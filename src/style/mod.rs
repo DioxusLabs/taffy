@@ -23,7 +23,7 @@ pub use self::block::{BlockContainerStyle, BlockItemStyle, TextAlign};
 #[cfg(feature = "flexbox")]
 pub use self::flex::{FlexDirection, FlexWrap, FlexboxContainerStyle, FlexboxItemStyle};
 #[cfg(feature = "grid_named")]
-pub use self::grid::{CheapCloneStr, GridTemplateArea, NamedGridLine, TemplateLineNames};
+pub use self::grid::{GridTemplateArea, NamedGridLine, TemplateLineNames};
 #[cfg(feature = "grid")]
 pub use self::grid::{
     GenericGridPlacement, GenericGridTemplateComponent, GenericRepetition, GridAutoFlow, GridContainerStyle,
@@ -33,6 +33,7 @@ pub use self::grid::{
 #[cfg(feature = "grid")]
 pub(crate) use self::grid::{GridAreaAxis, GridAreaEnd, NonNamedGridPlacement, OriginZeroGridPlacement};
 
+use core::fmt::Debug;
 use crate::geometry::{Point, Rect, Size};
 use crate::style_helpers::TaffyAuto as _;
 
@@ -42,6 +43,17 @@ use crate::geometry::Line;
 use crate::style_helpers;
 #[cfg(feature = "grid")]
 use crate::util::sys::GridTrackVec;
+
+/// Trait that represents a cheaply clonable string. If you're unsure what to use here
+/// consider `Arc<str>` or `string_cache::Atom`.
+pub trait CheapCloneStr:
+    AsRef<str> + for<'a> From<&'a str> + From<String> + PartialEq + Eq + Clone + Default + Debug + 'static
+{
+}
+impl<T> CheapCloneStr for T where
+    T: AsRef<str> + for<'a> From<&'a str> + From<String> + PartialEq + Eq + Clone + Default + Debug + 'static
+{
+}
 
 /// The core set of styles that are shared between all CSS layout nodes
 ///

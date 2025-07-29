@@ -1,24 +1,13 @@
 //! Style types for CSS Grid layout
 use super::{
     AlignContent, AlignItems, AlignSelf, CompactLength, CoreStyle, Dimension, JustifyContent, LengthPercentage,
-    LengthPercentageAuto, Style,
+    LengthPercentageAuto, Style, CheapCloneStr
 };
 use crate::compute::grid::{GridCoordinate, GridLine, OriginZeroLine};
 use crate::geometry::{AbsoluteAxis, AbstractAxis, Line, MinMax, Size};
 use crate::style_helpers::*;
 use core::cmp::{max, min};
 use core::fmt::Debug;
-
-/// Trait that represents a cheaply clonable string. If you're unsure what to use here
-/// consider `Arc<str>` or `string_cache::Atom`.
-pub trait CheapCloneStr:
-    AsRef<str> + for<'a> From<&'a str> + From<String> + PartialEq + Eq + Clone + Default + Debug + 'static
-{
-}
-impl<T> CheapCloneStr for T where
-    T: AsRef<str> + for<'a> From<&'a str> + From<String> + PartialEq + Eq + Clone + Default + Debug + 'static
-{
-}
 
 /// Defines a grid area
 #[cfg(feature = "grid_named")]
