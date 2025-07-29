@@ -169,6 +169,9 @@ fn child_min_line_max_line_span<S: CheapCloneStr>(
 #[cfg(test)]
 mod tests {
     mod test_child_min_max_line {
+        use std::sync::Arc;
+        type S = Arc<str>;
+
         use super::super::child_min_line_max_line_span;
         use super::super::OriginZeroLine;
         use crate::geometry::Line;
@@ -176,7 +179,7 @@ mod tests {
 
         #[test]
         fn child_min_max_line_auto() {
-            let (min_col, max_col, span) = child_min_line_max_line_span(Line { start: line(5), end: span(6) }, 6);
+            let (min_col, max_col, span) = child_min_line_max_line_span::<S>(Line { start: line(5), end: span(6) }, 6);
             assert_eq!(min_col, OriginZeroLine(4));
             assert_eq!(max_col, OriginZeroLine(10));
             assert_eq!(span, 1);
@@ -184,7 +187,7 @@ mod tests {
 
         #[test]
         fn child_min_max_line_negative_track() {
-            let (min_col, max_col, span) = child_min_line_max_line_span(Line { start: line(-5), end: span(3) }, 6);
+            let (min_col, max_col, span) = child_min_line_max_line_span::<S>(Line { start: line(-5), end: span(3) }, 6);
             assert_eq!(min_col, OriginZeroLine(2));
             assert_eq!(max_col, OriginZeroLine(5));
             assert_eq!(span, 1);

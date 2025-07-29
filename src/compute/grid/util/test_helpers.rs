@@ -1,4 +1,6 @@
 //! Helpers for use in unit tests within the grid module
+use std::sync::Arc;
+
 use super::super::OriginZeroLine;
 use crate::prelude::*;
 use crate::style::{Dimension, GridPlacement, Style};
@@ -20,8 +22,10 @@ impl CreateParentTestNode for (f32, f32, i32, i32) {
 pub(crate) trait CreateChildTestNode {
     fn into_grid_child(self) -> Style;
 }
-impl CreateChildTestNode for (GridPlacement, GridPlacement, GridPlacement, GridPlacement) {
-    fn into_grid_child(self) -> Style {
+impl CreateChildTestNode
+    for (GridPlacement<Arc<str>>, GridPlacement<Arc<str>>, GridPlacement<Arc<str>>, GridPlacement<Arc<str>>)
+{
+    fn into_grid_child(self) -> Style<Arc<str>> {
         Style {
             display: Display::Grid,
             grid_column: Line { start: self.0, end: self.1 },

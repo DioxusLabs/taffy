@@ -1055,6 +1055,8 @@ impl<T: GridItemStyle> GridItemStyle for &'_ T {
 
 #[cfg(test)]
 mod tests {
+    use std::sync::Arc;
+
     use super::Style;
     use crate::{geometry::*, style_helpers::TaffyAuto as _};
 
@@ -1063,7 +1065,7 @@ mod tests {
         #[cfg(feature = "grid")]
         use super::GridPlacement;
 
-        let old_defaults = Style {
+        let old_defaults: Style<Arc<str>> = Style {
             display: Default::default(),
             item_is_table: false,
             item_is_replaced: false,
@@ -1108,6 +1110,12 @@ mod tests {
             grid_template_rows: Default::default(),
             #[cfg(feature = "grid")]
             grid_template_columns: Default::default(),
+            #[cfg(feature = "grid_named")]
+            grid_template_row_names: Default::default(),
+            #[cfg(feature = "grid_named")]
+            grid_template_column_names: Default::default(),
+            #[cfg(feature = "grid_named")]
+            grid_template_areas: Default::default(),
             #[cfg(feature = "grid")]
             grid_auto_rows: Default::default(),
             #[cfg(feature = "grid")]
@@ -1120,7 +1128,7 @@ mod tests {
             grid_column: Line { start: GridPlacement::Auto, end: GridPlacement::Auto },
         };
 
-        assert_eq!(Style::DEFAULT, Style::default());
+        assert_eq!(Style::DEFAULT, Style::<Arc<str>>::default());
         assert_eq!(Style::DEFAULT, old_defaults);
     }
 
@@ -1181,15 +1189,15 @@ mod tests {
         assert_type_size::<MinTrackSizingFunction>(8);
         assert_type_size::<MaxTrackSizingFunction>(8);
         assert_type_size::<TrackSizingFunction>(16);
-        assert_type_size::<GridTemplateComponent<S>>(32);
+        assert_type_size::<GridTemplateComponent<S>>(56);
         assert_type_size::<Vec<TrackSizingFunction>>(24);
         assert_type_size::<Vec<GridTemplateComponent<S>>>(24);
 
         // CSS Grid Item
-        assert_type_size::<GridPlacement<S>>(4);
-        assert_type_size::<Line<GridPlacement<S>>>(8);
+        assert_type_size::<GridPlacement<S>>(24);
+        assert_type_size::<Line<GridPlacement<S>>>(48);
 
         // Overall
-        assert_type_size::<Style>(352);
+        assert_type_size::<Style>(504);
     }
 }

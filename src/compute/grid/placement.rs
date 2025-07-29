@@ -359,6 +359,7 @@ mod tests {
         use crate::compute::grid::types::TrackCounts;
         use crate::compute::grid::util::*;
         use crate::compute::grid::CellOccupancyMatrix;
+        use crate::compute::grid::NamedLineResolver;
         use crate::prelude::*;
         use crate::style::GridAutoFlow;
 
@@ -381,6 +382,9 @@ mod tests {
             let mut items = Vec::new();
             let mut cell_occupancy_matrix =
                 CellOccupancyMatrix::with_track_counts(estimated_sizes.0, estimated_sizes.1);
+            let mut name_resolver = NamedLineResolver::new(&Style::DEFAULT, 0, 0);
+            name_resolver.set_explicit_column_count(explicit_col_count);
+            name_resolver.set_explicit_row_count(explicit_row_count);
 
             // Run placement algorithm
             place_grid_items(
@@ -390,6 +394,8 @@ mod tests {
                 flow,
                 AlignSelf::Start,
                 AlignSelf::Start,
+                // TODO: actually test named line resolution
+                &name_resolver,
             );
 
             // Assert that each item has been placed in the right location
