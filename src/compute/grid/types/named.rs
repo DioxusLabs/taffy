@@ -323,7 +323,7 @@ impl<S: CheapCloneStr> NamedLineResolver<S> {
 
     /// Set the number of rows in the explicit grid
     pub(crate) fn set_explicit_row_count(&mut self, count: u16) {
-        self.explicit_column_count = count;
+        self.explicit_row_count = count;
     }
 }
 
