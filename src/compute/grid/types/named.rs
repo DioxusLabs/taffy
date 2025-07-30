@@ -256,9 +256,9 @@ impl<S: CheapCloneStr> NamedLineResolver<S> {
                     } else {
                         let remaining_lines = (abs_idx - lines.len() as i16) * idx.signum();
                         if idx > 0 {
-                            (explicit_track_count + 1) + remaining_lines
+                            (explicit_track_count + 2) + remaining_lines
                         } else {
-                            -((explicit_track_count + 1) + remaining_lines)
+                            -((explicit_track_count + 2) + remaining_lines)
                         }
                     }
                 }
@@ -301,11 +301,12 @@ impl<S: CheapCloneStr> NamedLineResolver<S> {
                 // The CSS Grid specification has a weird quirk where it matches non-existent line names
                 // to the first (positive) implicit line in the grid
                 //
+                // We add/subtract 2 to the explicit track count because (in each axis) a grid has one more explicit
+                // grid line than it has tracks. And the fallback line is the line *after* that.
+                //
                 // See: <https://github.com/w3c/csswg-drafts/issues/966#issuecomment-277042153>
-                GenericGridPlacement::Line(GridLine::from(match axis {
-                    GridAreaAxis::Row => (self.explicit_row_count.max(1) + 1) as i16,
-                    GridAreaAxis::Column => (self.explicit_column_count.max(1) + 1) as i16,
-                }))
+                let line = if idx > 0 { (explicit_track_count + 2) + idx } else { -((explicit_track_count + 2) + idx) };
+                GenericGridPlacement::Line(GridLine::from(line))
             }
         }
     }
