@@ -1,16 +1,16 @@
 //! Style types for CSS Grid layout
 use super::{
-    AlignContent, AlignItems, AlignSelf, CompactLength, CoreStyle, Dimension, JustifyContent, LengthPercentage,
-    LengthPercentageAuto, Style, CheapCloneStr
+    AlignContent, AlignItems, AlignSelf, CheapCloneStr, CompactLength, CoreStyle, Dimension, JustifyContent,
+    LengthPercentage, LengthPercentageAuto, Style,
 };
 use crate::compute::grid::{GridCoordinate, GridLine, OriginZeroLine};
 use crate::geometry::{AbsoluteAxis, AbstractAxis, Line, MinMax, Size};
 use crate::style_helpers::*;
+use crate::sys::{Arc, Vec};
 use core::cmp::{max, min};
 use core::fmt::Debug;
 
 /// Defines a grid area
-#[cfg(feature = "grid_named")]
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct GridTemplateArea<CustomIdent: CheapCloneStr> {
@@ -28,7 +28,6 @@ pub struct GridTemplateArea<CustomIdent: CheapCloneStr> {
 }
 
 /// Defines a named grid line
-#[cfg(feature = "grid_named")]
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct NamedGridLine<CustomIdent: CheapCloneStr> {
@@ -39,14 +38,12 @@ pub struct NamedGridLine<CustomIdent: CheapCloneStr> {
     pub index: u16,
 }
 
-#[cfg(feature = "grid_named")]
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub(crate) enum GridAreaAxis {
     Row,
     Column,
 }
 
-#[cfg(feature = "grid_named")]
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub(crate) enum GridAreaEnd {
     Start,
@@ -71,7 +68,6 @@ pub trait GenericRepetition {
 
 /// A nested list of line names. This is effectively a generic representation of `Vec<Vec<String>>` that allows
 /// both the collection and string type to be customised.
-#[cfg(feature = "grid_named")]
 #[rustfmt::skip]
 pub trait TemplateLineNames<'a, S: CheapCloneStr> : Iterator<Item = Self::LineNameSet<'a>> + ExactSizeIterator + Clone where Self: 'a {
     /// A simple list line names. This is effectively a generic representation of `VecString>` that allows
@@ -132,14 +128,12 @@ pub trait GridContainerStyle: CoreStyle {
         Self: 'a;
 
     /// The type returned by grid_template_row_names and grid_template_column_names
-    #[cfg(feature = "grid_named")]
     //IntoIterator<Item = &'a Self::LineNameSet<'a>>
     type TemplateLineNames<'a>: TemplateLineNames<'a, Self::CustomIdent>
     where
         Self: 'a;
 
     /// The type of custom identifiers used to identify named grid lines and areas
-    #[cfg(feature = "grid_named")]
     type GridTemplateAreas<'a>: IntoIterator<Item = GridTemplateArea<Self::CustomIdent>>
     where
         Self: 'a;
@@ -157,13 +151,10 @@ pub trait GridContainerStyle: CoreStyle {
     fn grid_auto_columns(&self) -> Self::AutoTrackList<'_>;
 
     /// Named grid areas
-    #[cfg(feature = "grid_named")]
     fn grid_template_areas(&self) -> Option<Self::GridTemplateAreas<'_>>;
     /// Defines the line names for row lines
-    #[cfg(feature = "grid_named")]
     fn grid_template_column_names(&self) -> Option<Self::TemplateLineNames<'_>>;
     /// Defines the size of implicitly created rows
-    #[cfg(feature = "grid_named")]
     fn grid_template_row_names(&self) -> Option<Self::TemplateLineNames<'_>>;
 
     /// Controls how items get placed into the grid for auto-placed items
@@ -335,14 +326,13 @@ pub(crate) type NonNamedGridPlacement = GenericGridPlacement<GridLine>;
 /// [Specification](https://www.w3.org/TR/css3-grid-layout/#typedef-grid-row-start-grid-line)
 #[derive(Clone, PartialEq, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-pub enum GridPlacement<S: CheapCloneStr> {
+pub enum GridPlacement<S: CheapCloneStr = Arc<str>> {
     /// Place item according to the auto-placement algorithm, and the parent's grid_auto_flow property
     Auto,
     /// Place item at specified line (column or row) index
     Line(GridLine),
     /// Item should span specified number of tracks (columns or rows)
     Span(u16),
-    #[cfg(feature = "grid_named")]
     /// A named grid line
     Named(S, i16),
 }
@@ -351,22 +341,22 @@ impl<S: CheapCloneStr> TaffyAuto for GridPlacement<S> {
 }
 impl<S: CheapCloneStr> TaffyGridLine for GridPlacement<S> {
     fn from_line_index(index: i16) -> Self {
-        GridPlacement::Line(GridLine::from(index))
+        GridPlacement::<S>::Line(GridLine::from(index))
     }
 }
 impl<S: CheapCloneStr> TaffyGridLine for Line<GridPlacement<S>> {
     fn from_line_index(index: i16) -> Self {
-        Line { start: GridPlacement::from_line_index(index), end: GridPlacement::Auto }
+        Line { start: GridPlacement::<S>::from_line_index(index), end: GridPlacement::<S>::Auto }
     }
 }
 impl<S: CheapCloneStr> TaffyGridSpan for GridPlacement<S> {
     fn from_span(span: u16) -> Self {
-        GridPlacement::Span(span)
+        GridPlacement::<S>::Span(span)
     }
 }
 impl<S: CheapCloneStr> TaffyGridSpan for Line<GridPlacement<S>> {
     fn from_span(span: u16) -> Self {
-        Line { start: GridPlacement::from_span(span), end: GridPlacement::Auto }
+        Line { start: GridPlacement::<S>::from_span(span), end: GridPlacement::<S>::Auto }
     }
 }
 
@@ -381,7 +371,6 @@ impl<S: CheapCloneStr> GridPlacement<S> {
     pub fn into_origin_zero_placement_ignoring_named(&self, explicit_track_count: u16) -> OriginZeroGridPlacement {
         match self {
             Self::Auto => OriginZeroGridPlacement::Auto,
-            Self::Named(_, _) => OriginZeroGridPlacement::Auto,
             Self::Span(span) => OriginZeroGridPlacement::Span(*span),
             // Grid line zero is an invalid index, so it gets treated as Auto
             // See: https://developer.mozilla.org/en-US/docs/Web/CSS/grid-row-start#values
@@ -389,6 +378,7 @@ impl<S: CheapCloneStr> GridPlacement<S> {
                 0 => OriginZeroGridPlacement::Auto,
                 _ => OriginZeroGridPlacement::Line(line.into_origin_zero_line(explicit_track_count)),
             },
+            Self::Named(_, _) => OriginZeroGridPlacement::Auto,
         }
     }
 
@@ -577,7 +567,7 @@ impl Line<OriginZeroGridPlacement> {
 /// Represents the start and end points of a GridItem within a given axis
 impl<S: CheapCloneStr> Default for Line<GridPlacement<S>> {
     fn default() -> Self {
-        Line { start: GridPlacement::Auto, end: GridPlacement::Auto }
+        Line { start: GridPlacement::<S>::Auto, end: GridPlacement::<S>::Auto }
     }
 }
 
@@ -1211,10 +1201,7 @@ pub struct GridTemplateRepetition<S: CheapCloneStr> {
     /// The tracks to repeat
     pub tracks: Vec<TrackSizingFunction>,
     /// The line names for the repeated tracks
-    #[cfg(feature = "grid_named")]
     pub line_names: Vec<Vec<S>>,
-    #[cfg(not(feature = "grid_named"))]
-    pub dummy: PhantomData<S>,
 }
 
 #[rustfmt::skip]

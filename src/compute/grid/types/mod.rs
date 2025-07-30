@@ -12,11 +12,10 @@ pub(crate) use coordinates::{GridCoordinate, GridLine, OriginZeroLine};
 pub(super) use grid_item::GridItem;
 pub(super) use grid_track::GridTrack;
 pub(super) use grid_track_counts::TrackCounts;
+pub(super) use named::NamedLineResolver;
 
 #[allow(unused_imports)]
 pub(super) use grid_track::GridTrackKind;
-
-pub(super) use named::NamedLineResolver;
 
 // pub(super) enum GridPosition {
 //     Auto,

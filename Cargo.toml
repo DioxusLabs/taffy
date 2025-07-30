@@ -39,7 +39,6 @@ default = [
     "taffy_tree",
     "flexbox",
     "grid",
-    "grid_named",
     "block_layout",
     "calc",
     "content_size",
@@ -55,8 +54,6 @@ block_layout = []
 flexbox = []
 ## Enables the CSS Grid layout algorithm. See [`compute_grid_layout`](crate::compute_grid_layout).
 grid = ["alloc", "dep:grid"]
-## Enables names grid lines and areas for the grid layout algorithm
-grid_named = ["grid"]
 ## Enables calc() values for all layout algorithms
 calc = []
 ## Causes all algorithms to compute and output a content size for each node

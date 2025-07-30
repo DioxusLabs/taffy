@@ -28,7 +28,6 @@ where
     GridTemplateComponent::Repeat(GridTemplateRepetition {
         count: repetition_kind.try_into().unwrap(),
         tracks,
-        #[cfg(feature = "grid_named")]
         line_names: Vec::new(),
     })
 }

@@ -72,9 +72,9 @@ fn get_known_child_positions<'a, S: GridItemStyle + 'a>(
         // Note: that the children reference the lines in between (and around) the tracks not tracks themselves,
         // and thus we must subtract 1 to get an accurate estimate of the number of tracks
         let (child_col_min, child_col_max, child_col_span) =
-            child_min_line_max_line_span(child_style.grid_column(), explicit_col_count);
+            child_min_line_max_line_span::<S::CustomIdent>(child_style.grid_column(), explicit_col_count);
         let (child_row_min, child_row_max, child_row_span) =
-            child_min_line_max_line_span(child_style.grid_row(), explicit_row_count);
+            child_min_line_max_line_span::<S::CustomIdent>(child_style.grid_row(), explicit_row_count);
         col_min = min(col_min, child_col_min);
         col_max = max(col_max, child_col_max);
         col_max_span = max(col_max_span, child_col_span);

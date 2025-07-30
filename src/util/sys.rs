@@ -15,6 +15,24 @@ pub(crate) use self::core::*;
 /// For when `std` is enabled
 #[cfg(feature = "std")]
 mod std {
+    // // Re-exporting a macro_rules macro doesn't work properly, so we wrap
+    // // it in a trivial new macro that just forwards it's input to the underlying
+    // // std/alloc macro
+    // macro_rules! format {
+    //     ($($tokens:tt)*) => {
+    //         ::std::format!($($tokens)*)
+    //     };
+    // }
+    // pub(crate) use format;
+
+    pub(crate) use std::format;
+
+    /// A string
+    pub(crate) type String = std::string::String;
+    /// Atomic reference counting
+    pub(crate) use std::sync::Arc;
+    /// A map
+    pub(crate) type Map<K, V> = std::collections::HashMap<K, V, std::hash::RandomState>;
     /// An allocation-backend agnostic vector type
     pub(crate) type Vec<A> = std::vec::Vec<A>;
     /// A vector of child nodes
@@ -27,6 +45,14 @@ mod std {
     #[must_use]
     pub(crate) fn new_vec_with_capacity<A>(capacity: usize) -> Vec<A> {
         Vec::with_capacity(capacity)
+    }
+
+    /// Creates a new vector with the capacity for the specified number of items before it must be resized
+    #[must_use]
+    pub(crate) fn single_value_vec<A>(value: A) -> Vec<A> {
+        let mut vec = Vec::with_capacity(1);
+        vec.push(value);
+        vec
     }
 
     /// Rounds to the nearest whole number
@@ -76,6 +102,25 @@ mod alloc {
     extern crate alloc;
     use core::cmp::Ordering;
 
+    // // Re-exporting a macro_rules macro doesn't work properly, so we wrap
+    // // it in a trivial new macro that just forwards it's input to the underlying
+    // // std/alloc macro
+    // macro_rules! format {
+    //     ($($tokens:tt)*) => {
+    //         ::alloc::fmt::format!($($tokens)*)
+    //     };
+    // }
+    // pub(crate) use format;
+
+    pub(crate) use alloc::format;
+
+    /// A string
+    pub(crate) type String = alloc::string::String;
+    /// Atomic reference counting
+    pub(crate) use alloc::sync::Arc;
+    /// A map
+    // TODO: consider using hashbrown
+    pub(crate) type Map<K, V> = alloc::collections::BTreeMap<K, V>;
     /// An allocation-backend agnostic vector type
     pub(crate) type Vec<A> = alloc::vec::Vec<A>;
     /// A vector of child nodes
@@ -88,6 +133,14 @@ mod alloc {
     #[must_use]
     pub(crate) fn new_vec_with_capacity<A>(capacity: usize) -> Vec<A> {
         Vec::with_capacity(capacity)
+    }
+
+    /// Creates a new vector with the capacity for the specified number of items before it must be resized
+    #[must_use]
+    pub(crate) fn single_value_vec<A>(value: A) -> Vec<A> {
+        let mut vec = Vec::with_capacity(1);
+        vec.push(value);
+        vec
     }
 
     /// Rounds to the nearest whole number
@@ -142,6 +195,14 @@ mod core {
     #[must_use]
     pub(crate) fn new_vec_with_capacity<A, const CAP: usize>(_capacity: usize) -> arrayvec::ArrayVec<A, CAP> {
         arrayvec::ArrayVec::new()
+    }
+
+    /// Creates a new vector with the capacity for the specified number of items before it must be resized
+    #[must_use]
+    pub(crate) fn single_value_vec<A>(value: A) -> arrayvec::ArrayVec<A, CAP> {
+        let mut vec = new_vec_with_capacity(1);
+        vec.push(value);
+        vec
     }
 
     /// Rounds to the nearest whole number

@@ -2,21 +2,24 @@ use crate::{
     CheapCloneStr, GenericGridPlacement, GenericGridTemplateComponent, GenericRepetition as _, GridAreaAxis,
     GridAreaEnd, GridContainerStyle, GridPlacement, GridTemplateArea, Line, NonNamedGridPlacement, RepetitionCount,
 };
-use core::{borrow::Borrow, fmt::Debug};
-use std::{
-    collections::HashMap,
-    hash::{Hash, Hasher},
-};
+use core::{borrow::Borrow, cmp::Ordering, fmt::Debug};
 
 use super::GridLine;
+// use alloc::fmt::format;
+use crate::sys::{format, single_value_vec, Map, Vec};
 
 /// Wrap an `AsRef<str>` type with a type which implements Hash by first
 /// deferring to the underlying `&str`'s implementation of Hash.
 #[derive(Debug, Clone)]
 pub(crate) struct StrHasher<T: CheapCloneStr>(pub T);
-impl<T: CheapCloneStr> Hash for StrHasher<T> {
-    fn hash<H: Hasher>(&self, state: &mut H) {
-        self.0.as_ref().hash(state)
+impl<T: CheapCloneStr> PartialOrd for StrHasher<T> {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        self.0.as_ref().partial_cmp(other.0.as_ref())
+    }
+}
+impl<T: CheapCloneStr> Ord for StrHasher<T> {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.0.as_ref().cmp(other.0.as_ref())
     }
 }
 impl<T: CheapCloneStr> PartialEq for StrHasher<T> {
@@ -24,26 +27,32 @@ impl<T: CheapCloneStr> PartialEq for StrHasher<T> {
         other.0.as_ref() == self.0.as_ref()
     }
 }
+impl<T: CheapCloneStr> Eq for StrHasher<T> {}
+#[cfg(feature = "std")]
+impl<T: CheapCloneStr> std::hash::Hash for StrHasher<T> {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.0.as_ref().hash(state)
+    }
+}
 impl<T: CheapCloneStr> Borrow<str> for StrHasher<T> {
     fn borrow(&self) -> &str {
         self.0.as_ref()
     }
 }
-impl<T: CheapCloneStr> Eq for StrHasher<T> {}
 
 /// Resolve lines for
 pub(crate) struct NamedLineResolver<S: CheapCloneStr> {
-    row_lines: HashMap<StrHasher<S>, Vec<u16>>,
-    column_lines: HashMap<StrHasher<S>, Vec<u16>>,
-    areas: HashMap<StrHasher<S>, GridTemplateArea<S>>,
+    row_lines: Map<StrHasher<S>, Vec<u16>>,
+    column_lines: Map<StrHasher<S>, Vec<u16>>,
+    areas: Map<StrHasher<S>, GridTemplateArea<S>>,
     area_column_count: u16,
     area_row_count: u16,
     explicit_column_count: u16,
     explicit_row_count: u16,
 }
 
-fn upsert_line_name_map<S: CheapCloneStr>(map: &mut HashMap<StrHasher<S>, Vec<u16>>, key: S, value: u16) {
-    map.entry(StrHasher(key)).and_modify(|lines| lines.push(value)).or_insert_with(|| vec![value]);
+fn upsert_line_name_map<S: CheapCloneStr>(map: &mut Map<StrHasher<S>, Vec<u16>>, key: S, value: u16) {
+    map.entry(StrHasher(key)).and_modify(|lines| lines.push(value)).or_insert_with(|| single_value_vec(value));
 }
 
 impl<S: CheapCloneStr> NamedLineResolver<S> {
@@ -52,9 +61,9 @@ impl<S: CheapCloneStr> NamedLineResolver<S> {
         column_auto_repetitions: u16,
         row_auto_repetitions: u16,
     ) -> Self {
-        let mut areas: HashMap<StrHasher<S>, GridTemplateArea<_>> = HashMap::new();
-        let mut column_lines: HashMap<StrHasher<S>, Vec<u16>> = HashMap::new();
-        let mut row_lines: HashMap<StrHasher<S>, Vec<u16>> = HashMap::new();
+        let mut areas: Map<StrHasher<S>, GridTemplateArea<_>> = Map::new();
+        let mut column_lines: Map<StrHasher<S>, Vec<u16>> = Map::new();
+        let mut row_lines: Map<StrHasher<S>, Vec<u16>> = Map::new();
 
         let mut area_column_count = 0;
         let mut area_row_count = 0;
@@ -88,7 +97,7 @@ impl<S: CheapCloneStr> NamedLineResolver<S> {
                         column_lines
                             .entry(StrHasher(line_name.clone()))
                             .and_modify(|lines: &mut Vec<u16>| lines.push(current_line))
-                            .or_insert_with(|| vec![current_line]);
+                            .or_insert_with(|| single_value_vec(current_line));
                     }
 
                     if let Some(GenericGridTemplateComponent::Repeat(repeat)) = column_tracks.next() {
@@ -126,7 +135,7 @@ impl<S: CheapCloneStr> NamedLineResolver<S> {
                         row_lines
                             .entry(StrHasher(line_name.clone()))
                             .and_modify(|lines: &mut Vec<u16>| lines.push(current_line))
-                            .or_insert_with(|| vec![current_line]);
+                            .or_insert_with(|| single_value_vec(current_line));
                     }
 
                     if let Some(GenericGridTemplateComponent::Repeat(repeat)) = row_tracks.next() {

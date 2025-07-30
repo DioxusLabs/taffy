@@ -52,7 +52,7 @@ use crate::tree::{
 use crate::util::debug::{debug_log, debug_log_node, debug_pop_node, debug_push_node};
 use crate::util::sys::round;
 use crate::util::ResolveOrZero;
-use crate::{BoxSizing, CacheTree, MaybeMath, MaybeResolve};
+use crate::{CacheTree, MaybeMath, MaybeResolve};
 
 /// Compute layout for the root node in the tree
 pub fn compute_root_layout(tree: &mut impl LayoutPartialTree, root: NodeId, available_space: Size<AvailableSpace>) {
@@ -60,6 +60,8 @@ pub fn compute_root_layout(tree: &mut impl LayoutPartialTree, root: NodeId, avai
 
     #[cfg(feature = "block_layout")]
     {
+        use crate::BoxSizing;
+
         let parent_size = available_space.into_options();
         let style = tree.get_core_container_style(root);
 
