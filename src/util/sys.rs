@@ -30,11 +30,9 @@ mod std {
     /// A string
     pub(crate) type String = std::string::String;
     /// The default type for representing strings in Taffy styles
-    pub(crate) type DefaultCheapStr = std::sync::Arc<str>;
-    /// Atomic reference counting
-    pub(crate) use std::sync::Arc;
+    pub(crate) type DefaultCheapStr = String;
     /// A map
-    pub(crate) type Map<K, V> = std::collections::HashMap<K, V, std::hash::RandomState>;
+    pub(crate) type Map<K, V> = std::collections::HashMap<K, V, std::collections::hash_map::RandomState>;
     /// An allocation-backend agnostic vector type
     pub(crate) type Vec<A> = std::vec::Vec<A>;
     /// A vector of child nodes
@@ -117,9 +115,7 @@ mod alloc {
     /// A string
     pub(crate) type String = alloc::string::String;
     /// The default type for representing strings in Taffy styles
-    pub(crate) type DefaultCheapStr = alloc::sync::Arc<str>;
-    /// Atomic reference counting
-    pub(crate) use alloc::sync::Arc;
+    pub(crate) type DefaultCheapStr = String;
     /// A map
     // TODO: consider using hashbrown
     pub(crate) type Map<K, V> = alloc::collections::BTreeMap<K, V>;

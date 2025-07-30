@@ -20,13 +20,13 @@ jobs:
   # We only run `cargo build` (not `cargo test`) so as to avoid requiring dev-dependencies to build with the MSRV
   # version. Building is likely sufficient as runtime errors varying between rust versions is very unlikely.
   build-features-msrv:
-    name: "MSRV Build [Rust 1.80]"
+    name: "MSRV Build [Rust 1.65]"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@master
         with:
-          toolchain: 1.80
+          toolchain: 1.65
       - run: cargo build
 
   build-features-debug:

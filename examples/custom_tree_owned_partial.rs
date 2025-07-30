@@ -9,8 +9,6 @@ mod common {
     pub mod image;
     pub mod text;
 }
-use std::sync::Arc;
-
 use common::image::{image_measure_function, ImageContext};
 use common::text::{text_measure_function, FontMetrics, TextContext, WritingMode, LOREM_IPSUM};
 use taffy::{
@@ -140,7 +138,7 @@ impl taffy::LayoutPartialTree for Node {
     where
         Self: 'a;
 
-    type CustomIdent = Arc<str>;
+    type CustomIdent = String;
 
     fn get_core_container_style(&self, node_id: NodeId) -> Self::CoreContainerStyle<'_> {
         &self.node_from_id(node_id).style

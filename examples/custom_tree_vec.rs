@@ -2,8 +2,6 @@ mod common {
     pub mod image;
     pub mod text;
 }
-use std::sync::Arc;
-
 use common::image::{image_measure_function, ImageContext};
 use common::text::{text_measure_function, FontMetrics, TextContext, WritingMode, LOREM_IPSUM};
 use taffy::util::print_tree;
@@ -141,7 +139,7 @@ impl taffy::TraversePartialTree for Tree {
 impl taffy::TraverseTree for Tree {}
 
 impl taffy::LayoutPartialTree for Tree {
-    type CustomIdent = Arc<str>;
+    type CustomIdent = String;
 
     type CoreContainerStyle<'a>
         = &'a Style

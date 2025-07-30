@@ -6,7 +6,7 @@ use super::{
 use crate::compute::grid::{GridCoordinate, GridLine, OriginZeroLine};
 use crate::geometry::{AbsoluteAxis, AbstractAxis, Line, MinMax, Size};
 use crate::style_helpers::*;
-use crate::sys::{Arc, Vec};
+use crate::sys::{DefaultCheapStr, Vec};
 use core::cmp::{max, min};
 use core::fmt::Debug;
 
@@ -345,7 +345,7 @@ pub(crate) type NonNamedGridPlacement = GenericGridPlacement<GridLine>;
 /// [Specification](https://www.w3.org/TR/css3-grid-layout/#typedef-grid-row-start-grid-line)
 #[derive(Clone, PartialEq, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-pub enum GridPlacement<S: CheapCloneStr = Arc<str>> {
+pub enum GridPlacement<S: CheapCloneStr = DefaultCheapStr> {
     /// Place item according to the auto-placement algorithm, and the parent's grid_auto_flow property
     Auto,
     /// Place item at specified line (column or row) index

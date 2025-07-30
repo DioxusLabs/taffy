@@ -315,8 +315,6 @@ fn create_implicit_tracks(
 
 #[cfg(test)]
 mod test {
-    use std::sync::Arc;
-
     use super::compute_explicit_grid_size_in_axis;
     use super::initialize_grid_tracks;
     use crate::compute::grid::explicit_grid::AutoRepeatStrategy;
