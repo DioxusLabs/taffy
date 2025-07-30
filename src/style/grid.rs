@@ -50,19 +50,28 @@ pub(crate) enum GridAreaEnd {
     End,
 }
 
+/// A trait to represent a `repeat()` clause in a `grid-template-*` definition
 pub trait GenericRepetition {
+    /// The type that represents `<custom-ident>`s (for named lines)
     type CustomIdent: CheapCloneStr;
+    /// The type which represents an iterator over the list of repeated tracks
     type RepetitionTrackList<'a>: Iterator<Item = TrackSizingFunction> + ExactSizeIterator + Clone
     where
         Self: 'a;
+
+    /// A nested iterator of line names (nested because each line may have multiple associated names)
     type TemplateLineNames<'a>: TemplateLineNames<'a, Self::CustomIdent>
     where
         Self: 'a;
+    /// The repetition count (integer, auto-fill, or auto-fit)
     fn count(&self) -> RepetitionCount;
+    /// Get an iterator over the repeated tracks
     fn tracks(&self) -> Self::RepetitionTrackList<'_>;
+    /// Returns the number of repeated tracks
     fn track_count(&self) -> u16 {
         self.tracks().len() as u16
     }
+    /// Returns an iterator over the lines names
     fn lines_names(&self) -> Self::TemplateLineNames<'_>;
 }
 
@@ -85,12 +94,16 @@ impl<'a, S: CheapCloneStr> TemplateLineNames<'a, S>
 }
 
 #[derive(Copy, Clone)]
+/// A type representing a component in a `grid-template-*` defintion where the type
+/// representing `repeat()`s is generic
 pub enum GenericGridTemplateComponent<S, Repetition>
 where
     S: CheapCloneStr,
     Repetition: GenericRepetition<CustomIdent = S>,
 {
+    /// A single track sizing function
     Single(TrackSizingFunction),
+    /// A `repeat()`
     Repeat(Repetition),
 }
 
