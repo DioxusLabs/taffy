@@ -180,10 +180,6 @@ impl<S: CheapCloneStr> NamedLineResolver<S> {
             lines.dedup();
         }
 
-        // dbg!(&areas);
-        // dbg!(&column_lines);
-        // dbg!(&row_lines);
-
         Self {
             area_column_count,
             area_row_count,
