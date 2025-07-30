@@ -38,15 +38,21 @@ pub struct NamedGridLine<CustomIdent: CheapCloneStr> {
     pub index: u16,
 }
 
+/// Axis as `Row` or `Column`
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub(crate) enum GridAreaAxis {
+    /// The `Row` axis
     Row,
+    /// The `Column` axis
     Column,
 }
 
+/// Logical end (`Start` or `End`)
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub(crate) enum GridAreaEnd {
+    /// The `Start` end
     Start,
+    /// The `End` end
     End,
 }
 

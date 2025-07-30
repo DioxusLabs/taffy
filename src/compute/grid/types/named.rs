@@ -1,3 +1,5 @@
+//! Code for resolving name grid lines and areas
+
 use crate::{
     CheapCloneStr, GenericGridPlacement, GenericGridTemplateComponent, GenericRepetition as _, GridAreaAxis,
     GridAreaEnd, GridContainerStyle, GridPlacement, GridTemplateArea, Line, NonNamedGridPlacement, RepetitionCount,
@@ -14,7 +16,7 @@ use crate::sys::{format, single_value_vec, Map, Vec};
 pub(crate) struct StrHasher<T: CheapCloneStr>(pub T);
 impl<T: CheapCloneStr> PartialOrd for StrHasher<T> {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        self.0.as_ref().partial_cmp(other.0.as_ref())
+        Some(self.cmp(other))
     }
 }
 impl<T: CheapCloneStr> Ord for StrHasher<T> {
@@ -40,22 +42,36 @@ impl<T: CheapCloneStr> Borrow<str> for StrHasher<T> {
     }
 }
 
-/// Resolve lines for
+/// Resolver that takes grid lines names and area names as input and can then be used to
+/// resolve line names of grid placement properties into line numbers.
 pub(crate) struct NamedLineResolver<S: CheapCloneStr> {
+    /// Map of row line names to line numbers. Each line name may correspond to multiple lines
+    /// so we store a `Vec`
     row_lines: Map<StrHasher<S>, Vec<u16>>,
+    /// Map of column line names to line numbers. Each line name may correspond to multiple lines
+    /// so we store a `Vec`
     column_lines: Map<StrHasher<S>, Vec<u16>>,
+    /// Map of area names to area definitions (start and end lines numbers in each axis)
     areas: Map<StrHasher<S>, GridTemplateArea<S>>,
+    /// Number of columns implied by grid area definitions
     area_column_count: u16,
+    /// Number of rows implied by grid area definitions
     area_row_count: u16,
+    /// The number of explicit columns in the grid. This is an *input* to the `NamedLineResolver` and is
+    /// used when computing the fallback line when a non-existent named line is specified.
     explicit_column_count: u16,
+    /// The number of explicit rows in the grid. This is an *input* to the `NamedLineResolver` and is
+    /// used when computing the fallback line when a non-existent named line is specified.
     explicit_row_count: u16,
 }
 
+/// Utility function to create or update an entry in a line name map
 fn upsert_line_name_map<S: CheapCloneStr>(map: &mut Map<StrHasher<S>, Vec<u16>>, key: S, value: u16) {
     map.entry(StrHasher(key)).and_modify(|lines| lines.push(value)).or_insert_with(|| single_value_vec(value));
 }
 
 impl<S: CheapCloneStr> NamedLineResolver<S> {
+    /// Create and initialise a new `NamedLineResolver`
     pub(crate) fn new(
         style: &impl GridContainerStyle<CustomIdent = S>,
         column_auto_repetitions: u16,
@@ -179,16 +195,19 @@ impl<S: CheapCloneStr> NamedLineResolver<S> {
         }
     }
 
+    /// Resolve named lines for both the `start` and `end` of a row-axis grid placement
     #[inline(always)]
     pub(crate) fn resolve_row_names(&self, line: &Line<GridPlacement<S>>) -> Line<NonNamedGridPlacement> {
         self.resolve_line_names(line, GridAreaAxis::Row)
     }
 
+    /// Resolve named lines for both the `start` and `end` of a column-axis grid placement
     #[inline(always)]
     pub(crate) fn resolve_column_names(&self, line: &Line<GridPlacement<S>>) -> Line<NonNamedGridPlacement> {
         self.resolve_line_names(line, GridAreaAxis::Column)
     }
 
+    /// Resolve named lines for both the `start` and `end` of a grid placement
     #[inline(always)]
     pub(crate) fn resolve_line_names(
         &self,
@@ -201,6 +220,7 @@ impl<S: CheapCloneStr> NamedLineResolver<S> {
         }
     }
 
+    /// Resolve named lines for a single grid placement
     pub(crate) fn resolve_line_name(
         &self,
         placement: &GridPlacement<S>,
@@ -290,18 +310,22 @@ impl<S: CheapCloneStr> NamedLineResolver<S> {
         }
     }
 
+    /// Get the number of columns defined by the grid areas
     pub(crate) fn area_column_count(&self) -> u16 {
         self.area_column_count
     }
 
+    /// Get the number of rows defined by the grid areas
     pub(crate) fn area_row_count(&self) -> u16 {
         self.area_row_count
     }
 
+    /// Set the number of columns in the explicit grid
     pub(crate) fn set_explicit_column_count(&mut self, count: u16) {
         self.explicit_column_count = count;
     }
 
+    /// Set the number of rows in the explicit grid
     pub(crate) fn set_explicit_row_count(&mut self, count: u16) {
         self.explicit_column_count = count;
     }

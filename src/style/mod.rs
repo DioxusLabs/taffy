@@ -855,20 +855,6 @@ impl<T: FlexboxItemStyle> FlexboxItemStyle for &'_ T {
     }
 }
 
-// impl<'a, S: CheapCloneStr> TemplateLineNames<'a> for &'a [S] {
-//     type CustomIdent = S;
-
-//     type LineNameSet<'b>
-//     where
-//         Self: 'b;
-// }
-
-// impl<S: CheapCloneStr, T: Deref<Target = S>>
-
-#[cfg(feature = "grid")]
-type AsComponentRef<'a, S> =
-    fn(&'a GridTemplateComponent<S>) -> GenericGridTemplateComponent<S, &'a GridTemplateRepetition<S>>;
-
 #[cfg(feature = "grid")]
 impl<S: CheapCloneStr> GridContainerStyle for Style<S> {
     type Repetition<'a>
@@ -877,7 +863,10 @@ impl<S: CheapCloneStr> GridContainerStyle for Style<S> {
         Self: 'a;
 
     type TemplateTrackList<'a>
-        = core::iter::Map<core::slice::Iter<'a, GridTemplateComponent<S>>, AsComponentRef<'a, S>>
+        = core::iter::Map<
+        core::slice::Iter<'a, GridTemplateComponent<S>>,
+        fn(&'a GridTemplateComponent<S>) -> GenericGridTemplateComponent<S, &'a GridTemplateRepetition<S>>,
+    >
     where
         Self: 'a;
 

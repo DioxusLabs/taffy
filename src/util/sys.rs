@@ -29,6 +29,7 @@ mod std {
 
     /// A string
     pub(crate) type String = std::string::String;
+    /// The default type for representing strings in Taffy styles
     pub(crate) type DefaultCheapStr = std::sync::Arc<str>;
     /// Atomic reference counting
     pub(crate) use std::sync::Arc;
@@ -51,9 +52,7 @@ mod std {
     /// Creates a new vector with the capacity for the specified number of items before it must be resized
     #[must_use]
     pub(crate) fn single_value_vec<A>(value: A) -> Vec<A> {
-        let mut vec = Vec::with_capacity(1);
-        vec.push(value);
-        vec
+        vec![value]
     }
 
     /// Rounds to the nearest whole number
@@ -117,6 +116,7 @@ mod alloc {
 
     /// A string
     pub(crate) type String = alloc::string::String;
+    /// The default type for representing strings in Taffy styles
     pub(crate) type DefaultCheapStr = alloc::sync::Arc<str>;
     /// Atomic reference counting
     pub(crate) use alloc::sync::Arc;
@@ -185,6 +185,7 @@ mod core {
 
     /// A string
     pub(crate) type String = &'static str;
+    /// The default type for representing strings in Taffy styles
     pub(crate) type DefaultCheapStr = &'static str;
 
     /// An allocation-backend agnostic vector type
