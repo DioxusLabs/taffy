@@ -107,8 +107,8 @@ impl<S: CheapCloneStr> NamedLineResolver<S> {
         let mut current_line = 0;
         if let Some(mut column_tracks) = style.grid_template_columns() {
             if let Some(column_line_names_iter) = style.grid_template_column_names() {
-                current_line += 1;
                 for line_names in column_line_names_iter {
+                    current_line += 1;
                     for line_name in line_names.into_iter() {
                         column_lines
                             .entry(StrHasher(line_name.clone()))
@@ -132,6 +132,8 @@ impl<S: CheapCloneStr> NamedLineResolver<S> {
                             // Last line name set collapses with following line name set
                             current_line -= 1;
                         }
+                        // Last line name set collapses with following line name set
+                        current_line -= 1;
                     }
                 }
             }
@@ -170,6 +172,8 @@ impl<S: CheapCloneStr> NamedLineResolver<S> {
                             // Last line name set collapses with following line name set
                             current_line -= 1;
                         }
+                        // Last line name set collapses with following line name set
+                        current_line -= 1;
                     }
                 }
             }
