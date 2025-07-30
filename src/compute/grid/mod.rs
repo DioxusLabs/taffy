@@ -184,6 +184,9 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     let explicit_col_count = grid_template_col_count.max(name_resolver.area_column_count());
     let explicit_row_count = grid_template_row_count.max(name_resolver.area_row_count());
 
+    name_resolver.set_explicit_column_count(explicit_col_count);
+    name_resolver.set_explicit_row_count(explicit_row_count);
+
     // 3. Implicit Grid: Estimate Track Counts
     // Estimate the number of rows and columns in the implicit grid (= the entire grid)
     // This is necessary as part of placement. Doing it early here is a perf optimisation to reduce allocations.
@@ -215,8 +218,6 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     // Extract track counts from previous step (auto-placement can expand the number of tracks)
     let final_col_counts = *cell_occupancy_matrix.track_counts(AbsoluteAxis::Horizontal);
     let final_row_counts = *cell_occupancy_matrix.track_counts(AbsoluteAxis::Vertical);
-    name_resolver.set_explicit_column_count(final_col_counts.explicit);
-    name_resolver.set_explicit_row_count(final_row_counts.explicit);
 
     // 5. Initialize Tracks
     // Initialize (explicit and implicit) grid tracks (and gutters)
