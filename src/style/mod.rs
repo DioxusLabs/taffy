@@ -11,12 +11,11 @@ mod flex;
 #[cfg(feature = "grid")]
 mod grid;
 
-use crate::sys::Arc;
-
 pub use self::alignment::{AlignContent, AlignItems, AlignSelf, JustifyContent, JustifyItems, JustifySelf};
 pub use self::available_space::AvailableSpace;
 pub use self::compact_length::CompactLength;
 pub use self::dimension::{Dimension, LengthPercentage, LengthPercentageAuto};
+use crate::sys::DefaultCheapStr;
 
 #[cfg(feature = "block_layout")]
 pub use self::block::{BlockContainerStyle, BlockItemStyle, TextAlign};
@@ -50,14 +49,23 @@ use crate::sys::String;
 
 /// Trait that represents a cheaply clonable string. If you're unsure what to use here
 /// consider `Arc<str>` or `string_cache::Atom`.
+#[cfg(any(feature = "alloc", feature = "std"))]
 pub trait CheapCloneStr:
     AsRef<str> + for<'a> From<&'a str> + From<String> + PartialEq + Eq + Clone + Default + Debug + 'static
 {
 }
+#[cfg(any(feature = "alloc", feature = "std"))]
 impl<T> CheapCloneStr for T where
     T: AsRef<str> + for<'a> From<&'a str> + From<String> + PartialEq + Eq + Clone + Default + Debug + 'static
 {
 }
+
+/// Trait that represents a cheaply clonable string. If you're unsure what to use here
+/// consider `Arc<str>` or `string_cache::Atom`.
+#[cfg(not(any(feature = "alloc", feature = "std")))]
+pub trait CheapCloneStr {}
+#[cfg(not(any(feature = "alloc", feature = "std")))]
+impl<T> CheapCloneStr for T {}
 
 /// The core set of styles that are shared between all CSS layout nodes
 ///
@@ -362,7 +370,7 @@ impl Overflow {
 #[derive(Clone, PartialEq, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "serde", serde(default))]
-pub struct Style<S: CheapCloneStr = Arc<str>> {
+pub struct Style<S: CheapCloneStr = DefaultCheapStr> {
     /// This is a dummy field which is necessary to make Taffy compile with the `grid` feature disabled
     /// It should always be set to `core::marker::PhantomData`.
     pub dummy: core::marker::PhantomData<S>,
@@ -1079,9 +1087,8 @@ impl<T: GridItemStyle> GridItemStyle for &'_ T {
 
 #[cfg(test)]
 mod tests {
-    use std::sync::Arc;
-
     use super::Style;
+    use crate::sys::DefaultCheapStr;
     use crate::{geometry::*, style_helpers::TaffyAuto as _};
 
     #[test]
@@ -1089,7 +1096,7 @@ mod tests {
         #[cfg(feature = "grid")]
         use super::GridPlacement;
 
-        let old_defaults: Style<Arc<str>> = Style {
+        let old_defaults: Style<DefaultCheapStr> = Style {
             dummy: core::marker::PhantomData,
             display: Default::default(),
             item_is_table: false,
@@ -1153,7 +1160,7 @@ mod tests {
             grid_column: Line { start: GridPlacement::Auto, end: GridPlacement::Auto },
         };
 
-        assert_eq!(Style::DEFAULT, Style::<Arc<str>>::default());
+        assert_eq!(Style::DEFAULT, Style::<DefaultCheapStr>::default());
         assert_eq!(Style::DEFAULT, old_defaults);
     }
 
@@ -1162,6 +1169,7 @@ mod tests {
     #[test]
     fn style_sizes() {
         use super::*;
+        type S = crate::sys::DefaultCheapStr;
 
         fn assert_type_size<T>(expected_size: usize) {
             let name = ::core::any::type_name::<T>();
@@ -1180,7 +1188,6 @@ mod tests {
                 ::core::mem::size_of::<T>(),
             );
         }
-        type S = Arc<str>;
 
         // Display and Position
         assert_type_size::<Display>(1);

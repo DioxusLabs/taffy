@@ -29,6 +29,7 @@ mod std {
 
     /// A string
     pub(crate) type String = std::string::String;
+    pub(crate) type DefaultCheapStr = std::sync::Arc<str>;
     /// Atomic reference counting
     pub(crate) use std::sync::Arc;
     /// A map
@@ -116,6 +117,7 @@ mod alloc {
 
     /// A string
     pub(crate) type String = alloc::string::String;
+    pub(crate) type DefaultCheapStr = alloc::sync::Arc<str>;
     /// Atomic reference counting
     pub(crate) use alloc::sync::Arc;
     /// A map
@@ -181,6 +183,10 @@ mod core {
     /// The maximum number of children of any given node
     pub const MAX_GRID_TRACKS: usize = 16;
 
+    /// A string
+    pub(crate) type String = &'static str;
+    pub(crate) type DefaultCheapStr = &'static str;
+
     /// An allocation-backend agnostic vector type
     pub(crate) type Vec<A> = arrayvec::ArrayVec<A, MAX_NODE_COUNT>;
     /// A vector of child nodes, whose length cannot exceed [`MAX_CHILD_COUNT`]
@@ -199,7 +205,7 @@ mod core {
 
     /// Creates a new vector with the capacity for the specified number of items before it must be resized
     #[must_use]
-    pub(crate) fn single_value_vec<A>(value: A) -> arrayvec::ArrayVec<A, CAP> {
+    pub(crate) fn single_value_vec<A, const CAP: usize>(value: A) -> arrayvec::ArrayVec<A, CAP> {
         let mut vec = new_vec_with_capacity(1);
         vec.push(value);
         vec

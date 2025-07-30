@@ -530,10 +530,7 @@ pub trait FromFr {
 #[cfg(feature = "grid")]
 #[cfg(test)]
 mod repeat_fn_tests {
-    use std::sync::Arc;
-
-    type S = Arc<str>;
-
+    type S = crate::sys::DefaultCheapStr;
     use super::repeat;
     use crate::{
         style::{GridTemplateComponent, RepetitionCount, TrackSizingFunction},
