@@ -363,6 +363,9 @@ impl Overflow {
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "serde", serde(default))]
 pub struct Style<S: CheapCloneStr = Arc<str>> {
+    /// This is a dummy field which is necessary to make Taffy compile with the `grid` feature disabled
+    /// It should always be set to `core::marker::PhantomData`.
+    pub dummy: core::marker::PhantomData<S>,
     /// What layout strategy should be used?
     pub display: Display,
     /// Whether a child is display:table or not. This affects children of block layouts.
@@ -507,6 +510,7 @@ pub struct Style<S: CheapCloneStr = Arc<str>> {
 impl<S: CheapCloneStr> Style<S> {
     /// The [`Default`] layout, in a form that can be used in const functions
     pub const DEFAULT: Style<S> = Style {
+        dummy: core::marker::PhantomData,
         display: Display::DEFAULT,
         item_is_table: false,
         item_is_replaced: false,
@@ -1086,6 +1090,7 @@ mod tests {
         use super::GridPlacement;
 
         let old_defaults: Style<Arc<str>> = Style {
+            dummy: core::marker::PhantomData,
             display: Default::default(),
             item_is_table: false,
             item_is_replaced: false,
