@@ -240,6 +240,7 @@ impl<S: CheapCloneStr> NamedLineResolver<S> {
                 };
 
                 // An index of 0 is used to represent "no index specified".
+                let original_idx = idx;
                 if idx == 0 {
                     idx = 1;
                 }
@@ -305,7 +306,11 @@ impl<S: CheapCloneStr> NamedLineResolver<S> {
                 // grid line than it has tracks. And the fallback line is the line *after* that.
                 //
                 // See: <https://github.com/w3c/csswg-drafts/issues/966#issuecomment-277042153>
-                let line = if idx > 0 { (explicit_track_count + 2) + idx } else { -((explicit_track_count + 2) + idx) };
+                let line = if idx > 0 {
+                    (explicit_track_count + 2) + original_idx
+                } else {
+                    -((explicit_track_count + 2) + original_idx)
+                };
                 GenericGridPlacement::Line(GridLine::from(line))
             }
         }
