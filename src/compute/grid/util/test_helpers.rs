@@ -20,8 +20,10 @@ impl CreateParentTestNode for (f32, f32, i32, i32) {
 pub(crate) trait CreateChildTestNode {
     fn into_grid_child(self) -> Style;
 }
-impl CreateChildTestNode for (GridPlacement, GridPlacement, GridPlacement, GridPlacement) {
-    fn into_grid_child(self) -> Style {
+impl CreateChildTestNode
+    for (GridPlacement<String>, GridPlacement<String>, GridPlacement<String>, GridPlacement<String>)
+{
+    fn into_grid_child(self) -> Style<String> {
         Style {
             display: Display::Grid,
             grid_column: Line { start: self.0, end: self.1 },

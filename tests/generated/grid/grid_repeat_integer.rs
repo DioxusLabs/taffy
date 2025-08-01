@@ -17,8 +17,8 @@ fn grid_repeat_integer__border_box() {
         .new_with_children(
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
-                grid_template_rows: vec![repeat(GridTrackRepetition::Count(3u16), vec![length(40f32)])],
-                grid_template_columns: vec![repeat(GridTrackRepetition::Count(3u16), vec![length(40f32)])],
+                grid_template_rows: vec![repeat(RepetitionCount::Count(3u16), vec![length(40f32)])],
+                grid_template_columns: vec![repeat(RepetitionCount::Count(3u16), vec![length(40f32)])],
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::from_length(120f32),
                     height: taffy::style::Dimension::from_length(120f32),
@@ -132,8 +132,8 @@ fn grid_repeat_integer__content_box() {
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
                 box_sizing: taffy::style::BoxSizing::ContentBox,
-                grid_template_rows: vec![repeat(GridTrackRepetition::Count(3u16), vec![length(40f32)])],
-                grid_template_columns: vec![repeat(GridTrackRepetition::Count(3u16), vec![length(40f32)])],
+                grid_template_rows: vec![repeat(RepetitionCount::Count(3u16), vec![length(40f32)])],
+                grid_template_columns: vec![repeat(RepetitionCount::Count(3u16), vec![length(40f32)])],
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::from_length(120f32),
                     height: taffy::style::Dimension::from_length(120f32),

@@ -1,23 +1,159 @@
 //! Style types for CSS Grid layout
 use super::{
-    AlignContent, AlignItems, AlignSelf, CompactLength, CoreStyle, Dimension, JustifyContent, LengthPercentage,
-    LengthPercentageAuto, Style,
+    AlignContent, AlignItems, AlignSelf, CheapCloneStr, CompactLength, CoreStyle, Dimension, JustifyContent,
+    LengthPercentage, LengthPercentageAuto, Style,
 };
 use crate::compute::grid::{GridCoordinate, GridLine, OriginZeroLine};
 use crate::geometry::{AbsoluteAxis, AbstractAxis, Line, MinMax, Size};
 use crate::style_helpers::*;
-use crate::util::sys::GridTrackVec;
-use core::borrow::Borrow;
+use crate::sys::{DefaultCheapStr, Vec};
 use core::cmp::{max, min};
+use core::fmt::Debug;
+
+/// Defines a grid area
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub struct GridTemplateArea<CustomIdent: CheapCloneStr> {
+    /// The name of the grid area which
+    #[cfg_attr(feature = "serde", serde(deserialize_with = "crate::util::deserialize_from_str"))]
+    pub name: CustomIdent,
+    /// The index of the row at which the grid area starts in grid coordinates.
+    pub row_start: u16,
+    /// The index of the row at which the grid area ends in grid coordinates.
+    pub row_end: u16,
+    /// The index of the column at which the grid area starts in grid coordinates.
+    pub column_start: u16,
+    /// The index of the column at which the grid area end in grid coordinates.
+    pub column_end: u16,
+}
+
+/// Defines a named grid line
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub struct NamedGridLine<CustomIdent: CheapCloneStr> {
+    /// The name of the grid area which
+    #[cfg_attr(feature = "serde", serde(deserialize_with = "crate::util::deserialize_from_str"))]
+    pub name: CustomIdent,
+    /// The index of the row at which the grid area starts in grid coordinates.
+    pub index: u16,
+}
+
+/// Axis as `Row` or `Column`
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub(crate) enum GridAreaAxis {
+    /// The `Row` axis
+    Row,
+    /// The `Column` axis
+    Column,
+}
+
+/// Logical end (`Start` or `End`)
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub(crate) enum GridAreaEnd {
+    /// The `Start` end
+    Start,
+    /// The `End` end
+    End,
+}
+
+/// A trait to represent a `repeat()` clause in a `grid-template-*` definition
+pub trait GenericRepetition {
+    /// The type that represents `<custom-ident>`s (for named lines)
+    type CustomIdent: CheapCloneStr;
+    /// The type which represents an iterator over the list of repeated tracks
+    type RepetitionTrackList<'a>: Iterator<Item = TrackSizingFunction> + ExactSizeIterator + Clone
+    where
+        Self: 'a;
+
+    /// A nested iterator of line names (nested because each line may have multiple associated names)
+    type TemplateLineNames<'a>: TemplateLineNames<'a, Self::CustomIdent>
+    where
+        Self: 'a;
+    /// The repetition count (integer, auto-fill, or auto-fit)
+    fn count(&self) -> RepetitionCount;
+    /// Get an iterator over the repeated tracks
+    fn tracks(&self) -> Self::RepetitionTrackList<'_>;
+    /// Returns the number of repeated tracks
+    fn track_count(&self) -> u16 {
+        self.tracks().len() as u16
+    }
+    /// Returns an iterator over the lines names
+    fn lines_names(&self) -> Self::TemplateLineNames<'_>;
+}
+
+/// A nested list of line names. This is effectively a generic representation of `Vec<Vec<String>>` that allows
+/// both the collection and string type to be customised.
+#[rustfmt::skip]
+pub trait TemplateLineNames<'a, S: CheapCloneStr> : Iterator<Item = Self::LineNameSet<'a>> + ExactSizeIterator + Clone where Self: 'a {
+    /// A simple list line names. This is effectively a generic representation of `VecString>` that allows
+    /// both the collection and string type to be customised.
+    type LineNameSet<'b>: Iterator<Item = &'b S> + ExactSizeIterator + Clone where Self: 'b;
+}
+
+impl<'a, S: CheapCloneStr> TemplateLineNames<'a, S>
+    for core::iter::Map<core::slice::Iter<'a, Vec<S>>, fn(&Vec<S>) -> core::slice::Iter<'_, S>>
+{
+    type LineNameSet<'b>
+        = core::slice::Iter<'b, S>
+    where
+        Self: 'b;
+}
+
+#[derive(Copy, Clone)]
+/// A type representing a component in a `grid-template-*` defintion where the type
+/// representing `repeat()`s is generic
+pub enum GenericGridTemplateComponent<S, Repetition>
+where
+    S: CheapCloneStr,
+    Repetition: GenericRepetition<CustomIdent = S>,
+{
+    /// A single track sizing function
+    Single(TrackSizingFunction),
+    /// A `repeat()`
+    Repeat(Repetition),
+}
+
+impl<S, Repetition> GenericGridTemplateComponent<S, Repetition>
+where
+    S: CheapCloneStr,
+    Repetition: GenericRepetition<CustomIdent = S>,
+{
+    /// Whether the track definition is a auto-repeated fragment
+    pub fn is_auto_repetition(&self) -> bool {
+        match self {
+            Self::Single(_) => false,
+            Self::Repeat(repeat) => matches!(repeat.count(), RepetitionCount::AutoFit | RepetitionCount::AutoFill),
+        }
+    }
+}
 
 /// The set of styles required for a CSS Grid container
 pub trait GridContainerStyle: CoreStyle {
-    /// The type returned by grid_template_rows and grid_template_columns
-    type TemplateTrackList<'a>: Borrow<[TrackSizingFunction]>
+    /// The type for a `repeat()` within a grid_template_rows or grid_template_columns
+    type Repetition<'a>: GenericRepetition<CustomIdent = Self::CustomIdent>
     where
         Self: 'a;
+
+    /// The type returned by grid_template_rows and grid_template_columns
+    type TemplateTrackList<'a>: Iterator<Item = GenericGridTemplateComponent<Self::CustomIdent, Self::Repetition<'a>>>
+        + ExactSizeIterator
+        + Clone
+    where
+        Self: 'a;
+
     /// The type returned by grid_auto_rows and grid_auto_columns
-    type AutoTrackList<'a>: Borrow<[NonRepeatedTrackSizingFunction]>
+    type AutoTrackList<'a>: Iterator<Item = TrackSizingFunction> + ExactSizeIterator + Clone
+    where
+        Self: 'a;
+
+    /// The type returned by grid_template_row_names and grid_template_column_names
+    //IntoIterator<Item = &'a Self::LineNameSet<'a>>
+    type TemplateLineNames<'a>: TemplateLineNames<'a, Self::CustomIdent>
+    where
+        Self: 'a;
+
+    /// The type of custom identifiers used to identify named grid lines and areas
+    type GridTemplateAreas<'a>: IntoIterator<Item = GridTemplateArea<Self::CustomIdent>>
     where
         Self: 'a;
 
@@ -25,24 +161,31 @@ pub trait GridContainerStyle: CoreStyle {
     // associated_type_defaults feature (https://github.com/rust-lang/rust/issues/29661) is stabilised.
 
     /// Defines the track sizing functions (heights) of the grid rows
-    fn grid_template_rows(&self) -> Self::TemplateTrackList<'_>;
+    fn grid_template_rows(&self) -> Option<Self::TemplateTrackList<'_>>;
     /// Defines the track sizing functions (widths) of the grid columns
-    fn grid_template_columns(&self) -> Self::TemplateTrackList<'_>;
+    fn grid_template_columns(&self) -> Option<Self::TemplateTrackList<'_>>;
     /// Defines the size of implicitly created rows
     fn grid_auto_rows(&self) -> Self::AutoTrackList<'_>;
     /// Defined the size of implicitly created columns
     fn grid_auto_columns(&self) -> Self::AutoTrackList<'_>;
 
+    /// Named grid areas
+    fn grid_template_areas(&self) -> Option<Self::GridTemplateAreas<'_>>;
+    /// Defines the line names for row lines
+    fn grid_template_column_names(&self) -> Option<Self::TemplateLineNames<'_>>;
+    /// Defines the size of implicitly created rows
+    fn grid_template_row_names(&self) -> Option<Self::TemplateLineNames<'_>>;
+
     /// Controls how items get placed into the grid for auto-placed items
     #[inline(always)]
     fn grid_auto_flow(&self) -> GridAutoFlow {
-        Style::DEFAULT.grid_auto_flow
+        Style::<Self::CustomIdent>::DEFAULT.grid_auto_flow
     }
 
     /// How large should the gaps between items in a grid or flex container be?
     #[inline(always)]
     fn gap(&self) -> Size<LengthPercentage> {
-        Style::DEFAULT.gap
+        Style::<Self::CustomIdent>::DEFAULT.gap
     }
 
     // Alignment properties
@@ -50,27 +193,27 @@ pub trait GridContainerStyle: CoreStyle {
     /// How should content contained within this item be aligned in the cross/block axis
     #[inline(always)]
     fn align_content(&self) -> Option<AlignContent> {
-        Style::DEFAULT.align_content
+        Style::<Self::CustomIdent>::DEFAULT.align_content
     }
     /// How should contained within this item be aligned in the main/inline axis
     #[inline(always)]
     fn justify_content(&self) -> Option<JustifyContent> {
-        Style::DEFAULT.justify_content
+        Style::<Self::CustomIdent>::DEFAULT.justify_content
     }
     /// How this node's children aligned in the cross/block axis?
     #[inline(always)]
     fn align_items(&self) -> Option<AlignItems> {
-        Style::DEFAULT.align_items
+        Style::<Self::CustomIdent>::DEFAULT.align_items
     }
     /// How this node's children should be aligned in the inline axis
     #[inline(always)]
     fn justify_items(&self) -> Option<AlignItems> {
-        Style::DEFAULT.justify_items
+        Style::<Self::CustomIdent>::DEFAULT.justify_items
     }
 
     /// Get a grid item's row or column placement depending on the axis passed
     #[inline(always)]
-    fn grid_template_tracks(&self, axis: AbsoluteAxis) -> Self::TemplateTrackList<'_> {
+    fn grid_template_tracks(&self, axis: AbsoluteAxis) -> Option<Self::TemplateTrackList<'_>> {
         match axis {
             AbsoluteAxis::Horizontal => self.grid_template_columns(),
             AbsoluteAxis::Vertical => self.grid_template_rows(),
@@ -91,31 +234,31 @@ pub trait GridContainerStyle: CoreStyle {
 pub trait GridItemStyle: CoreStyle {
     /// Defines which row in the grid the item should start and end at
     #[inline(always)]
-    fn grid_row(&self) -> Line<GridPlacement> {
-        Style::DEFAULT.grid_row
+    fn grid_row(&self) -> Line<GridPlacement<Self::CustomIdent>> {
+        Default::default()
     }
     /// Defines which column in the grid the item should start and end at
     #[inline(always)]
-    fn grid_column(&self) -> Line<GridPlacement> {
-        Style::DEFAULT.grid_column
+    fn grid_column(&self) -> Line<GridPlacement<Self::CustomIdent>> {
+        Default::default()
     }
 
     /// How this node should be aligned in the cross/block axis
     /// Falls back to the parents [`AlignItems`] if not set
     #[inline(always)]
     fn align_self(&self) -> Option<AlignSelf> {
-        Style::DEFAULT.align_self
+        Style::<Self::CustomIdent>::DEFAULT.align_self
     }
     /// How this node should be aligned in the inline axis
     /// Falls back to the parents [`super::JustifyItems`] if not set
     #[inline(always)]
     fn justify_self(&self) -> Option<AlignSelf> {
-        Style::DEFAULT.justify_self
+        Style::<Self::CustomIdent>::DEFAULT.justify_self
     }
 
     /// Get a grid item's row or column placement depending on the axis passed
     #[inline(always)]
-    fn grid_placement(&self, axis: AbsoluteAxis) -> Line<GridPlacement> {
+    fn grid_placement(&self, axis: AbsoluteAxis) -> Line<GridPlacement<Self::CustomIdent>> {
         match axis {
             AbsoluteAxis::Horizontal => self.grid_column(),
             AbsoluteAxis::Vertical => self.grid_row(),
@@ -190,48 +333,101 @@ pub enum GenericGridPlacement<LineType: GridCoordinate> {
 /// A grid line placement using the normalized OriginZero coordinates to specify line positions.
 pub(crate) type OriginZeroGridPlacement = GenericGridPlacement<OriginZeroLine>;
 
+/// A grid line placement using CSS grid line coordinates to specify line positions. This uses the same coordinate
+/// system as the public `GridPlacement` type but doesn't support named lines (these are expected to have already
+/// been resolved by the time values of this type are constructed).
+pub(crate) type NonNamedGridPlacement = GenericGridPlacement<GridLine>;
+
 /// A grid line placement specification. Used for grid-[row/column]-[start/end]. Named tracks are not implemented.
 ///
 /// Defaults to `GridPlacement::Auto`
 ///
 /// [Specification](https://www.w3.org/TR/css3-grid-layout/#typedef-grid-row-start-grid-line)
-pub type GridPlacement = GenericGridPlacement<GridLine>;
-impl TaffyAuto for GridPlacement {
+#[derive(Clone, PartialEq, Debug)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub enum GridPlacement<S: CheapCloneStr = DefaultCheapStr> {
+    /// Place item according to the auto-placement algorithm, and the parent's grid_auto_flow property
+    Auto,
+    /// Place item at specified line (column or row) index
+    Line(GridLine),
+    /// Place item at specified named line (column or row)
+    NamedLine(S, i16),
+    /// Item should span specified number of tracks (columns or rows)
+    Span(u16),
+    /// Item should span until the nth line named <name>.
+    ///
+    /// If there are less than n lines named <name> in the specified direction then
+    /// all implicit lines will be counted.
+    NamedSpan(S, u16),
+}
+impl<S: CheapCloneStr> TaffyAuto for GridPlacement<S> {
     const AUTO: Self = Self::Auto;
 }
-impl TaffyGridLine for GridPlacement {
+impl<S: CheapCloneStr> TaffyGridLine for GridPlacement<S> {
     fn from_line_index(index: i16) -> Self {
-        GridPlacement::Line(GridLine::from(index))
+        GridPlacement::<S>::Line(GridLine::from(index))
     }
 }
-impl TaffyGridLine for Line<GridPlacement> {
+impl<S: CheapCloneStr> TaffyGridLine for Line<GridPlacement<S>> {
     fn from_line_index(index: i16) -> Self {
-        Line { start: GridPlacement::from_line_index(index), end: GridPlacement::Auto }
+        Line { start: GridPlacement::<S>::from_line_index(index), end: GridPlacement::<S>::Auto }
     }
 }
-impl TaffyGridSpan for GridPlacement {
+impl<S: CheapCloneStr> TaffyGridSpan for GridPlacement<S> {
     fn from_span(span: u16) -> Self {
-        GridPlacement::Span(span)
+        GridPlacement::<S>::Span(span)
     }
 }
-impl TaffyGridSpan for Line<GridPlacement> {
+impl<S: CheapCloneStr> TaffyGridSpan for Line<GridPlacement<S>> {
     fn from_span(span: u16) -> Self {
-        Line { start: GridPlacement::from_span(span), end: GridPlacement::Auto }
+        Line { start: GridPlacement::<S>::from_span(span), end: GridPlacement::<S>::Auto }
     }
 }
 
-impl Default for GridPlacement {
+impl<S: CheapCloneStr> Default for GridPlacement<S> {
     fn default() -> Self {
         Self::Auto
     }
 }
 
-impl GridPlacement {
-    /// Apply a mapping function if the [`GridPlacement`] is a `Track`. Otherwise return `self` unmodified.
-    pub fn into_origin_zero_placement(self, explicit_track_count: u16) -> OriginZeroGridPlacement {
+impl<S: CheapCloneStr> GridPlacement<S> {
+    /// Apply a mapping function if the [`GridPlacement`] is a `Line`. Otherwise return `self` unmodified.
+    pub fn into_origin_zero_placement_ignoring_named(&self, explicit_track_count: u16) -> OriginZeroGridPlacement {
         match self {
             Self::Auto => OriginZeroGridPlacement::Auto,
-            Self::Span(span) => OriginZeroGridPlacement::Span(span),
+            Self::Span(span) => OriginZeroGridPlacement::Span(*span),
+            // Grid line zero is an invalid index, so it gets treated as Auto
+            // See: https://developer.mozilla.org/en-US/docs/Web/CSS/grid-row-start#values
+            Self::Line(line) => match line.as_i16() {
+                0 => OriginZeroGridPlacement::Auto,
+                _ => OriginZeroGridPlacement::Line(line.into_origin_zero_line(explicit_track_count)),
+            },
+            Self::NamedLine(_, _) => OriginZeroGridPlacement::Auto,
+            Self::NamedSpan(_, _) => OriginZeroGridPlacement::Auto,
+        }
+    }
+}
+
+impl<S: CheapCloneStr> Line<GridPlacement<S>> {
+    /// Apply a mapping function if the [`GridPlacement`] is a `Line`. Otherwise return `self` unmodified.
+    pub fn into_origin_zero_ignoring_named(&self, explicit_track_count: u16) -> Line<OriginZeroGridPlacement> {
+        Line {
+            start: self.start.into_origin_zero_placement_ignoring_named(explicit_track_count),
+            end: self.end.into_origin_zero_placement_ignoring_named(explicit_track_count),
+        }
+    }
+}
+
+impl NonNamedGridPlacement {
+    /// Apply a mapping function if the [`GridPlacement`] is a `Track`. Otherwise return `self` unmodified.
+    pub fn into_origin_zero_placement(
+        &self,
+        explicit_track_count: u16,
+        // resolve_named: impl Fn(&str) -> Option<GridLine>
+    ) -> OriginZeroGridPlacement {
+        match self {
+            Self::Auto => OriginZeroGridPlacement::Auto,
+            Self::Span(span) => OriginZeroGridPlacement::Span(*span),
             // Grid line zero is an invalid index, so it gets treated as Auto
             // See: https://developer.mozilla.org/en-US/docs/Web/CSS/grid-row-start#values
             Self::Line(line) => match line.as_i16() {
@@ -261,13 +457,29 @@ impl<T: GridCoordinate> Line<GenericGridPlacement<T>> {
     }
 }
 
-impl Line<GridPlacement> {
+impl<S: CheapCloneStr> Line<GridPlacement<S>> {
     #[inline]
     /// Whether the track position is definite in this axis (or the item will need auto placement)
     /// The track position is definite if least one of the start and end positions is a NON-ZERO track index
     /// (0 is an invalid line in GridLine coordinates, and falls back to "auto" which is indefinite)
     pub fn is_definite(&self) -> bool {
-        match (self.start, self.end) {
+        match (&self.start, &self.end) {
+            (GridPlacement::Line(line), _) if line.as_i16() != 0 => true,
+            (_, GridPlacement::Line(line)) if line.as_i16() != 0 => true,
+            (GridPlacement::NamedLine(_, _), _) => true,
+            (_, GridPlacement::NamedLine(_, _)) => true,
+            _ => false,
+        }
+    }
+}
+
+impl Line<NonNamedGridPlacement> {
+    #[inline]
+    /// Whether the track position is definite in this axis (or the item will need auto placement)
+    /// The track position is definite if least one of the start and end positions is a NON-ZERO track index
+    /// (0 is an invalid line in GridLine coordinates, and falls back to "auto" which is indefinite)
+    pub fn is_definite(&self) -> bool {
+        match (&self.start, &self.end) {
             (GenericGridPlacement::Line(line), _) if line.as_i16() != 0 => true,
             (_, GenericGridPlacement::Line(line)) if line.as_i16() != 0 => true,
             _ => false,
@@ -353,9 +565,9 @@ impl Line<OriginZeroGridPlacement> {
 }
 
 /// Represents the start and end points of a GridItem within a given axis
-impl Default for Line<GridPlacement> {
+impl<S: CheapCloneStr> Default for Line<GridPlacement<S>> {
     fn default() -> Self {
-        Line { start: GridPlacement::Auto, end: GridPlacement::Auto }
+        Line { start: GridPlacement::<S>::Auto, end: GridPlacement::<S>::Auto }
     }
 }
 
@@ -871,8 +1083,8 @@ impl MinTrackSizingFunction {
 ///
 /// May either be a MinMax variant which specifies separate values for the min-/max- track sizing functions
 /// or a scalar value which applies to both track sizing functions.
-pub type NonRepeatedTrackSizingFunction = MinMax<MinTrackSizingFunction, MaxTrackSizingFunction>;
-impl NonRepeatedTrackSizingFunction {
+pub type TrackSizingFunction = MinMax<MinTrackSizingFunction, MaxTrackSizingFunction>;
+impl TrackSizingFunction {
     /// Extract the min track sizing function
     pub fn min_sizing_function(&self) -> MinTrackSizingFunction {
         self.min
@@ -886,51 +1098,51 @@ impl NonRepeatedTrackSizingFunction {
         self.min.0.is_length_or_percentage() || self.max.0.is_length_or_percentage()
     }
 }
-impl TaffyAuto for NonRepeatedTrackSizingFunction {
+impl TaffyAuto for TrackSizingFunction {
     const AUTO: Self = Self { min: MinTrackSizingFunction::AUTO, max: MaxTrackSizingFunction::AUTO };
 }
-impl TaffyMinContent for NonRepeatedTrackSizingFunction {
+impl TaffyMinContent for TrackSizingFunction {
     const MIN_CONTENT: Self =
         Self { min: MinTrackSizingFunction::MIN_CONTENT, max: MaxTrackSizingFunction::MIN_CONTENT };
 }
-impl TaffyMaxContent for NonRepeatedTrackSizingFunction {
+impl TaffyMaxContent for TrackSizingFunction {
     const MAX_CONTENT: Self =
         Self { min: MinTrackSizingFunction::MAX_CONTENT, max: MaxTrackSizingFunction::MAX_CONTENT };
 }
-impl TaffyFitContent for NonRepeatedTrackSizingFunction {
+impl TaffyFitContent for TrackSizingFunction {
     fn fit_content(argument: LengthPercentage) -> Self {
         Self { min: MinTrackSizingFunction::AUTO, max: MaxTrackSizingFunction::fit_content(argument) }
     }
 }
-impl TaffyZero for NonRepeatedTrackSizingFunction {
+impl TaffyZero for TrackSizingFunction {
     const ZERO: Self = Self { min: MinTrackSizingFunction::ZERO, max: MaxTrackSizingFunction::ZERO };
 }
-impl FromLength for NonRepeatedTrackSizingFunction {
+impl FromLength for TrackSizingFunction {
     fn from_length<Input: Into<f32> + Copy>(value: Input) -> Self {
         Self { min: MinTrackSizingFunction::from_length(value), max: MaxTrackSizingFunction::from_length(value) }
     }
 }
-impl FromPercent for NonRepeatedTrackSizingFunction {
+impl FromPercent for TrackSizingFunction {
     fn from_percent<Input: Into<f32> + Copy>(percent: Input) -> Self {
         Self { min: MinTrackSizingFunction::from_percent(percent), max: MaxTrackSizingFunction::from_percent(percent) }
     }
 }
-impl FromFr for NonRepeatedTrackSizingFunction {
+impl FromFr for TrackSizingFunction {
     fn from_fr<Input: Into<f32> + Copy>(flex: Input) -> Self {
         Self { min: MinTrackSizingFunction::AUTO, max: MaxTrackSizingFunction::from_fr(flex) }
     }
 }
-impl From<LengthPercentage> for NonRepeatedTrackSizingFunction {
+impl From<LengthPercentage> for TrackSizingFunction {
     fn from(input: LengthPercentage) -> Self {
         Self { min: input.into(), max: input.into() }
     }
 }
-impl From<LengthPercentageAuto> for NonRepeatedTrackSizingFunction {
+impl From<LengthPercentageAuto> for TrackSizingFunction {
     fn from(input: LengthPercentageAuto) -> Self {
         Self { min: input.into(), max: input.into() }
     }
 }
-impl From<Dimension> for NonRepeatedTrackSizingFunction {
+impl From<Dimension> for TrackSizingFunction {
     fn from(input: Dimension) -> Self {
         Self { min: input.into(), max: input.into() }
     }
@@ -942,7 +1154,7 @@ impl From<Dimension> for NonRepeatedTrackSizingFunction {
 /// and the difference between AutoFit and AutoFill.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-pub enum GridTrackRepetition {
+pub enum RepetitionCount {
     /// Auto-repeating tracks should be generated to fit the container
     /// See: <https://developer.mozilla.org/en-US/docs/Web/CSS/repeat#auto-fill>
     AutoFill,
@@ -952,7 +1164,7 @@ pub enum GridTrackRepetition {
     /// The specified tracks should be repeated exacts N times
     Count(u16),
 }
-impl From<u16> for GridTrackRepetition {
+impl From<u16> for RepetitionCount {
     fn from(value: u16) -> Self {
         Self::Count(value)
     }
@@ -969,7 +1181,7 @@ impl core::fmt::Display for InvalidStringRepetitionValue {
         f.write_str("&str can only be converted to GridTrackRepetition if it's value is 'auto-fit' or 'auto-fill'")
     }
 }
-impl TryFrom<&str> for GridTrackRepetition {
+impl TryFrom<&str> for RepetitionCount {
     type Error = InvalidStringRepetitionValue;
     fn try_from(value: &str) -> Result<Self, InvalidStringRepetitionValue> {
         match value {
@@ -980,56 +1192,107 @@ impl TryFrom<&str> for GridTrackRepetition {
     }
 }
 
-/// The sizing function for a grid track (row/column)
+/// A typed representation of a `repeat(..)` in `grid-template-*` value
+#[derive(Clone, PartialEq, Debug)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub struct GridTemplateRepetition<S: CheapCloneStr> {
+    /// The number of the times the repeat is repeated
+    pub count: RepetitionCount,
+    /// The tracks to repeat
+    pub tracks: Vec<TrackSizingFunction>,
+    /// The line names for the repeated tracks
+    pub line_names: Vec<Vec<S>>,
+}
+
+#[rustfmt::skip]
+impl<S: CheapCloneStr> GenericRepetition for &'_ GridTemplateRepetition<S> {
+    type CustomIdent = S;
+    type RepetitionTrackList<'a> = core::iter::Copied<core::slice::Iter<'a, TrackSizingFunction>> where Self: 'a;
+    type TemplateLineNames<'a> = core::iter::Map<core::slice::Iter<'a, Vec<S>>, fn(&Vec<S>) -> core::slice::Iter<'_, S>> where Self: 'a;
+    #[inline(always)]
+    fn count(&self) -> RepetitionCount {
+        self.count
+    }
+    #[inline(always)]
+    fn track_count(&self) -> u16 {
+        self.tracks.len() as u16
+    }
+    #[inline(always)]
+    fn tracks(&self) -> Self::RepetitionTrackList<'_> {
+        self.tracks.iter().copied()
+    }
+    #[inline(always)]
+    fn lines_names(&self) -> Self::TemplateLineNames<'_> {
+        self.line_names.iter().map(|names| names.iter())
+    }
+}
+
+/// An element in a `grid-template-columns` or `grid-template-rows` definition.
+/// Either a track sizing function or a repeat().
+///
 /// See <https://developer.mozilla.org/en-US/docs/Web/CSS/grid-template-columns>
 #[derive(Clone, PartialEq, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-pub enum TrackSizingFunction {
+pub enum GridTemplateComponent<S: CheapCloneStr> {
     /// A single non-repeated track
-    Single(NonRepeatedTrackSizingFunction),
+    Single(TrackSizingFunction),
     /// Automatically generate grid tracks to fit the available space using the specified definite track lengths
     /// Only valid if every track in template (not just the repetition) has a fixed size.
-    Repeat(GridTrackRepetition, GridTrackVec<NonRepeatedTrackSizingFunction>),
+    Repeat(GridTemplateRepetition<S>),
 }
-impl TrackSizingFunction {
+
+impl<S: CheapCloneStr> GridTemplateComponent<S> {
+    /// Convert a `GridTemplateComponent` into a `GridTemplateComponentRef`
+    pub fn as_component_ref(&self) -> GenericGridTemplateComponent<S, &GridTemplateRepetition<S>> {
+        match self {
+            GridTemplateComponent::Single(size) => GenericGridTemplateComponent::Single(*size),
+            GridTemplateComponent::Repeat(repetition) => GenericGridTemplateComponent::Repeat(repetition),
+        }
+    }
+}
+
+impl<S: CheapCloneStr> GridTemplateComponent<S> {
     /// Whether the track definition is a auto-repeated fragment
     pub fn is_auto_repetition(&self) -> bool {
-        matches!(self, Self::Repeat(GridTrackRepetition::AutoFit | GridTrackRepetition::AutoFill, _))
+        matches!(
+            self,
+            Self::Repeat(GridTemplateRepetition { count: RepetitionCount::AutoFit | RepetitionCount::AutoFill, .. })
+        )
     }
 }
-impl TaffyAuto for TrackSizingFunction {
-    const AUTO: Self = Self::Single(NonRepeatedTrackSizingFunction::AUTO);
+impl<S: CheapCloneStr> TaffyAuto for GridTemplateComponent<S> {
+    const AUTO: Self = Self::Single(TrackSizingFunction::AUTO);
 }
-impl TaffyMinContent for TrackSizingFunction {
-    const MIN_CONTENT: Self = Self::Single(NonRepeatedTrackSizingFunction::MIN_CONTENT);
+impl<S: CheapCloneStr> TaffyMinContent for GridTemplateComponent<S> {
+    const MIN_CONTENT: Self = Self::Single(TrackSizingFunction::MIN_CONTENT);
 }
-impl TaffyMaxContent for TrackSizingFunction {
-    const MAX_CONTENT: Self = Self::Single(NonRepeatedTrackSizingFunction::MAX_CONTENT);
+impl<S: CheapCloneStr> TaffyMaxContent for GridTemplateComponent<S> {
+    const MAX_CONTENT: Self = Self::Single(TrackSizingFunction::MAX_CONTENT);
 }
-impl TaffyFitContent for TrackSizingFunction {
+impl<S: CheapCloneStr> TaffyFitContent for GridTemplateComponent<S> {
     fn fit_content(argument: LengthPercentage) -> Self {
-        Self::Single(NonRepeatedTrackSizingFunction::fit_content(argument))
+        Self::Single(TrackSizingFunction::fit_content(argument))
     }
 }
-impl TaffyZero for TrackSizingFunction {
-    const ZERO: Self = Self::Single(NonRepeatedTrackSizingFunction::ZERO);
+impl<S: CheapCloneStr> TaffyZero for GridTemplateComponent<S> {
+    const ZERO: Self = Self::Single(TrackSizingFunction::ZERO);
 }
-impl FromLength for TrackSizingFunction {
+impl<S: CheapCloneStr> FromLength for GridTemplateComponent<S> {
     fn from_length<Input: Into<f32> + Copy>(value: Input) -> Self {
-        Self::Single(NonRepeatedTrackSizingFunction::from_length(value))
+        Self::Single(TrackSizingFunction::from_length(value))
     }
 }
-impl FromPercent for TrackSizingFunction {
+impl<S: CheapCloneStr> FromPercent for GridTemplateComponent<S> {
     fn from_percent<Input: Into<f32> + Copy>(percent: Input) -> Self {
-        Self::Single(NonRepeatedTrackSizingFunction::from_percent(percent))
+        Self::Single(TrackSizingFunction::from_percent(percent))
     }
 }
-impl FromFr for TrackSizingFunction {
+impl<S: CheapCloneStr> FromFr for GridTemplateComponent<S> {
     fn from_fr<Input: Into<f32> + Copy>(flex: Input) -> Self {
-        Self::Single(NonRepeatedTrackSizingFunction::from_fr(flex))
+        Self::Single(TrackSizingFunction::from_fr(flex))
     }
 }
-impl From<MinMax<MinTrackSizingFunction, MaxTrackSizingFunction>> for TrackSizingFunction {
+impl<S: CheapCloneStr> From<MinMax<MinTrackSizingFunction, MaxTrackSizingFunction>> for GridTemplateComponent<S> {
     fn from(input: MinMax<MinTrackSizingFunction, MaxTrackSizingFunction>) -> Self {
         Self::Single(input)
     }

@@ -139,6 +139,8 @@ impl taffy::TraversePartialTree for Tree {
 impl taffy::TraverseTree for Tree {}
 
 impl taffy::LayoutPartialTree for Tree {
+    type CustomIdent = String;
+
     type CoreContainerStyle<'a>
         = &'a Style
     where

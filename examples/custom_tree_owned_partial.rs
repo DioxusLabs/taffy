@@ -138,6 +138,8 @@ impl taffy::LayoutPartialTree for Node {
     where
         Self: 'a;
 
+    type CustomIdent = String;
+
     fn get_core_container_style(&self, node_id: NodeId) -> Self::CoreContainerStyle<'_> {
         &self.node_from_id(node_id).style
     }

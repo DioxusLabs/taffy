@@ -880,11 +880,11 @@ fn generate_track_definition(track_definition: &serde_json::Map<String, Value>) 
                         let value = || arg.get("value").unwrap().as_u64().unwrap() as u16;
 
                         match unit {
-                            "auto-fill" => quote!(GridTrackRepetition::AutoFill),
-                            "auto-fit" => quote!(GridTrackRepetition::AutoFit),
+                            "auto-fill" => quote!(RepetitionCount::AutoFill),
+                            "auto-fit" => quote!(RepetitionCount::AutoFit),
                             "integer" => {
                                 let repetition_count = value();
-                                quote!(GridTrackRepetition::Count(#repetition_count))
+                                quote!(RepetitionCount::Count(#repetition_count))
                             }
                             _ => unreachable!(),
                         }

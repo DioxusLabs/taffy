@@ -2,7 +2,7 @@
 //! to reduce the number of allocations required when creating a grid.
 use crate::geometry::Line;
 use crate::style::{GenericGridPlacement, GridPlacement};
-use crate::GridItemStyle;
+use crate::{CheapCloneStr, GridItemStyle};
 use core::cmp::{max, min};
 
 use super::types::TrackCounts;
@@ -72,9 +72,9 @@ fn get_known_child_positions<'a, S: GridItemStyle + 'a>(
         // Note: that the children reference the lines in between (and around) the tracks not tracks themselves,
         // and thus we must subtract 1 to get an accurate estimate of the number of tracks
         let (child_col_min, child_col_max, child_col_span) =
-            child_min_line_max_line_span(child_style.grid_column(), explicit_col_count);
+            child_min_line_max_line_span::<S::CustomIdent>(child_style.grid_column(), explicit_col_count);
         let (child_row_min, child_row_max, child_row_span) =
-            child_min_line_max_line_span(child_style.grid_row(), explicit_row_count);
+            child_min_line_max_line_span::<S::CustomIdent>(child_style.grid_row(), explicit_row_count);
         col_min = min(col_min, child_col_min);
         col_max = max(col_max, child_col_max);
         col_max_span = max(col_max_span, child_col_span);
@@ -91,8 +91,8 @@ fn get_known_child_positions<'a, S: GridItemStyle + 'a>(
 ///
 /// Values are returned in origin-zero coordinates
 #[inline]
-fn child_min_line_max_line_span(
-    line: Line<GridPlacement>,
+fn child_min_line_max_line_span<S: CheapCloneStr>(
+    line: Line<GridPlacement<S>>,
     explicit_track_count: u16,
 ) -> (OriginZeroLine, OriginZeroLine, u16) {
     use GenericGridPlacement::*;
@@ -104,7 +104,8 @@ fn child_min_line_max_line_span(
     // D. If the placement contains only a span for a named line, replace it with a span of 1.
 
     // Convert line into origin-zero coordinates before attempting to analyze
-    let oz_line = line.into_origin_zero(explicit_track_count);
+    // We ignore named lines here as they are accounted for separately
+    let oz_line = line.into_origin_zero_ignoring_named(explicit_track_count);
 
     let min = match (oz_line.start, oz_line.end) {
         // Both tracks specified
@@ -156,8 +157,8 @@ fn child_min_line_max_line_span(
 
     // Calculate span only for indefinitely placed items as we don't need for other items (whose required space will
     // be taken into account by min and max)
-    let span = match (line.start, line.end) {
-        (Auto | Span(_), Auto | Span(_)) => line.indefinite_span(),
+    let span = match (oz_line.start, oz_line.end) {
+        (Auto | Span(_), Auto | Span(_)) => oz_line.indefinite_span(),
         _ => 1,
     };
 
@@ -168,6 +169,7 @@ fn child_min_line_max_line_span(
 #[cfg(test)]
 mod tests {
     mod test_child_min_max_line {
+        type S = String;
         use super::super::child_min_line_max_line_span;
         use super::super::OriginZeroLine;
         use crate::geometry::Line;
@@ -175,7 +177,7 @@ mod tests {
 
         #[test]
         fn child_min_max_line_auto() {
-            let (min_col, max_col, span) = child_min_line_max_line_span(Line { start: line(5), end: span(6) }, 6);
+            let (min_col, max_col, span) = child_min_line_max_line_span::<S>(Line { start: line(5), end: span(6) }, 6);
             assert_eq!(min_col, OriginZeroLine(4));
             assert_eq!(max_col, OriginZeroLine(10));
             assert_eq!(span, 1);
@@ -183,7 +185,7 @@ mod tests {
 
         #[test]
         fn child_min_max_line_negative_track() {
-            let (min_col, max_col, span) = child_min_line_max_line_span(Line { start: line(-5), end: span(3) }, 6);
+            let (min_col, max_col, span) = child_min_line_max_line_span::<S>(Line { start: line(-5), end: span(3) }, 6);
             assert_eq!(min_col, OriginZeroLine(2));
             assert_eq!(max_col, OriginZeroLine(5));
             assert_eq!(span, 1);

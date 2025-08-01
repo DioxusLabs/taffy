@@ -7,6 +7,7 @@ use slotmap::{DefaultKey, SlotMap};
 
 use crate::geometry::Size;
 use crate::style::{AvailableSpace, Display, Style};
+use crate::sys::DefaultCheapStr;
 use crate::tree::{
     Cache, ClearState, Layout, LayoutInput, LayoutOutput, LayoutPartialTree, NodeId, PrintTree, RoundTree, RunMode,
     TraversePartialTree, TraverseTree,
@@ -326,6 +327,8 @@ where
         = &'a Style
     where
         Self: 'a;
+
+    type CustomIdent = DefaultCheapStr;
 
     #[inline(always)]
     fn get_core_container_style(&self, node_id: NodeId) -> Self::CoreContainerStyle<'_> {

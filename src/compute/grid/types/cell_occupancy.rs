@@ -4,7 +4,7 @@ use crate::compute::grid::OriginZeroLine;
 use crate::geometry::AbsoluteAxis;
 use crate::geometry::Line;
 use crate::util::sys::Vec;
-use core::cmp::{max, min};
+use core::cmp::max;
 use core::fmt::Debug;
 use core::ops::Range;
 use grid::Grid;
@@ -90,9 +90,9 @@ impl CellOccupancyMatrix {
     /// Expands the grid (potentially in all 4 directions) in order to ensure that the specified range fits within the allocated space
     fn expand_to_fit_range(&mut self, row_range: Range<i16>, col_range: Range<i16>) {
         // Calculate number of rows and columns missing to accommodate ranges (if any)
-        let req_negative_rows = -min(row_range.start, 0);
+        let req_negative_rows = max(-row_range.start, 0);
         let req_positive_rows = max(row_range.end - self.rows.len() as i16, 0);
-        let req_negative_cols = -min(col_range.start, 0);
+        let req_negative_cols = max(-col_range.start, 0);
         let req_positive_cols = max(col_range.end - self.columns.len() as i16, 0);
 
         let old_row_count = self.rows.len();
@@ -209,11 +209,17 @@ impl CellOccupancyMatrix {
 
     /// Determines whether the specified row contains any items
     pub fn row_is_occupied(&self, row_index: usize) -> bool {
+        if row_index >= self.inner.rows() {
+            return false;
+        }
         self.inner.iter_row(row_index).any(|cell| !matches!(cell, CellOccupancyState::Unoccupied))
     }
 
     /// Determines whether the specified column contains any items
     pub fn column_is_occupied(&self, column_index: usize) -> bool {
+        if column_index >= self.inner.cols() {
+            return false;
+        }
         self.inner.iter_col(column_index).any(|cell| !matches!(cell, CellOccupancyState::Unoccupied))
     }
 
@@ -236,6 +242,11 @@ impl CellOccupancyMatrix {
     ) -> Option<OriginZeroLine> {
         let track_counts = self.track_counts(track_type.other_axis());
         let track_computed_index = track_counts.oz_line_to_next_track(start_at);
+
+        // Index out of boudnds: no track to search
+        if track_computed_index < 0 || track_computed_index >= self.inner.rows() as i16 {
+            return None;
+        }
 
         let maybe_index = match track_type {
             AbsoluteAxis::Horizontal => {

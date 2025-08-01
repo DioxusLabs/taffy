@@ -1,7 +1,5 @@
 //! This module is a partial implementation of the CSS Grid Level 1 specification
 //! <https://www.w3.org/TR/css-grid-1>
-use core::borrow::Borrow;
-
 use crate::geometry::{AbsoluteAxis, AbstractAxis, InBothAbsAxis};
 use crate::geometry::{Line, Point, Rect, Size};
 use crate::style::{AlignItems, AlignSelf, AvailableSpace, Overflow, Position};
@@ -15,13 +13,13 @@ use crate::{
     JustifyContent, LayoutGridContainer,
 };
 use alignment::{align_and_position_item, align_tracks};
-use explicit_grid::{compute_explicit_grid_size_in_axis, initialize_grid_tracks};
+use explicit_grid::{compute_explicit_grid_size_in_axis, initialize_grid_tracks, AutoRepeatStrategy};
 use implicit_grid::compute_grid_size_estimate;
 use placement::place_grid_items;
 use track_sizing::{
     determine_if_item_crosses_flexible_or_intrinsic_tracks, resolve_item_track_indexes, track_sizing_algorithm,
 };
-use types::{CellOccupancyMatrix, GridTrack};
+use types::{CellOccupancyMatrix, GridTrack, NamedLineResolver};
 
 #[cfg(feature = "detailed_layout_info")]
 use types::{GridItem, GridTrackKind, TrackCounts};
@@ -152,21 +150,42 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
         .maybe_max(padding_border_size)
         .maybe_sub(content_box_inset.sum_axes());
 
-    // Exactly compute the number of rows and columns in the explicit grid.
-    let explicit_col_count = compute_explicit_grid_size_in_axis(
+    // If the grid container has a definite size or max size in the relevant axis:
+    //   - then the number of repetitions is the largest possible positive integer that does not cause the grid to overflow the content
+    //     box of its grid container.
+    // Otherwise, if the grid container has a definite min size in the relevant axis:
+    //   - then the number of repetitions is the smallest possible positive integer that fulfills that minimum requirement
+    // Otherwise, the specified track list repeats only once.
+    let auto_repeat_fit_strategy = outer_node_size.or(max_size).map(|val| match val {
+        Some(_) => AutoRepeatStrategy::MaxRepetitionsThatDoNotOverflow,
+        None => AutoRepeatStrategy::MinRepetitionsThatDoOverflow,
+    });
+
+    // Compute the number of rows and columns in the explicit grid *template*
+    // (explicit tracks from grid_areas are computed separately below)
+    let (col_auto_repetition_count, grid_template_col_count) = compute_explicit_grid_size_in_axis(
         &style,
-        grid_template_columms.borrow(),
-        auto_fit_container_size,
+        auto_fit_container_size.width,
+        auto_repeat_fit_strategy.width,
         |val, basis| tree.calc(val, basis),
         AbsoluteAxis::Horizontal,
     );
-    let explicit_row_count = compute_explicit_grid_size_in_axis(
+    let (row_auto_repetition_count, grid_template_row_count) = compute_explicit_grid_size_in_axis(
         &style,
-        grid_template_rows.borrow(),
-        auto_fit_container_size,
+        auto_fit_container_size.height,
+        auto_repeat_fit_strategy.height,
         |val, basis| tree.calc(val, basis),
         AbsoluteAxis::Vertical,
     );
+
+    // type CustomIdent<'a> = <<Tree as LayoutPartialTree>::CoreContainerStyle<'_> as CoreStyle>::CustomIdent;
+    let mut name_resolver = NamedLineResolver::new(&style, col_auto_repetition_count, row_auto_repetition_count);
+
+    let explicit_col_count = grid_template_col_count.max(name_resolver.area_column_count());
+    let explicit_row_count = grid_template_row_count.max(name_resolver.area_row_count());
+
+    name_resolver.set_explicit_column_count(explicit_col_count);
+    name_resolver.set_explicit_row_count(explicit_row_count);
 
     // 3. Implicit Grid: Estimate Track Counts
     // Estimate the number of rows and columns in the implicit grid (= the entire grid)
@@ -193,6 +212,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
         style.grid_auto_flow(),
         align_items.unwrap_or(AlignItems::Stretch),
         justify_items.unwrap_or(AlignItems::Stretch),
+        &name_resolver,
     );
 
     // Extract track counts from previous step (auto-placement can expand the number of tracks)
@@ -204,22 +224,12 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     // This resolves the min and max track sizing functions for all tracks and gutters
     let mut columns = GridTrackVec::new();
     let mut rows = GridTrackVec::new();
-    initialize_grid_tracks(
-        &mut columns,
-        final_col_counts,
-        grid_template_columms.borrow(),
-        grid_auto_columms.borrow(),
-        style.gap().width,
-        |column_index| cell_occupancy_matrix.column_is_occupied(column_index),
-    );
-    initialize_grid_tracks(
-        &mut rows,
-        final_row_counts,
-        grid_template_rows.borrow(),
-        grid_auto_rows.borrow(),
-        style.gap().height,
-        |row_index| cell_occupancy_matrix.row_is_occupied(row_index),
-    );
+    initialize_grid_tracks(&mut columns, final_col_counts, &style, AbsoluteAxis::Horizontal, |column_index| {
+        cell_occupancy_matrix.column_is_occupied(column_index)
+    });
+    initialize_grid_tracks(&mut rows, final_row_counts, &style, AbsoluteAxis::Vertical, |row_index| {
+        cell_occupancy_matrix.row_is_occupied(row_index)
+    });
 
     drop(grid_template_rows);
     drop(grid_template_columms);
@@ -541,21 +551,21 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
         if child_style.position() == Position::Absolute {
             // Convert grid-col-{start/end} into Option's of indexes into the columns vector
             // The Option is None if the style property is Auto and an unresolvable Span
-            let maybe_col_indexes = child_style
-                .grid_column()
+            let maybe_col_indexes = name_resolver
+                .resolve_column_names(&child_style.grid_column())
                 .into_origin_zero(final_col_counts.explicit)
                 .resolve_absolutely_positioned_grid_tracks()
                 .map(|maybe_grid_line| {
-                    maybe_grid_line.map(|line: OriginZeroLine| line.into_track_vec_index(final_col_counts))
+                    maybe_grid_line.and_then(|line: OriginZeroLine| line.try_into_track_vec_index(final_col_counts))
                 });
             // Convert grid-row-{start/end} into Option's of indexes into the row vector
             // The Option is None if the style property is Auto and an unresolvable Span
-            let maybe_row_indexes = child_style
-                .grid_row()
+            let maybe_row_indexes = name_resolver
+                .resolve_row_names(&child_style.grid_row())
                 .into_origin_zero(final_row_counts.explicit)
                 .resolve_absolutely_positioned_grid_tracks()
                 .map(|maybe_grid_line| {
-                    maybe_grid_line.map(|line: OriginZeroLine| line.into_track_vec_index(final_row_counts))
+                    maybe_grid_line.and_then(|line: OriginZeroLine| line.try_into_track_vec_index(final_row_counts))
                 });
 
             let grid_area = Rect {

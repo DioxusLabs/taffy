@@ -2,6 +2,7 @@ mod common {
     pub mod image;
     pub mod text;
 }
+
 use common::image::{image_measure_function, ImageContext};
 use common::text::{text_measure_function, FontMetrics, TextContext, WritingMode, LOREM_IPSUM};
 use taffy::tree::Cache;
@@ -134,6 +135,8 @@ impl LayoutPartialTree for StatelessLayoutTree {
         = &'a Style
     where
         Self: 'a;
+
+    type CustomIdent = String;
 
     fn get_core_container_style(&self, node_id: NodeId) -> Self::CoreContainerStyle<'_> {
         unsafe { &node_from_id(node_id).style }

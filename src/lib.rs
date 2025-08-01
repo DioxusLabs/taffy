@@ -65,6 +65,11 @@
 #![deny(unsafe_code)]
 #![warn(missing_docs)]
 #![warn(clippy::missing_docs_in_private_items)]
+// Disable "unused_x" warnings when default features aren't enabled.
+#![cfg_attr(not(feature = "default"), allow(dead_code))]
+#![cfg_attr(not(feature = "default"), allow(unused_imports))]
+#![cfg_attr(not(feature = "default"), allow(unused_variables))]
+#![cfg_attr(not(feature = "default"), allow(unused_mut))]
 
 // We always need std for the tests
 // See <https://github.com/la10736/rstest/issues/149#issuecomment-1156402989>
