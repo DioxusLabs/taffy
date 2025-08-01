@@ -13,7 +13,7 @@ use common::image::{image_measure_function, ImageContext};
 use common::text::{text_measure_function, FontMetrics, TextContext, WritingMode, LOREM_IPSUM};
 use taffy::{
     compute_cached_layout, compute_flexbox_layout, compute_grid_layout, compute_leaf_layout, compute_root_layout,
-    prelude::*, Cache, CacheTree, Layout, Style,
+    prelude::*, Cache, CacheTree, DefaultUnits, Layout, Style,
 };
 
 #[derive(Debug, Copy, Clone)]
@@ -138,7 +138,7 @@ impl taffy::LayoutPartialTree for Node {
     where
         Self: 'a;
 
-    type CustomIdent = String;
+    type Units = DefaultUnits;
 
     fn get_core_container_style(&self, node_id: NodeId) -> Self::CoreContainerStyle<'_> {
         &self.node_from_id(node_id).style

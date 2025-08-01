@@ -1,7 +1,5 @@
 //! Style types for Flexbox layout
-use super::{
-    AlignContent, AlignItems, AlignSelf, CoreStyle, Dimension, JustifyContent, LengthPercentage, Style, Units,
-};
+use super::{AlignContent, AlignItems, AlignSelf, CoreStyle, Dimension, JustifyContent, LengthPercentage, Style};
 use crate::geometry::Size;
 
 /// The set of styles required for a Flexbox container
