@@ -4,7 +4,7 @@ use super::types::{CellOccupancyMatrix, CellOccupancyState, GridItem};
 use super::{NamedLineResolver, OriginZeroLine};
 use crate::geometry::Line;
 use crate::geometry::{AbsoluteAxis, InBothAbsAxis};
-use crate::style::{AlignItems, GridAutoFlow, OriginZeroGridPlacement, Units};
+use crate::style::{AlignItems, GridAutoFlow, OriginZeroGridPlacement};
 use crate::tree::NodeId;
 use crate::util::sys::Vec;
 use crate::GridItemStyle;
@@ -20,7 +20,7 @@ pub(super) fn place_grid_items<'a, S, ChildIter>(
     grid_auto_flow: GridAutoFlow,
     align_items: AlignItems,
     justify_items: AlignItems,
-    named_line_resolver: &NamedLineResolver<<S::Units as Units>::Str>,
+    named_line_resolver: &NamedLineResolver<S::Units>,
 ) where
     S: GridItemStyle + 'a,
     ChildIter: Iterator<Item = (usize, NodeId, S)>,
