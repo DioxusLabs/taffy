@@ -231,7 +231,7 @@ impl<S: CheapCloneStr> NamedLineResolver<S> {
             GridPlacement::Auto => NonNamedGridPlacement::Auto,
             GridPlacement::Line(grid_line) => NonNamedGridPlacement::Line(*grid_line),
             GridPlacement::Span(span) => NonNamedGridPlacement::Span(*span),
-            GridPlacement::Named(name, idx) => {
+            GridPlacement::NamedLine(name, idx) => {
                 let name = name.as_ref();
                 let mut idx = *idx;
                 let explicit_track_count = match axis {

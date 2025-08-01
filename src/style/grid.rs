@@ -350,10 +350,10 @@ pub enum GridPlacement<S: CheapCloneStr = DefaultCheapStr> {
     Auto,
     /// Place item at specified line (column or row) index
     Line(GridLine),
+    /// Place item at specified named line (column or row)
+    NamedLine(S, i16),
     /// Item should span specified number of tracks (columns or rows)
     Span(u16),
-    /// A named grid line
-    Named(S, i16),
 }
 impl<S: CheapCloneStr> TaffyAuto for GridPlacement<S> {
     const AUTO: Self = Self::Auto;
@@ -397,7 +397,7 @@ impl<S: CheapCloneStr> GridPlacement<S> {
                 0 => OriginZeroGridPlacement::Auto,
                 _ => OriginZeroGridPlacement::Line(line.into_origin_zero_line(explicit_track_count)),
             },
-            Self::Named(_, _) => OriginZeroGridPlacement::Auto,
+            Self::NamedLine(_, _) => OriginZeroGridPlacement::Auto,
         }
     }
 
@@ -416,7 +416,7 @@ impl<S: CheapCloneStr> GridPlacement<S> {
                 0 => OriginZeroGridPlacement::Auto,
                 _ => OriginZeroGridPlacement::Line(line.into_origin_zero_line(explicit_track_count)),
             },
-            Self::Named(name, idx) => {
+            Self::NamedLine(name, idx) => {
                 let line = resolve_named(name.as_ref(), *idx).unwrap_or(GridLine::from(0));
                 match line.as_i16() {
                     0 => OriginZeroGridPlacement::Auto,
@@ -485,8 +485,8 @@ impl<S: CheapCloneStr> Line<GridPlacement<S>> {
         match (&self.start, &self.end) {
             (GridPlacement::Line(line), _) if line.as_i16() != 0 => true,
             (_, GridPlacement::Line(line)) if line.as_i16() != 0 => true,
-            (GridPlacement::Named(_, _), _) => true,
-            (_, GridPlacement::Named(_, _)) => true,
+            (GridPlacement::NamedLine(_, _), _) => true,
+            (_, GridPlacement::NamedLine(_, _)) => true,
             _ => false,
         }
     }
