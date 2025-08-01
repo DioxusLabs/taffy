@@ -60,6 +60,25 @@ impl<T> CheapCloneStr for T where
 {
 }
 
+/// Allows Taffy to abstract of the types it uses to represent strings and calc expressions.
+/// In future it may be extended to abstract the scalar number type (currently f32)
+pub trait Units {
+    /// Trait that represents a cheaply clonable string. If you're unsure what to use here
+    /// consider `Arc<str>` or `string_cache::Atom`.
+    type Str: CheapCloneStr;
+
+    /// Type representing a calc expression.
+    /// If you're not using Calc then you can just use `()`
+    type Calc: 'static;
+}
+
+pub struct DefaultUnits;
+
+impl Units for DefaultUnits {
+    type Str = String;
+    type Calc = ();
+}
+
 /// Trait that represents a cheaply clonable string. If you're unsure what to use here
 /// consider `Arc<str>` or `string_cache::Atom`.
 #[cfg(not(any(feature = "alloc", feature = "std")))]
@@ -74,7 +93,7 @@ impl<T> CheapCloneStr for T {}
 /// to override the default implementation for each style property that your style type actually supports.
 pub trait CoreStyle {
     /// The type of custom identifiers used to identify named grid lines and areas
-    type CustomIdent: CheapCloneStr;
+    type Units: Units;
 
     /// Which box generation mode should be used
     #[inline(always)]
@@ -102,7 +121,7 @@ pub trait CoreStyle {
     /// How children overflowing their container should affect layout
     #[inline(always)]
     fn overflow(&self) -> Point<Overflow> {
-        Style::<Self::CustomIdent>::DEFAULT.overflow
+        Style::<Self::Units>::DEFAULT.overflow
     }
     /// How much space (in points) should be reserved for the scrollbars of `Overflow::Scroll` and `Overflow::Auto` nodes.
     #[inline(always)]
@@ -114,52 +133,52 @@ pub trait CoreStyle {
     /// What should the `position` value of this struct use as a base offset?
     #[inline(always)]
     fn position(&self) -> Position {
-        Style::<Self::CustomIdent>::DEFAULT.position
+        Style::<Self::Units>::DEFAULT.position
     }
     /// How should the position of this element be tweaked relative to the layout defined?
     #[inline(always)]
     fn inset(&self) -> Rect<LengthPercentageAuto> {
-        Style::<Self::CustomIdent>::DEFAULT.inset
+        Style::<Self::Units>::DEFAULT.inset
     }
 
     // Size properies
     /// Sets the initial size of the item
     #[inline(always)]
     fn size(&self) -> Size<Dimension> {
-        Style::<Self::CustomIdent>::DEFAULT.size
+        Style::<Self::Units>::DEFAULT.size
     }
     /// Controls the minimum size of the item
     #[inline(always)]
     fn min_size(&self) -> Size<Dimension> {
-        Style::<Self::CustomIdent>::DEFAULT.min_size
+        Style::<Self::Units>::DEFAULT.min_size
     }
     /// Controls the maximum size of the item
     #[inline(always)]
     fn max_size(&self) -> Size<Dimension> {
-        Style::<Self::CustomIdent>::DEFAULT.max_size
+        Style::<Self::Units>::DEFAULT.max_size
     }
     /// Sets the preferred aspect ratio for the item
     /// The ratio is calculated as width divided by height.
     #[inline(always)]
     fn aspect_ratio(&self) -> Option<f32> {
-        Style::<Self::CustomIdent>::DEFAULT.aspect_ratio
+        Style::<Self::Units>::DEFAULT.aspect_ratio
     }
 
     // Spacing Properties
     /// How large should the margin be on each side?
     #[inline(always)]
     fn margin(&self) -> Rect<LengthPercentageAuto> {
-        Style::<Self::CustomIdent>::DEFAULT.margin
+        Style::<Self::Units>::DEFAULT.margin
     }
     /// How large should the padding be on each side?
     #[inline(always)]
     fn padding(&self) -> Rect<LengthPercentage> {
-        Style::<Self::CustomIdent>::DEFAULT.padding
+        Style::<Self::Units>::DEFAULT.padding
     }
     /// How large should the border be on each side?
     #[inline(always)]
     fn border(&self) -> Rect<LengthPercentage> {
-        Style::<Self::CustomIdent>::DEFAULT.border
+        Style::<Self::Units>::DEFAULT.border
     }
 }
 
@@ -370,10 +389,10 @@ impl Overflow {
 #[derive(Clone, PartialEq, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "serde", serde(default))]
-pub struct Style<S: CheapCloneStr = DefaultCheapStr> {
+pub struct Style<U: Units = DefaultCheapStr> {
     /// This is a dummy field which is necessary to make Taffy compile with the `grid` feature disabled
     /// It should always be set to `core::marker::PhantomData`.
-    pub dummy: core::marker::PhantomData<S>,
+    pub dummy: core::marker::PhantomData<U>,
     /// What layout strategy should be used?
     pub display: Display,
     /// Whether a child is display:table or not. This affects children of block layouts.
@@ -481,10 +500,10 @@ pub struct Style<S: CheapCloneStr = DefaultCheapStr> {
     // Grid container properies
     /// Defines the track sizing functions (heights) of the grid rows
     #[cfg(feature = "grid")]
-    pub grid_template_rows: GridTrackVec<GridTemplateComponent<S>>,
+    pub grid_template_rows: GridTrackVec<GridTemplateComponent<U::Str>>,
     /// Defines the track sizing functions (widths) of the grid columns
     #[cfg(feature = "grid")]
-    pub grid_template_columns: GridTrackVec<GridTemplateComponent<S>>,
+    pub grid_template_columns: GridTrackVec<GridTemplateComponent<U::Str>>,
     /// Defines the size of implicitly created rows
     #[cfg(feature = "grid")]
     pub grid_auto_rows: GridTrackVec<TrackSizingFunction>,
@@ -498,26 +517,26 @@ pub struct Style<S: CheapCloneStr = DefaultCheapStr> {
     // Grid container named properties
     /// Defines the rectangular grid areas
     #[cfg(feature = "grid")]
-    pub grid_template_areas: GridTrackVec<GridTemplateArea<S>>,
+    pub grid_template_areas: GridTrackVec<GridTemplateArea<U::Str>>,
     /// The named lines between the columns
     #[cfg(feature = "grid")]
-    pub grid_template_column_names: GridTrackVec<GridTrackVec<S>>,
+    pub grid_template_column_names: GridTrackVec<GridTrackVec<U>>,
     /// The named lines between the rows
     #[cfg(feature = "grid")]
-    pub grid_template_row_names: GridTrackVec<GridTrackVec<S>>,
+    pub grid_template_row_names: GridTrackVec<GridTrackVec<U>>,
 
     // Grid child properties
     /// Defines which row in the grid the item should start and end at
     #[cfg(feature = "grid")]
-    pub grid_row: Line<GridPlacement<S>>,
+    pub grid_row: Line<GridPlacement<U::Str>>,
     /// Defines which column in the grid the item should start and end at
     #[cfg(feature = "grid")]
-    pub grid_column: Line<GridPlacement<S>>,
+    pub grid_column: Line<GridPlacement<U::Str>>,
 }
 
-impl<S: CheapCloneStr> Style<S> {
+impl<U: Units> Style<U> {
     /// The [`Default`] layout, in a form that can be used in const functions
-    pub const DEFAULT: Style<S> = Style {
+    pub const DEFAULT: Style<U> = Style {
         dummy: core::marker::PhantomData,
         display: Display::DEFAULT,
         item_is_table: false,
@@ -581,20 +600,20 @@ impl<S: CheapCloneStr> Style<S> {
         #[cfg(feature = "grid")]
         grid_auto_flow: GridAutoFlow::Row,
         #[cfg(feature = "grid")]
-        grid_row: Line { start: GridPlacement::<S>::Auto, end: GridPlacement::<S>::Auto },
+        grid_row: Line { start: GridPlacement::<U>::Auto, end: GridPlacement::<U>::Auto },
         #[cfg(feature = "grid")]
-        grid_column: Line { start: GridPlacement::<S>::Auto, end: GridPlacement::<S>::Auto },
+        grid_column: Line { start: GridPlacement::<U>::Auto, end: GridPlacement::<U>::Auto },
     };
 }
 
-impl<S: CheapCloneStr> Default for Style<S> {
+impl<U: Units> Default for Style<U> {
     fn default() -> Self {
         Style::DEFAULT
     }
 }
 
-impl<S: CheapCloneStr> CoreStyle for Style<S> {
-    type CustomIdent = S;
+impl<U: Units> CoreStyle for Style<U> {
+    type Units = U;
 
     #[inline(always)]
     fn box_generation_mode(&self) -> BoxGenerationMode {
@@ -663,7 +682,7 @@ impl<S: CheapCloneStr> CoreStyle for Style<S> {
 }
 
 impl<T: CoreStyle> CoreStyle for &'_ T {
-    type CustomIdent = T::CustomIdent;
+    type Units = T::Units;
 
     #[inline(always)]
     fn box_generation_mode(&self) -> BoxGenerationMode {
@@ -728,7 +747,7 @@ impl<T: CoreStyle> CoreStyle for &'_ T {
 }
 
 #[cfg(feature = "block_layout")]
-impl<S: CheapCloneStr> BlockContainerStyle for Style<S> {
+impl<U: Units> BlockContainerStyle for Style<U> {
     #[inline(always)]
     fn text_align(&self) -> TextAlign {
         self.text_align
@@ -744,7 +763,7 @@ impl<T: BlockContainerStyle> BlockContainerStyle for &'_ T {
 }
 
 #[cfg(feature = "block_layout")]
-impl<S: CheapCloneStr> BlockItemStyle for Style<S> {
+impl<U: Units> BlockItemStyle for Style<U> {
     #[inline(always)]
     fn is_table(&self) -> bool {
         self.item_is_table
@@ -760,7 +779,7 @@ impl<T: BlockItemStyle> BlockItemStyle for &'_ T {
 }
 
 #[cfg(feature = "flexbox")]
-impl<S: CheapCloneStr> FlexboxContainerStyle for Style<S> {
+impl<U: Units> FlexboxContainerStyle for Style<U> {
     #[inline(always)]
     fn flex_direction(&self) -> FlexDirection {
         self.flex_direction
@@ -816,7 +835,7 @@ impl<T: FlexboxContainerStyle> FlexboxContainerStyle for &'_ T {
 }
 
 #[cfg(feature = "flexbox")]
-impl<S: CheapCloneStr> FlexboxItemStyle for Style<S> {
+impl<U: Units> FlexboxItemStyle for Style<U> {
     #[inline(always)]
     fn flex_basis(&self) -> Dimension {
         self.flex_basis
@@ -856,16 +875,18 @@ impl<T: FlexboxItemStyle> FlexboxItemStyle for &'_ T {
 }
 
 #[cfg(feature = "grid")]
-impl<S: CheapCloneStr> GridContainerStyle for Style<S> {
+impl<U: Units> GridContainerStyle for Style<U> {
     type Repetition<'a>
-        = &'a GridTemplateRepetition<S>
+        = &'a GridTemplateRepetition<U::Str>
     where
         Self: 'a;
 
     type TemplateTrackList<'a>
         = core::iter::Map<
-        core::slice::Iter<'a, GridTemplateComponent<S>>,
-        fn(&'a GridTemplateComponent<S>) -> GenericGridTemplateComponent<S, &'a GridTemplateRepetition<S>>,
+        core::slice::Iter<'a, GridTemplateComponent<U::Str>>,
+        fn(
+            &'a GridTemplateComponent<U::Str>,
+        ) -> GenericGridTemplateComponent<U::Str, &'a GridTemplateRepetition<U::Str>>,
     >
     where
         Self: 'a;
@@ -877,12 +898,15 @@ impl<S: CheapCloneStr> GridContainerStyle for Style<S> {
 
     #[cfg(feature = "grid")]
     type TemplateLineNames<'a>
-        = core::iter::Map<core::slice::Iter<'a, GridTrackVec<S>>, fn(&GridTrackVec<S>) -> core::slice::Iter<'_, S>>
+        = core::iter::Map<
+        core::slice::Iter<'a, GridTrackVec<U::Str>>,
+        fn(&GridTrackVec<U::Str>) -> core::slice::Iter<'_, U::Str>,
+    >
     where
         Self: 'a;
     #[cfg(feature = "grid")]
     type GridTemplateAreas<'a>
-        = core::iter::Cloned<core::slice::Iter<'a, GridTemplateArea<S>>>
+        = core::iter::Cloned<core::slice::Iter<'a, GridTemplateArea<U::Str>>>
     where
         Self: 'a;
 
@@ -1033,14 +1057,14 @@ impl<T: GridContainerStyle> GridContainerStyle for &'_ T {
 }
 
 #[cfg(feature = "grid")]
-impl<S: CheapCloneStr> GridItemStyle for Style<S> {
+impl<U: Units> GridItemStyle for Style<U> {
     #[inline(always)]
-    fn grid_row(&self) -> Line<GridPlacement<S>> {
+    fn grid_row(&self) -> Line<GridPlacement<U::Str>> {
         // TODO: Investigate eliminating clone
         self.grid_row.clone()
     }
     #[inline(always)]
-    fn grid_column(&self) -> Line<GridPlacement<S>> {
+    fn grid_column(&self) -> Line<GridPlacement<U::Str>> {
         // TODO: Investigate eliminating clone
         self.grid_column.clone()
     }
@@ -1057,11 +1081,11 @@ impl<S: CheapCloneStr> GridItemStyle for Style<S> {
 #[cfg(feature = "grid")]
 impl<T: GridItemStyle> GridItemStyle for &'_ T {
     #[inline(always)]
-    fn grid_row(&self) -> Line<GridPlacement<Self::CustomIdent>> {
+    fn grid_row(&self) -> Line<GridPlacement<<T::Units as Units>::Str>> {
         (*self).grid_row()
     }
     #[inline(always)]
-    fn grid_column(&self) -> Line<GridPlacement<Self::CustomIdent>> {
+    fn grid_column(&self) -> Line<GridPlacement<<T::Units as Units>::Str>> {
         (*self).grid_column()
     }
     #[inline(always)]
@@ -1213,7 +1237,7 @@ mod tests {
         assert_type_size::<MaxTrackSizingFunction>(8);
         assert_type_size::<TrackSizingFunction>(16);
         assert_type_size::<Vec<TrackSizingFunction>>(24);
-        assert_type_size::<Vec<GridTemplateComponent<S>>>(24);
+        assert_type_size::<Vec<GridTemplateComponent<U>>>(24);
 
         // String-type dependent (String)
         assert_type_size::<GridTemplateComponent<String>>(56);
