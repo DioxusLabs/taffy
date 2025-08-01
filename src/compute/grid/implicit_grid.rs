@@ -169,9 +169,7 @@ fn child_min_line_max_line_span<S: CheapCloneStr>(
 #[cfg(test)]
 mod tests {
     mod test_child_min_max_line {
-        use std::sync::Arc;
-        type S = Arc<str>;
-
+        type S = String;
         use super::super::child_min_line_max_line_span;
         use super::super::OriginZeroLine;
         use crate::geometry::Line;
