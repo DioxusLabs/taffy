@@ -354,6 +354,11 @@ pub enum GridPlacement<S: CheapCloneStr = DefaultCheapStr> {
     NamedLine(S, i16),
     /// Item should span specified number of tracks (columns or rows)
     Span(u16),
+    /// Item should span until the nth line named <name>.
+    ///
+    /// If there are less than n lines named <name> in the specified direction then
+    /// all implicit lines will be counted.
+    NamedSpan(S, u16),
 }
 impl<S: CheapCloneStr> TaffyAuto for GridPlacement<S> {
     const AUTO: Self = Self::Auto;
@@ -398,31 +403,7 @@ impl<S: CheapCloneStr> GridPlacement<S> {
                 _ => OriginZeroGridPlacement::Line(line.into_origin_zero_line(explicit_track_count)),
             },
             Self::NamedLine(_, _) => OriginZeroGridPlacement::Auto,
-        }
-    }
-
-    /// Apply a mapping function if the [`GridPlacement`] is a `Track`. Otherwise return `self` unmodified.
-    pub fn into_origin_zero_placement(
-        &self,
-        explicit_track_count: u16,
-        resolve_named: impl Fn(&str, i16) -> Option<GridLine>,
-    ) -> OriginZeroGridPlacement {
-        match self {
-            Self::Auto => OriginZeroGridPlacement::Auto,
-            Self::Span(span) => OriginZeroGridPlacement::Span(*span),
-            // Grid line zero is an invalid index, so it gets treated as Auto
-            // See: https://developer.mozilla.org/en-US/docs/Web/CSS/grid-row-start#values
-            Self::Line(line) => match line.as_i16() {
-                0 => OriginZeroGridPlacement::Auto,
-                _ => OriginZeroGridPlacement::Line(line.into_origin_zero_line(explicit_track_count)),
-            },
-            Self::NamedLine(name, idx) => {
-                let line = resolve_named(name.as_ref(), *idx).unwrap_or(GridLine::from(0));
-                match line.as_i16() {
-                    0 => OriginZeroGridPlacement::Auto,
-                    _ => OriginZeroGridPlacement::Line(line.into_origin_zero_line(explicit_track_count)),
-                }
-            }
+            Self::NamedSpan(_, _) => OriginZeroGridPlacement::Auto,
         }
     }
 }

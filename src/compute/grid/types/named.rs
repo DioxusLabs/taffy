@@ -1,8 +1,8 @@
 //! Code for resolving name grid lines and areas
 
 use crate::{
-    CheapCloneStr, GenericGridPlacement, GenericGridTemplateComponent, GenericRepetition as _, GridAreaAxis,
-    GridAreaEnd, GridContainerStyle, GridPlacement, GridTemplateArea, Line, NonNamedGridPlacement, RepetitionCount,
+    CheapCloneStr, GenericGridTemplateComponent, GenericRepetition as _, GridAreaAxis, GridAreaEnd, GridContainerStyle,
+    GridPlacement, GridTemplateArea, Line, NonNamedGridPlacement, RepetitionCount,
 };
 use core::{borrow::Borrow, cmp::Ordering, fmt::Debug};
 
@@ -214,106 +214,159 @@ impl<S: CheapCloneStr> NamedLineResolver<S> {
         line: &Line<GridPlacement<S>>,
         axis: GridAreaAxis,
     ) -> Line<NonNamedGridPlacement> {
-        Line {
-            start: self.resolve_line_name(&line.start, axis, GridAreaEnd::Start),
-            end: self.resolve_line_name(&line.end, axis, GridAreaEnd::End),
-        }
-    }
+        let start_holder;
+        let start_line_resolved = if let GridPlacement::NamedLine(name, idx) = &line.start {
+            start_holder =
+                GridPlacement::Line(self.find_line_index(name, *idx, axis, GridAreaEnd::Start, &|lines| lines));
+            &start_holder
+        } else {
+            &line.start
+        };
 
-    /// Resolve named lines for a single grid placement
-    pub(crate) fn resolve_line_name(
-        &self,
-        placement: &GridPlacement<S>,
-        axis: GridAreaAxis,
-        end: GridAreaEnd,
-    ) -> NonNamedGridPlacement {
-        match placement {
-            GridPlacement::Auto => NonNamedGridPlacement::Auto,
-            GridPlacement::Line(grid_line) => NonNamedGridPlacement::Line(*grid_line),
-            GridPlacement::Span(span) => NonNamedGridPlacement::Span(*span),
-            GridPlacement::NamedLine(name, idx) => {
-                let name = name.as_ref();
-                let mut idx = *idx;
+        let end_holder;
+        let end_line_resolved = if let GridPlacement::NamedLine(name, idx) = &line.end {
+            end_holder = GridPlacement::Line(self.find_line_index(name, *idx, axis, GridAreaEnd::End, &|lines| lines));
+            &end_holder
+        } else {
+            &line.end
+        };
+
+        // If both the *-start and *-end values of its grid-placement properties specify a line, its grid span is implicit.
+        // If it has an explicit span value, its grid span is explicit.
+        // Otherwise, its grid span is automatic:
+        //   - if it is subgridded in that axis, its grid span is determined from its <line-name-list>;
+        //   - otherwise its grid span is 1.
+        //
+        // <https://drafts.csswg.org/css-grid-2/#grid-span>
+        match (&start_line_resolved, &end_line_resolved) {
+            (GridPlacement::Line(start_line), GridPlacement::NamedSpan(name, idx)) => {
                 let explicit_track_count = match axis {
                     GridAreaAxis::Row => self.explicit_row_count as i16,
                     GridAreaAxis::Column => self.explicit_column_count as i16,
                 };
-
-                // An index of 0 is used to represent "no index specified".
-                let original_idx = idx;
-                if idx == 0 {
-                    idx = 1;
-                }
-
-                fn get_line(lines: &[u16], explicit_track_count: i16, idx: i16) -> i16 {
-                    let abs_idx = idx.abs();
-                    let enough_lines = abs_idx <= lines.len() as i16;
-                    if enough_lines {
-                        if idx > 0 {
-                            lines[(abs_idx - 1) as usize] as i16
-                        } else {
-                            lines[lines.len() - (abs_idx) as usize] as i16
-                        }
-                    } else {
-                        let remaining_lines = (abs_idx - lines.len() as i16) * idx.signum();
-                        if idx > 0 {
-                            (explicit_track_count + 2) + remaining_lines
-                        } else {
-                            -((explicit_track_count + 2) + remaining_lines)
-                        }
-                    }
-                }
-
-                // Lookup lines
-                let line_lookup = match axis {
-                    GridAreaAxis::Row => &self.row_lines,
-                    GridAreaAxis::Column => &self.column_lines,
-                };
-                if let Some(lines) = line_lookup.get(name) {
-                    return GenericGridPlacement::Line(GridLine::from(get_line(lines, explicit_track_count, idx)));
+                let normalized_start_line = if start_line.as_i16() > 0 {
+                    start_line.as_i16() as u16
                 } else {
-                    // TODO: eliminate string allocations
-                    match end {
-                        GridAreaEnd::Start => {
-                            let implicit_name = format!("{name}-start");
-                            if let Some(lines) = line_lookup.get(&*implicit_name) {
-                                // println!("IMPLICIT COL {implicit_name}");
-                                return GenericGridPlacement::Line(GridLine::from(get_line(
-                                    lines,
-                                    explicit_track_count,
-                                    idx,
-                                )));
-                            }
-                        }
-                        GridAreaEnd::End => {
-                            let implicit_name = format!("{name}-end");
-                            if let Some(lines) = line_lookup.get(&*implicit_name) {
-                                // println!("IMPLICIT ROW {implicit_name}");
-                                return GenericGridPlacement::Line(GridLine::from(get_line(
-                                    lines,
-                                    explicit_track_count,
-                                    idx,
-                                )));
-                            }
-                        }
-                    }
-                }
-
-                // The CSS Grid specification has a weird quirk where it matches non-existent line names
-                // to the first (positive) implicit line in the grid
-                //
-                // We add/subtract 2 to the explicit track count because (in each axis) a grid has one more explicit
-                // grid line than it has tracks. And the fallback line is the line *after* that.
-                //
-                // See: <https://github.com/w3c/csswg-drafts/issues/966#issuecomment-277042153>
-                let line = if idx > 0 {
-                    (explicit_track_count + 2) + original_idx
-                } else {
-                    -((explicit_track_count + 2) + original_idx)
+                    (explicit_track_count + 1 + start_line.as_i16()).max(0) as u16
                 };
-                GenericGridPlacement::Line(GridLine::from(line))
+                let end_line = self.find_line_index(name, *idx as i16, axis, GridAreaEnd::End, &|lines| {
+                    let point = lines.partition_point(|line| *line <= normalized_start_line);
+                    &lines[point..]
+                });
+                Line { start: NonNamedGridPlacement::Line(*start_line), end: NonNamedGridPlacement::Line(end_line) }
+            }
+            (GridPlacement::NamedSpan(name, idx), GridPlacement::Line(end_line)) => {
+                let explicit_track_count = match axis {
+                    GridAreaAxis::Row => self.explicit_row_count as i16,
+                    GridAreaAxis::Column => self.explicit_column_count as i16,
+                };
+                let normalized_end_line = if end_line.as_i16() > 0 {
+                    end_line.as_i16() as u16
+                } else {
+                    (explicit_track_count + 1 + end_line.as_i16()).max(0) as u16
+                };
+                let start_line = self.find_line_index(name, *idx as i16, axis, GridAreaEnd::Start, &|lines| {
+                    let point = lines.partition_point(|line| *line < normalized_end_line);
+                    &lines[..point]
+                });
+                Line { start: NonNamedGridPlacement::Line(start_line), end: NonNamedGridPlacement::Line(*end_line) }
+            }
+            (start, end) => Line {
+                start: match start {
+                    GridPlacement::Auto => NonNamedGridPlacement::Auto,
+                    GridPlacement::Line(grid_line) => NonNamedGridPlacement::Line(*grid_line),
+                    GridPlacement::Span(span) => NonNamedGridPlacement::Span(*span),
+                    GridPlacement::NamedSpan(_, _) => NonNamedGridPlacement::Span(1),
+                    _ => unreachable!(),
+                },
+                end: match end {
+                    GridPlacement::Auto => NonNamedGridPlacement::Auto,
+                    GridPlacement::Line(grid_line) => NonNamedGridPlacement::Line(*grid_line),
+                    GridPlacement::Span(span) => NonNamedGridPlacement::Span(*span),
+                    GridPlacement::NamedSpan(_, _) => NonNamedGridPlacement::Span(1),
+                    _ => unreachable!(),
+                },
+            },
+        }
+    }
+
+    /// Resolve the grid line for a named grid line or span
+    fn find_line_index(
+        &self,
+        name: &S,
+        idx: i16,
+        axis: GridAreaAxis,
+        end: GridAreaEnd,
+        filter_lines: &dyn Fn(&[u16]) -> &[u16],
+    ) -> GridLine {
+        let name = name.as_ref();
+        let mut idx = idx;
+        let explicit_track_count = match axis {
+            GridAreaAxis::Row => self.explicit_row_count as i16,
+            GridAreaAxis::Column => self.explicit_column_count as i16,
+        };
+
+        // An index of 0 is used to represent "no index specified".
+        if idx == 0 {
+            idx = 1;
+        }
+
+        fn get_line(lines: &[u16], explicit_track_count: i16, idx: i16) -> i16 {
+            let abs_idx = idx.abs();
+            let enough_lines = abs_idx <= lines.len() as i16;
+            if enough_lines {
+                if idx > 0 {
+                    lines[(abs_idx - 1) as usize] as i16
+                } else {
+                    lines[lines.len() - (abs_idx) as usize] as i16
+                }
+            } else {
+                let remaining_lines = (abs_idx - lines.len() as i16) * idx.signum();
+                if idx > 0 {
+                    (explicit_track_count + 1) + remaining_lines
+                } else {
+                    -((explicit_track_count + 1) + remaining_lines)
+                }
             }
         }
+
+        // Lookup lines
+        let line_lookup = match axis {
+            GridAreaAxis::Row => &self.row_lines,
+            GridAreaAxis::Column => &self.column_lines,
+        };
+        if let Some(lines) = line_lookup.get(name) {
+            return GridLine::from(get_line(filter_lines(lines), explicit_track_count, idx));
+        } else {
+            // TODO: eliminate string allocations
+            match end {
+                GridAreaEnd::Start => {
+                    let implicit_name = format!("{name}-start");
+                    if let Some(lines) = line_lookup.get(&*implicit_name) {
+                        // println!("IMPLICIT COL {implicit_name}");
+                        return GridLine::from(get_line(filter_lines(lines), explicit_track_count, idx));
+                    }
+                }
+                GridAreaEnd::End => {
+                    let implicit_name = format!("{name}-end");
+                    if let Some(lines) = line_lookup.get(&*implicit_name) {
+                        // println!("IMPLICIT ROW {implicit_name}");
+                        return GridLine::from(get_line(filter_lines(lines), explicit_track_count, idx));
+                    }
+                }
+            }
+        }
+
+        // The CSS Grid specification has a weird quirk where it matches non-existent line names
+        // to the first (positive) implicit line in the grid
+        //
+        // We add/subtract 2 to the explicit track count because (in each axis) a grid has one more explicit
+        // grid line than it has tracks. And the fallback line is the line *after* that.
+        //
+        // See: <https://github.com/w3c/csswg-drafts/issues/966#issuecomment-277042153>
+        let line = if idx > 0 { (explicit_track_count + 1) + idx } else { -((explicit_track_count + 1) + idx) };
+
+        GridLine::from(line)
     }
 
     /// Get the number of columns defined by the grid areas
