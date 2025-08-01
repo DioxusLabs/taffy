@@ -15,7 +15,6 @@ pub use self::alignment::{AlignContent, AlignItems, AlignSelf, JustifyContent, J
 pub use self::available_space::AvailableSpace;
 pub use self::compact_length::CompactLength;
 pub use self::dimension::{Dimension, LengthPercentage, LengthPercentageAuto};
-use crate::sys::DefaultCheapStr;
 
 #[cfg(feature = "block_layout")]
 pub use self::block::{BlockContainerStyle, BlockItemStyle, TextAlign};
@@ -60,6 +59,10 @@ impl<T> CheapCloneStr for T where
 {
 }
 
+/// Trait that represent a `calc()` expression
+pub trait Calc: Clone + Debug + 'static {}
+impl<T> Calc for T where T: Clone + Debug + 'static {}
+
 /// Allows Taffy to abstract of the types it uses to represent strings and calc expressions.
 /// In future it may be extended to abstract the scalar number type (currently f32)
 pub trait Units {
@@ -69,9 +72,11 @@ pub trait Units {
 
     /// Type representing a calc expression.
     /// If you're not using Calc then you can just use `()`
-    type Calc: 'static;
+    type Calc: Calc;
 }
 
+/// A default implementation of the [`Units`] trait
+#[derive(Debug, Copy, Clone, Default, Eq, PartialEq)]
 pub struct DefaultUnits;
 
 impl Units for DefaultUnits {
@@ -389,7 +394,7 @@ impl Overflow {
 #[derive(Clone, PartialEq, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "serde", serde(default))]
-pub struct Style<U: Units = DefaultCheapStr> {
+pub struct Style<U: Units = DefaultUnits> {
     /// This is a dummy field which is necessary to make Taffy compile with the `grid` feature disabled
     /// It should always be set to `core::marker::PhantomData`.
     pub dummy: core::marker::PhantomData<U>,
@@ -520,10 +525,10 @@ pub struct Style<U: Units = DefaultCheapStr> {
     pub grid_template_areas: GridTrackVec<GridTemplateArea<U::Str>>,
     /// The named lines between the columns
     #[cfg(feature = "grid")]
-    pub grid_template_column_names: GridTrackVec<GridTrackVec<U>>,
+    pub grid_template_column_names: GridTrackVec<GridTrackVec<U::Str>>,
     /// The named lines between the rows
     #[cfg(feature = "grid")]
-    pub grid_template_row_names: GridTrackVec<GridTrackVec<U>>,
+    pub grid_template_row_names: GridTrackVec<GridTrackVec<U::Str>>,
 
     // Grid child properties
     /// Defines which row in the grid the item should start and end at
@@ -600,9 +605,9 @@ impl<U: Units> Style<U> {
         #[cfg(feature = "grid")]
         grid_auto_flow: GridAutoFlow::Row,
         #[cfg(feature = "grid")]
-        grid_row: Line { start: GridPlacement::<U>::Auto, end: GridPlacement::<U>::Auto },
+        grid_row: Line { start: GridPlacement::<U::Str>::Auto, end: GridPlacement::<U::Str>::Auto },
         #[cfg(feature = "grid")]
-        grid_column: Line { start: GridPlacement::<U>::Auto, end: GridPlacement::<U>::Auto },
+        grid_column: Line { start: GridPlacement::<U::Str>::Auto, end: GridPlacement::<U::Str>::Auto },
     };
 }
 
@@ -1103,7 +1108,7 @@ mod tests {
     use std::sync::Arc;
 
     use super::Style;
-    use crate::sys::DefaultCheapStr;
+    use crate::DefaultUnits;
     use crate::{geometry::*, style_helpers::TaffyAuto as _};
 
     #[test]
@@ -1111,7 +1116,7 @@ mod tests {
         #[cfg(feature = "grid")]
         use super::GridPlacement;
 
-        let old_defaults: Style<DefaultCheapStr> = Style {
+        let old_defaults: Style<DefaultUnits> = Style {
             dummy: core::marker::PhantomData,
             display: Default::default(),
             item_is_table: false,
@@ -1175,7 +1180,7 @@ mod tests {
             grid_column: Line { start: GridPlacement::Auto, end: GridPlacement::Auto },
         };
 
-        assert_eq!(Style::DEFAULT, Style::<DefaultCheapStr>::default());
+        assert_eq!(Style::DEFAULT, Style::<DefaultUnits>::default());
         assert_eq!(Style::DEFAULT, old_defaults);
     }
 
@@ -1237,18 +1242,19 @@ mod tests {
         assert_type_size::<MaxTrackSizingFunction>(8);
         assert_type_size::<TrackSizingFunction>(16);
         assert_type_size::<Vec<TrackSizingFunction>>(24);
-        assert_type_size::<Vec<GridTemplateComponent<U>>>(24);
+        assert_type_size::<Vec<GridTemplateComponent<S>>>(24);
 
         // String-type dependent (String)
         assert_type_size::<GridTemplateComponent<String>>(56);
         assert_type_size::<GridPlacement<String>>(32);
         assert_type_size::<Line<GridPlacement<String>>>(64);
-        assert_type_size::<Style<String>>(536);
 
         // String-type dependent (Arc<str>)
         assert_type_size::<GridTemplateComponent<Arc<str>>>(56);
         assert_type_size::<GridPlacement<Arc<str>>>(24);
         assert_type_size::<Line<GridPlacement<Arc<str>>>>(48);
-        assert_type_size::<Style<Arc<str>>>(504);
+
+        // Overall size (default units)
+        assert_type_size::<Style<DefaultUnits>>(536);
     }
 }
