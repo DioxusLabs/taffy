@@ -68,7 +68,12 @@ impl<T> Calc for T where T: Clone + Debug + 'static {}
 pub trait Units {
     /// Trait that represents a cheaply clonable string. If you're unsure what to use here
     /// consider `Arc<str>` or `string_cache::Atom`.
+    #[cfg(not(feature = "serde"))]
     type Str: CheapCloneStr;
+    /// Trait that represents a cheaply clonable string. If you're unsure what to use here
+    /// consider `Arc<str>` or `string_cache::Atom`.
+    #[cfg(feature = "serde")]
+    type Str: CheapCloneStr + serde::Serialize + for<'a> serde::Deserialize<'a>;
 
     /// Type representing a calc expression.
     /// If you're not using Calc then you can just use `()`
