@@ -161,6 +161,7 @@ struct AlgoConstants {
 }
 
 /// Computes the layout of a box according to the flexbox algorithm
+#[cfg_attr(feature = "stacksafe", stacksafe::stacksafe)]
 pub fn compute_flexbox_layout(
     tree: &mut impl LayoutFlexboxContainer,
     node: NodeId,
