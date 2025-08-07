@@ -7,7 +7,7 @@ use crate::geometry::{AbsoluteAxis, InBothAbsAxis};
 use crate::style::{AlignItems, GridAutoFlow, OriginZeroGridPlacement};
 use crate::tree::NodeId;
 use crate::util::sys::Vec;
-use crate::{CoreStyle, GridItemStyle};
+use crate::GridItemStyle;
 
 /// 8.5. Grid Item Placement Algorithm
 /// Place items into the grid, generating new rows/column into the implicit grid as required
@@ -20,7 +20,7 @@ pub(super) fn place_grid_items<'a, S, ChildIter>(
     grid_auto_flow: GridAutoFlow,
     align_items: AlignItems,
     justify_items: AlignItems,
-    named_line_resolver: &NamedLineResolver<<S as CoreStyle>::CustomIdent>,
+    named_line_resolver: &NamedLineResolver<S::Units>,
 ) where
     S: GridItemStyle + 'a,
     ChildIter: Iterator<Item = (usize, NodeId, S)>,
