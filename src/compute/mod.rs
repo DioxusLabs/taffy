@@ -157,6 +157,7 @@ pub fn compute_root_layout(tree: &mut impl LayoutPartialTree, root: NodeId, avai
 /// Attempts to find a cached layout for the specified node and layout inputs.
 ///
 /// Uses the provided closure to compute the layout (and then stores the result in the cache) if no cached layout is found.
+#[cfg_attr(feature = "stacksafe", stacksafe::stacksafe)]
 #[inline(always)]
 pub fn compute_cached_layout<Tree: CacheTree + ?Sized, ComputeFunction>(
     tree: &mut Tree,
