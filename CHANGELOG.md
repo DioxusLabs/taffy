@@ -1,5 +1,30 @@
 # Changelog
 
+## 0.9.0
+
+### Support for named grid lines and grid areas
+
+Taffy now supports named grid lines and areas.
+
+As these rely on arbitrary user-provided strings, Taffy's `Style` struct is now generic
+over a string-like type (via the `CheapCloneStr` trait). Additionally as the `grid` feature is optional,
+it has a `PhantomData` field of that type to make type inference work.
+
+### Changed
+
+- `PrintTree` and `RoundTree`: use `Layout` instead of `&Layout` (#849).
+- Renamed `TrackSizingFunction` to `GridTemplateComponent`
+- Renamed `NonRepeatingTrackSizingFunction` to `TrackSizingFunction`
+- The `Repeat` variant of `GridTemplateComponent` now contains a new `GridTemplateRepetition` struct, which allows
+  line names to be specifed in addition to tracks.
+- The way that grid styles are exposed in the low-level API is now a lot more generic with many associated types.
+
+### Added
+
+- `GridTemplateArea` struct and `Style::grid_template_areas` field
+- `Style::grid_template_column_names` and `Style::grid_template_row_names` fields. If non-empty, these
+  should have length of exactly one greater than the corresponding `grid_template_column`/`grid_template_rows` style.
+
 ## 0.8.3
 
 ### Fixed
