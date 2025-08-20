@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.9.1
+
+### Fixed
+
+- Flexbox: don't apply cross-axis stretch alignment to children with auto margins (#861)
+
 ## 0.9.0
 
 ### Support for named grid lines and grid areas
