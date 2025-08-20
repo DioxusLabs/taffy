@@ -676,7 +676,11 @@ fn determine_flex_base_size(
         // Known dimensions for child sizing
         let child_known_dimensions = {
             let mut ckd = child.size.with_main(dir, None);
-            if child.align_self == AlignSelf::Stretch && ckd.cross(dir).is_none() {
+            if child.align_self == AlignSelf::Stretch
+                && !child.margin_is_auto.cross_start(constants.dir)
+                && !child.margin_is_auto.cross_end(constants.dir)
+                && ckd.cross(dir).is_none()
+            {
                 ckd.set_cross(
                     dir,
                     cross_axis_available_space.into_option().maybe_sub(child.margin.cross_axis_sum(dir)),
