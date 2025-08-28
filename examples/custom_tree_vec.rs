@@ -7,7 +7,7 @@ use common::text::{text_measure_function, FontMetrics, TextContext, WritingMode,
 use taffy::util::print_tree;
 use taffy::{
     compute_cached_layout, compute_flexbox_layout, compute_grid_layout, compute_leaf_layout, compute_root_layout,
-    prelude::*, round_layout, Cache, CacheTree,
+    prelude::*, round_layout, Cache, CacheTree, DefaultUnits,
 };
 
 #[derive(Debug, Copy, Clone)]
@@ -139,7 +139,7 @@ impl taffy::TraversePartialTree for Tree {
 impl taffy::TraverseTree for Tree {}
 
 impl taffy::LayoutPartialTree for Tree {
-    type CustomIdent = String;
+    type Units = DefaultUnits;
 
     type CoreContainerStyle<'a>
         = &'a Style
