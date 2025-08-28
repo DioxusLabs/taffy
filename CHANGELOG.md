@@ -20,7 +20,7 @@ it has a `PhantomData` field of that type to make type inference work.
 
 - `PrintTree` and `RoundTree`: use `Layout` instead of `&Layout` (#849).
 - Renamed `TrackSizingFunction` to `GridTemplateComponent`
-- Renamed `NonRepeatingTrackSizingFunction` to `TrackSizingFunction`
+- Renamed `NonRepeatedTrackSizingFunction` to `TrackSizingFunction`
 - The `Repeat` variant of `GridTemplateComponent` now contains a new `GridTemplateRepetition` struct, which allows
   line names to be specifed in addition to tracks.
 - The way that grid styles are exposed in the low-level API is now a lot more generic with many associated types.
