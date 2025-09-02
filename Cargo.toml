@@ -20,7 +20,7 @@ arrayvec = { version = "0.7", default-features = false }
 document-features = { version = "0.2.7", optional = true }
 serde = { version = "1.0", default-features = false, optional = true, features = ["serde_derive"] }
 slotmap = { version = "1.0.6", default-features = false, optional = true }
-grid = { version = "0.18.0", default-features = false, optional = true }
+grid = { version = "1.0.0", default-features = false, optional = true }
 
 [package.metadata.docs.rs]
 # To test all the documentation related features, run:
