@@ -398,6 +398,9 @@ pub struct Style<S: CheapCloneStr = DefaultCheapStr> {
     #[cfg(feature = "float_layout")]
     /// Should the box be floated
     pub float: Float,
+    #[cfg(feature = "float_layout")]
+    /// Should the box clear floats
+    pub clear: Clear,
 
     // Position properties
     /// What should the `position` value of this struct use as a base offset?
@@ -535,6 +538,8 @@ impl<S: CheapCloneStr> Style<S> {
         scrollbar_width: 0.0,
         #[cfg(feature = "float_layout")]
         float: Float::None,
+        #[cfg(feature = "float_layout")]
+        clear: Clear::None,
         position: Position::Relative,
         inset: Rect::auto(),
         margin: Rect::zero(),
@@ -759,6 +764,18 @@ impl<S: CheapCloneStr> BlockItemStyle for Style<S> {
     fn is_table(&self) -> bool {
         self.item_is_table
     }
+
+    #[cfg(feature = "float_layout")]
+    #[inline(always)]
+    fn float(&self) -> Float {
+        self.float
+    }
+
+    #[cfg(feature = "float_layout")]
+    #[inline(always)]
+    fn clear(&self) -> Clear {
+        self.clear
+    }
 }
 
 #[cfg(feature = "block_layout")]
@@ -766,6 +783,16 @@ impl<T: BlockItemStyle> BlockItemStyle for &'_ T {
     #[inline(always)]
     fn is_table(&self) -> bool {
         (*self).is_table()
+    }
+
+    #[inline(always)]
+    fn float(&self) -> Float {
+        (*self).float()
+    }
+
+    #[inline(always)]
+    fn clear(&self) -> Clear {
+        (*self).clear()
     }
 }
 

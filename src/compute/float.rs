@@ -51,9 +51,9 @@ pub enum FloatDirection {
 #[derive(Debug, Clone, Default)]
 pub struct FloatedBox {
     /// A user defined ID for the box
-    id: u64,
-    width: f32,
-    height: f32,
+    pub(crate) id: u64,
+    pub(crate) width: f32,
+    pub(crate) height: f32,
 }
 
 /// A floated box
@@ -87,33 +87,34 @@ impl FloatContext {
         Self { available_space, left_floats: Vec::new(), right_floats: Vec::new(), segments: Vec::new() }
     }
 
+    /// Create a new empty `FloatContext`
+    pub fn set_width(&mut self, available_space: AvailableSpace) {
+        self.available_space = available_space;
+    }
+
     /// Position a floated box with the context
     pub fn place_floated_box(&mut self, floated_box: FloatedBox, float_direction: FloatDirection) -> Point<f32> {
         let last_float = self.get_float_list(float_direction).last().unwrap_or(&PlacedFloatedBox::DEFAULT);
 
-        let (x_inset, y): (f32, f32) = match self.available_space {
-            AvailableSpace::MinContent => {
+        let do_wrap = match self.available_space {
+            AvailableSpace::MinContent => true,
+            AvailableSpace::MaxContent => false,
+            AvailableSpace::Definite(available_width) => {
+                let line_available_width = available_width - last_float.x_inset - last_float.width;
+                line_available_width < floated_box.width
+            }
+        };
+
+        let (x_inset, y) = match do_wrap {
+            true => {
                 let x_inset = 0.0;
                 let y = last_float.y + last_float.height;
                 (x_inset, y)
             }
-            AvailableSpace::MaxContent => {
+            false => {
                 let x_inset = last_float.x_inset + last_float.width;
                 let y = last_float.y;
                 (x_inset, y)
-            }
-            AvailableSpace::Definite(available_width) => {
-                let line_available_width = available_width - last_float.x_inset - last_float.width;
-
-                if line_available_width < floated_box.width {
-                    let x_inset = 0.0;
-                    let y = last_float.y + last_float.height;
-                    (x_inset, y)
-                } else {
-                    let x_inset = last_float.x_inset + last_float.width;
-                    let y = last_float.y;
-                    (x_inset, y)
-                }
             }
         };
 
@@ -130,11 +131,29 @@ impl FloatContext {
             // Position won't actually be used if we're layouting under a min-content
             // or max-content constraint, so just return (0, 0)
             AvailableSpace::MinContent | AvailableSpace::MaxContent => Point::ZERO,
-            AvailableSpace::Definite(width) => match float_direction {
+            AvailableSpace::Definite(container_width) => match float_direction {
                 FloatDirection::Left => Point { x: x_inset, y },
-                FloatDirection::Right => Point { x: width - x_inset, y },
+                FloatDirection::Right => Point { x: container_width - x_inset - floated_box.width, y },
             },
         };
+    }
+
+    pub(crate) fn content_width(&self) -> f32 {
+        match self.available_space {
+            AvailableSpace::Definite(width) => width,
+            AvailableSpace::MinContent => {
+                let left_max =
+                    self.left_floats.iter().map(|float| float.x_inset).max_by(|a, b| a.total_cmp(b)).unwrap_or(0.0);
+                let right_max =
+                    self.right_floats.iter().map(|float| float.x_inset).max_by(|a, b| a.total_cmp(b)).unwrap_or(0.0);
+                left_max.max(right_max)
+            }
+            AvailableSpace::MaxContent => {
+                let left_max = self.left_floats.last().map(|float| float.x_inset).unwrap_or(0.0);
+                let right_max = self.right_floats.last().map(|float| float.x_inset).unwrap_or(0.0);
+                left_max + right_max
+            }
+        }
     }
 
     fn get_float_list(&self, float_direction: FloatDirection) -> &[PlacedFloatedBox] {
