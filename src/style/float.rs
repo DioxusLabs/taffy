@@ -15,6 +15,12 @@ pub enum Float {
     None,
 }
 
+impl Float {
+    pub fn is_floated(self) -> bool {
+        matches!(self, Self::Left | Self::Right)
+    }
+}
+
 /// Gives a box "clearance", which moves it below floated boxes which precede
 /// it in the tree.
 ///

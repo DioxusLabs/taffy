@@ -24,6 +24,13 @@ pub trait BlockItemStyle: CoreStyle {
     fn float(&self) -> super::Float {
         super::Float::None
     }
+
+    /// Whether the item is a floated
+    #[cfg(feature = "float_layout")]
+    #[inline(always)]
+    fn clear(&self) -> super::Clear {
+        super::Clear::None
+    }
 }
 
 /// Used by block layout to implement the legacy behaviour of `<center>` and `<div align="left | right | center">`
