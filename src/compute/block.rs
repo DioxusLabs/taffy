@@ -42,8 +42,12 @@ impl BlockFormattingContext {
         self.float_context.place_floated_box(floated_box, float_direction)
     }
 
-    fn floated_content_contribution(&self) -> f32 {
+    fn floated_content_width_contribution(&self) -> f32 {
         self.float_context.content_width()
+    }
+
+    fn floated_content_height_contribution(&self) -> f32 {
+        self.float_context.content_height()
     }
 }
 
@@ -183,6 +187,7 @@ pub fn compute_block_layout(
     }
 
     // Unwrap the block formatting context if one was passed, or else create a new one
+    let is_root = bfc.is_none();
     let mut new_bfc: BlockFormattingContext;
     let bfc_ref: &mut BlockFormattingContext = match bfc {
         Some(inherited_bfc) => inherited_bfc,
@@ -193,7 +198,13 @@ pub fn compute_block_layout(
     };
 
     debug_log!("BLOCK");
-    compute_inner(tree, node_id, LayoutInput { known_dimensions: styled_based_known_dimensions, ..inputs }, bfc_ref)
+    compute_inner(
+        tree,
+        node_id,
+        LayoutInput { known_dimensions: styled_based_known_dimensions, ..inputs },
+        bfc_ref,
+        is_root,
+    )
 }
 
 /// Computes the layout of [`LayoutBlockContainer`] according to the block layout algorithm
@@ -202,6 +213,7 @@ fn compute_inner(
     node_id: NodeId,
     inputs: LayoutInput,
     bfc: &mut BlockFormattingContext,
+    is_bfc_root: bool,
 ) -> LayoutOutput {
     let LayoutInput {
         known_dimensions, parent_size, available_space, run_mode, vertical_margins_are_collapsible, ..
@@ -300,7 +312,7 @@ fn compute_inner(
     let resolved_padding = raw_padding.resolve_or_zero(Some(container_outer_width), |val, basis| tree.calc(val, basis));
     let resolved_border = raw_border.resolve_or_zero(Some(container_outer_width), |val, basis| tree.calc(val, basis));
     let resolved_content_box_inset = resolved_padding + resolved_border + scrollbar_gutter;
-    let (inflow_content_size, intrinsic_outer_height, first_child_top_margin_set, last_child_bottom_margin_set) =
+    let (inflow_content_size, mut intrinsic_outer_height, first_child_top_margin_set, last_child_bottom_margin_set) =
         perform_final_layout_on_in_flow_children(
             tree,
             &mut items,
@@ -311,6 +323,12 @@ fn compute_inner(
             own_margins_collapse_with_children,
             bfc,
         );
+
+    // Root BFCs contain floats
+    if is_bfc_root {
+        intrinsic_outer_height = intrinsic_outer_height.max(bfc.floated_content_height_contribution());
+    }
+
     let container_outer_height = known_dimensions
         .height
         .unwrap_or(intrinsic_outer_height.maybe_clamp(min_size.height, max_size.height))
@@ -477,7 +495,7 @@ fn determine_content_based_container_width(
         max_child_width = f32_max(max_child_width, width);
     }
 
-    max_child_width.max(bfc.floated_content_contribution())
+    max_child_width.max(bfc.floated_content_width_contribution())
 }
 
 /// Compute each child's final size and position
