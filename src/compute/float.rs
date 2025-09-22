@@ -156,6 +156,12 @@ impl FloatContext {
         }
     }
 
+    pub(crate) fn content_height(&self) -> f32 {
+        let left_max = self.left_floats.iter().map(|f| f.y + f.height).max_by(|a, b| a.total_cmp(b)).unwrap_or(0.0);
+        let right_max = self.right_floats.iter().map(|f| f.y + f.height).max_by(|a, b| a.total_cmp(b)).unwrap_or(0.0);
+        left_max.max(right_max)
+    }
+
     fn get_float_list(&self, float_direction: FloatDirection) -> &[PlacedFloatedBox] {
         match float_direction {
             FloatDirection::Left => &self.left_floats,
