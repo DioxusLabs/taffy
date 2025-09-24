@@ -9,10 +9,12 @@ use crate::util::sys::f32_max;
 use crate::util::sys::Vec;
 use crate::util::MaybeMath;
 use crate::util::{MaybeResolve, ResolveOrZero};
-use crate::{BlockContainerStyle, BlockItemStyle, BoxGenerationMode, BoxSizing, LayoutBlockContainer, TextAlign};
+use crate::{
+    BlockContainerStyle, BlockItemStyle, BoxGenerationMode, BoxSizing, LayoutBlockContainer, RequestedAxis, TextAlign,
+};
 
 #[cfg(feature = "float_layout")]
-use super::{FloatContext, FloatDirection, FloatedBox};
+use super::{FloatContext, FloatDirection};
 #[cfg(feature = "float_layout")]
 use crate::{Clear, Float};
 
@@ -30,29 +32,82 @@ impl BlockFormattingContext {
             float_context: FloatContext::new(available_space),
         }
     }
+
+    /// Create an initial `BlockContext` for this `BlockFormattingContext`
+    pub fn root_block_context(&mut self) -> BlockContext<'_> {
+        BlockContext { bfc: self, y_offset: 0.0, insets: [0.0, 0.0], float_content_contribution: 0.0, is_root: true }
+    }
+}
+
+/// Context for each individual Block within a Block Formatting Context
+///
+/// Contains a mutable reference to the BlockFormattingContext + block-specific data
+pub struct BlockContext<'bfc> {
+    bfc: &'bfc mut BlockFormattingContext,
+    /// The y-offset of the border-top of the block node, relative to the to the border-top of the
+    /// root node of the Block Formatting Context it belongs to.
+    y_offset: f32,
+    /// The x-inset in from each side of the block node, relative to the root node of the Block Formatting Context it belongs to.
+    insets: [f32; 2],
+    /// The height that floats take up in the element
+    float_content_contribution: f32,
+    /// Whether the node is the root of the Block Formatting Context is belongs to.
+    is_root: bool,
 }
 
 #[cfg(feature = "float_layout")]
-impl BlockFormattingContext {
-    pub fn set_width(&mut self, available_space: AvailableSpace) {
-        self.float_context.set_width(available_space);
+impl BlockContext<'_> {
+    /// Create a sub-`BlockContext` for a child block node
+    pub fn sub_context(&mut self, additional_y_offset: f32, insets: [f32; 2]) -> BlockContext<'_> {
+        BlockContext {
+            bfc: self.bfc,
+            y_offset: self.y_offset + additional_y_offset,
+            insets: [self.insets[0] + insets[0], self.insets[1] + insets[1]],
+            float_content_contribution: 0.0,
+            is_root: false,
+        }
     }
 
-    pub fn place_floated_box(&mut self, floated_box: FloatedBox, float_direction: FloatDirection) -> Point<f32> {
-        self.float_context.place_floated_box(floated_box, float_direction)
+    pub fn set_width(&mut self, available_space: AvailableSpace) {
+        self.bfc.float_context.set_width(available_space);
+    }
+
+    pub fn is_bfc_root(&self) -> bool {
+        self.is_root
+    }
+
+    pub fn place_floated_box(
+        &mut self,
+        floated_box: Size<f32>,
+        min_y: f32,
+        direction: FloatDirection,
+        clear: Clear,
+    ) -> Point<f32> {
+        let mut pos =
+            self.bfc.float_context.place_floated_box(floated_box, min_y + self.y_offset, self.insets, direction, clear);
+        pos.y -= self.y_offset;
+        pos.x -= self.insets[0];
+
+        self.float_content_contribution = self.float_content_contribution.max(pos.y + floated_box.height);
+
+        pos
+    }
+
+    fn add_child_floated_content_height_contribution(&mut self, child_contribution: f32) {
+        self.float_content_contribution = self.float_content_contribution.max(child_contribution);
     }
 
     fn floated_content_width_contribution(&self) -> f32 {
-        self.float_context.content_width()
+        self.bfc.float_context.content_width()
     }
 
     fn floated_content_height_contribution(&self) -> f32 {
-        self.float_context.content_height()
+        self.float_content_contribution
     }
 }
 
 #[cfg(not(feature = "float_layout"))]
-impl BlockFormattingContext {
+impl BlockContext<'_> {
     fn floated_content_contribution(&self) -> f32 {
         0.0
     }
@@ -72,6 +127,9 @@ struct BlockItem {
 
     /// Items that are tables don't have stretch sizing applied to them
     is_table: bool,
+
+    // Whether the child is a non-independent block or inline node
+    is_in_same_bfc: bool,
 
     // Float and clear styles
     #[cfg(feature = "float_layout")]
@@ -133,7 +191,7 @@ pub fn compute_block_layout(
     tree: &mut impl LayoutBlockContainer,
     node_id: NodeId,
     inputs: LayoutInput,
-    bfc: Option<&mut BlockFormattingContext>,
+    block_ctx: Option<&mut BlockContext<'_>>,
 ) -> LayoutOutput {
     let LayoutInput { known_dimensions, parent_size, run_mode, .. } = inputs;
     let style = tree.get_block_container_style(node_id);
@@ -187,24 +245,27 @@ pub fn compute_block_layout(
     }
 
     // Unwrap the block formatting context if one was passed, or else create a new one
-    let is_root = bfc.is_none();
-    let mut new_bfc: BlockFormattingContext;
-    let bfc_ref: &mut BlockFormattingContext = match bfc {
-        Some(inherited_bfc) => inherited_bfc,
-        None => {
-            new_bfc = BlockFormattingContext::new(inputs.available_space.width);
-            &mut new_bfc
-        }
-    };
-
     debug_log!("BLOCK");
-    compute_inner(
-        tree,
-        node_id,
-        LayoutInput { known_dimensions: styled_based_known_dimensions, ..inputs },
-        bfc_ref,
-        is_root,
-    )
+    match block_ctx {
+        Some(inherited_bfc) => compute_inner(
+            tree,
+            node_id,
+            LayoutInput { known_dimensions: styled_based_known_dimensions, ..inputs },
+            inherited_bfc,
+        ),
+        None => {
+            let mut root_bfc = BlockFormattingContext::new(inputs.available_space.width);
+            let mut root_ctx = root_bfc.root_block_context();
+            compute_inner(
+                tree,
+                node_id,
+                LayoutInput { known_dimensions: styled_based_known_dimensions, ..inputs },
+                &mut root_ctx,
+            )
+        }
+    }
+
+    // compute_inner(tree, node_id, LayoutInput { known_dimensions: styled_based_known_dimensions, ..inputs }, block_ctx)
 }
 
 /// Computes the layout of [`LayoutBlockContainer`] according to the block layout algorithm
@@ -212,8 +273,7 @@ fn compute_inner(
     tree: &mut impl LayoutBlockContainer,
     node_id: NodeId,
     inputs: LayoutInput,
-    bfc: &mut BlockFormattingContext,
-    is_bfc_root: bool,
+    mut block_ctx: &mut BlockContext<'_>,
 ) -> LayoutOutput {
     let LayoutInput {
         known_dimensions, parent_size, available_space, run_mode, vertical_margins_are_collapsible, ..
@@ -261,25 +321,25 @@ fn compute_inner(
         .maybe_apply_aspect_ratio(aspect_ratio)
         .maybe_add(box_sizing_adjustment);
 
+    let overflow = style.overflow();
+    let is_scroll_container = overflow.x.is_scroll_container() || overflow.y.is_scroll_container();
+
     // Determine margin collapsing behaviour
     let own_margins_collapse_with_children = Line {
         start: vertical_margins_are_collapsible.start
-            && !style.overflow().x.is_scroll_container()
-            && !style.overflow().y.is_scroll_container()
+            && !is_scroll_container
             && style.position() == Position::Relative
             && padding.top == 0.0
             && border.top == 0.0,
         end: vertical_margins_are_collapsible.end
-            && !style.overflow().x.is_scroll_container()
-            && !style.overflow().y.is_scroll_container()
+            && !is_scroll_container
             && style.position() == Position::Relative
             && padding.bottom == 0.0
             && border.bottom == 0.0
             && size.height.is_none(),
     };
     let has_styles_preventing_being_collapsed_through = !style.is_block()
-        || style.overflow().x.is_scroll_container()
-        || style.overflow().y.is_scroll_container()
+        || is_scroll_container
         || style.position() == Position::Absolute
         || padding.top > 0.0
         || padding.bottom > 0.0
@@ -298,7 +358,7 @@ fn compute_inner(
     // 2. Compute container width
     let container_outer_width = known_dimensions.width.unwrap_or_else(|| {
         let available_width = available_space.width.maybe_sub(content_box_inset.horizontal_axis_sum());
-        let intrinsic_width = determine_content_based_container_width(tree, bfc, &items, available_width)
+        let intrinsic_width = determine_content_based_container_width(tree, &mut block_ctx, &items, available_width)
             + content_box_inset.horizontal_axis_sum();
         intrinsic_width.maybe_clamp(min_size.width, max_size.width).maybe_max(Some(padding_border_size.width))
     });
@@ -321,12 +381,13 @@ fn compute_inner(
             resolved_content_box_inset,
             text_align,
             own_margins_collapse_with_children,
-            bfc,
+            &mut block_ctx,
         );
 
     // Root BFCs contain floats
-    if is_bfc_root {
-        intrinsic_outer_height = intrinsic_outer_height.max(bfc.floated_content_height_contribution());
+    let contains_floats = block_ctx.is_bfc_root() || is_scroll_container;
+    if contains_floats {
+        intrinsic_outer_height = intrinsic_outer_height.max(block_ctx.floated_content_height_contribution());
     }
 
     let container_outer_height = known_dimensions
@@ -413,12 +474,22 @@ fn generate_item_list(
             let pb_sum = (padding + border).sum_axes();
             let box_sizing_adjustment =
                 if child_style.box_sizing() == BoxSizing::ContentBox { pb_sum } else { Size::ZERO };
+
+            let position = child_style.position();
+            let float = child_style.float();
+
+            let is_block = child_style.is_block();
+            let is_table = child_style.is_table();
+
+            let is_in_same_bfc: bool = is_block && !is_table && position != Position::Absolute && float == Float::None;
+
             BlockItem {
                 node_id: child_node_id,
                 order: order as u32,
-                is_table: child_style.is_table(),
+                is_table,
+                is_in_same_bfc,
                 #[cfg(feature = "float_layout")]
-                float: child_style.float(),
+                float,
                 #[cfg(feature = "float_layout")]
                 clear: child_style.clear(),
                 size: child_style
@@ -438,7 +509,7 @@ fn generate_item_list(
                     .maybe_add(box_sizing_adjustment),
                 overflow: child_style.overflow(),
                 scrollbar_width: child_style.scrollbar_width(),
-                position: child_style.position(),
+                position,
                 inset: child_style.inset(),
                 margin: child_style.margin(),
                 padding,
@@ -458,7 +529,7 @@ fn generate_item_list(
 #[inline]
 fn determine_content_based_container_width(
     tree: &mut impl LayoutPartialTree,
-    bfc: &mut BlockFormattingContext,
+    block_ctx: &mut BlockContext<'_>,
     items: &[BlockItem],
     available_width: AvailableSpace,
 ) -> f32 {
@@ -495,20 +566,20 @@ fn determine_content_based_container_width(
         max_child_width = f32_max(max_child_width, width);
     }
 
-    max_child_width.max(bfc.floated_content_width_contribution())
+    max_child_width.max(block_ctx.floated_content_width_contribution())
 }
 
 /// Compute each child's final size and position
 #[inline]
 fn perform_final_layout_on_in_flow_children(
-    tree: &mut impl LayoutPartialTree,
+    tree: &mut impl LayoutBlockContainer,
     items: &mut [BlockItem],
     container_outer_width: f32,
     content_box_inset: Rect<f32>,
     resolved_content_box_inset: Rect<f32>,
     text_align: TextAlign,
     own_margins_collapse_with_children: Line<bool>,
-    bfc: &mut BlockFormattingContext,
+    block_ctx: &mut BlockContext<'_>,
 ) -> (Size<f32>, f32, CollapsibleMarginSet, CollapsibleMarginSet) {
     // Resolve container_inner_width for sizing child nodes using initial content_box_inset
     let container_inner_width = container_outer_width - content_box_inset.horizontal_axis_sum();
@@ -517,12 +588,15 @@ fn perform_final_layout_on_in_flow_children(
         Size { width: AvailableSpace::Definite(container_inner_width), height: AvailableSpace::MinContent };
 
     // TODO: handle nested blocks with different widths
-    bfc.set_width(available_space.width);
+    if block_ctx.is_bfc_root() {
+        block_ctx.set_width(available_space.width);
+    }
 
     #[cfg_attr(not(feature = "content_size"), allow(unused_mut))]
     let mut inflow_content_size = Size::ZERO;
     let mut committed_y_offset = resolved_content_box_inset.top;
     let mut y_offset_for_absolute = resolved_content_box_inset.top;
+    let mut y_offset_for_float = resolved_content_box_inset.top;
     let mut first_child_top_margin_set = CollapsibleMarginSet::ZERO;
     let mut active_collapsible_margin_set = CollapsibleMarginSet::ZERO;
     let mut is_collapsing_with_first_margin_set = true;
@@ -554,10 +628,8 @@ fn perform_final_layout_on_in_flow_children(
                 );
                 let margin_box = item_layout.size + item_non_auto_margin.sum_axes();
 
-                let mut location = bfc.place_floated_box(
-                    FloatedBox { id: item.node_id.into(), width: margin_box.width, height: margin_box.height },
-                    float_direction,
-                );
+                let mut location =
+                    block_ctx.place_floated_box(margin_box, y_offset_for_float, float_direction, item.clear);
 
                 location.y += item_non_auto_margin.top;
                 location.x += item_non_auto_margin.left;
@@ -613,14 +685,40 @@ fn perform_final_layout_on_in_flow_children(
                     .maybe_clamp(item.min_size, item.max_size)
             };
 
-            let item_layout = tree.perform_child_layout(
-                item.node_id,
+            //
+
+            let inputs = LayoutInput {
+                run_mode: RunMode::PerformLayout,
+                sizing_mode: SizingMode::InherentSize,
+                axis: RequestedAxis::Both,
                 known_dimensions,
                 parent_size,
-                available_space.map_width(|w| w.maybe_sub(item_non_auto_x_margin_sum)),
-                SizingMode::InherentSize,
-                Line::TRUE,
-            );
+                available_space: available_space.map_width(|w| w.maybe_sub(item_non_auto_x_margin_sum)),
+                vertical_margins_are_collapsible: if item.is_in_same_bfc { Line::TRUE } else { Line::FALSE },
+            };
+
+            let item_layout = if item.is_in_same_bfc {
+                let width = known_dimensions
+                    .width
+                    .expect("Same-bfc child will always have defined width due to stretch sizing");
+
+                // TODO: account for auto margins
+                let inset_left = item_non_auto_margin.left + content_box_inset.left;
+                let inset_right = container_outer_width - width - inset_left;
+                let insets = [inset_left, inset_right];
+
+                // Compute child layout
+                let mut child_block_ctx = block_ctx.sub_context(y_offset_for_absolute, insets);
+                let output = tree.compute_block_child_layout(item.node_id, inputs, Some(&mut child_block_ctx));
+
+                // Extract float contribution from child block context
+                let child_contribution = child_block_ctx.floated_content_height_contribution();
+                block_ctx.add_child_floated_content_height_contribution(y_offset_for_absolute + child_contribution);
+
+                output
+            } else {
+                tree.compute_child_layout(item.node_id, inputs)
+            };
             let final_size = item_layout.size;
 
             let top_margin_set = item_layout.top_margin.collapse_with_margin(item_margin.top.unwrap_or(0.0));
@@ -734,6 +832,8 @@ fn perform_final_layout_on_in_flow_children(
                 active_collapsible_margin_set = bottom_margin_set;
                 y_offset_for_absolute = committed_y_offset + active_collapsible_margin_set.resolve();
             }
+
+            y_offset_for_float += committed_y_offset + item_layout.size.height + y_margin_offset;
         }
     }
 
