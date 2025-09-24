@@ -5,6 +5,8 @@ use slotmap::SecondaryMap;
 use slotmap::SparseSecondaryMap as SecondaryMap;
 use slotmap::{DefaultKey, SlotMap};
 
+#[cfg(feature = "block_layout")]
+use crate::block::BlockContext;
 use crate::geometry::Size;
 use crate::style::{AvailableSpace, Display, Style};
 use crate::sys::DefaultCheapStr;
@@ -295,7 +297,7 @@ where
         &mut self,
         node_id: NodeId,
         inputs: LayoutInput,
-        #[cfg(feature = "block_layout")] bfc: Option<&mut BlockFormattingContext>,
+        #[cfg(feature = "block_layout")] block_ctx: Option<&mut BlockContext<'_>>,
     ) -> LayoutOutput {
         // If RunMode is PerformHiddenLayout then this indicates that an ancestor node is `Display::None`
         // and thus that we should lay out this node using hidden layout regardless of it's own display style.
@@ -326,7 +328,7 @@ where
             match (display_mode, has_children) {
                 (Display::None, _) => compute_hidden_layout(tree, node_id),
                 #[cfg(feature = "block_layout")]
-                (Display::Block, true) => compute_block_layout(tree, node_id, inputs, bfc),
+                (Display::Block, true) => compute_block_layout(tree, node_id, inputs, block_ctx),
                 #[cfg(feature = "flexbox")]
                 (Display::Flex, true) => compute_flexbox_layout(tree, node_id, inputs),
                 #[cfg(feature = "grid")]
@@ -475,9 +477,9 @@ where
         &mut self,
         node_id: NodeId,
         inputs: LayoutInput,
-        bfc: Option<&mut BlockFormattingContext>,
+        block_ctx: Option<&mut BlockContext<'_>>,
     ) -> LayoutOutput {
-        self.compute_child_layout(node_id, inputs, bfc)
+        self.compute_child_layout(node_id, inputs, block_ctx)
     }
 }
 

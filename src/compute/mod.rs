@@ -39,7 +39,7 @@ pub(crate) mod grid;
 pub use leaf::compute_leaf_layout;
 
 #[cfg(feature = "block_layout")]
-pub use self::block::{compute_block_layout, BlockFormattingContext};
+pub use self::block::{compute_block_layout, BlockContext, BlockFormattingContext};
 
 #[cfg(feature = "flexbox")]
 pub use self::flexbox::compute_flexbox_layout;
@@ -48,9 +48,7 @@ pub use self::flexbox::compute_flexbox_layout;
 pub use self::grid::compute_grid_layout;
 
 #[cfg(feature = "float_layout")]
-use self::float::FloatDirection;
-#[cfg(feature = "float_layout")]
-pub use self::float::{FloatContext, FloatedBox};
+pub use self::float::{FloatContext, FloatDirection, FloatedBox};
 
 use crate::geometry::{Line, Point, Size};
 use crate::style::{AvailableSpace, CoreStyle, Overflow};

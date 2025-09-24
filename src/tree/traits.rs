@@ -137,7 +137,7 @@ use crate::style::{FlexboxContainerStyle, FlexboxItemStyle};
 use crate::style::{GridContainerStyle, GridItemStyle};
 use crate::CheapCloneStr;
 #[cfg(feature = "block_layout")]
-use crate::{BlockContainerStyle, BlockFormattingContext, BlockItemStyle};
+use crate::{BlockContainerStyle, BlockContext, BlockItemStyle};
 
 #[cfg(all(feature = "grid", feature = "detailed_layout_info"))]
 use crate::compute::grid::DetailedGridInfo;
@@ -320,9 +320,9 @@ pub trait LayoutBlockContainer: LayoutPartialTree {
         &mut self,
         node_id: NodeId,
         inputs: LayoutInput,
-        bfc: Option<&mut BlockFormattingContext>,
+        block_ctx: Option<&mut BlockContext<'_>>,
     ) -> LayoutOutput {
-        let _ = bfc;
+        let _ = block_ctx;
         self.compute_child_layout(node_id, inputs)
     }
 }
