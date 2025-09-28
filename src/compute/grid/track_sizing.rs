@@ -64,7 +64,7 @@ impl ItemBatcher {
 
 /// This struct captures a bunch of variables which are used to compute the intrinsic sizes of children so that those variables
 /// don't have to be passed around all over the place below. It then has methods that implement the intrinsic sizing computations
-struct IntrisicSizeMeasurer<'tree, 'oat, Tree, EstimateFunction>
+struct IntrinsicSizeMeasurer<'tree, 'oat, Tree, EstimateFunction>
 where
     Tree: LayoutPartialTree,
     EstimateFunction: Fn(&GridTrack, Option<f32>, &Tree) -> Option<f32>,
@@ -82,7 +82,7 @@ where
     inner_node_size: Size<Option<f32>>,
 }
 
-impl<Tree, EstimateFunction> IntrisicSizeMeasurer<'_, '_, Tree, EstimateFunction>
+impl<Tree, EstimateFunction> IntrinsicSizeMeasurer<'_, '_, Tree, EstimateFunction>
 where
     Tree: LayoutPartialTree,
     EstimateFunction: Fn(&GridTrack, Option<f32>, &Tree) -> Option<f32>,
@@ -536,7 +536,7 @@ fn resolve_intrinsic_track_sizes<Tree: LayoutPartialTree>(
 
     // Step 2.
 
-    // The track sizing algorithm requires us to iterate through the items in ascendeding order of the number of
+    // The track sizing algorithm requires us to iterate through the items in ascending order of the number of
     // tracks they span (first items that span 1 track, then items that span 2 tracks, etc).
     // To avoid having to do multiple iterations of the items, we pre-sort them into this order.
     items.sort_by(cmp_by_cross_flex_then_span_then_start(axis));
@@ -555,7 +555,7 @@ fn resolve_intrinsic_track_sizes<Tree: LayoutPartialTree>(
     let axis_inner_node_size = inner_node_size.get(axis);
     let flex_factor_sum = axis_tracks.iter().map(|track| track.flex_factor()).sum::<f32>();
     let mut item_sizer =
-        IntrisicSizeMeasurer { tree, other_axis_tracks, axis, inner_node_size, get_track_size_estimate };
+        IntrinsicSizeMeasurer { tree, other_axis_tracks, axis, inner_node_size, get_track_size_estimate };
 
     let mut batched_item_iterator = ItemBatcher::new(axis);
     while let Some((batch, is_flex)) = batched_item_iterator.next(items) {
@@ -637,7 +637,7 @@ fn resolve_intrinsic_track_sizes<Tree: LayoutPartialTree>(
                     }
 
                     // Always increase the growth limit to at least the size of the *fit-content limited*
-                    // max-cotent contribution
+                    // max-content contribution
                     let fit_content_limit = track.fit_content_limit(axis_inner_node_size);
                     let max_content_contribution =
                         f32_min(item_sizer.max_content_contribution(item), fit_content_limit);
