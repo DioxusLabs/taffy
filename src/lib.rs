@@ -60,7 +60,7 @@
 // document the feature flags for the crate by extracting the comments from Cargo.toml
 #![cfg_attr(feature = "document-features", doc = document_features::document_features!())]
 // annotate items with their required features (gated by docsrs flag as this requires the nightly toolchain)
-#![cfg_attr(docsrs, feature(doc_auto_cfg))]
+#![cfg_attr(docsrs, feature(doc_cfg))]
 #![cfg_attr(not(feature = "std"), no_std)]
 #![deny(unsafe_code)]
 #![warn(missing_docs)]
