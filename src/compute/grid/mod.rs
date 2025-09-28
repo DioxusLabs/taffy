@@ -98,9 +98,9 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
 
     // Note: we avoid accessing the grid rows/columns methods more than once as this can
     // cause an expensive-ish computation
-    let grid_template_columms = style.grid_template_columns();
+    let grid_template_columns = style.grid_template_columns();
     let grid_template_rows = style.grid_template_rows();
-    let grid_auto_columms = style.grid_auto_columns();
+    let grid_auto_columns = style.grid_auto_columns();
     let grid_auto_rows = style.grid_auto_rows();
 
     let constrained_available_space = known_dimensions
@@ -232,9 +232,9 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     });
 
     drop(grid_template_rows);
-    drop(grid_template_columms);
+    drop(grid_template_columns);
     drop(grid_auto_rows);
-    drop(grid_auto_columms);
+    drop(grid_auto_columns);
     drop(style);
 
     // 6. Track Sizing
@@ -381,7 +381,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
             });
         rerun_column_sizing = min_content_contribution_changed;
     } else {
-        // Clear intrisic width caches
+        // Clear intrinsic width caches
         items.iter_mut().for_each(|item| {
             item.available_space_cache = None;
             item.min_content_contribution_cache.width = None;
@@ -442,7 +442,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
             rerun_row_sizing = min_content_contribution_changed;
         } else {
             items.iter_mut().for_each(|item| {
-                // Clear intrisic height caches
+                // Clear intrinsic height caches
                 item.available_space_cache = None;
                 item.min_content_contribution_cache.height = None;
                 item.max_content_contribution_cache.height = None;
@@ -582,7 +582,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
             };
             drop(child_style);
 
-            // TODO: Baseline alignment support for absolutely positioned items (should check if is actuallty specified)
+            // TODO: Baseline alignment support for absolutely positioned items (should check if is actually specified)
             #[cfg_attr(not(feature = "content_size"), allow(unused_variables))]
             let (content_size_contribution, _, _) =
                 align_and_position_item(tree, child, order, grid_area, container_alignment_styles, 0.0);
