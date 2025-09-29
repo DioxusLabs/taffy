@@ -26,7 +26,7 @@
 //!
 //! <https://www.w3.org/TR/CSS22/visuren.html#floats>
 
-use core::ops::{Range, RangeInclusive};
+use core::ops::Range;
 
 use crate::{AvailableSpace, Clear, Point, Size};
 
@@ -48,6 +48,17 @@ pub struct FloatContext {
 pub enum FloatDirection {
     Left = 0,
     Right = 1,
+}
+
+/// An empty "slot" that avoids floats that is suitable for non-floated content
+/// to be laid out into
+#[derive(Debug, Clone, Copy, Default)]
+pub struct ContentSlot {
+    pub segment_id: Option<usize>,
+    pub x: f32,
+    pub y: f32,
+    pub width: f32,
+    pub height: f32,
 }
 
 /// A floated box to place within the context
@@ -147,6 +158,16 @@ impl FloatContext {
                 }
             }
         }
+    }
+
+    pub fn find_content_slot(
+        &self,
+        min_y: f32,
+        containing_block_insets: [f32; 2],
+        clear: Clear,
+        after: Option<usize>,
+    ) -> ContentSlot {
+        self.placer.find_content_slot(min_y, containing_block_insets, clear, after)
     }
 
     pub(crate) fn content_width(&self) -> f32 {
@@ -335,7 +356,7 @@ impl FloatPlacer {
             // segment below all existing segments. A new segment will always have space for
             // the float, so we can exit the loop at this point.
             let Some(start_segment) = self.segments.get(start_idx) else {
-                break (None, None, 0.0);
+                break (None, None, containing_block_insets[slot]);
             };
 
             // Candidate start segment doesn't have (horizontal) space for the float:
@@ -476,7 +497,56 @@ impl FloatPlacer {
         PlacedFloatedBox { width: floated_box.width, height: floated_box.height, y: start_y, x_inset: placed_inset }
     }
 
-    fn place_non_floated_content(&mut self, min_y: f32, height: f32) -> (Point<f32>, Size<f32>) {
-        todo!()
+    fn find_content_slot(
+        &self,
+        min_y: f32,
+        containing_block_insets: [f32; 2],
+        clear: Clear,
+        after: Option<usize>,
+    ) -> ContentSlot {
+        // The min starting segment index
+        let at_least = after.map(|idx| idx + 1).unwrap_or(0);
+
+        // Ensure that content respects "clear" and "after"
+        let hwm = match clear {
+            Clear::Left => {
+                let left_end = self.last_placed_floats[0].end;
+                at_least.max(left_end)
+            }
+            Clear::Right => {
+                let right_end = self.last_placed_floats[1].end;
+                at_least.max(right_end)
+            }
+            Clear::Both => {
+                let left_end = self.last_placed_floats[0].end;
+                let right_end = self.last_placed_floats[1].end;
+                at_least.max(left_end).max(right_end)
+            }
+            Clear::None => at_least,
+        };
+
+        let start_idx = self.segments[hwm..].iter().position(|segment| segment.y.end > min_y).map(|idx| idx + hwm);
+        let start_idx = start_idx.unwrap_or(self.segments.len());
+        let segment = self.segments.get(start_idx);
+        match segment {
+            Some(segment) => {
+                let inset_left = segment.insets[0].max(containing_block_insets[0]);
+                let inset_right = segment.insets[1].max(containing_block_insets[1]);
+                ContentSlot {
+                    segment_id: Some(start_idx),
+                    x: inset_left,
+                    y: segment.y.start.max(min_y),
+                    width: self.bfc_width - inset_left - inset_right,
+                    height: f32::INFINITY,
+                }
+            }
+            None => ContentSlot {
+                segment_id: None,
+                x: containing_block_insets[0],
+                y: min_y,
+                width: self.bfc_width - containing_block_insets[0] - containing_block_insets[1],
+                height: f32::INFINITY,
+            },
+        }
     }
 }
