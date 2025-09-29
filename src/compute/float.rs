@@ -26,7 +26,7 @@
 //!
 //! <https://www.w3.org/TR/CSS22/visuren.html#floats>
 
-use core::ops::Range;
+use core::ops::{Range, RangeInclusive};
 
 use crate::{AvailableSpace, Clear, Point, Size};
 
@@ -208,7 +208,10 @@ struct FloatPlacer {
 
     segments: Vec<Segment>,
     // Left hwm in slot 0. Right hwm in slot 1.
-    high_water_marks: [usize; 2],
+    // high_water_marks: [usize; 2],
+    /// A closed-open range indicating which segment the last placed float
+    /// was placed(on each side).
+    last_placed_floats: [Range<usize>; 2],
     // left_float_high_water_mark: usize,
     // right_float_high_water_mark: usize,
 }
@@ -256,7 +259,7 @@ impl FloatPlacer {
                 AvailableSpace::MaxContent => f32::INFINITY,
             },
             segments: Vec::new(),
-            high_water_marks: [0, 0],
+            last_placed_floats: [0..0, 0..0], // high_water_marks: [0, 0],
         }
     }
 
@@ -273,6 +276,12 @@ impl FloatPlacer {
         self.segments.splice((idx + 1)..(idx + 1), core::iter::once(new_segment));
     }
 
+    fn update_last_placed_float(&mut self, direction: FloatDirection, placement: Range<usize>) {
+        let slot = direction as usize;
+        self.last_placed_floats[slot].start = self.last_placed_floats[slot].start.max(placement.start);
+        self.last_placed_floats[slot].end = self.last_placed_floats[slot].end.max(placement.end);
+    }
+
     fn place_float(
         &mut self,
         min_y: f32,
@@ -282,23 +291,49 @@ impl FloatPlacer {
         clear: Clear,
     ) -> PlacedFloatedBox {
         let slot = direction as usize;
-        let hwm = self.high_water_marks[slot];
 
-        // Find the initial start segment for the float
-        // TODO: take into account "clear"
-        let start_idx = self.segments[hwm..].iter().position(|segment| segment.y.contains(&min_y)).map(|idx| idx + hwm);
+        // Ensure that float:
+        //    - Starts at or after the last placed float that was floated in the same direction as it
+        //    - Respects "clear"
+        let hwm = match clear {
+            Clear::Left => {
+                let float_dir_start = self.last_placed_floats[slot].start;
+                let left_end = self.last_placed_floats[0].end;
+                float_dir_start.max(left_end)
+            }
+            Clear::Right => {
+                let float_dir_start = self.last_placed_floats[slot].start;
+                let right_end = self.last_placed_floats[1].end;
+                float_dir_start.max(right_end)
+            }
+            Clear::Both => {
+                let left_end = self.last_placed_floats[0].end;
+                let right_end = self.last_placed_floats[1].end;
+                left_end.max(right_end)
+            }
+            Clear::None => {
+                // float_dir_start
+                self.last_placed_floats[slot].start
+            }
+        };
+
+        // Ensure that float is placed in a segment at or below "min_y"
+        // (ensuring that it is placed at or below min_y within it's segment happens below)
+        let start_idx = self.segments[hwm..].iter().position(|segment| segment.y.end > min_y).map(|idx| idx + hwm);
 
         let mut start_idx = start_idx.unwrap_or(self.segments.len());
         let mut start_y = min_y;
         let mut end_idx = start_idx;
         // let mut end_y = min_y;
 
-        // Loop over remaining segments, trying to place the float
+        // Loop over remaining segments, trying to place the float in a position
+        // that has space to accomodate it.
         let (start, mut end, placed_inset) = 'outer: loop {
             // Start segment does not exist:
             //
             // This means no existing segment can accomodate the float so we must create a new
-            // segment below all existing segments
+            // segment below all existing segments. A new segment will always have space for
+            // the float, so we can exit the loop at this point.
             let Some(start_segment) = self.segments.get(start_idx) else {
                 break (None, None, 0.0);
             };
@@ -361,6 +396,8 @@ impl FloatPlacer {
 
         // Short-circuit for zero-sized boxes
         if floated_box.width == 0.0 || floated_box.height == 0.0 {
+            // TODO: need to update last_placed_float?
+
             return PlacedFloatedBox {
                 width: floated_box.width,
                 height: floated_box.height,
@@ -381,6 +418,11 @@ impl FloatPlacer {
             let mut insets = containing_block_insets;
             insets[slot] += floated_box.width;
             self.segments.push(Segment { y: start_y..(start_y + floated_box.height), insets });
+
+            // Update last_placed_float
+            let start_idx = self.segments.len() - 1;
+            let end_idx = start_idx + 1;
+            self.update_last_placed_float(direction, start_idx..end_idx);
 
             return PlacedFloatedBox {
                 width: floated_box.width,
@@ -427,6 +469,9 @@ impl FloatPlacer {
         for segment in &mut self.segments[start_idx..=end_idx] {
             segment.insets[slot] = placed_inset_plus_width;
         }
+
+        // Update last_placed_float
+        self.update_last_placed_float(direction, start_idx..(end_idx + 1));
 
         PlacedFloatedBox { width: floated_box.width, height: floated_box.height, y: start_y, x_inset: placed_inset }
     }
