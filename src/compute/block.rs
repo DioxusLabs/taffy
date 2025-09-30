@@ -261,7 +261,12 @@ pub fn compute_block_layout(
             inherited_bfc,
         ),
         None => {
-            let mut root_bfc = BlockFormattingContext::new(inputs.available_space.width);
+            let mut root_bfc = BlockFormattingContext::new(
+                styled_based_known_dimensions
+                    .width
+                    .map(AvailableSpace::Definite)
+                    .unwrap_or(inputs.available_space.width),
+            );
             let mut root_ctx = root_bfc.root_block_context();
             compute_inner(
                 tree,
