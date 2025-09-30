@@ -637,7 +637,7 @@ fn perform_final_layout_on_in_flow_children(
                     item.node_id,
                     Size::NONE,
                     parent_size,
-                    Size::MAX_CONTENT,
+                    available_space,
                     SizingMode::InherentSize,
                     Line::TRUE,
                 );
@@ -646,6 +646,16 @@ fn perform_final_layout_on_in_flow_children(
                 let mut location =
                     block_ctx.place_floated_box(margin_box, y_offset_for_float, float_direction, item.clear);
 
+                // Ensure that content that appears after a float does not get positioned before/above the float
+                //
+                // FIXME: this isn't quite right, because a second float at the same location
+                // shouldn't cause content to push down to it's level
+                // committed_y_offset = committed_y_offset.max(location.y);
+                // y_offset_for_absolute = y_offset_for_absolute.max(location.y);
+                // y_offset_for_float = y_offset_for_float.max(location.y);
+
+                // Convert the margin-box location returned by float placement into a border-box location
+                // for the output Layout
                 location.y += item_non_auto_margin.top;
                 location.x += item_non_auto_margin.left;
 
