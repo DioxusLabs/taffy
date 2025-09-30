@@ -727,7 +727,7 @@ fn perform_final_layout_on_in_flow_children(
                 let insets = [inset_left, inset_right];
 
                 // Compute child layout
-                let mut child_block_ctx = block_ctx.sub_context(y_offset_for_absolute, insets);
+                let mut child_block_ctx = block_ctx.sub_context(y_offset_for_absolute + item_non_auto_margin.top, insets);
                 let output = tree.compute_block_child_layout(item.node_id, inputs, Some(&mut child_block_ctx));
 
                 // Extract float contribution from child block context
