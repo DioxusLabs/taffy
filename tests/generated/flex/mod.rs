@@ -180,6 +180,7 @@ mod bevy_issue_10343_block;
 mod bevy_issue_10343_flex;
 mod bevy_issue_10343_grid;
 mod bevy_issue_16304;
+mod bevy_issue_21240;
 mod bevy_issue_7976_3_level;
 mod bevy_issue_7976_4_level;
 mod bevy_issue_7976_reduced;
