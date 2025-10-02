@@ -7,7 +7,6 @@ use slotmap::{DefaultKey, SlotMap};
 
 use crate::geometry::Size;
 use crate::style::{AvailableSpace, Display, Style};
-use crate::sys::DefaultCheapStr;
 use crate::tree::{
     Cache, ClearState, Layout, LayoutInput, LayoutOutput, LayoutPartialTree, NodeId, PrintTree, RoundTree, RunMode,
     TraversePartialTree, TraverseTree,
@@ -18,13 +17,13 @@ use crate::util::sys::{new_vec_with_capacity, ChildrenVec, Vec};
 use crate::compute::{
     compute_cached_layout, compute_hidden_layout, compute_leaf_layout, compute_root_layout, round_layout,
 };
-use crate::CacheTree;
 #[cfg(feature = "block_layout")]
 use crate::{compute::compute_block_layout, LayoutBlockContainer};
 #[cfg(feature = "flexbox")]
 use crate::{compute::compute_flexbox_layout, LayoutFlexboxContainer};
 #[cfg(feature = "grid")]
 use crate::{compute::compute_grid_layout, LayoutGridContainer};
+use crate::{CacheTree, DefaultUnits};
 
 #[cfg(all(feature = "detailed_layout_info", feature = "grid"))]
 use crate::compute::grid::DetailedGridInfo;
@@ -328,7 +327,7 @@ where
     where
         Self: 'a;
 
-    type CustomIdent = DefaultCheapStr;
+    type Units = DefaultUnits;
 
     #[inline(always)]
     fn get_core_container_style(&self, node_id: NodeId) -> Self::CoreContainerStyle<'_> {
