@@ -146,7 +146,7 @@ pub(super) fn align_and_position_item(
     let width = inherent_size.width.or_else(|| {
         // Apply width derived from both the left and right properties of an absolutely
         // positioned element being set
-        if position == Position::Absolute {
+        if position.is_out_of_flow() {
             if let (Some(left), Some(right)) = (inset_horizontal.start, inset_horizontal.end) {
                 return Some(f32_max(grid_area_minus_item_margins_size.width - left - right, 0.0));
             }
@@ -159,7 +159,7 @@ pub(super) fn align_and_position_item(
         if margin.left.is_some()
             && margin.right.is_some()
             && alignment_styles.horizontal == AlignSelf::Stretch
-            && position != Position::Absolute
+            && position.is_in_flow()
         {
             return Some(grid_area_minus_item_margins_size.width);
         }
@@ -171,7 +171,7 @@ pub(super) fn align_and_position_item(
     let Size { width, height } = Size { width, height: inherent_size.height }.maybe_apply_aspect_ratio(aspect_ratio);
 
     let height = height.or_else(|| {
-        if position == Position::Absolute {
+        if position.is_out_of_flow() {
             if let (Some(top), Some(bottom)) = (inset_vertical.start, inset_vertical.end) {
                 return Some(f32_max(grid_area_minus_item_margins_size.height - top - bottom, 0.0));
             }
@@ -184,7 +184,7 @@ pub(super) fn align_and_position_item(
         if margin.top.is_some()
             && margin.bottom.is_some()
             && alignment_styles.vertical == AlignSelf::Stretch
-            && position != Position::Absolute
+            && position.is_in_flow()
         {
             return Some(grid_area_minus_item_margins_size.height);
         }
@@ -309,7 +309,7 @@ pub(super) fn align_item_within_area(
         AlignSelf::Stretch => resolved_margin.start,
     };
 
-    let offset_within_area = if position == Position::Absolute {
+    let offset_within_area = if position.is_out_of_flow() {
         if let Some(start) = inset.start {
             start + non_auto_margin.start
         } else if let Some(end) = inset.end {
