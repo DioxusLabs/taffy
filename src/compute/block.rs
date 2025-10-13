@@ -490,10 +490,16 @@ fn perform_final_layout_on_in_flow_children(
                 x: resolved_content_box_inset.left,
                 y: committed_y_offset + active_collapsible_margin_set.resolve(),
             };
+
             let mut location = Point {
-                x: resolved_content_box_inset.left + inset_offset.x + resolved_margin.left,
-                y: committed_y_offset + inset_offset.y + y_margin_offset,
+                x: resolved_content_box_inset.left + resolved_margin.left,
+                y: committed_y_offset + y_margin_offset,
             };
+
+            if item.position == Position::Relative {
+                location.x += inset_offset.x;
+                location.y += inset_offset.y;
+            }
 
             // Apply alignment
             let item_outer_width = item_layout.size.width + resolved_margin.horizontal_axis_sum();
