@@ -12,7 +12,7 @@ use crate::util::debug::debug_log;
 use crate::util::sys::{f32_max, new_vec_with_capacity, Vec};
 use crate::util::MaybeMath;
 use crate::util::{MaybeResolve, ResolveOrZero};
-use crate::{BoxGenerationMode, BoxSizing, Direction};
+use crate::{BoxGenerationMode, BoxSizing, Direction, Position};
 
 use super::common::alignment::apply_alignment_fallback;
 #[cfg(feature = "content_size")]
@@ -34,6 +34,9 @@ struct FlexItem {
     max_size: Size<Option<f32>>,
     /// The cross-alignment of this item
     align_self: AlignSelf,
+
+    /// The position style of the item
+    position: Position,
 
     /// The overflow style of the item
     overflow: Point<Overflow>,
@@ -524,6 +527,7 @@ fn generate_anonymous_flex_items(
             FlexItem {
                 node: child,
                 order: index as u32,
+                position: child_style.position(),
                 size: child_style
                     .size()
                     .maybe_resolve(constants.node_inner_size, |val, basis| tree.calc(val, basis))
@@ -1926,15 +1930,23 @@ fn calculate_flex_item(
 
     let is_rtl_row = direction.is_row() && layout_direction.is_rtl();
     let is_rtl_column = direction.is_column() && layout_direction.is_rtl();
-    let main_relative_inset = if is_rtl_row {
-        item.inset.main_end(direction).or(item.inset.main_start(direction).map(|pos| -pos)).unwrap_or(0.0)
+    let main_relative_inset = if item.position == Position::Relative {
+        if is_rtl_row {
+            item.inset.main_end(direction).or(item.inset.main_start(direction).map(|pos| -pos)).unwrap_or(0.0)
+        } else {
+            item.inset.main_start(direction).or(item.inset.main_end(direction).map(|pos| -pos)).unwrap_or(0.0)
+        }
     } else {
-        item.inset.main_start(direction).or(item.inset.main_end(direction).map(|pos| -pos)).unwrap_or(0.0)
+        0.0
     };
-    let cross_relative_inset = if is_rtl_column {
-        item.inset.cross_end(direction).map(|pos| -pos).or(item.inset.cross_start(direction)).unwrap_or(0.0)
+    let cross_relative_inset = if item.position == Position::Relative {
+        if is_rtl_column {
+            item.inset.cross_end(direction).map(|pos| -pos).or(item.inset.cross_start(direction)).unwrap_or(0.0)
+        } else {
+            item.inset.cross_start(direction).or(item.inset.cross_end(direction).map(|pos| -pos)).unwrap_or(0.0)
+        }
     } else {
-        item.inset.cross_start(direction).or(item.inset.cross_end(direction).map(|pos| -pos)).unwrap_or(0.0)
+        0.0
     };
     let effective_line_offset_cross = if is_rtl_column { 0.0 } else { line_offset_cross };
 

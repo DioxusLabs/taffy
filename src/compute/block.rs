@@ -956,30 +956,33 @@ fn perform_final_layout_on_in_flow_children(
             let mut location = if item.is_in_same_bfc {
                 Point {
                     x: match direction {
-                        Direction::Ltr => resolved_content_box_inset.left + inset_offset.x + resolved_margin.left,
+                        Direction::Ltr => resolved_content_box_inset.left + resolved_margin.left,
                         Direction::Rtl => {
                             container_outer_width
                                 - resolved_content_box_inset.right
                                 - final_size.width
                                 - resolved_margin.right
-                                + inset_offset.x
                         }
                     },
-                    y: committed_y_offset.max(clear_pos) + y_margin_offset + inset_offset.y,
+                    y: committed_y_offset.max(clear_pos) + y_margin_offset,
                 }
             } else {
                 // TODO: handle inset and margins
                 Point {
                     x: match direction {
-                        Direction::Ltr => float_avoiding_position.x + resolved_margin.left + inset_offset.x,
+                        Direction::Ltr => float_avoiding_position.x + resolved_margin.left,
                         Direction::Rtl => {
                             float_avoiding_position.x + float_avoiding_width - final_size.width - resolved_margin.right
-                                + inset_offset.x
                         }
                     },
-                    y: float_avoiding_position.y + inset_offset.y,
+                    y: float_avoiding_position.y,
                 }
             };
+
+            if item.position == Position::Relative {
+                location.x += inset_offset.x;
+                location.y += inset_offset.y;
+            }
 
             // Apply alignment
             let item_outer_width = item_layout.size.width + resolved_margin.horizontal_axis_sum();
