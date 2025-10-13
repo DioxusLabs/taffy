@@ -174,13 +174,13 @@ fn compute_inner(tree: &mut impl LayoutBlockContainer, node_id: NodeId, inputs: 
         start: vertical_margins_are_collapsible.start
             && !style.overflow().x.is_scroll_container()
             && !style.overflow().y.is_scroll_container()
-            && style.position() == Position::Relative
+            && style.position().is_in_flow()
             && padding.top == 0.0
             && border.top == 0.0,
         end: vertical_margins_are_collapsible.end
             && !style.overflow().x.is_scroll_container()
             && !style.overflow().y.is_scroll_container()
-            && style.position() == Position::Relative
+            && style.position().is_in_flow()
             && padding.bottom == 0.0
             && border.bottom == 0.0
             && size.height.is_none(),
@@ -188,7 +188,7 @@ fn compute_inner(tree: &mut impl LayoutBlockContainer, node_id: NodeId, inputs: 
     let has_styles_preventing_being_collapsed_through = !style.is_block()
         || style.overflow().x.is_scroll_container()
         || style.overflow().y.is_scroll_container()
-        || style.position() == Position::Absolute
+        || style.position().is_out_of_flow()
         || padding.top > 0.0
         || padding.bottom > 0.0
         || border.top > 0.0
@@ -267,7 +267,7 @@ fn compute_inner(tree: &mut impl LayoutBlockContainer, node_id: NodeId, inputs: 
 
     // 7. Determine whether this node can be collapsed through
     let all_in_flow_children_can_be_collapsed_through =
-        items.iter().all(|item| item.position == Position::Absolute || item.can_be_collapsed_through);
+        items.iter().all(|item| item.position.is_out_of_flow() || item.can_be_collapsed_through);
     let can_be_collapsed_through =
         !has_styles_preventing_being_collapsed_through && all_in_flow_children_can_be_collapsed_through;
 
@@ -361,7 +361,7 @@ fn determine_content_based_container_width(
     let available_space = Size { width: available_width, height: AvailableSpace::MinContent };
 
     let mut max_child_width = 0.0;
-    for item in items.iter().filter(|item| item.position != Position::Absolute) {
+    for item in items.iter().filter(|item| item.position.is_in_flow()) {
         let known_dimensions = item.size.maybe_clamp(item.min_size, item.max_size);
 
         let width = known_dimensions.width.unwrap_or_else(|| {
@@ -413,7 +413,7 @@ fn perform_final_layout_on_in_flow_children(
     let mut active_collapsible_margin_set = CollapsibleMarginSet::ZERO;
     let mut is_collapsing_with_first_margin_set = true;
     for item in items.iter_mut() {
-        if item.position == Position::Absolute {
+        if item.position.is_out_of_flow() {
             item.static_position = Point { x: resolved_content_box_inset.left, y: y_offset_for_absolute }
         } else {
             let item_margin = item
@@ -589,12 +589,11 @@ fn perform_absolute_layout_on_absolute_children(
     #[cfg_attr(not(feature = "content_size"), allow(unused_mut))]
     let mut absolute_content_size = Size::ZERO;
 
-    for item in items.iter().filter(|item| item.position == Position::Absolute) {
+    for item in items.iter().filter(|item| item.position.is_out_of_flow()) {
         let child_style = tree.get_block_child_style(item.node_id);
 
         // Skip items that are display:none or are not position:absolute
-        if child_style.box_generation_mode() == BoxGenerationMode::None || child_style.position() != Position::Absolute
-        {
+        if child_style.box_generation_mode() == BoxGenerationMode::None {
             continue;
         }
 
