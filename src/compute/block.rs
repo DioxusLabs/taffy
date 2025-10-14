@@ -1005,7 +1005,7 @@ fn perform_absolute_layout_on_absolute_children(
             left: if left.is_some() { margin.left.unwrap_or(0.0) } else { 0.0 },
             right: if right.is_some() { margin.right.unwrap_or(0.0) } else { 0.0 },
             top: if top.is_some() { margin.top.unwrap_or(0.0) } else { 0.0 },
-            bottom: if bottom.is_some() { margin.left.unwrap_or(0.0) } else { 0.0 },
+            bottom: if bottom.is_some() { margin.bottom.unwrap_or(0.0) } else { 0.0 },
         };
 
         // Expand auto margins to fill available space
