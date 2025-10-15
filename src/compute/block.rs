@@ -622,14 +622,15 @@ fn perform_final_layout_on_in_flow_children(
     block_ctx: &mut BlockContext<'_>,
 ) -> (Size<f32>, f32, CollapsibleMarginSet, CollapsibleMarginSet) {
     // Resolve container_inner_width for sizing child nodes using initial content_box_inset
-    let container_inner_width = container_outer_width - content_box_inset.horizontal_axis_sum();
+    let container_inner_width = container_outer_width - resolved_content_box_inset.horizontal_axis_sum();
     let parent_size = Size { width: Some(container_outer_width), height: None };
     let available_space =
         Size { width: AvailableSpace::Definite(container_inner_width), height: AvailableSpace::MinContent };
 
     // TODO: handle nested blocks with different widths
     if block_ctx.is_bfc_root() {
-        block_ctx.set_width(available_space.width);
+        block_ctx.set_width(AvailableSpace::Definite(container_outer_width));
+        block_ctx.apply_content_box_inset([resolved_content_box_inset.left, resolved_content_box_inset.right]);
     }
 
     #[cfg_attr(not(feature = "content_size"), allow(unused_mut))]
