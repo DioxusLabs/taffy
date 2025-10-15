@@ -879,13 +879,13 @@ fn perform_final_layout_on_in_flow_children(
                     .collapse_with_set(top_margin_set)
                     .collapse_with_set(bottom_margin_set);
                 y_offset_for_absolute = committed_y_offset + item_layout.size.height + y_margin_offset;
+                y_offset_for_float = committed_y_offset + item_layout.size.height + y_margin_offset;
             } else {
                 committed_y_offset += item_layout.size.height + y_margin_offset;
                 active_collapsible_margin_set = bottom_margin_set;
                 y_offset_for_absolute = committed_y_offset + active_collapsible_margin_set.resolve();
+                y_offset_for_float = committed_y_offset;
             }
-
-            y_offset_for_float += committed_y_offset + item_layout.size.height + y_margin_offset;
         }
     }
 
