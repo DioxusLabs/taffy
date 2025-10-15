@@ -287,7 +287,7 @@ pub fn compute_block_layout(
                 styled_based_known_dimensions
                     .width
                     .map(AvailableSpace::Definite)
-                    .unwrap_or(inputs.available_space.width),
+                    .unwrap_or(AvailableSpace::MaxContent),
             );
             let mut root_ctx = root_bfc.root_block_context();
             compute_inner(
