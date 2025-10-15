@@ -101,6 +101,9 @@ impl FloatContext {
     /// Create a new empty `FloatContext`
     pub fn set_width(&mut self, available_space: AvailableSpace) {
         self.available_space = available_space;
+        if let AvailableSpace::Definite(bfc_width) = available_space {
+            self.placer.bfc_width = bfc_width;
+        }
     }
 
     /// Position a floated box with the context
