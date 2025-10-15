@@ -35,7 +35,14 @@ impl BlockFormattingContext {
 
     /// Create an initial `BlockContext` for this `BlockFormattingContext`
     pub fn root_block_context(&mut self) -> BlockContext<'_> {
-        BlockContext { bfc: self, y_offset: 0.0, insets: [0.0, 0.0], float_content_contribution: 0.0, is_root: true }
+        BlockContext {
+            bfc: self,
+            y_offset: 0.0,
+            insets: [0.0, 0.0],
+            content_box_insets: [0.0, 0.0],
+            float_content_contribution: 0.0,
+            is_root: true,
+        }
     }
 }
 
@@ -47,8 +54,10 @@ pub struct BlockContext<'bfc> {
     /// The y-offset of the border-top of the block node, relative to the to the border-top of the
     /// root node of the Block Formatting Context it belongs to.
     y_offset: f32,
-    /// The x-inset in from each side of the block node, relative to the root node of the Block Formatting Context it belongs to.
+    /// The x-inset of the border-box in from each side of the block node, relative to the root node of the Block Formatting Context it belongs to.
     insets: [f32; 2],
+    /// The x-insets of the content box
+    content_box_insets: [f32; 2],
     /// The height that floats take up in the element
     float_content_contribution: f32,
     /// Whether the node is the root of the Block Formatting Context is belongs to.
@@ -59,10 +68,12 @@ pub struct BlockContext<'bfc> {
 impl BlockContext<'_> {
     /// Create a sub-`BlockContext` for a child block node
     pub fn sub_context(&mut self, additional_y_offset: f32, insets: [f32; 2]) -> BlockContext<'_> {
+        let insets = [self.insets[0] + insets[0], self.insets[1] + insets[1]];
         BlockContext {
             bfc: self.bfc,
             y_offset: self.y_offset + additional_y_offset,
-            insets: [self.insets[0] + insets[0], self.insets[1] + insets[1]],
+            insets,
+            content_box_insets: insets,
             float_content_contribution: 0.0,
             is_root: false,
         }
@@ -76,6 +87,11 @@ impl BlockContext<'_> {
         self.is_root
     }
 
+    pub fn apply_content_box_inset(&mut self, content_box_x_insets: [f32; 2]) {
+        self.content_box_insets[0] = self.insets[0] + content_box_x_insets[0];
+        self.content_box_insets[1] = self.insets[1] + content_box_x_insets[1];
+    }
+
     pub fn place_floated_box(
         &mut self,
         floated_box: Size<f32>,
@@ -83,8 +99,13 @@ impl BlockContext<'_> {
         direction: FloatDirection,
         clear: Clear,
     ) -> Point<f32> {
-        let mut pos =
-            self.bfc.float_context.place_floated_box(floated_box, min_y + self.y_offset, self.insets, direction, clear);
+        let mut pos = self.bfc.float_context.place_floated_box(
+            floated_box,
+            min_y + self.y_offset,
+            self.content_box_insets,
+            direction,
+            clear,
+        );
         pos.y -= self.y_offset;
         pos.x -= self.insets[0];
 
@@ -94,7 +115,8 @@ impl BlockContext<'_> {
     }
 
     pub fn find_content_slot(&self, min_y: f32, clear: Clear, after: Option<usize>) -> ContentSlot {
-        let mut slot = self.bfc.float_context.find_content_slot(min_y + self.y_offset, self.insets, clear, after);
+        let mut slot =
+            self.bfc.float_context.find_content_slot(min_y + self.y_offset, self.content_box_insets, clear, after);
         slot.y -= self.y_offset;
         slot.x -= self.insets[0];
         slot
@@ -314,6 +336,9 @@ fn compute_inner(
     let padding_border_size = padding_border.sum_axes();
     let content_box_inset = padding_border + scrollbar_gutter;
     let container_content_box_size = known_dimensions.maybe_sub(content_box_inset.sum_axes());
+
+    // Apply content box inset
+    block_ctx.apply_content_box_inset([content_box_inset.left, content_box_inset.right]);
 
     let box_sizing_adjustment =
         if style.box_sizing() == BoxSizing::ContentBox { padding_border_size } else { Size::ZERO };
