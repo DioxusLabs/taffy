@@ -1,8 +1,8 @@
 //! Computes size using styles and measure functions
 
-use crate::geometry::{Point, Size};
+use crate::geometry::Size;
 use crate::style::{AvailableSpace, Overflow, Position};
-use crate::tree::{CollapsibleMarginSet, RunMode};
+use crate::tree::RunMode;
 use crate::tree::{LayoutInput, LayoutOutput, SizingMode};
 use crate::util::debug::debug_log;
 use crate::util::sys::f32_max;
@@ -10,6 +10,9 @@ use crate::util::MaybeMath;
 use crate::util::{MaybeResolve, ResolveOrZero};
 use crate::{BoxSizing, CoreStyle};
 use core::unreachable;
+
+#[cfg(feature = "content_size")]
+use crate::geometry::Rect;
 
 /// Compute the size of a leaf node (node with no children)
 pub fn compute_leaf_layout<MeasureFunction>(
@@ -64,7 +67,9 @@ where
     // Scrollbar gutters are reserved when the `overflow` property is set to `Overflow::Scroll`.
     // However, the axis are switched (transposed) because a node that scrolls vertically needs
     // *horizontal* space to be reserved for a scrollbar
-    let scrollbar_gutter = style.overflow().transpose().map(|overflow| match overflow {
+    let overflow = style.overflow();
+    let is_scroll_container = overflow.x.is_scroll_container() || overflow.y.is_scroll_container();
+    let scrollbar_gutter = overflow.transpose().map(|overflow| match overflow {
         Overflow::Scroll => style.scrollbar_width(),
         _ => 0.0,
     });
@@ -74,8 +79,7 @@ where
     content_box_inset.bottom += scrollbar_gutter.y;
 
     let has_styles_preventing_being_collapsed_through = !style.is_block()
-        || style.overflow().x.is_scroll_container()
-        || style.overflow().y.is_scroll_container()
+        || is_scroll_container
         || style.position() == Position::Absolute
         || padding.top > 0.0
         || padding.bottom > 0.0
@@ -95,16 +99,8 @@ where
             let size = Size { width, height }
                 .maybe_clamp(node_min_size, node_max_size)
                 .maybe_max(padding_border.sum_axes().map(Some));
-            return LayoutOutput {
-                size,
-                #[cfg(feature = "content_size")]
-                content_size: Size::ZERO,
-                first_baselines: Point::NONE,
-                top_margin: CollapsibleMarginSet::ZERO,
-                bottom_margin: CollapsibleMarginSet::ZERO,
-                margins_can_collapse_through: false,
-            };
-        };
+            return LayoutOutput { size, ..LayoutOutput::DEFAULT };
+        }
     }
 
     // Compute available space
@@ -148,17 +144,22 @@ where
         width: clamped_size.width,
         height: f32_max(clamped_size.height, aspect_ratio.map(|ratio| clamped_size.width / ratio).unwrap_or(0.0)),
     };
-    let size = size.maybe_max(padding_border.sum_axes().map(Some));
+    let size = size.f32_max(padding_border.sum_axes());
+
+    #[cfg(feature = "content_size")]
+    let descendent_scrollable_overflow = if is_scroll_container {
+        Rect::from_top_left_and_size(border.top_left(), measured_size + padding.sum_axes())
+    } else {
+        Rect::from_top_left_and_size(border.top_left() + padding.top_left(), measured_size)
+    };
 
     LayoutOutput {
         size,
         #[cfg(feature = "content_size")]
-        content_size: measured_size + padding.sum_axes(),
-        first_baselines: Point::NONE,
-        top_margin: CollapsibleMarginSet::ZERO,
-        bottom_margin: CollapsibleMarginSet::ZERO,
+        descendent_scrollable_overflow,
         margins_can_collapse_through: !has_styles_preventing_being_collapsed_through
             && size.height == 0.0
             && measured_size.height == 0.0,
+        ..LayoutOutput::DEFAULT
     }
 }
