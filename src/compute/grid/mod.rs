@@ -540,7 +540,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     // children.
     #[cfg(feature = "content_size")]
     if is_scroll_container {
-        scrollable_overflow = scrollable_overflow.inset_by(-padding);
+        scrollable_overflow = scrollable_overflow.outset_by(padding);
     }
 
     // Position hidden and absolutely positioned children

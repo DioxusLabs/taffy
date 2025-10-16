@@ -257,6 +257,7 @@ pub(super) fn align_and_position_item(
             padding,
             border,
             margin: resolved_margin,
+            ..Layout::default()
         },
     );
 

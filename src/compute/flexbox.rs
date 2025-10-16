@@ -409,7 +409,7 @@ fn compute_preliminary(tree: &mut impl LayoutFlexboxContainer, node: NodeId, inp
     // so we do it here before adding the out-of-flow (absolute)
     // children.
     if constants.is_scroll_container {
-        scrollable_overflow = scrollable_overflow.inset_by(-constants.padding);
+        scrollable_overflow = scrollable_overflow.outset_by(constants.padding);
     }
 
     // Before returning we perform absolute layout on all absolutely positioned children
@@ -2004,6 +2004,7 @@ fn calculate_flex_item(
             padding: item.padding,
             border: item.border,
             margin: item.margin,
+            ..Layout::default()
         },
     );
 
@@ -2377,6 +2378,7 @@ fn perform_absolute_layout_on_absolute_children(
                 padding,
                 border,
                 margin: resolved_margin,
+                ..Layout::default()
             },
         );
 

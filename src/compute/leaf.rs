@@ -1,8 +1,8 @@
 //! Computes size using styles and measure functions
 
-use crate::geometry::{Point, Size};
+use crate::geometry::Size;
 use crate::style::{AvailableSpace, Overflow, Position};
-use crate::tree::{CollapsibleMarginSet, RunMode};
+use crate::tree::RunMode;
 use crate::tree::{LayoutInput, LayoutOutput, SizingMode};
 use crate::util::debug::debug_log;
 use crate::util::sys::f32_max;
@@ -157,11 +157,9 @@ where
         size,
         #[cfg(feature = "content_size")]
         descendent_scrollable_overflow,
-        first_baselines: Point::NONE,
-        top_margin: CollapsibleMarginSet::ZERO,
-        bottom_margin: CollapsibleMarginSet::ZERO,
         margins_can_collapse_through: !has_styles_preventing_being_collapsed_through
             && size.height == 0.0
             && measured_size.height == 0.0,
+        ..LayoutOutput::DEFAULT
     }
 }

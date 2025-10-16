@@ -158,6 +158,7 @@ pub fn compute_root_layout(tree: &mut impl LayoutPartialTree, root: NodeId, avai
             border,
             // TODO: support auto margins for root node?
             margin,
+            ..Layout::default()
         },
     );
 }

@@ -256,7 +256,7 @@ impl<T> Rect<T> {
         Line { start: self.top, end: self.bottom }
     }
 
-    /// Return the rectangle with the edges move "in" by the
+    /// Return the rectangle with the edges moved "in" by the
     /// corresponding component of `insets`.
     pub fn inset_by<U, V>(self, insets: Rect<U>) -> Rect<V>
     where
@@ -268,6 +268,21 @@ impl<T> Rect<T> {
             right: self.right - insets.right,
             top: self.top + insets.top,
             bottom: self.bottom - insets.bottom,
+        }
+    }
+
+    /// Return the rectangle with the edges moved "out" by the
+    /// corresponding component of `insets`.
+    pub fn outset_by<U, V>(self, outsets: Rect<U>) -> Rect<V>
+    where
+        T: Add<U, Output = V>,
+        T: Sub<U, Output = V>,
+    {
+        Rect {
+            left: self.left - outsets.left,
+            right: self.right + outsets.right,
+            top: self.top - outsets.top,
+            bottom: self.bottom + outsets.bottom,
         }
     }
 
@@ -414,17 +429,19 @@ impl Rect<f32> {
         Self { left: start, right: end, top, bottom }
     }
 
-    /// Creates an "empty" rectangle with the left and top at positive
+    /// Returns an "empty" rectangle with the left and top at positive
     /// infinity and the right and bottom at negative infinity.  This
     /// is the identity element for union operations.
     pub const fn new_empty() -> Self {
-        Self { left: f32::INFINITY, right: -f32::INFINITY, top: f32::INFINITY, bottom: -f32::INFINITY }
+        Self { left: f32::INFINITY, right: f32::NEG_INFINITY, top: f32::INFINITY, bottom: f32::NEG_INFINITY }
     }
 
     /// Returns the union of self and `other`--the rectangle that
     /// encloses all of the area of either rectangle.  If `other` is
     /// empty (i.e. right < left or bottom < top), returns self
-    /// unchanged.
+    /// unchanged.  A rectangle with zero area (i.e. left==right or
+    /// top==bottom) is **not** excluded.  In other words, the edges
+    /// are considered to be closed bounds.
     ///
     /// See also [`union_with`]
     pub fn union(mut self, other: Rect<f32>) -> Rect<f32> {
@@ -434,7 +451,9 @@ impl Rect<f32> {
 
     /// Expands self to include the area of another rectangle.  If
     /// `other` is empty (i.e. right < left or bottom < top), leaves
-    /// self unchanged.
+    /// self unchanged.  A rectangle with zero area (i.e. left==right
+    /// or top==bottom) is **not** excluded.  In other words, the
+    /// edges are considered to be closed bounds.
     ///
     pub fn union_with(&mut self, other: Rect<f32>) {
         if other.left <= other.right && other.top <= other.bottom {
