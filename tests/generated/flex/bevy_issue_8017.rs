@@ -93,48 +93,317 @@ fn bevy_issue_8017__border_box() {
     println!("\nComputed tree:");
     taffy.print_tree(node);
     println!();
+    let mut mismatches = 0u32;
     let layout = taffy.layout(node).unwrap();
-    let Layout { size, location, .. } = layout;
-    assert_eq!(size.width, 400f32, "width of node {:?}. Expected {}. Actual {}", node, 400f32, size.width);
-    assert_eq!(size.height, 400f32, "height of node {:?}. Expected {}. Actual {}", node, 400f32, size.height);
-    assert_eq!(location.x, 0f32, "x of node {:?}. Expected {}. Actual {}", node, 0f32, location.x);
-    assert_eq!(location.y, 0f32, "y of node {:?}. Expected {}. Actual {}", node, 0f32, location.y);
+    if layout.size.width != 400f32 {
+        mismatches += 1;
+        eprintln!("{:?}.{} mismatch: expected {} actual {}", node, stringify!(size.width), 400f32, layout.size.width);
+    }
+    if layout.size.height != 400f32 {
+        mismatches += 1;
+        eprintln!("{:?}.{} mismatch: expected {} actual {}", node, stringify!(size.height), 400f32, layout.size.height);
+    }
+    if layout.location.x != 0f32 {
+        mismatches += 1;
+        eprintln!("{:?}.{} mismatch: expected {} actual {}", node, stringify!(location.x), 0f32, layout.location.x);
+    }
+    if layout.location.y != 0f32 {
+        mismatches += 1;
+        eprintln!("{:?}.{} mismatch: expected {} actual {}", node, stringify!(location.y), 0f32, layout.location.y);
+    }
+    #[cfg(feature = "content_size")]
+    if layout.scroll_width() != 0f32 {
+        mismatches += 1;
+        eprintln!(
+            "{:?}.{} mismatch: expected {} actual {}",
+            node,
+            stringify!(scroll_width()),
+            0f32,
+            layout.scroll_width()
+        );
+    }
+    #[cfg(feature = "content_size")]
+    if layout.scroll_height() != 0f32 {
+        mismatches += 1;
+        eprintln!(
+            "{:?}.{} mismatch: expected {} actual {}",
+            node,
+            stringify!(scroll_height()),
+            0f32,
+            layout.scroll_height()
+        );
+    }
     let layout = taffy.layout(node0).unwrap();
-    let Layout { size, location, .. } = layout;
-    assert_eq!(size.width, 384f32, "width of node {:?}. Expected {}. Actual {}", node0, 384f32, size.width);
-    assert_eq!(size.height, 188f32, "height of node {:?}. Expected {}. Actual {}", node0, 188f32, size.height);
-    assert_eq!(location.x, 8f32, "x of node {:?}. Expected {}. Actual {}", node0, 8f32, location.x);
-    assert_eq!(location.y, 8f32, "y of node {:?}. Expected {}. Actual {}", node0, 8f32, location.y);
+    if layout.size.width != 384f32 {
+        mismatches += 1;
+        eprintln!("{:?}.{} mismatch: expected {} actual {}", node0, stringify!(size.width), 384f32, layout.size.width);
+    }
+    if layout.size.height != 188f32 {
+        mismatches += 1;
+        eprintln!(
+            "{:?}.{} mismatch: expected {} actual {}",
+            node0,
+            stringify!(size.height),
+            188f32,
+            layout.size.height
+        );
+    }
+    if layout.location.x != 8f32 {
+        mismatches += 1;
+        eprintln!("{:?}.{} mismatch: expected {} actual {}", node0, stringify!(location.x), 8f32, layout.location.x);
+    }
+    if layout.location.y != 8f32 {
+        mismatches += 1;
+        eprintln!("{:?}.{} mismatch: expected {} actual {}", node0, stringify!(location.y), 8f32, layout.location.y);
+    }
+    #[cfg(feature = "content_size")]
+    if layout.scroll_width() != 0f32 {
+        mismatches += 1;
+        eprintln!(
+            "{:?}.{} mismatch: expected {} actual {}",
+            node0,
+            stringify!(scroll_width()),
+            0f32,
+            layout.scroll_width()
+        );
+    }
+    #[cfg(feature = "content_size")]
+    if layout.scroll_height() != 0f32 {
+        mismatches += 1;
+        eprintln!(
+            "{:?}.{} mismatch: expected {} actual {}",
+            node0,
+            stringify!(scroll_height()),
+            0f32,
+            layout.scroll_height()
+        );
+    }
     let layout = taffy.layout(node00).unwrap();
-    let Layout { size, location, .. } = layout;
-    assert_eq!(size.width, 188f32, "width of node {:?}. Expected {}. Actual {}", node00, 188f32, size.width);
-    assert_eq!(size.height, 188f32, "height of node {:?}. Expected {}. Actual {}", node00, 188f32, size.height);
-    assert_eq!(location.x, 0f32, "x of node {:?}. Expected {}. Actual {}", node00, 0f32, location.x);
-    assert_eq!(location.y, 0f32, "y of node {:?}. Expected {}. Actual {}", node00, 0f32, location.y);
+    if layout.size.width != 188f32 {
+        mismatches += 1;
+        eprintln!("{:?}.{} mismatch: expected {} actual {}", node00, stringify!(size.width), 188f32, layout.size.width);
+    }
+    if layout.size.height != 188f32 {
+        mismatches += 1;
+        eprintln!(
+            "{:?}.{} mismatch: expected {} actual {}",
+            node00,
+            stringify!(size.height),
+            188f32,
+            layout.size.height
+        );
+    }
+    if layout.location.x != 0f32 {
+        mismatches += 1;
+        eprintln!("{:?}.{} mismatch: expected {} actual {}", node00, stringify!(location.x), 0f32, layout.location.x);
+    }
+    if layout.location.y != 0f32 {
+        mismatches += 1;
+        eprintln!("{:?}.{} mismatch: expected {} actual {}", node00, stringify!(location.y), 0f32, layout.location.y);
+    }
+    #[cfg(feature = "content_size")]
+    if layout.scroll_width() != 0f32 {
+        mismatches += 1;
+        eprintln!(
+            "{:?}.{} mismatch: expected {} actual {}",
+            node00,
+            stringify!(scroll_width()),
+            0f32,
+            layout.scroll_width()
+        );
+    }
+    #[cfg(feature = "content_size")]
+    if layout.scroll_height() != 0f32 {
+        mismatches += 1;
+        eprintln!(
+            "{:?}.{} mismatch: expected {} actual {}",
+            node00,
+            stringify!(scroll_height()),
+            0f32,
+            layout.scroll_height()
+        );
+    }
     let layout = taffy.layout(node01).unwrap();
-    let Layout { size, location, .. } = layout;
-    assert_eq!(size.width, 188f32, "width of node {:?}. Expected {}. Actual {}", node01, 188f32, size.width);
-    assert_eq!(size.height, 188f32, "height of node {:?}. Expected {}. Actual {}", node01, 188f32, size.height);
-    assert_eq!(location.x, 196f32, "x of node {:?}. Expected {}. Actual {}", node01, 196f32, location.x);
-    assert_eq!(location.y, 0f32, "y of node {:?}. Expected {}. Actual {}", node01, 0f32, location.y);
+    if layout.size.width != 188f32 {
+        mismatches += 1;
+        eprintln!("{:?}.{} mismatch: expected {} actual {}", node01, stringify!(size.width), 188f32, layout.size.width);
+    }
+    if layout.size.height != 188f32 {
+        mismatches += 1;
+        eprintln!(
+            "{:?}.{} mismatch: expected {} actual {}",
+            node01,
+            stringify!(size.height),
+            188f32,
+            layout.size.height
+        );
+    }
+    if layout.location.x != 196f32 {
+        mismatches += 1;
+        eprintln!("{:?}.{} mismatch: expected {} actual {}", node01, stringify!(location.x), 196f32, layout.location.x);
+    }
+    if layout.location.y != 0f32 {
+        mismatches += 1;
+        eprintln!("{:?}.{} mismatch: expected {} actual {}", node01, stringify!(location.y), 0f32, layout.location.y);
+    }
+    #[cfg(feature = "content_size")]
+    if layout.scroll_width() != 0f32 {
+        mismatches += 1;
+        eprintln!(
+            "{:?}.{} mismatch: expected {} actual {}",
+            node01,
+            stringify!(scroll_width()),
+            0f32,
+            layout.scroll_width()
+        );
+    }
+    #[cfg(feature = "content_size")]
+    if layout.scroll_height() != 0f32 {
+        mismatches += 1;
+        eprintln!(
+            "{:?}.{} mismatch: expected {} actual {}",
+            node01,
+            stringify!(scroll_height()),
+            0f32,
+            layout.scroll_height()
+        );
+    }
     let layout = taffy.layout(node1).unwrap();
-    let Layout { size, location, .. } = layout;
-    assert_eq!(size.width, 384f32, "width of node {:?}. Expected {}. Actual {}", node1, 384f32, size.width);
-    assert_eq!(size.height, 188f32, "height of node {:?}. Expected {}. Actual {}", node1, 188f32, size.height);
-    assert_eq!(location.x, 8f32, "x of node {:?}. Expected {}. Actual {}", node1, 8f32, location.x);
-    assert_eq!(location.y, 204f32, "y of node {:?}. Expected {}. Actual {}", node1, 204f32, location.y);
+    if layout.size.width != 384f32 {
+        mismatches += 1;
+        eprintln!("{:?}.{} mismatch: expected {} actual {}", node1, stringify!(size.width), 384f32, layout.size.width);
+    }
+    if layout.size.height != 188f32 {
+        mismatches += 1;
+        eprintln!(
+            "{:?}.{} mismatch: expected {} actual {}",
+            node1,
+            stringify!(size.height),
+            188f32,
+            layout.size.height
+        );
+    }
+    if layout.location.x != 8f32 {
+        mismatches += 1;
+        eprintln!("{:?}.{} mismatch: expected {} actual {}", node1, stringify!(location.x), 8f32, layout.location.x);
+    }
+    if layout.location.y != 204f32 {
+        mismatches += 1;
+        eprintln!("{:?}.{} mismatch: expected {} actual {}", node1, stringify!(location.y), 204f32, layout.location.y);
+    }
+    #[cfg(feature = "content_size")]
+    if layout.scroll_width() != 0f32 {
+        mismatches += 1;
+        eprintln!(
+            "{:?}.{} mismatch: expected {} actual {}",
+            node1,
+            stringify!(scroll_width()),
+            0f32,
+            layout.scroll_width()
+        );
+    }
+    #[cfg(feature = "content_size")]
+    if layout.scroll_height() != 0f32 {
+        mismatches += 1;
+        eprintln!(
+            "{:?}.{} mismatch: expected {} actual {}",
+            node1,
+            stringify!(scroll_height()),
+            0f32,
+            layout.scroll_height()
+        );
+    }
     let layout = taffy.layout(node10).unwrap();
-    let Layout { size, location, .. } = layout;
-    assert_eq!(size.width, 188f32, "width of node {:?}. Expected {}. Actual {}", node10, 188f32, size.width);
-    assert_eq!(size.height, 188f32, "height of node {:?}. Expected {}. Actual {}", node10, 188f32, size.height);
-    assert_eq!(location.x, 0f32, "x of node {:?}. Expected {}. Actual {}", node10, 0f32, location.x);
-    assert_eq!(location.y, 0f32, "y of node {:?}. Expected {}. Actual {}", node10, 0f32, location.y);
+    if layout.size.width != 188f32 {
+        mismatches += 1;
+        eprintln!("{:?}.{} mismatch: expected {} actual {}", node10, stringify!(size.width), 188f32, layout.size.width);
+    }
+    if layout.size.height != 188f32 {
+        mismatches += 1;
+        eprintln!(
+            "{:?}.{} mismatch: expected {} actual {}",
+            node10,
+            stringify!(size.height),
+            188f32,
+            layout.size.height
+        );
+    }
+    if layout.location.x != 0f32 {
+        mismatches += 1;
+        eprintln!("{:?}.{} mismatch: expected {} actual {}", node10, stringify!(location.x), 0f32, layout.location.x);
+    }
+    if layout.location.y != 0f32 {
+        mismatches += 1;
+        eprintln!("{:?}.{} mismatch: expected {} actual {}", node10, stringify!(location.y), 0f32, layout.location.y);
+    }
+    #[cfg(feature = "content_size")]
+    if layout.scroll_width() != 0f32 {
+        mismatches += 1;
+        eprintln!(
+            "{:?}.{} mismatch: expected {} actual {}",
+            node10,
+            stringify!(scroll_width()),
+            0f32,
+            layout.scroll_width()
+        );
+    }
+    #[cfg(feature = "content_size")]
+    if layout.scroll_height() != 0f32 {
+        mismatches += 1;
+        eprintln!(
+            "{:?}.{} mismatch: expected {} actual {}",
+            node10,
+            stringify!(scroll_height()),
+            0f32,
+            layout.scroll_height()
+        );
+    }
     let layout = taffy.layout(node11).unwrap();
-    let Layout { size, location, .. } = layout;
-    assert_eq!(size.width, 188f32, "width of node {:?}. Expected {}. Actual {}", node11, 188f32, size.width);
-    assert_eq!(size.height, 188f32, "height of node {:?}. Expected {}. Actual {}", node11, 188f32, size.height);
-    assert_eq!(location.x, 196f32, "x of node {:?}. Expected {}. Actual {}", node11, 196f32, location.x);
-    assert_eq!(location.y, 0f32, "y of node {:?}. Expected {}. Actual {}", node11, 0f32, location.y);
+    if layout.size.width != 188f32 {
+        mismatches += 1;
+        eprintln!("{:?}.{} mismatch: expected {} actual {}", node11, stringify!(size.width), 188f32, layout.size.width);
+    }
+    if layout.size.height != 188f32 {
+        mismatches += 1;
+        eprintln!(
+            "{:?}.{} mismatch: expected {} actual {}",
+            node11,
+            stringify!(size.height),
+            188f32,
+            layout.size.height
+        );
+    }
+    if layout.location.x != 196f32 {
+        mismatches += 1;
+        eprintln!("{:?}.{} mismatch: expected {} actual {}", node11, stringify!(location.x), 196f32, layout.location.x);
+    }
+    if layout.location.y != 0f32 {
+        mismatches += 1;
+        eprintln!("{:?}.{} mismatch: expected {} actual {}", node11, stringify!(location.y), 0f32, layout.location.y);
+    }
+    #[cfg(feature = "content_size")]
+    if layout.scroll_width() != 0f32 {
+        mismatches += 1;
+        eprintln!(
+            "{:?}.{} mismatch: expected {} actual {}",
+            node11,
+            stringify!(scroll_width()),
+            0f32,
+            layout.scroll_width()
+        );
+    }
+    #[cfg(feature = "content_size")]
+    if layout.scroll_height() != 0f32 {
+        mismatches += 1;
+        eprintln!(
+            "{:?}.{} mismatch: expected {} actual {}",
+            node11,
+            stringify!(scroll_height()),
+            0f32,
+            layout.scroll_height()
+        );
+    }
+    assert!(mismatches == 0, "Detected {mismatches} mismatch(es)");
 }
 
 #[test]
@@ -239,46 +508,315 @@ fn bevy_issue_8017__content_box() {
     println!("\nComputed tree:");
     taffy.print_tree(node);
     println!();
+    let mut mismatches = 0u32;
     let layout = taffy.layout(node).unwrap();
-    let Layout { size, location, .. } = layout;
-    assert_eq!(size.width, 416f32, "width of node {:?}. Expected {}. Actual {}", node, 416f32, size.width);
-    assert_eq!(size.height, 416f32, "height of node {:?}. Expected {}. Actual {}", node, 416f32, size.height);
-    assert_eq!(location.x, 0f32, "x of node {:?}. Expected {}. Actual {}", node, 0f32, location.x);
-    assert_eq!(location.y, 0f32, "y of node {:?}. Expected {}. Actual {}", node, 0f32, location.y);
+    if layout.size.width != 416f32 {
+        mismatches += 1;
+        eprintln!("{:?}.{} mismatch: expected {} actual {}", node, stringify!(size.width), 416f32, layout.size.width);
+    }
+    if layout.size.height != 416f32 {
+        mismatches += 1;
+        eprintln!("{:?}.{} mismatch: expected {} actual {}", node, stringify!(size.height), 416f32, layout.size.height);
+    }
+    if layout.location.x != 0f32 {
+        mismatches += 1;
+        eprintln!("{:?}.{} mismatch: expected {} actual {}", node, stringify!(location.x), 0f32, layout.location.x);
+    }
+    if layout.location.y != 0f32 {
+        mismatches += 1;
+        eprintln!("{:?}.{} mismatch: expected {} actual {}", node, stringify!(location.y), 0f32, layout.location.y);
+    }
+    #[cfg(feature = "content_size")]
+    if layout.scroll_width() != 0f32 {
+        mismatches += 1;
+        eprintln!(
+            "{:?}.{} mismatch: expected {} actual {}",
+            node,
+            stringify!(scroll_width()),
+            0f32,
+            layout.scroll_width()
+        );
+    }
+    #[cfg(feature = "content_size")]
+    if layout.scroll_height() != 0f32 {
+        mismatches += 1;
+        eprintln!(
+            "{:?}.{} mismatch: expected {} actual {}",
+            node,
+            stringify!(scroll_height()),
+            0f32,
+            layout.scroll_height()
+        );
+    }
     let layout = taffy.layout(node0).unwrap();
-    let Layout { size, location, .. } = layout;
-    assert_eq!(size.width, 400f32, "width of node {:?}. Expected {}. Actual {}", node0, 400f32, size.width);
-    assert_eq!(size.height, 196f32, "height of node {:?}. Expected {}. Actual {}", node0, 196f32, size.height);
-    assert_eq!(location.x, 8f32, "x of node {:?}. Expected {}. Actual {}", node0, 8f32, location.x);
-    assert_eq!(location.y, 8f32, "y of node {:?}. Expected {}. Actual {}", node0, 8f32, location.y);
+    if layout.size.width != 400f32 {
+        mismatches += 1;
+        eprintln!("{:?}.{} mismatch: expected {} actual {}", node0, stringify!(size.width), 400f32, layout.size.width);
+    }
+    if layout.size.height != 196f32 {
+        mismatches += 1;
+        eprintln!(
+            "{:?}.{} mismatch: expected {} actual {}",
+            node0,
+            stringify!(size.height),
+            196f32,
+            layout.size.height
+        );
+    }
+    if layout.location.x != 8f32 {
+        mismatches += 1;
+        eprintln!("{:?}.{} mismatch: expected {} actual {}", node0, stringify!(location.x), 8f32, layout.location.x);
+    }
+    if layout.location.y != 8f32 {
+        mismatches += 1;
+        eprintln!("{:?}.{} mismatch: expected {} actual {}", node0, stringify!(location.y), 8f32, layout.location.y);
+    }
+    #[cfg(feature = "content_size")]
+    if layout.scroll_width() != 0f32 {
+        mismatches += 1;
+        eprintln!(
+            "{:?}.{} mismatch: expected {} actual {}",
+            node0,
+            stringify!(scroll_width()),
+            0f32,
+            layout.scroll_width()
+        );
+    }
+    #[cfg(feature = "content_size")]
+    if layout.scroll_height() != 0f32 {
+        mismatches += 1;
+        eprintln!(
+            "{:?}.{} mismatch: expected {} actual {}",
+            node0,
+            stringify!(scroll_height()),
+            0f32,
+            layout.scroll_height()
+        );
+    }
     let layout = taffy.layout(node00).unwrap();
-    let Layout { size, location, .. } = layout;
-    assert_eq!(size.width, 196f32, "width of node {:?}. Expected {}. Actual {}", node00, 196f32, size.width);
-    assert_eq!(size.height, 196f32, "height of node {:?}. Expected {}. Actual {}", node00, 196f32, size.height);
-    assert_eq!(location.x, 0f32, "x of node {:?}. Expected {}. Actual {}", node00, 0f32, location.x);
-    assert_eq!(location.y, 0f32, "y of node {:?}. Expected {}. Actual {}", node00, 0f32, location.y);
+    if layout.size.width != 196f32 {
+        mismatches += 1;
+        eprintln!("{:?}.{} mismatch: expected {} actual {}", node00, stringify!(size.width), 196f32, layout.size.width);
+    }
+    if layout.size.height != 196f32 {
+        mismatches += 1;
+        eprintln!(
+            "{:?}.{} mismatch: expected {} actual {}",
+            node00,
+            stringify!(size.height),
+            196f32,
+            layout.size.height
+        );
+    }
+    if layout.location.x != 0f32 {
+        mismatches += 1;
+        eprintln!("{:?}.{} mismatch: expected {} actual {}", node00, stringify!(location.x), 0f32, layout.location.x);
+    }
+    if layout.location.y != 0f32 {
+        mismatches += 1;
+        eprintln!("{:?}.{} mismatch: expected {} actual {}", node00, stringify!(location.y), 0f32, layout.location.y);
+    }
+    #[cfg(feature = "content_size")]
+    if layout.scroll_width() != 0f32 {
+        mismatches += 1;
+        eprintln!(
+            "{:?}.{} mismatch: expected {} actual {}",
+            node00,
+            stringify!(scroll_width()),
+            0f32,
+            layout.scroll_width()
+        );
+    }
+    #[cfg(feature = "content_size")]
+    if layout.scroll_height() != 0f32 {
+        mismatches += 1;
+        eprintln!(
+            "{:?}.{} mismatch: expected {} actual {}",
+            node00,
+            stringify!(scroll_height()),
+            0f32,
+            layout.scroll_height()
+        );
+    }
     let layout = taffy.layout(node01).unwrap();
-    let Layout { size, location, .. } = layout;
-    assert_eq!(size.width, 196f32, "width of node {:?}. Expected {}. Actual {}", node01, 196f32, size.width);
-    assert_eq!(size.height, 196f32, "height of node {:?}. Expected {}. Actual {}", node01, 196f32, size.height);
-    assert_eq!(location.x, 204f32, "x of node {:?}. Expected {}. Actual {}", node01, 204f32, location.x);
-    assert_eq!(location.y, 0f32, "y of node {:?}. Expected {}. Actual {}", node01, 0f32, location.y);
+    if layout.size.width != 196f32 {
+        mismatches += 1;
+        eprintln!("{:?}.{} mismatch: expected {} actual {}", node01, stringify!(size.width), 196f32, layout.size.width);
+    }
+    if layout.size.height != 196f32 {
+        mismatches += 1;
+        eprintln!(
+            "{:?}.{} mismatch: expected {} actual {}",
+            node01,
+            stringify!(size.height),
+            196f32,
+            layout.size.height
+        );
+    }
+    if layout.location.x != 204f32 {
+        mismatches += 1;
+        eprintln!("{:?}.{} mismatch: expected {} actual {}", node01, stringify!(location.x), 204f32, layout.location.x);
+    }
+    if layout.location.y != 0f32 {
+        mismatches += 1;
+        eprintln!("{:?}.{} mismatch: expected {} actual {}", node01, stringify!(location.y), 0f32, layout.location.y);
+    }
+    #[cfg(feature = "content_size")]
+    if layout.scroll_width() != 0f32 {
+        mismatches += 1;
+        eprintln!(
+            "{:?}.{} mismatch: expected {} actual {}",
+            node01,
+            stringify!(scroll_width()),
+            0f32,
+            layout.scroll_width()
+        );
+    }
+    #[cfg(feature = "content_size")]
+    if layout.scroll_height() != 0f32 {
+        mismatches += 1;
+        eprintln!(
+            "{:?}.{} mismatch: expected {} actual {}",
+            node01,
+            stringify!(scroll_height()),
+            0f32,
+            layout.scroll_height()
+        );
+    }
     let layout = taffy.layout(node1).unwrap();
-    let Layout { size, location, .. } = layout;
-    assert_eq!(size.width, 400f32, "width of node {:?}. Expected {}. Actual {}", node1, 400f32, size.width);
-    assert_eq!(size.height, 196f32, "height of node {:?}. Expected {}. Actual {}", node1, 196f32, size.height);
-    assert_eq!(location.x, 8f32, "x of node {:?}. Expected {}. Actual {}", node1, 8f32, location.x);
-    assert_eq!(location.y, 212f32, "y of node {:?}. Expected {}. Actual {}", node1, 212f32, location.y);
+    if layout.size.width != 400f32 {
+        mismatches += 1;
+        eprintln!("{:?}.{} mismatch: expected {} actual {}", node1, stringify!(size.width), 400f32, layout.size.width);
+    }
+    if layout.size.height != 196f32 {
+        mismatches += 1;
+        eprintln!(
+            "{:?}.{} mismatch: expected {} actual {}",
+            node1,
+            stringify!(size.height),
+            196f32,
+            layout.size.height
+        );
+    }
+    if layout.location.x != 8f32 {
+        mismatches += 1;
+        eprintln!("{:?}.{} mismatch: expected {} actual {}", node1, stringify!(location.x), 8f32, layout.location.x);
+    }
+    if layout.location.y != 212f32 {
+        mismatches += 1;
+        eprintln!("{:?}.{} mismatch: expected {} actual {}", node1, stringify!(location.y), 212f32, layout.location.y);
+    }
+    #[cfg(feature = "content_size")]
+    if layout.scroll_width() != 0f32 {
+        mismatches += 1;
+        eprintln!(
+            "{:?}.{} mismatch: expected {} actual {}",
+            node1,
+            stringify!(scroll_width()),
+            0f32,
+            layout.scroll_width()
+        );
+    }
+    #[cfg(feature = "content_size")]
+    if layout.scroll_height() != 0f32 {
+        mismatches += 1;
+        eprintln!(
+            "{:?}.{} mismatch: expected {} actual {}",
+            node1,
+            stringify!(scroll_height()),
+            0f32,
+            layout.scroll_height()
+        );
+    }
     let layout = taffy.layout(node10).unwrap();
-    let Layout { size, location, .. } = layout;
-    assert_eq!(size.width, 196f32, "width of node {:?}. Expected {}. Actual {}", node10, 196f32, size.width);
-    assert_eq!(size.height, 196f32, "height of node {:?}. Expected {}. Actual {}", node10, 196f32, size.height);
-    assert_eq!(location.x, 0f32, "x of node {:?}. Expected {}. Actual {}", node10, 0f32, location.x);
-    assert_eq!(location.y, 0f32, "y of node {:?}. Expected {}. Actual {}", node10, 0f32, location.y);
+    if layout.size.width != 196f32 {
+        mismatches += 1;
+        eprintln!("{:?}.{} mismatch: expected {} actual {}", node10, stringify!(size.width), 196f32, layout.size.width);
+    }
+    if layout.size.height != 196f32 {
+        mismatches += 1;
+        eprintln!(
+            "{:?}.{} mismatch: expected {} actual {}",
+            node10,
+            stringify!(size.height),
+            196f32,
+            layout.size.height
+        );
+    }
+    if layout.location.x != 0f32 {
+        mismatches += 1;
+        eprintln!("{:?}.{} mismatch: expected {} actual {}", node10, stringify!(location.x), 0f32, layout.location.x);
+    }
+    if layout.location.y != 0f32 {
+        mismatches += 1;
+        eprintln!("{:?}.{} mismatch: expected {} actual {}", node10, stringify!(location.y), 0f32, layout.location.y);
+    }
+    #[cfg(feature = "content_size")]
+    if layout.scroll_width() != 0f32 {
+        mismatches += 1;
+        eprintln!(
+            "{:?}.{} mismatch: expected {} actual {}",
+            node10,
+            stringify!(scroll_width()),
+            0f32,
+            layout.scroll_width()
+        );
+    }
+    #[cfg(feature = "content_size")]
+    if layout.scroll_height() != 0f32 {
+        mismatches += 1;
+        eprintln!(
+            "{:?}.{} mismatch: expected {} actual {}",
+            node10,
+            stringify!(scroll_height()),
+            0f32,
+            layout.scroll_height()
+        );
+    }
     let layout = taffy.layout(node11).unwrap();
-    let Layout { size, location, .. } = layout;
-    assert_eq!(size.width, 196f32, "width of node {:?}. Expected {}. Actual {}", node11, 196f32, size.width);
-    assert_eq!(size.height, 196f32, "height of node {:?}. Expected {}. Actual {}", node11, 196f32, size.height);
-    assert_eq!(location.x, 204f32, "x of node {:?}. Expected {}. Actual {}", node11, 204f32, location.x);
-    assert_eq!(location.y, 0f32, "y of node {:?}. Expected {}. Actual {}", node11, 0f32, location.y);
+    if layout.size.width != 196f32 {
+        mismatches += 1;
+        eprintln!("{:?}.{} mismatch: expected {} actual {}", node11, stringify!(size.width), 196f32, layout.size.width);
+    }
+    if layout.size.height != 196f32 {
+        mismatches += 1;
+        eprintln!(
+            "{:?}.{} mismatch: expected {} actual {}",
+            node11,
+            stringify!(size.height),
+            196f32,
+            layout.size.height
+        );
+    }
+    if layout.location.x != 204f32 {
+        mismatches += 1;
+        eprintln!("{:?}.{} mismatch: expected {} actual {}", node11, stringify!(location.x), 204f32, layout.location.x);
+    }
+    if layout.location.y != 0f32 {
+        mismatches += 1;
+        eprintln!("{:?}.{} mismatch: expected {} actual {}", node11, stringify!(location.y), 0f32, layout.location.y);
+    }
+    #[cfg(feature = "content_size")]
+    if layout.scroll_width() != 0f32 {
+        mismatches += 1;
+        eprintln!(
+            "{:?}.{} mismatch: expected {} actual {}",
+            node11,
+            stringify!(scroll_width()),
+            0f32,
+            layout.scroll_width()
+        );
+    }
+    #[cfg(feature = "content_size")]
+    if layout.scroll_height() != 0f32 {
+        mismatches += 1;
+        eprintln!(
+            "{:?}.{} mismatch: expected {} actual {}",
+            node11,
+            stringify!(scroll_height()),
+            0f32,
+            layout.scroll_height()
+        );
+    }
+    assert!(mismatches == 0, "Detected {mismatches} mismatch(es)");
 }

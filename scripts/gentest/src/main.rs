@@ -232,7 +232,9 @@ fn generate_test(name: impl AsRef<str>, description: &Value) -> TokenStream {
             taffy.print_tree(node);
             println!();
 
+            let mut mismatches = 0u32;
             #assertions
+            assert!(mismatches == 0, "Detected {mismatches} mismatch(es)");
         }
     )
 }
@@ -270,44 +272,50 @@ fn generate_assertions(ident: &str, node: &Value, use_rounding: bool) -> TokenSt
 
     let ident = Ident::new(ident, Span::call_site());
 
+    let gen_check = |expr: TokenStream, expected: f32| {
+        let cmp = if use_rounding {
+            quote!(layout.#expr != #expected)
+        } else {
+            quote!((layout.#expr - #expected).abs() >= 0.1)
+        };
+        quote!(
+            if #cmp {
+                mismatches += 1;
+                eprintln!("{:?}.{} mismatch: expected {} actual {}", #ident, stringify!(#expr), #expected, layout.#expr);
+            }
+        )
+    };
+
     // The scrollWidth reading from chrome is only accurate if the node is scroll container. So only assert in that case.
     // TODO: accurately test content size in the non-scroll-container case.
-    let scroll_assertions = if is_scroll_container {
+    let scroll_assertions = if is_scroll_container || true {
+        let check_scroll_width = gen_check(quote!(scroll_width()), scroll_width);
+        let check_scroll_height = gen_check(quote!(scroll_height()), scroll_height);
         quote!(
             #[cfg(feature = "content_size")]
-            assert_eq!(layout.scroll_width(), #scroll_width, "scroll_width of node {:?}. Expected {}. Actual {}", #ident, #scroll_width, layout.scroll_width());
+            #check_scroll_width
             #[cfg(feature = "content_size")]
-            assert_eq!(layout.scroll_height(), #scroll_height, "scroll_height of node {:?}. Expected {}. Actual {}", #ident, #scroll_height, layout.scroll_height());
+            #check_scroll_height
         )
     } else {
         quote!()
     };
 
-    if use_rounding {
-        quote!(
-            let layout = taffy.layout(#ident).unwrap();
-            let Layout { size, location, .. } = layout;
-            assert_eq!(size.width, #width, "width of node {:?}. Expected {}. Actual {}", #ident,  #width, size.width);
-            assert_eq!(size.height, #height, "height of node {:?}. Expected {}. Actual {}", #ident,  #height, size.height);
-            assert_eq!(location.x, #x, "x of node {:?}. Expected {}. Actual {}", #ident,  #x, location.x);
-            assert_eq!(location.y, #y, "y of node {:?}. Expected {}. Actual {}", #ident,  #y, location.y);
-            #scroll_assertions
+    let check_width = gen_check(quote!(size.width), width);
+    let check_height = gen_check(quote!(size.height), height);
+    let check_x = gen_check(quote!(location.x), x);
+    let check_y = gen_check(quote!(location.y), y);
 
-            #children
-        )
-    } else {
-        quote!(
-            let layout = taffy.layout(#ident).unwrap();
-            let Layout { size, location, .. } = layout;
-            assert!((size.width - #width).abs() < 0.1, "width of node {:?}. Expected {}. Actual {}", #ident, #width, size.width);
-            assert!((size.height - #height).abs() < 0.1, "height of node {:?}. Expected {}. Actual {}", #ident, #height, size.height);
-            assert!((location.x - #x).abs() < 0.1, "x of node {:?}. Expected {}. Actual {}", #ident, #x, location.x);
-            assert!((location.y - #y).abs() < 0.1, "y of node {:?}. Expected {}. Actual {}", #ident, #y, location.y);
-            #scroll_assertions
+    quote!(
+        let layout = taffy.layout(#ident).unwrap();
+        #check_width
+        #check_height
+        #check_x
+        #check_y
+        #scroll_assertions
 
-            #children
-        )
-    }
+        #children
+    )
 }
 
 fn generate_node(ident: &str, node: &Value) -> TokenStream {
@@ -445,6 +453,8 @@ fn generate_node(ident: &str, node: &Value) -> TokenStream {
                 "hidden" => Some(quote!(taffy::style::Overflow::Hidden)),
                 "scroll" => Some(quote!(taffy::style::Overflow::Scroll)),
                 "auto" => Some(quote!(taffy::style::Overflow::Auto)),
+                "clip" => Some(quote!(taffy::style::Overflow::Clip)),
+                "visible" => None, // None defaults to visible.
                 _ => None,
             },
             _ => None,
@@ -610,7 +620,8 @@ fn generate_node(ident: &str, node: &Value) -> TokenStream {
     let text_content = get_string_value("text_content", node);
     let writing_mode = get_string_value("writingMode", style);
     let raw_aspect_ratio = get_number_value("aspect_ratio", style);
-    let node_context: Option<_> = text_content.map(|text| generate_node_context(text, writing_mode, raw_aspect_ratio));
+    let node_context: Option<_> =
+        text_content.map(|text| generate_node_context(ident, text, writing_mode, raw_aspect_ratio));
 
     edges_quoted!(style, margin, generate_length_percentage_auto, quote!(zero()));
     edges_quoted!(style, padding, generate_length_percentage, quote!(zero()));
@@ -684,8 +695,11 @@ fn generate_node(ident: &str, node: &Value) -> TokenStream {
             #children_body
             let #ident = taffy.new_with_children(#style,#children).unwrap();
         )
-    } else if node_context.is_some() {
-        quote!(let #ident = taffy.new_leaf_with_context(#style,#node_context,).unwrap();)
+    } else if let Some((temps, expr)) = node_context {
+        quote!(
+            #temps
+            let #ident = taffy.new_leaf_with_context(#style,#expr,).unwrap();
+        )
     } else {
         quote!(let #ident = taffy.new_leaf(#style).unwrap();)
     }
@@ -922,7 +936,12 @@ fn generate_scalar_definition(track_definition: &serde_json::Map<String, Value>)
     }
 }
 
-fn generate_node_context(text_content: &str, writing_mode: Option<&str>, aspect_ratio: Option<f32>) -> TokenStream {
+fn generate_node_context(
+    node_ident: &str,
+    text_content: &str,
+    writing_mode: Option<&str>,
+    aspect_ratio: Option<f32>,
+) -> (TokenStream, TokenStream) {
     let trimmed_text_content = text_content.trim();
 
     let writing_mode_token = match writing_mode {
@@ -935,7 +954,20 @@ fn generate_node_context(text_content: &str, writing_mode: Option<&str>, aspect_
         None => quote!(None),
     };
 
-    quote!(
-        crate::TestNodeContext::ahem_text(#trimmed_text_content, #writing_mode_token)
-    )
+    let string_lit = quote!(#trimmed_text_content);
+
+    // If the string literal is too long, rustfmt gives up on the
+    // whole line.  So pull long string literals out onto their own
+    // line so that the Style constructor still gets formatted.
+    if string_lit.to_string().len() > 100 {
+        let temp = format_ident!("{node_ident}_text");
+        (quote!(let #temp = #string_lit;), quote!(crate::TestNodeContext::ahem_text(#temp, #writing_mode_token)))
+    } else {
+        (
+            quote!(),
+            quote!(
+                crate::TestNodeContext::ahem_text(#string_lit, #writing_mode_token)
+            ),
+        )
+    }
 }

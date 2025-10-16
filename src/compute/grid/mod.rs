@@ -82,10 +82,15 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     // Scrollbar gutters are reserved when the `overflow` property is set to `Overflow::Scroll`.
     // However, the axis are switched (transposed) because a node that scrolls vertically needs
     // *horizontal* space to be reserved for a scrollbar
-    let scrollbar_gutter = style.overflow().transpose().map(|overflow| match overflow {
+    let overflow = style.overflow();
+    let scrollbar_gutter = overflow.transpose().map(|overflow| match overflow {
         Overflow::Scroll => style.scrollbar_width(),
         _ => 0.0,
     });
+
+    #[cfg(feature = "content_size")]
+    let is_scroll_container = overflow.x.is_scroll_container() | overflow.y.is_scroll_container();
+
     // TODO: make side configurable based on the `direction` property
     let mut content_box_inset = padding_border;
     content_box_inset.right += scrollbar_gutter.x;
@@ -491,8 +496,14 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
 
     // 9. Size, Align, and Position Grid Items
 
-    #[cfg_attr(not(feature = "content_size"), allow(unused_mut))]
-    let mut item_content_size_contribution = Size::ZERO;
+    #[cfg(feature = "content_size")]
+    let scroll_origin = border.top_left();
+
+    // Accumulator for the scrollable content inherited from children.
+    // Adding our padding box only happens once our final size has
+    // been picked by the container we are inside.
+    #[cfg(feature = "content_size")]
+    let mut scrollable_overflow = Rect::new_empty();
 
     // Sort items back into original order to allow them to be matched up with styles
     items.sort_by_key(|item| item.source_order);
@@ -507,22 +518,29 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
             left: columns[item.column_indexes.start as usize + 1].offset,
             right: columns[item.column_indexes.end as usize].offset,
         };
-        #[cfg_attr(not(feature = "content_size"), allow(unused_variables))]
-        let (content_size_contribution, y_position, height) = align_and_position_item(
+        let (y_position, height) = align_and_position_item(
             tree,
             item.node,
             index as u32,
             grid_area,
             container_alignment_styles,
             item.baseline_shim,
+            #[cfg(feature = "content_size")]
+            &mut scrollable_overflow,
+            #[cfg(feature = "content_size")]
+            scroll_origin,
         );
         item.y_position = y_position;
         item.height = height;
+    }
 
-        #[cfg(feature = "content_size")]
-        {
-            item_content_size_contribution = item_content_size_contribution.f32_max(content_size_contribution);
-        }
+    // If we are a scroll container, inflate the inflow scrollable
+    // overflow by our padding.  This only applys to inflow children
+    // so we do it here before adding the out-of-flow (absolute)
+    // children.
+    #[cfg(feature = "content_size")]
+    if is_scroll_container {
+        scrollable_overflow = scrollable_overflow.inset_by(-padding);
     }
 
     // Position hidden and absolutely positioned children
@@ -583,13 +601,18 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
             drop(child_style);
 
             // TODO: Baseline alignment support for absolutely positioned items (should check if is actually specified)
-            #[cfg_attr(not(feature = "content_size"), allow(unused_variables))]
-            let (content_size_contribution, _, _) =
-                align_and_position_item(tree, child, order, grid_area, container_alignment_styles, 0.0);
-            #[cfg(feature = "content_size")]
-            {
-                item_content_size_contribution = item_content_size_contribution.f32_max(content_size_contribution);
-            }
+            align_and_position_item(
+                tree,
+                child,
+                order,
+                grid_area,
+                container_alignment_styles,
+                0.0,
+                #[cfg(feature = "content_size")]
+                &mut scrollable_overflow,
+                #[cfg(feature = "content_size")]
+                scroll_origin,
+            );
 
             order += 1;
         }
@@ -608,7 +631,11 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
 
     // If there are not items then return just the container size (no baseline)
     if items.is_empty() {
-        return LayoutOutput::from_outer_size(container_border_box);
+        return LayoutOutput::from_size_and_overflow(
+            container_border_box,
+            #[cfg(feature = "content_size")]
+            scrollable_overflow,
+        );
     }
 
     // Determine the grid container baseline(s) (currently we only compute the first baseline)
@@ -636,7 +663,8 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
 
     LayoutOutput::from_sizes_and_baselines(
         container_border_box,
-        item_content_size_contribution,
+        #[cfg(feature = "content_size")]
+        scrollable_overflow,
         Point { x: None, y: Some(grid_container_baseline) },
     )
 }

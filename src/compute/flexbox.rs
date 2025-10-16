@@ -1,5 +1,8 @@
 //! Computes the [flexbox](https://css-tricks.com/snippets/css/a-guide-to-flexbox/) layout algorithm on [`TaffyTree`](crate::TaffyTree) according to the [spec](https://www.w3.org/TR/css-flexbox-1/)
-use crate::compute::common::alignment::compute_alignment_offset;
+use crate::compute::common::{
+    alignment::{apply_alignment_fallback, compute_alignment_offset},
+    compute_scrollbar_size,
+};
 use crate::geometry::{Line, Point, Rect, Size};
 use crate::style::{
     AlignContent, AlignItems, AlignSelf, AvailableSpace, FlexWrap, JustifyContent, LengthPercentageAuto, Overflow,
@@ -15,9 +18,8 @@ use crate::util::MaybeMath;
 use crate::util::{MaybeResolve, ResolveOrZero};
 use crate::{BoxGenerationMode, BoxSizing};
 
-use super::common::alignment::apply_alignment_fallback;
 #[cfg(feature = "content_size")]
-use super::common::content_size::compute_content_size_contribution;
+use super::common::content_size::expand_scrollable_overflow;
 
 /// The intermediate results of a flexbox calculation for a single item
 struct FlexItem {
@@ -135,11 +137,18 @@ struct AlgoConstants {
     margin: Rect<f32>,
     /// The border of this section
     border: Rect<f32>,
+    /// The padding of this section
+    #[cfg(feature = "content_size")]
+    padding: Rect<f32>,
     /// The space between the content box and the border box.
     /// This consists of padding + border + scrollbar_gutter.
     content_box_inset: Rect<f32>,
+    /// True iff this is a scroll container (i.e. either overflow
+    /// value is auto, scroll, or hidden).
+    #[cfg(feature = "content_size")]
+    is_scroll_container: bool,
     /// The size reserved for scrollbar gutters in each axis
-    scrollbar_gutter: Point<f32>,
+    scrollbar_gutter: Size<f32>,
     /// The gap of this section
     gap: Size<f32>,
     /// The align_items property of this node
@@ -364,13 +373,56 @@ fn compute_preliminary(tree: &mut impl LayoutFlexboxContainer, node: NodeId, inp
     debug_log!("align_flex_lines_per_align_content");
     align_flex_lines_per_align_content(&mut flex_lines, &constants, total_line_cross_size);
 
+    #[cfg(feature = "content_size")]
+    let padding_box = Rect::from_origin_and_size(constants.container_size)
+        .inset_by(constants.border)
+        .shrunk_by(constants.scrollbar_gutter);
+
+    // The origin of the scrolling region.  Nominally the upper-left
+    // of the padding box, but can be adjusted to accomodate
+    // `place-content: start` and `place-content: end` alignment.
+    // (That detail is not yet implemented.)
+    #[cfg(feature = "content_size")]
+    let scroll_origin: Point<f32> = padding_box.top_left();
+
+    // Accumulator for the scrollable content inherited from children.
+    // Adding our padding box only happens once our final size has
+    // been picked by the container we are inside.
+    #[cfg(feature = "content_size")]
+    let mut scrollable_overflow = Rect::new_empty();
+
     // Do a final layout pass and gather the resulting layouts
     debug_log!("final_layout_pass");
-    let inflow_content_size = final_layout_pass(tree, &mut flex_lines, &constants);
+    final_layout_pass(
+        tree,
+        &mut flex_lines,
+        &constants,
+        #[cfg(feature = "content_size")]
+        &mut scrollable_overflow,
+        #[cfg(feature = "content_size")]
+        scroll_origin,
+    );
+
+    #[cfg(feature = "content_size")]
+    // If we are a scroll container, inflate the inflow scrollable
+    // overflow by our padding.  This only applys to inflow children
+    // so we do it here before adding the out-of-flow (absolute)
+    // children.
+    if constants.is_scroll_container {
+        scrollable_overflow = scrollable_overflow.inset_by(-constants.padding);
+    }
 
     // Before returning we perform absolute layout on all absolutely positioned children
     debug_log!("perform_absolute_layout_on_absolute_children");
-    let absolute_content_size = perform_absolute_layout_on_absolute_children(tree, node, &constants);
+    perform_absolute_layout_on_absolute_children(
+        tree,
+        node,
+        &constants,
+        #[cfg(feature = "content_size")]
+        &mut scrollable_overflow,
+        #[cfg(feature = "content_size")]
+        scroll_origin,
+    );
 
     debug_log!("hidden_layout");
     let len = tree.child_count(node);
@@ -407,7 +459,8 @@ fn compute_preliminary(tree: &mut impl LayoutFlexboxContainer, node: NodeId, inp
 
     LayoutOutput::from_sizes_and_baselines(
         constants.container_size,
-        inflow_content_size.f32_max(absolute_content_size),
+        #[cfg(feature = "content_size")]
+        scrollable_overflow,
         Point { x: None, y: first_vertical_baseline },
     )
 }
@@ -438,17 +491,18 @@ fn compute_constants(
     let align_content = style.align_content().unwrap_or(AlignContent::Stretch);
     let justify_content = style.justify_content();
 
+    let overflow = style.overflow();
+    #[cfg(feature = "content_size")]
+    let is_scroll_container = overflow.x.is_scroll_container() | overflow.y.is_scroll_container();
     // Scrollbar gutters are reserved when the `overflow` property is set to `Overflow::Scroll`.
     // However, the axis are switched (transposed) because a node that scrolls vertically needs
     // *horizontal* space to be reserved for a scrollbar
-    let scrollbar_gutter = style.overflow().transpose().map(|overflow| match overflow {
+    let scrollbar_gutter = Size::from(overflow.transpose().map(|overflow| match overflow {
         Overflow::Scroll => style.scrollbar_width(),
         _ => 0.0,
-    });
+    }));
     // TODO: make side configurable based on the `direction` property
-    let mut content_box_inset = padding + border;
-    content_box_inset.right += scrollbar_gutter.x;
-    content_box_inset.bottom += scrollbar_gutter.y;
+    let content_box_inset = padding + border + Rect::from_origin_and_size(scrollbar_gutter);
 
     let node_outer_size = known_dimensions;
     let node_inner_size = node_outer_size.maybe_sub(content_box_inset.sum_axes());
@@ -475,8 +529,12 @@ fn compute_constants(
             .maybe_add(box_sizing_adjustment),
         margin,
         border,
+        #[cfg(feature = "content_size")]
+        padding,
         gap,
         content_box_inset,
+        #[cfg(feature = "content_size")]
+        is_scroll_container,
         scrollbar_gutter,
         align_items,
         align_content,
@@ -1883,10 +1941,11 @@ fn calculate_flex_item(
     total_offset_main: &mut f32,
     total_offset_cross: f32,
     line_offset_cross: f32,
-    #[cfg(feature = "content_size")] total_content_size: &mut Size<f32>,
     container_size: Size<f32>,
     node_inner_size: Size<Option<f32>>,
     direction: FlexDirection,
+    #[cfg(feature = "content_size")] container_scrollable_overflow: &mut Rect<f32>,
+    #[cfg(feature = "content_size")] container_scroll_origin: Point<f32>,
 ) {
     let layout_output = tree.perform_child_layout(
         item.node,
@@ -1896,12 +1955,7 @@ fn calculate_flex_item(
         SizingMode::ContentSize,
         Line::FALSE,
     );
-    let LayoutOutput {
-        size,
-        #[cfg(feature = "content_size")]
-        content_size,
-        ..
-    } = layout_output;
+    let size = layout_output.size;
 
     let offset_main = *total_offset_main
         + item.offset_main
@@ -1928,10 +1982,15 @@ fn calculate_flex_item(
         true => Point { x: offset_main, y: offset_cross },
         false => Point { x: offset_cross, y: offset_main },
     };
-    let scrollbar_size = Size {
-        width: if item.overflow.y == Overflow::Scroll { item.scrollbar_width } else { 0.0 },
-        height: if item.overflow.x == Overflow::Scroll { item.scrollbar_width } else { 0.0 },
-    };
+
+    let scrollbar_size = compute_scrollbar_size(item.overflow, size, item.padding, item.border, item.scrollbar_width);
+
+    #[cfg(feature = "content_size")]
+    // Now that we've picked a final size for the item, add the
+    // resultant padding box to the scrollable overflow.
+    let scrollable_overflow = layout_output
+        .descendent_scrollable_overflow
+        .union(Rect::from_origin_and_size(size).inset_by(item.border).shrunk_by(scrollbar_size));
 
     tree.set_unrounded_layout(
         item.node,
@@ -1939,7 +1998,7 @@ fn calculate_flex_item(
             order: item.order,
             size,
             #[cfg(feature = "content_size")]
-            content_size,
+            scrollable_overflow,
             scrollbar_size,
             location,
             padding: item.padding,
@@ -1951,10 +2010,16 @@ fn calculate_flex_item(
     *total_offset_main += item.offset_main + item.margin.main_axis_sum(direction) + size.main(direction);
 
     #[cfg(feature = "content_size")]
-    {
-        *total_content_size =
-            total_content_size.f32_max(compute_content_size_contribution(location, size, content_size, item.overflow));
-    }
+    expand_scrollable_overflow(
+        container_scrollable_overflow,
+        container_scroll_origin,
+        location,
+        size,
+        item.border,
+        scrollbar_size,
+        item.overflow,
+        scrollable_overflow,
+    );
 }
 
 /// Calculates the layout line
@@ -1963,11 +2028,12 @@ fn calculate_layout_line(
     tree: &mut impl LayoutFlexboxContainer,
     line: &mut FlexLine,
     total_offset_cross: &mut f32,
-    #[cfg(feature = "content_size")] content_size: &mut Size<f32>,
     container_size: Size<f32>,
     node_inner_size: Size<Option<f32>>,
     padding_border: Rect<f32>,
     direction: FlexDirection,
+    #[cfg(feature = "content_size")] container_scrollable_overflow: &mut Rect<f32>,
+    #[cfg(feature = "content_size")] container_scroll_origin: Point<f32>,
 ) {
     let mut total_offset_main = padding_border.main_start(direction);
     let line_offset_cross = line.offset_cross;
@@ -1980,11 +2046,13 @@ fn calculate_layout_line(
                 &mut total_offset_main,
                 *total_offset_cross,
                 line_offset_cross,
-                #[cfg(feature = "content_size")]
-                content_size,
                 container_size,
                 node_inner_size,
                 direction,
+                #[cfg(feature = "content_size")]
+                container_scrollable_overflow,
+                #[cfg(feature = "content_size")]
+                container_scroll_origin,
             );
         }
     } else {
@@ -1995,11 +2063,13 @@ fn calculate_layout_line(
                 &mut total_offset_main,
                 *total_offset_cross,
                 line_offset_cross,
-                #[cfg(feature = "content_size")]
-                content_size,
                 container_size,
                 node_inner_size,
                 direction,
+                #[cfg(feature = "content_size")]
+                container_scrollable_overflow,
+                #[cfg(feature = "content_size")]
+                container_scroll_origin,
             );
         }
     }
@@ -2013,11 +2083,10 @@ fn final_layout_pass(
     tree: &mut impl LayoutFlexboxContainer,
     flex_lines: &mut [FlexLine],
     constants: &AlgoConstants,
-) -> Size<f32> {
+    #[cfg(feature = "content_size")] scrollable_overflow: &mut Rect<f32>,
+    #[cfg(feature = "content_size")] scroll_origin: Point<f32>,
+) {
     let mut total_offset_cross = constants.content_box_inset.cross_start(constants.dir);
-
-    #[cfg_attr(not(feature = "content_size"), allow(unused_mut))]
-    let mut content_size = Size::ZERO;
 
     if constants.is_wrap_reverse {
         for line in flex_lines.iter_mut().rev() {
@@ -2025,12 +2094,14 @@ fn final_layout_pass(
                 tree,
                 line,
                 &mut total_offset_cross,
-                #[cfg(feature = "content_size")]
-                &mut content_size,
                 constants.container_size,
                 constants.node_inner_size,
                 constants.content_box_inset,
                 constants.dir,
+                #[cfg(feature = "content_size")]
+                scrollable_overflow,
+                #[cfg(feature = "content_size")]
+                scroll_origin,
             );
         }
     } else {
@@ -2039,20 +2110,17 @@ fn final_layout_pass(
                 tree,
                 line,
                 &mut total_offset_cross,
-                #[cfg(feature = "content_size")]
-                &mut content_size,
                 constants.container_size,
                 constants.node_inner_size,
                 constants.content_box_inset,
                 constants.dir,
+                #[cfg(feature = "content_size")]
+                scrollable_overflow,
+                #[cfg(feature = "content_size")]
+                scroll_origin,
             );
         }
     }
-
-    content_size.width += constants.content_box_inset.right - constants.border.right - constants.scrollbar_gutter.x;
-    content_size.height += constants.content_box_inset.bottom - constants.border.bottom - constants.scrollbar_gutter.y;
-
-    content_size
 }
 
 /// Perform absolute layout on all absolutely positioned children.
@@ -2061,14 +2129,13 @@ fn perform_absolute_layout_on_absolute_children(
     tree: &mut impl LayoutFlexboxContainer,
     node: NodeId,
     constants: &AlgoConstants,
-) -> Size<f32> {
+    #[cfg(feature = "content_size")] container_scrollable_overflow: &mut Rect<f32>,
+    #[cfg(feature = "content_size")] scroll_origin: Point<f32>,
+) {
     let container_width = constants.container_size.width;
     let container_height = constants.container_size.height;
     let inset_relative_size =
         constants.container_size - constants.border.sum_axes() - constants.scrollbar_gutter.into();
-
-    #[cfg_attr(not(feature = "content_size"), allow(unused_mut))]
-    let mut content_size = Size::ZERO;
 
     for order in 0..tree.child_count(node) {
         let child = tree.get_child_id(node, order);
@@ -2288,17 +2355,23 @@ fn perform_absolute_layout_on_absolute_children(
             true => Point { x: offset_main, y: offset_cross },
             false => Point { x: offset_cross, y: offset_main },
         };
-        let scrollbar_size = Size {
-            width: if overflow.y == Overflow::Scroll { scrollbar_width } else { 0.0 },
-            height: if overflow.x == Overflow::Scroll { scrollbar_width } else { 0.0 },
-        };
+
+        let scrollbar_size = compute_scrollbar_size(overflow, final_size, padding, border, scrollbar_width);
+
+        #[cfg(feature = "content_size")]
+        // Now that we've picked a final size for the item, add the
+        // resultant padding box to the scrollable overflow.
+        let scrollable_overflow = layout_output
+            .descendent_scrollable_overflow
+            .union(Rect::from_origin_and_size(final_size).inset_by(border).shrunk_by(scrollbar_size));
+
         tree.set_unrounded_layout(
             child,
             &Layout {
                 order: order as u32,
                 size: final_size,
                 #[cfg(feature = "content_size")]
-                content_size: layout_output.content_size,
+                scrollable_overflow,
                 scrollbar_size,
                 location,
                 padding,
@@ -2308,28 +2381,17 @@ fn perform_absolute_layout_on_absolute_children(
         );
 
         #[cfg(feature = "content_size")]
-        {
-            let size_content_size_contribution = Size {
-                width: match overflow.x {
-                    Overflow::Visible => f32_max(final_size.width, layout_output.content_size.width),
-                    _ => final_size.width,
-                },
-                height: match overflow.y {
-                    Overflow::Visible => f32_max(final_size.height, layout_output.content_size.height),
-                    _ => final_size.height,
-                },
-            };
-            if size_content_size_contribution.has_non_zero_area() {
-                let content_size_contribution = Size {
-                    width: location.x + size_content_size_contribution.width,
-                    height: location.y + size_content_size_contribution.height,
-                };
-                content_size = content_size.f32_max(content_size_contribution);
-            }
-        }
+        expand_scrollable_overflow(
+            container_scrollable_overflow,
+            scroll_origin,
+            location,
+            final_size,
+            border,
+            scrollbar_size,
+            overflow,
+            scrollable_overflow,
+        );
     }
-
-    content_size
 }
 
 /// Computes the total space taken up by gaps in an axis given:

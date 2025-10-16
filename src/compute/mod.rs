@@ -45,7 +45,7 @@ pub use self::flexbox::compute_flexbox_layout;
 pub use self::grid::compute_grid_layout;
 
 use crate::geometry::{Line, Point, Size};
-use crate::style::{AvailableSpace, CoreStyle, Overflow};
+use crate::style::{AvailableSpace, CoreStyle};
 use crate::tree::{
     Layout, LayoutInput, LayoutOutput, LayoutPartialTree, LayoutPartialTreeExt, NodeId, RoundTree, SizingMode,
 };
@@ -53,6 +53,9 @@ use crate::util::debug::{debug_log, debug_log_node, debug_pop_node, debug_push_n
 use crate::util::sys::round;
 use crate::util::ResolveOrZero;
 use crate::{CacheTree, MaybeMath, MaybeResolve};
+
+#[cfg(feature = "content_size")]
+use crate::geometry::Rect;
 
 /// Compute layout for the root node in the tree
 pub fn compute_root_layout(tree: &mut impl LayoutPartialTree, root: NodeId, available_space: Size<AvailableSpace>) {
@@ -131,11 +134,16 @@ pub fn compute_root_layout(tree: &mut impl LayoutPartialTree, root: NodeId, avai
         style.border().resolve_or_zero(available_space.width.into_option(), |val, basis| tree.calc(val, basis));
     let margin =
         style.margin().resolve_or_zero(available_space.width.into_option(), |val, basis| tree.calc(val, basis));
-    let scrollbar_size = Size {
-        width: if style.overflow().y == Overflow::Scroll { style.scrollbar_width() } else { 0.0 },
-        height: if style.overflow().x == Overflow::Scroll { style.scrollbar_width() } else { 0.0 },
-    };
+    let scrollbar_size =
+        common::compute_scrollbar_size(style.overflow(), output.size, padding, border, style.scrollbar_width());
     drop(style);
+
+    #[cfg(feature = "content_size")]
+    // Now that we've picked a final size for the item, add the
+    // resultant padding box to the scrollable overflow.
+    let scrollable_overflow = output
+        .descendent_scrollable_overflow
+        .union(Rect::from_origin_and_size(output.size).inset_by(border).shrunk_by(scrollbar_size));
 
     tree.set_unrounded_layout(
         root,
@@ -144,7 +152,7 @@ pub fn compute_root_layout(tree: &mut impl LayoutPartialTree, root: NodeId, avai
             location: Point::ZERO,
             size: output.size,
             #[cfg(feature = "content_size")]
-            content_size: output.content_size,
+            scrollable_overflow,
             scrollbar_size,
             padding,
             border,
@@ -187,6 +195,8 @@ where
     tree.cache_store(node, known_dimensions, available_space, run_mode, computed_size_and_baselines);
 
     debug_log!("RESULT", dbg:computed_size_and_baselines.size);
+    #[cfg(feature = "content_size")]
+    debug_log!("  scrollable overflow", dbg:computed_size_and_baselines.descendent_scrollable_overflow);
     debug_pop_node!();
 
     computed_size_and_baselines
@@ -235,7 +245,7 @@ pub fn round_layout(tree: &mut impl RoundTree, node_id: NodeId) {
             - round(cumulative_y + unrounded_layout.size.height - unrounded_layout.padding.bottom);
 
         #[cfg(feature = "content_size")]
-        round_content_size(&mut layout, unrounded_layout.content_size, cumulative_x, cumulative_y);
+        round_scrollable_overflow(&mut layout, unrounded_layout.scrollable_overflow, cumulative_x, cumulative_y);
 
         tree.set_final_layout(node_id, &layout);
 
@@ -248,16 +258,21 @@ pub fn round_layout(tree: &mut impl RoundTree, node_id: NodeId) {
 
     #[cfg(feature = "content_size")]
     #[inline(always)]
-    /// Round content size variables.
-    /// This is split into a separate function to make it easier to feature flag.
-    fn round_content_size(
+    /// Round the scrollable overflow.  This is split into a separate
+    /// function to make it easier to feature flag.
+    fn round_scrollable_overflow(
         layout: &mut Layout,
-        unrounded_content_size: Size<f32>,
+        unrounded_scrollable_overflow: Rect<f32>,
         cumulative_x: f32,
         cumulative_y: f32,
     ) {
-        layout.content_size.width = round(cumulative_x + unrounded_content_size.width) - round(cumulative_x);
-        layout.content_size.height = round(cumulative_y + unrounded_content_size.height) - round(cumulative_y);
+        layout.scrollable_overflow.left =
+            round(cumulative_x + unrounded_scrollable_overflow.left) - round(cumulative_x);
+        layout.scrollable_overflow.right =
+            round(cumulative_x + unrounded_scrollable_overflow.right) - round(cumulative_x);
+        layout.scrollable_overflow.top = round(cumulative_y + unrounded_scrollable_overflow.top) - round(cumulative_y);
+        layout.scrollable_overflow.bottom =
+            round(cumulative_y + unrounded_scrollable_overflow.bottom) - round(cumulative_y);
     }
 }
 

@@ -34,6 +34,14 @@ mod grid_absolute_layout_within_border;
 #[cfg(feature = "grid")]
 mod grid_absolute_layout_within_border_static;
 #[cfg(feature = "grid")]
+mod grid_absolute_overflow_clip;
+#[cfg(feature = "grid")]
+mod grid_absolute_overflow_hidden;
+#[cfg(feature = "grid")]
+mod grid_absolute_overflow_scroll;
+#[cfg(feature = "grid")]
+mod grid_absolute_overflow_visible;
+#[cfg(feature = "grid")]
 mod grid_absolute_resolved_insets;
 #[cfg(feature = "grid")]
 mod grid_absolute_row_end;
@@ -235,6 +243,14 @@ mod grid_fr_span_2_proportion_zero_sum_with_non_spanned_track;
 mod grid_gap;
 #[cfg(feature = "grid")]
 mod grid_hidden;
+#[cfg(feature = "grid")]
+mod grid_inflow_overflow_clip;
+#[cfg(feature = "grid")]
+mod grid_inflow_overflow_hidden;
+#[cfg(feature = "grid")]
+mod grid_inflow_overflow_scroll;
+#[cfg(feature = "grid")]
+mod grid_inflow_overflow_visible;
 #[cfg(feature = "grid")]
 mod grid_justify_content_center;
 #[cfg(feature = "grid")]

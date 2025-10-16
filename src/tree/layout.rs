@@ -162,8 +162,12 @@ pub struct LayoutOutput {
     /// The size of the node
     pub size: Size<f32>,
     #[cfg(feature = "content_size")]
-    /// The size of the content within the node
-    pub content_size: Size<f32>,
+    /// The scrollable overflow from child elements and leaf content
+    /// measures relative to the padding box.  It does not include
+    /// this node's own padding box, because the exact dimensions of
+    /// this node's final size (and hence its padding box) are at the
+    /// whims of whoever called compute_child_layout().
+    pub descendent_scrollable_overflow: Rect<f32>,
     /// The first baseline of the node in each dimension, if any
     pub first_baselines: Point<Option<f32>>,
     /// Top margin that can be collapsed with. This is used for CSS block layout and can be set to
@@ -182,7 +186,7 @@ impl LayoutOutput {
     pub const HIDDEN: Self = Self {
         size: Size::ZERO,
         #[cfg(feature = "content_size")]
-        content_size: Size::ZERO,
+        descendent_scrollable_overflow: Rect::new_empty(),
         first_baselines: Point::NONE,
         top_margin: CollapsibleMarginSet::ZERO,
         bottom_margin: CollapsibleMarginSet::ZERO,
@@ -195,28 +199,35 @@ impl LayoutOutput {
     /// Constructor to create a `LayoutOutput` from just the size and baselines
     pub fn from_sizes_and_baselines(
         size: Size<f32>,
-        #[cfg_attr(not(feature = "content_size"), allow(unused_variables))] content_size: Size<f32>,
+        #[cfg(feature = "content_size")] descendent_scrollable_overflow: Rect<f32>,
         first_baselines: Point<Option<f32>>,
     ) -> Self {
         Self {
             size,
             #[cfg(feature = "content_size")]
-            content_size,
+            descendent_scrollable_overflow,
             first_baselines,
-            top_margin: CollapsibleMarginSet::ZERO,
-            bottom_margin: CollapsibleMarginSet::ZERO,
-            margins_can_collapse_through: false,
+            ..Self::DEFAULT
         }
     }
 
-    /// Construct a `LayoutOutput` from just the container and content sizes
-    pub fn from_sizes(size: Size<f32>, content_size: Size<f32>) -> Self {
-        Self::from_sizes_and_baselines(size, content_size, Point::NONE)
+    /// Construct a `LayoutOutput` from just the container size and
+    /// scrollable overflow.
+    pub fn from_size_and_overflow(
+        size: Size<f32>,
+        #[cfg(feature = "content_size")] descendent_scrollable_overflow: Rect<f32>,
+    ) -> Self {
+        Self {
+            size,
+            #[cfg(feature = "content_size")]
+            descendent_scrollable_overflow,
+            ..Self::DEFAULT
+        }
     }
 
     /// Construct a `LayoutOutput` from just the container's size.
     pub fn from_outer_size(size: Size<f32>) -> Self {
-        Self::from_sizes(size, Size::zero())
+        Self { size, ..Self::DEFAULT }
     }
 }
 
@@ -234,9 +245,11 @@ pub struct Layout {
     /// The width and height of the node
     pub size: Size<f32>,
     #[cfg(feature = "content_size")]
-    /// The width and height of the content inside the node. This may be larger than the size of the node in the case of
-    /// overflowing content and is useful for computing a "scroll width/height" for scrollable nodes
-    pub content_size: Size<f32>,
+    /// The extent of the scrollable overflow from this node and any
+    /// (unclipped) descendents.  This will always include this nodes
+    /// padding box and additionally includes the overflow from any
+    /// children that are not themselves clipped.
+    pub scrollable_overflow: Rect<f32>,
     /// The size of the scrollbars in each dimension. If there is no scrollbar then the size will be zero.
     pub scrollbar_size: Size<f32>,
     /// The size of the borders of the node
@@ -266,7 +279,7 @@ impl Layout {
             location: Point::ZERO,
             size: Size::zero(),
             #[cfg(feature = "content_size")]
-            content_size: Size::zero(),
+            scrollable_overflow: Rect::zero(),
             scrollbar_size: Size::zero(),
             border: Rect::zero(),
             padding: Rect::zero(),
@@ -285,7 +298,7 @@ impl Layout {
             size: Size::zero(),
             location: Point::ZERO,
             #[cfg(feature = "content_size")]
-            content_size: Size::zero(),
+            scrollable_overflow: Rect::zero(),
             scrollbar_size: Size::zero(),
             border: Rect::zero(),
             padding: Rect::zero(),
@@ -324,24 +337,34 @@ impl Layout {
 
 #[cfg(feature = "content_size")]
 impl Layout {
-    /// Return the scroll width of the node.
-    /// The scroll width is the difference between the width and the content width, floored at zero
+    /// Return the scroll width of the node.  The scroll width is the
+    /// difference between the padding box width and the portion of
+    /// the scrollable overflow to the right of the scroll origin.
+    /// The scroll origin is currently always the padding box's
+    /// top-left corner but there are unimplemented parts of the CSS
+    /// standard that cause it to move.
     pub fn scroll_width(&self) -> f32 {
-        f32_max(
-            0.0,
-            self.content_size.width + f32_min(self.scrollbar_size.width, self.size.width) - self.size.width
-                + self.border.right,
-        )
+        let right_padding_edge =
+            f32_max(self.size.width - self.border.right - self.scrollbar_size.width, self.border.left);
+        // The scrollable overflow always include the node's padding
+        // box, so this can never result in a negative value.
+        assert!(self.scrollable_overflow.right >= right_padding_edge);
+        return self.scrollable_overflow.right - right_padding_edge;
     }
 
-    /// Return the scroll height of the node.
-    /// The scroll height is the difference between the height and the content height, floored at zero
+    /// Return the scroll height of the node.  The scroll height is
+    /// the difference between the padding box height and the portion
+    /// of the scrollable overflow below the top padding edge.  The
+    /// scroll origin is currently always the padding box's top-left
+    /// corner but there are unimplemented parts of the CSS standard
+    /// that cause it to move.
     pub fn scroll_height(&self) -> f32 {
-        f32_max(
-            0.0,
-            self.content_size.height + f32_min(self.scrollbar_size.height, self.size.height) - self.size.height
-                + self.border.bottom,
-        )
+        let bottom_padding_edge =
+            f32_max(self.size.height - self.border.bottom - self.scrollbar_size.height, self.border.top);
+        // The scrollable overflow always include the node's padding
+        // box, so this can never result in a negative value.
+        assert!(self.scrollable_overflow.bottom >= bottom_padding_edge);
+        return self.scrollable_overflow.bottom - bottom_padding_edge;
     }
 }
 

@@ -1,15 +1,16 @@
 //! Alignment of tracks and final positioning of items
 use super::types::GridTrack;
 use crate::compute::common::alignment::{apply_alignment_fallback, compute_alignment_offset};
+use crate::compute::common::compute_scrollbar_size;
 use crate::geometry::{InBothAbsAxis, Line, Point, Rect, Size};
-use crate::style::{AlignContent, AlignItems, AlignSelf, AvailableSpace, CoreStyle, GridItemStyle, Overflow, Position};
+use crate::style::{AlignContent, AlignItems, AlignSelf, AvailableSpace, CoreStyle, GridItemStyle, Position};
 use crate::tree::{Layout, LayoutPartialTreeExt, NodeId, SizingMode};
 use crate::util::sys::f32_max;
 use crate::util::{MaybeMath, MaybeResolve, ResolveOrZero};
+use crate::{BoxSizing, LayoutGridContainer};
 
 #[cfg(feature = "content_size")]
-use crate::compute::common::content_size::compute_content_size_contribution;
-use crate::{BoxSizing, LayoutGridContainer};
+use crate::compute::common::content_size::expand_scrollable_overflow;
 
 /// Align the grid tracks within the grid according to the align-content (rows) or
 /// justify-content (columns) property. This only does anything if the size of the
@@ -63,7 +64,10 @@ pub(super) fn align_and_position_item(
     grid_area: Rect<f32>,
     container_alignment_styles: InBothAbsAxis<Option<AlignItems>>,
     baseline_shim: f32,
-) -> (Size<f32>, f32, f32) {
+
+    #[cfg(feature = "content_size")] container_scrollable_overflow: &mut Rect<f32>,
+    #[cfg(feature = "content_size")] container_scroll_origin: Point<f32>,
+) -> (f32, f32) {
     let grid_area_size = Size { width: grid_area.right - grid_area.left, height: grid_area.bottom - grid_area.top };
 
     let style = tree.get_grid_child_style(node);
@@ -209,12 +213,12 @@ pub(super) fn align_and_position_item(
     );
 
     // Resolve final size
-    let Size { width, height } = Size { width, height }.unwrap_or(layout_output.size).maybe_clamp(min_size, max_size);
+    let size = Size { width, height }.unwrap_or(layout_output.size).maybe_clamp(min_size, max_size);
 
     let (x, x_margin) = align_item_within_area(
         Line { start: grid_area.left, end: grid_area.right },
         justify_self.unwrap_or(alignment_styles.horizontal),
-        width,
+        size.width,
         position,
         inset_horizontal,
         margin.horizontal_components(),
@@ -223,28 +227,32 @@ pub(super) fn align_and_position_item(
     let (y, y_margin) = align_item_within_area(
         Line { start: grid_area.top, end: grid_area.bottom },
         align_self.unwrap_or(alignment_styles.vertical),
-        height,
+        size.height,
         position,
         inset_vertical,
         margin.vertical_components(),
         baseline_shim,
     );
 
-    let scrollbar_size = Size {
-        width: if overflow.y == Overflow::Scroll { scrollbar_width } else { 0.0 },
-        height: if overflow.x == Overflow::Scroll { scrollbar_width } else { 0.0 },
-    };
+    let scrollbar_size = compute_scrollbar_size(overflow, size, padding, border, scrollbar_width);
 
     let resolved_margin = Rect { left: x_margin.start, right: x_margin.end, top: y_margin.start, bottom: y_margin.end };
+
+    #[cfg(feature = "content_size")]
+    // Now that we've picked a final size for the item, add the
+    // resultant padding box to the scrollable overflow.
+    let scrollable_overflow = layout_output
+        .descendent_scrollable_overflow
+        .union(Rect::from_origin_and_size(size).inset_by(border).shrunk_by(scrollbar_size));
 
     tree.set_unrounded_layout(
         node,
         &Layout {
             order,
             location: Point { x, y },
-            size: Size { width, height },
+            size,
             #[cfg(feature = "content_size")]
-            content_size: layout_output.content_size,
+            scrollable_overflow,
             scrollbar_size,
             padding,
             border,
@@ -253,12 +261,18 @@ pub(super) fn align_and_position_item(
     );
 
     #[cfg(feature = "content_size")]
-    let contribution =
-        compute_content_size_contribution(Point { x, y }, Size { width, height }, layout_output.content_size, overflow);
-    #[cfg(not(feature = "content_size"))]
-    let contribution = Size::ZERO;
+    expand_scrollable_overflow(
+        container_scrollable_overflow,
+        container_scroll_origin,
+        Point { x, y },
+        size,
+        border,
+        scrollbar_size,
+        overflow,
+        scrollable_overflow,
+    );
 
-    (contribution, y, height)
+    (y, size.height)
 }
 
 /// Align and size a grid item along a single axis

@@ -1,4 +1,6 @@
 //! Computes the CSS block layout algorithm in the case that the block container being laid out contains only block-level boxes
+
+use crate::compute::common::compute_scrollbar_size;
 use crate::geometry::{Line, Point, Rect, Size};
 use crate::style::{AvailableSpace, CoreStyle, LengthPercentageAuto, Overflow, Position};
 use crate::style_helpers::TaffyMaxContent;
@@ -12,7 +14,7 @@ use crate::util::{MaybeResolve, ResolveOrZero};
 use crate::{BlockContainerStyle, BlockItemStyle, BoxGenerationMode, BoxSizing, LayoutBlockContainer, TextAlign};
 
 #[cfg(feature = "content_size")]
-use super::common::content_size::compute_content_size_contribution;
+use super::common::content_size::expand_scrollable_overflow;
 
 /// Per-child data that is accumulated and modified over the course of the layout algorithm
 struct BlockItem {
@@ -134,12 +136,13 @@ fn compute_inner(tree: &mut impl LayoutBlockContainer, node_id: NodeId, inputs: 
     let aspect_ratio = style.aspect_ratio();
     let padding = raw_padding.resolve_or_zero(parent_size.width, |val, basis| tree.calc(val, basis));
     let border = raw_border.resolve_or_zero(parent_size.width, |val, basis| tree.calc(val, basis));
+    let overflow = style.overflow();
 
     // Scrollbar gutters are reserved when the `overflow` property is set to `Overflow::Scroll`.
     // However, the axis are switched (transposed) because a node that scrolls vertically needs
     // *horizontal* space to be reserved for a scrollbar
     let scrollbar_gutter = {
-        let offsets = style.overflow().transpose().map(|overflow| match overflow {
+        let offsets = overflow.transpose().map(|overflow| match overflow {
             Overflow::Scroll => style.scrollbar_width(),
             _ => 0.0,
         });
@@ -169,25 +172,25 @@ fn compute_inner(tree: &mut impl LayoutBlockContainer, node_id: NodeId, inputs: 
         .maybe_apply_aspect_ratio(aspect_ratio)
         .maybe_add(box_sizing_adjustment);
 
+    // Is this a scroll container?
+    let is_scroll_container = overflow.x.is_scroll_container() || overflow.y.is_scroll_container();
+
     // Determine margin collapsing behaviour
     let own_margins_collapse_with_children = Line {
         start: vertical_margins_are_collapsible.start
-            && !style.overflow().x.is_scroll_container()
-            && !style.overflow().y.is_scroll_container()
+            && !is_scroll_container
             && style.position() == Position::Relative
             && padding.top == 0.0
             && border.top == 0.0,
         end: vertical_margins_are_collapsible.end
-            && !style.overflow().x.is_scroll_container()
-            && !style.overflow().y.is_scroll_container()
+            && !is_scroll_container
             && style.position() == Position::Relative
             && padding.bottom == 0.0
             && border.bottom == 0.0
             && size.height.is_none(),
     };
     let has_styles_preventing_being_collapsed_through = !style.is_block()
-        || style.overflow().x.is_scroll_container()
-        || style.overflow().y.is_scroll_container()
+        || is_scroll_container
         || style.position() == Position::Absolute
         || padding.top > 0.0
         || padding.bottom > 0.0
@@ -220,7 +223,15 @@ fn compute_inner(tree: &mut impl LayoutBlockContainer, node_id: NodeId, inputs: 
     let resolved_padding = raw_padding.resolve_or_zero(Some(container_outer_width), |val, basis| tree.calc(val, basis));
     let resolved_border = raw_border.resolve_or_zero(Some(container_outer_width), |val, basis| tree.calc(val, basis));
     let resolved_content_box_inset = resolved_padding + resolved_border + scrollbar_gutter;
-    let (inflow_content_size, intrinsic_outer_height, first_child_top_margin_set, last_child_bottom_margin_set) =
+
+    #[cfg(feature = "content_size")]
+    let scroll_origin = resolved_border.top_left();
+
+    // Accumulator for the descendent's scrollable overflow.
+    #[cfg(feature = "content_size")]
+    let mut descendent_scrollable_overflow = Rect::new_empty();
+
+    let (intrinsic_outer_height, first_child_top_margin_set, last_child_bottom_margin_set) =
         perform_final_layout_on_in_flow_children(
             tree,
             &mut items,
@@ -229,7 +240,21 @@ fn compute_inner(tree: &mut impl LayoutBlockContainer, node_id: NodeId, inputs: 
             resolved_content_box_inset,
             text_align,
             own_margins_collapse_with_children,
+            #[cfg(feature = "content_size")]
+            &mut descendent_scrollable_overflow,
+            #[cfg(feature = "content_size")]
+            scroll_origin,
         );
+
+    // If we are a scroll container, inflate the inflow scrollable
+    // overflow by our padding.  This only applys to inflow children
+    // so we do it here before adding the out-of-flow (absolute)
+    // children.
+    #[cfg(feature = "content_size")]
+    if is_scroll_container {
+        descendent_scrollable_overflow = descendent_scrollable_overflow.inset_by(-resolved_padding);
+    }
+
     let container_outer_height = known_dimensions
         .height
         .unwrap_or(intrinsic_outer_height.maybe_clamp(min_size.height, max_size.height))
@@ -244,9 +269,17 @@ fn compute_inner(tree: &mut impl LayoutBlockContainer, node_id: NodeId, inputs: 
     // 4. Layout absolutely positioned children
     let absolute_position_inset = resolved_border + scrollbar_gutter;
     let absolute_position_area = final_outer_size - absolute_position_inset.sum_axes();
-    let absolute_position_offset = Point { x: absolute_position_inset.left, y: absolute_position_inset.top };
-    let absolute_content_size =
-        perform_absolute_layout_on_absolute_children(tree, &items, absolute_position_area, absolute_position_offset);
+    let absolute_position_offset = absolute_position_inset.top_left();
+    perform_absolute_layout_on_absolute_children(
+        tree,
+        &items,
+        absolute_position_area,
+        absolute_position_offset,
+        #[cfg(feature = "content_size")]
+        &mut descendent_scrollable_overflow,
+        #[cfg(feature = "content_size")]
+        scroll_origin,
+    );
 
     // 5. Perform hidden layout on hidden children
     let len = tree.child_count(node_id);
@@ -271,13 +304,10 @@ fn compute_inner(tree: &mut impl LayoutBlockContainer, node_id: NodeId, inputs: 
     let can_be_collapsed_through =
         !has_styles_preventing_being_collapsed_through && all_in_flow_children_can_be_collapsed_through;
 
-    #[cfg_attr(not(feature = "content_size"), allow(unused_variables))]
-    let content_size = inflow_content_size.f32_max(absolute_content_size);
-
     LayoutOutput {
         size: final_outer_size,
         #[cfg(feature = "content_size")]
-        content_size,
+        descendent_scrollable_overflow,
         first_baselines: Point::NONE,
         top_margin: if own_margins_collapse_with_children.start {
             first_child_top_margin_set
@@ -398,15 +428,15 @@ fn perform_final_layout_on_in_flow_children(
     resolved_content_box_inset: Rect<f32>,
     text_align: TextAlign,
     own_margins_collapse_with_children: Line<bool>,
-) -> (Size<f32>, f32, CollapsibleMarginSet, CollapsibleMarginSet) {
+    #[cfg(feature = "content_size")] container_scrollable_overflow: &mut Rect<f32>,
+    #[cfg(feature = "content_size")] container_scroll_origin: Point<f32>,
+) -> (f32, CollapsibleMarginSet, CollapsibleMarginSet) {
     // Resolve container_inner_width for sizing child nodes using initial content_box_inset
     let container_inner_width = container_outer_width - content_box_inset.horizontal_axis_sum();
     let parent_size = Size { width: Some(container_outer_width), height: None };
     let available_space =
         Size { width: AvailableSpace::Definite(container_inner_width), height: AvailableSpace::MinContent };
 
-    #[cfg_attr(not(feature = "content_size"), allow(unused_mut))]
-    let mut inflow_content_size = Size::ZERO;
     let mut committed_y_offset = resolved_content_box_inset.top;
     let mut y_offset_for_absolute = resolved_content_box_inset.top;
     let mut first_child_top_margin_set = CollapsibleMarginSet::ZERO;
@@ -510,10 +540,20 @@ fn perform_final_layout_on_in_flow_children(
                 }
             }
 
-            let scrollbar_size = Size {
-                width: if item.overflow.y == Overflow::Scroll { item.scrollbar_width } else { 0.0 },
-                height: if item.overflow.x == Overflow::Scroll { item.scrollbar_width } else { 0.0 },
-            };
+            let scrollbar_size = compute_scrollbar_size(
+                item.overflow,
+                item_layout.size,
+                item.padding,
+                item.border,
+                item.scrollbar_width,
+            );
+
+            #[cfg(feature = "content_size")]
+            // Now that we've picked a final size for the item, add
+            // the resultant padding box to the scrollable overflow.
+            let scrollable_overflow = item_layout
+                .descendent_scrollable_overflow
+                .union(Rect::from_origin_and_size(item_layout.size).inset_by(item.border).shrunk_by(scrollbar_size));
 
             tree.set_unrounded_layout(
                 item.node_id,
@@ -521,7 +561,7 @@ fn perform_final_layout_on_in_flow_children(
                     order: item.order,
                     size: item_layout.size,
                     #[cfg(feature = "content_size")]
-                    content_size: item_layout.content_size,
+                    scrollable_overflow,
                     scrollbar_size,
                     location,
                     padding: item.padding,
@@ -531,14 +571,16 @@ fn perform_final_layout_on_in_flow_children(
             );
 
             #[cfg(feature = "content_size")]
-            {
-                inflow_content_size = inflow_content_size.f32_max(compute_content_size_contribution(
-                    location,
-                    final_size,
-                    item_layout.content_size,
-                    item.overflow,
-                ));
-            }
+            expand_scrollable_overflow(
+                container_scrollable_overflow,
+                container_scroll_origin,
+                location,
+                final_size,
+                item.border,
+                scrollbar_size,
+                item.overflow,
+                scrollable_overflow,
+            );
 
             // Update first_child_top_margin_set
             if is_collapsing_with_first_margin_set {
@@ -572,7 +614,7 @@ fn perform_final_layout_on_in_flow_children(
 
     committed_y_offset += resolved_content_box_inset.bottom + bottom_y_margin_offset;
     let content_height = f32_max(0.0, committed_y_offset);
-    (inflow_content_size, content_height, first_child_top_margin_set, last_child_bottom_margin_set)
+    (content_height, first_child_top_margin_set, last_child_bottom_margin_set)
 }
 
 /// Perform absolute layout on all absolutely positioned children.
@@ -582,12 +624,11 @@ fn perform_absolute_layout_on_absolute_children(
     items: &[BlockItem],
     area_size: Size<f32>,
     area_offset: Point<f32>,
-) -> Size<f32> {
+    #[cfg(feature = "content_size")] container_scrollable_overflow: &mut Rect<f32>,
+    #[cfg(feature = "content_size")] container_scroll_origin: Point<f32>,
+) {
     let area_width = area_size.width;
     let area_height = area_size.height;
-
-    #[cfg_attr(not(feature = "content_size"), allow(unused_mut))]
-    let mut absolute_content_size = Size::ZERO;
 
     for item in items.iter().filter(|item| item.position == Position::Absolute) {
         let child_style = tree.get_block_child_style(item.node_id);
@@ -751,12 +792,15 @@ fn perform_absolute_layout_on_absolute_children(
                 .maybe_add(area_offset.y)
                 .unwrap_or(item.static_position.y + resolved_margin.top),
         };
-        // Note: axis intentionally switched here as scrollbars take up space in the opposite axis
-        // to the axis in which scrolling is enabled.
-        let scrollbar_size = Size {
-            width: if item.overflow.y == Overflow::Scroll { item.scrollbar_width } else { 0.0 },
-            height: if item.overflow.x == Overflow::Scroll { item.scrollbar_width } else { 0.0 },
-        };
+
+        let scrollbar_size = compute_scrollbar_size(item.overflow, final_size, padding, border, item.scrollbar_width);
+
+        #[cfg(feature = "content_size")]
+        // Now that we've picked a final size for the item, add the
+        // resultant padding box to the scrollable overflow.
+        let scrollable_overflow = layout_output
+            .descendent_scrollable_overflow
+            .union(Rect::from_top_left_and_size(border.top_left(), final_size - (border.sum_axes() + scrollbar_size)));
 
         tree.set_unrounded_layout(
             item.node_id,
@@ -764,7 +808,7 @@ fn perform_absolute_layout_on_absolute_children(
                 order: item.order,
                 size: final_size,
                 #[cfg(feature = "content_size")]
-                content_size: layout_output.content_size,
+                scrollable_overflow,
                 scrollbar_size,
                 location,
                 padding,
@@ -774,15 +818,15 @@ fn perform_absolute_layout_on_absolute_children(
         );
 
         #[cfg(feature = "content_size")]
-        {
-            absolute_content_size = absolute_content_size.f32_max(compute_content_size_contribution(
-                location,
-                final_size,
-                layout_output.content_size,
-                item.overflow,
-            ));
-        }
+        expand_scrollable_overflow(
+            container_scrollable_overflow,
+            container_scroll_origin,
+            location,
+            final_size,
+            border,
+            scrollbar_size,
+            item.overflow,
+            scrollable_overflow,
+        );
     }
-
-    absolute_content_size
 }
