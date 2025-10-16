@@ -265,8 +265,6 @@ pub enum Position {
     ///
     /// WARNING: to opt-out of layouting entirely, you must use [`Display::None`] instead on your [`Style`] object.
     Absolute,
-    /// The offset is computed relative to the viewport or transform boundary
-    Fixed,
 }
 
 impl Default for Position {
@@ -285,7 +283,7 @@ impl Position {
     /// Whether the element is positioned out-of-flow (absolute or fixed position)
     #[inline(always)]
     pub fn is_out_of_flow(self) -> bool {
-        matches!(self, Self::Absolute | Self::Fixed)
+        matches!(self, Self::Absolute)
     }
 
     /// Whether the element is positioned in-flow (NOT absolute or fixed position)
