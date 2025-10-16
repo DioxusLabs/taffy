@@ -6,6 +6,7 @@ fn absolute_child_with_max_height_larger_shrinkable_grandchild__border_box() {
     let mut taffy = crate::new_test_tree();
     let node00 = taffy
         .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             flex_shrink: 1f32,
             flex_basis: taffy::style::Dimension::from_length(150f32),
             size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(100f32), height: auto() },
@@ -17,6 +18,10 @@ fn absolute_child_with_max_height_larger_shrinkable_grandchild__border_box() {
             taffy::style::Style {
                 position: taffy::style::Position::Absolute,
                 flex_direction: taffy::style::FlexDirection::Column,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 max_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(100f32) },
                 inset: taffy::geometry::Rect { left: auto(), right: auto(), top: auto(), bottom: length(20f32) },
                 ..Default::default()
@@ -28,6 +33,10 @@ fn absolute_child_with_max_height_larger_shrinkable_grandchild__border_box() {
         .new_with_children(
             taffy::style::Style {
                 flex_direction: taffy::style::FlexDirection::Column,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::from_length(100f32),
                     height: taffy::style::Dimension::from_length(200f32),
@@ -183,6 +192,7 @@ fn absolute_child_with_max_height_larger_shrinkable_grandchild__content_box() {
     let node00 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             flex_shrink: 1f32,
             flex_basis: taffy::style::Dimension::from_length(150f32),
             size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(100f32), height: auto() },
@@ -195,6 +205,10 @@ fn absolute_child_with_max_height_larger_shrinkable_grandchild__content_box() {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 position: taffy::style::Position::Absolute,
                 flex_direction: taffy::style::FlexDirection::Column,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 max_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(100f32) },
                 inset: taffy::geometry::Rect { left: auto(), right: auto(), top: auto(), bottom: length(20f32) },
                 ..Default::default()
@@ -207,6 +221,10 @@ fn absolute_child_with_max_height_larger_shrinkable_grandchild__content_box() {
             taffy::style::Style {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 flex_direction: taffy::style::FlexDirection::Column,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::from_length(100f32),
                     height: taffy::style::Dimension::from_length(200f32),

@@ -4,18 +4,40 @@ fn bevy_issue_21240__border_box() {
     #[allow(unused_imports)]
     use taffy::{prelude::*, Layout};
     let mut taffy = crate::new_test_tree();
-    let node0 = taffy.new_leaf(taffy::style::Style { ..Default::default() }).unwrap();
-    let node1 = taffy.new_leaf(taffy::style::Style { ..Default::default() }).unwrap();
-    let node2 = taffy.new_leaf(taffy::style::Style { ..Default::default() }).unwrap();
-    let node3 = taffy.new_leaf(taffy::style::Style { ..Default::default() }).unwrap();
+    let node0 = taffy
+        .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
+            ..Default::default()
+        })
+        .unwrap();
+    let node1 = taffy
+        .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
+            ..Default::default()
+        })
+        .unwrap();
+    let node2 = taffy
+        .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
+            ..Default::default()
+        })
+        .unwrap();
+    let node3 = taffy
+        .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
+            ..Default::default()
+        })
+        .unwrap();
     let node4 = taffy
         .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             grid_column: taffy::geometry::Line { start: line(1i16), end: line(-1i16) },
             ..Default::default()
         })
         .unwrap();
     let node5 = taffy
         .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             grid_column: taffy::geometry::Line { start: line(1i16), end: taffy::style::GridPlacement::Span(4u16) },
             ..Default::default()
         })
@@ -24,6 +46,10 @@ fn bevy_issue_21240__border_box() {
         .new_with_children(
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 gap: taffy::geometry::Size { width: length(8f32), height: length(8f32) },
                 grid_template_rows: vec![length(40f32), length(40f32), length(40f32)],
                 grid_template_columns: vec![length(40f32), length(40f32), length(40f32), length(40f32)],
@@ -326,20 +352,37 @@ fn bevy_issue_21240__content_box() {
     use taffy::{prelude::*, Layout};
     let mut taffy = crate::new_test_tree();
     let node0 = taffy
-        .new_leaf(taffy::style::Style { box_sizing: taffy::style::BoxSizing::ContentBox, ..Default::default() })
+        .new_leaf(taffy::style::Style {
+            box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
+            ..Default::default()
+        })
         .unwrap();
     let node1 = taffy
-        .new_leaf(taffy::style::Style { box_sizing: taffy::style::BoxSizing::ContentBox, ..Default::default() })
+        .new_leaf(taffy::style::Style {
+            box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
+            ..Default::default()
+        })
         .unwrap();
     let node2 = taffy
-        .new_leaf(taffy::style::Style { box_sizing: taffy::style::BoxSizing::ContentBox, ..Default::default() })
+        .new_leaf(taffy::style::Style {
+            box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
+            ..Default::default()
+        })
         .unwrap();
     let node3 = taffy
-        .new_leaf(taffy::style::Style { box_sizing: taffy::style::BoxSizing::ContentBox, ..Default::default() })
+        .new_leaf(taffy::style::Style {
+            box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
+            ..Default::default()
+        })
         .unwrap();
     let node4 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             grid_column: taffy::geometry::Line { start: line(1i16), end: line(-1i16) },
             ..Default::default()
         })
@@ -347,6 +390,7 @@ fn bevy_issue_21240__content_box() {
     let node5 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             grid_column: taffy::geometry::Line { start: line(1i16), end: taffy::style::GridPlacement::Span(4u16) },
             ..Default::default()
         })
@@ -356,6 +400,10 @@ fn bevy_issue_21240__content_box() {
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
                 box_sizing: taffy::style::BoxSizing::ContentBox,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 gap: taffy::geometry::Size { width: length(8f32), height: length(8f32) },
                 grid_template_rows: vec![length(40f32), length(40f32), length(40f32)],
                 grid_template_columns: vec![length(40f32), length(40f32), length(40f32), length(40f32)],

@@ -5,10 +5,15 @@ fn percentage_main_max_height__border_box() {
     use taffy::{prelude::*, Layout};
     let mut taffy = crate::new_test_tree();
     let node00 = taffy
-        .new_leaf(taffy::style::Style { flex_basis: taffy::style::Dimension::from_length(15f32), ..Default::default() })
+        .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
+            flex_basis: taffy::style::Dimension::from_length(15f32),
+            ..Default::default()
+        })
         .unwrap();
     let node01 = taffy
         .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             flex_basis: taffy::style::Dimension::from_length(48f32),
             max_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_percent(0.33f32) },
             ..Default::default()
@@ -18,6 +23,10 @@ fn percentage_main_max_height__border_box() {
         .new_with_children(
             taffy::style::Style {
                 flex_direction: taffy::style::FlexDirection::Column,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 align_items: Some(taffy::style::AlignItems::FlexStart),
                 size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(151f32) },
                 ..Default::default()
@@ -29,6 +38,10 @@ fn percentage_main_max_height__border_box() {
         .new_with_children(
             taffy::style::Style {
                 flex_direction: taffy::style::FlexDirection::Column,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(71f32), height: auto() },
                 ..Default::default()
             },
@@ -226,6 +239,7 @@ fn percentage_main_max_height__content_box() {
     let node00 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             flex_basis: taffy::style::Dimension::from_length(15f32),
             ..Default::default()
         })
@@ -233,6 +247,7 @@ fn percentage_main_max_height__content_box() {
     let node01 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             flex_basis: taffy::style::Dimension::from_length(48f32),
             max_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_percent(0.33f32) },
             ..Default::default()
@@ -243,6 +258,10 @@ fn percentage_main_max_height__content_box() {
             taffy::style::Style {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 flex_direction: taffy::style::FlexDirection::Column,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 align_items: Some(taffy::style::AlignItems::FlexStart),
                 size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(151f32) },
                 ..Default::default()
@@ -255,6 +274,10 @@ fn percentage_main_max_height__content_box() {
             taffy::style::Style {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 flex_direction: taffy::style::FlexDirection::Column,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(71f32), height: auto() },
                 ..Default::default()
             },

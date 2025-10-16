@@ -6,6 +6,7 @@ fn align_items_flex_end_child_with_margin_bigger_than_parent__border_box() {
     let mut taffy = crate::new_test_tree();
     let node00 = taffy
         .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(50f32),
                 height: taffy::style::Dimension::from_length(50f32),
@@ -16,13 +17,24 @@ fn align_items_flex_end_child_with_margin_bigger_than_parent__border_box() {
         .unwrap();
     let node0 = taffy
         .new_with_children(
-            taffy::style::Style { align_items: Some(taffy::style::AlignItems::FlexEnd), ..Default::default() },
+            taffy::style::Style {
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
+                align_items: Some(taffy::style::AlignItems::FlexEnd),
+                ..Default::default()
+            },
             &[node00],
         )
         .unwrap();
     let node = taffy
         .new_with_children(
             taffy::style::Style {
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 align_items: Some(taffy::style::AlignItems::Center),
                 justify_content: Some(taffy::style::JustifyContent::Center),
                 size: taffy::geometry::Size {
@@ -174,6 +186,7 @@ fn align_items_flex_end_child_with_margin_bigger_than_parent__content_box() {
     let node00 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(50f32),
                 height: taffy::style::Dimension::from_length(50f32),
@@ -186,6 +199,10 @@ fn align_items_flex_end_child_with_margin_bigger_than_parent__content_box() {
         .new_with_children(
             taffy::style::Style {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 align_items: Some(taffy::style::AlignItems::FlexEnd),
                 ..Default::default()
             },
@@ -196,6 +213,10 @@ fn align_items_flex_end_child_with_margin_bigger_than_parent__content_box() {
         .new_with_children(
             taffy::style::Style {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 align_items: Some(taffy::style::AlignItems::Center),
                 justify_content: Some(taffy::style::JustifyContent::Center),
                 size: taffy::geometry::Size {

@@ -6,6 +6,7 @@ fn block_inset_fixed__border_box() {
     let mut taffy = crate::new_test_tree();
     let node0 = taffy
         .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(10f32) },
             inset: taffy::geometry::Rect { left: length(2f32), right: auto(), top: length(4f32), bottom: auto() },
             ..Default::default()
@@ -13,6 +14,7 @@ fn block_inset_fixed__border_box() {
         .unwrap();
     let node1 = taffy
         .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(10f32) },
             inset: taffy::geometry::Rect { left: auto(), right: length(6f32), top: auto(), bottom: length(8f32) },
             ..Default::default()
@@ -20,6 +22,7 @@ fn block_inset_fixed__border_box() {
         .unwrap();
     let node2 = taffy
         .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(10f32) },
             inset: taffy::geometry::Rect {
                 left: length(2f32),
@@ -34,6 +37,10 @@ fn block_inset_fixed__border_box() {
         .new_with_children(
             taffy::style::Style {
                 display: taffy::style::Display::Block,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(50f32), height: auto() },
                 ..Default::default()
             },
@@ -213,6 +220,7 @@ fn block_inset_fixed__content_box() {
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(10f32) },
             inset: taffy::geometry::Rect { left: length(2f32), right: auto(), top: length(4f32), bottom: auto() },
             ..Default::default()
@@ -221,6 +229,7 @@ fn block_inset_fixed__content_box() {
     let node1 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(10f32) },
             inset: taffy::geometry::Rect { left: auto(), right: length(6f32), top: auto(), bottom: length(8f32) },
             ..Default::default()
@@ -229,6 +238,7 @@ fn block_inset_fixed__content_box() {
     let node2 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(10f32) },
             inset: taffy::geometry::Rect {
                 left: length(2f32),
@@ -244,6 +254,10 @@ fn block_inset_fixed__content_box() {
             taffy::style::Style {
                 display: taffy::style::Display::Block,
                 box_sizing: taffy::style::BoxSizing::ContentBox,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(50f32), height: auto() },
                 ..Default::default()
             },

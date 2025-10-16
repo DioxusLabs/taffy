@@ -7,6 +7,7 @@ fn grid_align_items_baseline_multiline_column__border_box() {
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             display: taffy::style::Display::Grid,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(50f32),
                 height: taffy::style::Dimension::from_length(50f32),
@@ -17,6 +18,7 @@ fn grid_align_items_baseline_multiline_column__border_box() {
     let node10 = taffy
         .new_leaf(taffy::style::Style {
             display: taffy::style::Display::Grid,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(20f32),
                 height: taffy::style::Dimension::from_length(20f32),
@@ -28,6 +30,10 @@ fn grid_align_items_baseline_multiline_column__border_box() {
         .new_with_children(
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::from_length(30f32),
                     height: taffy::style::Dimension::from_length(50f32),
@@ -40,6 +46,7 @@ fn grid_align_items_baseline_multiline_column__border_box() {
     let node20 = taffy
         .new_leaf(taffy::style::Style {
             display: taffy::style::Display::Grid,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(10f32),
                 height: taffy::style::Dimension::from_length(10f32),
@@ -51,6 +58,10 @@ fn grid_align_items_baseline_multiline_column__border_box() {
         .new_with_children(
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::from_length(40f32),
                     height: taffy::style::Dimension::from_length(70f32),
@@ -63,6 +74,7 @@ fn grid_align_items_baseline_multiline_column__border_box() {
     let node3 = taffy
         .new_leaf(taffy::style::Style {
             display: taffy::style::Display::Grid,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(50f32),
                 height: taffy::style::Dimension::from_length(20f32),
@@ -74,6 +86,10 @@ fn grid_align_items_baseline_multiline_column__border_box() {
         .new_with_children(
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 align_items: Some(taffy::style::AlignItems::Baseline),
                 grid_template_columns: vec![auto(), auto()],
                 size: taffy::geometry::Size {
@@ -388,6 +404,7 @@ fn grid_align_items_baseline_multiline_column__content_box() {
         .new_leaf(taffy::style::Style {
             display: taffy::style::Display::Grid,
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(50f32),
                 height: taffy::style::Dimension::from_length(50f32),
@@ -399,6 +416,7 @@ fn grid_align_items_baseline_multiline_column__content_box() {
         .new_leaf(taffy::style::Style {
             display: taffy::style::Display::Grid,
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(20f32),
                 height: taffy::style::Dimension::from_length(20f32),
@@ -411,6 +429,10 @@ fn grid_align_items_baseline_multiline_column__content_box() {
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
                 box_sizing: taffy::style::BoxSizing::ContentBox,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::from_length(30f32),
                     height: taffy::style::Dimension::from_length(50f32),
@@ -424,6 +446,7 @@ fn grid_align_items_baseline_multiline_column__content_box() {
         .new_leaf(taffy::style::Style {
             display: taffy::style::Display::Grid,
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(10f32),
                 height: taffy::style::Dimension::from_length(10f32),
@@ -436,6 +459,10 @@ fn grid_align_items_baseline_multiline_column__content_box() {
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
                 box_sizing: taffy::style::BoxSizing::ContentBox,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::from_length(40f32),
                     height: taffy::style::Dimension::from_length(70f32),
@@ -449,6 +476,7 @@ fn grid_align_items_baseline_multiline_column__content_box() {
         .new_leaf(taffy::style::Style {
             display: taffy::style::Display::Grid,
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(50f32),
                 height: taffy::style::Dimension::from_length(20f32),
@@ -461,6 +489,10 @@ fn grid_align_items_baseline_multiline_column__content_box() {
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
                 box_sizing: taffy::style::BoxSizing::ContentBox,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 align_items: Some(taffy::style::AlignItems::Baseline),
                 grid_template_columns: vec![auto(), auto()],
                 size: taffy::geometry::Size {

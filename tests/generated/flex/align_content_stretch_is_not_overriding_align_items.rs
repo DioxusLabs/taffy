@@ -6,6 +6,7 @@ fn align_content_stretch_is_not_overriding_align_items__border_box() {
     let mut taffy = crate::new_test_tree();
     let node00 = taffy
         .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             align_content: Some(taffy::style::AlignContent::Stretch),
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(10f32),
@@ -17,6 +18,10 @@ fn align_content_stretch_is_not_overriding_align_items__border_box() {
     let node0 = taffy
         .new_with_children(
             taffy::style::Style {
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 align_items: Some(taffy::style::AlignItems::Center),
                 align_content: Some(taffy::style::AlignContent::Stretch),
                 size: taffy::geometry::Size {
@@ -30,7 +35,14 @@ fn align_content_stretch_is_not_overriding_align_items__border_box() {
         .unwrap();
     let node = taffy
         .new_with_children(
-            taffy::style::Style { align_content: Some(taffy::style::AlignContent::Stretch), ..Default::default() },
+            taffy::style::Style {
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
+                align_content: Some(taffy::style::AlignContent::Stretch),
+                ..Default::default()
+            },
             &[node0],
         )
         .unwrap();
@@ -180,6 +192,7 @@ fn align_content_stretch_is_not_overriding_align_items__content_box() {
     let node00 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             align_content: Some(taffy::style::AlignContent::Stretch),
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(10f32),
@@ -192,6 +205,10 @@ fn align_content_stretch_is_not_overriding_align_items__content_box() {
         .new_with_children(
             taffy::style::Style {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 align_items: Some(taffy::style::AlignItems::Center),
                 align_content: Some(taffy::style::AlignContent::Stretch),
                 size: taffy::geometry::Size {
@@ -207,6 +224,10 @@ fn align_content_stretch_is_not_overriding_align_items__content_box() {
         .new_with_children(
             taffy::style::Style {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 align_content: Some(taffy::style::AlignContent::Stretch),
                 ..Default::default()
             },

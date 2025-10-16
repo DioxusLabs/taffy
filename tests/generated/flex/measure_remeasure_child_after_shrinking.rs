@@ -6,6 +6,7 @@ fn measure_remeasure_child_after_shrinking__border_box() {
     let mut taffy = crate::new_test_tree();
     let node0 = taffy
         .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             flex_shrink: 0f32,
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(50f32),
@@ -16,13 +17,23 @@ fn measure_remeasure_child_after_shrinking__border_box() {
         .unwrap();
     let node1 = taffy
         .new_leaf_with_context(
-            taffy::style::Style { ..Default::default() },
+            taffy::style::Style {
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
+                ..Default::default()
+            },
             crate::TestNodeContext::ahem_text("HH", crate::WritingMode::Horizontal),
         )
         .unwrap();
     let node = taffy
         .new_with_children(
             taffy::style::Style {
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 align_items: Some(taffy::style::AlignItems::Start),
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::from_length(100f32),
@@ -167,6 +178,7 @@ fn measure_remeasure_child_after_shrinking__content_box() {
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             flex_shrink: 0f32,
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(50f32),
@@ -177,7 +189,14 @@ fn measure_remeasure_child_after_shrinking__content_box() {
         .unwrap();
     let node1 = taffy
         .new_leaf_with_context(
-            taffy::style::Style { box_sizing: taffy::style::BoxSizing::ContentBox, ..Default::default() },
+            taffy::style::Style {
+                box_sizing: taffy::style::BoxSizing::ContentBox,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
+                ..Default::default()
+            },
             crate::TestNodeContext::ahem_text("HH", crate::WritingMode::Horizontal),
         )
         .unwrap();
@@ -185,6 +204,10 @@ fn measure_remeasure_child_after_shrinking__content_box() {
         .new_with_children(
             taffy::style::Style {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 align_items: Some(taffy::style::AlignItems::Start),
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::from_length(100f32),

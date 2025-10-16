@@ -6,6 +6,7 @@ fn gridflex_kitchen_sink_minimise3__border_box() {
     let mut taffy = crate::new_test_tree();
     let node00 = taffy
         .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(20f32),
                 height: taffy::style::Dimension::from_length(20f32),
@@ -13,13 +14,32 @@ fn gridflex_kitchen_sink_minimise3__border_box() {
             ..Default::default()
         })
         .unwrap();
-    let node01 = taffy.new_leaf(taffy::style::Style { ..Default::default() }).unwrap();
-    let node02 = taffy.new_leaf(taffy::style::Style { ..Default::default() }).unwrap();
-    let node03 = taffy.new_leaf(taffy::style::Style { ..Default::default() }).unwrap();
+    let node01 = taffy
+        .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
+            ..Default::default()
+        })
+        .unwrap();
+    let node02 = taffy
+        .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
+            ..Default::default()
+        })
+        .unwrap();
+    let node03 = taffy
+        .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
+            ..Default::default()
+        })
+        .unwrap();
     let node0 = taffy
         .new_with_children(
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 grid_template_rows: vec![percent(0.3f32), percent(0.1f32)],
                 grid_template_columns: vec![auto(), percent(0.1f32)],
                 ..Default::default()
@@ -30,6 +50,10 @@ fn gridflex_kitchen_sink_minimise3__border_box() {
     let node = taffy
         .new_with_children(
             taffy::style::Style {
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(50f32), height: auto() },
                 ..Default::default()
             },
@@ -293,6 +317,7 @@ fn gridflex_kitchen_sink_minimise3__content_box() {
     let node00 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(20f32),
                 height: taffy::style::Dimension::from_length(20f32),
@@ -301,19 +326,35 @@ fn gridflex_kitchen_sink_minimise3__content_box() {
         })
         .unwrap();
     let node01 = taffy
-        .new_leaf(taffy::style::Style { box_sizing: taffy::style::BoxSizing::ContentBox, ..Default::default() })
+        .new_leaf(taffy::style::Style {
+            box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
+            ..Default::default()
+        })
         .unwrap();
     let node02 = taffy
-        .new_leaf(taffy::style::Style { box_sizing: taffy::style::BoxSizing::ContentBox, ..Default::default() })
+        .new_leaf(taffy::style::Style {
+            box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
+            ..Default::default()
+        })
         .unwrap();
     let node03 = taffy
-        .new_leaf(taffy::style::Style { box_sizing: taffy::style::BoxSizing::ContentBox, ..Default::default() })
+        .new_leaf(taffy::style::Style {
+            box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
+            ..Default::default()
+        })
         .unwrap();
     let node0 = taffy
         .new_with_children(
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
                 box_sizing: taffy::style::BoxSizing::ContentBox,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 grid_template_rows: vec![percent(0.3f32), percent(0.1f32)],
                 grid_template_columns: vec![auto(), percent(0.1f32)],
                 ..Default::default()
@@ -325,6 +366,10 @@ fn gridflex_kitchen_sink_minimise3__content_box() {
         .new_with_children(
             taffy::style::Style {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(50f32), height: auto() },
                 ..Default::default()
             },

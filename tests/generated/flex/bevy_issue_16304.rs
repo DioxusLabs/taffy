@@ -6,6 +6,7 @@ fn bevy_issue_16304__border_box() {
     let mut taffy = crate::new_test_tree();
     let node000 = taffy
         .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(20f32),
                 height: taffy::style::Dimension::from_length(40f32),
@@ -15,6 +16,7 @@ fn bevy_issue_16304__border_box() {
         .unwrap();
     let node001 = taffy
         .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(20f32),
                 height: taffy::style::Dimension::from_length(40f32),
@@ -27,6 +29,10 @@ fn bevy_issue_16304__border_box() {
             taffy::style::Style {
                 display: taffy::style::Display::Flex,
                 flex_wrap: taffy::style::FlexWrap::Wrap,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 gap: taffy::geometry::Size { width: length(10f32), height: length(10f32) },
                 min_size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(50f32), height: auto() },
                 ..Default::default()
@@ -39,6 +45,10 @@ fn bevy_issue_16304__border_box() {
             taffy::style::Style {
                 display: taffy::style::Display::Flex,
                 flex_direction: taffy::style::FlexDirection::Column,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(50f32), height: auto() },
                 ..Default::default()
             },
@@ -46,7 +56,17 @@ fn bevy_issue_16304__border_box() {
         )
         .unwrap();
     let node = taffy
-        .new_with_children(taffy::style::Style { display: taffy::style::Display::Flex, ..Default::default() }, &[node0])
+        .new_with_children(
+            taffy::style::Style {
+                display: taffy::style::Display::Flex,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
+                ..Default::default()
+            },
+            &[node0],
+        )
         .unwrap();
     taffy.compute_layout_with_measure(node, taffy::geometry::Size::MAX_CONTENT, crate::test_measure_function).unwrap();
     println!("\nComputed tree:");
@@ -278,6 +298,7 @@ fn bevy_issue_16304__content_box() {
     let node000 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(20f32),
                 height: taffy::style::Dimension::from_length(40f32),
@@ -288,6 +309,7 @@ fn bevy_issue_16304__content_box() {
     let node001 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(20f32),
                 height: taffy::style::Dimension::from_length(40f32),
@@ -301,6 +323,10 @@ fn bevy_issue_16304__content_box() {
                 display: taffy::style::Display::Flex,
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 flex_wrap: taffy::style::FlexWrap::Wrap,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 gap: taffy::geometry::Size { width: length(10f32), height: length(10f32) },
                 min_size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(50f32), height: auto() },
                 ..Default::default()
@@ -314,6 +340,10 @@ fn bevy_issue_16304__content_box() {
                 display: taffy::style::Display::Flex,
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 flex_direction: taffy::style::FlexDirection::Column,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(50f32), height: auto() },
                 ..Default::default()
             },
@@ -325,6 +355,10 @@ fn bevy_issue_16304__content_box() {
             taffy::style::Style {
                 display: taffy::style::Display::Flex,
                 box_sizing: taffy::style::BoxSizing::ContentBox,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 ..Default::default()
             },
             &[node0],

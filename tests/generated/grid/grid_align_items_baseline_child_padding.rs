@@ -7,6 +7,7 @@ fn grid_align_items_baseline_child_padding__border_box() {
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             display: taffy::style::Display::Grid,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(50f32),
                 height: taffy::style::Dimension::from_length(50f32),
@@ -17,6 +18,7 @@ fn grid_align_items_baseline_child_padding__border_box() {
     let node10 = taffy
         .new_leaf(taffy::style::Style {
             display: taffy::style::Display::Grid,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(50f32),
                 height: taffy::style::Dimension::from_length(10f32),
@@ -28,6 +30,10 @@ fn grid_align_items_baseline_child_padding__border_box() {
         .new_with_children(
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::from_length(50f32),
                     height: taffy::style::Dimension::from_length(20f32),
@@ -47,6 +53,10 @@ fn grid_align_items_baseline_child_padding__border_box() {
         .new_with_children(
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 align_items: Some(taffy::style::AlignItems::Baseline),
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::from_length(100f32),
@@ -243,6 +253,7 @@ fn grid_align_items_baseline_child_padding__content_box() {
         .new_leaf(taffy::style::Style {
             display: taffy::style::Display::Grid,
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(50f32),
                 height: taffy::style::Dimension::from_length(50f32),
@@ -254,6 +265,7 @@ fn grid_align_items_baseline_child_padding__content_box() {
         .new_leaf(taffy::style::Style {
             display: taffy::style::Display::Grid,
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(50f32),
                 height: taffy::style::Dimension::from_length(10f32),
@@ -266,6 +278,10 @@ fn grid_align_items_baseline_child_padding__content_box() {
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
                 box_sizing: taffy::style::BoxSizing::ContentBox,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::from_length(50f32),
                     height: taffy::style::Dimension::from_length(20f32),
@@ -286,6 +302,10 @@ fn grid_align_items_baseline_child_padding__content_box() {
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
                 box_sizing: taffy::style::BoxSizing::ContentBox,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 align_items: Some(taffy::style::AlignItems::Baseline),
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::from_length(100f32),

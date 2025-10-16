@@ -6,6 +6,7 @@ fn align_items_center_with_min_height_with_align_content_flex_start_with_wrap__b
     let mut taffy = crate::new_test_tree();
     let node00 = taffy
         .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(10f32),
                 height: taffy::style::Dimension::from_length(10f32),
@@ -15,6 +16,7 @@ fn align_items_center_with_min_height_with_align_content_flex_start_with_wrap__b
         .unwrap();
     let node01 = taffy
         .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(10f32),
                 height: taffy::style::Dimension::from_length(20f32),
@@ -27,6 +29,10 @@ fn align_items_center_with_min_height_with_align_content_flex_start_with_wrap__b
             taffy::style::Style {
                 display: taffy::style::Display::Flex,
                 flex_wrap: taffy::style::FlexWrap::Wrap,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 align_items: Some(taffy::style::AlignItems::Center),
                 align_content: Some(taffy::style::AlignContent::FlexStart),
                 size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(100f32), height: auto() },
@@ -38,6 +44,7 @@ fn align_items_center_with_min_height_with_align_content_flex_start_with_wrap__b
         .unwrap();
     let node10 = taffy
         .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(10f32),
                 height: taffy::style::Dimension::from_length(10f32),
@@ -47,6 +54,7 @@ fn align_items_center_with_min_height_with_align_content_flex_start_with_wrap__b
         .unwrap();
     let node11 = taffy
         .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(10f32),
                 height: taffy::style::Dimension::from_length(20f32),
@@ -59,6 +67,10 @@ fn align_items_center_with_min_height_with_align_content_flex_start_with_wrap__b
             taffy::style::Style {
                 display: taffy::style::Display::Flex,
                 flex_wrap: taffy::style::FlexWrap::Wrap,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 align_items: Some(taffy::style::AlignItems::Center),
                 size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(100f32), height: auto() },
                 min_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(100f32) },
@@ -69,6 +81,7 @@ fn align_items_center_with_min_height_with_align_content_flex_start_with_wrap__b
         .unwrap();
     let node20 = taffy
         .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(10f32),
                 height: taffy::style::Dimension::from_length(10f32),
@@ -78,6 +91,7 @@ fn align_items_center_with_min_height_with_align_content_flex_start_with_wrap__b
         .unwrap();
     let node21 = taffy
         .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(10f32),
                 height: taffy::style::Dimension::from_length(20f32),
@@ -89,6 +103,10 @@ fn align_items_center_with_min_height_with_align_content_flex_start_with_wrap__b
         .new_with_children(
             taffy::style::Style {
                 display: taffy::style::Display::Flex,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 align_items: Some(taffy::style::AlignItems::Center),
                 size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(100f32), height: auto() },
                 min_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(100f32) },
@@ -99,6 +117,7 @@ fn align_items_center_with_min_height_with_align_content_flex_start_with_wrap__b
         .unwrap();
     let node30 = taffy
         .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(10f32),
                 height: taffy::style::Dimension::from_length(10f32),
@@ -108,6 +127,7 @@ fn align_items_center_with_min_height_with_align_content_flex_start_with_wrap__b
         .unwrap();
     let node31 = taffy
         .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(10f32),
                 height: taffy::style::Dimension::from_length(20f32),
@@ -119,6 +139,10 @@ fn align_items_center_with_min_height_with_align_content_flex_start_with_wrap__b
         .new_with_children(
             taffy::style::Style {
                 display: taffy::style::Display::Flex,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 align_items: Some(taffy::style::AlignItems::Center),
                 align_content: Some(taffy::style::AlignContent::FlexStart),
                 size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(100f32), height: auto() },
@@ -128,8 +152,18 @@ fn align_items_center_with_min_height_with_align_content_flex_start_with_wrap__b
             &[node30, node31],
         )
         .unwrap();
-    let node =
-        taffy.new_with_children(taffy::style::Style { ..Default::default() }, &[node0, node1, node2, node3]).unwrap();
+    let node = taffy
+        .new_with_children(
+            taffy::style::Style {
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
+                ..Default::default()
+            },
+            &[node0, node1, node2, node3],
+        )
+        .unwrap();
     taffy.compute_layout_with_measure(node, taffy::geometry::Size::MAX_CONTENT, crate::test_measure_function).unwrap();
     println!("\nComputed tree:");
     taffy.print_tree(node);
@@ -726,6 +760,7 @@ fn align_items_center_with_min_height_with_align_content_flex_start_with_wrap__c
     let node00 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(10f32),
                 height: taffy::style::Dimension::from_length(10f32),
@@ -736,6 +771,7 @@ fn align_items_center_with_min_height_with_align_content_flex_start_with_wrap__c
     let node01 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(10f32),
                 height: taffy::style::Dimension::from_length(20f32),
@@ -749,6 +785,10 @@ fn align_items_center_with_min_height_with_align_content_flex_start_with_wrap__c
                 display: taffy::style::Display::Flex,
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 flex_wrap: taffy::style::FlexWrap::Wrap,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 align_items: Some(taffy::style::AlignItems::Center),
                 align_content: Some(taffy::style::AlignContent::FlexStart),
                 size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(100f32), height: auto() },
@@ -761,6 +801,7 @@ fn align_items_center_with_min_height_with_align_content_flex_start_with_wrap__c
     let node10 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(10f32),
                 height: taffy::style::Dimension::from_length(10f32),
@@ -771,6 +812,7 @@ fn align_items_center_with_min_height_with_align_content_flex_start_with_wrap__c
     let node11 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(10f32),
                 height: taffy::style::Dimension::from_length(20f32),
@@ -784,6 +826,10 @@ fn align_items_center_with_min_height_with_align_content_flex_start_with_wrap__c
                 display: taffy::style::Display::Flex,
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 flex_wrap: taffy::style::FlexWrap::Wrap,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 align_items: Some(taffy::style::AlignItems::Center),
                 size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(100f32), height: auto() },
                 min_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(100f32) },
@@ -795,6 +841,7 @@ fn align_items_center_with_min_height_with_align_content_flex_start_with_wrap__c
     let node20 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(10f32),
                 height: taffy::style::Dimension::from_length(10f32),
@@ -805,6 +852,7 @@ fn align_items_center_with_min_height_with_align_content_flex_start_with_wrap__c
     let node21 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(10f32),
                 height: taffy::style::Dimension::from_length(20f32),
@@ -817,6 +865,10 @@ fn align_items_center_with_min_height_with_align_content_flex_start_with_wrap__c
             taffy::style::Style {
                 display: taffy::style::Display::Flex,
                 box_sizing: taffy::style::BoxSizing::ContentBox,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 align_items: Some(taffy::style::AlignItems::Center),
                 size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(100f32), height: auto() },
                 min_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(100f32) },
@@ -828,6 +880,7 @@ fn align_items_center_with_min_height_with_align_content_flex_start_with_wrap__c
     let node30 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(10f32),
                 height: taffy::style::Dimension::from_length(10f32),
@@ -838,6 +891,7 @@ fn align_items_center_with_min_height_with_align_content_flex_start_with_wrap__c
     let node31 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(10f32),
                 height: taffy::style::Dimension::from_length(20f32),
@@ -850,6 +904,10 @@ fn align_items_center_with_min_height_with_align_content_flex_start_with_wrap__c
             taffy::style::Style {
                 display: taffy::style::Display::Flex,
                 box_sizing: taffy::style::BoxSizing::ContentBox,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 align_items: Some(taffy::style::AlignItems::Center),
                 align_content: Some(taffy::style::AlignContent::FlexStart),
                 size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(100f32), height: auto() },
@@ -861,7 +919,14 @@ fn align_items_center_with_min_height_with_align_content_flex_start_with_wrap__c
         .unwrap();
     let node = taffy
         .new_with_children(
-            taffy::style::Style { box_sizing: taffy::style::BoxSizing::ContentBox, ..Default::default() },
+            taffy::style::Style {
+                box_sizing: taffy::style::BoxSizing::ContentBox,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
+                ..Default::default()
+            },
             &[node0, node1, node2, node3],
         )
         .unwrap();

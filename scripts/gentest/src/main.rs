@@ -447,29 +447,25 @@ fn generate_node(ident: &str, node: &Value) -> TokenStream {
         _ => quote!(),
     };
 
-    fn quote_overflow(overflow: &Value) -> Option<TokenStream> {
+    fn quote_overflow(overflow: &Value) -> (TokenStream, bool) {
         match overflow {
             Value::String(ref value) => match value.as_ref() {
-                "hidden" => Some(quote!(taffy::style::Overflow::Hidden)),
-                "scroll" => Some(quote!(taffy::style::Overflow::Scroll)),
-                "auto" => Some(quote!(taffy::style::Overflow::Auto)),
-                "clip" => Some(quote!(taffy::style::Overflow::Clip)),
-                "visible" => None, // None defaults to visible.
-                _ => None,
+                "hidden" => (quote!(taffy::style::Overflow::Hidden), true),
+                "scroll" => (quote!(taffy::style::Overflow::Scroll), true),
+                "auto" => (quote!(taffy::style::Overflow::Auto), true),
+                "clip" => (quote!(taffy::style::Overflow::Clip), false),
+                _ => (quote!(taffy::style::Overflow::Visible), false),
             },
-            _ => None,
+            _ => (quote!(taffy::style::Overflow::Visible), false),
         }
     }
-    let overflow_x = quote_overflow(&style["overflowX"]);
-    let overflow_y = quote_overflow(&style["overflowY"]);
-    let (overflow, scrollbar_width) = if overflow_x.is_some() || overflow_y.is_some() {
-        let overflow_x = overflow_x.unwrap_or(quote!(taffy::style::Overflow::Visible));
-        let overflow_y = overflow_y.unwrap_or(quote!(taffy::style::Overflow::Visible));
-        let overflow = quote!(overflow: taffy::geometry::Point { x: #overflow_x, y: #overflow_y },);
-        let scrollbar_width = quote_number_prop("scrollbar_width", style, |value: f32| quote!(#value));
-        (overflow, scrollbar_width)
+    let (overflow_x, x_scroll_container) = quote_overflow(&style["overflowX"]);
+    let (overflow_y, y_scroll_container) = quote_overflow(&style["overflowY"]);
+    let overflow = quote!(overflow: taffy::geometry::Point { x: #overflow_x, y: #overflow_y },);
+    let scrollbar_width = if x_scroll_container | y_scroll_container {
+        quote_number_prop("scrollbar_width", style, |value: f32| quote!(#value))
     } else {
-        (quote!(), quote!())
+        quote!()
     };
 
     let text_align = match style["textAlign"] {

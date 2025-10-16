@@ -7,13 +7,21 @@ fn grid_percent_items_nested_inside_stretch_alignment__border_box() {
     let node00 = taffy
         .new_leaf(taffy::style::Style {
             display: taffy::style::Display::Grid,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             padding: taffy::geometry::Rect { left: zero(), right: zero(), top: percent(0.2f32), bottom: zero() },
             ..Default::default()
         })
         .unwrap();
     let node0 = taffy
         .new_with_children(
-            taffy::style::Style { display: taffy::style::Display::Grid, ..Default::default() },
+            taffy::style::Style {
+                display: taffy::style::Display::Grid,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
+                ..Default::default()
+            },
             &[node00],
         )
         .unwrap();
@@ -21,6 +29,10 @@ fn grid_percent_items_nested_inside_stretch_alignment__border_box() {
         .new_with_children(
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(200f32), height: auto() },
                 ..Default::default()
             },
@@ -168,6 +180,7 @@ fn grid_percent_items_nested_inside_stretch_alignment__content_box() {
         .new_leaf(taffy::style::Style {
             display: taffy::style::Display::Grid,
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             padding: taffy::geometry::Rect { left: zero(), right: zero(), top: percent(0.2f32), bottom: zero() },
             ..Default::default()
         })
@@ -177,6 +190,10 @@ fn grid_percent_items_nested_inside_stretch_alignment__content_box() {
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
                 box_sizing: taffy::style::BoxSizing::ContentBox,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 ..Default::default()
             },
             &[node00],
@@ -187,6 +204,10 @@ fn grid_percent_items_nested_inside_stretch_alignment__content_box() {
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
                 box_sizing: taffy::style::BoxSizing::ContentBox,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(200f32), height: auto() },
                 ..Default::default()
             },

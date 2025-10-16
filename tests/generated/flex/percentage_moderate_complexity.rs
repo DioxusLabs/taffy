@@ -7,6 +7,7 @@ fn percentage_moderate_complexity__border_box() {
     taffy.disable_rounding();
     let node00 = taffy
         .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size { width: taffy::style::Dimension::from_percent(0.45f32), height: auto() },
             margin: taffy::geometry::Rect {
                 left: percent(0.05f32),
@@ -28,6 +29,10 @@ fn percentage_moderate_complexity__border_box() {
             taffy::style::Style {
                 display: taffy::style::Display::Flex,
                 flex_direction: taffy::style::FlexDirection::Column,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 size: taffy::geometry::Size { width: taffy::style::Dimension::from_percent(0.5f32), height: auto() },
                 margin: taffy::geometry::Rect {
                     left: length(5f32),
@@ -51,6 +56,10 @@ fn percentage_moderate_complexity__border_box() {
             taffy::style::Style {
                 display: taffy::style::Display::Flex,
                 flex_direction: taffy::style::FlexDirection::Column,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(200f32), height: auto() },
                 padding: taffy::geometry::Rect {
                     left: length(3f32),
@@ -228,6 +237,7 @@ fn percentage_moderate_complexity__content_box() {
     let node00 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size { width: taffy::style::Dimension::from_percent(0.45f32), height: auto() },
             margin: taffy::geometry::Rect {
                 left: percent(0.05f32),
@@ -250,6 +260,10 @@ fn percentage_moderate_complexity__content_box() {
                 display: taffy::style::Display::Flex,
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 flex_direction: taffy::style::FlexDirection::Column,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 size: taffy::geometry::Size { width: taffy::style::Dimension::from_percent(0.5f32), height: auto() },
                 margin: taffy::geometry::Rect {
                     left: length(5f32),
@@ -274,6 +288,10 @@ fn percentage_moderate_complexity__content_box() {
                 display: taffy::style::Display::Flex,
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 flex_direction: taffy::style::FlexDirection::Column,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(200f32), height: auto() },
                 padding: taffy::geometry::Rect {
                     left: length(3f32),

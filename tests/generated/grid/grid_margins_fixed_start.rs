@@ -6,6 +6,7 @@ fn grid_margins_fixed_start__border_box() {
     let mut taffy = crate::new_test_tree();
     let node0 = taffy
         .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             align_self: Some(taffy::style::AlignSelf::Start),
             justify_self: Some(taffy::style::JustifySelf::Start),
             size: taffy::geometry::Size {
@@ -21,15 +22,44 @@ fn grid_margins_fixed_start__border_box() {
             ..Default::default()
         })
         .unwrap();
-    let node1 = taffy.new_leaf(taffy::style::Style { ..Default::default() }).unwrap();
-    let node2 = taffy.new_leaf(taffy::style::Style { ..Default::default() }).unwrap();
-    let node3 = taffy.new_leaf(taffy::style::Style { ..Default::default() }).unwrap();
-    let node4 = taffy.new_leaf(taffy::style::Style { ..Default::default() }).unwrap();
-    let node5 = taffy.new_leaf(taffy::style::Style { ..Default::default() }).unwrap();
+    let node1 = taffy
+        .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
+            ..Default::default()
+        })
+        .unwrap();
+    let node2 = taffy
+        .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
+            ..Default::default()
+        })
+        .unwrap();
+    let node3 = taffy
+        .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
+            ..Default::default()
+        })
+        .unwrap();
+    let node4 = taffy
+        .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
+            ..Default::default()
+        })
+        .unwrap();
+    let node5 = taffy
+        .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
+            ..Default::default()
+        })
+        .unwrap();
     let node = taffy
         .new_with_children(
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 grid_template_rows: vec![length(40f32), length(40f32), length(40f32)],
                 grid_template_columns: vec![length(40f32), length(40f32), length(40f32)],
                 padding: taffy::geometry::Rect {
@@ -333,6 +363,7 @@ fn grid_margins_fixed_start__content_box() {
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             align_self: Some(taffy::style::AlignSelf::Start),
             justify_self: Some(taffy::style::JustifySelf::Start),
             size: taffy::geometry::Size {
@@ -349,25 +380,49 @@ fn grid_margins_fixed_start__content_box() {
         })
         .unwrap();
     let node1 = taffy
-        .new_leaf(taffy::style::Style { box_sizing: taffy::style::BoxSizing::ContentBox, ..Default::default() })
+        .new_leaf(taffy::style::Style {
+            box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
+            ..Default::default()
+        })
         .unwrap();
     let node2 = taffy
-        .new_leaf(taffy::style::Style { box_sizing: taffy::style::BoxSizing::ContentBox, ..Default::default() })
+        .new_leaf(taffy::style::Style {
+            box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
+            ..Default::default()
+        })
         .unwrap();
     let node3 = taffy
-        .new_leaf(taffy::style::Style { box_sizing: taffy::style::BoxSizing::ContentBox, ..Default::default() })
+        .new_leaf(taffy::style::Style {
+            box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
+            ..Default::default()
+        })
         .unwrap();
     let node4 = taffy
-        .new_leaf(taffy::style::Style { box_sizing: taffy::style::BoxSizing::ContentBox, ..Default::default() })
+        .new_leaf(taffy::style::Style {
+            box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
+            ..Default::default()
+        })
         .unwrap();
     let node5 = taffy
-        .new_leaf(taffy::style::Style { box_sizing: taffy::style::BoxSizing::ContentBox, ..Default::default() })
+        .new_leaf(taffy::style::Style {
+            box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
+            ..Default::default()
+        })
         .unwrap();
     let node = taffy
         .new_with_children(
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
                 box_sizing: taffy::style::BoxSizing::ContentBox,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 grid_template_rows: vec![length(40f32), length(40f32), length(40f32)],
                 grid_template_columns: vec![length(40f32), length(40f32), length(40f32)],
                 padding: taffy::geometry::Rect {

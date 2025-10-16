@@ -6,6 +6,7 @@ fn wrap_reverse_row_single_line_different_size__border_box() {
     let mut taffy = crate::new_test_tree();
     let node0 = taffy
         .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(30f32),
                 height: taffy::style::Dimension::from_length(10f32),
@@ -15,6 +16,7 @@ fn wrap_reverse_row_single_line_different_size__border_box() {
         .unwrap();
     let node1 = taffy
         .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(30f32),
                 height: taffy::style::Dimension::from_length(20f32),
@@ -24,6 +26,7 @@ fn wrap_reverse_row_single_line_different_size__border_box() {
         .unwrap();
     let node2 = taffy
         .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(30f32),
                 height: taffy::style::Dimension::from_length(30f32),
@@ -33,6 +36,7 @@ fn wrap_reverse_row_single_line_different_size__border_box() {
         .unwrap();
     let node3 = taffy
         .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(30f32),
                 height: taffy::style::Dimension::from_length(40f32),
@@ -42,6 +46,7 @@ fn wrap_reverse_row_single_line_different_size__border_box() {
         .unwrap();
     let node4 = taffy
         .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(30f32),
                 height: taffy::style::Dimension::from_length(50f32),
@@ -53,6 +58,10 @@ fn wrap_reverse_row_single_line_different_size__border_box() {
         .new_with_children(
             taffy::style::Style {
                 flex_wrap: taffy::style::FlexWrap::WrapReverse,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 align_content: Some(taffy::style::AlignContent::FlexStart),
                 size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(300f32), height: auto() },
                 ..Default::default()
@@ -311,6 +320,7 @@ fn wrap_reverse_row_single_line_different_size__content_box() {
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(30f32),
                 height: taffy::style::Dimension::from_length(10f32),
@@ -321,6 +331,7 @@ fn wrap_reverse_row_single_line_different_size__content_box() {
     let node1 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(30f32),
                 height: taffy::style::Dimension::from_length(20f32),
@@ -331,6 +342,7 @@ fn wrap_reverse_row_single_line_different_size__content_box() {
     let node2 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(30f32),
                 height: taffy::style::Dimension::from_length(30f32),
@@ -341,6 +353,7 @@ fn wrap_reverse_row_single_line_different_size__content_box() {
     let node3 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(30f32),
                 height: taffy::style::Dimension::from_length(40f32),
@@ -351,6 +364,7 @@ fn wrap_reverse_row_single_line_different_size__content_box() {
     let node4 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(30f32),
                 height: taffy::style::Dimension::from_length(50f32),
@@ -363,6 +377,10 @@ fn wrap_reverse_row_single_line_different_size__content_box() {
             taffy::style::Style {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 flex_wrap: taffy::style::FlexWrap::WrapReverse,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 align_content: Some(taffy::style::AlignContent::FlexStart),
                 size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(300f32), height: auto() },
                 ..Default::default()

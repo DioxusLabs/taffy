@@ -6,6 +6,7 @@ fn grid_percent_items_nested_with_padding_margin__border_box() {
     let mut taffy = crate::new_test_tree();
     let node000 = taffy
         .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size { width: taffy::style::Dimension::from_percent(0.45f32), height: auto() },
             margin: taffy::geometry::Rect {
                 left: percent(0.05f32),
@@ -26,6 +27,10 @@ fn grid_percent_items_nested_with_padding_margin__border_box() {
         .new_with_children(
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 size: taffy::geometry::Size { width: taffy::style::Dimension::from_percent(0.5f32), height: auto() },
                 margin: taffy::geometry::Rect {
                     left: length(5f32),
@@ -48,6 +53,10 @@ fn grid_percent_items_nested_with_padding_margin__border_box() {
         .new_with_children(
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 min_size: taffy::geometry::Size {
                     width: taffy::style::Dimension::from_percent(0.6f32),
                     height: auto(),
@@ -69,11 +78,20 @@ fn grid_percent_items_nested_with_padding_margin__border_box() {
             &[node00],
         )
         .unwrap();
-    let node1 = taffy.new_leaf(taffy::style::Style { ..Default::default() }).unwrap();
+    let node1 = taffy
+        .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
+            ..Default::default()
+        })
+        .unwrap();
     let node = taffy
         .new_with_children(
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 grid_template_rows: vec![fr(1f32), fr(4f32)],
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::from_length(200f32),
@@ -314,6 +332,7 @@ fn grid_percent_items_nested_with_padding_margin__content_box() {
     let node000 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size { width: taffy::style::Dimension::from_percent(0.45f32), height: auto() },
             margin: taffy::geometry::Rect {
                 left: percent(0.05f32),
@@ -335,6 +354,10 @@ fn grid_percent_items_nested_with_padding_margin__content_box() {
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
                 box_sizing: taffy::style::BoxSizing::ContentBox,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 size: taffy::geometry::Size { width: taffy::style::Dimension::from_percent(0.5f32), height: auto() },
                 margin: taffy::geometry::Rect {
                     left: length(5f32),
@@ -358,6 +381,10 @@ fn grid_percent_items_nested_with_padding_margin__content_box() {
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
                 box_sizing: taffy::style::BoxSizing::ContentBox,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 min_size: taffy::geometry::Size {
                     width: taffy::style::Dimension::from_percent(0.6f32),
                     height: auto(),
@@ -380,13 +407,21 @@ fn grid_percent_items_nested_with_padding_margin__content_box() {
         )
         .unwrap();
     let node1 = taffy
-        .new_leaf(taffy::style::Style { box_sizing: taffy::style::BoxSizing::ContentBox, ..Default::default() })
+        .new_leaf(taffy::style::Style {
+            box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
+            ..Default::default()
+        })
         .unwrap();
     let node = taffy
         .new_with_children(
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
                 box_sizing: taffy::style::BoxSizing::ContentBox,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 grid_template_rows: vec![fr(1f32), fr(4f32)],
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::from_length(200f32),

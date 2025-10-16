@@ -6,19 +6,34 @@ fn grid_aspect_ratio_child_fill_content_height__border_box() {
     let mut taffy = crate::new_test_tree();
     let node0 = taffy
         .new_leaf_with_context(
-            taffy::style::Style { aspect_ratio: Some(0.5f32), ..Default::default() },
+            taffy::style::Style {
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
+                aspect_ratio: Some(0.5f32),
+                ..Default::default()
+            },
             crate::TestNodeContext::ahem_text("HHHH", crate::WritingMode::Horizontal),
         )
         .unwrap();
     let node1 = taffy
         .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(20f32) },
             ..Default::default()
         })
         .unwrap();
     let node = taffy
         .new_with_children(
-            taffy::style::Style { display: taffy::style::Display::Grid, ..Default::default() },
+            taffy::style::Style {
+                display: taffy::style::Display::Grid,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
+                ..Default::default()
+            },
             &[node0, node1],
         )
         .unwrap();
@@ -157,6 +172,10 @@ fn grid_aspect_ratio_child_fill_content_height__content_box() {
         .new_leaf_with_context(
             taffy::style::Style {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 aspect_ratio: Some(0.5f32),
                 ..Default::default()
             },
@@ -166,6 +185,7 @@ fn grid_aspect_ratio_child_fill_content_height__content_box() {
     let node1 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(20f32) },
             ..Default::default()
         })
@@ -175,6 +195,10 @@ fn grid_aspect_ratio_child_fill_content_height__content_box() {
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
                 box_sizing: taffy::style::BoxSizing::ContentBox,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 ..Default::default()
             },
             &[node0, node1],

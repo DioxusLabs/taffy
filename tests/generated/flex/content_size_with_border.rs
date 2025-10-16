@@ -6,121 +6,241 @@ fn content_size_with_border__border_box() {
     let mut taffy = crate::new_test_tree();
     let node0 = taffy
         .new_leaf_with_context(
-            taffy::style::Style { ..Default::default() },
+            taffy::style::Style {
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
+                ..Default::default()
+            },
             crate::TestNodeContext::ahem_text("XXXXXXXXXXXXXXXXXXXX", crate::WritingMode::Horizontal),
         )
         .unwrap();
     let node1 = taffy
         .new_leaf_with_context(
-            taffy::style::Style { ..Default::default() },
+            taffy::style::Style {
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
+                ..Default::default()
+            },
             crate::TestNodeContext::ahem_text("XXXXXXXXXXXXXXXXXXXX", crate::WritingMode::Horizontal),
         )
         .unwrap();
     let node2 = taffy
         .new_leaf_with_context(
-            taffy::style::Style { ..Default::default() },
+            taffy::style::Style {
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
+                ..Default::default()
+            },
             crate::TestNodeContext::ahem_text("XXXXXXXXXXXXXXXXXXXX", crate::WritingMode::Horizontal),
         )
         .unwrap();
     let node3 = taffy
         .new_leaf_with_context(
-            taffy::style::Style { ..Default::default() },
+            taffy::style::Style {
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
+                ..Default::default()
+            },
             crate::TestNodeContext::ahem_text("XXXXXXXXXXXXXXXXXXXX", crate::WritingMode::Horizontal),
         )
         .unwrap();
     let node4 = taffy
         .new_leaf_with_context(
-            taffy::style::Style { ..Default::default() },
+            taffy::style::Style {
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
+                ..Default::default()
+            },
             crate::TestNodeContext::ahem_text("XXXXXXXXXXXXXXXXXXXX", crate::WritingMode::Horizontal),
         )
         .unwrap();
     let node5 = taffy
         .new_leaf_with_context(
-            taffy::style::Style { ..Default::default() },
+            taffy::style::Style {
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
+                ..Default::default()
+            },
             crate::TestNodeContext::ahem_text("XXXXXXXXXXXXXXXXXXXX", crate::WritingMode::Horizontal),
         )
         .unwrap();
     let node6 = taffy
         .new_leaf_with_context(
-            taffy::style::Style { ..Default::default() },
+            taffy::style::Style {
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
+                ..Default::default()
+            },
             crate::TestNodeContext::ahem_text("XXXXXXXXXXXXXXXXXXXX", crate::WritingMode::Horizontal),
         )
         .unwrap();
     let node7 = taffy
         .new_leaf_with_context(
-            taffy::style::Style { ..Default::default() },
+            taffy::style::Style {
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
+                ..Default::default()
+            },
             crate::TestNodeContext::ahem_text("XXXXXXXXXXXXXXXXXXXX", crate::WritingMode::Horizontal),
         )
         .unwrap();
     let node8 = taffy
         .new_leaf_with_context(
-            taffy::style::Style { ..Default::default() },
+            taffy::style::Style {
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
+                ..Default::default()
+            },
             crate::TestNodeContext::ahem_text("XXXXXXXXXXXXXXXXXXXX", crate::WritingMode::Horizontal),
         )
         .unwrap();
     let node9 = taffy
         .new_leaf_with_context(
-            taffy::style::Style { ..Default::default() },
+            taffy::style::Style {
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
+                ..Default::default()
+            },
             crate::TestNodeContext::ahem_text("XXXXXXXXXXXXXXXXXXXX", crate::WritingMode::Horizontal),
         )
         .unwrap();
     let node10 = taffy
         .new_leaf_with_context(
-            taffy::style::Style { ..Default::default() },
+            taffy::style::Style {
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
+                ..Default::default()
+            },
             crate::TestNodeContext::ahem_text("XXXXXXXXXXXXXXXXXXXX", crate::WritingMode::Horizontal),
         )
         .unwrap();
     let node11 = taffy
         .new_leaf_with_context(
-            taffy::style::Style { ..Default::default() },
+            taffy::style::Style {
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
+                ..Default::default()
+            },
             crate::TestNodeContext::ahem_text("XXXXXXXXXXXXXXXXXXXX", crate::WritingMode::Horizontal),
         )
         .unwrap();
     let node12 = taffy
         .new_leaf_with_context(
-            taffy::style::Style { ..Default::default() },
+            taffy::style::Style {
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
+                ..Default::default()
+            },
             crate::TestNodeContext::ahem_text("XXXXXXXXXXXXXXXXXXXX", crate::WritingMode::Horizontal),
         )
         .unwrap();
     let node13 = taffy
         .new_leaf_with_context(
-            taffy::style::Style { ..Default::default() },
+            taffy::style::Style {
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
+                ..Default::default()
+            },
             crate::TestNodeContext::ahem_text("XXXXXXXXXXXXXXXXXXXX", crate::WritingMode::Horizontal),
         )
         .unwrap();
     let node14 = taffy
         .new_leaf_with_context(
-            taffy::style::Style { ..Default::default() },
+            taffy::style::Style {
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
+                ..Default::default()
+            },
             crate::TestNodeContext::ahem_text("XXXXXXXXXXXXXXXXXXXX", crate::WritingMode::Horizontal),
         )
         .unwrap();
     let node15 = taffy
         .new_leaf_with_context(
-            taffy::style::Style { ..Default::default() },
+            taffy::style::Style {
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
+                ..Default::default()
+            },
             crate::TestNodeContext::ahem_text("XXXXXXXXXXXXXXXXXXXX", crate::WritingMode::Horizontal),
         )
         .unwrap();
     let node16 = taffy
         .new_leaf_with_context(
-            taffy::style::Style { ..Default::default() },
+            taffy::style::Style {
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
+                ..Default::default()
+            },
             crate::TestNodeContext::ahem_text("XXXXXXXXXXXXXXXXXXXX", crate::WritingMode::Horizontal),
         )
         .unwrap();
     let node17 = taffy
         .new_leaf_with_context(
-            taffy::style::Style { ..Default::default() },
+            taffy::style::Style {
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
+                ..Default::default()
+            },
             crate::TestNodeContext::ahem_text("XXXXXXXXXXXXXXXXXXXX", crate::WritingMode::Horizontal),
         )
         .unwrap();
     let node18 = taffy
         .new_leaf_with_context(
-            taffy::style::Style { ..Default::default() },
+            taffy::style::Style {
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
+                ..Default::default()
+            },
             crate::TestNodeContext::ahem_text("XXXXXXXXXXXXXXXXXXXX", crate::WritingMode::Horizontal),
         )
         .unwrap();
     let node19 = taffy
         .new_leaf_with_context(
-            taffy::style::Style { ..Default::default() },
+            taffy::style::Style {
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
+                ..Default::default()
+            },
             crate::TestNodeContext::ahem_text("XXXXXXXXXXXXXXXXXXXX", crate::WritingMode::Horizontal),
         )
         .unwrap();
@@ -1043,121 +1163,261 @@ fn content_size_with_border__content_box() {
     let mut taffy = crate::new_test_tree();
     let node0 = taffy
         .new_leaf_with_context(
-            taffy::style::Style { box_sizing: taffy::style::BoxSizing::ContentBox, ..Default::default() },
+            taffy::style::Style {
+                box_sizing: taffy::style::BoxSizing::ContentBox,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
+                ..Default::default()
+            },
             crate::TestNodeContext::ahem_text("XXXXXXXXXXXXXXXXXXXX", crate::WritingMode::Horizontal),
         )
         .unwrap();
     let node1 = taffy
         .new_leaf_with_context(
-            taffy::style::Style { box_sizing: taffy::style::BoxSizing::ContentBox, ..Default::default() },
+            taffy::style::Style {
+                box_sizing: taffy::style::BoxSizing::ContentBox,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
+                ..Default::default()
+            },
             crate::TestNodeContext::ahem_text("XXXXXXXXXXXXXXXXXXXX", crate::WritingMode::Horizontal),
         )
         .unwrap();
     let node2 = taffy
         .new_leaf_with_context(
-            taffy::style::Style { box_sizing: taffy::style::BoxSizing::ContentBox, ..Default::default() },
+            taffy::style::Style {
+                box_sizing: taffy::style::BoxSizing::ContentBox,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
+                ..Default::default()
+            },
             crate::TestNodeContext::ahem_text("XXXXXXXXXXXXXXXXXXXX", crate::WritingMode::Horizontal),
         )
         .unwrap();
     let node3 = taffy
         .new_leaf_with_context(
-            taffy::style::Style { box_sizing: taffy::style::BoxSizing::ContentBox, ..Default::default() },
+            taffy::style::Style {
+                box_sizing: taffy::style::BoxSizing::ContentBox,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
+                ..Default::default()
+            },
             crate::TestNodeContext::ahem_text("XXXXXXXXXXXXXXXXXXXX", crate::WritingMode::Horizontal),
         )
         .unwrap();
     let node4 = taffy
         .new_leaf_with_context(
-            taffy::style::Style { box_sizing: taffy::style::BoxSizing::ContentBox, ..Default::default() },
+            taffy::style::Style {
+                box_sizing: taffy::style::BoxSizing::ContentBox,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
+                ..Default::default()
+            },
             crate::TestNodeContext::ahem_text("XXXXXXXXXXXXXXXXXXXX", crate::WritingMode::Horizontal),
         )
         .unwrap();
     let node5 = taffy
         .new_leaf_with_context(
-            taffy::style::Style { box_sizing: taffy::style::BoxSizing::ContentBox, ..Default::default() },
+            taffy::style::Style {
+                box_sizing: taffy::style::BoxSizing::ContentBox,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
+                ..Default::default()
+            },
             crate::TestNodeContext::ahem_text("XXXXXXXXXXXXXXXXXXXX", crate::WritingMode::Horizontal),
         )
         .unwrap();
     let node6 = taffy
         .new_leaf_with_context(
-            taffy::style::Style { box_sizing: taffy::style::BoxSizing::ContentBox, ..Default::default() },
+            taffy::style::Style {
+                box_sizing: taffy::style::BoxSizing::ContentBox,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
+                ..Default::default()
+            },
             crate::TestNodeContext::ahem_text("XXXXXXXXXXXXXXXXXXXX", crate::WritingMode::Horizontal),
         )
         .unwrap();
     let node7 = taffy
         .new_leaf_with_context(
-            taffy::style::Style { box_sizing: taffy::style::BoxSizing::ContentBox, ..Default::default() },
+            taffy::style::Style {
+                box_sizing: taffy::style::BoxSizing::ContentBox,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
+                ..Default::default()
+            },
             crate::TestNodeContext::ahem_text("XXXXXXXXXXXXXXXXXXXX", crate::WritingMode::Horizontal),
         )
         .unwrap();
     let node8 = taffy
         .new_leaf_with_context(
-            taffy::style::Style { box_sizing: taffy::style::BoxSizing::ContentBox, ..Default::default() },
+            taffy::style::Style {
+                box_sizing: taffy::style::BoxSizing::ContentBox,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
+                ..Default::default()
+            },
             crate::TestNodeContext::ahem_text("XXXXXXXXXXXXXXXXXXXX", crate::WritingMode::Horizontal),
         )
         .unwrap();
     let node9 = taffy
         .new_leaf_with_context(
-            taffy::style::Style { box_sizing: taffy::style::BoxSizing::ContentBox, ..Default::default() },
+            taffy::style::Style {
+                box_sizing: taffy::style::BoxSizing::ContentBox,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
+                ..Default::default()
+            },
             crate::TestNodeContext::ahem_text("XXXXXXXXXXXXXXXXXXXX", crate::WritingMode::Horizontal),
         )
         .unwrap();
     let node10 = taffy
         .new_leaf_with_context(
-            taffy::style::Style { box_sizing: taffy::style::BoxSizing::ContentBox, ..Default::default() },
+            taffy::style::Style {
+                box_sizing: taffy::style::BoxSizing::ContentBox,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
+                ..Default::default()
+            },
             crate::TestNodeContext::ahem_text("XXXXXXXXXXXXXXXXXXXX", crate::WritingMode::Horizontal),
         )
         .unwrap();
     let node11 = taffy
         .new_leaf_with_context(
-            taffy::style::Style { box_sizing: taffy::style::BoxSizing::ContentBox, ..Default::default() },
+            taffy::style::Style {
+                box_sizing: taffy::style::BoxSizing::ContentBox,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
+                ..Default::default()
+            },
             crate::TestNodeContext::ahem_text("XXXXXXXXXXXXXXXXXXXX", crate::WritingMode::Horizontal),
         )
         .unwrap();
     let node12 = taffy
         .new_leaf_with_context(
-            taffy::style::Style { box_sizing: taffy::style::BoxSizing::ContentBox, ..Default::default() },
+            taffy::style::Style {
+                box_sizing: taffy::style::BoxSizing::ContentBox,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
+                ..Default::default()
+            },
             crate::TestNodeContext::ahem_text("XXXXXXXXXXXXXXXXXXXX", crate::WritingMode::Horizontal),
         )
         .unwrap();
     let node13 = taffy
         .new_leaf_with_context(
-            taffy::style::Style { box_sizing: taffy::style::BoxSizing::ContentBox, ..Default::default() },
+            taffy::style::Style {
+                box_sizing: taffy::style::BoxSizing::ContentBox,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
+                ..Default::default()
+            },
             crate::TestNodeContext::ahem_text("XXXXXXXXXXXXXXXXXXXX", crate::WritingMode::Horizontal),
         )
         .unwrap();
     let node14 = taffy
         .new_leaf_with_context(
-            taffy::style::Style { box_sizing: taffy::style::BoxSizing::ContentBox, ..Default::default() },
+            taffy::style::Style {
+                box_sizing: taffy::style::BoxSizing::ContentBox,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
+                ..Default::default()
+            },
             crate::TestNodeContext::ahem_text("XXXXXXXXXXXXXXXXXXXX", crate::WritingMode::Horizontal),
         )
         .unwrap();
     let node15 = taffy
         .new_leaf_with_context(
-            taffy::style::Style { box_sizing: taffy::style::BoxSizing::ContentBox, ..Default::default() },
+            taffy::style::Style {
+                box_sizing: taffy::style::BoxSizing::ContentBox,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
+                ..Default::default()
+            },
             crate::TestNodeContext::ahem_text("XXXXXXXXXXXXXXXXXXXX", crate::WritingMode::Horizontal),
         )
         .unwrap();
     let node16 = taffy
         .new_leaf_with_context(
-            taffy::style::Style { box_sizing: taffy::style::BoxSizing::ContentBox, ..Default::default() },
+            taffy::style::Style {
+                box_sizing: taffy::style::BoxSizing::ContentBox,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
+                ..Default::default()
+            },
             crate::TestNodeContext::ahem_text("XXXXXXXXXXXXXXXXXXXX", crate::WritingMode::Horizontal),
         )
         .unwrap();
     let node17 = taffy
         .new_leaf_with_context(
-            taffy::style::Style { box_sizing: taffy::style::BoxSizing::ContentBox, ..Default::default() },
+            taffy::style::Style {
+                box_sizing: taffy::style::BoxSizing::ContentBox,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
+                ..Default::default()
+            },
             crate::TestNodeContext::ahem_text("XXXXXXXXXXXXXXXXXXXX", crate::WritingMode::Horizontal),
         )
         .unwrap();
     let node18 = taffy
         .new_leaf_with_context(
-            taffy::style::Style { box_sizing: taffy::style::BoxSizing::ContentBox, ..Default::default() },
+            taffy::style::Style {
+                box_sizing: taffy::style::BoxSizing::ContentBox,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
+                ..Default::default()
+            },
             crate::TestNodeContext::ahem_text("XXXXXXXXXXXXXXXXXXXX", crate::WritingMode::Horizontal),
         )
         .unwrap();
     let node19 = taffy
         .new_leaf_with_context(
-            taffy::style::Style { box_sizing: taffy::style::BoxSizing::ContentBox, ..Default::default() },
+            taffy::style::Style {
+                box_sizing: taffy::style::BoxSizing::ContentBox,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
+                ..Default::default()
+            },
             crate::TestNodeContext::ahem_text("XXXXXXXXXXXXXXXXXXXX", crate::WritingMode::Horizontal),
         )
         .unwrap();

@@ -6,12 +6,14 @@ fn percent_absolute_position__border_box() {
     let mut taffy = crate::new_test_tree();
     let node00 = taffy
         .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size { width: taffy::style::Dimension::from_percent(1f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
     let node01 = taffy
         .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size { width: taffy::style::Dimension::from_percent(1f32), height: auto() },
             ..Default::default()
         })
@@ -20,6 +22,10 @@ fn percent_absolute_position__border_box() {
         .new_with_children(
             taffy::style::Style {
                 position: taffy::style::Position::Absolute,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::from_percent(1f32),
                     height: taffy::style::Dimension::from_length(50f32),
@@ -34,6 +40,10 @@ fn percent_absolute_position__border_box() {
         .new_with_children(
             taffy::style::Style {
                 flex_direction: taffy::style::FlexDirection::Column,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::from_length(60f32),
                     height: taffy::style::Dimension::from_length(50f32),
@@ -228,6 +238,7 @@ fn percent_absolute_position__content_box() {
     let node00 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size { width: taffy::style::Dimension::from_percent(1f32), height: auto() },
             ..Default::default()
         })
@@ -235,6 +246,7 @@ fn percent_absolute_position__content_box() {
     let node01 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size { width: taffy::style::Dimension::from_percent(1f32), height: auto() },
             ..Default::default()
         })
@@ -244,6 +256,10 @@ fn percent_absolute_position__content_box() {
             taffy::style::Style {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 position: taffy::style::Position::Absolute,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::from_percent(1f32),
                     height: taffy::style::Dimension::from_length(50f32),
@@ -259,6 +275,10 @@ fn percent_absolute_position__content_box() {
             taffy::style::Style {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 flex_direction: taffy::style::FlexDirection::Column,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::from_length(60f32),
                     height: taffy::style::Dimension::from_length(50f32),

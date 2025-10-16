@@ -7,6 +7,10 @@ fn align_items_center_justify_content_center__border_box() {
     let node000 = taffy
         .new_leaf_with_context(
             taffy::style::Style {
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::from_length(10f32),
                     height: taffy::style::Dimension::from_length(10f32),
@@ -20,6 +24,10 @@ fn align_items_center_justify_content_center__border_box() {
         .new_with_children(
             taffy::style::Style {
                 flex_direction: taffy::style::FlexDirection::Column,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 align_items: Some(taffy::style::AlignItems::Center),
                 justify_content: Some(taffy::style::JustifyContent::Center),
                 size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_percent(1f32) },
@@ -38,6 +46,10 @@ fn align_items_center_justify_content_center__border_box() {
         .new_with_children(
             taffy::style::Style {
                 flex_direction: taffy::style::FlexDirection::Column,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 align_items: Some(taffy::style::AlignItems::Center),
                 justify_content: Some(taffy::style::JustifyContent::Center),
                 size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(50f32) },
@@ -50,6 +62,10 @@ fn align_items_center_justify_content_center__border_box() {
         .new_with_children(
             taffy::style::Style {
                 flex_direction: taffy::style::FlexDirection::Column,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::from_length(500f32),
                     height: taffy::style::Dimension::from_length(500f32),
@@ -245,6 +261,10 @@ fn align_items_center_justify_content_center__content_box() {
         .new_leaf_with_context(
             taffy::style::Style {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::from_length(10f32),
                     height: taffy::style::Dimension::from_length(10f32),
@@ -259,6 +279,10 @@ fn align_items_center_justify_content_center__content_box() {
             taffy::style::Style {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 flex_direction: taffy::style::FlexDirection::Column,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 align_items: Some(taffy::style::AlignItems::Center),
                 justify_content: Some(taffy::style::JustifyContent::Center),
                 size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_percent(1f32) },
@@ -278,6 +302,10 @@ fn align_items_center_justify_content_center__content_box() {
             taffy::style::Style {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 flex_direction: taffy::style::FlexDirection::Column,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 align_items: Some(taffy::style::AlignItems::Center),
                 justify_content: Some(taffy::style::JustifyContent::Center),
                 size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(50f32) },
@@ -291,6 +319,10 @@ fn align_items_center_justify_content_center__content_box() {
             taffy::style::Style {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 flex_direction: taffy::style::FlexDirection::Column,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::from_length(500f32),
                     height: taffy::style::Dimension::from_length(500f32),

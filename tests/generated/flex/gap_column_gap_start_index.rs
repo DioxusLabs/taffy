@@ -7,6 +7,7 @@ fn gap_column_gap_start_index__border_box() {
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             position: taffy::style::Position::Absolute,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(20f32),
                 height: taffy::style::Dimension::from_length(20f32),
@@ -16,6 +17,7 @@ fn gap_column_gap_start_index__border_box() {
         .unwrap();
     let node1 = taffy
         .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(20f32),
                 height: taffy::style::Dimension::from_length(20f32),
@@ -25,6 +27,7 @@ fn gap_column_gap_start_index__border_box() {
         .unwrap();
     let node2 = taffy
         .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(20f32),
                 height: taffy::style::Dimension::from_length(20f32),
@@ -34,6 +37,7 @@ fn gap_column_gap_start_index__border_box() {
         .unwrap();
     let node3 = taffy
         .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(20f32),
                 height: taffy::style::Dimension::from_length(20f32),
@@ -45,6 +49,10 @@ fn gap_column_gap_start_index__border_box() {
         .new_with_children(
             taffy::style::Style {
                 flex_wrap: taffy::style::FlexWrap::Wrap,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 gap: taffy::geometry::Size { width: length(10f32), height: length(20f32) },
                 size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(80f32), height: auto() },
                 ..Default::default()
@@ -265,6 +273,7 @@ fn gap_column_gap_start_index__content_box() {
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             position: taffy::style::Position::Absolute,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(20f32),
                 height: taffy::style::Dimension::from_length(20f32),
@@ -275,6 +284,7 @@ fn gap_column_gap_start_index__content_box() {
     let node1 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(20f32),
                 height: taffy::style::Dimension::from_length(20f32),
@@ -285,6 +295,7 @@ fn gap_column_gap_start_index__content_box() {
     let node2 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(20f32),
                 height: taffy::style::Dimension::from_length(20f32),
@@ -295,6 +306,7 @@ fn gap_column_gap_start_index__content_box() {
     let node3 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(20f32),
                 height: taffy::style::Dimension::from_length(20f32),
@@ -307,6 +319,10 @@ fn gap_column_gap_start_index__content_box() {
             taffy::style::Style {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 flex_wrap: taffy::style::FlexWrap::Wrap,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 gap: taffy::geometry::Size { width: length(10f32), height: length(20f32) },
                 size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(80f32), height: auto() },
                 ..Default::default()

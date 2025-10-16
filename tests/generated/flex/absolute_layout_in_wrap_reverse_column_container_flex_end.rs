@@ -7,6 +7,7 @@ fn absolute_layout_in_wrap_reverse_column_container_flex_end__border_box() {
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             position: taffy::style::Position::Absolute,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             align_self: Some(taffy::style::AlignSelf::FlexEnd),
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(20f32),
@@ -20,6 +21,10 @@ fn absolute_layout_in_wrap_reverse_column_container_flex_end__border_box() {
             taffy::style::Style {
                 flex_direction: taffy::style::FlexDirection::Column,
                 flex_wrap: taffy::style::FlexWrap::WrapReverse,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::from_length(100f32),
                     height: taffy::style::Dimension::from_length(100f32),
@@ -125,6 +130,7 @@ fn absolute_layout_in_wrap_reverse_column_container_flex_end__content_box() {
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             position: taffy::style::Position::Absolute,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             align_self: Some(taffy::style::AlignSelf::FlexEnd),
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(20f32),
@@ -139,6 +145,10 @@ fn absolute_layout_in_wrap_reverse_column_container_flex_end__content_box() {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 flex_direction: taffy::style::FlexDirection::Column,
                 flex_wrap: taffy::style::FlexWrap::WrapReverse,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::from_length(100f32),
                     height: taffy::style::Dimension::from_length(100f32),

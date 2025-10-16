@@ -9,7 +9,6 @@ fn leaf_overflow_clip_with_border__border_box() {
         .new_leaf_with_context(
             taffy::style::Style {
                 overflow: taffy::geometry::Point { x: taffy::style::Overflow::Clip, y: taffy::style::Overflow::Clip },
-                scrollbar_width: 15f32,
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::from_length(45f32),
                     height: taffy::style::Dimension::from_length(45f32),
@@ -84,7 +83,6 @@ fn leaf_overflow_clip_with_border__content_box() {
             taffy::style::Style {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 overflow: taffy::geometry::Point { x: taffy::style::Overflow::Clip, y: taffy::style::Overflow::Clip },
-                scrollbar_width: 15f32,
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::from_length(45f32),
                     height: taffy::style::Dimension::from_length(45f32),

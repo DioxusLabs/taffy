@@ -4,11 +4,20 @@ fn bevy_issue_10343_block__border_box() {
     #[allow(unused_imports)]
     use taffy::{prelude::*, Layout};
     let mut taffy = crate::new_test_tree();
-    let node000 = taffy.new_leaf(taffy::style::Style { ..Default::default() }).unwrap();
+    let node000 = taffy
+        .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
+            ..Default::default()
+        })
+        .unwrap();
     let node00 = taffy
         .new_with_children(
             taffy::style::Style {
                 display: taffy::style::Display::Block,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::from_length(200f32),
                     height: taffy::style::Dimension::from_length(200f32),
@@ -26,7 +35,14 @@ fn bevy_issue_10343_block__border_box() {
         .unwrap();
     let node0 = taffy
         .new_with_children(
-            taffy::style::Style { display: taffy::style::Display::Flex, ..Default::default() },
+            taffy::style::Style {
+                display: taffy::style::Display::Flex,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
+                ..Default::default()
+            },
             &[node00],
         )
         .unwrap();
@@ -35,6 +51,10 @@ fn bevy_issue_10343_block__border_box() {
             taffy::style::Style {
                 display: taffy::style::Display::Flex,
                 flex_direction: taffy::style::FlexDirection::Column,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 justify_content: Some(taffy::style::JustifyContent::SpaceAround),
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::from_length(100f32),
@@ -234,13 +254,21 @@ fn bevy_issue_10343_block__content_box() {
     use taffy::{prelude::*, Layout};
     let mut taffy = crate::new_test_tree();
     let node000 = taffy
-        .new_leaf(taffy::style::Style { box_sizing: taffy::style::BoxSizing::ContentBox, ..Default::default() })
+        .new_leaf(taffy::style::Style {
+            box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
+            ..Default::default()
+        })
         .unwrap();
     let node00 = taffy
         .new_with_children(
             taffy::style::Style {
                 display: taffy::style::Display::Block,
                 box_sizing: taffy::style::BoxSizing::ContentBox,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::from_length(200f32),
                     height: taffy::style::Dimension::from_length(200f32),
@@ -261,6 +289,10 @@ fn bevy_issue_10343_block__content_box() {
             taffy::style::Style {
                 display: taffy::style::Display::Flex,
                 box_sizing: taffy::style::BoxSizing::ContentBox,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 ..Default::default()
             },
             &[node00],
@@ -272,6 +304,10 @@ fn bevy_issue_10343_block__content_box() {
                 display: taffy::style::Display::Flex,
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 flex_direction: taffy::style::FlexDirection::Column,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 justify_content: Some(taffy::style::JustifyContent::SpaceAround),
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::from_length(100f32),

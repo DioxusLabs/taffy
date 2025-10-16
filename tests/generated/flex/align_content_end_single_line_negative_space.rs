@@ -6,6 +6,7 @@ fn align_content_end_single_line_negative_space__border_box() {
     let mut taffy = crate::new_test_tree();
     let node00 = taffy
         .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             flex_shrink: 0f32,
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_percent(0.8f32),
@@ -18,6 +19,10 @@ fn align_content_end_single_line_negative_space__border_box() {
         .new_with_children(
             taffy::style::Style {
                 display: taffy::style::Display::Flex,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 align_content: Some(taffy::style::AlignContent::End),
                 justify_content: Some(taffy::style::JustifyContent::Center),
                 size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(10f32) },
@@ -31,6 +36,10 @@ fn align_content_end_single_line_negative_space__border_box() {
             taffy::style::Style {
                 display: taffy::style::Display::Flex,
                 flex_direction: taffy::style::FlexDirection::Column,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::from_length(320f32),
                     height: taffy::style::Dimension::from_length(320f32),
@@ -186,6 +195,7 @@ fn align_content_end_single_line_negative_space__content_box() {
     let node00 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             flex_shrink: 0f32,
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_percent(0.8f32),
@@ -199,6 +209,10 @@ fn align_content_end_single_line_negative_space__content_box() {
             taffy::style::Style {
                 display: taffy::style::Display::Flex,
                 box_sizing: taffy::style::BoxSizing::ContentBox,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 align_content: Some(taffy::style::AlignContent::End),
                 justify_content: Some(taffy::style::JustifyContent::Center),
                 size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(10f32) },
@@ -213,6 +227,10 @@ fn align_content_end_single_line_negative_space__content_box() {
                 display: taffy::style::Display::Flex,
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 flex_direction: taffy::style::FlexDirection::Column,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::from_length(320f32),
                     height: taffy::style::Dimension::from_length(320f32),

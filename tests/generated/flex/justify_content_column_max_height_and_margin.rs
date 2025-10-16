@@ -6,6 +6,7 @@ fn justify_content_column_max_height_and_margin__border_box() {
     let mut taffy = crate::new_test_tree();
     let node00 = taffy
         .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(20f32),
                 height: taffy::style::Dimension::from_length(20f32),
@@ -17,6 +18,10 @@ fn justify_content_column_max_height_and_margin__border_box() {
         .new_with_children(
             taffy::style::Style {
                 flex_direction: taffy::style::FlexDirection::Column,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 justify_content: Some(taffy::style::JustifyContent::Center),
                 size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(100f32) },
                 max_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(80f32) },
@@ -26,7 +31,18 @@ fn justify_content_column_max_height_and_margin__border_box() {
             &[node00],
         )
         .unwrap();
-    let node = taffy.new_with_children(taffy::style::Style { ..Default::default() }, &[node0]).unwrap();
+    let node = taffy
+        .new_with_children(
+            taffy::style::Style {
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
+                ..Default::default()
+            },
+            &[node0],
+        )
+        .unwrap();
     taffy.compute_layout_with_measure(node, taffy::geometry::Size::MAX_CONTENT, crate::test_measure_function).unwrap();
     println!("\nComputed tree:");
     taffy.print_tree(node);
@@ -167,6 +183,7 @@ fn justify_content_column_max_height_and_margin__content_box() {
     let node00 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(20f32),
                 height: taffy::style::Dimension::from_length(20f32),
@@ -179,6 +196,10 @@ fn justify_content_column_max_height_and_margin__content_box() {
             taffy::style::Style {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 flex_direction: taffy::style::FlexDirection::Column,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 justify_content: Some(taffy::style::JustifyContent::Center),
                 size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(100f32) },
                 max_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(80f32) },
@@ -190,7 +211,14 @@ fn justify_content_column_max_height_and_margin__content_box() {
         .unwrap();
     let node = taffy
         .new_with_children(
-            taffy::style::Style { box_sizing: taffy::style::BoxSizing::ContentBox, ..Default::default() },
+            taffy::style::Style {
+                box_sizing: taffy::style::BoxSizing::ContentBox,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
+                ..Default::default()
+            },
             &[node0],
         )
         .unwrap();

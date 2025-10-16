@@ -21,6 +21,10 @@ fn grid_fit_content_percent_indefinite_min_content_hidden__border_box() {
         .new_with_children(
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 grid_template_rows: vec![length(40f32)],
                 grid_template_columns: vec![fit_content(percent(0.5f32))],
                 ..Default::default()
@@ -139,6 +143,10 @@ fn grid_fit_content_percent_indefinite_min_content_hidden__content_box() {
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
                 box_sizing: taffy::style::BoxSizing::ContentBox,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 grid_template_rows: vec![length(40f32)],
                 grid_template_columns: vec![fit_content(percent(0.5f32))],
                 ..Default::default()

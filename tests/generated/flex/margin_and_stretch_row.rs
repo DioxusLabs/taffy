@@ -6,6 +6,7 @@ fn margin_and_stretch_row__border_box() {
     let mut taffy = crate::new_test_tree();
     let node0 = taffy
         .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             flex_grow: 1f32,
             margin: taffy::geometry::Rect { left: zero(), right: zero(), top: length(10f32), bottom: length(10f32) },
             ..Default::default()
@@ -14,6 +15,10 @@ fn margin_and_stretch_row__border_box() {
     let node = taffy
         .new_with_children(
             taffy::style::Style {
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::from_length(100f32),
                     height: taffy::style::Dimension::from_length(100f32),
@@ -118,6 +123,7 @@ fn margin_and_stretch_row__content_box() {
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             flex_grow: 1f32,
             margin: taffy::geometry::Rect { left: zero(), right: zero(), top: length(10f32), bottom: length(10f32) },
             ..Default::default()
@@ -127,6 +133,10 @@ fn margin_and_stretch_row__content_box() {
         .new_with_children(
             taffy::style::Style {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::from_length(100f32),
                     height: taffy::style::Dimension::from_length(100f32),

@@ -8,6 +8,10 @@ fn blitz_issue_88__border_box() {
         .new_leaf_with_context(
             taffy::style::Style {
                 display: taffy::style::Display::Block,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 flex_grow: 1f32,
                 flex_basis: taffy::style::Dimension::from_length(0f32),
                 ..Default::default()
@@ -20,7 +24,15 @@ fn blitz_issue_88__border_box() {
         .unwrap();
     let node00 = taffy
         .new_with_children(
-            taffy::style::Style { display: taffy::style::Display::Flex, flex_grow: 1f32, ..Default::default() },
+            taffy::style::Style {
+                display: taffy::style::Display::Flex,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
+                flex_grow: 1f32,
+                ..Default::default()
+            },
             &[node000],
         )
         .unwrap();
@@ -29,6 +41,10 @@ fn blitz_issue_88__border_box() {
             taffy::style::Style {
                 display: taffy::style::Display::Flex,
                 flex_direction: taffy::style::FlexDirection::Column,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 justify_content: Some(taffy::style::JustifyContent::Start),
                 ..Default::default()
             },
@@ -39,6 +55,10 @@ fn blitz_issue_88__border_box() {
         .new_with_children(
             taffy::style::Style {
                 display: taffy::style::Display::Block,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(600f32), height: auto() },
                 ..Default::default()
             },
@@ -238,6 +258,10 @@ fn blitz_issue_88__content_box() {
             taffy::style::Style {
                 display: taffy::style::Display::Block,
                 box_sizing: taffy::style::BoxSizing::ContentBox,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 flex_grow: 1f32,
                 flex_basis: taffy::style::Dimension::from_length(0f32),
                 ..Default::default()
@@ -253,6 +277,10 @@ fn blitz_issue_88__content_box() {
             taffy::style::Style {
                 display: taffy::style::Display::Flex,
                 box_sizing: taffy::style::BoxSizing::ContentBox,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 flex_grow: 1f32,
                 ..Default::default()
             },
@@ -265,6 +293,10 @@ fn blitz_issue_88__content_box() {
                 display: taffy::style::Display::Flex,
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 flex_direction: taffy::style::FlexDirection::Column,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 justify_content: Some(taffy::style::JustifyContent::Start),
                 ..Default::default()
             },
@@ -276,6 +308,10 @@ fn blitz_issue_88__content_box() {
             taffy::style::Style {
                 display: taffy::style::Display::Block,
                 box_sizing: taffy::style::BoxSizing::ContentBox,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(600f32), height: auto() },
                 ..Default::default()
             },

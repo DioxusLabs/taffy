@@ -4,12 +4,33 @@ fn flex_grow_shrink_at_most__border_box() {
     #[allow(unused_imports)]
     use taffy::{prelude::*, Layout};
     let mut taffy = crate::new_test_tree();
-    let node00 =
-        taffy.new_leaf(taffy::style::Style { flex_grow: 1f32, flex_shrink: 1f32, ..Default::default() }).unwrap();
-    let node0 = taffy.new_with_children(taffy::style::Style { ..Default::default() }, &[node00]).unwrap();
+    let node00 = taffy
+        .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
+            flex_grow: 1f32,
+            flex_shrink: 1f32,
+            ..Default::default()
+        })
+        .unwrap();
+    let node0 = taffy
+        .new_with_children(
+            taffy::style::Style {
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
+                ..Default::default()
+            },
+            &[node00],
+        )
+        .unwrap();
     let node = taffy
         .new_with_children(
             taffy::style::Style {
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::from_length(100f32),
                     height: taffy::style::Dimension::from_length(100f32),
@@ -165,6 +186,7 @@ fn flex_grow_shrink_at_most__content_box() {
     let node00 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             flex_grow: 1f32,
             flex_shrink: 1f32,
             ..Default::default()
@@ -172,7 +194,14 @@ fn flex_grow_shrink_at_most__content_box() {
         .unwrap();
     let node0 = taffy
         .new_with_children(
-            taffy::style::Style { box_sizing: taffy::style::BoxSizing::ContentBox, ..Default::default() },
+            taffy::style::Style {
+                box_sizing: taffy::style::BoxSizing::ContentBox,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
+                ..Default::default()
+            },
             &[node00],
         )
         .unwrap();
@@ -180,6 +209,10 @@ fn flex_grow_shrink_at_most__content_box() {
         .new_with_children(
             taffy::style::Style {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::from_length(100f32),
                     height: taffy::style::Dimension::from_length(100f32),

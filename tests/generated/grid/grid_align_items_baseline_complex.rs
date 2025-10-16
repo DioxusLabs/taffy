@@ -6,6 +6,7 @@ fn grid_align_items_baseline_complex__border_box() {
     let mut taffy = crate::new_test_tree();
     let node0 = taffy
         .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(20f32),
                 height: taffy::style::Dimension::from_length(20f32),
@@ -15,6 +16,7 @@ fn grid_align_items_baseline_complex__border_box() {
         .unwrap();
     let node10 = taffy
         .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(10f32) },
             ..Default::default()
         })
@@ -22,6 +24,10 @@ fn grid_align_items_baseline_complex__border_box() {
     let node1 = taffy
         .new_with_children(
             taffy::style::Style {
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::from_length(20f32),
                     height: taffy::style::Dimension::from_length(20f32),
@@ -33,6 +39,7 @@ fn grid_align_items_baseline_complex__border_box() {
         .unwrap();
     let node20 = taffy
         .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(10f32) },
             ..Default::default()
         })
@@ -40,6 +47,10 @@ fn grid_align_items_baseline_complex__border_box() {
     let node2 = taffy
         .new_with_children(
             taffy::style::Style {
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::from_length(20f32),
                     height: taffy::style::Dimension::from_length(20f32),
@@ -51,6 +62,7 @@ fn grid_align_items_baseline_complex__border_box() {
         .unwrap();
     let node3 = taffy
         .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(20f32),
                 height: taffy::style::Dimension::from_length(20f32),
@@ -60,6 +72,7 @@ fn grid_align_items_baseline_complex__border_box() {
         .unwrap();
     let node4 = taffy
         .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(20f32),
                 height: taffy::style::Dimension::from_length(20f32),
@@ -69,6 +82,7 @@ fn grid_align_items_baseline_complex__border_box() {
         .unwrap();
     let node5 = taffy
         .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(20f32),
                 height: taffy::style::Dimension::from_length(20f32),
@@ -78,6 +92,7 @@ fn grid_align_items_baseline_complex__border_box() {
         .unwrap();
     let node60 = taffy
         .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(10f32) },
             ..Default::default()
         })
@@ -85,6 +100,10 @@ fn grid_align_items_baseline_complex__border_box() {
     let node6 = taffy
         .new_with_children(
             taffy::style::Style {
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::from_length(20f32),
                     height: taffy::style::Dimension::from_length(20f32),
@@ -96,6 +115,7 @@ fn grid_align_items_baseline_complex__border_box() {
         .unwrap();
     let node70 = taffy
         .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(5f32) },
             ..Default::default()
         })
@@ -103,6 +123,10 @@ fn grid_align_items_baseline_complex__border_box() {
     let node7 = taffy
         .new_with_children(
             taffy::style::Style {
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::from_length(20f32),
                     height: taffy::style::Dimension::from_length(20f32),
@@ -114,6 +138,7 @@ fn grid_align_items_baseline_complex__border_box() {
         .unwrap();
     let node8 = taffy
         .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(20f32),
                 height: taffy::style::Dimension::from_length(20f32),
@@ -125,6 +150,10 @@ fn grid_align_items_baseline_complex__border_box() {
         .new_with_children(
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 align_items: Some(taffy::style::AlignItems::Baseline),
                 grid_template_rows: vec![length(40f32), length(40f32), length(40f32)],
                 grid_template_columns: vec![length(40f32), length(40f32), length(40f32)],
@@ -718,6 +747,7 @@ fn grid_align_items_baseline_complex__content_box() {
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(20f32),
                 height: taffy::style::Dimension::from_length(20f32),
@@ -728,6 +758,7 @@ fn grid_align_items_baseline_complex__content_box() {
     let node10 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(10f32) },
             ..Default::default()
         })
@@ -736,6 +767,10 @@ fn grid_align_items_baseline_complex__content_box() {
         .new_with_children(
             taffy::style::Style {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::from_length(20f32),
                     height: taffy::style::Dimension::from_length(20f32),
@@ -748,6 +783,7 @@ fn grid_align_items_baseline_complex__content_box() {
     let node20 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(10f32) },
             ..Default::default()
         })
@@ -756,6 +792,10 @@ fn grid_align_items_baseline_complex__content_box() {
         .new_with_children(
             taffy::style::Style {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::from_length(20f32),
                     height: taffy::style::Dimension::from_length(20f32),
@@ -768,6 +808,7 @@ fn grid_align_items_baseline_complex__content_box() {
     let node3 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(20f32),
                 height: taffy::style::Dimension::from_length(20f32),
@@ -778,6 +819,7 @@ fn grid_align_items_baseline_complex__content_box() {
     let node4 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(20f32),
                 height: taffy::style::Dimension::from_length(20f32),
@@ -788,6 +830,7 @@ fn grid_align_items_baseline_complex__content_box() {
     let node5 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(20f32),
                 height: taffy::style::Dimension::from_length(20f32),
@@ -798,6 +841,7 @@ fn grid_align_items_baseline_complex__content_box() {
     let node60 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(10f32) },
             ..Default::default()
         })
@@ -806,6 +850,10 @@ fn grid_align_items_baseline_complex__content_box() {
         .new_with_children(
             taffy::style::Style {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::from_length(20f32),
                     height: taffy::style::Dimension::from_length(20f32),
@@ -818,6 +866,7 @@ fn grid_align_items_baseline_complex__content_box() {
     let node70 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(5f32) },
             ..Default::default()
         })
@@ -826,6 +875,10 @@ fn grid_align_items_baseline_complex__content_box() {
         .new_with_children(
             taffy::style::Style {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::from_length(20f32),
                     height: taffy::style::Dimension::from_length(20f32),
@@ -838,6 +891,7 @@ fn grid_align_items_baseline_complex__content_box() {
     let node8 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(20f32),
                 height: taffy::style::Dimension::from_length(20f32),
@@ -850,6 +904,10 @@ fn grid_align_items_baseline_complex__content_box() {
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
                 box_sizing: taffy::style::BoxSizing::ContentBox,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 align_items: Some(taffy::style::AlignItems::Baseline),
                 grid_template_rows: vec![length(40f32), length(40f32), length(40f32)],
                 grid_template_columns: vec![length(40f32), length(40f32), length(40f32)],

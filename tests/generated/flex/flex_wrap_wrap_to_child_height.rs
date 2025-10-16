@@ -6,6 +6,7 @@ fn flex_wrap_wrap_to_child_height__border_box() {
     let mut taffy = crate::new_test_tree();
     let node000 = taffy
         .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(100f32),
                 height: taffy::style::Dimension::from_length(100f32),
@@ -17,6 +18,10 @@ fn flex_wrap_wrap_to_child_height__border_box() {
         .new_with_children(
             taffy::style::Style {
                 flex_direction: taffy::style::FlexDirection::Column,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(100f32), height: auto() },
                 ..Default::default()
             },
@@ -27,6 +32,10 @@ fn flex_wrap_wrap_to_child_height__border_box() {
         .new_with_children(
             taffy::style::Style {
                 flex_wrap: taffy::style::FlexWrap::Wrap,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 align_items: Some(taffy::style::AlignItems::FlexStart),
                 ..Default::default()
             },
@@ -35,6 +44,7 @@ fn flex_wrap_wrap_to_child_height__border_box() {
         .unwrap();
     let node1 = taffy
         .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(100f32),
                 height: taffy::style::Dimension::from_length(100f32),
@@ -44,7 +54,14 @@ fn flex_wrap_wrap_to_child_height__border_box() {
         .unwrap();
     let node = taffy
         .new_with_children(
-            taffy::style::Style { flex_direction: taffy::style::FlexDirection::Column, ..Default::default() },
+            taffy::style::Style {
+                flex_direction: taffy::style::FlexDirection::Column,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
+                ..Default::default()
+            },
             &[node0, node1],
         )
         .unwrap();
@@ -290,6 +307,7 @@ fn flex_wrap_wrap_to_child_height__content_box() {
     let node000 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(100f32),
                 height: taffy::style::Dimension::from_length(100f32),
@@ -302,6 +320,10 @@ fn flex_wrap_wrap_to_child_height__content_box() {
             taffy::style::Style {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 flex_direction: taffy::style::FlexDirection::Column,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(100f32), height: auto() },
                 ..Default::default()
             },
@@ -313,6 +335,10 @@ fn flex_wrap_wrap_to_child_height__content_box() {
             taffy::style::Style {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 flex_wrap: taffy::style::FlexWrap::Wrap,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 align_items: Some(taffy::style::AlignItems::FlexStart),
                 ..Default::default()
             },
@@ -322,6 +348,7 @@ fn flex_wrap_wrap_to_child_height__content_box() {
     let node1 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(100f32),
                 height: taffy::style::Dimension::from_length(100f32),
@@ -334,6 +361,10 @@ fn flex_wrap_wrap_to_child_height__content_box() {
             taffy::style::Style {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 flex_direction: taffy::style::FlexDirection::Column,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 ..Default::default()
             },
             &[node0, node1],

@@ -7,6 +7,7 @@ fn align_baseline_multiline_column2__border_box() {
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             flex_direction: taffy::style::FlexDirection::Column,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(50f32),
                 height: taffy::style::Dimension::from_length(50f32),
@@ -17,6 +18,7 @@ fn align_baseline_multiline_column2__border_box() {
     let node10 = taffy
         .new_leaf(taffy::style::Style {
             flex_direction: taffy::style::FlexDirection::Column,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(20f32),
                 height: taffy::style::Dimension::from_length(20f32),
@@ -28,6 +30,10 @@ fn align_baseline_multiline_column2__border_box() {
         .new_with_children(
             taffy::style::Style {
                 flex_direction: taffy::style::FlexDirection::Column,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::from_length(30f32),
                     height: taffy::style::Dimension::from_length(50f32),
@@ -40,6 +46,7 @@ fn align_baseline_multiline_column2__border_box() {
     let node20 = taffy
         .new_leaf(taffy::style::Style {
             flex_direction: taffy::style::FlexDirection::Column,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(10f32),
                 height: taffy::style::Dimension::from_length(10f32),
@@ -51,6 +58,10 @@ fn align_baseline_multiline_column2__border_box() {
         .new_with_children(
             taffy::style::Style {
                 flex_direction: taffy::style::FlexDirection::Column,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::from_length(40f32),
                     height: taffy::style::Dimension::from_length(70f32),
@@ -63,6 +74,7 @@ fn align_baseline_multiline_column2__border_box() {
     let node3 = taffy
         .new_leaf(taffy::style::Style {
             flex_direction: taffy::style::FlexDirection::Column,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(50f32),
                 height: taffy::style::Dimension::from_length(20f32),
@@ -75,6 +87,10 @@ fn align_baseline_multiline_column2__border_box() {
             taffy::style::Style {
                 flex_direction: taffy::style::FlexDirection::Column,
                 flex_wrap: taffy::style::FlexWrap::Wrap,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 align_items: Some(taffy::style::AlignItems::Baseline),
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::from_length(100f32),
@@ -388,6 +404,7 @@ fn align_baseline_multiline_column2__content_box() {
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             flex_direction: taffy::style::FlexDirection::Column,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(50f32),
                 height: taffy::style::Dimension::from_length(50f32),
@@ -399,6 +416,7 @@ fn align_baseline_multiline_column2__content_box() {
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             flex_direction: taffy::style::FlexDirection::Column,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(20f32),
                 height: taffy::style::Dimension::from_length(20f32),
@@ -411,6 +429,10 @@ fn align_baseline_multiline_column2__content_box() {
             taffy::style::Style {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 flex_direction: taffy::style::FlexDirection::Column,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::from_length(30f32),
                     height: taffy::style::Dimension::from_length(50f32),
@@ -424,6 +446,7 @@ fn align_baseline_multiline_column2__content_box() {
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             flex_direction: taffy::style::FlexDirection::Column,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(10f32),
                 height: taffy::style::Dimension::from_length(10f32),
@@ -436,6 +459,10 @@ fn align_baseline_multiline_column2__content_box() {
             taffy::style::Style {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 flex_direction: taffy::style::FlexDirection::Column,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::from_length(40f32),
                     height: taffy::style::Dimension::from_length(70f32),
@@ -449,6 +476,7 @@ fn align_baseline_multiline_column2__content_box() {
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             flex_direction: taffy::style::FlexDirection::Column,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(50f32),
                 height: taffy::style::Dimension::from_length(20f32),
@@ -462,6 +490,10 @@ fn align_baseline_multiline_column2__content_box() {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 flex_direction: taffy::style::FlexDirection::Column,
                 flex_wrap: taffy::style::FlexWrap::Wrap,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 align_items: Some(taffy::style::AlignItems::Baseline),
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::from_length(100f32),

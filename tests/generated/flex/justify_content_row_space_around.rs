@@ -6,18 +6,21 @@ fn justify_content_row_space_around__border_box() {
     let mut taffy = crate::new_test_tree();
     let node0 = taffy
         .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(10f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
     let node1 = taffy
         .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(10f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
     let node2 = taffy
         .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(10f32), height: auto() },
             ..Default::default()
         })
@@ -25,6 +28,10 @@ fn justify_content_row_space_around__border_box() {
     let node = taffy
         .new_with_children(
             taffy::style::Style {
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 justify_content: Some(taffy::style::JustifyContent::SpaceAround),
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::from_length(100f32),
@@ -226,6 +233,7 @@ fn justify_content_row_space_around__content_box() {
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(10f32), height: auto() },
             ..Default::default()
         })
@@ -233,6 +241,7 @@ fn justify_content_row_space_around__content_box() {
     let node1 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(10f32), height: auto() },
             ..Default::default()
         })
@@ -240,6 +249,7 @@ fn justify_content_row_space_around__content_box() {
     let node2 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(10f32), height: auto() },
             ..Default::default()
         })
@@ -248,6 +258,10 @@ fn justify_content_row_space_around__content_box() {
         .new_with_children(
             taffy::style::Style {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 justify_content: Some(taffy::style::JustifyContent::SpaceAround),
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::from_length(100f32),

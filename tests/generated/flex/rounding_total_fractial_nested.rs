@@ -6,6 +6,7 @@ fn rounding_total_fractial_nested__border_box() {
     let mut taffy = crate::new_test_tree();
     let node00 = taffy
         .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             flex_grow: 1f32,
             flex_basis: taffy::style::Dimension::from_length(0.3f32),
             size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(9.9f32) },
@@ -15,6 +16,7 @@ fn rounding_total_fractial_nested__border_box() {
         .unwrap();
     let node01 = taffy
         .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             flex_grow: 4f32,
             flex_basis: taffy::style::Dimension::from_length(0.3f32),
             size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(1.1f32) },
@@ -26,6 +28,10 @@ fn rounding_total_fractial_nested__border_box() {
         .new_with_children(
             taffy::style::Style {
                 flex_direction: taffy::style::FlexDirection::Column,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 flex_grow: 0.7f32,
                 flex_basis: taffy::style::Dimension::from_length(50.3f32),
                 size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(20.3f32) },
@@ -36,6 +42,7 @@ fn rounding_total_fractial_nested__border_box() {
         .unwrap();
     let node1 = taffy
         .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             flex_grow: 1.6f32,
             size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(10f32) },
             ..Default::default()
@@ -43,6 +50,7 @@ fn rounding_total_fractial_nested__border_box() {
         .unwrap();
     let node2 = taffy
         .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             flex_grow: 1.1f32,
             size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(10.7f32) },
             ..Default::default()
@@ -52,6 +60,10 @@ fn rounding_total_fractial_nested__border_box() {
         .new_with_children(
             taffy::style::Style {
                 flex_direction: taffy::style::FlexDirection::Column,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::from_length(87.4f32),
                     height: taffy::style::Dimension::from_length(113.4f32),
@@ -324,6 +336,7 @@ fn rounding_total_fractial_nested__content_box() {
     let node00 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             flex_grow: 1f32,
             flex_basis: taffy::style::Dimension::from_length(0.3f32),
             size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(9.9f32) },
@@ -334,6 +347,7 @@ fn rounding_total_fractial_nested__content_box() {
     let node01 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             flex_grow: 4f32,
             flex_basis: taffy::style::Dimension::from_length(0.3f32),
             size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(1.1f32) },
@@ -346,6 +360,10 @@ fn rounding_total_fractial_nested__content_box() {
             taffy::style::Style {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 flex_direction: taffy::style::FlexDirection::Column,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 flex_grow: 0.7f32,
                 flex_basis: taffy::style::Dimension::from_length(50.3f32),
                 size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(20.3f32) },
@@ -357,6 +375,7 @@ fn rounding_total_fractial_nested__content_box() {
     let node1 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             flex_grow: 1.6f32,
             size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(10f32) },
             ..Default::default()
@@ -365,6 +384,7 @@ fn rounding_total_fractial_nested__content_box() {
     let node2 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             flex_grow: 1.1f32,
             size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(10.7f32) },
             ..Default::default()
@@ -375,6 +395,10 @@ fn rounding_total_fractial_nested__content_box() {
             taffy::style::Style {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 flex_direction: taffy::style::FlexDirection::Column,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::from_length(87.4f32),
                     height: taffy::style::Dimension::from_length(113.4f32),

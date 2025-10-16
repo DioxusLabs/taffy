@@ -7,6 +7,7 @@ fn block_padding_border_percentage_intrinsic_size__border_box() {
     let node00 = taffy
         .new_leaf(taffy::style::Style {
             display: taffy::style::Display::Block,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(10f32) },
             ..Default::default()
         })
@@ -15,6 +16,10 @@ fn block_padding_border_percentage_intrinsic_size__border_box() {
         .new_with_children(
             taffy::style::Style {
                 display: taffy::style::Display::Block,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 padding: taffy::geometry::Rect {
                     left: percent(0.04f32),
                     right: percent(0.02f32),
@@ -28,7 +33,14 @@ fn block_padding_border_percentage_intrinsic_size__border_box() {
         .unwrap();
     let node = taffy
         .new_with_children(
-            taffy::style::Style { display: taffy::style::Display::Block, ..Default::default() },
+            taffy::style::Style {
+                display: taffy::style::Display::Block,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
+                ..Default::default()
+            },
             &[node0],
         )
         .unwrap();
@@ -173,6 +185,7 @@ fn block_padding_border_percentage_intrinsic_size__content_box() {
         .new_leaf(taffy::style::Style {
             display: taffy::style::Display::Block,
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(10f32) },
             ..Default::default()
         })
@@ -182,6 +195,10 @@ fn block_padding_border_percentage_intrinsic_size__content_box() {
             taffy::style::Style {
                 display: taffy::style::Display::Block,
                 box_sizing: taffy::style::BoxSizing::ContentBox,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 padding: taffy::geometry::Rect {
                     left: percent(0.04f32),
                     right: percent(0.02f32),
@@ -198,6 +215,10 @@ fn block_padding_border_percentage_intrinsic_size__content_box() {
             taffy::style::Style {
                 display: taffy::style::Display::Block,
                 box_sizing: taffy::style::BoxSizing::ContentBox,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 ..Default::default()
             },
             &[node0],

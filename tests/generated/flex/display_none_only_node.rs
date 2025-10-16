@@ -7,6 +7,7 @@ fn display_none_only_node__border_box() {
     let node = taffy
         .new_leaf(taffy::style::Style {
             display: taffy::style::Display::None,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(100f32),
                 height: taffy::style::Dimension::from_length(100f32),
@@ -71,6 +72,7 @@ fn display_none_only_node__content_box() {
         .new_leaf(taffy::style::Style {
             display: taffy::style::Display::None,
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(100f32),
                 height: taffy::style::Dimension::from_length(100f32),

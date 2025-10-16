@@ -7,6 +7,7 @@ fn bevy_issue_9530__border_box() {
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             flex_direction: taffy::style::FlexDirection::Column,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_percent(1f32),
                 height: taffy::style::Dimension::from_length(20f32),
@@ -16,6 +17,7 @@ fn bevy_issue_9530__border_box() {
         .unwrap();
     let node10 = taffy
         .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_percent(1f32),
                 height: taffy::style::Dimension::from_length(50f32),
@@ -27,6 +29,10 @@ fn bevy_issue_9530__border_box() {
     let node11 = taffy
         .new_leaf_with_context(
             taffy::style::Style {
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 align_items: Some(taffy::style::AlignItems::Center),
                 align_content: Some(taffy::style::AlignContent::Center),
                 justify_content: Some(taffy::style::JustifyContent::Center),
@@ -44,6 +50,7 @@ fn bevy_issue_9530__border_box() {
         .unwrap();
     let node12 = taffy
         .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_percent(1f32),
                 height: taffy::style::Dimension::from_length(50f32),
@@ -55,6 +62,10 @@ fn bevy_issue_9530__border_box() {
         .new_with_children(
             taffy::style::Style {
                 flex_direction: taffy::style::FlexDirection::Column,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 flex_grow: 1f32,
                 size: taffy::geometry::Size { width: taffy::style::Dimension::from_percent(1f32), height: auto() },
                 margin: taffy::geometry::Rect {
@@ -78,6 +89,10 @@ fn bevy_issue_9530__border_box() {
         .new_with_children(
             taffy::style::Style {
                 flex_direction: taffy::style::FlexDirection::Column,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 align_items: Some(taffy::style::AlignItems::Center),
                 align_content: Some(taffy::style::AlignContent::Center),
                 size: taffy::geometry::Size {
@@ -371,6 +386,7 @@ fn bevy_issue_9530__content_box() {
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             flex_direction: taffy::style::FlexDirection::Column,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_percent(1f32),
                 height: taffy::style::Dimension::from_length(20f32),
@@ -381,6 +397,7 @@ fn bevy_issue_9530__content_box() {
     let node10 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_percent(1f32),
                 height: taffy::style::Dimension::from_length(50f32),
@@ -393,6 +410,10 @@ fn bevy_issue_9530__content_box() {
         .new_leaf_with_context(
             taffy::style::Style {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 align_items: Some(taffy::style::AlignItems::Center),
                 align_content: Some(taffy::style::AlignContent::Center),
                 justify_content: Some(taffy::style::JustifyContent::Center),
@@ -411,6 +432,7 @@ fn bevy_issue_9530__content_box() {
     let node12 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_percent(1f32),
                 height: taffy::style::Dimension::from_length(50f32),
@@ -423,6 +445,10 @@ fn bevy_issue_9530__content_box() {
             taffy::style::Style {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 flex_direction: taffy::style::FlexDirection::Column,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 flex_grow: 1f32,
                 size: taffy::geometry::Size { width: taffy::style::Dimension::from_percent(1f32), height: auto() },
                 margin: taffy::geometry::Rect {
@@ -447,6 +473,10 @@ fn bevy_issue_9530__content_box() {
             taffy::style::Style {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 flex_direction: taffy::style::FlexDirection::Column,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 align_items: Some(taffy::style::AlignItems::Center),
                 align_content: Some(taffy::style::AlignContent::Center),
                 size: taffy::geometry::Size {

@@ -6,6 +6,7 @@ fn padding_no_child__border_box() {
     let mut taffy = crate::new_test_tree();
     let node = taffy
         .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             padding: taffy::geometry::Rect {
                 left: length(10f32),
                 right: length(10f32),
@@ -71,6 +72,7 @@ fn padding_no_child__content_box() {
     let node = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             padding: taffy::geometry::Rect {
                 left: length(10f32),
                 right: length(10f32),

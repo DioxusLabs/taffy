@@ -6,6 +6,7 @@ fn block_margin_y_first_child_collapse_positive_parent_smaller__border_box() {
     let mut taffy = crate::new_test_tree();
     let node000 = taffy
         .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(10f32) },
             ..Default::default()
         })
@@ -14,6 +15,10 @@ fn block_margin_y_first_child_collapse_positive_parent_smaller__border_box() {
         .new_with_children(
             taffy::style::Style {
                 display: taffy::style::Display::Block,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 margin: taffy::geometry::Rect { left: zero(), right: zero(), top: length(10f32), bottom: zero() },
                 ..Default::default()
             },
@@ -24,6 +29,10 @@ fn block_margin_y_first_child_collapse_positive_parent_smaller__border_box() {
         .new_with_children(
             taffy::style::Style {
                 display: taffy::style::Display::Block,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 margin: taffy::geometry::Rect { left: zero(), right: zero(), top: length(5f32), bottom: zero() },
                 ..Default::default()
             },
@@ -34,6 +43,10 @@ fn block_margin_y_first_child_collapse_positive_parent_smaller__border_box() {
         .new_with_children(
             taffy::style::Style {
                 display: taffy::style::Display::Block,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(50f32), height: auto() },
                 ..Default::default()
             },
@@ -225,6 +238,7 @@ fn block_margin_y_first_child_collapse_positive_parent_smaller__content_box() {
     let node000 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(10f32) },
             ..Default::default()
         })
@@ -234,6 +248,10 @@ fn block_margin_y_first_child_collapse_positive_parent_smaller__content_box() {
             taffy::style::Style {
                 display: taffy::style::Display::Block,
                 box_sizing: taffy::style::BoxSizing::ContentBox,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 margin: taffy::geometry::Rect { left: zero(), right: zero(), top: length(10f32), bottom: zero() },
                 ..Default::default()
             },
@@ -245,6 +263,10 @@ fn block_margin_y_first_child_collapse_positive_parent_smaller__content_box() {
             taffy::style::Style {
                 display: taffy::style::Display::Block,
                 box_sizing: taffy::style::BoxSizing::ContentBox,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 margin: taffy::geometry::Rect { left: zero(), right: zero(), top: length(5f32), bottom: zero() },
                 ..Default::default()
             },
@@ -256,6 +278,10 @@ fn block_margin_y_first_child_collapse_positive_parent_smaller__content_box() {
             taffy::style::Style {
                 display: taffy::style::Display::Block,
                 box_sizing: taffy::style::BoxSizing::ContentBox,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(50f32), height: auto() },
                 ..Default::default()
             },

@@ -6,25 +6,49 @@ fn gridflex_row_integration__border_box() {
     let mut taffy = crate::new_test_tree();
     let node00 = taffy
         .new_leaf_with_context(
-            taffy::style::Style { ..Default::default() },
+            taffy::style::Style {
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
+                ..Default::default()
+            },
             crate::TestNodeContext::ahem_text("HH", crate::WritingMode::Horizontal),
         )
         .unwrap();
     let node01 = taffy
         .new_leaf_with_context(
-            taffy::style::Style { ..Default::default() },
+            taffy::style::Style {
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
+                ..Default::default()
+            },
             crate::TestNodeContext::ahem_text("HH", crate::WritingMode::Horizontal),
         )
         .unwrap();
     let node02 = taffy
         .new_leaf_with_context(
-            taffy::style::Style { ..Default::default() },
+            taffy::style::Style {
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
+                ..Default::default()
+            },
             crate::TestNodeContext::ahem_text("HH", crate::WritingMode::Horizontal),
         )
         .unwrap();
     let node03 = taffy
         .new_leaf_with_context(
-            taffy::style::Style { ..Default::default() },
+            taffy::style::Style {
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
+                ..Default::default()
+            },
             crate::TestNodeContext::ahem_text("HH", crate::WritingMode::Horizontal),
         )
         .unwrap();
@@ -32,6 +56,10 @@ fn gridflex_row_integration__border_box() {
         .new_with_children(
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 grid_template_rows: vec![fr(1f32), fr(1f32)],
                 grid_template_columns: vec![fr(1f32), fr(1f32)],
                 ..Default::default()
@@ -39,7 +67,18 @@ fn gridflex_row_integration__border_box() {
             &[node00, node01, node02, node03],
         )
         .unwrap();
-    let node = taffy.new_with_children(taffy::style::Style { ..Default::default() }, &[node0]).unwrap();
+    let node = taffy
+        .new_with_children(
+            taffy::style::Style {
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
+                ..Default::default()
+            },
+            &[node0],
+        )
+        .unwrap();
     taffy.compute_layout_with_measure(node, taffy::geometry::Size::MAX_CONTENT, crate::test_measure_function).unwrap();
     println!("\nComputed tree:");
     taffy.print_tree(node);
@@ -314,25 +353,53 @@ fn gridflex_row_integration__content_box() {
     let mut taffy = crate::new_test_tree();
     let node00 = taffy
         .new_leaf_with_context(
-            taffy::style::Style { box_sizing: taffy::style::BoxSizing::ContentBox, ..Default::default() },
+            taffy::style::Style {
+                box_sizing: taffy::style::BoxSizing::ContentBox,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
+                ..Default::default()
+            },
             crate::TestNodeContext::ahem_text("HH", crate::WritingMode::Horizontal),
         )
         .unwrap();
     let node01 = taffy
         .new_leaf_with_context(
-            taffy::style::Style { box_sizing: taffy::style::BoxSizing::ContentBox, ..Default::default() },
+            taffy::style::Style {
+                box_sizing: taffy::style::BoxSizing::ContentBox,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
+                ..Default::default()
+            },
             crate::TestNodeContext::ahem_text("HH", crate::WritingMode::Horizontal),
         )
         .unwrap();
     let node02 = taffy
         .new_leaf_with_context(
-            taffy::style::Style { box_sizing: taffy::style::BoxSizing::ContentBox, ..Default::default() },
+            taffy::style::Style {
+                box_sizing: taffy::style::BoxSizing::ContentBox,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
+                ..Default::default()
+            },
             crate::TestNodeContext::ahem_text("HH", crate::WritingMode::Horizontal),
         )
         .unwrap();
     let node03 = taffy
         .new_leaf_with_context(
-            taffy::style::Style { box_sizing: taffy::style::BoxSizing::ContentBox, ..Default::default() },
+            taffy::style::Style {
+                box_sizing: taffy::style::BoxSizing::ContentBox,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
+                ..Default::default()
+            },
             crate::TestNodeContext::ahem_text("HH", crate::WritingMode::Horizontal),
         )
         .unwrap();
@@ -341,6 +408,10 @@ fn gridflex_row_integration__content_box() {
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
                 box_sizing: taffy::style::BoxSizing::ContentBox,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 grid_template_rows: vec![fr(1f32), fr(1f32)],
                 grid_template_columns: vec![fr(1f32), fr(1f32)],
                 ..Default::default()
@@ -350,7 +421,14 @@ fn gridflex_row_integration__content_box() {
         .unwrap();
     let node = taffy
         .new_with_children(
-            taffy::style::Style { box_sizing: taffy::style::BoxSizing::ContentBox, ..Default::default() },
+            taffy::style::Style {
+                box_sizing: taffy::style::BoxSizing::ContentBox,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
+                ..Default::default()
+            },
             &[node0],
         )
         .unwrap();

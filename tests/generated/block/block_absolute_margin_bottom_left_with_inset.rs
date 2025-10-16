@@ -8,6 +8,7 @@ fn block_absolute_margin_bottom_left_with_inset__border_box() {
         .new_leaf(taffy::style::Style {
             display: taffy::style::Display::Block,
             position: taffy::style::Position::Absolute,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(10f32),
                 height: taffy::style::Dimension::from_length(10f32),
@@ -26,6 +27,10 @@ fn block_absolute_margin_bottom_left_with_inset__border_box() {
         .new_with_children(
             taffy::style::Style {
                 display: taffy::style::Display::Block,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::from_length(100f32),
                     height: taffy::style::Dimension::from_length(100f32),
@@ -132,6 +137,7 @@ fn block_absolute_margin_bottom_left_with_inset__content_box() {
             display: taffy::style::Display::Block,
             box_sizing: taffy::style::BoxSizing::ContentBox,
             position: taffy::style::Position::Absolute,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(10f32),
                 height: taffy::style::Dimension::from_length(10f32),
@@ -151,6 +157,10 @@ fn block_absolute_margin_bottom_left_with_inset__content_box() {
             taffy::style::Style {
                 display: taffy::style::Display::Block,
                 box_sizing: taffy::style::BoxSizing::ContentBox,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::from_length(100f32),
                     height: taffy::style::Dimension::from_length(100f32),

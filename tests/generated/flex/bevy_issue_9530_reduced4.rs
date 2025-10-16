@@ -7,6 +7,10 @@ fn bevy_issue_9530_reduced4__border_box() {
     let node0 = taffy
         .new_leaf_with_context(
             taffy::style::Style {
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 margin: taffy::geometry::Rect {
                     left: length(20f32),
                     right: length(20f32),
@@ -25,6 +29,10 @@ fn bevy_issue_9530_reduced4__border_box() {
         .new_with_children(
             taffy::style::Style {
                 flex_direction: taffy::style::FlexDirection::Column,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(80f32), height: auto() },
                 ..Default::default()
             },
@@ -127,6 +135,10 @@ fn bevy_issue_9530_reduced4__content_box() {
         .new_leaf_with_context(
             taffy::style::Style {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 margin: taffy::geometry::Rect {
                     left: length(20f32),
                     right: length(20f32),
@@ -146,6 +158,10 @@ fn bevy_issue_9530_reduced4__content_box() {
             taffy::style::Style {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 flex_direction: taffy::style::FlexDirection::Column,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(80f32), height: auto() },
                 ..Default::default()
             },

@@ -7,6 +7,7 @@ fn block_margin_y_collapse_through_with_absolute_child__border_box() {
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             display: taffy::style::Display::Block,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(10f32) },
             margin: taffy::geometry::Rect { left: zero(), right: zero(), top: zero(), bottom: length(10f32) },
             ..Default::default()
@@ -14,7 +15,14 @@ fn block_margin_y_collapse_through_with_absolute_child__border_box() {
         .unwrap();
     let node10 = taffy
         .new_leaf_with_context(
-            taffy::style::Style { position: taffy::style::Position::Absolute, ..Default::default() },
+            taffy::style::Style {
+                position: taffy::style::Position::Absolute,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
+                ..Default::default()
+            },
             crate::TestNodeContext::ahem_text("HH", crate::WritingMode::Horizontal),
         )
         .unwrap();
@@ -22,6 +30,10 @@ fn block_margin_y_collapse_through_with_absolute_child__border_box() {
         .new_with_children(
             taffy::style::Style {
                 display: taffy::style::Display::Block,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 margin: taffy::geometry::Rect {
                     left: zero(),
                     right: zero(),
@@ -36,6 +48,7 @@ fn block_margin_y_collapse_through_with_absolute_child__border_box() {
     let node2 = taffy
         .new_leaf(taffy::style::Style {
             display: taffy::style::Display::Block,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(10f32) },
             margin: taffy::geometry::Rect { left: zero(), right: zero(), top: length(10f32), bottom: zero() },
             ..Default::default()
@@ -45,6 +58,10 @@ fn block_margin_y_collapse_through_with_absolute_child__border_box() {
         .new_with_children(
             taffy::style::Style {
                 display: taffy::style::Display::Block,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(50f32), height: auto() },
                 ..Default::default()
             },
@@ -270,6 +287,7 @@ fn block_margin_y_collapse_through_with_absolute_child__content_box() {
         .new_leaf(taffy::style::Style {
             display: taffy::style::Display::Block,
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(10f32) },
             margin: taffy::geometry::Rect { left: zero(), right: zero(), top: zero(), bottom: length(10f32) },
             ..Default::default()
@@ -280,6 +298,10 @@ fn block_margin_y_collapse_through_with_absolute_child__content_box() {
             taffy::style::Style {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 position: taffy::style::Position::Absolute,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 ..Default::default()
             },
             crate::TestNodeContext::ahem_text("HH", crate::WritingMode::Horizontal),
@@ -290,6 +312,10 @@ fn block_margin_y_collapse_through_with_absolute_child__content_box() {
             taffy::style::Style {
                 display: taffy::style::Display::Block,
                 box_sizing: taffy::style::BoxSizing::ContentBox,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 margin: taffy::geometry::Rect {
                     left: zero(),
                     right: zero(),
@@ -305,6 +331,7 @@ fn block_margin_y_collapse_through_with_absolute_child__content_box() {
         .new_leaf(taffy::style::Style {
             display: taffy::style::Display::Block,
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(10f32) },
             margin: taffy::geometry::Rect { left: zero(), right: zero(), top: length(10f32), bottom: zero() },
             ..Default::default()
@@ -315,6 +342,10 @@ fn block_margin_y_collapse_through_with_absolute_child__content_box() {
             taffy::style::Style {
                 display: taffy::style::Display::Block,
                 box_sizing: taffy::style::BoxSizing::ContentBox,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(50f32), height: auto() },
                 ..Default::default()
             },

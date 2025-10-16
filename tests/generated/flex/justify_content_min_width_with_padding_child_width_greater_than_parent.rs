@@ -6,6 +6,7 @@ fn justify_content_min_width_with_padding_child_width_greater_than_parent__borde
     let mut taffy = crate::new_test_tree();
     let node000 = taffy
         .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             align_content: Some(taffy::style::AlignContent::Stretch),
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(300f32),
@@ -17,6 +18,10 @@ fn justify_content_min_width_with_padding_child_width_greater_than_parent__borde
     let node00 = taffy
         .new_with_children(
             taffy::style::Style {
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 align_content: Some(taffy::style::AlignContent::Stretch),
                 justify_content: Some(taffy::style::JustifyContent::Center),
                 min_size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(400f32), height: auto() },
@@ -33,7 +38,14 @@ fn justify_content_min_width_with_padding_child_width_greater_than_parent__borde
         .unwrap();
     let node0 = taffy
         .new_with_children(
-            taffy::style::Style { align_content: Some(taffy::style::AlignContent::Stretch), ..Default::default() },
+            taffy::style::Style {
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
+                align_content: Some(taffy::style::AlignContent::Stretch),
+                ..Default::default()
+            },
             &[node00],
         )
         .unwrap();
@@ -41,6 +53,10 @@ fn justify_content_min_width_with_padding_child_width_greater_than_parent__borde
         .new_with_children(
             taffy::style::Style {
                 flex_direction: taffy::style::FlexDirection::Column,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 align_content: Some(taffy::style::AlignContent::Stretch),
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::from_length(1000f32),
@@ -260,6 +276,7 @@ fn justify_content_min_width_with_padding_child_width_greater_than_parent__conte
     let node000 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             align_content: Some(taffy::style::AlignContent::Stretch),
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(300f32),
@@ -272,6 +289,10 @@ fn justify_content_min_width_with_padding_child_width_greater_than_parent__conte
         .new_with_children(
             taffy::style::Style {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 align_content: Some(taffy::style::AlignContent::Stretch),
                 justify_content: Some(taffy::style::JustifyContent::Center),
                 min_size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(400f32), height: auto() },
@@ -290,6 +311,10 @@ fn justify_content_min_width_with_padding_child_width_greater_than_parent__conte
         .new_with_children(
             taffy::style::Style {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 align_content: Some(taffy::style::AlignContent::Stretch),
                 ..Default::default()
             },
@@ -301,6 +326,10 @@ fn justify_content_min_width_with_padding_child_width_greater_than_parent__conte
             taffy::style::Style {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 flex_direction: taffy::style::FlexDirection::Column,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 align_content: Some(taffy::style::AlignContent::Stretch),
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::from_length(1000f32),

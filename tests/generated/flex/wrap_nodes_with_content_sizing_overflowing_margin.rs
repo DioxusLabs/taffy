@@ -6,6 +6,7 @@ fn wrap_nodes_with_content_sizing_overflowing_margin__border_box() {
     let mut taffy = crate::new_test_tree();
     let node000 = taffy
         .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(40f32),
                 height: taffy::style::Dimension::from_length(40f32),
@@ -15,12 +16,20 @@ fn wrap_nodes_with_content_sizing_overflowing_margin__border_box() {
         .unwrap();
     let node00 = taffy
         .new_with_children(
-            taffy::style::Style { flex_direction: taffy::style::FlexDirection::Column, ..Default::default() },
+            taffy::style::Style {
+                flex_direction: taffy::style::FlexDirection::Column,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
+                ..Default::default()
+            },
             &[node000],
         )
         .unwrap();
     let node010 = taffy
         .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(40f32),
                 height: taffy::style::Dimension::from_length(40f32),
@@ -32,6 +41,10 @@ fn wrap_nodes_with_content_sizing_overflowing_margin__border_box() {
         .new_with_children(
             taffy::style::Style {
                 flex_direction: taffy::style::FlexDirection::Column,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 margin: taffy::geometry::Rect { left: zero(), right: length(10f32), top: zero(), bottom: zero() },
                 ..Default::default()
             },
@@ -42,6 +55,10 @@ fn wrap_nodes_with_content_sizing_overflowing_margin__border_box() {
         .new_with_children(
             taffy::style::Style {
                 flex_wrap: taffy::style::FlexWrap::Wrap,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(85f32), height: auto() },
                 ..Default::default()
             },
@@ -52,6 +69,10 @@ fn wrap_nodes_with_content_sizing_overflowing_margin__border_box() {
         .new_with_children(
             taffy::style::Style {
                 flex_direction: taffy::style::FlexDirection::Column,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::from_length(500f32),
                     height: taffy::style::Dimension::from_length(500f32),
@@ -336,6 +357,7 @@ fn wrap_nodes_with_content_sizing_overflowing_margin__content_box() {
     let node000 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(40f32),
                 height: taffy::style::Dimension::from_length(40f32),
@@ -348,6 +370,10 @@ fn wrap_nodes_with_content_sizing_overflowing_margin__content_box() {
             taffy::style::Style {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 flex_direction: taffy::style::FlexDirection::Column,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 ..Default::default()
             },
             &[node000],
@@ -356,6 +382,7 @@ fn wrap_nodes_with_content_sizing_overflowing_margin__content_box() {
     let node010 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(40f32),
                 height: taffy::style::Dimension::from_length(40f32),
@@ -368,6 +395,10 @@ fn wrap_nodes_with_content_sizing_overflowing_margin__content_box() {
             taffy::style::Style {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 flex_direction: taffy::style::FlexDirection::Column,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 margin: taffy::geometry::Rect { left: zero(), right: length(10f32), top: zero(), bottom: zero() },
                 ..Default::default()
             },
@@ -379,6 +410,10 @@ fn wrap_nodes_with_content_sizing_overflowing_margin__content_box() {
             taffy::style::Style {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 flex_wrap: taffy::style::FlexWrap::Wrap,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(85f32), height: auto() },
                 ..Default::default()
             },
@@ -390,6 +425,10 @@ fn wrap_nodes_with_content_sizing_overflowing_margin__content_box() {
             taffy::style::Style {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 flex_direction: taffy::style::FlexDirection::Column,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::from_length(500f32),
                     height: taffy::style::Dimension::from_length(500f32),

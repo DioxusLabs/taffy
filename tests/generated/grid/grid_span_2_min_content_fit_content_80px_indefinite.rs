@@ -6,6 +6,7 @@ fn grid_span_2_min_content_fit_content_80px_indefinite__border_box() {
     let mut taffy = crate::new_test_tree();
     let node0 = taffy
         .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             grid_row: taffy::geometry::Line { start: line(1i16), end: taffy::style::GridPlacement::Auto },
             grid_column: taffy::geometry::Line { start: line(1i16), end: taffy::style::GridPlacement::Auto },
             ..Default::default()
@@ -13,6 +14,7 @@ fn grid_span_2_min_content_fit_content_80px_indefinite__border_box() {
         .unwrap();
     let node1 = taffy
         .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             grid_row: taffy::geometry::Line { start: line(1i16), end: taffy::style::GridPlacement::Auto },
             grid_column: taffy::geometry::Line { start: line(2i16), end: taffy::style::GridPlacement::Auto },
             ..Default::default()
@@ -21,6 +23,10 @@ fn grid_span_2_min_content_fit_content_80px_indefinite__border_box() {
     let node2 = taffy
         .new_leaf_with_context(
             taffy::style::Style {
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 grid_row: taffy::geometry::Line { start: line(1i16), end: taffy::style::GridPlacement::Auto },
                 grid_column: taffy::geometry::Line { start: line(1i16), end: taffy::style::GridPlacement::Span(2u16) },
                 ..Default::default()
@@ -32,6 +38,10 @@ fn grid_span_2_min_content_fit_content_80px_indefinite__border_box() {
         .new_with_children(
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 grid_template_rows: vec![length(40f32)],
                 grid_template_columns: vec![min_content(), fit_content(length(80f32))],
                 ..Default::default()
@@ -212,6 +222,7 @@ fn grid_span_2_min_content_fit_content_80px_indefinite__content_box() {
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             grid_row: taffy::geometry::Line { start: line(1i16), end: taffy::style::GridPlacement::Auto },
             grid_column: taffy::geometry::Line { start: line(1i16), end: taffy::style::GridPlacement::Auto },
             ..Default::default()
@@ -220,6 +231,7 @@ fn grid_span_2_min_content_fit_content_80px_indefinite__content_box() {
     let node1 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             grid_row: taffy::geometry::Line { start: line(1i16), end: taffy::style::GridPlacement::Auto },
             grid_column: taffy::geometry::Line { start: line(2i16), end: taffy::style::GridPlacement::Auto },
             ..Default::default()
@@ -229,6 +241,10 @@ fn grid_span_2_min_content_fit_content_80px_indefinite__content_box() {
         .new_leaf_with_context(
             taffy::style::Style {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 grid_row: taffy::geometry::Line { start: line(1i16), end: taffy::style::GridPlacement::Auto },
                 grid_column: taffy::geometry::Line { start: line(1i16), end: taffy::style::GridPlacement::Span(2u16) },
                 ..Default::default()
@@ -241,6 +257,10 @@ fn grid_span_2_min_content_fit_content_80px_indefinite__content_box() {
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
                 box_sizing: taffy::style::BoxSizing::ContentBox,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 grid_template_rows: vec![length(40f32)],
                 grid_template_columns: vec![min_content(), fit_content(length(80f32))],
                 ..Default::default()

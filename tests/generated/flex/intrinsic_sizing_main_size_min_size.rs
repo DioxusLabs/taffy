@@ -7,6 +7,7 @@ fn intrinsic_sizing_main_size_min_size__border_box() {
     let node00 = taffy
         .new_leaf(taffy::style::Style {
             display: taffy::style::Display::Flex,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             min_size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(50f32),
                 height: taffy::style::Dimension::from_length(50f32),
@@ -25,6 +26,10 @@ fn intrinsic_sizing_main_size_min_size__border_box() {
             taffy::style::Style {
                 display: taffy::style::Display::Flex,
                 position: taffy::style::Position::Absolute,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 align_items: Some(taffy::style::AlignItems::Center),
                 justify_content: Some(taffy::style::JustifyContent::Center),
                 max_size: taffy::geometry::Size {
@@ -47,6 +52,10 @@ fn intrinsic_sizing_main_size_min_size__border_box() {
         .new_with_children(
             taffy::style::Style {
                 display: taffy::style::Display::Flex,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::from_length(300f32),
                     height: taffy::style::Dimension::from_length(200f32),
@@ -197,6 +206,7 @@ fn intrinsic_sizing_main_size_min_size__content_box() {
         .new_leaf(taffy::style::Style {
             display: taffy::style::Display::Flex,
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             min_size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(50f32),
                 height: taffy::style::Dimension::from_length(50f32),
@@ -216,6 +226,10 @@ fn intrinsic_sizing_main_size_min_size__content_box() {
                 display: taffy::style::Display::Flex,
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 position: taffy::style::Position::Absolute,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 align_items: Some(taffy::style::AlignItems::Center),
                 justify_content: Some(taffy::style::JustifyContent::Center),
                 max_size: taffy::geometry::Size {
@@ -239,6 +253,10 @@ fn intrinsic_sizing_main_size_min_size__content_box() {
             taffy::style::Style {
                 display: taffy::style::Display::Flex,
                 box_sizing: taffy::style::BoxSizing::ContentBox,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::from_length(300f32),
                     height: taffy::style::Dimension::from_length(200f32),

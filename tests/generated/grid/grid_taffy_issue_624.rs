@@ -6,6 +6,7 @@ fn grid_taffy_issue_624__border_box() {
     let mut taffy = crate::new_test_tree();
     let node0 = taffy
         .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             grid_row: taffy::geometry::Line { start: line(1i16), end: taffy::style::GridPlacement::Span(2u16) },
             grid_column: taffy::geometry::Line { start: line(1i16), end: taffy::style::GridPlacement::Auto },
             size: taffy::geometry::Size {
@@ -17,6 +18,7 @@ fn grid_taffy_issue_624__border_box() {
         .unwrap();
     let node1 = taffy
         .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             grid_row: taffy::geometry::Line { start: line(1i16), end: taffy::style::GridPlacement::Span(2u16) },
             grid_column: taffy::geometry::Line { start: line(2i16), end: taffy::style::GridPlacement::Span(2u16) },
             size: taffy::geometry::Size {
@@ -28,6 +30,7 @@ fn grid_taffy_issue_624__border_box() {
         .unwrap();
     let node2 = taffy
         .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             grid_row: taffy::geometry::Line { start: line(3i16), end: taffy::style::GridPlacement::Span(1u16) },
             grid_column: taffy::geometry::Line { start: line(1i16), end: taffy::style::GridPlacement::Span(2u16) },
             size: taffy::geometry::Size {
@@ -41,6 +44,10 @@ fn grid_taffy_issue_624__border_box() {
         .new_with_children(
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 justify_items: Some(taffy::style::JustifyItems::Start),
                 justify_content: Some(taffy::style::JustifyContent::Start),
                 grid_template_rows: vec![auto(), auto(), auto(), fr(1f32)],
@@ -227,6 +234,7 @@ fn grid_taffy_issue_624__content_box() {
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             grid_row: taffy::geometry::Line { start: line(1i16), end: taffy::style::GridPlacement::Span(2u16) },
             grid_column: taffy::geometry::Line { start: line(1i16), end: taffy::style::GridPlacement::Auto },
             size: taffy::geometry::Size {
@@ -239,6 +247,7 @@ fn grid_taffy_issue_624__content_box() {
     let node1 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             grid_row: taffy::geometry::Line { start: line(1i16), end: taffy::style::GridPlacement::Span(2u16) },
             grid_column: taffy::geometry::Line { start: line(2i16), end: taffy::style::GridPlacement::Span(2u16) },
             size: taffy::geometry::Size {
@@ -251,6 +260,7 @@ fn grid_taffy_issue_624__content_box() {
     let node2 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             grid_row: taffy::geometry::Line { start: line(3i16), end: taffy::style::GridPlacement::Span(1u16) },
             grid_column: taffy::geometry::Line { start: line(1i16), end: taffy::style::GridPlacement::Span(2u16) },
             size: taffy::geometry::Size {
@@ -265,6 +275,10 @@ fn grid_taffy_issue_624__content_box() {
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
                 box_sizing: taffy::style::BoxSizing::ContentBox,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 justify_items: Some(taffy::style::JustifyItems::Start),
                 justify_content: Some(taffy::style::JustifyContent::Start),
                 grid_template_rows: vec![auto(), auto(), auto(), fr(1f32)],

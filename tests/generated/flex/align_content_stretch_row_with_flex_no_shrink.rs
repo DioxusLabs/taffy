@@ -6,12 +6,14 @@ fn align_content_stretch_row_with_flex_no_shrink__border_box() {
     let mut taffy = crate::new_test_tree();
     let node0 = taffy
         .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(50f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
     let node1 = taffy
         .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             flex_grow: 1f32,
             flex_shrink: 1f32,
             flex_basis: taffy::style::Dimension::from_percent(0f32),
@@ -21,12 +23,14 @@ fn align_content_stretch_row_with_flex_no_shrink__border_box() {
         .unwrap();
     let node2 = taffy
         .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(50f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
     let node3 = taffy
         .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             flex_grow: 1f32,
             flex_shrink: 0f32,
             flex_basis: taffy::style::Dimension::from_percent(0f32),
@@ -36,6 +40,7 @@ fn align_content_stretch_row_with_flex_no_shrink__border_box() {
         .unwrap();
     let node4 = taffy
         .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(50f32), height: auto() },
             ..Default::default()
         })
@@ -44,6 +49,10 @@ fn align_content_stretch_row_with_flex_no_shrink__border_box() {
         .new_with_children(
             taffy::style::Style {
                 flex_wrap: taffy::style::FlexWrap::Wrap,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 align_content: Some(taffy::style::AlignContent::Stretch),
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::from_length(150f32),
@@ -335,6 +344,7 @@ fn align_content_stretch_row_with_flex_no_shrink__content_box() {
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(50f32), height: auto() },
             ..Default::default()
         })
@@ -342,6 +352,7 @@ fn align_content_stretch_row_with_flex_no_shrink__content_box() {
     let node1 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             flex_grow: 1f32,
             flex_shrink: 1f32,
             flex_basis: taffy::style::Dimension::from_percent(0f32),
@@ -352,6 +363,7 @@ fn align_content_stretch_row_with_flex_no_shrink__content_box() {
     let node2 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(50f32), height: auto() },
             ..Default::default()
         })
@@ -359,6 +371,7 @@ fn align_content_stretch_row_with_flex_no_shrink__content_box() {
     let node3 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             flex_grow: 1f32,
             flex_shrink: 0f32,
             flex_basis: taffy::style::Dimension::from_percent(0f32),
@@ -369,6 +382,7 @@ fn align_content_stretch_row_with_flex_no_shrink__content_box() {
     let node4 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(50f32), height: auto() },
             ..Default::default()
         })
@@ -378,6 +392,10 @@ fn align_content_stretch_row_with_flex_no_shrink__content_box() {
             taffy::style::Style {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 flex_wrap: taffy::style::FlexWrap::Wrap,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 align_content: Some(taffy::style::AlignContent::Stretch),
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::from_length(150f32),

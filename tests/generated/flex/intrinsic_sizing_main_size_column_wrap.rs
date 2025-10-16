@@ -6,13 +6,27 @@ fn intrinsic_sizing_main_size_column_wrap__border_box() {
     let mut taffy = crate::new_test_tree();
     let node0 = taffy
         .new_leaf_with_context(
-            taffy::style::Style { flex_direction: taffy::style::FlexDirection::Column, ..Default::default() },
+            taffy::style::Style {
+                flex_direction: taffy::style::FlexDirection::Column,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
+                ..Default::default()
+            },
             crate::TestNodeContext::ahem_text("HH\u{200b}HH", crate::WritingMode::Vertical),
         )
         .unwrap();
     let node1 = taffy
         .new_leaf_with_context(
-            taffy::style::Style { flex_direction: taffy::style::FlexDirection::Column, ..Default::default() },
+            taffy::style::Style {
+                flex_direction: taffy::style::FlexDirection::Column,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
+                ..Default::default()
+            },
             crate::TestNodeContext::ahem_text("HH\u{200b}HH", crate::WritingMode::Vertical),
         )
         .unwrap();
@@ -21,6 +35,10 @@ fn intrinsic_sizing_main_size_column_wrap__border_box() {
             taffy::style::Style {
                 flex_direction: taffy::style::FlexDirection::Column,
                 flex_wrap: taffy::style::FlexWrap::Wrap,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 ..Default::default()
             },
             &[node0, node1],
@@ -162,6 +180,10 @@ fn intrinsic_sizing_main_size_column_wrap__content_box() {
             taffy::style::Style {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 flex_direction: taffy::style::FlexDirection::Column,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 ..Default::default()
             },
             crate::TestNodeContext::ahem_text("HH\u{200b}HH", crate::WritingMode::Vertical),
@@ -172,6 +194,10 @@ fn intrinsic_sizing_main_size_column_wrap__content_box() {
             taffy::style::Style {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 flex_direction: taffy::style::FlexDirection::Column,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 ..Default::default()
             },
             crate::TestNodeContext::ahem_text("HH\u{200b}HH", crate::WritingMode::Vertical),
@@ -183,6 +209,10 @@ fn intrinsic_sizing_main_size_column_wrap__content_box() {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 flex_direction: taffy::style::FlexDirection::Column,
                 flex_wrap: taffy::style::FlexWrap::Wrap,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 ..Default::default()
             },
             &[node0, node1],

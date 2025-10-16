@@ -6,6 +6,7 @@ fn block_margin_x_percentage_intrinsic_size_self_positive__border_box() {
     let mut taffy = crate::new_test_tree();
     let node0 = taffy
         .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(100f32),
                 height: taffy::style::Dimension::from_length(10f32),
@@ -21,7 +22,14 @@ fn block_margin_x_percentage_intrinsic_size_self_positive__border_box() {
         .unwrap();
     let node = taffy
         .new_with_children(
-            taffy::style::Style { display: taffy::style::Display::Block, ..Default::default() },
+            taffy::style::Style {
+                display: taffy::style::Display::Block,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
+                ..Default::default()
+            },
             &[node0],
         )
         .unwrap();
@@ -120,6 +128,7 @@ fn block_margin_x_percentage_intrinsic_size_self_positive__content_box() {
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(100f32),
                 height: taffy::style::Dimension::from_length(10f32),
@@ -138,6 +147,10 @@ fn block_margin_x_percentage_intrinsic_size_self_positive__content_box() {
             taffy::style::Style {
                 display: taffy::style::Display::Block,
                 box_sizing: taffy::style::BoxSizing::ContentBox,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 ..Default::default()
             },
             &[node0],

@@ -7,6 +7,10 @@ fn aspect_ratio_flex_column_stretch_fill_max_width__border_box() {
     let node0 = taffy
         .new_leaf_with_context(
             taffy::style::Style {
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 max_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(20f32) },
                 aspect_ratio: Some(2f32),
                 ..Default::default()
@@ -19,6 +23,10 @@ fn aspect_ratio_flex_column_stretch_fill_max_width__border_box() {
             taffy::style::Style {
                 display: taffy::style::Display::Flex,
                 flex_direction: taffy::style::FlexDirection::Column,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::from_length(100f32),
                     height: taffy::style::Dimension::from_length(100f32),
@@ -124,6 +132,10 @@ fn aspect_ratio_flex_column_stretch_fill_max_width__content_box() {
         .new_leaf_with_context(
             taffy::style::Style {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 max_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(20f32) },
                 aspect_ratio: Some(2f32),
                 ..Default::default()
@@ -137,6 +149,10 @@ fn aspect_ratio_flex_column_stretch_fill_max_width__content_box() {
                 display: taffy::style::Display::Flex,
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 flex_direction: taffy::style::FlexDirection::Column,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::from_length(100f32),
                     height: taffy::style::Dimension::from_length(100f32),

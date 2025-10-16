@@ -7,6 +7,7 @@ fn block_absolute_no_styles__border_box() {
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             display: taffy::style::Display::Block,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(50f32),
                 height: taffy::style::Dimension::from_length(10f32),
@@ -18,12 +19,20 @@ fn block_absolute_no_styles__border_box() {
         .new_leaf(taffy::style::Style {
             display: taffy::style::Display::Block,
             position: taffy::style::Position::Absolute,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             ..Default::default()
         })
         .unwrap();
     let node = taffy
         .new_with_children(
-            taffy::style::Style { display: taffy::style::Display::Block, ..Default::default() },
+            taffy::style::Style {
+                display: taffy::style::Display::Block,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
+                ..Default::default()
+            },
             &[node0, node1],
         )
         .unwrap();
@@ -162,6 +171,7 @@ fn block_absolute_no_styles__content_box() {
         .new_leaf(taffy::style::Style {
             display: taffy::style::Display::Block,
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(50f32),
                 height: taffy::style::Dimension::from_length(10f32),
@@ -174,6 +184,7 @@ fn block_absolute_no_styles__content_box() {
             display: taffy::style::Display::Block,
             box_sizing: taffy::style::BoxSizing::ContentBox,
             position: taffy::style::Position::Absolute,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             ..Default::default()
         })
         .unwrap();
@@ -182,6 +193,10 @@ fn block_absolute_no_styles__content_box() {
             taffy::style::Style {
                 display: taffy::style::Display::Block,
                 box_sizing: taffy::style::BoxSizing::ContentBox,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 ..Default::default()
             },
             &[node0, node1],

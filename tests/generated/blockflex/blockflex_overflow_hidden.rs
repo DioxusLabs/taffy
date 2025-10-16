@@ -21,7 +21,15 @@ fn blockflex_overflow_hidden__border_box() {
         .unwrap();
     let node1 = taffy
         .new_leaf_with_context(
-            taffy::style::Style { display: taffy::style::Display::Block, flex_grow: 1f32, ..Default::default() },
+            taffy::style::Style {
+                display: taffy::style::Display::Block,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
+                flex_grow: 1f32,
+                ..Default::default()
+            },
             crate::TestNodeContext::ahem_text("HHHH\u{200b}HH", crate::WritingMode::Horizontal),
         )
         .unwrap();
@@ -29,6 +37,10 @@ fn blockflex_overflow_hidden__border_box() {
         .new_with_children(
             taffy::style::Style {
                 display: taffy::style::Display::Flex,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::from_length(20f32),
                     height: taffy::style::Dimension::from_length(50f32),
@@ -190,6 +202,10 @@ fn blockflex_overflow_hidden__content_box() {
             taffy::style::Style {
                 display: taffy::style::Display::Block,
                 box_sizing: taffy::style::BoxSizing::ContentBox,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 flex_grow: 1f32,
                 ..Default::default()
             },
@@ -201,6 +217,10 @@ fn blockflex_overflow_hidden__content_box() {
             taffy::style::Style {
                 display: taffy::style::Display::Flex,
                 box_sizing: taffy::style::BoxSizing::ContentBox,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::from_length(20f32),
                     height: taffy::style::Dimension::from_length(50f32),

@@ -6,16 +6,32 @@ fn blockgrid_block_in_grid_auto__border_box() {
     let mut taffy = crate::new_test_tree();
     let node0 = taffy
         .new_leaf_with_context(
-            taffy::style::Style { display: taffy::style::Display::Block, ..Default::default() },
+            taffy::style::Style {
+                display: taffy::style::Display::Block,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
+                ..Default::default()
+            },
             crate::TestNodeContext::ahem_text("HH\u{200b}HH", crate::WritingMode::Horizontal),
         )
         .unwrap();
-    let node1 =
-        taffy.new_leaf(taffy::style::Style { display: taffy::style::Display::Block, ..Default::default() }).unwrap();
+    let node1 = taffy
+        .new_leaf(taffy::style::Style {
+            display: taffy::style::Display::Block,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
+            ..Default::default()
+        })
+        .unwrap();
     let node = taffy
         .new_with_children(
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 grid_template_columns: vec![auto()],
                 ..Default::default()
             },
@@ -158,6 +174,10 @@ fn blockgrid_block_in_grid_auto__content_box() {
             taffy::style::Style {
                 display: taffy::style::Display::Block,
                 box_sizing: taffy::style::BoxSizing::ContentBox,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 ..Default::default()
             },
             crate::TestNodeContext::ahem_text("HH\u{200b}HH", crate::WritingMode::Horizontal),
@@ -167,6 +187,7 @@ fn blockgrid_block_in_grid_auto__content_box() {
         .new_leaf(taffy::style::Style {
             display: taffy::style::Display::Block,
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             ..Default::default()
         })
         .unwrap();
@@ -175,6 +196,10 @@ fn blockgrid_block_in_grid_auto__content_box() {
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
                 box_sizing: taffy::style::BoxSizing::ContentBox,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 grid_template_columns: vec![auto()],
                 ..Default::default()
             },

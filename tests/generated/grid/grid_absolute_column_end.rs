@@ -7,6 +7,7 @@ fn grid_absolute_column_end__border_box() {
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             position: taffy::style::Position::Absolute,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             grid_column: taffy::geometry::Line { start: taffy::style::GridPlacement::Auto, end: line(1i16) },
             inset: taffy::geometry::Rect {
                 left: length(4f32),
@@ -21,6 +22,10 @@ fn grid_absolute_column_end__border_box() {
         .new_with_children(
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 grid_template_rows: vec![length(40f32), length(40f32), length(40f32)],
                 grid_template_columns: vec![length(40f32), length(40f32), length(40f32)],
                 padding: taffy::geometry::Rect {
@@ -136,6 +141,7 @@ fn grid_absolute_column_end__content_box() {
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             position: taffy::style::Position::Absolute,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             grid_column: taffy::geometry::Line { start: taffy::style::GridPlacement::Auto, end: line(1i16) },
             inset: taffy::geometry::Rect {
                 left: length(4f32),
@@ -151,6 +157,10 @@ fn grid_absolute_column_end__content_box() {
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
                 box_sizing: taffy::style::BoxSizing::ContentBox,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 grid_template_rows: vec![length(40f32), length(40f32), length(40f32)],
                 grid_template_columns: vec![length(40f32), length(40f32), length(40f32)],
                 padding: taffy::geometry::Rect {

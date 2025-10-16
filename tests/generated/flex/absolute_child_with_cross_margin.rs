@@ -6,6 +6,7 @@ fn absolute_child_with_cross_margin__border_box() {
     let mut taffy = crate::new_test_tree();
     let node0 = taffy
         .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             align_content: Some(taffy::style::AlignContent::Stretch),
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(28f32),
@@ -18,6 +19,10 @@ fn absolute_child_with_cross_margin__border_box() {
         .new_leaf_with_context(
             taffy::style::Style {
                 position: taffy::style::Position::Absolute,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 align_content: Some(taffy::style::AlignContent::Stretch),
                 flex_grow: 0f32,
                 flex_shrink: 1f32,
@@ -33,6 +38,7 @@ fn absolute_child_with_cross_margin__border_box() {
         .unwrap();
     let node2 = taffy
         .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             align_content: Some(taffy::style::AlignContent::Stretch),
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(25f32),
@@ -44,6 +50,10 @@ fn absolute_child_with_cross_margin__border_box() {
     let node = taffy
         .new_with_children(
             taffy::style::Style {
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 justify_content: Some(taffy::style::JustifyContent::SpaceBetween),
                 min_size: taffy::geometry::Size {
                     width: taffy::style::Dimension::from_length(311f32),
@@ -231,6 +241,7 @@ fn absolute_child_with_cross_margin__content_box() {
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             align_content: Some(taffy::style::AlignContent::Stretch),
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(28f32),
@@ -244,6 +255,10 @@ fn absolute_child_with_cross_margin__content_box() {
             taffy::style::Style {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 position: taffy::style::Position::Absolute,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 align_content: Some(taffy::style::AlignContent::Stretch),
                 flex_grow: 0f32,
                 flex_shrink: 1f32,
@@ -260,6 +275,7 @@ fn absolute_child_with_cross_margin__content_box() {
     let node2 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             align_content: Some(taffy::style::AlignContent::Stretch),
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(25f32),
@@ -272,6 +288,10 @@ fn absolute_child_with_cross_margin__content_box() {
         .new_with_children(
             taffy::style::Style {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 justify_content: Some(taffy::style::JustifyContent::SpaceBetween),
                 min_size: taffy::geometry::Size {
                     width: taffy::style::Dimension::from_length(311f32),

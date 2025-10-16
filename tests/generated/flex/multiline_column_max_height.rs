@@ -6,6 +6,7 @@ fn multiline_column_max_height__border_box() {
     let mut taffy = crate::new_test_tree();
     let node0 = taffy
         .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             flex_shrink: 0f32,
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(40f32),
@@ -16,6 +17,7 @@ fn multiline_column_max_height__border_box() {
         .unwrap();
     let node1 = taffy
         .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             flex_shrink: 0f32,
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(40f32),
@@ -26,6 +28,7 @@ fn multiline_column_max_height__border_box() {
         .unwrap();
     let node2 = taffy
         .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             flex_shrink: 0f32,
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(40f32),
@@ -36,6 +39,7 @@ fn multiline_column_max_height__border_box() {
         .unwrap();
     let node3 = taffy
         .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             flex_shrink: 0f32,
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(40f32),
@@ -46,6 +50,7 @@ fn multiline_column_max_height__border_box() {
         .unwrap();
     let node4 = taffy
         .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             flex_shrink: 0f32,
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(40f32),
@@ -56,6 +61,7 @@ fn multiline_column_max_height__border_box() {
         .unwrap();
     let node5 = taffy
         .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             flex_shrink: 0f32,
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(40f32),
@@ -66,6 +72,7 @@ fn multiline_column_max_height__border_box() {
         .unwrap();
     let node6 = taffy
         .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             flex_shrink: 0f32,
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(40f32),
@@ -76,6 +83,7 @@ fn multiline_column_max_height__border_box() {
         .unwrap();
     let node7 = taffy
         .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             flex_shrink: 0f32,
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(40f32),
@@ -86,6 +94,7 @@ fn multiline_column_max_height__border_box() {
         .unwrap();
     let node8 = taffy
         .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             flex_shrink: 0f32,
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(40f32),
@@ -96,6 +105,7 @@ fn multiline_column_max_height__border_box() {
         .unwrap();
     let node9 = taffy
         .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             flex_shrink: 0f32,
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(40f32),
@@ -106,6 +116,7 @@ fn multiline_column_max_height__border_box() {
         .unwrap();
     let node10 = taffy
         .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             flex_shrink: 0f32,
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(40f32),
@@ -116,6 +127,7 @@ fn multiline_column_max_height__border_box() {
         .unwrap();
     let node11 = taffy
         .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             flex_shrink: 0f32,
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(40f32),
@@ -126,6 +138,7 @@ fn multiline_column_max_height__border_box() {
         .unwrap();
     let node12 = taffy
         .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             flex_shrink: 0f32,
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(40f32),
@@ -136,6 +149,7 @@ fn multiline_column_max_height__border_box() {
         .unwrap();
     let node13 = taffy
         .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             flex_shrink: 0f32,
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(40f32),
@@ -146,6 +160,7 @@ fn multiline_column_max_height__border_box() {
         .unwrap();
     let node14 = taffy
         .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             flex_shrink: 0f32,
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(40f32),
@@ -156,6 +171,7 @@ fn multiline_column_max_height__border_box() {
         .unwrap();
     let node15 = taffy
         .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             flex_shrink: 0f32,
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(40f32),
@@ -166,6 +182,7 @@ fn multiline_column_max_height__border_box() {
         .unwrap();
     let node16 = taffy
         .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             flex_shrink: 0f32,
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(40f32),
@@ -176,6 +193,7 @@ fn multiline_column_max_height__border_box() {
         .unwrap();
     let node17 = taffy
         .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             flex_shrink: 0f32,
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(40f32),
@@ -186,6 +204,7 @@ fn multiline_column_max_height__border_box() {
         .unwrap();
     let node18 = taffy
         .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             flex_shrink: 0f32,
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(40f32),
@@ -196,6 +215,7 @@ fn multiline_column_max_height__border_box() {
         .unwrap();
     let node19 = taffy
         .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             flex_shrink: 0f32,
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(40f32),
@@ -210,6 +230,10 @@ fn multiline_column_max_height__border_box() {
                 display: taffy::style::Display::Flex,
                 flex_direction: taffy::style::FlexDirection::Column,
                 flex_wrap: taffy::style::FlexWrap::Wrap,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 max_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(200f32) },
                 ..Default::default()
             },
@@ -1115,6 +1139,7 @@ fn multiline_column_max_height__content_box() {
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             flex_shrink: 0f32,
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(40f32),
@@ -1126,6 +1151,7 @@ fn multiline_column_max_height__content_box() {
     let node1 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             flex_shrink: 0f32,
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(40f32),
@@ -1137,6 +1163,7 @@ fn multiline_column_max_height__content_box() {
     let node2 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             flex_shrink: 0f32,
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(40f32),
@@ -1148,6 +1175,7 @@ fn multiline_column_max_height__content_box() {
     let node3 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             flex_shrink: 0f32,
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(40f32),
@@ -1159,6 +1187,7 @@ fn multiline_column_max_height__content_box() {
     let node4 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             flex_shrink: 0f32,
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(40f32),
@@ -1170,6 +1199,7 @@ fn multiline_column_max_height__content_box() {
     let node5 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             flex_shrink: 0f32,
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(40f32),
@@ -1181,6 +1211,7 @@ fn multiline_column_max_height__content_box() {
     let node6 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             flex_shrink: 0f32,
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(40f32),
@@ -1192,6 +1223,7 @@ fn multiline_column_max_height__content_box() {
     let node7 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             flex_shrink: 0f32,
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(40f32),
@@ -1203,6 +1235,7 @@ fn multiline_column_max_height__content_box() {
     let node8 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             flex_shrink: 0f32,
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(40f32),
@@ -1214,6 +1247,7 @@ fn multiline_column_max_height__content_box() {
     let node9 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             flex_shrink: 0f32,
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(40f32),
@@ -1225,6 +1259,7 @@ fn multiline_column_max_height__content_box() {
     let node10 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             flex_shrink: 0f32,
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(40f32),
@@ -1236,6 +1271,7 @@ fn multiline_column_max_height__content_box() {
     let node11 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             flex_shrink: 0f32,
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(40f32),
@@ -1247,6 +1283,7 @@ fn multiline_column_max_height__content_box() {
     let node12 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             flex_shrink: 0f32,
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(40f32),
@@ -1258,6 +1295,7 @@ fn multiline_column_max_height__content_box() {
     let node13 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             flex_shrink: 0f32,
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(40f32),
@@ -1269,6 +1307,7 @@ fn multiline_column_max_height__content_box() {
     let node14 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             flex_shrink: 0f32,
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(40f32),
@@ -1280,6 +1319,7 @@ fn multiline_column_max_height__content_box() {
     let node15 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             flex_shrink: 0f32,
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(40f32),
@@ -1291,6 +1331,7 @@ fn multiline_column_max_height__content_box() {
     let node16 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             flex_shrink: 0f32,
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(40f32),
@@ -1302,6 +1343,7 @@ fn multiline_column_max_height__content_box() {
     let node17 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             flex_shrink: 0f32,
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(40f32),
@@ -1313,6 +1355,7 @@ fn multiline_column_max_height__content_box() {
     let node18 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             flex_shrink: 0f32,
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(40f32),
@@ -1324,6 +1367,7 @@ fn multiline_column_max_height__content_box() {
     let node19 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             flex_shrink: 0f32,
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(40f32),
@@ -1339,6 +1383,10 @@ fn multiline_column_max_height__content_box() {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 flex_direction: taffy::style::FlexDirection::Column,
                 flex_wrap: taffy::style::FlexWrap::Wrap,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 max_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(200f32) },
                 ..Default::default()
             },

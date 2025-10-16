@@ -7,6 +7,7 @@ fn grid_absolute_resolved_insets__border_box() {
     let node00 = taffy
         .new_leaf(taffy::style::Style {
             position: taffy::style::Position::Absolute,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             inset: taffy::geometry::Rect {
                 left: taffy::style::LengthPercentageAuto::AUTO,
                 right: auto(),
@@ -19,6 +20,7 @@ fn grid_absolute_resolved_insets__border_box() {
     let node01 = taffy
         .new_leaf(taffy::style::Style {
             position: taffy::style::Position::Absolute,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             inset: taffy::geometry::Rect { left: length(0f32), right: auto(), top: length(0f32), bottom: auto() },
             ..Default::default()
         })
@@ -26,6 +28,7 @@ fn grid_absolute_resolved_insets__border_box() {
     let node02 = taffy
         .new_leaf(taffy::style::Style {
             position: taffy::style::Position::Absolute,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             inset: taffy::geometry::Rect { left: percent(1f32), right: auto(), top: percent(1f32), bottom: auto() },
             ..Default::default()
         })
@@ -33,6 +36,7 @@ fn grid_absolute_resolved_insets__border_box() {
     let node03 = taffy
         .new_leaf(taffy::style::Style {
             position: taffy::style::Position::Absolute,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             inset: taffy::geometry::Rect { left: auto(), right: percent(1f32), top: auto(), bottom: percent(1f32) },
             ..Default::default()
         })
@@ -40,6 +44,7 @@ fn grid_absolute_resolved_insets__border_box() {
     let node04 = taffy
         .new_leaf(taffy::style::Style {
             position: taffy::style::Position::Absolute,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             inset: taffy::geometry::Rect { left: length(30f32), right: auto(), top: length(30f32), bottom: auto() },
             ..Default::default()
         })
@@ -47,6 +52,7 @@ fn grid_absolute_resolved_insets__border_box() {
     let node05 = taffy
         .new_leaf(taffy::style::Style {
             position: taffy::style::Position::Absolute,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_percent(1f32),
                 height: taffy::style::Dimension::from_percent(1f32),
@@ -59,6 +65,10 @@ fn grid_absolute_resolved_insets__border_box() {
         .new_with_children(
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::from_length(200f32),
                     height: taffy::style::Dimension::from_length(200f32),
@@ -83,6 +93,7 @@ fn grid_absolute_resolved_insets__border_box() {
     let node10 = taffy
         .new_leaf(taffy::style::Style {
             position: taffy::style::Position::Absolute,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             inset: taffy::geometry::Rect {
                 left: taffy::style::LengthPercentageAuto::AUTO,
                 right: auto(),
@@ -95,6 +106,7 @@ fn grid_absolute_resolved_insets__border_box() {
     let node11 = taffy
         .new_leaf(taffy::style::Style {
             position: taffy::style::Position::Absolute,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             inset: taffy::geometry::Rect { left: length(0f32), right: auto(), top: length(0f32), bottom: auto() },
             ..Default::default()
         })
@@ -102,6 +114,7 @@ fn grid_absolute_resolved_insets__border_box() {
     let node12 = taffy
         .new_leaf(taffy::style::Style {
             position: taffy::style::Position::Absolute,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             inset: taffy::geometry::Rect { left: percent(1f32), right: auto(), top: percent(1f32), bottom: auto() },
             ..Default::default()
         })
@@ -109,6 +122,7 @@ fn grid_absolute_resolved_insets__border_box() {
     let node13 = taffy
         .new_leaf(taffy::style::Style {
             position: taffy::style::Position::Absolute,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             inset: taffy::geometry::Rect { left: auto(), right: percent(1f32), top: auto(), bottom: percent(1f32) },
             ..Default::default()
         })
@@ -116,6 +130,7 @@ fn grid_absolute_resolved_insets__border_box() {
     let node14 = taffy
         .new_leaf(taffy::style::Style {
             position: taffy::style::Position::Absolute,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             inset: taffy::geometry::Rect { left: length(30f32), right: auto(), top: length(30f32), bottom: auto() },
             ..Default::default()
         })
@@ -123,6 +138,7 @@ fn grid_absolute_resolved_insets__border_box() {
     let node15 = taffy
         .new_leaf(taffy::style::Style {
             position: taffy::style::Position::Absolute,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_percent(1f32),
                 height: taffy::style::Dimension::from_percent(1f32),
@@ -161,7 +177,18 @@ fn grid_absolute_resolved_insets__border_box() {
             &[node10, node11, node12, node13, node14, node15],
         )
         .unwrap();
-    let node = taffy.new_with_children(taffy::style::Style { ..Default::default() }, &[node0, node1]).unwrap();
+    let node = taffy
+        .new_with_children(
+            taffy::style::Style {
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
+                ..Default::default()
+            },
+            &[node0, node1],
+        )
+        .unwrap();
     taffy.compute_layout_with_measure(node, taffy::geometry::Size::MAX_CONTENT, crate::test_measure_function).unwrap();
     println!("\nComputed tree:");
     taffy.print_tree(node);
@@ -789,6 +816,7 @@ fn grid_absolute_resolved_insets__content_box() {
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             position: taffy::style::Position::Absolute,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             inset: taffy::geometry::Rect {
                 left: taffy::style::LengthPercentageAuto::AUTO,
                 right: auto(),
@@ -802,6 +830,7 @@ fn grid_absolute_resolved_insets__content_box() {
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             position: taffy::style::Position::Absolute,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             inset: taffy::geometry::Rect { left: length(0f32), right: auto(), top: length(0f32), bottom: auto() },
             ..Default::default()
         })
@@ -810,6 +839,7 @@ fn grid_absolute_resolved_insets__content_box() {
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             position: taffy::style::Position::Absolute,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             inset: taffy::geometry::Rect { left: percent(1f32), right: auto(), top: percent(1f32), bottom: auto() },
             ..Default::default()
         })
@@ -818,6 +848,7 @@ fn grid_absolute_resolved_insets__content_box() {
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             position: taffy::style::Position::Absolute,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             inset: taffy::geometry::Rect { left: auto(), right: percent(1f32), top: auto(), bottom: percent(1f32) },
             ..Default::default()
         })
@@ -826,6 +857,7 @@ fn grid_absolute_resolved_insets__content_box() {
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             position: taffy::style::Position::Absolute,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             inset: taffy::geometry::Rect { left: length(30f32), right: auto(), top: length(30f32), bottom: auto() },
             ..Default::default()
         })
@@ -834,6 +866,7 @@ fn grid_absolute_resolved_insets__content_box() {
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             position: taffy::style::Position::Absolute,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_percent(1f32),
                 height: taffy::style::Dimension::from_percent(1f32),
@@ -847,6 +880,10 @@ fn grid_absolute_resolved_insets__content_box() {
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
                 box_sizing: taffy::style::BoxSizing::ContentBox,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::from_length(200f32),
                     height: taffy::style::Dimension::from_length(200f32),
@@ -872,6 +909,7 @@ fn grid_absolute_resolved_insets__content_box() {
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             position: taffy::style::Position::Absolute,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             inset: taffy::geometry::Rect {
                 left: taffy::style::LengthPercentageAuto::AUTO,
                 right: auto(),
@@ -885,6 +923,7 @@ fn grid_absolute_resolved_insets__content_box() {
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             position: taffy::style::Position::Absolute,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             inset: taffy::geometry::Rect { left: length(0f32), right: auto(), top: length(0f32), bottom: auto() },
             ..Default::default()
         })
@@ -893,6 +932,7 @@ fn grid_absolute_resolved_insets__content_box() {
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             position: taffy::style::Position::Absolute,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             inset: taffy::geometry::Rect { left: percent(1f32), right: auto(), top: percent(1f32), bottom: auto() },
             ..Default::default()
         })
@@ -901,6 +941,7 @@ fn grid_absolute_resolved_insets__content_box() {
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             position: taffy::style::Position::Absolute,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             inset: taffy::geometry::Rect { left: auto(), right: percent(1f32), top: auto(), bottom: percent(1f32) },
             ..Default::default()
         })
@@ -909,6 +950,7 @@ fn grid_absolute_resolved_insets__content_box() {
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             position: taffy::style::Position::Absolute,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             inset: taffy::geometry::Rect { left: length(30f32), right: auto(), top: length(30f32), bottom: auto() },
             ..Default::default()
         })
@@ -917,6 +959,7 @@ fn grid_absolute_resolved_insets__content_box() {
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             position: taffy::style::Position::Absolute,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_percent(1f32),
                 height: taffy::style::Dimension::from_percent(1f32),
@@ -958,7 +1001,14 @@ fn grid_absolute_resolved_insets__content_box() {
         .unwrap();
     let node = taffy
         .new_with_children(
-            taffy::style::Style { box_sizing: taffy::style::BoxSizing::ContentBox, ..Default::default() },
+            taffy::style::Style {
+                box_sizing: taffy::style::BoxSizing::ContentBox,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
+                ..Default::default()
+            },
             &[node0, node1],
         )
         .unwrap();

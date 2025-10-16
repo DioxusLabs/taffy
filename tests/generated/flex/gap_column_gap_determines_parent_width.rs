@@ -6,18 +6,21 @@ fn gap_column_gap_determines_parent_width__border_box() {
     let mut taffy = crate::new_test_tree();
     let node0 = taffy
         .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(10f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
     let node1 = taffy
         .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(20f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
     let node2 = taffy
         .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(30f32), height: auto() },
             ..Default::default()
         })
@@ -25,6 +28,10 @@ fn gap_column_gap_determines_parent_width__border_box() {
     let node = taffy
         .new_with_children(
             taffy::style::Style {
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 align_items: Some(taffy::style::AlignItems::Stretch),
                 gap: taffy::geometry::Size { width: length(10f32), height: zero() },
                 size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(100f32) },
@@ -224,6 +231,7 @@ fn gap_column_gap_determines_parent_width__content_box() {
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(10f32), height: auto() },
             ..Default::default()
         })
@@ -231,6 +239,7 @@ fn gap_column_gap_determines_parent_width__content_box() {
     let node1 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(20f32), height: auto() },
             ..Default::default()
         })
@@ -238,6 +247,7 @@ fn gap_column_gap_determines_parent_width__content_box() {
     let node2 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(30f32), height: auto() },
             ..Default::default()
         })
@@ -246,6 +256,10 @@ fn gap_column_gap_determines_parent_width__content_box() {
         .new_with_children(
             taffy::style::Style {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 align_items: Some(taffy::style::AlignItems::Stretch),
                 gap: taffy::geometry::Size { width: length(10f32), height: zero() },
                 size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(100f32) },

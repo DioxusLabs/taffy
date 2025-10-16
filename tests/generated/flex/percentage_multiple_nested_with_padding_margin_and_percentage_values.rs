@@ -6,6 +6,7 @@ fn percentage_multiple_nested_with_padding_margin_and_percentage_values__border_
     let mut taffy = crate::new_test_tree();
     let node000 = taffy
         .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size { width: taffy::style::Dimension::from_percent(0.45f32), height: auto() },
             margin: taffy::geometry::Rect {
                 left: percent(0.05f32),
@@ -26,6 +27,10 @@ fn percentage_multiple_nested_with_padding_margin_and_percentage_values__border_
         .new_with_children(
             taffy::style::Style {
                 flex_direction: taffy::style::FlexDirection::Column,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 size: taffy::geometry::Size { width: taffy::style::Dimension::from_percent(0.5f32), height: auto() },
                 margin: taffy::geometry::Rect {
                     left: length(5f32),
@@ -48,6 +53,10 @@ fn percentage_multiple_nested_with_padding_margin_and_percentage_values__border_
         .new_with_children(
             taffy::style::Style {
                 flex_direction: taffy::style::FlexDirection::Column,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 flex_grow: 1f32,
                 flex_basis: taffy::style::Dimension::from_percent(0.1f32),
                 min_size: taffy::geometry::Size {
@@ -73,6 +82,7 @@ fn percentage_multiple_nested_with_padding_margin_and_percentage_values__border_
         .unwrap();
     let node1 = taffy
         .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             flex_grow: 4f32,
             flex_basis: taffy::style::Dimension::from_percent(0.15f32),
             min_size: taffy::geometry::Size { width: taffy::style::Dimension::from_percent(0.2f32), height: auto() },
@@ -83,6 +93,10 @@ fn percentage_multiple_nested_with_padding_margin_and_percentage_values__border_
         .new_with_children(
             taffy::style::Style {
                 flex_direction: taffy::style::FlexDirection::Column,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::from_length(200f32),
                     height: taffy::style::Dimension::from_length(200f32),
@@ -322,6 +336,7 @@ fn percentage_multiple_nested_with_padding_margin_and_percentage_values__content
     let node000 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size { width: taffy::style::Dimension::from_percent(0.45f32), height: auto() },
             margin: taffy::geometry::Rect {
                 left: percent(0.05f32),
@@ -343,6 +358,10 @@ fn percentage_multiple_nested_with_padding_margin_and_percentage_values__content
             taffy::style::Style {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 flex_direction: taffy::style::FlexDirection::Column,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 size: taffy::geometry::Size { width: taffy::style::Dimension::from_percent(0.5f32), height: auto() },
                 margin: taffy::geometry::Rect {
                     left: length(5f32),
@@ -366,6 +385,10 @@ fn percentage_multiple_nested_with_padding_margin_and_percentage_values__content
             taffy::style::Style {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 flex_direction: taffy::style::FlexDirection::Column,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 flex_grow: 1f32,
                 flex_basis: taffy::style::Dimension::from_percent(0.1f32),
                 min_size: taffy::geometry::Size {
@@ -392,6 +415,7 @@ fn percentage_multiple_nested_with_padding_margin_and_percentage_values__content
     let node1 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             flex_grow: 4f32,
             flex_basis: taffy::style::Dimension::from_percent(0.15f32),
             min_size: taffy::geometry::Size { width: taffy::style::Dimension::from_percent(0.2f32), height: auto() },
@@ -403,6 +427,10 @@ fn percentage_multiple_nested_with_padding_margin_and_percentage_values__content
             taffy::style::Style {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 flex_direction: taffy::style::FlexDirection::Column,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::from_length(200f32),
                     height: taffy::style::Dimension::from_length(200f32),

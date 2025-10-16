@@ -6,6 +6,7 @@ fn justify_content_overflow_min_max__border_box() {
     let mut taffy = crate::new_test_tree();
     let node0 = taffy
         .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             flex_shrink: 0f32,
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(50f32),
@@ -16,6 +17,7 @@ fn justify_content_overflow_min_max__border_box() {
         .unwrap();
     let node1 = taffy
         .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             flex_shrink: 0f32,
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(50f32),
@@ -26,6 +28,7 @@ fn justify_content_overflow_min_max__border_box() {
         .unwrap();
     let node2 = taffy
         .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             flex_shrink: 0f32,
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(50f32),
@@ -38,6 +41,10 @@ fn justify_content_overflow_min_max__border_box() {
         .new_with_children(
             taffy::style::Style {
                 flex_direction: taffy::style::FlexDirection::Column,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 justify_content: Some(taffy::style::JustifyContent::Center),
                 min_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(100f32) },
                 max_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(110f32) },
@@ -219,6 +226,7 @@ fn justify_content_overflow_min_max__content_box() {
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             flex_shrink: 0f32,
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(50f32),
@@ -230,6 +238,7 @@ fn justify_content_overflow_min_max__content_box() {
     let node1 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             flex_shrink: 0f32,
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(50f32),
@@ -241,6 +250,7 @@ fn justify_content_overflow_min_max__content_box() {
     let node2 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             flex_shrink: 0f32,
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(50f32),
@@ -254,6 +264,10 @@ fn justify_content_overflow_min_max__content_box() {
             taffy::style::Style {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 flex_direction: taffy::style::FlexDirection::Column,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 justify_content: Some(taffy::style::JustifyContent::Center),
                 min_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(100f32) },
                 max_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(110f32) },

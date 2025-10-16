@@ -7,6 +7,10 @@ fn grid_size_child_fixed_tracks__border_box() {
     let node0 = taffy
         .new_leaf_with_context(
             taffy::style::Style {
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 align_self: Some(taffy::style::AlignSelf::Start),
                 justify_self: Some(taffy::style::JustifySelf::Start),
                 ..Default::default()
@@ -17,6 +21,10 @@ fn grid_size_child_fixed_tracks__border_box() {
     let node1 = taffy
         .new_leaf_with_context(
             taffy::style::Style {
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 align_self: Some(taffy::style::AlignSelf::Start),
                 justify_self: Some(taffy::style::JustifySelf::Start),
                 ..Default::default()
@@ -27,6 +35,10 @@ fn grid_size_child_fixed_tracks__border_box() {
     let node2 = taffy
         .new_leaf_with_context(
             taffy::style::Style {
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 align_self: Some(taffy::style::AlignSelf::Start),
                 justify_self: Some(taffy::style::JustifySelf::Start),
                 ..Default::default()
@@ -37,6 +49,10 @@ fn grid_size_child_fixed_tracks__border_box() {
     let node3 = taffy
         .new_leaf_with_context(
             taffy::style::Style {
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 align_self: Some(taffy::style::AlignSelf::Start),
                 justify_self: Some(taffy::style::JustifySelf::Start),
                 size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(20f32), height: auto() },
@@ -48,6 +64,10 @@ fn grid_size_child_fixed_tracks__border_box() {
     let node4 = taffy
         .new_leaf_with_context(
             taffy::style::Style {
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 align_self: Some(taffy::style::AlignSelf::Start),
                 justify_self: Some(taffy::style::JustifySelf::Start),
                 max_size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(30f32), height: auto() },
@@ -60,6 +80,10 @@ fn grid_size_child_fixed_tracks__border_box() {
         .new_with_children(
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 grid_template_rows: vec![length(40f32), length(40f32), length(40f32)],
                 grid_template_columns: vec![length(40f32), length(40f32), length(40f32)],
                 size: taffy::geometry::Size {
@@ -323,6 +347,10 @@ fn grid_size_child_fixed_tracks__content_box() {
         .new_leaf_with_context(
             taffy::style::Style {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 align_self: Some(taffy::style::AlignSelf::Start),
                 justify_self: Some(taffy::style::JustifySelf::Start),
                 ..Default::default()
@@ -334,6 +362,10 @@ fn grid_size_child_fixed_tracks__content_box() {
         .new_leaf_with_context(
             taffy::style::Style {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 align_self: Some(taffy::style::AlignSelf::Start),
                 justify_self: Some(taffy::style::JustifySelf::Start),
                 ..Default::default()
@@ -345,6 +377,10 @@ fn grid_size_child_fixed_tracks__content_box() {
         .new_leaf_with_context(
             taffy::style::Style {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 align_self: Some(taffy::style::AlignSelf::Start),
                 justify_self: Some(taffy::style::JustifySelf::Start),
                 ..Default::default()
@@ -356,6 +392,10 @@ fn grid_size_child_fixed_tracks__content_box() {
         .new_leaf_with_context(
             taffy::style::Style {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 align_self: Some(taffy::style::AlignSelf::Start),
                 justify_self: Some(taffy::style::JustifySelf::Start),
                 size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(20f32), height: auto() },
@@ -368,6 +408,10 @@ fn grid_size_child_fixed_tracks__content_box() {
         .new_leaf_with_context(
             taffy::style::Style {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 align_self: Some(taffy::style::AlignSelf::Start),
                 justify_self: Some(taffy::style::JustifySelf::Start),
                 max_size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(30f32), height: auto() },
@@ -381,6 +425,10 @@ fn grid_size_child_fixed_tracks__content_box() {
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
                 box_sizing: taffy::style::BoxSizing::ContentBox,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 grid_template_rows: vec![length(40f32), length(40f32), length(40f32)],
                 grid_template_columns: vec![length(40f32), length(40f32), length(40f32)],
                 size: taffy::geometry::Size {

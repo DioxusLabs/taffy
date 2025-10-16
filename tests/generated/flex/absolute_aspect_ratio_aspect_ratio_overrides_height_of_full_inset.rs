@@ -7,6 +7,7 @@ fn absolute_aspect_ratio_aspect_ratio_overrides_height_of_full_inset__border_box
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             position: taffy::style::Position::Absolute,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             aspect_ratio: Some(3f32),
             inset: taffy::geometry::Rect {
                 left: percent(0.05f32),
@@ -21,6 +22,10 @@ fn absolute_aspect_ratio_aspect_ratio_overrides_height_of_full_inset__border_box
         .new_with_children(
             taffy::style::Style {
                 display: taffy::style::Display::Flex,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::from_length(400f32),
                     height: taffy::style::Dimension::from_length(300f32),
@@ -132,6 +137,7 @@ fn absolute_aspect_ratio_aspect_ratio_overrides_height_of_full_inset__content_bo
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             position: taffy::style::Position::Absolute,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             aspect_ratio: Some(3f32),
             inset: taffy::geometry::Rect {
                 left: percent(0.05f32),
@@ -147,6 +153,10 @@ fn absolute_aspect_ratio_aspect_ratio_overrides_height_of_full_inset__content_bo
             taffy::style::Style {
                 display: taffy::style::Display::Flex,
                 box_sizing: taffy::style::BoxSizing::ContentBox,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::from_length(400f32),
                     height: taffy::style::Dimension::from_length(300f32),

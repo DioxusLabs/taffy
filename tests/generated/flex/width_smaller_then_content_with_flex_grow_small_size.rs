@@ -6,6 +6,7 @@ fn width_smaller_then_content_with_flex_grow_small_size__border_box() {
     let mut taffy = crate::new_test_tree();
     let node00 = taffy
         .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(70f32),
                 height: taffy::style::Dimension::from_length(100f32),
@@ -17,6 +18,10 @@ fn width_smaller_then_content_with_flex_grow_small_size__border_box() {
         .new_with_children(
             taffy::style::Style {
                 flex_direction: taffy::style::FlexDirection::Column,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 flex_grow: 1f32,
                 size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(0f32), height: auto() },
                 ..Default::default()
@@ -26,6 +31,7 @@ fn width_smaller_then_content_with_flex_grow_small_size__border_box() {
         .unwrap();
     let node10 = taffy
         .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(20f32),
                 height: taffy::style::Dimension::from_length(100f32),
@@ -37,6 +43,10 @@ fn width_smaller_then_content_with_flex_grow_small_size__border_box() {
         .new_with_children(
             taffy::style::Style {
                 flex_direction: taffy::style::FlexDirection::Column,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 flex_grow: 1f32,
                 size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(0f32), height: auto() },
                 ..Default::default()
@@ -47,6 +57,10 @@ fn width_smaller_then_content_with_flex_grow_small_size__border_box() {
     let node = taffy
         .new_with_children(
             taffy::style::Style {
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(10f32), height: auto() },
                 ..Default::default()
             },
@@ -289,6 +303,7 @@ fn width_smaller_then_content_with_flex_grow_small_size__content_box() {
     let node00 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(70f32),
                 height: taffy::style::Dimension::from_length(100f32),
@@ -301,6 +316,10 @@ fn width_smaller_then_content_with_flex_grow_small_size__content_box() {
             taffy::style::Style {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 flex_direction: taffy::style::FlexDirection::Column,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 flex_grow: 1f32,
                 size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(0f32), height: auto() },
                 ..Default::default()
@@ -311,6 +330,7 @@ fn width_smaller_then_content_with_flex_grow_small_size__content_box() {
     let node10 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(20f32),
                 height: taffy::style::Dimension::from_length(100f32),
@@ -323,6 +343,10 @@ fn width_smaller_then_content_with_flex_grow_small_size__content_box() {
             taffy::style::Style {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 flex_direction: taffy::style::FlexDirection::Column,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 flex_grow: 1f32,
                 size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(0f32), height: auto() },
                 ..Default::default()
@@ -334,6 +358,10 @@ fn width_smaller_then_content_with_flex_grow_small_size__content_box() {
         .new_with_children(
             taffy::style::Style {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(10f32), height: auto() },
                 ..Default::default()
             },

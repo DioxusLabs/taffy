@@ -6,7 +6,13 @@ fn intrinsic_sizing_main_size_row__border_box() {
     let mut taffy = crate::new_test_tree();
     let node = taffy
         .new_leaf_with_context(
-            taffy::style::Style { ..Default::default() },
+            taffy::style::Style {
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
+                ..Default::default()
+            },
             crate::TestNodeContext::ahem_text("HH\u{200b}HH", crate::WritingMode::Horizontal),
         )
         .unwrap();
@@ -65,7 +71,14 @@ fn intrinsic_sizing_main_size_row__content_box() {
     let mut taffy = crate::new_test_tree();
     let node = taffy
         .new_leaf_with_context(
-            taffy::style::Style { box_sizing: taffy::style::BoxSizing::ContentBox, ..Default::default() },
+            taffy::style::Style {
+                box_sizing: taffy::style::BoxSizing::ContentBox,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
+                ..Default::default()
+            },
             crate::TestNodeContext::ahem_text("HH\u{200b}HH", crate::WritingMode::Horizontal),
         )
         .unwrap();

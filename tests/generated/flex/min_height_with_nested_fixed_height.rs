@@ -6,6 +6,7 @@ fn min_height_with_nested_fixed_height__border_box() {
     let mut taffy = crate::new_test_tree();
     let node00 = taffy
         .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(40f32),
                 height: taffy::style::Dimension::from_length(40f32),
@@ -17,6 +18,10 @@ fn min_height_with_nested_fixed_height__border_box() {
         .new_with_children(
             taffy::style::Style {
                 flex_direction: taffy::style::FlexDirection::Column,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 align_self: Some(taffy::style::AlignSelf::FlexStart),
                 flex_shrink: 0f32,
                 min_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(28f32) },
@@ -29,6 +34,10 @@ fn min_height_with_nested_fixed_height__border_box() {
     let node = taffy
         .new_with_children(
             taffy::style::Style {
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(320f32), height: auto() },
                 min_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(44f32) },
                 padding: taffy::geometry::Rect {
@@ -182,6 +191,7 @@ fn min_height_with_nested_fixed_height__content_box() {
     let node00 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(40f32),
                 height: taffy::style::Dimension::from_length(40f32),
@@ -194,6 +204,10 @@ fn min_height_with_nested_fixed_height__content_box() {
             taffy::style::Style {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 flex_direction: taffy::style::FlexDirection::Column,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 align_self: Some(taffy::style::AlignSelf::FlexStart),
                 flex_shrink: 0f32,
                 min_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(28f32) },
@@ -207,6 +221,10 @@ fn min_height_with_nested_fixed_height__content_box() {
         .new_with_children(
             taffy::style::Style {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(320f32), height: auto() },
                 min_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(44f32) },
                 padding: taffy::geometry::Rect {

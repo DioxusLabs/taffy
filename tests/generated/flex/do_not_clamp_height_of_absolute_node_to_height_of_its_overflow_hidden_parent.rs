@@ -6,6 +6,7 @@ fn do_not_clamp_height_of_absolute_node_to_height_of_its_overflow_hidden_parent_
     let mut taffy = crate::new_test_tree();
     let node00 = taffy
         .new_leaf(taffy::style::Style {
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(100f32),
                 height: taffy::style::Dimension::from_length(100f32),
@@ -18,6 +19,10 @@ fn do_not_clamp_height_of_absolute_node_to_height_of_its_overflow_hidden_parent_
             taffy::style::Style {
                 position: taffy::style::Position::Absolute,
                 flex_direction: taffy::style::FlexDirection::Column,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 inset: taffy::geometry::Rect { left: length(0f32), right: auto(), top: length(0f32), bottom: auto() },
                 ..Default::default()
             },
@@ -187,6 +192,7 @@ fn do_not_clamp_height_of_absolute_node_to_height_of_its_overflow_hidden_parent_
     let node00 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
+            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Visible, y: taffy::style::Overflow::Visible },
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::from_length(100f32),
                 height: taffy::style::Dimension::from_length(100f32),
@@ -200,6 +206,10 @@ fn do_not_clamp_height_of_absolute_node_to_height_of_its_overflow_hidden_parent_
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 position: taffy::style::Position::Absolute,
                 flex_direction: taffy::style::FlexDirection::Column,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 inset: taffy::geometry::Rect { left: length(0f32), right: auto(), top: length(0f32), bottom: auto() },
                 ..Default::default()
             },

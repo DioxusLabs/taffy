@@ -7,6 +7,10 @@ fn leaf_with_content_and_padding__border_box() {
     let node = taffy
         .new_leaf_with_context(
             taffy::style::Style {
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 padding: taffy::geometry::Rect {
                     left: length(8f32),
                     right: length(4f32),
@@ -75,6 +79,10 @@ fn leaf_with_content_and_padding__content_box() {
         .new_leaf_with_context(
             taffy::style::Style {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
+                overflow: taffy::geometry::Point {
+                    x: taffy::style::Overflow::Visible,
+                    y: taffy::style::Overflow::Visible,
+                },
                 padding: taffy::geometry::Rect {
                     left: length(8f32),
                     right: length(4f32),
