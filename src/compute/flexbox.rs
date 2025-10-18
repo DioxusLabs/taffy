@@ -2145,7 +2145,7 @@ fn perform_absolute_layout_on_absolute_children(
             known_dimensions.height = Some(f32_max(new_height_raw, 0.0));
             known_dimensions = known_dimensions.maybe_apply_aspect_ratio(aspect_ratio).maybe_clamp(min_size, max_size);
         }
-        let layout_output = tree.perform_child_layout(
+        let measured_size = tree.measure_child_size_both(
             child,
             known_dimensions,
             constants.node_inner_size,
@@ -2156,8 +2156,19 @@ fn perform_absolute_layout_on_absolute_children(
             SizingMode::InherentSize,
             Line::FALSE,
         );
-        let measured_size = layout_output.size;
         let final_size = known_dimensions.unwrap_or(measured_size).maybe_clamp(min_size, max_size);
+
+        let layout_output = tree.perform_child_layout(
+            child,
+            final_size.map(Some),
+            constants.node_inner_size,
+            Size {
+                width: AvailableSpace::Definite(container_width.maybe_clamp(min_size.width, max_size.width)),
+                height: AvailableSpace::Definite(container_height.maybe_clamp(min_size.height, max_size.height)),
+            },
+            SizingMode::InherentSize,
+            Line::FALSE,
+        );
 
         let non_auto_margin = margin.map(|m| m.unwrap_or(0.0));
 
