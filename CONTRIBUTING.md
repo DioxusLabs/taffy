@@ -14,6 +14,11 @@ The PR review process is completely open:  help us by commenting on, testing and
 
 If you'd like to help on a consistent basis or are interested in project management, create a Discussions post, and we'll be happy to hand out triage rights.
 
+## The "just" task runner
+
+Taffy uses a task runner called [just](github.com/casey/just) to run tasks. This can be installed by running `cargo install --locked just`. This is just necessary for the commands of the form `just ...` to work.
+If you do you not want to install `just` then you can peak into the `justfile` in the root of this repo to see the equivalent cargo command, which will usually be of the form `cargo run -rp <package> ...`.
+
 ## Testing
 
 ### Running tests
@@ -32,7 +37,7 @@ If you are Ubuntu, you will have to install `openssl` first,
 and then can follow [these instructions](https://tecadmin.net/setup-selenium-chromedriver-on-ubuntu/).
 Be sure that your Chrome version matches the downloaded `chromedriver` version!
 
-Once you have chromedriver installed and available in `PATH` you can re-generate all tests by running `cargo gentest`. You should not manually update the tests in `tests/generated`. Instead, fix the script in `scripts/gentest/` and re-generate them. This can happen after a refactor. It can be helpful to commit the updated tests in a dedicated commit so that they can be easier to ignore during review.
+Once you have chromedriver installed and available in `PATH` you can re-generate all tests by running `just gentest`. You should not manually update the tests in `tests/generated`. Instead, fix the script in `scripts/gentest/` and re-generate them. This can happen after a refactor. It can be helpful to commit the updated tests in a dedicated commit so that they can be easier to ignore during review.
 
 To add a new test case add another HTML file to `/test_fixtures` following the current tests as a template for new tests.
 
@@ -85,4 +90,4 @@ To add a new test case add another HTML file to `/test_fixtures` following the c
 ## Benchmarking
 
 Benchmarks build on the same infrastructure as testing, and actually benchmarks are automatically generated from test fixtures just like tests.
-Run `cargo xbench` to run benchmarks locally. To run head-to-head benchmarks with Yoga, run `cargo xbench --features yoga`. You will need `libclang-dev` or the xcode commandline tools installed in order to run the yoga benchmarks.
+Run `just bench` to run benchmarks locally. To run head-to-head benchmarks with Yoga, run `just bench --features yoga`. You will need `libclang-dev` or the xcode commandline tools installed in order to run the yoga benchmarks.
