@@ -14,6 +14,7 @@ Right now, it powers:
 - [Servo](https://github.com/servo/servo): an alternative web browser
 - [Blitz](https://github.com/DioxusLabs/blitz): a radically modular web engine
 - [Bevy](https://bevyengine.org/): an ergonomic, ECS-first Rust game engine
+- [Takumi](https://github.com/kane50613/takumi): Renders your React components to images
 - [iocraft](https://github.com/ccbrown/iocraft): crafting beautiful interfaces for the terminal
 - The [Lapce](https://lapce.dev/) text editor via the [Floem](https://github.com/lapce/floem) UI framework
 - The [Zed](https://zed.dev/) text editor via the [GPUI](https://github.com/zed-industries/zed/tree/main/crates/gpui) UI framework
