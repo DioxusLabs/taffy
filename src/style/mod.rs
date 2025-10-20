@@ -254,6 +254,8 @@ impl Default for BoxGenerationMode {
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum Position {
+    /// Offets are not applied
+    Static,
     /// The offset is computed relative to the final position given by the layout algorithm.
     /// Offsets do not affect the position of any other items; they are effectively a correction factor applied at the end.
     Relative,
@@ -268,6 +270,26 @@ pub enum Position {
 impl Default for Position {
     fn default() -> Self {
         Self::Relative
+    }
+}
+
+impl Position {
+    /// Whether the element has a non-static position
+    #[inline(always)]
+    pub fn is_positioned(self) -> bool {
+        !matches!(self, Self::Static)
+    }
+
+    /// Whether the element is positioned out-of-flow (absolute or fixed position)
+    #[inline(always)]
+    pub fn is_out_of_flow(self) -> bool {
+        matches!(self, Self::Absolute)
+    }
+
+    /// Whether the element is positioned in-flow (NOT absolute or fixed position)
+    #[inline(always)]
+    pub fn is_in_flow(self) -> bool {
+        !self.is_out_of_flow()
     }
 }
 

@@ -1,7 +1,7 @@
 //! Computes size using styles and measure functions
 
 use crate::geometry::{Point, Size};
-use crate::style::{AvailableSpace, Overflow, Position};
+use crate::style::{AvailableSpace, Overflow};
 use crate::tree::{CollapsibleMarginSet, RunMode};
 use crate::tree::{LayoutInput, LayoutOutput, SizingMode};
 use crate::util::debug::debug_log;
@@ -76,7 +76,7 @@ where
     let has_styles_preventing_being_collapsed_through = !style.is_block()
         || style.overflow().x.is_scroll_container()
         || style.overflow().y.is_scroll_container()
-        || style.position() == Position::Absolute
+        || style.position().is_out_of_flow()
         || padding.top > 0.0
         || padding.bottom > 0.0
         || border.top > 0.0
