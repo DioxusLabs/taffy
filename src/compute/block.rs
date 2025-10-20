@@ -653,7 +653,7 @@ fn perform_absolute_layout_on_absolute_children(
             known_dimensions = known_dimensions.maybe_apply_aspect_ratio(aspect_ratio).maybe_clamp(min_size, max_size);
         }
 
-        let layout_output = tree.perform_child_layout(
+        let measured_size = tree.measure_child_size_both(
             item.node_id,
             known_dimensions,
             area_size.map(Some),
@@ -664,8 +664,20 @@ fn perform_absolute_layout_on_absolute_children(
             SizingMode::ContentSize,
             Line::FALSE,
         );
-        let measured_size = layout_output.size;
+
         let final_size = known_dimensions.unwrap_or(measured_size).maybe_clamp(min_size, max_size);
+
+        let layout_output = tree.perform_child_layout(
+            item.node_id,
+            final_size.map(Some),
+            area_size.map(Some),
+            Size {
+                width: AvailableSpace::Definite(area_width.maybe_clamp(min_size.width, max_size.width)),
+                height: AvailableSpace::Definite(area_height.maybe_clamp(min_size.height, max_size.height)),
+            },
+            SizingMode::ContentSize,
+            Line::FALSE,
+        );
 
         let non_auto_margin = Rect {
             left: if left.is_some() { margin.left.unwrap_or(0.0) } else { 0.0 },
