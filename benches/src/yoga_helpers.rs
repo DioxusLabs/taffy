@@ -202,6 +202,7 @@ fn apply_taffy_style(node: &mut yg::Node, style: &tf::Style) {
 
     // position
     node.set_position_type(match style.position {
+        tf::Position::Static => yg::PositionType::Static,
         tf::Position::Relative => yg::PositionType::Relative,
         tf::Position::Absolute => yg::PositionType::Absolute,
     });
