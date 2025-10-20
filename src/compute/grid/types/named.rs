@@ -2,7 +2,7 @@
 
 use crate::{
     CheapCloneStr, GenericGridTemplateComponent, GenericRepetition as _, GridAreaAxis, GridAreaEnd, GridContainerStyle,
-    GridPlacement, GridTemplateArea, Line, NonNamedGridPlacement, RepetitionCount,
+    GridPlacement, GridTemplateArea, Line, NonNamedGridPlacement, RepetitionCount, Units,
 };
 use core::{borrow::Borrow, cmp::Ordering, fmt::Debug};
 
@@ -44,15 +44,15 @@ impl<T: CheapCloneStr> Borrow<str> for StrHasher<T> {
 
 /// Resolver that takes grid lines names and area names as input and can then be used to
 /// resolve line names of grid placement properties into line numbers.
-pub(crate) struct NamedLineResolver<S: CheapCloneStr> {
+pub(crate) struct NamedLineResolver<U: Units> {
     /// Map of row line names to line numbers. Each line name may correspond to multiple lines
     /// so we store a `Vec`
-    row_lines: Map<StrHasher<S>, Vec<u16>>,
+    row_lines: Map<StrHasher<U::Str>, Vec<u16>>,
     /// Map of column line names to line numbers. Each line name may correspond to multiple lines
     /// so we store a `Vec`
-    column_lines: Map<StrHasher<S>, Vec<u16>>,
+    column_lines: Map<StrHasher<U::Str>, Vec<u16>>,
     /// Map of area names to area definitions (start and end lines numbers in each axis)
-    areas: Map<StrHasher<S>, GridTemplateArea<S>>,
+    areas: Map<StrHasher<U::Str>, GridTemplateArea<U::Str>>,
     /// Number of columns implied by grid area definitions
     area_column_count: u16,
     /// Number of rows implied by grid area definitions
@@ -70,16 +70,16 @@ fn upsert_line_name_map<S: CheapCloneStr>(map: &mut Map<StrHasher<S>, Vec<u16>>,
     map.entry(StrHasher(key)).and_modify(|lines| lines.push(value)).or_insert_with(|| single_value_vec(value));
 }
 
-impl<S: CheapCloneStr> NamedLineResolver<S> {
+impl<U: Units> NamedLineResolver<U> {
     /// Create and initialise a new `NamedLineResolver`
     pub(crate) fn new(
-        style: &impl GridContainerStyle<CustomIdent = S>,
+        style: &impl GridContainerStyle<Units = U>,
         column_auto_repetitions: u16,
         row_auto_repetitions: u16,
     ) -> Self {
-        let mut areas: Map<StrHasher<S>, GridTemplateArea<_>> = Map::new();
-        let mut column_lines: Map<StrHasher<S>, Vec<u16>> = Map::new();
-        let mut row_lines: Map<StrHasher<S>, Vec<u16>> = Map::new();
+        let mut areas: Map<StrHasher<U::Str>, GridTemplateArea<_>> = Map::new();
+        let mut column_lines: Map<StrHasher<U::Str>, Vec<u16>> = Map::new();
+        let mut row_lines: Map<StrHasher<U::Str>, Vec<u16>> = Map::new();
 
         let mut area_column_count = 0;
         let mut area_row_count = 0;
@@ -91,13 +91,13 @@ impl<S: CheapCloneStr> NamedLineResolver<S> {
                 area_column_count = area_column_count.max(area.column_end.max(1) - 1);
                 area_row_count = area_row_count.max(area.row_end.max(1) - 1);
 
-                let col_start_name = S::from(format!("{}-start", area.name.as_ref()));
+                let col_start_name = U::Str::from(format!("{}-start", area.name.as_ref()));
                 upsert_line_name_map(&mut column_lines, col_start_name, area.column_start);
-                let col_end_name = S::from(format!("{}-end", area.name.as_ref()));
+                let col_end_name = U::Str::from(format!("{}-end", area.name.as_ref()));
                 upsert_line_name_map(&mut column_lines, col_end_name, area.column_end);
-                let row_start_name = S::from(format!("{}-start", area.name.as_ref()));
+                let row_start_name = U::Str::from(format!("{}-start", area.name.as_ref()));
                 upsert_line_name_map(&mut row_lines, row_start_name, area.row_start);
-                let row_end_name = S::from(format!("{}-end", area.name.as_ref()));
+                let row_end_name = U::Str::from(format!("{}-end", area.name.as_ref()));
                 upsert_line_name_map(&mut row_lines, row_end_name, area.row_end);
             }
         }
@@ -197,13 +197,13 @@ impl<S: CheapCloneStr> NamedLineResolver<S> {
 
     /// Resolve named lines for both the `start` and `end` of a row-axis grid placement
     #[inline(always)]
-    pub(crate) fn resolve_row_names(&self, line: &Line<GridPlacement<S>>) -> Line<NonNamedGridPlacement> {
+    pub(crate) fn resolve_row_names(&self, line: &Line<GridPlacement<U::Str>>) -> Line<NonNamedGridPlacement> {
         self.resolve_line_names(line, GridAreaAxis::Row)
     }
 
     /// Resolve named lines for both the `start` and `end` of a column-axis grid placement
     #[inline(always)]
-    pub(crate) fn resolve_column_names(&self, line: &Line<GridPlacement<S>>) -> Line<NonNamedGridPlacement> {
+    pub(crate) fn resolve_column_names(&self, line: &Line<GridPlacement<U::Str>>) -> Line<NonNamedGridPlacement> {
         self.resolve_line_names(line, GridAreaAxis::Column)
     }
 
@@ -211,7 +211,7 @@ impl<S: CheapCloneStr> NamedLineResolver<S> {
     #[inline(always)]
     pub(crate) fn resolve_line_names(
         &self,
-        line: &Line<GridPlacement<S>>,
+        line: &Line<GridPlacement<U::Str>>,
         axis: GridAreaAxis,
     ) -> Line<NonNamedGridPlacement> {
         let start_holder;
@@ -293,7 +293,7 @@ impl<S: CheapCloneStr> NamedLineResolver<S> {
     /// Resolve the grid line for a named grid line or span
     fn find_line_index(
         &self,
-        name: &S,
+        name: &U::Str,
         idx: i16,
         axis: GridAreaAxis,
         end: GridAreaEnd,
@@ -390,7 +390,7 @@ impl<S: CheapCloneStr> NamedLineResolver<S> {
     }
 }
 
-impl<S: CheapCloneStr> Debug for NamedLineResolver<S> {
+impl<U: Units> Debug for NamedLineResolver<U> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         writeln!(f, "Grid Areas:")?;
         for area in self.areas.values() {
