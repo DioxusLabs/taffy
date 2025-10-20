@@ -199,9 +199,24 @@ pub(super) fn align_and_position_item(
 
     // Layout node
     drop(style);
+
+    let size = if position == Position::Absolute && (width.is_none() || height.is_none()) {
+        tree.measure_child_size_both(
+            node,
+            Size { width, height },
+            grid_area_size.map(Option::Some),
+            grid_area_minus_item_margins_size.map(AvailableSpace::Definite),
+            SizingMode::InherentSize,
+            Line::FALSE,
+        )
+        .map(Some)
+    } else {
+        Size { width, height }
+    };
+
     let layout_output = tree.perform_child_layout(
         node,
-        Size { width, height },
+        size,
         grid_area_size.map(Option::Some),
         grid_area_minus_item_margins_size.map(AvailableSpace::Definite),
         SizingMode::InherentSize,
@@ -209,7 +224,7 @@ pub(super) fn align_and_position_item(
     );
 
     // Resolve final size
-    let Size { width, height } = Size { width, height }.unwrap_or(layout_output.size).maybe_clamp(min_size, max_size);
+    let Size { width, height } = size.unwrap_or(layout_output.size).maybe_clamp(min_size, max_size);
 
     let (x, x_margin) = align_item_within_area(
         Line { start: grid_area.left, end: grid_area.right },

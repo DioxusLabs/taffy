@@ -1,3 +1,4 @@
+mod absolute_correct_cross_child_size_with_percentage;
 mod chrome_issue_325928327;
 #[cfg(feature = "grid")]
 mod grid_absolute_align_self_sized_all;
