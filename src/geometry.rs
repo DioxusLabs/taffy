@@ -1,9 +1,13 @@
 //! Geometric primitives useful for layout
 
-use crate::util::sys::f32_max;
-use crate::CompactLength;
-use crate::{style::Dimension, util::sys::f32_min};
-use core::ops::{Add, Sub};
+use crate::{
+    style::Dimension,
+    style_helpers::TaffyZero,
+    util::sys::{f32_max, f32_min},
+    CompactLength,
+};
+
+use core::ops::{Add, Neg, Sub};
 
 #[cfg(feature = "flexbox")]
 use crate::style::FlexDirection;
@@ -139,7 +143,80 @@ impl<U, T: Add<U>> Add<Rect<U>> for Rect<T> {
     }
 }
 
+impl<U, T: Sub<U>> Sub<Rect<U>> for Rect<T> {
+    type Output = Rect<T::Output>;
+
+    fn sub(self, rhs: Rect<U>) -> Self::Output {
+        Rect {
+            left: self.left - rhs.left,
+            right: self.right - rhs.right,
+            top: self.top - rhs.top,
+            bottom: self.bottom - rhs.bottom,
+        }
+    }
+}
+
+impl<T: Add<Output = T> + Copy> Rect<T> {
+    /// Create a rectangle when given the top left as a point and a
+    /// size.  Right and bottom are the sum of the top_left and the
+    /// size.
+    pub fn from_top_left_and_size(top_left: Point<T>, size: Size<T>) -> Rect<T> {
+        Rect { left: top_left.x, top: top_left.y, right: top_left.x + size.width, bottom: top_left.y + size.height }
+    }
+}
+
+impl<T: TaffyZero> Rect<T> {
+    /// Create a rectangle from the origin (i.e. left=0, top=0) with
+    /// the given size (i.e. right=width, bottom=height).
+    pub fn from_origin_and_size(size: Size<T>) -> Rect<T> {
+        Rect { left: T::ZERO, top: T::ZERO, right: size.width, bottom: size.height }
+    }
+}
+
+impl<T: Sub<T> + Copy> Rect<T> {
+    /// Return the width of the rectangle (i.e. right - left).  Only
+    /// valid if the Rect represents a rectangle area, not boundry
+    /// insets.
+    #[inline(always)]
+    pub fn width(&self) -> <T as Sub<T>>::Output {
+        self.right - self.left
+    }
+
+    /// Return the height of the rectangle (i.e. bottom - top).  Only
+    /// valid if the Rect represents a rectangle area, not boundry
+    /// insets.
+    #[inline(always)]
+    pub fn height(self) -> <T as Sub<T>>::Output {
+        self.bottom - self.top
+    }
+
+    /// Return the width (i.e. right - left) and height (i.e. bottom -
+    /// top) of the rectangle as a Size.  Only valid if the Rect
+    /// represents a rectangle area, not boundry insets.
+    #[inline(always)]
+    pub fn size(self) -> Size<<T as Sub<T>>::Output> {
+        Size { width: self.width(), height: self.height() }
+    }
+}
+
+impl<T: Neg> Neg for Rect<T> {
+    type Output = Rect<<T as Neg>::Output>;
+    fn neg(self) -> Self::Output {
+        Rect { left: -self.left, right: -self.right, top: -self.top, bottom: -self.bottom }
+    }
+}
+
 impl<T> Rect<T> {
+    /// Returns the top and left components as a point.
+    pub fn top_left(self) -> Point<T> {
+        Point { x: self.left, y: self.top }
+    }
+
+    /// Returns the bottom and right components as a point.
+    pub fn bottom_right(self) -> Point<T> {
+        Point { x: self.right, y: self.bottom }
+    }
+
     /// Applies the function `f` to all four sides of the rect
     ///
     /// When applied to the left and right sides, the width is used
@@ -177,6 +254,61 @@ impl<T> Rect<T> {
     /// Returns a `Line<T>` containing the top and bottom properties of the Rect
     pub fn vertical_components(self) -> Line<T> {
         Line { start: self.top, end: self.bottom }
+    }
+
+    /// Return the rectangle with the edges moved "in" by the
+    /// corresponding component of `insets`.
+    pub fn inset_by<U, V>(self, insets: Rect<U>) -> Rect<V>
+    where
+        T: Add<U, Output = V>,
+        T: Sub<U, Output = V>,
+    {
+        Rect {
+            left: self.left + insets.left,
+            right: self.right - insets.right,
+            top: self.top + insets.top,
+            bottom: self.bottom - insets.bottom,
+        }
+    }
+
+    /// Return the rectangle with the edges moved "out" by the
+    /// corresponding component of `insets`.
+    pub fn outset_by<U, V>(self, outsets: Rect<U>) -> Rect<V>
+    where
+        T: Add<U, Output = V>,
+        T: Sub<U, Output = V>,
+    {
+        Rect {
+            left: self.left - outsets.left,
+            right: self.right + outsets.right,
+            top: self.top - outsets.top,
+            bottom: self.bottom + outsets.bottom,
+        }
+    }
+
+    /// Returns the rectangle with the horizontal components offset
+    /// by size.width and the vertical components offset by
+    /// size.height.
+    pub fn offset_by<U>(self, displacement: Size<U>) -> Rect<<T as Add<U>>::Output>
+    where
+        T: Add<U>,
+        U: Copy,
+    {
+        Rect {
+            left: self.left + displacement.width,
+            right: self.right + displacement.width,
+            top: self.top + displacement.height,
+            bottom: self.bottom + displacement.height,
+        }
+    }
+
+    /// Returns the rectangle with the bottom and right decreased by
+    /// the given delta.
+    pub fn shrunk_by<U>(self, delta: Size<U>) -> Rect<T>
+    where
+        T: Sub<U, Output = T>,
+    {
+        Rect { left: self.left, right: self.right - delta.width, top: self.top, bottom: self.bottom - delta.height }
     }
 }
 
@@ -295,6 +427,86 @@ impl Rect<f32> {
     #[must_use]
     pub const fn new(start: f32, end: f32, top: f32, bottom: f32) -> Self {
         Self { left: start, right: end, top, bottom }
+    }
+
+    /// Returns an "empty" rectangle with the left and top at positive
+    /// infinity and the right and bottom at negative infinity.  This
+    /// is the identity element for union operations.
+    pub const fn new_empty() -> Self {
+        Self { left: f32::INFINITY, right: f32::NEG_INFINITY, top: f32::INFINITY, bottom: f32::NEG_INFINITY }
+    }
+
+    /// Returns the union of self and `other`--the rectangle that
+    /// encloses all of the area of either rectangle.  If `other` is
+    /// empty (i.e. right < left or bottom < top), returns self
+    /// unchanged.  A rectangle with zero area (i.e. left==right or
+    /// top==bottom) is **not** excluded.  In other words, the edges
+    /// are considered to be closed bounds.
+    ///
+    /// See also [`union_with`]
+    pub fn union(mut self, other: Rect<f32>) -> Rect<f32> {
+        self.union_with(other);
+        self
+    }
+
+    /// Expands self to include the area of another rectangle.  If
+    /// `other` is empty (i.e. right < left or bottom < top), leaves
+    /// self unchanged.  A rectangle with zero area (i.e. left==right
+    /// or top==bottom) is **not** excluded.  In other words, the
+    /// edges are considered to be closed bounds.
+    ///
+    pub fn union_with(&mut self, other: Rect<f32>) {
+        if other.left <= other.right && other.top <= other.bottom {
+            self.left = f32_min(self.left, other.left);
+            self.right = f32_max(self.right, other.right);
+            self.top = f32_min(self.top, other.top);
+            self.bottom = f32_max(self.bottom, other.bottom);
+        }
+    }
+
+    /// Clip self against other along the X axis.  Returns true iff
+    /// there is any overlap.  Upon return, self will be within other
+    /// irrespective of the return value.
+    pub fn clip_against_x(&mut self, other: Rect<f32>) -> bool {
+        if self.right <= other.left {
+            self.left = other.left;
+            self.right = other.left;
+            false
+        } else if self.left >= other.right {
+            self.left = other.right;
+            self.right = other.right;
+            false
+        } else {
+            self.left = f32_max(self.left, other.left);
+            self.right = f32_min(self.right, other.right);
+            true
+        }
+    }
+    /// Clip self against other along the Y axis.  Returns true iff
+    /// there is any overlap.  Upon return, self will be within other
+    /// irrespective of the return value.
+    pub fn clip_against_y(&mut self, other: Rect<f32>) -> bool {
+        if self.bottom <= other.top {
+            self.top = other.top;
+            self.bottom = other.top;
+            false
+        } else if self.top >= other.bottom {
+            self.top = other.bottom;
+            self.bottom = other.bottom;
+            false
+        } else {
+            self.top = f32_max(self.top, other.top);
+            self.bottom = f32_min(self.bottom, other.bottom);
+            true
+        }
+    }
+    /// Clip self against other along the both axes.  Returns true iff
+    /// there is any overlap.  Upon return, self will be within other
+    /// irrespective of the return value.
+    pub fn clip_against(&mut self, other: Rect<f32>) -> bool {
+        let x = self.clip_against_x(other);
+        let y = self.clip_against_y(other);
+        x && y
     }
 }
 
@@ -643,12 +855,31 @@ impl Point<Option<f32>> {
     pub const NONE: Self = Self { x: None, y: None };
 }
 
-// Generic Add impl for Point<T> + Point<U> where T + U has an Add impl
 impl<U, T: Add<U>> Add<Point<U>> for Point<T> {
     type Output = Point<<T as Add<U>>::Output>;
 
+    /// Generic Add impl for Point<T> + Point<U> where T + U has an Add impl
     fn add(self, rhs: Point<U>) -> Self::Output {
         Point { x: self.x + rhs.x, y: self.y + rhs.y }
+    }
+}
+
+impl<U, T: Add<U>> Add<Size<U>> for Point<T> {
+    type Output = Point<<T as Add<U>>::Output>;
+
+    /// Adding a Size to a Point offsets the Point by the size.
+    fn add(self, rhs: Size<U>) -> Self::Output {
+        Point { x: self.x + rhs.width, y: self.y + rhs.height }
+    }
+}
+
+impl<U, T: Sub<U>> Sub<Point<U>> for Point<T> {
+    type Output = Size<<T as Sub<U>>::Output>;
+
+    /// Subtracting one point from another returns the distance between
+    /// them as a size.
+    fn sub(self, rhs: Point<U>) -> Self::Output {
+        Size { width: self.x - rhs.x, height: self.y - rhs.y }
     }
 }
 
@@ -685,30 +916,6 @@ impl<T> Point<T> {
         match axis {
             AbstractAxis::Inline => self.x = value,
             AbstractAxis::Block => self.y = value,
-        }
-    }
-
-    /// Gets the component in the main layout axis
-    ///
-    /// Whether this is the x or y depends on the `direction` provided
-    #[cfg(feature = "flexbox")]
-    pub(crate) fn main(self, direction: FlexDirection) -> T {
-        if direction.is_row() {
-            self.x
-        } else {
-            self.y
-        }
-    }
-
-    /// Gets the component in the cross layout axis
-    ///
-    /// Whether this is the x or y depends on the `direction` provided
-    #[cfg(feature = "flexbox")]
-    pub(crate) fn cross(self, direction: FlexDirection) -> T {
-        if direction.is_row() {
-            self.y
-        } else {
-            self.x
         }
     }
 }
