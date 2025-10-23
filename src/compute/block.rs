@@ -14,9 +14,9 @@ use crate::{
 };
 
 #[cfg(feature = "float_layout")]
-use super::{ContentSlot, FloatContext, FloatDirection};
+use super::{ContentSlot, FloatContext};
 #[cfg(feature = "float_layout")]
-use crate::{Clear, Float};
+use crate::{Clear, Float, FloatDirection};
 
 /// Context for positioning Block and Float boxes within a Block Formatting Context
 pub struct BlockFormattingContext {
@@ -205,14 +205,6 @@ impl BlockItem {
     fn is_floated(&self) -> bool {
         matches!(self.float, Float::Left | Float::Right)
     }
-
-    fn float_direction(&self) -> Option<FloatDirection> {
-        match self.float {
-            Float::Left => Some(FloatDirection::Left),
-            Float::Right => Some(FloatDirection::Right),
-            Float::None => None,
-        }
-    }
 }
 
 /// Computes the layout of [`LayoutPartialTree`] according to the block layout algorithm
@@ -284,10 +276,7 @@ pub fn compute_block_layout(
         ),
         None => {
             let mut root_bfc = BlockFormattingContext::new(
-                styled_based_known_dimensions
-                    .width
-                    .map(AvailableSpace::Definite)
-                    .unwrap_or(AvailableSpace::MaxContent),
+                styled_based_known_dimensions.width.map(AvailableSpace::Definite).unwrap_or(AvailableSpace::MaxContent),
             );
             let mut root_ctx = root_bfc.root_block_context();
             compute_inner(
@@ -578,7 +567,7 @@ fn determine_content_based_container_width(
     let mut max_child_width = 0.0;
     for item in items.iter().filter(|item| item.position != Position::Absolute) {
         #[cfg(feature = "float_layout")]
-        if let Some(_) = item.float_direction() {
+        if let Some(_) = item.float.float_direction() {
             // TODO: handle intrinsic size contribution of floated boxes
             continue;
         }
@@ -658,7 +647,7 @@ fn perform_final_layout_on_in_flow_children(
 
             // Handle floated boxes
             #[cfg(feature = "float_layout")]
-            if let Some(float_direction) = item.float_direction() {
+            if let Some(float_direction) = item.float.float_direction() {
                 let item_layout = tree.perform_child_layout(
                     item.node_id,
                     Size::NONE,
