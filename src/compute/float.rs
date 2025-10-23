@@ -28,7 +28,7 @@
 
 use core::ops::Range;
 
-use crate::{AvailableSpace, Clear, Point, Size};
+use crate::{AvailableSpace, Clear, FloatDirection, Point, Size};
 
 /// A context for placing floated boxes
 #[derive(Debug, Clone)]
@@ -41,13 +41,6 @@ pub struct FloatContext {
     /// A list of non-overlapping horizontal segments within the context.
     /// Each segment has the same available width for it's entire height.
     placer: FloatPlacer,
-}
-
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
-#[repr(u8)]
-pub enum FloatDirection {
-    Left = 0,
-    Right = 1,
 }
 
 /// An empty "slot" that avoids floats that is suitable for non-floated content

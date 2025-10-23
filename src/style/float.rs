@@ -15,9 +15,24 @@ pub enum Float {
     None,
 }
 
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+#[repr(u8)]
+pub enum FloatDirection {
+    Left = 0,
+    Right = 1,
+}
+
 impl Float {
     pub fn is_floated(self) -> bool {
         matches!(self, Self::Left | Self::Right)
+    }
+
+    pub fn float_direction(&self) -> Option<FloatDirection> {
+        match self {
+            Float::Left => Some(FloatDirection::Left),
+            Float::Right => Some(FloatDirection::Right),
+            Float::None => None,
+        }
     }
 }
 
