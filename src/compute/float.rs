@@ -209,7 +209,7 @@ struct Segment {
 impl Segment {
     fn fits_float_width(&self, floated_box: Size<f32>, direction: FloatDirection, bfc_width: f32) -> bool {
         let slot = direction as usize;
-        self.insets[slot] == 0.0 || (bfc_width - floated_box.width - self.inset_sum()) > 0.0
+        self.insets[slot] == 0.0 || (bfc_width - floated_box.width - self.inset_sum()) >= 0.0
     }
 
     #[inline(always)]
