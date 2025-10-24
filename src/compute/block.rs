@@ -565,20 +565,15 @@ fn determine_content_based_container_width(
     let available_space = Size { width: available_width, height: AvailableSpace::MinContent };
 
     let mut max_child_width = 0.0;
+    let mut float_contribution: f32 = 0.0;
     for item in items.iter().filter(|item| item.position != Position::Absolute) {
-        #[cfg(feature = "float_layout")]
-        if let Some(_) = item.float.float_direction() {
-            // TODO: handle intrinsic size contribution of floated boxes
-            continue;
-        }
-
         let known_dimensions = item.size.maybe_clamp(item.min_size, item.max_size);
 
+        let item_x_margin_sum = item
+            .margin
+            .resolve_or_zero(available_space.width.into_option(), |val, basis| tree.calc(val, basis))
+            .horizontal_axis_sum();
         let width = known_dimensions.width.unwrap_or_else(|| {
-            let item_x_margin_sum = item
-                .margin
-                .resolve_or_zero(available_space.width.into_option(), |val, basis| tree.calc(val, basis))
-                .horizontal_axis_sum();
             let size_and_baselines = tree.perform_child_layout(
                 item.node_id,
                 known_dimensions,
@@ -588,14 +583,25 @@ fn determine_content_based_container_width(
                 Line::TRUE,
             );
 
-            size_and_baselines.size.width + item_x_margin_sum
+            size_and_baselines.size.width
         });
 
-        let width = f32_max(width, item.padding_border_sum.width);
+        let width = f32_max(width, item.padding_border_sum.width) + item_x_margin_sum;
+
+        #[cfg(feature = "float_layout")]
+        if let Some(_) = item.float.float_direction() {
+            match available_space.width {
+                AvailableSpace::Definite(_) => {}
+                AvailableSpace::MinContent => float_contribution = float_contribution.max(width),
+                AvailableSpace::MaxContent => float_contribution += width,
+            };
+            continue;
+        }
+
         max_child_width = f32_max(max_child_width, width);
     }
 
-    max_child_width.max(block_ctx.floated_content_width_contribution())
+    max_child_width.max(float_contribution)
 }
 
 /// Compute each child's final size and position
