@@ -15,18 +15,26 @@ pub enum Float {
     None,
 }
 
+/// Whether a box that is definitely floated is floated to the left
+/// of to the right.
+///
+/// This type is only used in the low-level parts of the
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 #[repr(u8)]
 pub enum FloatDirection {
+    /// The box is floated to the left
     Left = 0,
+    /// The box is floated to the right
     Right = 1,
 }
 
 impl Float {
+    /// Whether the box is floated
     pub fn is_floated(self) -> bool {
         matches!(self, Self::Left | Self::Right)
     }
 
+    /// Converts [`Float`] into `Option<FloatDirection>`ca
     pub fn float_direction(&self) -> Option<FloatDirection> {
         match self {
             Float::Left => Some(FloatDirection::Left),
