@@ -79,19 +79,28 @@ impl BlockContext<'_> {
         }
     }
 
+    /// Set the width of the overall Block Formatting Context. This is used to resolve positions
+    /// that are relative to the right of the context such as right-floated boxes.
+    ///
+    /// Sub-blocks within a Block Formatting Context should use the `Self::sub_context` method to create
+    /// a sub-`BlockContext` with `insets` instead.
     pub fn set_width(&mut self, available_space: AvailableSpace) {
         self.bfc.float_context.set_width(available_space);
     }
 
+    /// Returns whether this block is the root block of it's Block Formatting Context
     pub fn is_bfc_root(&self) -> bool {
         self.is_root
     }
 
+    /// Set the x-axis content-box insets of the `BlockContext`. These are the difference between the border-box
+    /// and the content-box of the box (padding + border + scrollbar_gutter).
     pub fn apply_content_box_inset(&mut self, content_box_x_insets: [f32; 2]) {
         self.content_box_insets[0] = self.insets[0] + content_box_x_insets[0];
         self.content_box_insets[1] = self.insets[1] + content_box_x_insets[1];
     }
 
+    /// Position a floated box with the context
     pub fn place_floated_box(
         &mut self,
         floated_box: Size<f32>,
@@ -114,6 +123,7 @@ impl BlockContext<'_> {
         pos
     }
 
+    /// Search a space suitable for laying out non-floated content into
     pub fn find_content_slot(&self, min_y: f32, clear: Clear, after: Option<usize>) -> ContentSlot {
         let mut slot =
             self.bfc.float_context.find_content_slot(min_y + self.y_offset, self.content_box_insets, clear, after);
@@ -126,9 +136,9 @@ impl BlockContext<'_> {
         self.float_content_contribution = self.float_content_contribution.max(child_contribution);
     }
 
-    fn floated_content_width_contribution(&self) -> f32 {
-        self.bfc.float_context.content_width()
-    }
+    // fn floated_content_width_contribution(&self) -> f32 {
+    //     self.bfc.float_context.content_width()
+    // }
 
     fn floated_content_height_contribution(&self) -> f32 {
         self.float_content_contribution
@@ -198,13 +208,6 @@ struct BlockItem {
     static_position: Point<f32>,
     /// Whether margins can be collapsed through this item
     can_be_collapsed_through: bool,
-}
-
-#[cfg(feature = "float_layout")]
-impl BlockItem {
-    fn is_floated(&self) -> bool {
-        matches!(self.float, Float::Left | Float::Right)
-    }
 }
 
 /// Computes the layout of [`LayoutPartialTree`] according to the block layout algorithm

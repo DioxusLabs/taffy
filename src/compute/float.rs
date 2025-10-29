@@ -47,37 +47,41 @@ pub struct FloatContext {
 /// to be laid out into
 #[derive(Debug, Clone, Copy, Default)]
 pub struct ContentSlot {
+    /// The id of the segment that the slot starts in
     pub segment_id: Option<usize>,
+    /// The x position of the start of the slot
     pub x: f32,
+    /// The y position of the start of the slot
     pub y: f32,
+    /// The width of the slot
     pub width: f32,
+    /// The height of the slot
     pub height: f32,
 }
 
-/// A floated box to place within the context
-#[derive(Debug, Clone, Copy, Default)]
-pub struct FloatedBox {
-    /// A user defined ID for the box
-    // pub(crate) id: u64,
-    pub(crate) width: f32,
-    pub(crate) height: f32,
-}
+// /// A floated box to place within the context
+// #[derive(Debug, Clone, Copy, Default)]
+// pub struct FloatedBox {
+//     /// The width of the box
+//     pub(crate) width: f32,
+//     /// The height of the box
+//     pub(crate) height: f32,
+// }
 
 /// A floated box
 #[derive(Debug, Clone, Default)]
 struct PlacedFloatedBox {
     /// A user defined ID for the box
     // id: u64,
+    /// The width of the box
     width: f32,
+    /// The height of the box
     height: f32,
-    /// Distance from the edge of the container that the box is floated towards
+    /// Horizontal distance from the edge of the container that the box is floated towards
     /// (distance from the left for left floats, from the right for right floats)
     x_inset: f32,
+    /// Vertical distance from top edge of the container
     y: f32,
-}
-
-impl PlacedFloatedBox {
-    const DEFAULT: Self = Self { /*id: 0, */ width: 0.0, height: 0.0, x_inset: 0.0, y: 0.0 };
 }
 
 impl FloatContext {
@@ -156,6 +160,7 @@ impl FloatContext {
         }
     }
 
+    /// Search a space suitable for laying out non-floated content into
     pub fn find_content_slot(
         &self,
         min_y: f32,
@@ -166,34 +171,23 @@ impl FloatContext {
         self.placer.find_content_slot(min_y, containing_block_insets, clear, after)
     }
 
-    pub(crate) fn content_width(&self) -> f32 {
-        match self.available_space {
-            AvailableSpace::Definite(width) => width,
-            AvailableSpace::MinContent => {
-                let left_max =
-                    self.left_floats.iter().map(|float| float.x_inset).max_by(|a, b| a.total_cmp(b)).unwrap_or(0.0);
-                let right_max =
-                    self.right_floats.iter().map(|float| float.x_inset).max_by(|a, b| a.total_cmp(b)).unwrap_or(0.0);
-                left_max.max(right_max)
-            }
-            AvailableSpace::MaxContent => {
-                let left_max = self.left_floats.last().map(|float| float.x_inset).unwrap_or(0.0);
-                let right_max = self.right_floats.last().map(|float| float.x_inset).unwrap_or(0.0);
-                left_max + right_max
-            }
-        }
-    }
-
-    pub(crate) fn content_height(&self) -> f32 {
-        self.placer.segments.last().map(|seg| seg.y.end).unwrap_or(0.0)
-    }
-
-    fn get_float_list(&self, float_direction: FloatDirection) -> &[PlacedFloatedBox] {
-        match float_direction {
-            FloatDirection::Left => &self.left_floats,
-            FloatDirection::Right => &self.right_floats,
-        }
-    }
+    // pub(crate) fn content_width(&self) -> f32 {
+    //     match self.available_space {
+    //         AvailableSpace::Definite(width) => width,
+    //         AvailableSpace::MinContent => {
+    //             let left_max =
+    //                 self.left_floats.iter().map(|float| float.x_inset).max_by(|a, b| a.total_cmp(b)).unwrap_or(0.0);
+    //             let right_max =
+    //                 self.right_floats.iter().map(|float| float.x_inset).max_by(|a, b| a.total_cmp(b)).unwrap_or(0.0);
+    //             left_max.max(right_max)
+    //         }
+    //         AvailableSpace::MaxContent => {
+    //             let left_max = self.left_floats.last().map(|float| float.x_inset).unwrap_or(0.0);
+    //             let right_max = self.right_floats.last().map(|float| float.x_inset).unwrap_or(0.0);
+    //             left_max + right_max
+    //         }
+    //     }
+    // }
 }
 
 #[derive(Debug, Clone)]

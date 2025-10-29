@@ -20,7 +20,6 @@ use crate::util::sys::{new_vec_with_capacity, ChildrenVec, Vec};
 use crate::compute::{
     compute_cached_layout, compute_hidden_layout, compute_leaf_layout, compute_root_layout, round_layout,
 };
-use crate::BlockFormattingContext;
 use crate::CacheTree;
 
 #[cfg(feature = "block_layout")]
