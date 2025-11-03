@@ -898,7 +898,7 @@ fn perform_final_layout_on_in_flow_children(
                         + resolved_content_box_inset.left
                         + inset_offset.x
                         + resolved_margin.left,
-                    y: float_avoiding_position.y + inset_offset.y + y_margin_offset,
+                    y: float_avoiding_position.y + inset_offset.y,
                 }
             };
 
