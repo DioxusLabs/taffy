@@ -1122,7 +1122,10 @@ mod tests {
             item_is_table: false,
             item_is_replaced: false,
             box_sizing: Default::default(),
+            #[cfg(feature = "float_layout")]
             float: Default::default(),
+            #[cfg(feature = "float_layout")]
+            clear: Default::default(),
             overflow: Default::default(),
             scrollbar_width: 0.0,
             position: Default::default(),
