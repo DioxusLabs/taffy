@@ -99,11 +99,13 @@ impl FloatContext {
     }
 
     /// Whether the float context contains any floats
+    #[inline(always)]
     pub fn has_floats(&self) -> bool {
         self.has_floats
     }
 
     /// Whether the float context contains any floats that extend to or below min_y
+    #[inline(always)]
     pub fn has_active_floats(&self, min_y: f32) -> bool {
         self.has_floats && self.placer.segment_end() > min_y
     }
@@ -318,6 +320,7 @@ impl FloatPlacer {
         self.last_placed_floats[slot].end = self.last_placed_floats[slot].end.max(placement.end);
     }
 
+    #[inline(always)]
     fn segment_end(&self) -> f32 {
         self.segments.last().map(|seg| seg.y.end).unwrap_or(0.0)
     }
