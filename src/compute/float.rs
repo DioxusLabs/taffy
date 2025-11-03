@@ -183,7 +183,17 @@ impl FloatContext {
         clear: Clear,
         after: Option<usize>,
     ) -> ContentSlot {
-        self.placer.find_content_slot(min_y, containing_block_insets, clear, after)
+        if !self.has_active_floats(min_y) {
+            ContentSlot {
+                segment_id: None,
+                x: containing_block_insets[0],
+                y: min_y,
+                width: self.placer.bfc_width - containing_block_insets[0] - containing_block_insets[1],
+                height: f32::INFINITY,
+            }
+        } else {
+            self.placer.find_content_slot(min_y, containing_block_insets, clear, after)
+        }
     }
 
     // pub(crate) fn content_width(&self) -> f32 {
