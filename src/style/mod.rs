@@ -775,11 +775,13 @@ impl<T: BlockItemStyle> BlockItemStyle for &'_ T {
         (*self).is_table()
     }
 
+    #[cfg(feature = "float_layout")]
     #[inline(always)]
     fn float(&self) -> Float {
         (*self).float()
     }
 
+    #[cfg(feature = "float_layout")]
     #[inline(always)]
     fn clear(&self) -> Clear {
         (*self).clear()
