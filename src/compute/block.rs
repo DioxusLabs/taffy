@@ -100,6 +100,16 @@ impl BlockContext<'_> {
         self.content_box_insets[1] = self.insets[1] + content_box_x_insets[1];
     }
 
+    /// Whether the float context contains any floats
+    pub fn has_floats(&self) -> bool {
+        self.bfc.float_context.has_floats()
+    }
+
+    /// Whether the float context contains any floats that extend to or below min_y
+    pub fn has_active_floats(&self, min_y: f32) -> bool {
+        self.bfc.float_context.has_active_floats(min_y + self.y_offset)
+    }
+
     /// Position a floated box with the context
     pub fn place_floated_box(
         &mut self,

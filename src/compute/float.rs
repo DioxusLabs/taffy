@@ -41,6 +41,8 @@ pub struct FloatContext {
     /// A list of non-overlapping horizontal segments within the context.
     /// Each segment has the same available width for it's entire height.
     placer: FloatPlacer,
+    /// Whether the float context contains any floats
+    has_floats: bool,
 }
 
 /// An empty "slot" that avoids floats that is suitable for non-floated content
@@ -92,7 +94,18 @@ impl FloatContext {
             left_floats: Vec::new(),
             right_floats: Vec::new(),
             placer: FloatPlacer::new(available_space),
+            has_floats: false,
         }
+    }
+
+    /// Whether the float context contains any floats
+    pub fn has_floats(&self) -> bool {
+        self.has_floats
+    }
+
+    /// Whether the float context contains any floats that extend to or below min_y
+    pub fn has_active_floats(&self, min_y: f32) -> bool {
+        self.has_floats && self.placer.segment_end() > min_y
     }
 
     /// Create a new empty `FloatContext`
@@ -135,6 +148,8 @@ impl FloatContext {
         //         (x_inset, y)
         //     }
         // };
+
+        self.has_floats = true;
 
         // Return the (x, y) coordinates of the positioned box
         match self.available_space {
@@ -216,13 +231,13 @@ impl Segment {
 struct FloatPlacer {
     // Calling into this
     bfc_width: f32,
-
+    /// A list of the "segments" in the float context.
     segments: Vec<Segment>,
-    // Left hwm in slot 0. Right hwm in slot 1.
-    // high_water_marks: [usize; 2],
     /// A closed-open range indicating which segment the last placed float
     /// was placed(on each side).
     last_placed_floats: [Range<usize>; 2],
+    // Left hwm in slot 0. Right hwm in slot 1.
+    // high_water_marks: [usize; 2],
     // left_float_high_water_mark: usize,
     // right_float_high_water_mark: usize,
 }
@@ -291,6 +306,10 @@ impl FloatPlacer {
         let slot = direction as usize;
         self.last_placed_floats[slot].start = self.last_placed_floats[slot].start.max(placement.start);
         self.last_placed_floats[slot].end = self.last_placed_floats[slot].end.max(placement.end);
+    }
+
+    fn segment_end(&self) -> f32 {
+        self.segments.last().map(|seg| seg.y.end).unwrap_or(0.0)
     }
 
     fn place_float(
