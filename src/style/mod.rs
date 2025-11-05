@@ -329,7 +329,7 @@ impl Overflow {
     /// Returns true for overflow modes that contain their contents (`Overflow::Hidden`, `Overflow::Scroll`, `Overflow::Auto`)
     /// or else false for overflow modes that allow their contains to spill (`Overflow::Visible`).
     #[inline(always)]
-    pub(crate) fn is_scroll_container(self) -> bool {
+    pub fn is_scroll_container(self) -> bool {
         match self {
             Self::Visible | Self::Clip => false,
             Self::Hidden | Self::Scroll => true,
