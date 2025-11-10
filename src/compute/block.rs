@@ -768,9 +768,12 @@ fn perform_final_layout_on_in_flow_children(
                 (stretch_width, position)
             } else {
                 'block: {
+                    let top_margin =
+                        active_collapsible_margin_set.collapse_with_margin(item_non_auto_margin.top).resolve();
+                    let min_y = committed_y_offset + top_margin;
+
                     #[cfg(feature = "float_layout")]
                     if has_active_floats {
-                        let min_y = committed_y_offset + active_collapsible_margin_set.resolve();
                         let slot = block_ctx.find_content_slot(min_y, item.clear, None);
                         has_active_floats = slot.segment_id.is_some();
                         let stretch_width = slot.width - item_non_auto_x_margin_sum;
@@ -778,7 +781,6 @@ fn perform_final_layout_on_in_flow_children(
                     }
 
                     if !has_active_floats {
-                        let min_y = committed_y_offset + active_collapsible_margin_set.resolve();
                         let stretch_width = container_inner_width - item_non_auto_x_margin_sum;
                         break 'block (stretch_width, Point { x: 0.0, y: min_y });
                     }
