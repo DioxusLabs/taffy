@@ -33,6 +33,8 @@ use crate::{AvailableSpace, Clear, FloatDirection, Point, Size};
 /// A context for placing floated boxes
 #[derive(Debug, Clone)]
 pub struct FloatContext {
+    /// The available space constraint that applies to the root Block Formatting Context
+    /// for which this `FloatContext` manages floats.
     available_space: AvailableSpace,
     /// A list of left-floated boxes within the context
     left_floats: Vec<PlacedFloatedBox>,
@@ -61,29 +63,20 @@ pub struct ContentSlot {
     pub height: f32,
 }
 
-// /// A floated box to place within the context
-// #[derive(Debug, Clone, Copy, Default)]
-// pub struct FloatedBox {
-//     /// The width of the box
-//     pub(crate) width: f32,
-//     /// The height of the box
-//     pub(crate) height: f32,
-// }
-
 /// A floated box
 #[derive(Debug, Clone, Default)]
-struct PlacedFloatedBox {
+pub struct PlacedFloatedBox {
     /// A user defined ID for the box
     // id: u64,
     /// The width of the box
-    width: f32,
+    pub width: f32,
     /// The height of the box
-    height: f32,
+    pub height: f32,
     /// Horizontal distance from the edge of the container that the box is floated towards
     /// (distance from the left for left floats, from the right for right floats)
-    x_inset: f32,
+    pub x_inset: f32,
     /// Vertical distance from top edge of the container
-    y: f32,
+    pub y: f32,
 }
 
 impl FloatContext {
@@ -116,6 +109,16 @@ impl FloatContext {
         if let AvailableSpace::Definite(bfc_width) = available_space {
             self.placer.bfc_width = bfc_width;
         }
+    }
+
+    /// Returns a slice of placed left floats
+    pub fn left_floats(&self) -> &[PlacedFloatedBox] {
+        &self.left_floats
+    }
+
+    /// Returns a slice of placed right floats
+    pub fn right_floats(&self) -> &[PlacedFloatedBox] {
+        &self.right_floats
     }
 
     /// Position a floated box with the context
@@ -175,25 +178,67 @@ impl FloatContext {
     }
 }
 
+/// A non-overlapping horizontal segment of the Block Formatting Context container
 #[derive(Debug, Clone)]
 struct Segment {
+    /// The vertical start and end points of the segment
     y: Range<f32>,
     // Left inset in slot 0. Right inset in slot 1.
     insets: [f32; 2],
-    // y_end: f32,
-    // left_inset: f32,
-    // right_inset: f32,
 }
 
 impl Segment {
+    /// Whether the segment can fit the passed floated box (in the horizontal axis)
     fn fits_float_width(&self, floated_box: Size<f32>, direction: FloatDirection, bfc_width: f32) -> bool {
         let slot = direction as usize;
         self.insets[slot] == 0.0 || (bfc_width - floated_box.width - self.inset_sum()) >= 0.0
     }
 
+    /// The total space taken up by both insets
     #[inline(always)]
     fn inset_sum(&self) -> f32 {
         self.insets[0] + self.insets[1]
+    }
+}
+
+/// Given a pinned starting y position, this type helps determine if there is any x position
+/// such that there is sufficient horizontal space for the box accross it's entire height.
+#[derive(Debug, Clone)]
+struct FloatFitter {
+    bfc_width: f32,
+    available_height: f64,
+    insets: [f32; 2],
+}
+
+impl FloatFitter {
+    /// Create a new `FloatFitter`
+    fn new(bfc_width: f32, available_height: f32, insets: [f32; 2]) -> Self {
+        Self { bfc_width, available_height: available_height as f64, insets }
+    }
+
+    // Horizontal fitting
+
+    /// Union the insets of another segment. This is a "max" of the insets on each side.
+    fn union_insets(&mut self, insets: [f32; 2]) {
+        self.insets[0] = self.insets[0].max(insets[0]);
+        self.insets[1] = self.insets[1].max(insets[1]);
+    }
+
+    /// Given the currently accounted for insets, check whether there is an x position
+    /// such that the box fits horizontally
+    fn fits_horiontally(&self, width: f32) -> bool {
+        self.insets == [0.0, 0.0] || self.bfc_width - self.insets[0] - self.insets[1] - width >= 0.0
+    }
+
+    // Vertical fitting
+
+    /// Add the height of another segment.
+    fn add_height(&mut self, height: f32) {
+        self.available_height += height as f64;
+    }
+
+    fn fits_vertically(&mut self, height: f32) -> bool {
+        self.available_height >= height as f64
     }
 }
 
@@ -210,40 +255,6 @@ struct FloatPlacer {
     // high_water_marks: [usize; 2],
     // left_float_high_water_mark: usize,
     // right_float_high_water_mark: usize,
-}
-
-#[derive(Debug, Clone)]
-struct FloatFitter {
-    bfc_width: f32,
-    available_height: f64,
-    insets: [f32; 2],
-}
-
-impl FloatFitter {
-    fn new(bfc_width: f32, available_height: f32, insets: [f32; 2]) -> Self {
-        Self { bfc_width, available_height: available_height as f64, insets }
-    }
-
-    // Horizontal fitting
-
-    fn union_insets(&mut self, insets: [f32; 2]) {
-        self.insets[0] = self.insets[0].max(insets[0]);
-        self.insets[1] = self.insets[1].max(insets[1]);
-    }
-
-    fn fits_horiontally(&self, width: f32) -> bool {
-        self.insets == [0.0, 0.0] || self.bfc_width - self.insets[0] - self.insets[1] - width >= 0.0
-    }
-
-    // Vertical fitting
-
-    fn add_height(&mut self, height: f32) {
-        self.available_height += height as f64;
-    }
-
-    fn fits_vertically(&mut self, height: f32) -> bool {
-        self.available_height >= height as f64
-    }
 }
 
 impl FloatPlacer {

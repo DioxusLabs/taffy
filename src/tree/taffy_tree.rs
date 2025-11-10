@@ -292,6 +292,8 @@ where
         FnMut(Size<Option<f32>>, Size<AvailableSpace>, NodeId, Option<&mut NodeContext>, &Style) -> Size<f32>,
 {
     #[inline(always)]
+    /// Unified implementation that both `LayoutPartialTree::compute_child_layout`
+    /// and `LayoutBlockContainer::compute_block_child_layout` delegate to.
     fn compute_child_layout(
         &mut self,
         node_id: NodeId,
