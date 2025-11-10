@@ -406,7 +406,7 @@ fn compute_inner(
     // 2. Compute container width
     let container_outer_width = known_dimensions.width.unwrap_or_else(|| {
         let available_width = available_space.width.maybe_sub(content_box_inset.horizontal_axis_sum());
-        let intrinsic_width = determine_content_based_container_width(tree, &mut block_ctx, &items, available_width)
+        let intrinsic_width = determine_content_based_container_width(tree, block_ctx, &items, available_width)
             + content_box_inset.horizontal_axis_sum();
         intrinsic_width.maybe_clamp(min_size.width, max_size.width).maybe_max(Some(padding_border_size.width))
     });
@@ -429,7 +429,7 @@ fn compute_inner(
             resolved_content_box_inset,
             text_align,
             own_margins_collapse_with_children,
-            &mut block_ctx,
+            block_ctx,
         );
 
     // Root BFCs contain floats
@@ -619,7 +619,7 @@ fn determine_content_based_container_width(
         let width = f32_max(width, item.padding_border_sum.width) + item_x_margin_sum;
 
         #[cfg(feature = "float_layout")]
-        if let Some(_) = item.float.float_direction() {
+        if item.float.is_floated() {
             match available_space.width {
                 AvailableSpace::Definite(_) => {}
                 AvailableSpace::MinContent => float_contribution = float_contribution.max(width),
@@ -641,6 +641,7 @@ fn determine_content_based_container_width(
 
 /// Compute each child's final size and position
 #[inline]
+#[allow(clippy::too_many_arguments)]
 fn perform_final_layout_on_in_flow_children(
     tree: &mut impl LayoutBlockContainer,
     items: &mut [BlockItem],
