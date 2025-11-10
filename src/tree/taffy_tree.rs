@@ -413,7 +413,12 @@ where
 
     #[inline(always)]
     fn compute_child_layout(&mut self, node_id: NodeId, inputs: LayoutInput) -> LayoutOutput {
-        self.compute_child_layout(node_id, inputs, None)
+        self.compute_child_layout(
+            node_id,
+            inputs,
+            #[cfg(feature = "block_layout")]
+            None,
+        )
     }
 }
 
