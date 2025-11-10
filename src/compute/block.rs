@@ -762,6 +762,8 @@ fn perform_final_layout_on_in_flow_children(
 
             // Handle non-floated boxes
 
+            let mut y_margin_offset: f32 = 0.0;
+
             let (stretch_width, float_avoiding_position) = if item.is_in_same_bfc {
                 let stretch_width = container_inner_width - item_non_auto_x_margin_sum;
                 let position = Point { x: 0.0, y: 0.0 };
@@ -769,9 +771,12 @@ fn perform_final_layout_on_in_flow_children(
                 (stretch_width, position)
             } else {
                 'block: {
-                    let top_margin =
-                        active_collapsible_margin_set.collapse_with_margin(item_non_auto_margin.top).resolve();
-                    let min_y = committed_y_offset + top_margin;
+                    // Set y_margin_offset (different bfc child)
+                    if !is_collapsing_with_first_margin_set || !own_margins_collapse_with_children.start {
+                        y_margin_offset =
+                            active_collapsible_margin_set.collapse_with_margin(item_non_auto_margin.top).resolve();
+                    };
+                    let min_y = committed_y_offset + y_margin_offset;
 
                     #[cfg(feature = "float_layout")]
                     if has_active_floats {
@@ -873,10 +878,11 @@ fn perform_final_layout_on_in_flow_children(
                 y: inset.top.or(inset.bottom.map(|x| -x)).unwrap_or(0.0),
             };
 
-            let y_margin_offset = if is_collapsing_with_first_margin_set && own_margins_collapse_with_children.start {
-                0.0
-            } else {
-                active_collapsible_margin_set.collapse_with_margin(resolved_margin.top).resolve()
+            // Set y_margin_offset (same bfc child)
+            if item.is_in_same_bfc
+                && (!is_collapsing_with_first_margin_set || !own_margins_collapse_with_children.start)
+            {
+                y_margin_offset = active_collapsible_margin_set.collapse_with_margin(resolved_margin.top).resolve()
             };
 
             item.computed_size = item_layout.size;
