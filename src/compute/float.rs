@@ -28,7 +28,7 @@
 
 use core::ops::Range;
 
-use crate::{Clear, FloatDirection, Point, Size};
+use crate::{AvailableSpace, Clear, FloatDirection, Point, Size};
 
 /// An empty "slot" that avoids floats that is suitable for non-floated content
 /// to be laid out into
@@ -509,5 +509,36 @@ impl FloatContext {
                 height: f32::INFINITY,
             },
         }
+    }
+}
+
+/// Context for computing the intrinsic width contribution of a set of floats
+pub struct FloatIntrinsicWidthCalculator {
+    /// The available width of the container
+    available_width: AvailableSpace,
+    /// The running total intrinsic width contribution
+    contribution: f32,
+}
+
+impl FloatIntrinsicWidthCalculator {
+    /// Create a new `FloatIntrinsicWidthCalculator`
+    pub fn new(available_width: AvailableSpace) -> Self {
+        Self { available_width, contribution: 0.0 }
+    }
+
+    /// Add a float to the computation
+    pub fn add_float(&mut self, width: f32, _direction: FloatDirection, _clear: Clear) {
+        match self.available_width {
+            AvailableSpace::Definite(_) => {
+                // We will never hit this code path with definite available space
+            }
+            AvailableSpace::MinContent => self.contribution = self.contribution.max(width),
+            AvailableSpace::MaxContent => self.contribution += width,
+        };
+    }
+
+    /// Get the computed float contribution to intrinsic width
+    pub fn result(&self) -> f32 {
+        self.contribution
     }
 }

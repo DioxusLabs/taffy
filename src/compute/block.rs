@@ -14,6 +14,8 @@ use crate::{
 };
 
 #[cfg(feature = "float_layout")]
+use super::float::FloatIntrinsicWidthCalculator;
+#[cfg(feature = "float_layout")]
 use super::{ContentSlot, FloatContext};
 #[cfg(feature = "float_layout")]
 use crate::{Clear, Float, FloatDirection};
@@ -312,8 +314,6 @@ pub fn compute_block_layout(
             )
         }
     }
-
-    // compute_inner(tree, node_id, LayoutInput { known_dimensions: styled_based_known_dimensions, ..inputs }, block_ctx)
 }
 
 /// Computes the layout of [`LayoutBlockContainer`] according to the block layout algorithm
@@ -411,7 +411,7 @@ fn compute_inner(
     // 2. Compute container width
     let container_outer_width = known_dimensions.width.unwrap_or_else(|| {
         let available_width = available_space.width.maybe_sub(content_box_inset.horizontal_axis_sum());
-        let intrinsic_width = determine_content_based_container_width(tree, block_ctx, &items, available_width)
+        let intrinsic_width = determine_content_based_container_width(tree, &items, available_width)
             + content_box_inset.horizontal_axis_sum();
         intrinsic_width.maybe_clamp(min_size.width, max_size.width).maybe_max(Some(padding_border_size.width))
     });
@@ -592,7 +592,6 @@ fn generate_item_list(
 #[inline]
 fn determine_content_based_container_width(
     tree: &mut impl LayoutPartialTree,
-    block_ctx: &mut BlockContext<'_>,
     items: &[BlockItem],
     available_width: AvailableSpace,
 ) -> f32 {
@@ -600,7 +599,7 @@ fn determine_content_based_container_width(
 
     let mut max_child_width = 0.0;
     #[cfg(feature = "float_layout")]
-    let mut float_contribution: f32 = 0.0;
+    let mut float_contribution = FloatIntrinsicWidthCalculator::new(available_width);
     for item in items.iter().filter(|item| item.position != Position::Absolute) {
         let known_dimensions = item.size.maybe_clamp(item.min_size, item.max_size);
 
@@ -624,12 +623,8 @@ fn determine_content_based_container_width(
         let width = f32_max(width, item.padding_border_sum.width) + item_x_margin_sum;
 
         #[cfg(feature = "float_layout")]
-        if item.float.is_floated() {
-            match available_space.width {
-                AvailableSpace::Definite(_) => {}
-                AvailableSpace::MinContent => float_contribution = float_contribution.max(width),
-                AvailableSpace::MaxContent => float_contribution += width,
-            };
+        if let Some(direction) = item.float.float_direction() {
+            float_contribution.add_float(width, direction, item.clear);
             continue;
         }
 
@@ -638,7 +633,7 @@ fn determine_content_based_container_width(
 
     #[cfg(feature = "float_layout")]
     {
-        max_child_width = max_child_width.max(float_contribution);
+        max_child_width = max_child_width.max(float_contribution.result());
     }
 
     max_child_width
