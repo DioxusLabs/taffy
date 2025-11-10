@@ -127,30 +127,6 @@ impl FloatContext {
         direction: FloatDirection,
         clear: Clear,
     ) -> Point<f32> {
-        // let last_float = self.get_float_list(direction).last().unwrap_or(&PlacedFloatedBox::DEFAULT);
-
-        // let do_wrap = match self.available_space {
-        //     AvailableSpace::MinContent => true,
-        //     AvailableSpace::MaxContent => false,
-        //     AvailableSpace::Definite(available_width) => {
-        //         let line_available_width = available_width - last_float.x_inset - last_float.width;
-        //         line_available_width < size.width
-        //     }
-        // };
-
-        // let (x_inset, y) = match do_wrap {
-        //     true => {
-        //         let x_inset = 0.0;
-        //         let y = last_float.y + last_float.height;
-        //         (x_inset, y)
-        //     }
-        //     false => {
-        //         let x_inset = last_float.x_inset + last_float.width;
-        //         let y = last_float.y;
-        //         (x_inset, y)
-        //     }
-        // };
-
         self.has_floats = true;
 
         // Return the (x, y) coordinates of the positioned box
@@ -197,24 +173,6 @@ impl FloatContext {
             self.placer.find_content_slot(min_y, containing_block_insets, clear, after)
         }
     }
-
-    // pub(crate) fn content_width(&self) -> f32 {
-    //     match self.available_space {
-    //         AvailableSpace::Definite(width) => width,
-    //         AvailableSpace::MinContent => {
-    //             let left_max =
-    //                 self.left_floats.iter().map(|float| float.x_inset).max_by(|a, b| a.total_cmp(b)).unwrap_or(0.0);
-    //             let right_max =
-    //                 self.right_floats.iter().map(|float| float.x_inset).max_by(|a, b| a.total_cmp(b)).unwrap_or(0.0);
-    //             left_max.max(right_max)
-    //         }
-    //         AvailableSpace::MaxContent => {
-    //             let left_max = self.left_floats.last().map(|float| float.x_inset).unwrap_or(0.0);
-    //             let right_max = self.right_floats.last().map(|float| float.x_inset).unwrap_or(0.0);
-    //             left_max + right_max
-    //         }
-    //     }
-    // }
 }
 
 #[derive(Debug, Clone)]
