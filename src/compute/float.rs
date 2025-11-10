@@ -28,24 +28,7 @@
 
 use core::ops::Range;
 
-use crate::{AvailableSpace, Clear, FloatDirection, Point, Size};
-
-/// A context for placing floated boxes
-#[derive(Debug, Clone)]
-pub struct FloatContext {
-    /// The available space constraint that applies to the root Block Formatting Context
-    /// for which this `FloatContext` manages floats.
-    available_space: AvailableSpace,
-    /// A list of left-floated boxes within the context
-    left_floats: Vec<PlacedFloatedBox>,
-    /// A list of right-floated boxes within the context
-    right_floats: Vec<PlacedFloatedBox>,
-    /// A list of non-overlapping horizontal segments within the context.
-    /// Each segment has the same available width for it's entire height.
-    placer: FloatPlacer,
-    /// Whether the float context contains any floats
-    has_floats: bool,
-}
+use crate::{Clear, FloatDirection, Point, Size};
 
 /// An empty "slot" that avoids floats that is suitable for non-floated content
 /// to be laid out into
@@ -79,111 +62,12 @@ pub struct PlacedFloatedBox {
     pub y: f32,
 }
 
-impl FloatContext {
-    /// Create a new empty `FloatContext`
-    pub fn new(available_space: AvailableSpace) -> Self {
-        Self {
-            available_space,
-            left_floats: Vec::new(),
-            right_floats: Vec::new(),
-            placer: FloatPlacer::new(available_space),
-            has_floats: false,
-        }
-    }
-
-    /// Whether the float context contains any floats
-    #[inline(always)]
-    pub fn has_floats(&self) -> bool {
-        self.has_floats
-    }
-
-    /// Whether the float context contains any floats that extend to or below min_y
-    #[inline(always)]
-    pub fn has_active_floats(&self, min_y: f32) -> bool {
-        self.has_floats && self.placer.segment_end() > min_y
-    }
-
-    /// Create a new empty `FloatContext`
-    pub fn set_width(&mut self, available_space: AvailableSpace) {
-        self.available_space = available_space;
-        if let AvailableSpace::Definite(bfc_width) = available_space {
-            self.placer.bfc_width = bfc_width;
-        }
-    }
-
-    /// Returns a slice of placed left floats
-    pub fn left_floats(&self) -> &[PlacedFloatedBox] {
-        &self.left_floats
-    }
-
-    /// Returns a slice of placed right floats
-    pub fn right_floats(&self) -> &[PlacedFloatedBox] {
-        &self.right_floats
-    }
-
-    /// Position a floated box with the context
-    pub fn place_floated_box(
-        &mut self,
-        size: Size<f32>,
-        min_y: f32,
-        containing_block_insets: [f32; 2],
-        direction: FloatDirection,
-        clear: Clear,
-    ) -> Point<f32> {
-        self.has_floats = true;
-
-        // Return the (x, y) coordinates of the positioned box
-        match self.available_space {
-            // Position won't actually be used if we're layouting under a min-content
-            // or max-content constraint, so just return (0, 0)
-            AvailableSpace::MinContent | AvailableSpace::MaxContent => Point::ZERO,
-            AvailableSpace::Definite(container_width) => {
-                let placed_floated_box =
-                    self.placer.place_float(min_y, size, containing_block_insets, direction, clear);
-                let x_inset = placed_floated_box.x_inset;
-                let y = placed_floated_box.y;
-                match direction {
-                    FloatDirection::Left => {
-                        self.left_floats.push(placed_floated_box);
-                        Point { x: x_inset, y }
-                    }
-                    FloatDirection::Right => {
-                        self.right_floats.push(placed_floated_box);
-                        Point { x: container_width - x_inset - size.width, y }
-                    }
-                }
-            }
-        }
-    }
-
-    /// Search a space suitable for laying out non-floated content into
-    pub fn find_content_slot(
-        &self,
-        min_y: f32,
-        containing_block_insets: [f32; 2],
-        clear: Clear,
-        after: Option<usize>,
-    ) -> ContentSlot {
-        if !self.has_active_floats(min_y) {
-            ContentSlot {
-                segment_id: None,
-                x: containing_block_insets[0],
-                y: min_y,
-                width: self.placer.bfc_width - containing_block_insets[0] - containing_block_insets[1],
-                height: f32::INFINITY,
-            }
-        } else {
-            self.placer.find_content_slot(min_y, containing_block_insets, clear, after)
-        }
-    }
-}
-
 /// A non-overlapping horizontal segment of the Block Formatting Context container
 #[derive(Debug, Clone)]
 struct Segment {
     /// The vertical start and end points of the segment
     y: Range<f32>,
-    // Left inset in slot 0. Right inset in slot 1.
+    /// Left inset in slot 0. Right inset in slot 1.
     insets: [f32; 2],
 }
 
@@ -201,19 +85,24 @@ impl Segment {
     }
 }
 
+/// Helper type for placing a single floated box
+///
 /// Given a pinned starting y position, this type helps determine if there is any x position
 /// such that there is sufficient horizontal space for the box accross it's entire height.
 #[derive(Debug, Clone)]
 struct FloatFitter {
+    /// The overall width of the Block Formatting Context
     bfc_width: f32,
-    available_height: f64,
+    /// The total height of the set of segments currently being considered
+    slot_height: f64,
+    /// The union of the insets of the set of segments currently being considered
     insets: [f32; 2],
 }
 
 impl FloatFitter {
     /// Create a new `FloatFitter`
-    fn new(bfc_width: f32, available_height: f32, insets: [f32; 2]) -> Self {
-        Self { bfc_width, available_height: available_height as f64, insets }
+    fn new(bfc_width: f32, slot_height: f32, insets: [f32; 2]) -> Self {
+        Self { bfc_width, slot_height: slot_height as f64, insets }
     }
 
     // Horizontal fitting
@@ -234,19 +123,29 @@ impl FloatFitter {
 
     /// Add the height of another segment.
     fn add_height(&mut self, height: f32) {
-        self.available_height += height as f64;
+        self.slot_height += height as f64;
     }
 
+    /// Given the currently accounted for height, check whether the box fits vertically
     fn fits_vertically(&mut self, height: f32) -> bool {
-        self.available_height >= height as f64
+        self.slot_height >= height as f64
     }
 }
 
-#[derive(Debug, Clone, Default)]
-struct FloatPlacer {
-    // Calling into this
-    bfc_width: f32,
-    /// A list of the "segments" in the float context.
+/// A context for placing floated boxes
+#[derive(Debug, Clone)]
+pub struct FloatContext {
+    /// The available space constraint that applies to the root Block Formatting Context
+    /// for which this `FloatContext` manages floats.
+    available_width: f32,
+    /// Whether the float context contains any floats
+    has_floats: bool,
+    /// A list of left-floated boxes within the context
+    left_floats: Vec<PlacedFloatedBox>,
+    /// A list of right-floated boxes within the context
+    right_floats: Vec<PlacedFloatedBox>,
+    /// A list of non-overlapping horizontal "segments" within the context.
+    /// Each segment has the same available width for it's entire height.
     segments: Vec<Segment>,
     /// A closed-open range indicating which segment the last placed float
     /// was placed(on each side).
@@ -257,19 +156,54 @@ struct FloatPlacer {
     // right_float_high_water_mark: usize,
 }
 
-impl FloatPlacer {
-    fn new(available_space: AvailableSpace) -> Self {
+impl Default for FloatContext {
+    fn default() -> Self {
         Self {
-            bfc_width: match available_space {
-                AvailableSpace::Definite(width) => width,
-                AvailableSpace::MinContent => 0.0,
-                AvailableSpace::MaxContent => f32::INFINITY,
-            },
+            available_width: 0.0,
+            has_floats: false,
+            left_floats: Vec::new(),
+            right_floats: Vec::new(),
             segments: Vec::new(),
             last_placed_floats: [0..0, 0..0], // high_water_marks: [0, 0],
         }
     }
+}
 
+impl FloatContext {
+    /// Create a new empty `FloatContext`
+    pub fn new() -> Self {
+        Default::default()
+    }
+
+    /// Whether the float context contains any floats
+    #[inline(always)]
+    pub fn has_floats(&self) -> bool {
+        self.has_floats
+    }
+
+    /// Whether the float context contains any floats that extend to or below min_y
+    #[inline(always)]
+    pub fn has_active_floats(&self, min_y: f32) -> bool {
+        self.has_floats && self.segments.last().map(|seg| seg.y.end).unwrap_or(0.0) > min_y
+    }
+
+    /// Set the width of the `FloatContext`
+    pub fn set_width(&mut self, available_width: f32) {
+        self.available_width = available_width;
+    }
+
+    /// Returns a slice of placed left floats
+    pub fn left_floats(&self) -> &[PlacedFloatedBox] {
+        &self.left_floats
+    }
+
+    /// Returns a slice of placed right floats
+    pub fn right_floats(&self) -> &[PlacedFloatedBox] {
+        &self.right_floats
+    }
+
+    /// Divide a segment into two segments so that a new float can be placed and have it's
+    /// vertical start and end at exact segment boundaries
     fn subdivide_segment(&mut self, idx: usize, divide_at_y: f32) {
         let old_segment = &mut self.segments[idx];
         let new_segment = Segment { insets: old_segment.insets, y: divide_at_y..old_segment.y.end };
@@ -283,21 +217,46 @@ impl FloatPlacer {
         self.segments.splice((idx + 1)..(idx + 1), core::iter::once(new_segment));
     }
 
+    /// Update the last placed float start and end values
     fn update_last_placed_float(&mut self, direction: FloatDirection, placement: Range<usize>) {
         let slot = direction as usize;
         self.last_placed_floats[slot].start = self.last_placed_floats[slot].start.max(placement.start);
         self.last_placed_floats[slot].end = self.last_placed_floats[slot].end.max(placement.end);
     }
 
-    #[inline(always)]
-    fn segment_end(&self) -> f32 {
-        self.segments.last().map(|seg| seg.y.end).unwrap_or(0.0)
+    /// Position a floated box with the context, returning the (x, y) coordinates
+    pub fn place_floated_box(
+        &mut self,
+        floated_box: Size<f32>,
+        min_y: f32,
+        containing_block_insets: [f32; 2],
+        direction: FloatDirection,
+        clear: Clear,
+    ) -> Point<f32> {
+        self.has_floats = true;
+
+        let placed_floated_box =
+            self.place_floated_box_inner(floated_box, min_y, containing_block_insets, direction, clear);
+
+        let x_inset = placed_floated_box.x_inset;
+        let y = placed_floated_box.y;
+        match direction {
+            FloatDirection::Left => {
+                self.left_floats.push(placed_floated_box);
+                Point { x: x_inset, y }
+            }
+            FloatDirection::Right => {
+                self.right_floats.push(placed_floated_box);
+                Point { x: self.available_width - x_inset - floated_box.width, y }
+            }
+        }
     }
 
-    fn place_float(
+    /// Inner implementation of float placement, split into a separate function so that it can early-return
+    fn place_floated_box_inner(
         &mut self,
-        min_y: f32,
         floated_box: Size<f32>,
+        min_y: f32,
         containing_block_insets: [f32; 2],
         direction: FloatDirection,
         clear: Clear,
@@ -352,7 +311,7 @@ impl FloatPlacer {
 
             // Candidate start segment doesn't have (horizontal) space for the float:
             // => retry with the next segment
-            if !start_segment.fits_float_width(floated_box, direction, self.bfc_width) {
+            if !start_segment.fits_float_width(floated_box, direction, self.available_width) {
                 start_idx += 1;
                 end_idx = end_idx.max(start_idx);
                 continue;
@@ -360,7 +319,7 @@ impl FloatPlacer {
 
             start_y = start_y.max(start_segment.y.start);
             let available_height = start_segment.y.end - start_y;
-            let mut fitter = FloatFitter::new(self.bfc_width, available_height, containing_block_insets);
+            let mut fitter = FloatFitter::new(self.available_width, available_height, containing_block_insets);
             fitter.union_insets(start_segment.insets);
 
             // Pinning the start segment, loop over segments starting with the start segment
@@ -488,13 +447,24 @@ impl FloatPlacer {
         PlacedFloatedBox { width: floated_box.width, height: floated_box.height, y: start_y, x_inset: placed_inset }
     }
 
-    fn find_content_slot(
+    /// Search for a space suitable for laying out non-floated content into
+    pub fn find_content_slot(
         &self,
         min_y: f32,
         containing_block_insets: [f32; 2],
         clear: Clear,
         after: Option<usize>,
     ) -> ContentSlot {
+        if !self.has_active_floats(min_y) {
+            return ContentSlot {
+                segment_id: None,
+                x: containing_block_insets[0],
+                y: min_y,
+                width: self.available_width - containing_block_insets[0] - containing_block_insets[1],
+                height: f32::INFINITY,
+            };
+        }
+
         // The min starting segment index
         let at_least = after.map(|idx| idx + 1).unwrap_or(0);
 
@@ -527,7 +497,7 @@ impl FloatPlacer {
                     segment_id: Some(start_idx),
                     x: inset_left,
                     y: segment.y.start.max(min_y),
-                    width: self.bfc_width - inset_left - inset_right,
+                    width: self.available_width - inset_left - inset_right,
                     height: f32::INFINITY,
                 }
             }
@@ -535,7 +505,7 @@ impl FloatPlacer {
                 segment_id: None,
                 x: containing_block_insets[0],
                 y: min_y,
-                width: self.bfc_width - containing_block_insets[0] - containing_block_insets[1],
+                width: self.available_width - containing_block_insets[0] - containing_block_insets[1],
                 height: f32::INFINITY,
             },
         }

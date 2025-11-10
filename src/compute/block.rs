@@ -20,19 +20,24 @@ use crate::{Clear, Float, FloatDirection};
 
 /// Context for positioning Block and Float boxes within a Block Formatting Context
 pub struct BlockFormattingContext {
+    /// The float positioning context that handles positioning floats within this Block Formatting Context
     #[cfg(feature = "float_layout")]
-    float_context: super::FloatContext,
+    float_context: FloatContext,
+}
+
+impl Default for BlockFormattingContext {
+    fn default() -> Self {
+        Self {
+            #[cfg(feature = "float_layout")]
+            float_context: FloatContext::new(),
+        }
+    }
 }
 
 impl BlockFormattingContext {
     /// Create a new `BlockFormattingContext` with the specified width constraint
-    pub fn new(available_space: AvailableSpace) -> Self {
-        #[cfg(not(feature = "float_layout"))]
-        let _ = available_space;
-        Self {
-            #[cfg(feature = "float_layout")]
-            float_context: FloatContext::new(available_space),
-        }
+    pub fn new() -> Self {
+        Default::default()
     }
 
     /// Create an initial `BlockContext` for this `BlockFormattingContext`
@@ -52,6 +57,7 @@ impl BlockFormattingContext {
 ///
 /// Contains a mutable reference to the BlockFormattingContext + block-specific data
 pub struct BlockContext<'bfc> {
+    /// A mutable reference to the root BlockFormatttingContext that this BlockContext belongs to
     bfc: &'bfc mut BlockFormattingContext,
     /// The y-offset of the border-top of the block node, relative to the to the border-top of the
     /// root node of the Block Formatting Context it belongs to.
@@ -88,8 +94,8 @@ impl BlockContext<'_> {
     ///
     /// Sub-blocks within a Block Formatting Context should use the `Self::sub_context` method to create
     /// a sub-`BlockContext` with `insets` instead.
-    pub fn set_width(&mut self, available_space: AvailableSpace) {
-        self.bfc.float_context.set_width(available_space);
+    pub fn set_width(&mut self, available_width: f32) {
+        self.bfc.float_context.set_width(available_width);
     }
 
     /// Returns whether this block is the root block of it's Block Formatting Context
@@ -184,13 +190,14 @@ struct BlockItem {
     /// Items that are tables don't have stretch sizing applied to them
     is_table: bool,
 
-    // Whether the child is a non-independent block or inline node
+    /// Whether the child is a non-independent block or inline node
     is_in_same_bfc: bool,
 
-    // Float and clear styles
     #[cfg(feature = "float_layout")]
+    /// The `float` style of the node
     float: Float,
     #[cfg(feature = "float_layout")]
+    /// The `clear` style of the node
     clear: Clear,
 
     /// The base size of this item
@@ -295,9 +302,7 @@ pub fn compute_block_layout(
             inherited_bfc,
         ),
         None => {
-            let mut root_bfc = BlockFormattingContext::new(
-                styled_based_known_dimensions.width.map(AvailableSpace::Definite).unwrap_or(AvailableSpace::MaxContent),
-            );
+            let mut root_bfc = BlockFormattingContext::new();
             let mut root_ctx = root_bfc.root_block_context();
             compute_inner(
                 tree,
@@ -661,7 +666,7 @@ fn perform_final_layout_on_in_flow_children(
     // TODO: handle nested blocks with different widths
     #[cfg(feature = "float_layout")]
     if block_ctx.is_bfc_root() {
-        block_ctx.set_width(AvailableSpace::Definite(container_outer_width));
+        block_ctx.set_width(container_outer_width);
         block_ctx.apply_content_box_inset([resolved_content_box_inset.left, resolved_content_box_inset.right]);
     }
 
