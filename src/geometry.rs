@@ -204,7 +204,7 @@ where
         self.top + self.bottom
     }
 
-    /// Both horizontal_axis_sum and vertical_axis_sum as a Size<T>
+    /// Both horizontal_axis_sum and vertical_axis_sum as a `Size<T>`
     ///
     /// **NOTE:** this is *not* the width/height of the rectangle.
     #[inline(always)]
