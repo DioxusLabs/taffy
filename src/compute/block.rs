@@ -321,7 +321,7 @@ fn compute_inner(
     tree: &mut impl LayoutBlockContainer,
     node_id: NodeId,
     inputs: LayoutInput,
-    mut block_ctx: &mut BlockContext<'_>,
+    #[allow(unused_mut, reason = "needed when float is enabled")] mut block_ctx: &mut BlockContext<'_>,
 ) -> LayoutOutput {
     let LayoutInput {
         known_dimensions, parent_size, available_space, run_mode, vertical_margins_are_collapsible, ..
