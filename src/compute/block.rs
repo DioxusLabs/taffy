@@ -85,6 +85,11 @@ impl BlockContext<'_> {
             is_root: false,
         }
     }
+
+    /// Returns whether this block is the root block of it's Block Formatting Context
+    pub fn is_bfc_root(&self) -> bool {
+        self.is_root
+    }
 }
 
 #[cfg(feature = "float_layout")]
@@ -96,11 +101,6 @@ impl BlockContext<'_> {
     /// a sub-`BlockContext` with `insets` instead.
     pub fn set_width(&mut self, available_width: f32) {
         self.bfc.float_context.set_width(available_width);
-    }
-
-    /// Returns whether this block is the root block of it's Block Formatting Context
-    pub fn is_bfc_root(&self) -> bool {
-        self.is_root
     }
 
     /// Set the x-axis content-box insets of the `BlockContext`. These are the difference between the border-box
