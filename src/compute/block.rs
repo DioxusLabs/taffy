@@ -148,14 +148,13 @@ impl BlockContext<'_> {
         slot
     }
 
+    /// Update the height that descendent floats with the height that floats consume
+    /// within a particular child
     fn add_child_floated_content_height_contribution(&mut self, child_contribution: f32) {
         self.float_content_contribution = self.float_content_contribution.max(child_contribution);
     }
 
-    // fn floated_content_width_contribution(&self) -> f32 {
-    //     self.bfc.float_context.content_width()
-    // }
-
+    /// Returns the height that descendent floats consume
     fn floated_content_height_contribution(&self) -> f32 {
         self.float_content_contribution
     }
@@ -164,7 +163,8 @@ impl BlockContext<'_> {
 #[cfg(not(feature = "float_layout"))]
 impl BlockContext<'_> {
     #[inline(always)]
-    fn floated_content_contribution(&self) -> f32 {
+    /// Returns the height that descendent floats consume (always 0.0 when the float feature is disabled)
+    fn float_content_contribution(&self) -> f32 {
         0.0
     }
 }
