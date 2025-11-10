@@ -386,6 +386,7 @@ fn compute_inner(
             && size.height.is_none(),
     };
     let has_styles_preventing_being_collapsed_through = !style.is_block()
+        || block_ctx.is_bfc_root()
         || is_scroll_container
         || style.position() == Position::Absolute
         || padding.top > 0.0
