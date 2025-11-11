@@ -247,6 +247,8 @@ pub fn compute_block_layout(
     let style = tree.get_block_container_style(node_id);
 
     // Pull these out earlier to avoid borrowing issues
+    let overflow = style.overflow();
+    let is_scroll_container = overflow.x.is_scroll_container() || overflow.y.is_scroll_container();
     let aspect_ratio = style.aspect_ratio();
     let padding = style.padding().resolve_or_zero(parent_size.width, |val, basis| tree.calc(val, basis));
     let border = style.border().resolve_or_zero(parent_size.width, |val, basis| tree.calc(val, basis));
@@ -297,13 +299,13 @@ pub fn compute_block_layout(
     // Unwrap the block formatting context if one was passed, or else create a new one
     debug_log!("BLOCK");
     match block_ctx {
-        Some(inherited_bfc) => compute_inner(
+        Some(inherited_bfc) if !is_scroll_container => compute_inner(
             tree,
             node_id,
             LayoutInput { known_dimensions: styled_based_known_dimensions, ..inputs },
             inherited_bfc,
         ),
-        None => {
+        _ => {
             let mut root_bfc = BlockFormattingContext::new();
             let mut root_ctx = root_bfc.root_block_context();
             compute_inner(
