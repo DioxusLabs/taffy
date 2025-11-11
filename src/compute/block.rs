@@ -163,7 +163,7 @@ impl BlockContext<'_> {
     }
 
     /// Returns the height that descendent floats consume
-    fn floated_content_height_contribution(&self) -> f32 {
+    pub fn floated_content_height_contribution(&self) -> f32 {
         self.float_content_contribution
     }
 }
