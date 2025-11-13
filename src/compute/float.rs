@@ -270,17 +270,17 @@ impl FloatContext {
             Clear::Left => {
                 let float_dir_start = self.last_placed_floats[slot].start;
                 let left_end = self.last_placed_floats[0].end;
-                float_dir_start.max(left_end)
+                float_dir_start.max(left_end + 1)
             }
             Clear::Right => {
                 let float_dir_start = self.last_placed_floats[slot].start;
                 let right_end = self.last_placed_floats[1].end;
-                float_dir_start.max(right_end)
+                float_dir_start.max(right_end + 1)
             }
             Clear::Both => {
                 let left_end = self.last_placed_floats[0].end;
                 let right_end = self.last_placed_floats[1].end;
-                left_end.max(right_end)
+                left_end.max(right_end) + 1
             }
             Clear::None => {
                 // float_dir_start
@@ -290,7 +290,10 @@ impl FloatContext {
 
         // Ensure that float is placed in a segment at or below "min_y"
         // (ensuring that it is placed at or below min_y within it's segment happens below)
-        let start_idx = self.segments[hwm..].iter().position(|segment| segment.y.end > min_y).map(|idx| idx + hwm);
+        let start_idx = self
+            .segments
+            .get(hwm..)
+            .and_then(|segments| segments.iter().position(|segment| segment.y.end > min_y).map(|idx| idx + hwm));
 
         let mut start_idx = start_idx.unwrap_or(self.segments.len());
         let mut start_y = min_y;
@@ -472,21 +475,24 @@ impl FloatContext {
         let hwm = match clear {
             Clear::Left => {
                 let left_end = self.last_placed_floats[0].end;
-                at_least.max(left_end)
+                at_least.max(left_end + 1)
             }
             Clear::Right => {
                 let right_end = self.last_placed_floats[1].end;
-                at_least.max(right_end)
+                at_least.max(right_end + 1)
             }
             Clear::Both => {
                 let left_end = self.last_placed_floats[0].end;
                 let right_end = self.last_placed_floats[1].end;
-                at_least.max(left_end).max(right_end)
+                at_least.max(left_end).max(right_end) + 1
             }
             Clear::None => at_least,
         };
 
-        let start_idx = self.segments[hwm..].iter().position(|segment| segment.y.end > min_y).map(|idx| idx + hwm);
+        let start_idx = self
+            .segments
+            .get(hwm..)
+            .and_then(|segments| segments.iter().position(|segment| segment.y.end > min_y).map(|idx| idx + hwm));
         let start_idx = start_idx.unwrap_or(self.segments.len());
         let segment = self.segments.get(start_idx);
         match segment {
