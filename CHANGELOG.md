@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.9.2
+
+### Fixed
+
+- Fix wrong size propogation for absolute elements (#878)
+- Fix bounds check in CellOccupancyMatrix::last_of_type (#890)
+- Use doc_cfg instead of doc_auto_cfg (#868)
+
+### Changed
+
+- Upgraded grid dependency from 0.18 to 1.0 (#864)
+
 ## 0.9.1
 
 ### Fixed
