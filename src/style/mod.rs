@@ -251,11 +251,12 @@ impl Default for BoxGenerationMode {
 /// which can be unintuitive.
 ///
 /// [`Position::Relative`] is the default value, in contrast to the default behavior in CSS.
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum Position {
     /// The offset is computed relative to the final position given by the layout algorithm.
     /// Offsets do not affect the position of any other items; they are effectively a correction factor applied at the end.
+    #[default]
     Relative,
     /// The offset is computed relative to this item's closest positioned ancestor, if any.
     /// Otherwise, it is placed relative to the origin.
@@ -263,12 +264,6 @@ pub enum Position {
     ///
     /// WARNING: to opt-out of layouting entirely, you must use [`Display::None`] instead on your [`Style`] object.
     Absolute,
-}
-
-impl Default for Position {
-    fn default() -> Self {
-        Self::Relative
-    }
 }
 
 /// Specifies whether size styles for this node are assigned to the node's "content box" or "border box"
@@ -284,19 +279,14 @@ impl Default for Position {
 ///   - `flex_basis`
 ///
 /// See <https://developer.mozilla.org/en-US/docs/Web/CSS/box-sizing>
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum BoxSizing {
     /// Size styles such size, min_size, max_size specify the box's "border box" (the size excluding margin but including padding/border)
+    #[default]
     BorderBox,
     /// Size styles such size, min_size, max_size specify the box's "content box" (the size excluding padding/border/margin)
     ContentBox,
-}
-
-impl Default for BoxSizing {
-    fn default() -> Self {
-        Self::BorderBox
-    }
 }
 
 /// How children overflowing their container should affect layout

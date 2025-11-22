@@ -273,10 +273,11 @@ pub trait GridItemStyle: CoreStyle {
 /// Defaults to [`GridAutoFlow::Row`]
 ///
 /// [MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/grid-auto-flow)
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum GridAutoFlow {
     /// Items are placed by filling each row in turn, adding new rows as necessary
+    #[default]
     Row,
     /// Items are placed by filling each column in turn, adding new columns as necessary.
     Column,
@@ -284,12 +285,6 @@ pub enum GridAutoFlow {
     RowDense,
     /// Combines `Column` with the dense packing algorithm.
     ColumnDense,
-}
-
-impl Default for GridAutoFlow {
-    fn default() -> Self {
-        Self::Row
-    }
 }
 
 impl GridAutoFlow {
@@ -343,10 +338,11 @@ pub(crate) type NonNamedGridPlacement = GenericGridPlacement<GridLine>;
 /// Defaults to `GridPlacement::Auto`
 ///
 /// [Specification](https://www.w3.org/TR/css3-grid-layout/#typedef-grid-row-start-grid-line)
-#[derive(Clone, PartialEq, Debug)]
+#[derive(Clone, PartialEq, Debug, Default)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum GridPlacement<S: CheapCloneStr = DefaultCheapStr> {
     /// Place item according to the auto-placement algorithm, and the parent's grid_auto_flow property
+    #[default]
     Auto,
     /// Place item at specified line (column or row) index
     Line(GridLine),
@@ -381,12 +377,6 @@ impl<S: CheapCloneStr> TaffyGridSpan for GridPlacement<S> {
 impl<S: CheapCloneStr> TaffyGridSpan for Line<GridPlacement<S>> {
     fn from_span(span: u16) -> Self {
         Line { start: GridPlacement::<S>::from_span(span), end: GridPlacement::<S>::Auto }
-    }
-}
-
-impl<S: CheapCloneStr> Default for GridPlacement<S> {
-    fn default() -> Self {
-        Self::Auto
     }
 }
 
