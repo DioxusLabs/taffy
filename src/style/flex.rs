@@ -73,21 +73,16 @@ use crate::geometry::AbsoluteAxis;
 /// Defaults to [`FlexWrap::NoWrap`]
 ///
 /// [Specification](https://www.w3.org/TR/css-flexbox-1/#flex-wrap-property)
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum FlexWrap {
     /// Items will not wrap and stay on a single line
+    #[default]
     NoWrap,
     /// Items will wrap according to this item's [`FlexDirection`]
     Wrap,
     /// Items will wrap in the opposite direction to this item's [`FlexDirection`]
     WrapReverse,
-}
-
-impl Default for FlexWrap {
-    fn default() -> Self {
-        Self::NoWrap
-    }
 }
 
 /// The direction of the flexbox layout main axis.
@@ -101,12 +96,13 @@ impl Default for FlexWrap {
 /// The default behavior is [`FlexDirection::Row`].
 ///
 /// [Specification](https://www.w3.org/TR/css-flexbox-1/#flex-direction-property)
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum FlexDirection {
     /// Defines +x as the main axis
     ///
     /// Items will be added from left to right in a row.
+    #[default]
     Row,
     /// Defines +y as the main axis
     ///
@@ -120,12 +116,6 @@ pub enum FlexDirection {
     ///
     /// Items will be added from bottom to top in a column.
     ColumnReverse,
-}
-
-impl Default for FlexDirection {
-    fn default() -> Self {
-        Self::Row
-    }
 }
 
 impl FlexDirection {
