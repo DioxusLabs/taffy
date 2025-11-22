@@ -243,17 +243,22 @@ impl CellOccupancyMatrix {
         let track_counts = self.track_counts(track_type.other_axis());
         let track_computed_index = track_counts.oz_line_to_next_track(start_at);
 
-        // Index out of boudnds: no track to search
-        if track_computed_index < 0 || track_computed_index >= self.inner.rows() as i16 {
-            return None;
-        }
-
         let maybe_index = match track_type {
             AbsoluteAxis::Horizontal => {
-                self.inner.iter_row(track_computed_index as usize).rposition(|item| *item == kind)
+                if track_computed_index < 0 || track_computed_index >= self.inner.rows() as i16 {
+                    // Index out of bounds: no tracks to search
+                    None
+                } else {
+                    self.inner.iter_row(track_computed_index as usize).rposition(|item| *item == kind)
+                }
             }
             AbsoluteAxis::Vertical => {
-                self.inner.iter_col(track_computed_index as usize).rposition(|item| *item == kind)
+                if track_computed_index < 0 || track_computed_index >= self.inner.cols() as i16 {
+                    // Index out of bounds: no tracks to search
+                    None
+                } else {
+                    self.inner.iter_col(track_computed_index as usize).rposition(|item| *item == kind)
+                }
             }
         };
 
