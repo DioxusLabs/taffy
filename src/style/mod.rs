@@ -8,6 +8,8 @@ mod dimension;
 mod block;
 #[cfg(feature = "flexbox")]
 mod flex;
+#[cfg(feature = "float_layout")]
+mod float;
 #[cfg(feature = "grid")]
 mod grid;
 
@@ -21,6 +23,8 @@ use crate::sys::DefaultCheapStr;
 pub use self::block::{BlockContainerStyle, BlockItemStyle, TextAlign};
 #[cfg(feature = "flexbox")]
 pub use self::flex::{FlexDirection, FlexWrap, FlexboxContainerStyle, FlexboxItemStyle};
+#[cfg(feature = "float_layout")]
+pub use self::float::{Clear, Float, FloatDirection};
 #[cfg(feature = "grid")]
 pub use self::grid::{
     GenericGridPlacement, GenericGridTemplateComponent, GenericRepetition, GridAutoFlow, GridContainerStyle,
@@ -325,7 +329,7 @@ impl Overflow {
     /// Returns true for overflow modes that contain their contents (`Overflow::Hidden`, `Overflow::Scroll`, `Overflow::Auto`)
     /// or else false for overflow modes that allow their contains to spill (`Overflow::Visible`).
     #[inline(always)]
-    pub(crate) fn is_scroll_container(self) -> bool {
+    pub fn is_scroll_container(self) -> bool {
         match self {
             Self::Visible | Self::Clip => false,
             Self::Hidden | Self::Scroll => true,
@@ -380,6 +384,13 @@ pub struct Style<S: CheapCloneStr = DefaultCheapStr> {
     pub overflow: Point<Overflow>,
     /// How much space (in points) should be reserved for the scrollbars of `Overflow::Scroll` and `Overflow::Auto` nodes.
     pub scrollbar_width: f32,
+
+    #[cfg(feature = "float_layout")]
+    /// Should the box be floated
+    pub float: Float,
+    #[cfg(feature = "float_layout")]
+    /// Should the box clear floats
+    pub clear: Clear,
 
     // Position properties
     /// What should the `position` value of this struct use as a base offset?
@@ -515,6 +526,10 @@ impl<S: CheapCloneStr> Style<S> {
         box_sizing: BoxSizing::BorderBox,
         overflow: Point { x: Overflow::Visible, y: Overflow::Visible },
         scrollbar_width: 0.0,
+        #[cfg(feature = "float_layout")]
+        float: Float::None,
+        #[cfg(feature = "float_layout")]
+        clear: Clear::None,
         position: Position::Relative,
         inset: Rect::auto(),
         margin: Rect::zero(),
@@ -739,6 +754,18 @@ impl<S: CheapCloneStr> BlockItemStyle for Style<S> {
     fn is_table(&self) -> bool {
         self.item_is_table
     }
+
+    #[cfg(feature = "float_layout")]
+    #[inline(always)]
+    fn float(&self) -> Float {
+        self.float
+    }
+
+    #[cfg(feature = "float_layout")]
+    #[inline(always)]
+    fn clear(&self) -> Clear {
+        self.clear
+    }
 }
 
 #[cfg(feature = "block_layout")]
@@ -746,6 +773,18 @@ impl<T: BlockItemStyle> BlockItemStyle for &'_ T {
     #[inline(always)]
     fn is_table(&self) -> bool {
         (*self).is_table()
+    }
+
+    #[cfg(feature = "float_layout")]
+    #[inline(always)]
+    fn float(&self) -> Float {
+        (*self).float()
+    }
+
+    #[cfg(feature = "float_layout")]
+    #[inline(always)]
+    fn clear(&self) -> Clear {
+        (*self).clear()
     }
 }
 
@@ -1083,6 +1122,10 @@ mod tests {
             item_is_table: false,
             item_is_replaced: false,
             box_sizing: Default::default(),
+            #[cfg(feature = "float_layout")]
+            float: Default::default(),
+            #[cfg(feature = "float_layout")]
+            clear: Default::default(),
             overflow: Default::default(),
             scrollbar_width: 0.0,
             position: Default::default(),
