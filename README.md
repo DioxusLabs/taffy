@@ -1,5 +1,9 @@
 # Taffy
 
+<p align="center">
+  <img src="assets/logo.svg" alt="Taffy Logo" width="400">
+</p>
+
 [![GitHub CI](https://github.com/DioxusLabs/taffy/actions/workflows/ci.yml/badge.svg)](https://github.com/DioxusLabs/taffy/actions/workflows/ci.yml)
 [![crates.io](https://img.shields.io/crates/v/taffy.svg)](https://crates.io/crates/taffy)
 [![docs.rs](https://img.shields.io/docsrs/taffy)](https://docs.rs/taffy)
