@@ -109,7 +109,7 @@ impl TryFrom<RequestedAxis> for AbsoluteAxis {
 #[derive(Debug, Copy, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize))]
 pub struct LayoutInput {
-    /// Whether we only need to know the Node's size, or whe
+    /// Whether we only need to know the Node's size, or whether we need to perform a full layout
     pub run_mode: RunMode,
     /// Whether a Node's style sizes should be taken into account or ignored
     pub sizing_mode: SizingMode,
