@@ -34,13 +34,13 @@ impl FromLength for AvailableSpace {
 
 impl AvailableSpace {
     /// Returns true for definite values, else false
-    pub fn is_definite(self) -> bool {
+    pub const fn is_definite(self) -> bool {
         matches!(self, AvailableSpace::Definite(_))
     }
 
     /// Convert to Option
     /// Definite values become Some(value). Constraints become None.
-    pub fn into_option(self) -> Option<f32> {
+    pub const fn into_option(self) -> Option<f32> {
         match self {
             AvailableSpace::Definite(value) => Some(value),
             _ => None,

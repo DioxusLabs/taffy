@@ -290,7 +290,7 @@ pub enum GridAutoFlow {
 impl GridAutoFlow {
     /// Whether grid auto placement uses the sparse placement algorithm or the dense placement algorithm
     /// See: <https://developer.mozilla.org/en-US/docs/Web/CSS/grid-auto-flow#values>
-    pub fn is_dense(&self) -> bool {
+    pub const fn is_dense(&self) -> bool {
         match self {
             Self::Row | Self::Column => false,
             Self::RowDense | Self::ColumnDense => true,
@@ -299,7 +299,7 @@ impl GridAutoFlow {
 
     /// Whether grid auto placement fills areas row-wise or column-wise
     /// See: <https://developer.mozilla.org/en-US/docs/Web/CSS/grid-auto-flow#values>
-    pub fn primary_axis(&self) -> AbsoluteAxis {
+    pub const fn primary_axis(&self) -> AbsoluteAxis {
         match self {
             Self::Row | Self::RowDense => AbsoluteAxis::Horizontal,
             Self::Column | Self::ColumnDense => AbsoluteAxis::Vertical,
@@ -431,7 +431,7 @@ impl NonNamedGridPlacement {
 impl<T: GridCoordinate> Line<GenericGridPlacement<T>> {
     /// Resolves the span for an indefinite placement (a placement that does not consist of two `Track`s).
     /// Panics if called on a definite placement
-    pub fn indefinite_span(&self) -> u16 {
+    pub const fn indefinite_span(&self) -> u16 {
         use GenericGridPlacement as GP;
         match (self.start, self.end) {
             (GP::Line(_), GP::Auto) => 1,
@@ -489,7 +489,7 @@ impl Line<OriginZeroGridPlacement> {
     #[inline]
     /// Whether the track position is definite in this axis (or the item will need auto placement)
     /// The track position is definite if least one of the start and end positions is a track index
-    pub fn is_definite(&self) -> bool {
+    pub const fn is_definite(&self) -> bool {
         matches!((self.start, self.end), (GenericGridPlacement::Line(_), _) | (_, GenericGridPlacement::Line(_)))
     }
 

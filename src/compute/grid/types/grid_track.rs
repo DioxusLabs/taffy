@@ -61,7 +61,7 @@ pub(in super::super) struct GridTrack {
 
 impl GridTrack {
     /// GridTrack constructor with all configuration parameters for the other constructors exposed
-    fn new_with_kind(
+    const fn new_with_kind(
         kind: GridTrackKind,
         min_track_sizing_function: MinTrackSizingFunction,
         max_track_sizing_function: MaxTrackSizingFunction,
@@ -83,7 +83,7 @@ impl GridTrack {
     }
 
     /// Create new GridTrack representing an actual track (not a gutter)
-    pub fn new(
+    pub const fn new(
         min_track_sizing_function: MinTrackSizingFunction,
         max_track_sizing_function: MaxTrackSizingFunction,
     ) -> GridTrack {

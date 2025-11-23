@@ -52,12 +52,12 @@ impl LengthPercentage {
     /// # Safety
     /// CompactLength must represent a valid variant for LengthPercentage
     #[allow(unsafe_code)]
-    pub unsafe fn from_raw(val: CompactLength) -> Self {
+    pub const unsafe fn from_raw(val: CompactLength) -> Self {
         Self(val)
     }
 
     /// Get the underlying `CompactLength` representation of the value
-    pub fn into_raw(self) -> CompactLength {
+    pub const fn into_raw(self) -> CompactLength {
         self.0
     }
 }
@@ -143,12 +143,12 @@ impl LengthPercentageAuto {
     /// # Safety
     /// CompactLength must represent a valid variant for LengthPercentageAuto
     #[allow(unsafe_code)]
-    pub unsafe fn from_raw(val: CompactLength) -> Self {
+    pub const unsafe fn from_raw(val: CompactLength) -> Self {
         Self(val)
     }
 
     /// Get the underlying `CompactLength` representation of the value
-    pub fn into_raw(self) -> CompactLength {
+    pub const fn into_raw(self) -> CompactLength {
         self.0
     }
 
@@ -261,12 +261,12 @@ impl Dimension {
     /// # Safety
     /// CompactLength must represent a valid variant for LengthPercentageAuto
     #[allow(unsafe_code)]
-    pub unsafe fn from_raw(val: CompactLength) -> Self {
+    pub const unsafe fn from_raw(val: CompactLength) -> Self {
         Self(val)
     }
 
     /// Get the underlying `CompactLength` representation of the value
-    pub fn into_raw(self) -> CompactLength {
+    pub const fn into_raw(self) -> CompactLength {
         self.0
     }
 
