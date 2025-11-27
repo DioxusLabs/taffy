@@ -27,6 +27,9 @@ pub(crate) mod leaf;
 #[cfg(feature = "block_layout")]
 pub(crate) mod block;
 
+#[cfg(feature = "float_layout")]
+pub(crate) mod float;
+
 #[cfg(feature = "flexbox")]
 pub(crate) mod flexbox;
 
@@ -36,13 +39,16 @@ pub(crate) mod grid;
 pub use leaf::compute_leaf_layout;
 
 #[cfg(feature = "block_layout")]
-pub use self::block::compute_block_layout;
+pub use self::block::{compute_block_layout, BlockContext, BlockFormattingContext};
 
 #[cfg(feature = "flexbox")]
 pub use self::flexbox::compute_flexbox_layout;
 
 #[cfg(feature = "grid")]
 pub use self::grid::compute_grid_layout;
+
+#[cfg(feature = "float_layout")]
+pub use self::float::{ContentSlot, FloatContext, FloatIntrinsicWidthCalculator};
 
 use crate::geometry::{Line, Point, Size};
 use crate::style::{AvailableSpace, CoreStyle, Overflow};
@@ -162,10 +168,10 @@ pub fn compute_cached_layout<Tree: CacheTree + ?Sized, ComputeFunction>(
     tree: &mut Tree,
     node: NodeId,
     inputs: LayoutInput,
-    mut compute_uncached: ComputeFunction,
+    compute_uncached: ComputeFunction,
 ) -> LayoutOutput
 where
-    ComputeFunction: FnMut(&mut Tree, NodeId, LayoutInput) -> LayoutOutput,
+    ComputeFunction: FnOnce(&mut Tree, NodeId, LayoutInput) -> LayoutOutput,
 {
     debug_push_node!(node);
     let LayoutInput { known_dimensions, available_space, run_mode, .. } = inputs;

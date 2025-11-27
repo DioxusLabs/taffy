@@ -212,6 +212,9 @@ function describeElement(e) {
 
       writingMode: parseEnum(e.style.writingMode),
 
+      cssFloat: parseEnum(e.style.cssFloat),
+      clear: parseEnum(e.style.clear),
+
       textAlign: parseEnum(e.style.textAlign),
 
       flexDirection: parseEnum(e.style.flexDirection),
