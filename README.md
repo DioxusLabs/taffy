@@ -1,7 +1,7 @@
-# Taffy
-
-<p align="center">
-  <img src="assets/logo.svg" alt="Taffy Logo" width="400">
+<p>
+<picture>
+  <img src="assets/logo.svg" alt="Taffy" height="70">
+</picture>
 </p>
 
 [![GitHub CI](https://github.com/DioxusLabs/taffy/actions/workflows/ci.yml/badge.svg)](https://github.com/DioxusLabs/taffy/actions/workflows/ci.yml)
