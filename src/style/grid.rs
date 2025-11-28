@@ -1,7 +1,7 @@
 //! Style types for CSS Grid layout
 use super::{
     AlignContent, AlignItems, AlignSelf, CheapCloneStr, CompactLength, CoreStyle, Dimension, JustifyContent,
-    LengthPercentage, LengthPercentageAuto, Style,
+    LengthPercentage, LengthPercentageAuto, Style, Units,
 };
 use crate::compute::grid::{GridCoordinate, GridLine, OriginZeroLine};
 use crate::geometry::{AbsoluteAxis, AbstractAxis, Line, MinMax, Size};
@@ -130,12 +130,12 @@ where
 /// The set of styles required for a CSS Grid container
 pub trait GridContainerStyle: CoreStyle {
     /// The type for a `repeat()` within a grid_template_rows or grid_template_columns
-    type Repetition<'a>: GenericRepetition<CustomIdent = Self::CustomIdent>
+    type Repetition<'a>: GenericRepetition<CustomIdent = <Self::Units as Units>::Str>
     where
         Self: 'a;
 
     /// The type returned by grid_template_rows and grid_template_columns
-    type TemplateTrackList<'a>: Iterator<Item = GenericGridTemplateComponent<Self::CustomIdent, Self::Repetition<'a>>>
+    type TemplateTrackList<'a>: Iterator<Item = GenericGridTemplateComponent<<Self::Units as Units>::Str, Self::Repetition<'a>>>
         + ExactSizeIterator
         + Clone
     where
@@ -148,12 +148,12 @@ pub trait GridContainerStyle: CoreStyle {
 
     /// The type returned by grid_template_row_names and grid_template_column_names
     //IntoIterator<Item = &'a Self::LineNameSet<'a>>
-    type TemplateLineNames<'a>: TemplateLineNames<'a, Self::CustomIdent>
+    type TemplateLineNames<'a>: TemplateLineNames<'a, <Self::Units as Units>::Str>
     where
         Self: 'a;
 
     /// The type of custom identifiers used to identify named grid lines and areas
-    type GridTemplateAreas<'a>: IntoIterator<Item = GridTemplateArea<Self::CustomIdent>>
+    type GridTemplateAreas<'a>: IntoIterator<Item = GridTemplateArea<<Self::Units as Units>::Str>>
     where
         Self: 'a;
 
@@ -179,13 +179,13 @@ pub trait GridContainerStyle: CoreStyle {
     /// Controls how items get placed into the grid for auto-placed items
     #[inline(always)]
     fn grid_auto_flow(&self) -> GridAutoFlow {
-        Style::<Self::CustomIdent>::DEFAULT.grid_auto_flow
+        Style::<Self::Units>::DEFAULT.grid_auto_flow
     }
 
     /// How large should the gaps between items in a grid or flex container be?
     #[inline(always)]
     fn gap(&self) -> Size<LengthPercentage> {
-        Style::<Self::CustomIdent>::DEFAULT.gap
+        Style::<Self::Units>::DEFAULT.gap
     }
 
     // Alignment properties
@@ -193,22 +193,22 @@ pub trait GridContainerStyle: CoreStyle {
     /// How should content contained within this item be aligned in the cross/block axis
     #[inline(always)]
     fn align_content(&self) -> Option<AlignContent> {
-        Style::<Self::CustomIdent>::DEFAULT.align_content
+        Style::<Self::Units>::DEFAULT.align_content
     }
     /// How should contained within this item be aligned in the main/inline axis
     #[inline(always)]
     fn justify_content(&self) -> Option<JustifyContent> {
-        Style::<Self::CustomIdent>::DEFAULT.justify_content
+        Style::<Self::Units>::DEFAULT.justify_content
     }
     /// How this node's children aligned in the cross/block axis?
     #[inline(always)]
     fn align_items(&self) -> Option<AlignItems> {
-        Style::<Self::CustomIdent>::DEFAULT.align_items
+        Style::<Self::Units>::DEFAULT.align_items
     }
     /// How this node's children should be aligned in the inline axis
     #[inline(always)]
     fn justify_items(&self) -> Option<AlignItems> {
-        Style::<Self::CustomIdent>::DEFAULT.justify_items
+        Style::<Self::Units>::DEFAULT.justify_items
     }
 
     /// Get a grid item's row or column placement depending on the axis passed
@@ -234,12 +234,12 @@ pub trait GridContainerStyle: CoreStyle {
 pub trait GridItemStyle: CoreStyle {
     /// Defines which row in the grid the item should start and end at
     #[inline(always)]
-    fn grid_row(&self) -> Line<GridPlacement<Self::CustomIdent>> {
+    fn grid_row(&self) -> Line<GridPlacement<<Self::Units as Units>::Str>> {
         Default::default()
     }
     /// Defines which column in the grid the item should start and end at
     #[inline(always)]
-    fn grid_column(&self) -> Line<GridPlacement<Self::CustomIdent>> {
+    fn grid_column(&self) -> Line<GridPlacement<<Self::Units as Units>::Str>> {
         Default::default()
     }
 
@@ -247,18 +247,18 @@ pub trait GridItemStyle: CoreStyle {
     /// Falls back to the parents [`AlignItems`] if not set
     #[inline(always)]
     fn align_self(&self) -> Option<AlignSelf> {
-        Style::<Self::CustomIdent>::DEFAULT.align_self
+        Style::<Self::Units>::DEFAULT.align_self
     }
     /// How this node should be aligned in the inline axis
     /// Falls back to the parents [`super::JustifyItems`] if not set
     #[inline(always)]
     fn justify_self(&self) -> Option<AlignSelf> {
-        Style::<Self::CustomIdent>::DEFAULT.justify_self
+        Style::<Self::Units>::DEFAULT.justify_self
     }
 
     /// Get a grid item's row or column placement depending on the axis passed
     #[inline(always)]
-    fn grid_placement(&self, axis: AbsoluteAxis) -> Line<GridPlacement<Self::CustomIdent>> {
+    fn grid_placement(&self, axis: AbsoluteAxis) -> Line<GridPlacement<<Self::Units as Units>::Str>> {
         match axis {
             AbsoluteAxis::Horizontal => self.grid_column(),
             AbsoluteAxis::Vertical => self.grid_row(),
