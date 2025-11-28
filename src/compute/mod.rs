@@ -157,6 +157,7 @@ pub fn compute_root_layout(tree: &mut impl LayoutPartialTree, root: NodeId, avai
 /// Attempts to find a cached layout for the specified node and layout inputs.
 ///
 /// Uses the provided closure to compute the layout (and then stores the result in the cache) if no cached layout is found.
+#[cfg_attr(feature = "stacksafe", stacksafe::stacksafe)]
 #[inline(always)]
 pub fn compute_cached_layout<Tree: CacheTree + ?Sized, ComputeFunction>(
     tree: &mut Tree,
@@ -208,6 +209,7 @@ pub fn round_layout(tree: &mut impl RoundTree, node_id: NodeId) {
     return round_layout_inner(tree, node_id, 0.0, 0.0);
 
     /// Recursive function to apply rounding to all descendents
+    #[cfg_attr(feature = "stacksafe", stacksafe::stacksafe)]
     fn round_layout_inner(tree: &mut impl RoundTree, node_id: NodeId, cumulative_x: f32, cumulative_y: f32) {
         let unrounded_layout = tree.get_unrounded_layout(node_id);
         let mut layout = unrounded_layout;

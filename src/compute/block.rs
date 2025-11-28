@@ -61,6 +61,7 @@ struct BlockItem {
 }
 
 /// Computes the layout of [`LayoutPartialTree`] according to the block layout algorithm
+#[cfg_attr(feature = "stacksafe", stacksafe::stacksafe)]
 pub fn compute_block_layout(
     tree: &mut impl LayoutBlockContainer,
     node_id: NodeId,
@@ -122,6 +123,7 @@ pub fn compute_block_layout(
 }
 
 /// Computes the layout of [`LayoutBlockContainer`] according to the block layout algorithm
+#[cfg_attr(feature = "stacksafe", stacksafe::stacksafe)]
 fn compute_inner(tree: &mut impl LayoutBlockContainer, node_id: NodeId, inputs: LayoutInput) -> LayoutOutput {
     let LayoutInput {
         known_dimensions, parent_size, available_space, run_mode, vertical_margins_are_collapsible, ..
@@ -390,6 +392,7 @@ fn determine_content_based_container_width(
 
 /// Compute each child's final size and position
 #[inline]
+#[cfg_attr(feature = "stacksafe", stacksafe::stacksafe)]
 fn perform_final_layout_on_in_flow_children(
     tree: &mut impl LayoutPartialTree,
     items: &mut [BlockItem],
