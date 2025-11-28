@@ -41,6 +41,7 @@ default = [
     "calc",
     "content_size",
     "detailed_layout_info",
+    "builder"
 ]
 #! ## Feature Flags
 #!
@@ -60,6 +61,8 @@ content_size = []
 detailed_layout_info = []
 ## Use strict provenance APIs for pointer manipulation. Using this feature requires Rust 1.84 or higher.
 strict_provenance = []
+## Expose a builder pattern interface to construct layout tree
+builder = []
 
 #! ### Taffy Tree
 
