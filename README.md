@@ -1,4 +1,9 @@
-# Taffy
+<!-- markdownlint-disable-next-line MD041 -->
+<p>
+<picture>
+  <img src="assets/logo.svg" alt="Taffy" height="70">
+</picture>
+</p>
 
 [![GitHub CI](https://github.com/DioxusLabs/taffy/actions/workflows/ci.yml/badge.svg)](https://github.com/DioxusLabs/taffy/actions/workflows/ci.yml)
 [![crates.io](https://img.shields.io/crates/v/taffy.svg)](https://crates.io/crates/taffy)
