@@ -1,3 +1,4 @@
+<!-- markdownlint-disable-next-line MD041 -->
 <p>
 <picture>
   <img src="assets/logo.svg" alt="Taffy" height="70">
