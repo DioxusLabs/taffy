@@ -9,7 +9,7 @@ use taffy::tree::Cache;
 use taffy::util::print_tree;
 use taffy::{
     compute_cached_layout, compute_flexbox_layout, compute_grid_layout, compute_leaf_layout, compute_root_layout,
-    prelude::*, round_layout, CacheTree,
+    prelude::*, round_layout, CacheTree, DefaultUnits,
 };
 
 #[derive(Debug, Copy, Clone)]
@@ -136,7 +136,7 @@ impl LayoutPartialTree for StatelessLayoutTree {
     where
         Self: 'a;
 
-    type CustomIdent = String;
+    type Units = DefaultUnits;
 
     fn get_core_container_style(&self, node_id: NodeId) -> Self::CoreContainerStyle<'_> {
         unsafe { &node_from_id(node_id).style }

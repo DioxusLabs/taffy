@@ -1,7 +1,7 @@
 //! Helpers for use in unit tests within the grid module
 use super::super::OriginZeroLine;
-use crate::prelude::*;
 use crate::style::{Dimension, GridPlacement, Style};
+use crate::{prelude::*, DefaultUnits};
 
 pub(crate) trait CreateParentTestNode {
     fn into_grid(self) -> Style;
@@ -23,7 +23,7 @@ pub(crate) trait CreateChildTestNode {
 impl CreateChildTestNode
     for (GridPlacement<String>, GridPlacement<String>, GridPlacement<String>, GridPlacement<String>)
 {
-    fn into_grid_child(self) -> Style<String> {
+    fn into_grid_child(self) -> Style<DefaultUnits> {
         Style {
             display: Display::Grid,
             grid_column: Line { start: self.0, end: self.1 },

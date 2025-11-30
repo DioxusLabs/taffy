@@ -6,7 +6,7 @@ pub trait BlockContainerStyle: CoreStyle {
     /// Defines which row in the grid the item should start and end at
     #[inline(always)]
     fn text_align(&self) -> TextAlign {
-        Style::<Self::CustomIdent>::DEFAULT.text_align
+        Style::<Self::Units>::DEFAULT.text_align
     }
 }
 
