@@ -273,13 +273,15 @@ jobs:
             exit 1
           fi
 
+  # benches is excluded from the workspace as it depends on cosmic-text which breaks compilation
+  # of all crates in the workspace with our MSRV compiler
   benchmarks:
     name: Build Benchmarks
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
       - uses: dtolnay/rust-toolchain@stable
-      - run: cargo bench -p taffy_benchmarks --no-run
+      - run: cd benches && cargo bench --no-run
         name: Build benchmarks
         env:
           RUSTFLAGS: "-C opt-level=0"
@@ -290,7 +292,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - uses: dtolnay/rust-toolchain@stable
-      - run: cargo bench -p taffy_benchmarks --no-run --features yoga
+      - run: cd benches && cargo bench --no-run --features yoga
         name: Build benchmarks (w/yoga)
         env:
           RUSTFLAGS: "-C opt-level=0"
