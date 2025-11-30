@@ -105,9 +105,8 @@ members = [
     "scripts/gentest",
     "scripts/format-fixtures",
     "scripts/import-yoga-tests",
-    "benches",
     "tests/common",
 ]
-# The cosmic_text example is excluded from the workspace as including it breaks compilation
+# The cosmic_text example and benches are excluded from the workspace as including them breaks compilation
 # of all crates in the workspace with our MSRV compiler
-exclude = ["examples/cosmic_text"]
+exclude = ["examples/cosmic_text", "benches"]

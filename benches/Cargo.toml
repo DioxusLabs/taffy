@@ -21,6 +21,7 @@ taffy_03 = { package = "taffy", version = "0.3", optional = true }
 yoga = { version = "0.5.0", optional = true }
 ordered-float = { version = "4", optional = true }
 slotmap = { version = "1.0.6", optional = true }
+cosmic-text = "0.13"
 
 [features]
 yoga = ["dep:yoga", "dep:slotmap", "dep:ordered-float"]
@@ -44,4 +45,9 @@ harness = false
 [[bench]]
 name = "grid"
 path = "benches/grid.rs"
+harness = false
+
+[[bench]]
+name = "mixed"
+path = "benches/mixed.rs"
 harness = false
