@@ -17,6 +17,7 @@ impl CosmicTextContext {
         let mut buffer = Buffer::new_empty(metrics);
         buffer.set_size(font_system, None, None);
         buffer.set_text(font_system, text, attrs, Shaping::Advanced);
+        buffer.shape_until_scroll(font_system, false);
         Self { buffer }
     }
 
@@ -32,8 +33,6 @@ impl CosmicTextContext {
             AvailableSpace::Definite(width) => Some(width),
         });
         self.buffer.set_size(font_system, width_constraint, None);
-
-        self.buffer.shape_until_scroll(font_system, false);
 
         let (width, total_lines) = self
             .buffer
