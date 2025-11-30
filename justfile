@@ -7,8 +7,9 @@ import-yoga-tests:
 format-fixtures:
   cargo run --package format-fixtures --
 
+[working-directory: 'benches']
 bench *ARGS:
-  cargo bench --package taffy_benchmarks {{ARGS}}
+  cargo bench {{ARGS}}
 
 clippy:
   cargo +nightly clippy --workspace
