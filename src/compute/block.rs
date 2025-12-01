@@ -656,7 +656,7 @@ fn perform_final_layout_on_in_flow_children(
 ) -> (Size<f32>, f32, CollapsibleMarginSet, CollapsibleMarginSet) {
     // Resolve container_inner_width for sizing child nodes using initial content_box_inset
     let container_inner_width = container_outer_width - resolved_content_box_inset.horizontal_axis_sum();
-    let parent_size = Size { width: Some(container_outer_width), height: None };
+    let parent_size = Size { width: Some(container_inner_width), height: None };
     let available_space =
         Size { width: AvailableSpace::Definite(container_inner_width), height: AvailableSpace::MinContent };
 
@@ -817,7 +817,7 @@ fn perform_final_layout_on_in_flow_children(
                 axis: RequestedAxis::Both,
                 known_dimensions,
                 parent_size,
-                available_space: available_space.map_width(|w| w.maybe_sub(item_non_auto_x_margin_sum)),
+                available_space: available_space.map_width(|_| AvailableSpace::Definite(stretch_width)),
                 vertical_margins_are_collapsible: if item.is_in_same_bfc { Line::TRUE } else { Line::FALSE },
             };
 
