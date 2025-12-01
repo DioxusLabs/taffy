@@ -106,6 +106,7 @@ members = [
     "scripts/format-fixtures",
     "scripts/import-yoga-tests",
     "tests/common",
+    "bindings/c"
 ]
 # The cosmic_text example and benches are excluded from the workspace as including them breaks compilation
 # of all crates in the workspace with our MSRV compiler

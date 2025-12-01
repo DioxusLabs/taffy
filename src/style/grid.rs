@@ -483,6 +483,39 @@ impl Line<NonNamedGridPlacement> {
             end: self.end.into_origin_zero_placement(explicit_track_count),
         }
     }
+
+    /// Convert raw values of start, span, and end into a [`GridPlacement`].
+    /// Zero is not a valid value for any of the values and is thus used to indicate unset
+    /// Only 2 of the 3 values should be set. If all 3 are set then `span_value` is ignored.
+    // pub fn from_raw_parts(start: i16, span_value: u16, end: i16) -> Self {
+    //     match (start, span_value, end) {
+    //         (0, 0, 0) => auto(),
+    //         (start, 0, 0) => Line { start: line(start), end: auto() },
+    //         (0, 0, end) => Line { start: auto(), end: line(end) },
+    //         (0, span_value, 0) => span(span_value),
+    //         (start, span_value, 0) => Line { start: line(start), end: span(span_value) },
+    //         (0, span_value, end) => Line { start: span(span_value), end: line(end) },
+    //         (start, _, end) => Line { start: line(start), end: line(end) },
+    //     }
+    // }
+
+    /// Convert raw values of start, span, and end into a [`GridPlacement`].
+    /// Zero is not a valid value for any of the values and is thus used to indicate unset
+    /// Only 2 of the 3 values should be set. If all 3 are set then `span_value` is ignored.
+    pub fn into_raw_parts(self) -> (i16, u16, i16) {
+        use GenericGridPlacement::*;
+        match (self.start, self.end) {
+            (Line(start), Line(end)) => (start.as_i16(), 0, end.as_i16()),
+            (Line(start), Span(span)) => (start.as_i16(), span, 0),
+            (Line(start), Auto) => (start.as_i16(), 1, 0),
+            (Span(span), Line(end)) => (0, span, end.as_i16()),
+            (Span(span), Span(_)) => (0, span, 0),
+            (Span(span), Auto) => (0, span, 0),
+            (Auto, Line(end)) => (0, 1, end.as_i16()),
+            (Auto, Span(span)) => (0, span, 0),
+            (Auto, Auto) => (0, 1, 0),
+        }
+    }
 }
 
 impl Line<OriginZeroGridPlacement> {
