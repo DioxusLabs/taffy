@@ -423,6 +423,9 @@ fn compute_inner(
         return LayoutOutput::from_outer_size(Size { width: container_outer_width, height: container_outer_height });
     }
 
+    let container_percentage_resolution_height =
+        known_dimensions.height.or(size.height.maybe_max(min_size.height)).or(min_size.height);
+
     // 3. Perform final item layout and return content height
     let resolved_padding = raw_padding.resolve_or_zero(Some(container_outer_width), |val, basis| tree.calc(val, basis));
     let resolved_border = raw_border.resolve_or_zero(Some(container_outer_width), |val, basis| tree.calc(val, basis));
@@ -432,6 +435,7 @@ fn compute_inner(
             tree,
             &mut items,
             container_outer_width,
+            container_percentage_resolution_height,
             content_box_inset,
             resolved_content_box_inset,
             text_align,
@@ -648,6 +652,7 @@ fn perform_final_layout_on_in_flow_children(
     tree: &mut impl LayoutBlockContainer,
     items: &mut [BlockItem],
     container_outer_width: f32,
+    container_percentage_resolution_height: Option<f32>,
     content_box_inset: Rect<f32>,
     resolved_content_box_inset: Rect<f32>,
     text_align: TextAlign,
@@ -656,7 +661,9 @@ fn perform_final_layout_on_in_flow_children(
 ) -> (Size<f32>, f32, CollapsibleMarginSet, CollapsibleMarginSet) {
     // Resolve container_inner_width for sizing child nodes using initial content_box_inset
     let container_inner_width = container_outer_width - resolved_content_box_inset.horizontal_axis_sum();
-    let parent_size = Size { width: Some(container_inner_width), height: None };
+    let container_percentage_resolution_height =
+        container_percentage_resolution_height.maybe_sub(resolved_content_box_inset.vertical_axis_sum());
+    let parent_size = Size { width: Some(container_inner_width), height: container_percentage_resolution_height };
     let available_space =
         Size { width: AvailableSpace::Definite(container_inner_width), height: AvailableSpace::MinContent };
 
