@@ -156,6 +156,11 @@ impl BlockContext<'_> {
         slot
     }
 
+    /// Get the bottom of lowest relevant float for the specific clear property
+    pub fn cleared_threshold(&self, clear: Clear) -> Option<f32> {
+        self.bfc.float_context.cleared_threshold(clear).map(|threshold| threshold - self.y_offset)
+    }
+
     /// Update the height that descendent floats with the height that floats consume
     /// within a particular child
     fn add_child_floated_content_height_contribution(&mut self, child_contribution: f32) {
@@ -828,6 +833,8 @@ fn perform_final_layout_on_in_flow_children(
                 vertical_margins_are_collapsible: if item.is_in_same_bfc { Line::TRUE } else { Line::FALSE },
             };
 
+            let clear_pos = block_ctx.cleared_threshold(item.clear).unwrap_or(0.0);
+
             let item_layout = if item.is_in_same_bfc {
                 let width = known_dimensions
                     .width
@@ -840,7 +847,7 @@ fn perform_final_layout_on_in_flow_children(
 
                 // Compute child layout
                 let mut child_block_ctx =
-                    block_ctx.sub_context(y_offset_for_absolute + item_non_auto_margin.top, insets);
+                    block_ctx.sub_context((y_offset_for_absolute + item_non_auto_margin.top).max(clear_pos), insets);
                 let output = tree.compute_block_child_layout(item.node_id, inputs, Some(&mut child_block_ctx));
 
                 // Extract float contribution from child block context
@@ -895,12 +902,11 @@ fn perform_final_layout_on_in_flow_children(
             };
 
             item.computed_size = item_layout.size;
-            item.can_be_collapsed_through = item_layout.margins_can_collapse_through;
+            item.can_be_collapsed_through =
+                item_layout.margins_can_collapse_through && (item.float.is_floated() || item.clear == Clear::None);
             item.static_position = if item.is_in_same_bfc {
-                Point {
-                    x: resolved_content_box_inset.left,
-                    y: committed_y_offset + active_collapsible_margin_set.resolve(),
-                }
+                let uncleared_y = committed_y_offset + active_collapsible_margin_set.resolve();
+                Point { x: resolved_content_box_inset.left, y: uncleared_y.max(clear_pos) }
             } else {
                 // TODO: handle inset and margins
                 Point { x: float_avoiding_position.x + resolved_content_box_inset.left, y: float_avoiding_position.y }
@@ -908,7 +914,7 @@ fn perform_final_layout_on_in_flow_children(
             let mut location = if item.is_in_same_bfc {
                 Point {
                     x: resolved_content_box_inset.left + inset_offset.x + resolved_margin.left,
-                    y: committed_y_offset + inset_offset.y + y_margin_offset,
+                    y: committed_y_offset.max(clear_pos) + inset_offset.y + y_margin_offset,
                 }
             } else {
                 // TODO: handle inset and margins
@@ -984,7 +990,7 @@ fn perform_final_layout_on_in_flow_children(
                     y_offset_for_float = committed_y_offset + item_layout.size.height + y_margin_offset;
                 }
             } else {
-                committed_y_offset += item_layout.size.height + y_margin_offset;
+                committed_y_offset = location.y - inset_offset.y + item_layout.size.height;
                 active_collapsible_margin_set = bottom_margin_set;
                 y_offset_for_absolute = committed_y_offset + active_collapsible_margin_set.resolve();
                 #[cfg(feature = "float_layout")]
