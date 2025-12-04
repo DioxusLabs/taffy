@@ -450,6 +450,7 @@ impl FloatContext {
         PlacedFloatedBox { width: floated_box.width, height: floated_box.height, y: start_y, x_inset: placed_inset }
     }
 
+    /// Get the end segment of the last float on side(s) specified by the clear parameter (if any)
     fn cleared_segment(&self, clear: Clear) -> Option<usize> {
         match clear {
             Clear::Left => Some(self.last_placed_floats[0].end),
