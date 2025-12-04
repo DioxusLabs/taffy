@@ -450,6 +450,24 @@ impl FloatContext {
         PlacedFloatedBox { width: floated_box.width, height: floated_box.height, y: start_y, x_inset: placed_inset }
     }
 
+    fn cleared_segment(&self, clear: Clear) -> Option<usize> {
+        match clear {
+            Clear::Left => Some(self.last_placed_floats[0].end),
+            Clear::Right => Some(self.last_placed_floats[1].end),
+            Clear::Both => {
+                let left_end = self.last_placed_floats[0].end;
+                let right_end = self.last_placed_floats[1].end;
+                Some(left_end.max(right_end))
+            }
+            Clear::None => None,
+        }
+    }
+
+    /// Get the bottom of lowest relevant float for the specific clear property
+    pub fn cleared_threshold(&self, clear: Clear) -> Option<f32> {
+        self.cleared_segment(clear).and_then(|idx| self.segments.get(idx.max(1) - 1)).map(|seg| seg.y.end)
+    }
+
     /// Search for a space suitable for laying out non-floated content into
     pub fn find_content_slot(
         &self,
@@ -470,24 +488,7 @@ impl FloatContext {
 
         // The min starting segment index
         let at_least = after.map(|idx| idx + 1).unwrap_or(0);
-
-        // Ensure that content respects "clear" and "after"
-        let hwm = match clear {
-            Clear::Left => {
-                let left_end = self.last_placed_floats[0].end;
-                at_least.max(left_end + 1)
-            }
-            Clear::Right => {
-                let right_end = self.last_placed_floats[1].end;
-                at_least.max(right_end + 1)
-            }
-            Clear::Both => {
-                let left_end = self.last_placed_floats[0].end;
-                let right_end = self.last_placed_floats[1].end;
-                at_least.max(left_end).max(right_end) + 1
-            }
-            Clear::None => at_least,
-        };
+        let hwm = at_least.max(self.cleared_segment(clear).map(|idx| idx + 1).unwrap_or(0));
 
         let start_idx = self
             .segments
