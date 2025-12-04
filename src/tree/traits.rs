@@ -137,7 +137,7 @@ use crate::style::{FlexboxContainerStyle, FlexboxItemStyle};
 use crate::style::{GridContainerStyle, GridItemStyle};
 use crate::CheapCloneStr;
 #[cfg(feature = "block_layout")]
-use crate::{BlockContainerStyle, BlockItemStyle};
+use crate::{BlockContainerStyle, BlockContext, BlockItemStyle};
 
 #[cfg(all(feature = "grid", feature = "detailed_layout_info"))]
 use crate::compute::grid::DetailedGridInfo;
@@ -313,6 +313,18 @@ pub trait LayoutBlockContainer: LayoutPartialTree {
 
     /// Get the child's styles
     fn get_block_child_style(&self, child_node_id: NodeId) -> Self::BlockItemStyle<'_>;
+
+    /// Compute the specified node's size or full layout given the specified constraints
+    #[cfg(feature = "block_layout")]
+    fn compute_block_child_layout(
+        &mut self,
+        node_id: NodeId,
+        inputs: LayoutInput,
+        block_ctx: Option<&mut BlockContext<'_>>,
+    ) -> LayoutOutput {
+        let _ = block_ctx;
+        self.compute_child_layout(node_id, inputs)
+    }
 }
 
 // --- PRIVATE TRAITS

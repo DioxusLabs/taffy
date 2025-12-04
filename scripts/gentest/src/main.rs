@@ -420,6 +420,25 @@ fn generate_node(ident: &str, node: &Value) -> TokenStream {
         _ => quote!(),
     };
 
+    let float = match style["cssFloat"] {
+        Value::String(ref value) => match value.as_ref() {
+            "left" => quote!(float: taffy::style::Float::Left,),
+            "right" => quote!(float: taffy::style::Float::Right,),
+            _ => quote!(),
+        },
+        _ => quote!(),
+    };
+
+    let clear = match style["clear"] {
+        Value::String(ref value) => match value.as_ref() {
+            "left" => quote!(clear: taffy::style::Clear::Left,),
+            "right" => quote!(clear: taffy::style::Clear::Right,),
+            "both" => quote!(clear: taffy::style::Clear::Right,),
+            _ => quote!(),
+        },
+        _ => quote!(),
+    };
+
     let flex_direction = match style["flexDirection"] {
         Value::String(ref value) => match value.as_ref() {
             "row-reverse" => quote!(flex_direction: taffy::style::FlexDirection::RowReverse,),
@@ -646,6 +665,8 @@ fn generate_node(ident: &str, node: &Value) -> TokenStream {
         #box_sizing
         #direction
         #position
+        #float
+        #clear
         #text_align
         #flex_direction
         #flex_wrap

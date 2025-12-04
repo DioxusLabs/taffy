@@ -310,10 +310,8 @@ impl GridAutoFlow {
 /// A grid line placement specification which is generic over the coordinate system that it uses to define
 /// grid line positions.
 ///
-/// GenericGridPlacement<GridLine> is aliased as GridPlacement and is exposed to users of Taffy to define styles.
-/// GenericGridPlacement<OriginZeroLine> is aliased as OriginZeroGridPlacement and is used internally for placement computations.
-///
-/// See [`crate::compute::grid::type::coordinates`] for documentation on the different coordinate systems.
+/// `GenericGridPlacement<GridLine>` is aliased as GridPlacement and is exposed to users of Taffy to define styles.
+/// `GenericGridPlacement<OriginZeroLine>` is aliased as OriginZeroGridPlacement and is used internally for placement computations.
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum GenericGridPlacement<LineType: GridCoordinate> {
@@ -350,9 +348,9 @@ pub enum GridPlacement<S: CheapCloneStr = DefaultCheapStr> {
     NamedLine(S, i16),
     /// Item should span specified number of tracks (columns or rows)
     Span(u16),
-    /// Item should span until the nth line named <name>.
+    /// Item should span until the nth line named `<name>`.
     ///
-    /// If there are less than n lines named <name> in the specified direction then
+    /// If there are less than n lines named `<name>` in the specified direction then
     /// all implicit lines will be counted.
     NamedSpan(S, u16),
 }

@@ -5,6 +5,8 @@ use slotmap::SecondaryMap;
 use slotmap::SparseSecondaryMap as SecondaryMap;
 use slotmap::{DefaultKey, SlotMap};
 
+#[cfg(feature = "block_layout")]
+use crate::block::BlockContext;
 use crate::geometry::Size;
 use crate::style::{AvailableSpace, Display, Style};
 use crate::sys::DefaultCheapStr;
@@ -19,6 +21,7 @@ use crate::compute::{
     compute_cached_layout, compute_hidden_layout, compute_leaf_layout, compute_root_layout, round_layout,
 };
 use crate::CacheTree;
+
 #[cfg(feature = "block_layout")]
 use crate::{compute::compute_block_layout, LayoutBlockContainer};
 #[cfg(feature = "flexbox")]
@@ -283,6 +286,69 @@ where
     pub(crate) measure_function: MeasureFunction,
 }
 
+impl<NodeContext, MeasureFunction> TaffyView<'_, NodeContext, MeasureFunction>
+where
+    MeasureFunction:
+        FnMut(Size<Option<f32>>, Size<AvailableSpace>, NodeId, Option<&mut NodeContext>, &Style) -> Size<f32>,
+{
+    #[inline(always)]
+    /// Unified implementation that both `LayoutPartialTree::compute_child_layout`
+    /// and `LayoutBlockContainer::compute_block_child_layout` delegate to.
+    fn compute_child_layout(
+        &mut self,
+        node_id: NodeId,
+        inputs: LayoutInput,
+        #[cfg(feature = "block_layout")] block_ctx: Option<&mut BlockContext<'_>>,
+    ) -> LayoutOutput {
+        // If RunMode is PerformHiddenLayout then this indicates that an ancestor node is `Display::None`
+        // and thus that we should lay out this node using hidden layout regardless of it's own display style.
+        if inputs.run_mode == RunMode::PerformHiddenLayout {
+            debug_log!("HIDDEN");
+            return compute_hidden_layout(self, node_id);
+        }
+
+        // We run the following wrapped in "compute_cached_layout", which will check the cache for an entry matching the node and inputs and:
+        //   - Return that entry if exists
+        //   - Else call the passed closure (below) to compute the result
+        //
+        // If there was no cache match and a new result needs to be computed then that result will be added to the cache
+        compute_cached_layout(self, node_id, inputs, |tree, node_id, inputs| {
+            let display_mode = tree.taffy.nodes[node_id.into()].style.display;
+            let has_children = tree.child_count(node_id) > 0;
+
+            debug_log!(display_mode);
+            debug_log_node!(
+                inputs.known_dimensions,
+                inputs.parent_size,
+                inputs.available_space,
+                inputs.run_mode,
+                inputs.sizing_mode
+            );
+
+            // Dispatch to a layout algorithm based on the node's display style and whether the node has children or not.
+            match (display_mode, has_children) {
+                (Display::None, _) => compute_hidden_layout(tree, node_id),
+                #[cfg(feature = "block_layout")]
+                (Display::Block, true) => compute_block_layout(tree, node_id, inputs, block_ctx),
+                #[cfg(feature = "flexbox")]
+                (Display::Flex, true) => compute_flexbox_layout(tree, node_id, inputs),
+                #[cfg(feature = "grid")]
+                (Display::Grid, true) => compute_grid_layout(tree, node_id, inputs),
+                (_, false) => {
+                    let node_key = node_id.into();
+                    let style = &tree.taffy.nodes[node_key].style;
+                    let has_context = tree.taffy.nodes[node_key].has_context;
+                    let node_context = has_context.then(|| tree.taffy.node_context_data.get_mut(node_key)).flatten();
+                    let measure_function = |known_dimensions, available_space| {
+                        (tree.measure_function)(known_dimensions, available_space, node_id, node_context, style)
+                    };
+                    compute_leaf_layout(inputs, style, |_, _| 0.0, measure_function)
+                }
+            }
+        })
+    }
+}
+
 // TraversePartialTree impl for TaffyView
 impl<NodeContext, MeasureFunction> TraversePartialTree for TaffyView<'_, NodeContext, MeasureFunction>
 where
@@ -346,54 +412,13 @@ where
     }
 
     #[inline(always)]
-    fn compute_child_layout(&mut self, node: NodeId, inputs: LayoutInput) -> LayoutOutput {
-        // If RunMode is PerformHiddenLayout then this indicates that an ancestor node is `Display::None`
-        // and thus that we should lay out this node using hidden layout regardless of it's own display style.
-        if inputs.run_mode == RunMode::PerformHiddenLayout {
-            debug_log!("HIDDEN");
-            return compute_hidden_layout(self, node);
-        }
-
-        // We run the following wrapped in "compute_cached_layout", which will check the cache for an entry matching the node and inputs and:
-        //   - Return that entry if exists
-        //   - Else call the passed closure (below) to compute the result
-        //
-        // If there was no cache match and a new result needs to be computed then that result will be added to the cache
-        compute_cached_layout(self, node, inputs, |tree, node, inputs| {
-            let display_mode = tree.taffy.nodes[node.into()].style.display;
-            let has_children = tree.child_count(node) > 0;
-
-            debug_log!(display_mode);
-            debug_log_node!(
-                inputs.known_dimensions,
-                inputs.parent_size,
-                inputs.available_space,
-                inputs.run_mode,
-                inputs.sizing_mode
-            );
-
-            // Dispatch to a layout algorithm based on the node's display style and whether the node has children or not.
-            match (display_mode, has_children) {
-                (Display::None, _) => compute_hidden_layout(tree, node),
-                #[cfg(feature = "block_layout")]
-                (Display::Block, true) => compute_block_layout(tree, node, inputs),
-                #[cfg(feature = "flexbox")]
-                (Display::Flex, true) => compute_flexbox_layout(tree, node, inputs),
-                #[cfg(feature = "grid")]
-                (Display::Grid, true) => compute_grid_layout(tree, node, inputs),
-                (_, false) => {
-                    let node_key = node.into();
-                    let style = &tree.taffy.nodes[node_key].style;
-                    let has_context = tree.taffy.nodes[node_key].has_context;
-                    let node_context = has_context.then(|| tree.taffy.node_context_data.get_mut(node_key)).flatten();
-                    let measure_function = |known_dimensions, available_space| {
-                        (tree.measure_function)(known_dimensions, available_space, node, node_context, style)
-                    };
-                    // TODO: implement calc() in high-level API
-                    compute_leaf_layout(inputs, style, |_, _| 0.0, measure_function)
-                }
-            }
-        })
+    fn compute_child_layout(&mut self, node_id: NodeId, inputs: LayoutInput) -> LayoutOutput {
+        self.compute_child_layout(
+            node_id,
+            inputs,
+            #[cfg(feature = "block_layout")]
+            None,
+        )
     }
 }
 
@@ -451,6 +476,16 @@ where
     #[inline(always)]
     fn get_block_child_style(&self, child_node_id: NodeId) -> Self::BlockItemStyle<'_> {
         self.get_core_container_style(child_node_id)
+    }
+
+    #[inline(always)]
+    fn compute_block_child_layout(
+        &mut self,
+        node_id: NodeId,
+        inputs: LayoutInput,
+        block_ctx: Option<&mut BlockContext<'_>>,
+    ) -> LayoutOutput {
+        self.compute_child_layout(node_id, inputs, block_ctx)
     }
 }
 
