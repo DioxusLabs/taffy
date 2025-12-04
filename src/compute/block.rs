@@ -833,7 +833,10 @@ fn perform_final_layout_on_in_flow_children(
                 vertical_margins_are_collapsible: if item.is_in_same_bfc { Line::TRUE } else { Line::FALSE },
             };
 
+            #[cfg(feature = "float_layout")]
             let clear_pos = block_ctx.cleared_threshold(item.clear).unwrap_or(0.0);
+            #[cfg(not(feature = "float_layout"))]
+            let clear_pos = 0.0;
 
             let item_layout = if item.is_in_same_bfc {
                 let width = known_dimensions
@@ -901,9 +904,13 @@ fn perform_final_layout_on_in_flow_children(
                 y_margin_offset = active_collapsible_margin_set.collapse_with_margin(resolved_margin.top).resolve()
             };
 
+            #[cfg(feature = "float_layout")]
+            let float_or_not_clear = item.float.is_floated() || item.clear == Clear::None;
+            #[cfg(not(feature = "float_layout"))]
+            let float_or_not_clear = true;
+
             item.computed_size = item_layout.size;
-            item.can_be_collapsed_through =
-                item_layout.margins_can_collapse_through && (item.float.is_floated() || item.clear == Clear::None);
+            item.can_be_collapsed_through = item_layout.margins_can_collapse_through && float_or_not_clear;
             item.static_position = if item.is_in_same_bfc {
                 let uncleared_y = committed_y_offset + active_collapsible_margin_set.resolve();
                 Point { x: resolved_content_box_inset.left, y: uncleared_y.max(clear_pos) }
