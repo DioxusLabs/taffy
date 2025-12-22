@@ -130,12 +130,11 @@ use super::{Layout, LayoutInput, LayoutOutput, NodeId, RequestedAxis, RunMode, S
 #[cfg(feature = "detailed_layout_info")]
 use crate::debug::debug_log;
 use crate::geometry::{AbsoluteAxis, Line, Size};
-use crate::style::{AvailableSpace, CoreStyle};
+use crate::style::{AvailableSpace, CoreStyle, Units};
 #[cfg(feature = "flexbox")]
 use crate::style::{FlexboxContainerStyle, FlexboxItemStyle};
 #[cfg(feature = "grid")]
 use crate::style::{GridContainerStyle, GridItemStyle};
-use crate::CheapCloneStr;
 #[cfg(feature = "block_layout")]
 use crate::{BlockContainerStyle, BlockItemStyle};
 
@@ -174,13 +173,13 @@ pub trait TraverseTree: TraversePartialTree {}
 pub trait LayoutPartialTree: TraversePartialTree {
     /// The style type representing the core container styles that all containers should have
     /// Used when laying out the root node of a tree
-    type CoreContainerStyle<'a>: CoreStyle<CustomIdent = Self::CustomIdent>
+    type CoreContainerStyle<'a>: CoreStyle<Units = Self::Units>
     where
         Self: 'a;
 
     /// String type for representing "custom identifiers" (for example, named grid lines or areas)
     /// If you are unsure what to use here then consider `Arc<str>`.
-    type CustomIdent: CheapCloneStr;
+    type Units: Units;
 
     /// Get core style
     fn get_core_container_style(&self, node_id: NodeId) -> Self::CoreContainerStyle<'_>;
@@ -271,12 +270,12 @@ pub trait LayoutFlexboxContainer: LayoutPartialTree {
 /// Extends [`LayoutPartialTree`] with getters for the styles required for CSS Grid layout
 pub trait LayoutGridContainer: LayoutPartialTree {
     /// The style type representing the CSS Grid container's styles
-    type GridContainerStyle<'a>: GridContainerStyle<CustomIdent = Self::CustomIdent>
+    type GridContainerStyle<'a>: GridContainerStyle<Units = Self::Units>
     where
         Self: 'a;
 
     /// The style type representing each CSS Grid item's styles
-    type GridItemStyle<'a>: GridItemStyle<CustomIdent = Self::CustomIdent>
+    type GridItemStyle<'a>: GridItemStyle<Units = Self::Units>
     where
         Self: 'a;
 
