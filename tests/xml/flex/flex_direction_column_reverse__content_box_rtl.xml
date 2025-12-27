@@ -1,0 +1,17 @@
+<test name="flex_direction_column_reverse__content_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div box-sizing="content-box" direction="rtl" flex-direction="column-reverse" width="100px" height="100px">
+      <div box-sizing="content-box" direction="rtl" height="10px"/>
+      <div box-sizing="content-box" direction="rtl" height="10px"/>
+      <div box-sizing="content-box" direction="rtl" height="10px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="100" height="100">
+      <node x="0" y="90" width="100" height="10"/>
+      <node x="0" y="80" width="100" height="10"/>
+      <node x="0" y="70" width="100" height="10"/>
+    </node>
+  </expectations>
+</test>

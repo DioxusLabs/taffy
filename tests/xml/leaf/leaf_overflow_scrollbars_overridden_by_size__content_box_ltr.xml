@@ -1,0 +1,9 @@
+<test name="leaf_overflow_scrollbars_overridden_by_size__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div box-sizing="content-box" direction="ltr" overflow-x="scroll" overflow-y="scroll" scrollbar-width="15" width="2px" height="4px"/>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="2" height="4" scroll_width="0" scroll_height="0"/>
+  </expectations>
+</test>

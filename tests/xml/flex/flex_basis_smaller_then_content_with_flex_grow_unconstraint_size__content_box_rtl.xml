@@ -1,0 +1,23 @@
+<test name="flex_basis_smaller_then_content_with_flex_grow_unconstraint_size__content_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div box-sizing="content-box" direction="rtl">
+      <div box-sizing="content-box" direction="rtl" flex-direction="column" flex-grow="1" flex-basis="0px">
+        <div box-sizing="content-box" direction="rtl" width="70px" height="100px"/>
+      </div>
+      <div box-sizing="content-box" direction="rtl" flex-direction="column" flex-grow="1" flex-basis="0px">
+        <div box-sizing="content-box" direction="rtl" width="20px" height="100px"/>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="90" height="100">
+      <node x="20" y="0" width="70" height="100">
+        <node x="0" y="0" width="70" height="100"/>
+      </node>
+      <node x="0" y="0" width="20" height="100">
+        <node x="0" y="0" width="20" height="100"/>
+      </node>
+    </node>
+  </expectations>
+</test>

@@ -1,0 +1,15 @@
+<test name="flex_basis_flex_shrink_column__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div box-sizing="content-box" direction="ltr" flex-direction="column" width="100px" height="100px">
+      <div box-sizing="content-box" direction="ltr" flex-basis="100px"/>
+      <div box-sizing="content-box" direction="ltr" flex-basis="50px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="100" height="100">
+      <node x="0" y="0" width="100" height="67"/>
+      <node x="0" y="67" width="100" height="33"/>
+    </node>
+  </expectations>
+</test>

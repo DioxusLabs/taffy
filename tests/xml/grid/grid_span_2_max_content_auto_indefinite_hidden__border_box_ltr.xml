@@ -1,0 +1,15 @@
+<test name="grid_span_2_max_content_auto_indefinite_hidden__border_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" direction="ltr" grid-template-rows="40px" grid-template-columns="max-content auto">
+      <div direction="ltr" grid-row-start="1" grid-column-start="1"/>
+      <div direction="ltr" grid-row-start="1" grid-column-start="2"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="0" height="40">
+      <node x="0" y="0" width="0" height="40"/>
+      <node x="0" y="0" width="0" height="40"/>
+    </node>
+  </expectations>
+</test>

@@ -1,0 +1,17 @@
+<test name="gap_column_gap_percentage_flexible_with_padding__content_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div box-sizing="content-box" direction="rtl" width="100px" height="100px" row-gap="20px" column-gap="10%" padding-top="10px" padding-left="10px" padding-bottom="10px" padding-right="10px">
+      <div box-sizing="content-box" direction="rtl" flex-grow="1" flex-basis="0%"/>
+      <div box-sizing="content-box" direction="rtl" flex-grow="1" flex-basis="0%"/>
+      <div box-sizing="content-box" direction="rtl" flex-grow="1" flex-basis="0%"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="120" height="120">
+      <node x="83" y="10" width="27" height="100"/>
+      <node x="47" y="10" width="26" height="100"/>
+      <node x="10" y="10" width="27" height="100"/>
+    </node>
+  </expectations>
+</test>

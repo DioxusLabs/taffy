@@ -1,0 +1,21 @@
+<test name="grid_placement_definite_primary__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" direction="rtl" width="200px" height="200px" grid-template-columns="33% 74%">
+      <div direction="rtl" grid-column-start="1"/>
+      <div direction="rtl" grid-column-start="2"/>
+      <div direction="rtl" grid-column-start="1"/>
+      <div direction="rtl" grid-column-start="2"/>
+      <div direction="rtl" grid-column-start="1"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="200" height="200">
+      <node x="134" y="0" width="66" height="67"/>
+      <node x="-14" y="0" width="148" height="67"/>
+      <node x="134" y="67" width="66" height="66"/>
+      <node x="-14" y="67" width="148" height="66"/>
+      <node x="134" y="133" width="66" height="67"/>
+    </node>
+  </expectations>
+</test>

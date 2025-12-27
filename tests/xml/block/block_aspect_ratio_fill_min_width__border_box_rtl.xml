@@ -1,0 +1,15 @@
+<test name="block_aspect_ratio_fill_min_width__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="block" direction="rtl" width="100px" height="100px">
+      <text display="block" direction="rtl" min-height="40px" aspect-ratio="2">
+        
+      </text>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="100" height="100">
+      <node x="0" y="0" width="100" height="50"/>
+    </node>
+  </expectations>
+</test>

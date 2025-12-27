@@ -1,0 +1,13 @@
+<test name="min_height_larger_than_height__content_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div box-sizing="content-box" direction="rtl" width="100px" height="100px">
+      <div box-sizing="content-box" direction="rtl" height="25px" min-height="50px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="100" height="100">
+      <node x="100" y="0" width="0" height="50"/>
+    </node>
+  </expectations>
+</test>

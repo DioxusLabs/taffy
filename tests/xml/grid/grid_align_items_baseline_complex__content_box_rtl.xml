@@ -1,0 +1,45 @@
+<test name="grid_align_items_baseline_complex__content_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" box-sizing="content-box" direction="rtl" align-items="baseline" width="120px" height="120px" grid-template-rows="40px 40px 40px" grid-template-columns="40px 40px 40px">
+      <div box-sizing="content-box" direction="rtl" width="20px" height="20px"/>
+      <div box-sizing="content-box" direction="rtl" width="20px" height="20px">
+        <div box-sizing="content-box" direction="rtl" height="10px"/>
+      </div>
+      <div box-sizing="content-box" direction="rtl" width="20px" height="20px">
+        <div box-sizing="content-box" direction="rtl" height="10px"/>
+      </div>
+      <div box-sizing="content-box" direction="rtl" width="20px" height="20px"/>
+      <div box-sizing="content-box" direction="rtl" width="20px" height="20px"/>
+      <div box-sizing="content-box" direction="rtl" width="20px" height="20px"/>
+      <div box-sizing="content-box" direction="rtl" width="20px" height="20px">
+        <div box-sizing="content-box" direction="rtl" height="10px"/>
+      </div>
+      <div box-sizing="content-box" direction="rtl" width="20px" height="20px">
+        <div box-sizing="content-box" direction="rtl" height="5px"/>
+      </div>
+      <div box-sizing="content-box" direction="rtl" width="20px" height="20px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="120" height="120">
+      <node x="100" y="0" width="20" height="20"/>
+      <node x="60" y="10" width="20" height="20">
+        <node x="20" y="0" width="0" height="10"/>
+      </node>
+      <node x="20" y="10" width="20" height="20">
+        <node x="20" y="0" width="0" height="10"/>
+      </node>
+      <node x="100" y="40" width="20" height="20"/>
+      <node x="60" y="40" width="20" height="20"/>
+      <node x="20" y="40" width="20" height="20"/>
+      <node x="100" y="90" width="20" height="20">
+        <node x="20" y="0" width="0" height="10"/>
+      </node>
+      <node x="60" y="95" width="20" height="20">
+        <node x="20" y="0" width="0" height="5"/>
+      </node>
+      <node x="20" y="80" width="20" height="20"/>
+    </node>
+  </expectations>
+</test>

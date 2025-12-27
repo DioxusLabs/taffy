@@ -1,0 +1,23 @@
+<test name="grid_max_width_smaller_than_min_content__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" direction="rtl" grid-template-columns="max-content">
+      <div display="grid" direction="rtl" max-width="60px" grid-template-columns="auto auto">
+        <text direction="rtl">
+          HHHH​HHHH
+        </text>
+        <text direction="rtl">
+          HHHH​HHHH
+        </text>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="60" height="20">
+      <node x="0" y="0" width="60" height="20">
+        <node x="20" y="0" width="40" height="20"/>
+        <node x="-20" y="0" width="40" height="20"/>
+      </node>
+    </node>
+  </expectations>
+</test>

@@ -223,6 +223,7 @@ fn build_style<S: CheapCloneStr>(xnode: roxmltree::Node) -> taffy::Style<S> {
     taffy::Style {
         dummy: std::marker::PhantomData,
         display: parse_or_default(xnode.attribute("display")),
+        direction: parse_or_default(xnode.attribute("direction")),
         item_is_table: false,
         item_is_replaced: false,
         box_sizing: parse_or_default(xnode.attribute("box-sizing")),

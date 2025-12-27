@@ -1,0 +1,17 @@
+<test name="block_margin_y_collapse_through_negative__content_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="block" box-sizing="content-box" direction="rtl" width="50px">
+      <div display="block" box-sizing="content-box" direction="rtl" height="10px" margin-bottom="-5px"/>
+      <div display="block" box-sizing="content-box" direction="rtl" margin-top="-7px" margin-bottom="-3px"/>
+      <div display="block" box-sizing="content-box" direction="rtl" height="10px" margin-top="-2px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="50" height="13">
+      <node x="0" y="0" width="50" height="10"/>
+      <node x="0" y="3" width="50" height="0"/>
+      <node x="0" y="3" width="50" height="10"/>
+    </node>
+  </expectations>
+</test>

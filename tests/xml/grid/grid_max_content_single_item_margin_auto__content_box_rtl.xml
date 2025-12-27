@@ -1,0 +1,31 @@
+<test name="grid_max_content_single_item_margin_auto__content_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" box-sizing="content-box" direction="rtl" grid-template-rows="40px 40px 40px" grid-template-columns="40px max-content 40px">
+      <div box-sizing="content-box" direction="rtl"/>
+      <text box-sizing="content-box" direction="rtl" margin-top="auto" margin-left="auto" margin-bottom="auto" margin-right="auto">
+        HH​HH
+      </text>
+      <div box-sizing="content-box" direction="rtl"/>
+      <div box-sizing="content-box" direction="rtl"/>
+      <div box-sizing="content-box" direction="rtl"/>
+      <div box-sizing="content-box" direction="rtl"/>
+      <div box-sizing="content-box" direction="rtl"/>
+      <div box-sizing="content-box" direction="rtl"/>
+      <div box-sizing="content-box" direction="rtl"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="120" height="120">
+      <node x="80" y="0" width="40" height="40"/>
+      <node x="40" y="15" width="40" height="10"/>
+      <node x="0" y="0" width="40" height="40"/>
+      <node x="80" y="40" width="40" height="40"/>
+      <node x="40" y="40" width="40" height="40"/>
+      <node x="0" y="40" width="40" height="40"/>
+      <node x="80" y="80" width="40" height="40"/>
+      <node x="40" y="80" width="40" height="40"/>
+      <node x="0" y="80" width="40" height="40"/>
+    </node>
+  </expectations>
+</test>

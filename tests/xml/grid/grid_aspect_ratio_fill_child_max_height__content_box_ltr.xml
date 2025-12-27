@@ -1,0 +1,15 @@
+<test name="grid_aspect_ratio_fill_child_max_height__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" box-sizing="content-box" direction="ltr" width="100px" height="100px">
+      <text box-sizing="content-box" direction="ltr" writing-mode="vertical-lr" max-width="40px" aspect-ratio="2">
+        HH​HH​HH​HH​HH​HH
+      </text>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="100" height="100">
+      <node x="0" y="0" width="40" height="20"/>
+    </node>
+  </expectations>
+</test>

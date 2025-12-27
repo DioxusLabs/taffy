@@ -1,0 +1,11 @@
+<test name="measure_root__content_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <text box-sizing="content-box" direction="rtl">
+      HHHHHH
+    </text>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="60" height="10"/>
+  </expectations>
+</test>

@@ -1,0 +1,17 @@
+<test name="grid_justify_self_direction_rtl__content_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" box-sizing="content-box" direction="rtl" width="120px" height="120px" grid-template-rows="40px 40px 40px" grid-template-columns="40px 40px 40px">
+      <div box-sizing="content-box" direction="rtl" justify-self="start" width="20px" height="20px" grid-row-start="1" grid-column-start="1"/>
+      <div box-sizing="content-box" direction="rtl" justify-self="end" width="20px" height="20px" grid-row-start="2" grid-column-start="2"/>
+      <div box-sizing="content-box" direction="rtl" justify-self="center" width="20px" height="20px" grid-row-start="3" grid-column-start="3"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="120" height="120">
+      <node x="100" y="0" width="20" height="20"/>
+      <node x="40" y="40" width="20" height="20"/>
+      <node x="10" y="80" width="20" height="20"/>
+    </node>
+  </expectations>
+</test>

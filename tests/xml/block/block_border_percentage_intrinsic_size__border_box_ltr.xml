@@ -1,0 +1,17 @@
+<test name="block_border_percentage_intrinsic_size__border_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="block" direction="ltr">
+      <div display="block" direction="ltr">
+        <div display="block" direction="ltr" height="10px"/>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="0" height="10">
+      <node x="0" y="0" width="0" height="10">
+        <node x="0" y="0" width="0" height="10"/>
+      </node>
+    </node>
+  </expectations>
+</test>

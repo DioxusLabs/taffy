@@ -1,0 +1,17 @@
+<test name="block_absolute_child_with_margin_x__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="block" direction="rtl" width="20px" height="37px">
+      <div direction="rtl" position="absolute" width="9px" height="9px" margin-left="7px"/>
+      <div direction="rtl" position="absolute" width="9px" height="9px" margin-right="7px"/>
+      <div direction="rtl" position="absolute" width="9px" height="9px" margin-left="10px" margin-right="5px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="20" height="37">
+      <node x="11" y="0" width="9" height="9"/>
+      <node x="4" y="0" width="9" height="9"/>
+      <node x="6" y="0" width="9" height="9"/>
+    </node>
+  </expectations>
+</test>

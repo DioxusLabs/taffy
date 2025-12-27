@@ -1,0 +1,11 @@
+<test name="measure_root__border_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <text direction="ltr">
+      HHHHHH
+    </text>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="60" height="10"/>
+  </expectations>
+</test>

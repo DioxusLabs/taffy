@@ -1,0 +1,27 @@
+<test name="rounding_fractial_input_6__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div direction="rtl" width="7px">
+      <div direction="rtl" flex-wrap="wrap" width="50%">
+        <div direction="rtl" width="2px" height="10px"/>
+        <div direction="rtl" width="2px" height="10px"/>
+      </div>
+      <div direction="rtl" flex-wrap="wrap" width="50%">
+        <div direction="rtl" width="2px" height="10px"/>
+        <div direction="rtl" width="2px" height="10px"/>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="7" height="20">
+      <node x="4" y="0" width="3" height="20">
+        <node x="2" y="0" width="2" height="10"/>
+        <node x="2" y="10" width="2" height="10"/>
+      </node>
+      <node x="0" y="0" width="4" height="20">
+        <node x="2" y="0" width="2" height="10"/>
+        <node x="2" y="10" width="2" height="10"/>
+      </node>
+    </node>
+  </expectations>
+</test>

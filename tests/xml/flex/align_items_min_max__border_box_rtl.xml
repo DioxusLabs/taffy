@@ -1,0 +1,13 @@
+<test name="align_items_min_max__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div direction="rtl" flex-direction="column" align-items="center" height="100px" min-width="100px" max-width="200px">
+      <div direction="rtl" width="60px" height="60px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="100" height="100">
+      <node x="20" y="0" width="60" height="60"/>
+    </node>
+  </expectations>
+</test>

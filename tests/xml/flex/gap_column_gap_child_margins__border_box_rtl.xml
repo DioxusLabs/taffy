@@ -1,0 +1,17 @@
+<test name="gap_column_gap_child_margins__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div direction="rtl" width="80px" height="100px" column-gap="10px">
+      <div direction="rtl" flex-grow="1" flex-basis="0%" margin-left="2px" margin-right="2px"/>
+      <div direction="rtl" flex-grow="1" flex-basis="0%" margin-left="10px" margin-right="10px"/>
+      <div direction="rtl" flex-grow="1" flex-basis="0%" margin-left="15px" margin-right="15px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="80" height="100">
+      <node x="76" y="0" width="2" height="100"/>
+      <node x="52" y="0" width="2" height="100"/>
+      <node x="15" y="0" width="2" height="100"/>
+    </node>
+  </expectations>
+</test>

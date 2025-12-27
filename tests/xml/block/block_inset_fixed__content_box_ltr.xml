@@ -1,0 +1,17 @@
+<test name="block_inset_fixed__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="block" box-sizing="content-box" direction="ltr" width="50px">
+      <div box-sizing="content-box" direction="ltr" height="10px" top="4px" left="2px"/>
+      <div box-sizing="content-box" direction="ltr" height="10px" bottom="8px" right="6px"/>
+      <div box-sizing="content-box" direction="ltr" height="10px" top="4px" left="2px" bottom="8px" right="6px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="50" height="30">
+      <node x="2" y="4" width="50" height="10"/>
+      <node x="-6" y="2" width="50" height="10"/>
+      <node x="2" y="24" width="50" height="10"/>
+    </node>
+  </expectations>
+</test>

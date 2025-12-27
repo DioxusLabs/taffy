@@ -1,0 +1,21 @@
+<test name="block_margin_y_last_child_collapse_not_blocked_by_padding_top__border_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="block" direction="ltr" width="50px">
+      <div display="block" direction="ltr" margin-bottom="10px" padding-top="1px">
+        <div display="block" direction="ltr" margin-bottom="10px">
+          <div direction="ltr" height="10px"/>
+        </div>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="50" height="21">
+      <node x="0" y="0" width="50" height="11">
+        <node x="0" y="1" width="50" height="10">
+          <node x="0" y="0" width="50" height="10"/>
+        </node>
+      </node>
+    </node>
+  </expectations>
+</test>

@@ -1,0 +1,13 @@
+<test name="scroll_size__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div direction="rtl" overflow-x="scroll" overflow-y="scroll" scrollbar-width="15" align-items="start" justify-content="start" width="50px" height="50px">
+      <div direction="rtl" flex-shrink="0" width="100px" height="100px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="50" height="50" scroll_width="65" scroll_height="65">
+      <node x="-50" y="0" width="100" height="100"/>
+    </node>
+  </expectations>
+</test>

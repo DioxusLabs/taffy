@@ -1,0 +1,19 @@
+<test name="blockflex_overflow_hidden__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="flex" direction="rtl" width="20px" height="50px">
+      <text display="block" direction="rtl" overflow-x="hidden" overflow-y="hidden" scrollbar-width="15" flex-grow="1">
+        HHHH​HH
+      </text>
+      <text display="block" direction="rtl" flex-grow="1">
+        HHHH​HH
+      </text>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="20" height="50">
+      <node x="20" y="0" width="0" height="50" scroll_width="40" scroll_height="0"/>
+      <node x="-20" y="0" width="40" height="50"/>
+    </node>
+  </expectations>
+</test>

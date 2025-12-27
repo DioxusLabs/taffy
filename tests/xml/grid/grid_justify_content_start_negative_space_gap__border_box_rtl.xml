@@ -1,0 +1,33 @@
+<test name="grid_justify_content_start_negative_space_gap__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" direction="rtl" width="240px" height="240px" border-top="60px" border-left="60px" border-bottom="60px" border-right="60px">
+      <div display="grid" direction="rtl" align-content="center" justify-content="start" width="120px" height="120px" row-gap="10px" column-gap="10px" grid-template-rows="20px 20px 20px" grid-template-columns="40px 40px 40px">
+        <div direction="rtl"/>
+        <div direction="rtl"/>
+        <div direction="rtl"/>
+        <div direction="rtl"/>
+        <div direction="rtl"/>
+        <div direction="rtl"/>
+        <div direction="rtl"/>
+        <div direction="rtl"/>
+        <div direction="rtl"/>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="240" height="240">
+      <node x="60" y="60" width="120" height="120">
+        <node x="80" y="20" width="40" height="20"/>
+        <node x="30" y="20" width="40" height="20"/>
+        <node x="-20" y="20" width="40" height="20"/>
+        <node x="80" y="50" width="40" height="20"/>
+        <node x="30" y="50" width="40" height="20"/>
+        <node x="-20" y="50" width="40" height="20"/>
+        <node x="80" y="80" width="40" height="20"/>
+        <node x="30" y="80" width="40" height="20"/>
+        <node x="-20" y="80" width="40" height="20"/>
+      </node>
+    </node>
+  </expectations>
+</test>

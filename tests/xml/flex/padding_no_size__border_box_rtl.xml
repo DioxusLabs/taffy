@@ -1,0 +1,9 @@
+<test name="padding_no_size__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div direction="rtl" padding-top="10px" padding-left="10px" padding-bottom="10px" padding-right="10px"/>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="20" height="20"/>
+  </expectations>
+</test>

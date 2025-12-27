@@ -1,0 +1,23 @@
+<test name="grid_percent_tracks_indefinite_only__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" box-sizing="content-box" direction="ltr" grid-template-rows="30% 60%" grid-template-columns="10% 20% 30%">
+      <div box-sizing="content-box" direction="ltr"/>
+      <div box-sizing="content-box" direction="ltr"/>
+      <div box-sizing="content-box" direction="ltr"/>
+      <div box-sizing="content-box" direction="ltr"/>
+      <div box-sizing="content-box" direction="ltr"/>
+      <div box-sizing="content-box" direction="ltr"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="0" height="0">
+      <node x="0" y="0" width="0" height="0"/>
+      <node x="0" y="0" width="0" height="0"/>
+      <node x="0" y="0" width="0" height="0"/>
+      <node x="0" y="0" width="0" height="0"/>
+      <node x="0" y="0" width="0" height="0"/>
+      <node x="0" y="0" width="0" height="0"/>
+    </node>
+  </expectations>
+</test>

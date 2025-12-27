@@ -1,0 +1,23 @@
+<test name="align_baseline_double_nested_child__content_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div box-sizing="content-box" direction="rtl" align-items="baseline" width="100px" height="100px">
+      <div box-sizing="content-box" direction="rtl" width="50px" height="50px">
+        <div box-sizing="content-box" direction="rtl" width="50px" height="20px"/>
+      </div>
+      <div box-sizing="content-box" direction="rtl" width="50px" height="20px">
+        <div box-sizing="content-box" direction="rtl" width="50px" height="15px"/>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="100" height="100">
+      <node x="50" y="0" width="50" height="50">
+        <node x="0" y="0" width="50" height="20"/>
+      </node>
+      <node x="0" y="5" width="50" height="20">
+        <node x="0" y="0" width="50" height="15"/>
+      </node>
+    </node>
+  </expectations>
+</test>

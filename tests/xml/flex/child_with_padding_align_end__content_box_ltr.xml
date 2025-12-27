@@ -1,0 +1,13 @@
+<test name="child_with_padding_align_end__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div box-sizing="content-box" direction="ltr" flex-direction="column" align-items="flex-end" justify-content="flex-end" width="200px" height="200px">
+      <div box-sizing="content-box" direction="ltr" width="100px" height="100px" padding-top="20px" padding-left="20px" padding-bottom="20px" padding-right="20px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="200" height="200">
+      <node x="60" y="60" width="140" height="140"/>
+    </node>
+  </expectations>
+</test>

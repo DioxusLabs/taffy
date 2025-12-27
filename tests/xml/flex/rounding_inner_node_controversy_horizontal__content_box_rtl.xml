@@ -1,0 +1,21 @@
+<test name="rounding_inner_node_controversy_horizontal__content_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div box-sizing="content-box" direction="rtl" width="320px">
+      <div box-sizing="content-box" direction="rtl" flex-grow="1" height="10px"/>
+      <div box-sizing="content-box" direction="rtl" flex-direction="column" flex-grow="1" height="10px">
+        <div box-sizing="content-box" direction="rtl" flex-grow="1" height="10px"/>
+      </div>
+      <div box-sizing="content-box" direction="rtl" flex-grow="1" height="10px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="320" height="10">
+      <node x="213" y="0" width="107" height="10"/>
+      <node x="107" y="0" width="106" height="10">
+        <node x="0" y="0" width="106" height="10"/>
+      </node>
+      <node x="0" y="0" width="107" height="10"/>
+    </node>
+  </expectations>
+</test>

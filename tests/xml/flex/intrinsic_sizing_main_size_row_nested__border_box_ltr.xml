@@ -1,0 +1,15 @@
+<test name="intrinsic_sizing_main_size_row_nested__border_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div direction="ltr">
+      <text direction="ltr">
+        HH​HH
+      </text>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="40" height="10">
+      <node x="0" y="0" width="40" height="10"/>
+    </node>
+  </expectations>
+</test>

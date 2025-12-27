@@ -1,0 +1,13 @@
+<test name="percentage_position_bottom_right__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div box-sizing="content-box" direction="ltr" width="500px" height="500px">
+      <div box-sizing="content-box" direction="ltr" width="55.00000000000001%" height="15%" bottom="10%" right="20%"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="500" height="500">
+      <node x="-100" y="-50" width="275" height="75"/>
+    </node>
+  </expectations>
+</test>

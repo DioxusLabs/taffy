@@ -1,0 +1,15 @@
+<test name="block_absolute_aspect_ratio_fill_max_width__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="block" direction="rtl" width="400px" height="300px">
+      <text direction="rtl" position="absolute" max-height="50px" aspect-ratio="0.5">
+        HHHH​HHHH​HHHH​HHHH​HHHH​HHHH​HHHH​HHHH​HHHH
+      </text>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="400" height="300">
+      <node x="375" y="0" width="25" height="50"/>
+    </node>
+  </expectations>
+</test>

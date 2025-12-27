@@ -1,0 +1,13 @@
+<test name="grid_absolute_direction_rtl__content_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" box-sizing="content-box" direction="rtl" width="200px" height="200px" grid-template-rows="40px 40px 40px" grid-template-columns="40px 40px 40px">
+      <div box-sizing="content-box" direction="rtl" position="absolute" width="20px" height="20px" grid-row-start="1" grid-row-end="2" grid-column-start="1" grid-column-end="2"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="200" height="200">
+      <node x="180" y="0" width="20" height="20"/>
+    </node>
+  </expectations>
+</test>

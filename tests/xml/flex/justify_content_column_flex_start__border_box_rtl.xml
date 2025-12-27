@@ -1,0 +1,17 @@
+<test name="justify_content_column_flex_start__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div direction="rtl" flex-direction="column" justify-content="flex-start" width="100px" height="100px">
+      <div direction="rtl" height="10px"/>
+      <div direction="rtl" height="10px"/>
+      <div direction="rtl" height="10px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="100" height="100">
+      <node x="0" y="0" width="100" height="10"/>
+      <node x="0" y="10" width="100" height="10"/>
+      <node x="0" y="20" width="100" height="10"/>
+    </node>
+  </expectations>
+</test>

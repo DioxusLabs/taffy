@@ -1,0 +1,13 @@
+<test name="overflow_main_axis__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div box-sizing="content-box" direction="ltr" width="100px" height="100px">
+      <div box-sizing="content-box" direction="ltr" flex-shrink="0" width="200px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="100" height="100">
+      <node x="0" y="0" width="200" height="100"/>
+    </node>
+  </expectations>
+</test>

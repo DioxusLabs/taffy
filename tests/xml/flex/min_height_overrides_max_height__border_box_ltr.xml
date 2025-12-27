@@ -1,0 +1,13 @@
+<test name="min_height_overrides_max_height__border_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div direction="ltr">
+      <div direction="ltr" min-height="100px" max-height="50px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="0" height="100">
+      <node x="0" y="0" width="0" height="100"/>
+    </node>
+  </expectations>
+</test>

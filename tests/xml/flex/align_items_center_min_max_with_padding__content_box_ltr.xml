@@ -1,0 +1,13 @@
+<test name="align_items_center_min_max_with_padding__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div box-sizing="content-box" direction="ltr" align-items="center" min-width="320px" min-height="72px" max-width="320px" max-height="504px" padding-top="8px" padding-bottom="8px">
+      <div box-sizing="content-box" direction="ltr" width="62px" height="62px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="320" height="88">
+      <node x="0" y="13" width="62" height="62"/>
+    </node>
+  </expectations>
+</test>

@@ -1,0 +1,15 @@
+<test name="block_inset_direction_rtl__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="block" direction="rtl" width="100px" height="100px">
+      <div direction="rtl" width="40px" height="20px" left="10px"/>
+      <div direction="rtl" width="40px" height="20px" right="10px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="100" height="100">
+      <node x="70" y="0" width="40" height="20"/>
+      <node x="50" y="20" width="40" height="20"/>
+    </node>
+  </expectations>
+</test>

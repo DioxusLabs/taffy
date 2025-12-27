@@ -1,0 +1,13 @@
+<test name="grid_padding_border_overrides_max_size__border_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" direction="ltr">
+      <div direction="ltr" max-width="12px" max-height="12px" padding-top="2px" padding-left="8px" padding-bottom="6px" padding-right="4px" border-top="1px" border-left="7px" border-bottom="5px" border-right="3px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="22" height="14">
+      <node x="0" y="0" width="22" height="14"/>
+    </node>
+  </expectations>
+</test>

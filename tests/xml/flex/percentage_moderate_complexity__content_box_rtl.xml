@@ -1,0 +1,17 @@
+<test name="percentage_moderate_complexity__content_box_rtl" use-rounding="false">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="flex" box-sizing="content-box" direction="rtl" flex-direction="column" width="200px" padding-top="3px" padding-left="3px" padding-bottom="3px" padding-right="3px">
+      <div display="flex" box-sizing="content-box" direction="rtl" flex-direction="column" width="50%" margin-top="5px" margin-left="5px" margin-bottom="5px" margin-right="5px" padding-top="3%" padding-left="3%" padding-bottom="3%" padding-right="3%">
+        <div box-sizing="content-box" direction="rtl" width="45%" margin-top="5%" margin-left="5%" margin-bottom="5%" margin-right="5%" padding-top="3px" padding-left="3px" padding-bottom="3px" padding-right="3px"/>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="206" height="44">
+      <node x="86" y="8" width="112" height="28">
+        <node x="50" y="11" width="51" height="6"/>
+      </node>
+    </node>
+  </expectations>
+</test>

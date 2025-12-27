@@ -1,0 +1,29 @@
+<test name="grid_repeat_integer__content_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" box-sizing="content-box" direction="rtl" width="120px" height="120px" grid-template-rows="repeat(3, 40px)" grid-template-columns="repeat(3, 40px)">
+      <div box-sizing="content-box" direction="rtl"/>
+      <div box-sizing="content-box" direction="rtl"/>
+      <div box-sizing="content-box" direction="rtl"/>
+      <div box-sizing="content-box" direction="rtl"/>
+      <div box-sizing="content-box" direction="rtl"/>
+      <div box-sizing="content-box" direction="rtl"/>
+      <div box-sizing="content-box" direction="rtl"/>
+      <div box-sizing="content-box" direction="rtl"/>
+      <div box-sizing="content-box" direction="rtl"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="120" height="120">
+      <node x="80" y="0" width="40" height="40"/>
+      <node x="40" y="0" width="40" height="40"/>
+      <node x="0" y="0" width="40" height="40"/>
+      <node x="80" y="40" width="40" height="40"/>
+      <node x="40" y="40" width="40" height="40"/>
+      <node x="0" y="40" width="40" height="40"/>
+      <node x="80" y="80" width="40" height="40"/>
+      <node x="40" y="80" width="40" height="40"/>
+      <node x="0" y="80" width="40" height="40"/>
+    </node>
+  </expectations>
+</test>

@@ -1,0 +1,17 @@
+<test name="block_margin_auto_rtl__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="block" box-sizing="content-box" direction="rtl" width="100px">
+      <div box-sizing="content-box" direction="ltr" width="20px" height="10px" margin-left="auto"/>
+      <div box-sizing="content-box" direction="ltr" width="20px" height="10px" margin-right="auto"/>
+      <div box-sizing="content-box" direction="ltr" width="20px" height="10px" margin-left="auto" margin-right="auto"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="100" height="30">
+      <node x="80" y="0" width="20" height="10"/>
+      <node x="0" y="10" width="20" height="10"/>
+      <node x="40" y="20" width="20" height="10"/>
+    </node>
+  </expectations>
+</test>

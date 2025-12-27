@@ -129,7 +129,6 @@ pub fn compute_root_layout(tree: &mut impl LayoutPartialTree, root: NodeId, avai
         SizingMode::InherentSize,
         Line::FALSE,
     );
-
     let style = tree.get_core_container_style(root);
     let padding =
         style.padding().resolve_or_zero(available_space.width.into_option(), |val, basis| tree.calc(val, basis));
@@ -141,13 +140,21 @@ pub fn compute_root_layout(tree: &mut impl LayoutPartialTree, root: NodeId, avai
         width: if style.overflow().y == Overflow::Scroll { style.scrollbar_width() } else { 0.0 },
         height: if style.overflow().x == Overflow::Scroll { style.scrollbar_width() } else { 0.0 },
     };
+    let location = Point {
+        x: if style.direction().is_rtl() {
+            available_space.width.into_option().map_or(0.0, |available_width| available_width - output.size.width)
+        } else {
+            0.0
+        },
+        y: 0.0,
+    };
     drop(style);
 
     tree.set_unrounded_layout(
         root,
         &Layout {
             order: 0,
-            location: Point::ZERO,
+            location,
             size: output.size,
             #[cfg(feature = "content_size")]
             content_size: output.content_size,
