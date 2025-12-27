@@ -9,8 +9,8 @@ use crate::util::sys::{f32_max, GridTrackVec, Vec};
 use crate::util::MaybeMath;
 use crate::util::{MaybeResolve, ResolveOrZero};
 use crate::{
-    style_helpers::*, AlignContent, BoxGenerationMode, BoxSizing, CoreStyle, GridContainerStyle, GridItemStyle,
-    JustifyContent, LayoutGridContainer,
+    style_helpers::*, AlignContent, BoxGenerationMode, BoxSizing, CoreStyle, Direction, GridContainerStyle,
+    GridItemStyle, JustifyContent, LayoutGridContainer,
 };
 use alignment::{align_and_position_item, align_tracks};
 use explicit_grid::{compute_explicit_grid_size_in_axis, initialize_grid_tracks, AutoRepeatStrategy};
@@ -45,7 +45,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     node: NodeId,
     inputs: LayoutInput,
 ) -> LayoutOutput {
-    let LayoutInput { known_dimensions, parent_size, available_space, run_mode, .. } = inputs;
+    let LayoutInput { known_dimensions, parent_size, available_space, run_mode, direction, .. } = inputs;
 
     let style = tree.get_grid_container_style(node);
 
@@ -86,15 +86,26 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
         Overflow::Scroll => style.scrollbar_width(),
         _ => 0.0,
     });
-    // TODO: make side configurable based on the `direction` property
     let mut content_box_inset = padding_border;
-    content_box_inset.right += scrollbar_gutter.x;
     content_box_inset.bottom += scrollbar_gutter.y;
 
+    match direction {
+        Direction::Ltr => content_box_inset.right += scrollbar_gutter.x,
+        Direction::Rtl => content_box_inset.left += scrollbar_gutter.x,
+    };
+
     let align_content = style.align_content().unwrap_or(AlignContent::Stretch);
-    let justify_content = style.justify_content().unwrap_or(JustifyContent::Stretch);
+    let mut justify_content = style.justify_content().unwrap_or(JustifyContent::Stretch);
     let align_items = style.align_items();
-    let justify_items = style.justify_items();
+    let mut justify_items = style.justify_items();
+
+    if direction.is_rtl() {
+        justify_content.flip();
+
+        if let Some(justify_items) = justify_items.as_mut() {
+            justify_items.flip();
+        }
+    }
 
     // Note: we avoid accessing the grid rows/columns methods more than once as this can
     // cause an expensive-ish computation
@@ -501,11 +512,22 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
 
     // Position in-flow children (stored in items vector)
     for (index, item) in items.iter_mut().enumerate() {
+        let (left, right) = match item.direction {
+            Direction::Ltr => (
+                columns[item.column_indexes.start as usize + 1].offset,
+                columns[item.column_indexes.end as usize].offset,
+            ),
+            Direction::Rtl => (
+                container_border_box.width - columns[item.column_indexes.end as usize].offset,
+                container_border_box.width - columns[item.column_indexes.start as usize + 1].offset,
+            ),
+        };
+
         let grid_area = Rect {
             top: rows[item.row_indexes.start as usize + 1].offset,
             bottom: rows[item.row_indexes.end as usize].offset,
-            left: columns[item.column_indexes.start as usize + 1].offset,
-            right: columns[item.column_indexes.end as usize].offset,
+            left,
+            right,
         };
         #[cfg_attr(not(feature = "content_size"), allow(unused_variables))]
         let (content_size_contribution, y_position, height) = align_and_position_item(
@@ -533,6 +555,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
 
         // Position hidden child
         if child_style.box_generation_mode() == BoxGenerationMode::None {
+            let direction = child_style.direction();
             drop(child_style);
             tree.set_unrounded_layout(child, &Layout::with_order(order));
             tree.perform_child_layout(
@@ -541,6 +564,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
                 Size::NONE,
                 Size::MAX_CONTENT,
                 SizingMode::InherentSize,
+                direction,
                 Line::FALSE,
             );
             order += 1;
@@ -568,17 +592,30 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
                     maybe_grid_line.and_then(|line: OriginZeroLine| line.try_into_track_vec_index(final_row_counts))
                 });
 
+            let (left, right) = match direction {
+                Direction::Ltr => (
+                    maybe_col_indexes.start.map(|index| columns[index].offset).unwrap_or(border.left),
+                    maybe_col_indexes
+                        .end
+                        .map(|index| columns[index].offset)
+                        .unwrap_or(container_border_box.width - border.right - scrollbar_gutter.x),
+                ),
+                Direction::Rtl => (
+                    maybe_col_indexes
+                        .start
+                        .map(|index| columns[index].offset + border.left + scrollbar_gutter.x)
+                        .unwrap_or(border.left),
+                    maybe_col_indexes.end.map(|index| columns[index].offset).unwrap_or(container_border_box.width),
+                ),
+            };
             let grid_area = Rect {
                 top: maybe_row_indexes.start.map(|index| rows[index].offset).unwrap_or(border.top),
                 bottom: maybe_row_indexes
                     .end
                     .map(|index| rows[index].offset)
                     .unwrap_or(container_border_box.height - border.bottom - scrollbar_gutter.y),
-                left: maybe_col_indexes.start.map(|index| columns[index].offset).unwrap_or(border.left),
-                right: maybe_col_indexes
-                    .end
-                    .map(|index| columns[index].offset)
-                    .unwrap_or(container_border_box.width - border.right - scrollbar_gutter.x),
+                left,
+                right,
             };
             drop(child_style);
 

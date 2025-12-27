@@ -13,7 +13,7 @@ use crate::util::debug::debug_log;
 use crate::util::sys::{f32_max, new_vec_with_capacity, Vec};
 use crate::util::MaybeMath;
 use crate::util::{MaybeResolve, ResolveOrZero};
-use crate::{BoxGenerationMode, BoxSizing};
+use crate::{BoxGenerationMode, BoxSizing, Direction};
 
 use super::common::alignment::apply_alignment_fallback;
 #[cfg(feature = "content_size")]
@@ -26,6 +26,9 @@ struct FlexItem {
 
     /// The order of the node relative to it's siblings
     order: u32,
+
+    /// Direction (LTR or RTL)
+    direction: Direction,
 
     /// The base size of this item
     size: Size<Option<f32>>,
@@ -118,6 +121,8 @@ struct FlexLine<'a> {
 struct AlgoConstants {
     /// The direction of the current segment being laid out
     dir: FlexDirection,
+    /// The layout direction of the current segment being laid out
+    layout_direction: Direction,
     /// Is this segment a row
     is_row: bool,
     /// Is this segment a column
@@ -376,7 +381,10 @@ fn compute_preliminary(tree: &mut impl LayoutFlexboxContainer, node: NodeId, inp
     let len = tree.child_count(node);
     for order in 0..len {
         let child = tree.get_child_id(node, order);
-        if tree.get_flexbox_child_style(child).box_generation_mode() == BoxGenerationMode::None {
+        let child_style = tree.get_flexbox_child_style(child);
+        if child_style.box_generation_mode() == BoxGenerationMode::None {
+            let direction = child_style.direction();
+            drop(child_style);
             tree.set_unrounded_layout(child, &Layout::with_order(order as u32));
             tree.perform_child_layout(
                 child,
@@ -384,6 +392,7 @@ fn compute_preliminary(tree: &mut impl LayoutFlexboxContainer, node: NodeId, inp
                 Size::NONE,
                 Size::MAX_CONTENT,
                 SizingMode::InherentSize,
+                direction,
                 Line::FALSE,
             );
         }
@@ -421,6 +430,7 @@ fn compute_constants(
     parent_size: Size<Option<f32>>,
 ) -> AlgoConstants {
     let dir = style.flex_direction();
+    let layout_direction = style.direction();
     let is_row = dir.is_row();
     let is_column = dir.is_column();
     let is_wrap = matches!(style.flex_wrap(), FlexWrap::Wrap | FlexWrap::WrapReverse);
@@ -436,7 +446,13 @@ fn compute_constants(
 
     let align_items = style.align_items().unwrap_or(AlignItems::Stretch);
     let align_content = style.align_content().unwrap_or(AlignContent::Stretch);
-    let justify_content = style.justify_content();
+    let mut justify_content = style.justify_content();
+
+    if layout_direction.is_rtl() {
+        if let Some(justify_content) = justify_content.as_mut() {
+            justify_content.flip();
+        }
+    }
 
     // Scrollbar gutters are reserved when the `overflow` property is set to `Overflow::Scroll`.
     // However, the axis are switched (transposed) because a node that scrolls vertically needs
@@ -445,10 +461,14 @@ fn compute_constants(
         Overflow::Scroll => style.scrollbar_width(),
         _ => 0.0,
     });
-    // TODO: make side configurable based on the `direction` property
+
     let mut content_box_inset = padding + border;
-    content_box_inset.right += scrollbar_gutter.x;
     content_box_inset.bottom += scrollbar_gutter.y;
+
+    match layout_direction {
+        Direction::Ltr => content_box_inset.right += scrollbar_gutter.x,
+        Direction::Rtl => content_box_inset.left += scrollbar_gutter.x,
+    };
 
     let node_outer_size = known_dimensions;
     let node_inner_size = node_outer_size.maybe_sub(content_box_inset.sum_axes());
@@ -459,6 +479,7 @@ fn compute_constants(
 
     AlgoConstants {
         dir,
+        layout_direction,
         is_row,
         is_column,
         is_wrap,
@@ -518,6 +539,7 @@ fn generate_anonymous_flex_items(
             FlexItem {
                 node: child,
                 order: index as u32,
+                direction: child_style.direction(),
                 size: child_style
                     .size()
                     .maybe_resolve(constants.node_inner_size, |val, basis| tree.calc(val, basis))
@@ -764,6 +786,7 @@ fn determine_flex_base_size(
                 child_available_space,
                 SizingMode::ContentSize,
                 dir.main_axis(),
+                child.direction,
                 Line::FALSE,
             );
         };
@@ -807,6 +830,7 @@ fn determine_flex_base_size(
                     child_available_space,
                     SizingMode::ContentSize,
                     dir.main_axis(),
+                    child.direction,
                     Line::FALSE,
                 )
             };
@@ -1062,6 +1086,7 @@ fn determine_container_main_size(
                                     child_available_space,
                                     SizingMode::InherentSize,
                                     dir.main_axis(),
+                                    item.direction,
                                     Line::FALSE,
                                 ) + item.margin.main_axis_sum(constants.dir);
 
@@ -1397,6 +1422,7 @@ fn determine_hypothetical_cross_size(
                 },
                 SizingMode::ContentSize,
                 constants.dir.cross_axis(),
+                child.direction,
                 Line::FALSE,
             )
             .maybe_clamp(child.min_size.cross(constants.dir), child.max_size.cross(constants.dir))
@@ -1467,6 +1493,7 @@ fn calculate_children_base_lines(
                     },
                 },
                 SizingMode::ContentSize,
+                child.direction,
                 Line::FALSE,
             );
 
@@ -1771,10 +1798,12 @@ fn align_flex_items_along_cross_axis(
     max_baseline: f32,
     constants: &AlgoConstants,
 ) -> f32 {
+    let cross_axis_should_reverse = constants.is_column && matches!(constants.layout_direction, Direction::Rtl);
+
     match child.align_self {
         AlignSelf::Start => 0.0,
         AlignSelf::FlexStart => {
-            if constants.is_wrap_reverse {
+            if constants.is_wrap_reverse ^ cross_axis_should_reverse {
                 free_space
             } else {
                 0.0
@@ -1782,7 +1811,7 @@ fn align_flex_items_along_cross_axis(
         }
         AlignSelf::End => free_space,
         AlignSelf::FlexEnd => {
-            if constants.is_wrap_reverse {
+            if constants.is_wrap_reverse ^ cross_axis_should_reverse {
                 0.0
             } else {
                 free_space
@@ -1795,7 +1824,7 @@ fn align_flex_items_along_cross_axis(
             } else {
                 // Until we support vertical writing modes, baseline alignment only makes sense if
                 // the constants.direction is row, so we treat it as flex-start alignment in columns.
-                if constants.is_wrap_reverse {
+                if constants.is_wrap_reverse ^ cross_axis_should_reverse {
                     free_space
                 } else {
                     0.0
@@ -1803,7 +1832,7 @@ fn align_flex_items_along_cross_axis(
             }
         }
         AlignSelf::Stretch => {
-            if constants.is_wrap_reverse {
+            if constants.is_wrap_reverse ^ cross_axis_should_reverse {
                 free_space
             } else {
                 0.0
@@ -1887,6 +1916,7 @@ fn calculate_flex_item(
     container_size: Size<f32>,
     node_inner_size: Size<Option<f32>>,
     direction: FlexDirection,
+    layout_direction: Direction,
 ) {
     let layout_output = tree.perform_child_layout(
         item.node,
@@ -1894,6 +1924,7 @@ fn calculate_flex_item(
         node_inner_size,
         container_size.map(|s| s.into()),
         SizingMode::ContentSize,
+        item.direction,
         Line::FALSE,
     );
     let LayoutOutput {
@@ -1903,16 +1934,31 @@ fn calculate_flex_item(
         ..
     } = layout_output;
 
-    let offset_main = *total_offset_main
-        + item.offset_main
-        + item.margin.main_start(direction)
-        + (item.inset.main_start(direction).or(item.inset.main_end(direction).map(|pos| -pos)).unwrap_or(0.0));
+    let offset_main = if direction.is_row() && layout_direction.is_rtl() {
+        *total_offset_main
+            - item.offset_main
+            - item.margin.main_end(direction)
+            - (item.inset.main_end(direction).or(item.inset.main_start(direction).map(|pos| -pos)).unwrap_or(0.0))
+    } else {
+        *total_offset_main
+            + item.offset_main
+            + item.margin.main_start(direction)
+            + (item.inset.main_start(direction).or(item.inset.main_end(direction).map(|pos| -pos)).unwrap_or(0.0))
+    };
 
-    let offset_cross = total_offset_cross
-        + item.offset_cross
-        + line_offset_cross
-        + item.margin.cross_start(direction)
-        + (item.inset.cross_start(direction).or(item.inset.cross_end(direction).map(|pos| -pos)).unwrap_or(0.0));
+    let offset_cross = if direction.is_column() && layout_direction.is_rtl() {
+        total_offset_cross
+            - item.offset_cross
+            - line_offset_cross
+            - item.margin.cross_end(direction)
+            - (item.inset.cross_end(direction).or(item.inset.cross_start(direction).map(|pos| -pos)).unwrap_or(0.0))
+    } else {
+        total_offset_cross
+            + item.offset_cross
+            + line_offset_cross
+            + item.margin.cross_start(direction)
+            + (item.inset.cross_start(direction).or(item.inset.cross_end(direction).map(|pos| -pos)).unwrap_or(0.0))
+    };
 
     if direction.is_row() {
         let baseline_offset_cross = total_offset_cross + item.offset_cross + item.margin.cross_start(direction);
@@ -1924,13 +1970,21 @@ fn calculate_flex_item(
         item.baseline = baseline_offset_main + inner_baseline;
     }
 
-    let location = match direction.is_row() {
-        true => Point { x: offset_main, y: offset_cross },
-        false => Point { x: offset_cross, y: offset_main },
-    };
     let scrollbar_size = Size {
         width: if item.overflow.y == Overflow::Scroll { item.scrollbar_width } else { 0.0 },
         height: if item.overflow.x == Overflow::Scroll { item.scrollbar_width } else { 0.0 },
+    };
+    let location = if direction.is_row() {
+        Point {
+            x: if layout_direction.is_rtl() {
+                container_size.width - (offset_main + size.width) + scrollbar_size.width
+            } else {
+                offset_main
+            },
+            y: offset_cross,
+        }
+    } else {
+        Point { x: offset_cross, y: offset_main }
     };
 
     tree.set_unrounded_layout(
@@ -1968,9 +2022,19 @@ fn calculate_layout_line(
     node_inner_size: Size<Option<f32>>,
     padding_border: Rect<f32>,
     direction: FlexDirection,
+    layout_direction: Direction,
 ) {
-    let mut total_offset_main = padding_border.main_start(direction);
+    let mut total_offset_main = if layout_direction.is_rtl() && direction.is_row() {
+        padding_border.main_end(direction)
+    } else {
+        padding_border.main_start(direction)
+    };
     let line_offset_cross = line.offset_cross;
+
+    let is_rtl_column = layout_direction.is_rtl() && direction.is_column();
+    if is_rtl_column {
+        *total_offset_cross -= line_offset_cross + line.cross_size;
+    }
 
     if direction.is_reverse() {
         for item in line.items.iter_mut().rev() {
@@ -1985,6 +2049,7 @@ fn calculate_layout_line(
                 container_size,
                 node_inner_size,
                 direction,
+                layout_direction,
             );
         }
     } else {
@@ -2000,11 +2065,14 @@ fn calculate_layout_line(
                 container_size,
                 node_inner_size,
                 direction,
+                layout_direction,
             );
         }
     }
 
-    *total_offset_cross += line_offset_cross + line.cross_size;
+    if !is_rtl_column {
+        *total_offset_cross += line_offset_cross + line.cross_size;
+    }
 }
 
 /// Do a final layout pass and collect the resulting layouts.
@@ -2014,7 +2082,11 @@ fn final_layout_pass(
     flex_lines: &mut [FlexLine],
     constants: &AlgoConstants,
 ) -> Size<f32> {
-    let mut total_offset_cross = constants.content_box_inset.cross_start(constants.dir);
+    let mut total_offset_cross = if constants.is_column && constants.layout_direction.is_rtl() {
+        constants.container_size.width - constants.content_box_inset.cross_end(constants.dir)
+    } else {
+        constants.content_box_inset.cross_start(constants.dir)
+    };
 
     #[cfg_attr(not(feature = "content_size"), allow(unused_mut))]
     let mut content_size = Size::ZERO;
@@ -2031,6 +2103,7 @@ fn final_layout_pass(
                 constants.node_inner_size,
                 constants.content_box_inset,
                 constants.dir,
+                constants.layout_direction,
             );
         }
     } else {
@@ -2045,6 +2118,7 @@ fn final_layout_pass(
                 constants.node_inner_size,
                 constants.content_box_inset,
                 constants.dir,
+                constants.layout_direction,
             );
         }
     }
@@ -2124,6 +2198,7 @@ fn perform_absolute_layout_on_absolute_children(
             .maybe_apply_aspect_ratio(aspect_ratio)
             .maybe_add(box_sizing_adjustment);
         let mut known_dimensions = style_size.maybe_clamp(min_size, max_size);
+        let direction = child_style.direction();
 
         drop(child_style);
 
@@ -2154,6 +2229,7 @@ fn perform_absolute_layout_on_absolute_children(
                 height: AvailableSpace::Definite(container_height.maybe_clamp(min_size.height, max_size.height)),
             },
             SizingMode::InherentSize,
+            direction,
             Line::FALSE,
         );
         let final_size = known_dimensions.unwrap_or(measured_size).maybe_clamp(min_size, max_size);
@@ -2167,6 +2243,7 @@ fn perform_absolute_layout_on_absolute_children(
                 height: AvailableSpace::Definite(container_height.maybe_clamp(min_size.height, max_size.height)),
             },
             SizingMode::InherentSize,
+            direction,
             Line::FALSE,
         );
 

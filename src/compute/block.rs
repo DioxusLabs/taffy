@@ -10,7 +10,8 @@ use crate::util::sys::Vec;
 use crate::util::MaybeMath;
 use crate::util::{MaybeResolve, ResolveOrZero};
 use crate::{
-    BlockContainerStyle, BlockItemStyle, BoxGenerationMode, BoxSizing, LayoutBlockContainer, RequestedAxis, TextAlign,
+    BlockContainerStyle, BlockItemStyle, BoxGenerationMode, BoxSizing, Direction, LayoutBlockContainer, RequestedAxis,
+    TextAlign,
 };
 
 #[cfg(feature = "float_layout")]
@@ -206,6 +207,8 @@ struct BlockItem {
     #[cfg(feature = "float_layout")]
     /// The `clear` style of the node
     clear: Clear,
+    /// Direction (LTR or RTL)
+    direction: Direction,
 
     /// The base size of this item
     size: Size<Option<f32>>,
@@ -476,7 +479,10 @@ fn compute_inner(
     let len = tree.child_count(node_id);
     for order in 0..len {
         let child = tree.get_child_id(node_id, order);
-        if tree.get_block_child_style(child).box_generation_mode() == BoxGenerationMode::None {
+        let child_style = tree.get_block_child_style(child);
+        if child_style.box_generation_mode() == BoxGenerationMode::None {
+            let direction = child_style.direction();
+            drop(child_style);
             tree.set_unrounded_layout(child, &Layout::with_order(order as u32));
             tree.perform_child_layout(
                 child,
@@ -484,6 +490,7 @@ fn compute_inner(
                 Size::NONE,
                 Size::MAX_CONTENT,
                 SizingMode::InherentSize,
+                direction,
                 Line::FALSE,
             );
         }
@@ -566,6 +573,8 @@ fn generate_item_list(
                 float,
                 #[cfg(feature = "float_layout")]
                 clear: child_style.clear(),
+
+                direction: child_style.direction(),
                 size: child_style
                     .size()
                     .maybe_resolve(node_inner_size, |val, basis| tree.calc(val, basis))
@@ -625,6 +634,7 @@ fn determine_content_based_container_width(
                 Size::NONE,
                 available_space.map_width(|w| w.maybe_sub(item_x_margin_sum)),
                 SizingMode::InherentSize,
+                item.direction,
                 Line::TRUE,
             );
 
@@ -721,6 +731,7 @@ fn perform_final_layout_on_in_flow_children(
                     // available_space,
                     Size::MAX_CONTENT,
                     SizingMode::InherentSize,
+                    item.direction,
                     Line::TRUE,
                 );
                 let margin_box = item_layout.size + item_non_auto_margin.sum_axes();
@@ -829,6 +840,7 @@ fn perform_final_layout_on_in_flow_children(
                 axis: RequestedAxis::Both,
                 known_dimensions,
                 parent_size,
+                direction: item.direction,
                 available_space: available_space.map_width(|_| AvailableSpace::Definite(stretch_width)),
                 vertical_margins_are_collapsible: if item.is_in_same_bfc { Line::TRUE } else { Line::FALSE },
             };
@@ -864,6 +876,7 @@ fn perform_final_layout_on_in_flow_children(
             } else {
                 tree.compute_child_layout(item.node_id, inputs)
             };
+
             let final_size = item_layout.size;
 
             let top_margin_set = item_layout.top_margin.collapse_with_margin(item_margin.top.unwrap_or(0.0));
@@ -1104,6 +1117,7 @@ fn perform_absolute_layout_on_absolute_children(
                 height: AvailableSpace::Definite(area_height.maybe_clamp(min_size.height, max_size.height)),
             },
             SizingMode::ContentSize,
+            item.direction,
             Line::FALSE,
         );
 
@@ -1118,6 +1132,7 @@ fn perform_absolute_layout_on_absolute_children(
                 height: AvailableSpace::Definite(area_height.maybe_clamp(min_size.height, max_size.height)),
             },
             SizingMode::ContentSize,
+            item.direction,
             Line::FALSE,
         );
 

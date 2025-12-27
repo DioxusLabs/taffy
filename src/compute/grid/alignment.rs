@@ -198,6 +198,7 @@ pub(super) fn align_and_position_item(
     let Size { width, height } = Size { width, height }.maybe_clamp(min_size, max_size);
 
     // Layout node
+    let direction = style.direction();
     drop(style);
 
     let size = if position == Position::Absolute && (width.is_none() || height.is_none()) {
@@ -207,6 +208,7 @@ pub(super) fn align_and_position_item(
             grid_area_size.map(Option::Some),
             grid_area_minus_item_margins_size.map(AvailableSpace::Definite),
             SizingMode::InherentSize,
+            direction,
             Line::FALSE,
         )
         .map(Some)
@@ -220,6 +222,7 @@ pub(super) fn align_and_position_item(
         grid_area_size.map(Option::Some),
         grid_area_minus_item_margins_size.map(AvailableSpace::Definite),
         SizingMode::InherentSize,
+        direction,
         Line::FALSE,
     );
 
