@@ -232,7 +232,13 @@ fn compute_preliminary(tree: &mut impl LayoutFlexboxContainer, node: NodeId, inp
     let LayoutInput { known_dimensions, parent_size, available_space, run_mode, .. } = inputs;
 
     // Define some general constants we will need for the remainder of the algorithm.
-    let mut constants = compute_constants(tree, tree.get_flexbox_container_style(node), known_dimensions, parent_size);
+    let mut constants = compute_constants(
+        tree,
+        tree.get_flexbox_container_style(node),
+        known_dimensions,
+        parent_size,
+        inputs.direction,
+    );
 
     // 9. Flex Layout Algorithm
 
@@ -428,9 +434,9 @@ fn compute_constants(
     style: impl FlexboxContainerStyle,
     known_dimensions: Size<Option<f32>>,
     parent_size: Size<Option<f32>>,
+    layout_direction: Direction,
 ) -> AlgoConstants {
     let dir = style.flex_direction();
-    let layout_direction = style.direction();
     let is_row = dir.is_row();
     let is_column = dir.is_column();
     let is_wrap = matches!(style.flex_wrap(), FlexWrap::Wrap | FlexWrap::WrapReverse);
@@ -533,7 +539,7 @@ fn generate_anonymous_flex_items(
             FlexItem {
                 node: child,
                 order: index as u32,
-                direction: child_style.direction(),
+                direction: constants.layout_direction,
                 size: child_style
                     .size()
                     .maybe_resolve(constants.node_inner_size, |val, basis| tree.calc(val, basis))
@@ -2292,6 +2298,11 @@ fn perform_absolute_layout_on_absolute_children(
                 - constants.scrollbar_gutter.main(constants.dir)
                 - final_size.main(constants.dir)
                 - end
+                - resolved_margin.main_end(constants.dir)
+        } else if constants.is_row && constants.layout_direction.is_rtl() {
+            constants.container_size.main(constants.dir)
+                - constants.content_box_inset.main_end(constants.dir)
+                - final_size.main(constants.dir)
                 - resolved_margin.main_end(constants.dir)
         } else {
             // Stretch is an invalid value for justify_content in the flexbox algorithm, so we

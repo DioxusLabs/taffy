@@ -652,6 +652,15 @@ impl<U, T: Add<U>> Add<Point<U>> for Point<T> {
     }
 }
 
+// Generic Sub impl for Point<T> + Point<U> where T + U has an Sub impl
+impl<U, T: Sub<U>> Sub<Point<U>> for Point<T> {
+    type Output = Point<<T as Sub<U>>::Output>;
+
+    fn sub(self, rhs: Point<U>) -> Self::Output {
+        Point { x: self.x - rhs.x, y: self.y - rhs.y }
+    }
+}
+
 impl<T> Point<T> {
     /// Applies the function `f` to both the x and y
     ///

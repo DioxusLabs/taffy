@@ -30,20 +30,6 @@ pub enum AlignItems {
     Stretch,
 }
 
-impl AlignItems {
-    /// Flips the alignment value for the given direction
-    #[inline]
-    pub fn flip(&mut self) {
-        *self = match self {
-            Self::Start => Self::End,
-            Self::End => Self::Start,
-            Self::FlexStart => Self::FlexEnd,
-            Self::FlexEnd => Self::FlexStart,
-            _ => return,
-        }
-    }
-}
-
 /// Used to control how child nodes are aligned.
 /// Does not apply to Flexbox, and will be ignored if specified on a flex container
 /// For Grid it controls alignment in the inline axis
@@ -110,17 +96,3 @@ pub enum AlignContent {
 ///
 /// [MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/justify-content)
 pub type JustifyContent = AlignContent;
-
-impl AlignContent {
-    /// Flips the alignment value for the given direction
-    #[inline]
-    pub fn flip(&mut self) {
-        *self = match self {
-            Self::Start => Self::End,
-            Self::End => Self::Start,
-            Self::FlexStart => Self::FlexEnd,
-            Self::FlexEnd => Self::FlexStart,
-            _ => return,
-        }
-    }
-}
