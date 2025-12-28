@@ -207,7 +207,7 @@ struct BlockItem {
     #[cfg(feature = "float_layout")]
     /// The `clear` style of the node
     clear: Clear,
-    /// Direction (LTR or RTL)
+    /// The item's direction
     direction: Direction,
 
     /// The base size of this item

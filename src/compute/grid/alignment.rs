@@ -274,15 +274,12 @@ pub(super) fn align_and_position_item(
     );
 
     #[cfg(feature = "content_size")]
-    let contribution = {
-        let content_box_origin = Point { x: grid_area.left, y: grid_area.top };
-        compute_content_size_contribution(
-            Point { x, y } - content_box_origin,
-            Size { width, height },
-            layout_output.content_size,
-            overflow,
-        )
-    };
+    let contribution = compute_content_size_contribution(
+        Point { x: x - grid_area.left, y: y - grid_area.top },
+        Size { width, height },
+        layout_output.content_size,
+        overflow,
+    );
     #[cfg(not(feature = "content_size"))]
     let contribution = Size::ZERO;
 

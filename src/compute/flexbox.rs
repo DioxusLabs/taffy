@@ -27,7 +27,7 @@ struct FlexItem {
     /// The order of the node relative to it's siblings
     order: u32,
 
-    /// Direction (LTR or RTL)
+    /// The item's direction
     direction: Direction,
 
     /// The base size of this item
