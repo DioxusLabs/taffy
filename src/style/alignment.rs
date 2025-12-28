@@ -29,7 +29,6 @@ pub enum AlignItems {
     /// Stretch to fill the container
     Stretch,
 }
-
 /// Used to control how child nodes are aligned.
 /// Does not apply to Flexbox, and will be ignored if specified on a flex container
 /// For Grid it controls alignment in the inline axis
