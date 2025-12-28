@@ -95,17 +95,9 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     };
 
     let align_content = style.align_content().unwrap_or(AlignContent::Stretch);
-    let mut justify_content = style.justify_content().unwrap_or(JustifyContent::Stretch);
+    let justify_content = style.justify_content().unwrap_or(JustifyContent::Stretch);
     let align_items = style.align_items();
-    let mut justify_items = style.justify_items();
-
-    if direction.is_rtl() {
-        justify_content.flip();
-
-        if let Some(justify_items) = justify_items.as_mut() {
-            justify_items.flip();
-        }
-    }
+    let justify_items = style.justify_items();
 
     // Note: we avoid accessing the grid rows/columns methods more than once as this can
     // cause an expensive-ish computation
@@ -512,7 +504,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
 
     // Position in-flow children (stored in items vector)
     for (index, item) in items.iter_mut().enumerate() {
-        let (left, right) = match item.direction {
+        let (left, right) = match direction {
             Direction::Ltr => (
                 columns[item.column_indexes.start as usize + 1].offset,
                 columns[item.column_indexes.end as usize].offset,
@@ -537,6 +529,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
             grid_area,
             container_alignment_styles,
             item.baseline_shim,
+            direction,
         );
         item.y_position = y_position;
         item.height = height;
@@ -602,10 +595,13 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
                 ),
                 Direction::Rtl => (
                     maybe_col_indexes
+                        .end
+                        .map(|index| container_border_box.width - columns[index].offset)
+                        .unwrap_or(border.left + scrollbar_gutter.x),
+                    maybe_col_indexes
                         .start
-                        .map(|index| columns[index].offset + border.left + scrollbar_gutter.x)
-                        .unwrap_or(border.left),
-                    maybe_col_indexes.end.map(|index| columns[index].offset).unwrap_or(container_border_box.width),
+                        .map(|index| container_border_box.width - columns[index].offset)
+                        .unwrap_or(container_border_box.width - border.right),
                 ),
             };
             let grid_area = Rect {
@@ -622,7 +618,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
             // TODO: Baseline alignment support for absolutely positioned items (should check if is actually specified)
             #[cfg_attr(not(feature = "content_size"), allow(unused_variables))]
             let (content_size_contribution, _, _) =
-                align_and_position_item(tree, child, order, grid_area, container_alignment_styles, 0.0);
+                align_and_position_item(tree, child, order, grid_area, container_alignment_styles, 0.0, direction);
             #[cfg(feature = "content_size")]
             {
                 item_content_size_contribution = item_content_size_contribution.f32_max(content_size_contribution);

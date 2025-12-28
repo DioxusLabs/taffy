@@ -446,13 +446,7 @@ fn compute_constants(
 
     let align_items = style.align_items().unwrap_or(AlignItems::Stretch);
     let align_content = style.align_content().unwrap_or(AlignContent::Stretch);
-    let mut justify_content = style.justify_content();
-
-    if layout_direction.is_rtl() {
-        if let Some(justify_content) = justify_content.as_mut() {
-            justify_content.flip();
-        }
-    }
+    let justify_content = style.justify_content();
 
     // Scrollbar gutters are reserved when the `overflow` property is set to `Overflow::Scroll`.
     // However, the axis are switched (transposed) because a node that scrolls vertically needs
@@ -1936,9 +1930,9 @@ fn calculate_flex_item(
 
     let offset_main = if direction.is_row() && layout_direction.is_rtl() {
         *total_offset_main
-            - item.offset_main
-            - item.margin.main_end(direction)
-            - (item.inset.main_end(direction).or(item.inset.main_start(direction).map(|pos| -pos)).unwrap_or(0.0))
+            + item.offset_main
+            + item.margin.main_end(direction)
+            + (item.inset.main_end(direction).or(item.inset.main_start(direction).map(|pos| -pos)).unwrap_or(0.0))
     } else {
         *total_offset_main
             + item.offset_main
@@ -1948,10 +1942,9 @@ fn calculate_flex_item(
 
     let offset_cross = if direction.is_column() && layout_direction.is_rtl() {
         total_offset_cross
-            - item.offset_cross
-            - line_offset_cross
-            - item.margin.cross_end(direction)
-            - (item.inset.cross_end(direction).or(item.inset.cross_start(direction).map(|pos| -pos)).unwrap_or(0.0))
+            + item.offset_cross
+            + item.margin.cross_start(direction)
+            + (item.inset.cross_start(direction).or(item.inset.cross_end(direction).map(|pos| -pos)).unwrap_or(0.0))
     } else {
         total_offset_cross
             + item.offset_cross
@@ -1961,7 +1954,8 @@ fn calculate_flex_item(
     };
 
     if direction.is_row() {
-        let baseline_offset_cross = total_offset_cross + item.offset_cross + item.margin.cross_start(direction);
+        let baseline_offset_cross =
+            total_offset_cross + item.offset_cross + line_offset_cross + item.margin.cross_start(direction);
         let inner_baseline = layout_output.first_baselines.y.unwrap_or(size.height);
         item.baseline = baseline_offset_cross + inner_baseline;
     } else {

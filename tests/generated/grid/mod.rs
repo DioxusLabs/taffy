@@ -29,6 +29,8 @@ mod grid_absolute_container_top_right;
 #[cfg(feature = "grid")]
 mod grid_absolute_container_top_right_margin;
 #[cfg(feature = "grid")]
+mod grid_absolute_direction_rtl;
+#[cfg(feature = "grid")]
 mod grid_absolute_justify_self_sized_all;
 #[cfg(feature = "grid")]
 mod grid_absolute_layout_within_border;
@@ -181,6 +183,8 @@ mod grid_available_space_smaller_than_min_content;
 #[cfg(feature = "grid")]
 mod grid_basic;
 #[cfg(feature = "grid")]
+mod grid_basic_direction_rtl;
+#[cfg(feature = "grid")]
 mod grid_basic_implicit_tracks;
 #[cfg(feature = "grid")]
 mod grid_basic_with_overflow;
@@ -245,6 +249,8 @@ mod grid_justify_content_center_with_padding_border;
 #[cfg(feature = "grid")]
 mod grid_justify_content_end;
 #[cfg(feature = "grid")]
+mod grid_justify_content_end_direction_rtl;
+#[cfg(feature = "grid")]
 mod grid_justify_content_end_negative_space_gap;
 #[cfg(feature = "grid")]
 mod grid_justify_content_end_with_padding_border;
@@ -269,6 +275,8 @@ mod grid_justify_content_space_evenly_with_padding_border;
 #[cfg(feature = "grid")]
 mod grid_justify_content_start;
 #[cfg(feature = "grid")]
+mod grid_justify_content_start_direction_rtl;
+#[cfg(feature = "grid")]
 mod grid_justify_content_start_negative_space_gap;
 #[cfg(feature = "grid")]
 mod grid_justify_content_start_with_padding_border;
@@ -277,7 +285,11 @@ mod grid_justify_items_sized_center;
 #[cfg(feature = "grid")]
 mod grid_justify_items_sized_end;
 #[cfg(feature = "grid")]
+mod grid_justify_items_sized_end_direction_rtl;
+#[cfg(feature = "grid")]
 mod grid_justify_items_sized_start;
+#[cfg(feature = "grid")]
+mod grid_justify_items_sized_start_direction_rtl;
 #[cfg(feature = "grid")]
 mod grid_justify_items_sized_stretch;
 #[cfg(feature = "grid")]

@@ -9,7 +9,7 @@ use crate::util::{MaybeMath, MaybeResolve, ResolveOrZero};
 
 #[cfg(feature = "content_size")]
 use crate::compute::common::content_size::compute_content_size_contribution;
-use crate::{BoxSizing, LayoutGridContainer};
+use crate::{BoxSizing, Direction, LayoutGridContainer};
 
 /// Align the grid tracks within the grid according to the align-content (rows) or
 /// justify-content (columns) property. This only does anything if the size of the
@@ -63,6 +63,7 @@ pub(super) fn align_and_position_item(
     grid_area: Rect<f32>,
     container_alignment_styles: InBothAbsAxis<Option<AlignItems>>,
     baseline_shim: f32,
+    direction: Direction,
 ) -> (Size<f32>, f32, f32) {
     let grid_area_size = Size { width: grid_area.right - grid_area.left, height: grid_area.bottom - grid_area.top };
 
@@ -198,7 +199,7 @@ pub(super) fn align_and_position_item(
     let Size { width, height } = Size { width, height }.maybe_clamp(min_size, max_size);
 
     // Layout node
-    let direction = style.direction();
+    let item_direction = style.direction();
     drop(style);
 
     let size = if position == Position::Absolute && (width.is_none() || height.is_none()) {
@@ -208,7 +209,7 @@ pub(super) fn align_and_position_item(
             grid_area_size.map(Option::Some),
             grid_area_minus_item_margins_size.map(AvailableSpace::Definite),
             SizingMode::InherentSize,
-            direction,
+            item_direction,
             Line::FALSE,
         )
         .map(Some)
@@ -222,7 +223,7 @@ pub(super) fn align_and_position_item(
         grid_area_size.map(Option::Some),
         grid_area_minus_item_margins_size.map(AvailableSpace::Definite),
         SizingMode::InherentSize,
-        direction,
+        item_direction,
         Line::FALSE,
     );
 
@@ -237,6 +238,7 @@ pub(super) fn align_and_position_item(
         inset_horizontal,
         margin.horizontal_components(),
         0.0,
+        direction,
     );
     let (y, y_margin) = align_item_within_area(
         Line { start: grid_area.top, end: grid_area.bottom },
@@ -246,6 +248,7 @@ pub(super) fn align_and_position_item(
         inset_vertical,
         margin.vertical_components(),
         baseline_shim,
+        Direction::Ltr,
     );
 
     let scrollbar_size = Size {
@@ -280,6 +283,7 @@ pub(super) fn align_and_position_item(
 }
 
 /// Align and size a grid item along a single axis
+#[allow(clippy::too_many_arguments)]
 pub(super) fn align_item_within_area(
     grid_area: Line<f32>,
     alignment_style: AlignSelf,
@@ -288,6 +292,7 @@ pub(super) fn align_item_within_area(
     inset: Line<Option<f32>>,
     margin: Line<Option<f32>>,
     baseline_shim: f32,
+    direction: Direction,
 ) -> (f32, Line<f32>) {
     // Calculate grid area dimension in the axis
     let non_auto_margin = Line { start: margin.start.unwrap_or(0.0) + baseline_shim, end: margin.end.unwrap_or(0.0) };
@@ -304,12 +309,36 @@ pub(super) fn align_item_within_area(
 
     // Compute offset in the axis
     let alignment_based_offset = match alignment_style {
-        AlignSelf::Start | AlignSelf::FlexStart => resolved_margin.start,
-        AlignSelf::End | AlignSelf::FlexEnd => grid_area_size - resolved_size - resolved_margin.end,
+        AlignSelf::Start | AlignSelf::FlexStart => {
+            if direction.is_rtl() {
+                free_space + resolved_margin.start
+            } else {
+                resolved_margin.start
+            }
+        }
+        AlignSelf::End | AlignSelf::FlexEnd => {
+            if direction.is_rtl() {
+                resolved_margin.start
+            } else {
+                grid_area_size - resolved_size - resolved_margin.end
+            }
+        }
         AlignSelf::Center => (grid_area_size - resolved_size + resolved_margin.start - resolved_margin.end) / 2.0,
         // TODO: Add support for baseline alignment. For now we treat it as "start".
-        AlignSelf::Baseline => resolved_margin.start,
-        AlignSelf::Stretch => resolved_margin.start,
+        AlignSelf::Baseline => {
+            if direction.is_rtl() {
+                free_space + resolved_margin.start
+            } else {
+                resolved_margin.start
+            }
+        }
+        AlignSelf::Stretch => {
+            if direction.is_rtl() {
+                free_space + resolved_margin.start
+            } else {
+                resolved_margin.start
+            }
+        }
     };
 
     let offset_within_area = if position == Position::Absolute {
