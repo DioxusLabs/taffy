@@ -313,7 +313,8 @@ pub(super) fn align_item_within_area(
 
     // Compute offset in the axis
     let alignment_based_offset = match alignment_style {
-        AlignSelf::Start | AlignSelf::FlexStart => {
+        // TODO: Add support for baseline alignment. For now we treat it as "start".
+        AlignSelf::Start | AlignSelf::FlexStart | AlignSelf::Baseline | AlignSelf::Stretch => {
             if direction.is_rtl() {
                 free_space + resolved_margin.start
             } else {
@@ -328,21 +329,6 @@ pub(super) fn align_item_within_area(
             }
         }
         AlignSelf::Center => (grid_area_size - resolved_size + resolved_margin.start - resolved_margin.end) / 2.0,
-        // TODO: Add support for baseline alignment. For now we treat it as "start".
-        AlignSelf::Baseline => {
-            if direction.is_rtl() {
-                free_space + resolved_margin.start
-            } else {
-                resolved_margin.start
-            }
-        }
-        AlignSelf::Stretch => {
-            if direction.is_rtl() {
-                free_space + resolved_margin.start
-            } else {
-                resolved_margin.start
-            }
-        }
     };
 
     let offset_within_area = if position == Position::Absolute {

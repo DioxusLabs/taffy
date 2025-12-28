@@ -1024,10 +1024,8 @@ fn perform_final_layout_on_in_flow_children(
 
             #[cfg(feature = "content_size")]
             {
-                let content_box_top_left =
-                    Point { x: resolved_content_box_inset.left, y: resolved_content_box_inset.top };
                 inflow_content_size = inflow_content_size.f32_max(compute_content_size_contribution(
-                    location - content_box_top_left,
+                    location + Point { x: -resolved_content_box_inset.left, y: -resolved_content_box_inset.top },
                     final_size,
                     item_layout.content_size,
                     item.overflow,
