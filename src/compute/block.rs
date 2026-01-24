@@ -998,10 +998,6 @@ fn perform_final_layout_on_in_flow_children(
                 }
             }
 
-            // Apply inset
-            location.x += inset_offset.x;
-            location.y += inset_offset.y;
-
             let scrollbar_size = Size {
                 width: if item.overflow.y == Overflow::Scroll { item.scrollbar_width } else { 0.0 },
                 height: if item.overflow.x == Overflow::Scroll { item.scrollbar_width } else { 0.0 },
