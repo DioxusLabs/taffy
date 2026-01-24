@@ -803,11 +803,13 @@ fn perform_final_layout_on_in_flow_children(
 
             let mut y_margin_offset: f32 = 0.0;
 
-            let (stretch_width, float_avoiding_position) = if item.is_in_same_bfc {
+            let (stretch_width, float_avoiding_slot) = if item.is_in_same_bfc {
                 let stretch_width = container_inner_width - item_non_auto_x_margin_sum;
-                let position = Point { x: 0.0, y: 0.0 };
 
-                (stretch_width, position)
+                // Dummy slot. Slot is not used in that case that the item is in the same bfc
+                let slot = ContentSlot::default();
+
+                (stretch_width, slot)
             } else {
                 'block: {
                     // Set y_margin_offset (different bfc child)
@@ -822,12 +824,21 @@ fn perform_final_layout_on_in_flow_children(
                         let slot = block_ctx.find_content_slot(min_y, item.clear, None);
                         has_active_floats = slot.segment_id.is_some();
                         let stretch_width = slot.width - item_non_auto_x_margin_sum;
-                        break 'block (stretch_width, Point { x: slot.x, y: slot.y });
+                        break 'block (stretch_width, slot);
                     }
 
                     if !has_active_floats {
                         let stretch_width = container_inner_width - item_non_auto_x_margin_sum;
-                        break 'block (stretch_width, Point { x: 0.0, y: min_y });
+                        break 'block (
+                            stretch_width,
+                            ContentSlot {
+                                segment_id: None,
+                                x: resolved_content_box_inset.left,
+                                y: min_y,
+                                width: stretch_width,
+                                height: f32::INFINITY,
+                            },
+                        );
                     }
 
                     unreachable!("One of the above cases will always be hit");
@@ -943,37 +954,45 @@ fn perform_final_layout_on_in_flow_children(
                 Point {
                     x: match direction {
                         Direction::Ltr => resolved_content_box_inset.left,
-                        Direction::Rtl => container_outer_width - resolved_content_box_inset.right,
+                        Direction::Rtl => container_outer_width - resolved_content_box_inset.right - final_size.width,
                     },
                     y: uncleared_y.max(clear_pos),
                 }
             } else {
                 // TODO: handle inset and margins
-                Point { x: float_avoiding_position.x + resolved_content_box_inset.left, y: float_avoiding_position.y }
+                Point {
+                    x: match direction {
+                        Direction::Ltr => float_avoiding_slot.left_edge(),
+                        Direction::Rtl => float_avoiding_slot.right_edge() - final_size.width,
+                    },
+                    y: float_avoiding_slot.y,
+                }
             };
             let mut location = if item.is_in_same_bfc {
                 Point {
-                    x: if direction.is_rtl() {
-                        container_outer_width
-                            - resolved_content_box_inset.right
-                            - final_size.width
-                            - resolved_margin.right
-                            + inset_offset.x
-                    } else {
-                        resolved_content_box_inset.left + inset_offset.x + resolved_margin.left
+                    x: match direction {
+                        Direction::Ltr => resolved_content_box_inset.left + inset_offset.x + resolved_margin.left,
+                        Direction::Rtl => {
+                            container_outer_width
+                                - resolved_content_box_inset.right
+                                - final_size.width
+                                - resolved_margin.right
+                                + inset_offset.x
+                        }
                     },
-
-                    y: committed_y_offset.max(clear_pos) + inset_offset.y + y_margin_offset,
+                    y: committed_y_offset.max(clear_pos) + y_margin_offset + inset_offset.y,
                 }
             } else {
                 // TODO: handle inset and margins
                 // TODO: direction for float-avoiding boxes
                 Point {
-                    x: float_avoiding_position.x
-                        + resolved_content_box_inset.left
-                        + inset_offset.x
-                        + resolved_margin.left,
-                    y: float_avoiding_position.y + inset_offset.y,
+                    x: match direction {
+                        Direction::Ltr => float_avoiding_slot.left_edge() + resolved_margin.left + inset_offset.x,
+                        Direction::Rtl => {
+                            float_avoiding_slot.right_edge() - final_size.width - resolved_margin.right + inset_offset.x
+                        }
+                    },
+                    y: float_avoiding_slot.y + inset_offset.y,
                 }
             };
 
