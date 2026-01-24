@@ -46,6 +46,29 @@ pub struct ContentSlot {
     pub height: f32,
 }
 
+impl ContentSlot {
+    /// The distance of the left edge of the slot from the left side of it's container
+    #[inline(always)]
+    pub fn left_edge(&self) -> f32 {
+        self.x
+    }
+    /// The distance of the right edge of the slot from the left side of it's container
+    #[inline(always)]
+    pub fn right_edge(&self) -> f32 {
+        self.x + self.width
+    }
+    /// The distance of the top edge of the slot from the top side of it's container
+    #[inline(always)]
+    pub fn top_edge(&self) -> f32 {
+        self.y + self.height
+    }
+    /// The distance of the bottom edge of the slot from the top side of it's container
+    #[inline(always)]
+    pub fn bottom_edge(&self) -> f32 {
+        self.y + self.height
+    }
+}
+
 /// A floated box
 #[derive(Debug, Clone, Default)]
 pub struct PlacedFloatedBox {
