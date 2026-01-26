@@ -10,14 +10,12 @@ use crate::util::sys::Vec;
 use crate::util::MaybeMath;
 use crate::util::{MaybeResolve, ResolveOrZero};
 use crate::{
-    BlockContainerStyle, BlockItemStyle, BoxGenerationMode, BoxSizing, Direction, LayoutBlockContainer, RequestedAxis,
-    TextAlign,
+    BlockContainerStyle, BlockItemStyle, BoxGenerationMode, BoxSizing, ContentSlot, Direction, LayoutBlockContainer,
+    RequestedAxis, TextAlign,
 };
 
 #[cfg(feature = "float_layout")]
-use super::float::FloatIntrinsicWidthCalculator;
-#[cfg(feature = "float_layout")]
-use super::{ContentSlot, FloatContext};
+use super::float::{FloatContext, FloatIntrinsicWidthCalculator};
 #[cfg(feature = "float_layout")]
 use crate::{Clear, Float, FloatDirection};
 

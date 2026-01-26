@@ -48,7 +48,7 @@ pub use self::flexbox::compute_flexbox_layout;
 pub use self::grid::compute_grid_layout;
 
 #[cfg(feature = "float_layout")]
-pub use self::float::{ContentSlot, FloatContext, FloatIntrinsicWidthCalculator};
+pub use self::float::{FloatContext, FloatIntrinsicWidthCalculator};
 
 use crate::geometry::{Line, Point, Size};
 use crate::style::{AvailableSpace, CoreStyle, Overflow};
@@ -59,6 +59,46 @@ use crate::util::debug::{debug_log, debug_log_node, debug_pop_node, debug_push_n
 use crate::util::sys::round;
 use crate::util::ResolveOrZero;
 use crate::{CacheTree, MaybeMath, MaybeResolve};
+
+/// An empty "slot" that avoids floats that is suitable for non-floated content
+/// to be laid out into
+#[derive(Debug, Clone, Copy, Default)]
+#[cfg(any(feature = "float_layout", feature = "block_layout"))]
+pub struct ContentSlot {
+    /// The id of the segment that the slot starts in
+    pub segment_id: Option<usize>,
+    /// The x position of the start of the slot
+    pub x: f32,
+    /// The y position of the start of the slot
+    pub y: f32,
+    /// The width of the slot
+    pub width: f32,
+    /// The height of the slot
+    pub height: f32,
+}
+
+impl ContentSlot {
+    /// The distance of the left edge of the slot from the left side of it's container
+    #[inline(always)]
+    pub fn left_edge(&self) -> f32 {
+        self.x
+    }
+    /// The distance of the right edge of the slot from the left side of it's container
+    #[inline(always)]
+    pub fn right_edge(&self) -> f32 {
+        self.x + self.width
+    }
+    /// The distance of the top edge of the slot from the top side of it's container
+    #[inline(always)]
+    pub fn top_edge(&self) -> f32 {
+        self.y + self.height
+    }
+    /// The distance of the bottom edge of the slot from the top side of it's container
+    #[inline(always)]
+    pub fn bottom_edge(&self) -> f32 {
+        self.y + self.height
+    }
+}
 
 /// Compute layout for the root node in the tree
 pub fn compute_root_layout(tree: &mut impl LayoutPartialTree, root: NodeId, available_space: Size<AvailableSpace>) {
