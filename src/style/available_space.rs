@@ -1,7 +1,6 @@
 //! Style type for representing available space as a sizing constraint
 use crate::{
     prelude::{FromLength, TaffyMaxContent, TaffyMinContent, TaffyZero},
-    sys::abs,
     Size,
 };
 
@@ -101,18 +100,6 @@ impl AvailableSpace {
             AvailableSpace::MaxContent => f32::INFINITY,
             AvailableSpace::MinContent => 0.0,
             AvailableSpace::Definite(available_space) => available_space - used_space,
-        }
-    }
-
-    /// Compare equality with another AvailableSpace, treating definite values
-    /// that are within f32::EPSILON of each other as equal
-    pub fn is_roughly_equal(self, other: AvailableSpace) -> bool {
-        use AvailableSpace::*;
-        match (self, other) {
-            (Definite(a), Definite(b)) => abs(a - b) < f32::EPSILON,
-            (MinContent, MinContent) => true,
-            (MaxContent, MaxContent) => true,
-            _ => false,
         }
     }
 }
