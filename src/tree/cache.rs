@@ -117,35 +117,14 @@ impl Cache {
         match run_mode {
             RunMode::PerformLayout => self
                 .final_layout_entry
-                .filter(|entry| {
-                    let cached_size = entry.content.size;
-                    (known_dimensions.width == entry.known_dimensions.width
-                        || known_dimensions.width == Some(cached_size.width))
-                        && (known_dimensions.height == entry.known_dimensions.height
-                            || known_dimensions.height == Some(cached_size.height))
-                        && (known_dimensions.width.is_some()
-                            || entry.available_space.width.is_roughly_equal(available_space.width))
-                        && (known_dimensions.height.is_some()
-                            || entry.available_space.height.is_roughly_equal(available_space.height))
-                })
+                .filter(|entry| known_dimensions == entry.known_dimensions && available_space == entry.available_space)
                 .map(|e| e.content),
             RunMode::ComputeSize => {
-                for entry in self.measure_entries.iter().flatten() {
-                    let cached_size = entry.content;
-
-                    if (known_dimensions.width == entry.known_dimensions.width
-                        || known_dimensions.width == Some(cached_size.width))
-                        && (known_dimensions.height == entry.known_dimensions.height
-                            || known_dimensions.height == Some(cached_size.height))
-                        && (known_dimensions.width.is_some()
-                            || entry.available_space.width.is_roughly_equal(available_space.width))
-                        && (known_dimensions.height.is_some()
-                            || entry.available_space.height.is_roughly_equal(available_space.height))
-                    {
-                        return Some(LayoutOutput::from_outer_size(cached_size));
-                    }
+                let cache_slot = Self::compute_cache_slot(known_dimensions, available_space);
+                let entry = &self.measure_entries[cache_slot]?;
+                if known_dimensions == entry.known_dimensions && available_space == entry.available_space {
+                    return Some(LayoutOutput::from_outer_size(entry.content));
                 }
-
                 None
             }
             RunMode::PerformHiddenLayout => None,
