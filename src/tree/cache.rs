@@ -14,6 +14,8 @@ pub(crate) struct CacheEntry<T> {
     known_dimensions: Size<Option<f32>>,
     /// The initial cached size of the parent's node
     available_space: Size<AvailableSpace>,
+    /// The initial cached size of the parent's node
+    parent_size: Size<Option<f32>>,
     /// The cached size and baselines of the item
     content: T,
 }
@@ -112,17 +114,24 @@ impl Cache {
         &self,
         known_dimensions: Size<Option<f32>>,
         available_space: Size<AvailableSpace>,
+        parent_size: Size<Option<f32>>,
         run_mode: RunMode,
     ) -> Option<LayoutOutput> {
         match run_mode {
             RunMode::PerformLayout => self
                 .final_layout_entry
-                .filter(|entry| known_dimensions == entry.known_dimensions && available_space == entry.available_space)
+                .filter(|entry| {
+                    known_dimensions == entry.known_dimensions
+                        && available_space == entry.available_space
+                        && parent_size == entry.parent_size
+                })
                 .map(|e| e.content),
             RunMode::ComputeSize => {
                 let cache_slot = Self::compute_cache_slot(known_dimensions, available_space);
                 let entry = &self.measure_entries[cache_slot]?;
-                if known_dimensions == entry.known_dimensions && available_space == entry.available_space {
+                if known_dimensions == entry.known_dimensions && available_space == entry.available_space
+                // && parent_size == entry.parent_size
+                {
                     return Some(LayoutOutput::from_outer_size(entry.content));
                 }
                 None
@@ -136,19 +145,21 @@ impl Cache {
         &mut self,
         known_dimensions: Size<Option<f32>>,
         available_space: Size<AvailableSpace>,
+        parent_size: Size<Option<f32>>,
         run_mode: RunMode,
         layout_output: LayoutOutput,
     ) {
         match run_mode {
             RunMode::PerformLayout => {
                 self.is_empty = false;
-                self.final_layout_entry = Some(CacheEntry { known_dimensions, available_space, content: layout_output })
+                self.final_layout_entry =
+                    Some(CacheEntry { known_dimensions, available_space, parent_size, content: layout_output })
             }
             RunMode::ComputeSize => {
                 self.is_empty = false;
                 let cache_slot = Self::compute_cache_slot(known_dimensions, available_space);
                 self.measure_entries[cache_slot] =
-                    Some(CacheEntry { known_dimensions, available_space, content: layout_output.size });
+                    Some(CacheEntry { known_dimensions, available_space, parent_size, content: layout_output.size });
             }
             RunMode::PerformHiddenLayout => {}
         }

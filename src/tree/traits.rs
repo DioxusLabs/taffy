@@ -210,6 +210,7 @@ pub trait CacheTree {
         node_id: NodeId,
         known_dimensions: Size<Option<f32>>,
         available_space: Size<AvailableSpace>,
+        parent_size: Size<Option<f32>>,
         run_mode: RunMode,
     ) -> Option<LayoutOutput>;
 
@@ -219,6 +220,7 @@ pub trait CacheTree {
         node_id: NodeId,
         known_dimensions: Size<Option<f32>>,
         available_space: Size<AvailableSpace>,
+        parent_size: Size<Option<f32>>,
         run_mode: RunMode,
         layout_output: LayoutOutput,
     );

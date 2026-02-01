@@ -215,9 +215,10 @@ impl<NodeContext> CacheTree for TaffyTree<NodeContext> {
         node_id: NodeId,
         known_dimensions: Size<Option<f32>>,
         available_space: Size<AvailableSpace>,
+        parent_size: Size<Option<f32>>,
         run_mode: RunMode,
     ) -> Option<LayoutOutput> {
-        self.nodes[node_id.into()].cache.get(known_dimensions, available_space, run_mode)
+        self.nodes[node_id.into()].cache.get(known_dimensions, available_space, parent_size, run_mode)
     }
 
     fn cache_store(
@@ -225,10 +226,11 @@ impl<NodeContext> CacheTree for TaffyTree<NodeContext> {
         node_id: NodeId,
         known_dimensions: Size<Option<f32>>,
         available_space: Size<AvailableSpace>,
+        parent_size: Size<Option<f32>>,
         run_mode: RunMode,
         layout_output: LayoutOutput,
     ) {
-        self.nodes[node_id.into()].cache.store(known_dimensions, available_space, run_mode, layout_output)
+        self.nodes[node_id.into()].cache.store(known_dimensions, available_space, parent_size, run_mode, layout_output)
     }
 
     fn cache_clear(&mut self, node_id: NodeId) {
@@ -432,9 +434,10 @@ where
         node_id: NodeId,
         known_dimensions: Size<Option<f32>>,
         available_space: Size<AvailableSpace>,
+        parent_size: Size<Option<f32>>,
         run_mode: RunMode,
     ) -> Option<LayoutOutput> {
-        self.taffy.nodes[node_id.into()].cache.get(known_dimensions, available_space, run_mode)
+        self.taffy.nodes[node_id.into()].cache.get(known_dimensions, available_space, parent_size, run_mode)
     }
 
     fn cache_store(
@@ -442,10 +445,17 @@ where
         node_id: NodeId,
         known_dimensions: Size<Option<f32>>,
         available_space: Size<AvailableSpace>,
+        parent_size: Size<Option<f32>>,
         run_mode: RunMode,
         layout_output: LayoutOutput,
     ) {
-        self.taffy.nodes[node_id.into()].cache.store(known_dimensions, available_space, run_mode, layout_output)
+        self.taffy.nodes[node_id.into()].cache.store(
+            known_dimensions,
+            available_space,
+            parent_size,
+            run_mode,
+            layout_output,
+        )
     }
 
     fn cache_clear(&mut self, node_id: NodeId) {
