@@ -1060,7 +1060,8 @@ fn determine_container_main_size(
                                     child_known_dimensions,
                                     constants.node_inner_size,
                                     child_available_space,
-                                    SizingMode::InherentSize,
+                                    // FIXME: apply "InherentSize" differences manually
+                                    SizingMode::ContentSize,
                                     dir.main_axis(),
                                     Line::FALSE,
                                 ) + item.margin.main_axis_sum(constants.dir);
