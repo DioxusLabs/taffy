@@ -34,6 +34,8 @@ use crate::compute::grid::DetailedGridInfo;
 #[cfg(feature = "detailed_layout_info")]
 use crate::tree::layout::DetailedLayoutInfo;
 
+use super::SizingMode;
+
 /// The error Taffy generates on invalid operations
 pub type TaffyResult<T> = Result<T, TaffyError>;
 
@@ -217,8 +219,9 @@ impl<NodeContext> CacheTree for TaffyTree<NodeContext> {
         available_space: Size<AvailableSpace>,
         parent_size: Size<Option<f32>>,
         run_mode: RunMode,
+        sizing_mode: SizingMode,
     ) -> Option<LayoutOutput> {
-        self.nodes[node_id.into()].cache.get(known_dimensions, available_space, parent_size, run_mode)
+        self.nodes[node_id.into()].cache.get(known_dimensions, available_space, parent_size, run_mode, sizing_mode)
     }
 
     fn cache_store(
@@ -228,9 +231,17 @@ impl<NodeContext> CacheTree for TaffyTree<NodeContext> {
         available_space: Size<AvailableSpace>,
         parent_size: Size<Option<f32>>,
         run_mode: RunMode,
+        sizing_mode: SizingMode,
         layout_output: LayoutOutput,
     ) {
-        self.nodes[node_id.into()].cache.store(known_dimensions, available_space, parent_size, run_mode, layout_output)
+        self.nodes[node_id.into()].cache.store(
+            known_dimensions,
+            available_space,
+            parent_size,
+            run_mode,
+            sizing_mode,
+            layout_output,
+        )
     }
 
     fn cache_clear(&mut self, node_id: NodeId) {
@@ -436,8 +447,15 @@ where
         available_space: Size<AvailableSpace>,
         parent_size: Size<Option<f32>>,
         run_mode: RunMode,
+        sizing_mode: SizingMode,
     ) -> Option<LayoutOutput> {
-        self.taffy.nodes[node_id.into()].cache.get(known_dimensions, available_space, parent_size, run_mode)
+        self.taffy.nodes[node_id.into()].cache.get(
+            known_dimensions,
+            available_space,
+            parent_size,
+            run_mode,
+            sizing_mode,
+        )
     }
 
     fn cache_store(
@@ -447,6 +465,7 @@ where
         available_space: Size<AvailableSpace>,
         parent_size: Size<Option<f32>>,
         run_mode: RunMode,
+        sizing_mode: SizingMode,
         layout_output: LayoutOutput,
     ) {
         self.taffy.nodes[node_id.into()].cache.store(
@@ -454,6 +473,7 @@ where
             available_space,
             parent_size,
             run_mode,
+            sizing_mode,
             layout_output,
         )
     }

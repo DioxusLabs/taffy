@@ -212,6 +212,7 @@ pub trait CacheTree {
         available_space: Size<AvailableSpace>,
         parent_size: Size<Option<f32>>,
         run_mode: RunMode,
+        sizing_mode: SizingMode,
     ) -> Option<LayoutOutput>;
 
     /// Store a computed size in the cache
@@ -222,6 +223,7 @@ pub trait CacheTree {
         available_space: Size<AvailableSpace>,
         parent_size: Size<Option<f32>>,
         run_mode: RunMode,
+        sizing_mode: SizingMode,
         layout_output: LayoutOutput,
     );
 
