@@ -26,6 +26,7 @@ struct Node {
     image_data: Option<ImageContext>,
     cache: Cache,
     unrounded_layout: Layout,
+    has_new_layout: bool,
     final_layout: Layout,
     children: Vec<usize>,
 }
@@ -39,6 +40,7 @@ impl Default for Node {
             image_data: None,
             cache: Cache::new(),
             unrounded_layout: Layout::with_order(0),
+            has_new_layout: true,
             final_layout: Layout::with_order(0),
             children: Vec::new(),
         }
@@ -151,6 +153,8 @@ impl taffy::LayoutPartialTree for Tree {
     }
 
     fn set_unrounded_layout(&mut self, node_id: NodeId, layout: &Layout) {
+        let node = self.node_from_id_mut(node_id);
+        node.has_new_layout = &node.unrounded_layout != layout;
         self.node_from_id_mut(node_id).unrounded_layout = *layout;
     }
 
@@ -281,6 +285,10 @@ impl taffy::PrintTree for Tree {
 
     fn get_final_layout(&self, node_id: NodeId) -> Layout {
         self.node_from_id(node_id).final_layout
+    }
+
+    fn get_has_new_layout(&self, node_id: NodeId) -> bool {
+        self.node_from_id(node_id).has_new_layout
     }
 }
 

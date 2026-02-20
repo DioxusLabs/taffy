@@ -28,6 +28,7 @@ struct Node {
     image_data: Option<ImageContext>,
     cache: Cache,
     unrounded_layout: Layout,
+    pub(crate) has_new_layout: bool,
     final_layout: Layout,
     children: Vec<Node>,
 }
@@ -41,6 +42,7 @@ impl Default for Node {
             image_data: None,
             cache: Cache::new(),
             unrounded_layout: Layout::with_order(0),
+            has_new_layout: false,
             final_layout: Layout::with_order(0),
             children: Vec::new(),
         }
@@ -143,7 +145,11 @@ impl LayoutPartialTree for StatelessLayoutTree {
     }
 
     fn set_unrounded_layout(&mut self, node_id: NodeId, layout: &Layout) {
-        unsafe { node_from_id_mut(node_id).unrounded_layout = *layout };
+        unsafe {
+            let node = node_from_id_mut(node_id);
+            node.has_new_layout = &node.unrounded_layout != layout;
+            node.unrounded_layout = *layout;
+        };
     }
 
     fn resolve_calc_value(&self, _val: *const (), _basis: f32) -> f32 {
@@ -273,6 +279,10 @@ impl PrintTree for StatelessLayoutTree {
 
     fn get_final_layout(&self, node_id: NodeId) -> Layout {
         unsafe { node_from_id(node_id).final_layout }
+    }
+
+    fn get_has_new_layout(&self, node_id: NodeId) -> bool {
+        unsafe { node_from_id(node_id).has_new_layout }
     }
 }
 

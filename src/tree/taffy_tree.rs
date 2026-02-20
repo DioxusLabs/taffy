@@ -100,6 +100,9 @@ struct NodeData {
     /// layout to avoid errors from rounding already-rounded values. See <https://github.com/DioxusLabs/taffy/issues/501>.
     pub(crate) unrounded_layout: Layout,
 
+    /// True if the layout is new
+    pub(crate) has_new_layout: bool,
+
     /// The final results of the layout computation.
     /// These may be rounded or unrounded depending on what the `use_rounding` config setting is set to.
     pub(crate) final_layout: Layout,
@@ -123,6 +126,7 @@ impl NodeData {
             style,
             cache: Cache::new(),
             unrounded_layout: Layout::new(),
+            has_new_layout: true,
             final_layout: Layout::new(),
             has_context: false,
             #[cfg(feature = "detailed_layout_info")]
@@ -270,6 +274,11 @@ impl<NodeContext> PrintTree for TaffyTree<NodeContext> {
             self.nodes[node_id.into()].unrounded_layout
         }
     }
+
+    #[inline(always)]
+    fn get_has_new_layout(&self, node_id: NodeId) -> bool {
+        self.nodes[node_id.into()].has_new_layout
+    }
 }
 
 /// View over the Taffy tree that holds the tree itself along with a reference to the context
@@ -403,6 +412,7 @@ where
 
     #[inline(always)]
     fn set_unrounded_layout(&mut self, node_id: NodeId, layout: &Layout) {
+        self.taffy.nodes[node_id.into()].has_new_layout = &self.taffy.nodes[node_id.into()].unrounded_layout != layout;
         self.taffy.nodes[node_id.into()].unrounded_layout = *layout;
     }
 
@@ -925,6 +935,12 @@ impl<NodeContext> TaffyTree<NodeContext> {
         mark_dirty_recursive(&mut self.nodes, &self.parents, node.into());
 
         Ok(())
+    }
+
+    /// Marks the layout of this node as seen
+    #[inline]
+    pub fn mark_seen(&mut self, node: NodeId) {
+        self.nodes[node.into()].has_new_layout = false;
     }
 
     /// Indicates whether the layout of this node needs to be recomputed
