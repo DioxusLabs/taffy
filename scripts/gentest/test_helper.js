@@ -23,7 +23,7 @@ class TrackSizingParser {
   }
 
   parseSingleItem() {
-    return this.parseItem();
+    return this._parseItem();
   }
 
   _parseItemList(separator, terminator = null) {
