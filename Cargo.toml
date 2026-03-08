@@ -84,6 +84,7 @@ profile = ["std"]
 
 [dev-dependencies]
 serde_json = "1.0.93"
+roxmltree = "0.21.1"
 taffy_test_helpers = { path = "tests/common"}
 
 # Enable default features for tests and examples
