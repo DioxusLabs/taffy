@@ -5,6 +5,9 @@ use crate::{
     Size,
 };
 
+#[cfg(feature = "from_str")]
+use core::str::FromStr;
+
 /// The amount of space available to a node in a given axis
 /// <https://www.w3.org/TR/css-sizing-3/#available>
 #[derive(Copy, Clone, Debug, PartialEq)]
@@ -29,6 +32,19 @@ impl TaffyMinContent for AvailableSpace {
 impl FromLength for AvailableSpace {
     fn from_length<Input: Into<f32> + Copy>(value: Input) -> Self {
         Self::Definite(value.into())
+    }
+}
+
+#[cfg(feature = "from_str")]
+impl core::str::FromStr for AvailableSpace {
+    type Err = ();
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.trim() {
+            "max-content" => Ok(Self::MaxContent),
+            "min-content" => Ok(Self::MinContent),
+            // FIXME: parse definite AvailableSpace
+            _ => Err(()),
+        }
     }
 }
 

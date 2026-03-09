@@ -287,6 +287,29 @@ pub enum GridAutoFlow {
     ColumnDense,
 }
 
+#[cfg(feature = "from_str")]
+impl core::str::FromStr for GridAutoFlow {
+    type Err = ();
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let s = s.trim();
+        // TODO: check for space between keywords
+        let is_dense = s.contains("dense");
+        if s.starts_with("row") {
+            return match is_dense {
+                true => Ok(Self::RowDense),
+                false => Ok(Self::Row),
+            };
+        }
+        if s.starts_with("column") {
+            return match is_dense {
+                true => Ok(Self::ColumnDense),
+                false => Ok(Self::Column),
+            };
+        }
+        Err(())
+    }
+}
+
 impl GridAutoFlow {
     /// Whether grid auto placement uses the sparse placement algorithm or the dense placement algorithm
     /// See: <https://developer.mozilla.org/en-US/docs/Web/CSS/grid-auto-flow#values>
@@ -375,6 +398,53 @@ impl<S: CheapCloneStr> TaffyGridSpan for GridPlacement<S> {
 impl<S: CheapCloneStr> TaffyGridSpan for Line<GridPlacement<S>> {
     fn from_span(span: u16) -> Self {
         Line { start: GridPlacement::<S>::from_span(span), end: GridPlacement::<S>::Auto }
+    }
+}
+
+#[cfg(feature = "from_str")]
+impl<S: CheapCloneStr> core::str::FromStr for GridPlacement<S> {
+    type Err = ();
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        use super::from_str_helpers::parse_custom_ident;
+
+        let mut s = s.trim();
+        let mut is_span = false;
+
+        if s == "auto" {
+            return Ok(Self::Auto);
+        }
+
+        if s.starts_with("span ") && s.len() > 5 {
+            is_span = true;
+            s = &s[5..];
+        }
+
+        if s.as_bytes().iter().all(|b| b.is_ascii_digit()) {
+            return match is_span {
+                true => Ok(Self::Span(s.parse::<u16>().unwrap())),
+                false => Ok(Self::Line(GridLine::from(s.parse::<i16>().unwrap()))),
+            };
+        }
+
+        let (ident, rest) = parse_custom_ident(s)?;
+        let rest = rest.trim();
+
+        if rest == "" {
+            return match is_span {
+                true => Err(()),
+                false => Ok(Self::NamedLine(S::from(ident), 0)),
+            };
+        }
+
+        if rest.as_bytes().iter().all(|b| b.is_ascii_digit()) {
+            let ident = S::from(ident);
+            return match is_span {
+                true => Ok(Self::NamedSpan(ident, rest.parse::<u16>().unwrap())),
+                false => Ok(Self::NamedLine(ident, rest.parse::<i16>().unwrap())),
+            };
+        }
+
+        Err(())
     }
 }
 

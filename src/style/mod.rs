@@ -42,6 +42,9 @@ use crate::geometry::{Point, Rect, Size};
 use crate::style_helpers::TaffyAuto as _;
 use core::fmt::Debug;
 
+#[cfg(feature = "from_str")]
+mod from_str_helpers;
+
 #[cfg(feature = "grid")]
 use crate::geometry::Line;
 #[cfg(feature = "serde")]
@@ -210,6 +213,23 @@ impl Default for Display {
     }
 }
 
+#[cfg(feature = "from_str")]
+impl core::str::FromStr for Display {
+    type Err = ();
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.trim() {
+            "none" => Ok(Self::None),
+            #[cfg(feature = "flexbox")]
+            "flex" => Ok(Self::Flex),
+            #[cfg(feature = "grid")]
+            "grid" => Ok(Self::Grid),
+            #[cfg(feature = "block_layout")]
+            "block" => Ok(Self::Block),
+            _ => Err(()),
+        }
+    }
+}
+
 impl core::fmt::Display for Display {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
@@ -270,6 +290,18 @@ pub enum Position {
     Absolute,
 }
 
+#[cfg(feature = "from_str")]
+impl core::str::FromStr for Position {
+    type Err = ();
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.trim() {
+            "relative" => Ok(Self::Relative),
+            "absolute" => Ok(Self::Absolute),
+            _ => Err(()),
+        }
+    }
+}
+
 /// Specifies whether size styles for this node are assigned to the node's "content box" or "border box"
 ///
 /// - The "content box" is the node's inner size excluding padding, border and margin
@@ -291,6 +323,18 @@ pub enum BoxSizing {
     BorderBox,
     /// Size styles such size, min_size, max_size specify the box's "content box" (the size excluding padding/border/margin)
     ContentBox,
+}
+
+#[cfg(feature = "from_str")]
+impl core::str::FromStr for BoxSizing {
+    type Err = ();
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.trim() {
+            "border-box" => Ok(Self::BorderBox),
+            "content-box" => Ok(Self::ContentBox),
+            _ => Err(()),
+        }
+    }
 }
 
 /// How children overflowing their container should affect layout
@@ -343,6 +387,20 @@ impl Overflow {
         match self.is_scroll_container() {
             true => Some(0.0),
             false => None,
+        }
+    }
+}
+
+#[cfg(feature = "from_str")]
+impl core::str::FromStr for Overflow {
+    type Err = ();
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.trim() {
+            "visible" => Ok(Self::Visible),
+            "hidden" => Ok(Self::Hidden),
+            "clip" => Ok(Self::Clip),
+            "scroll" => Ok(Self::Scroll),
+            _ => Err(()),
         }
     }
 }

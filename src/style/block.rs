@@ -47,3 +47,17 @@ pub enum TextAlign {
     /// Corresponds to `-webkit-center` or `-moz-center` in browsers
     LegacyCenter,
 }
+
+#[cfg(feature = "from_str")]
+impl core::str::FromStr for TextAlign {
+    type Err = ();
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.trim() {
+            "auto" => Ok(Self::Auto),
+            "left" => Ok(Self::LegacyLeft),
+            "right" => Ok(Self::LegacyRight),
+            "center" => Ok(Self::LegacyCenter),
+            _ => Err(()),
+        }
+    }
+}
