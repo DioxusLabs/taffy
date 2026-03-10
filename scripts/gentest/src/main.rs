@@ -236,6 +236,8 @@ fn generate_assertions(w: &mut XmlWriter, node: &Value, use_rounding: bool) {
             generate_assertions(w, child, use_rounding);
         }
     };
+
+    w.end_element();
 }
 
 fn generate_node(w: &mut XmlWriter, node: &Value) {
@@ -256,26 +258,12 @@ fn generate_node(w: &mut XmlWriter, node: &Value) {
     }
 
     // Handle text/leaf node case
-    if let Some(text_content) = get_string_value(&node["textContent"]) {
+    let text_content = get_string_value(&node["textContent"]);
+    if text_content.is_some() {
         w.start_element("text");
-
-        let writing_mode = get_string_value(&style["writingMode"]);
-        if let Some(wm @ ("vertical-rl" | "vertical-lr")) = writing_mode {
-            w.write_attribute("writing-mode", wm);
-        };
-
-        let aspect_ratio = get_number_value(&style["aspectRatio"]);
-        if let Some(ratio) = aspect_ratio {
-            w.write_attribute("aspect-ratio", &ratio);
-        }
-
-        w.write_text(text_content.trim());
-
-        w.end_element();
-
-        return;
+    } else {
+        w.start_element("div");
     }
-    w.start_element("div");
 
     fn maybe_write<T: Display>(w: &mut XmlWriter, name: &str, value: Option<T>) {
         if let Some(attr) = value {
@@ -286,6 +274,7 @@ fn generate_node(w: &mut XmlWriter, node: &Value) {
     maybe_write(w, "display", get_str_attr(&style["display"], None));
     maybe_write(w, "box-sizing", get_str_attr(&style["boxSizing"], Some("border-box")));
     maybe_write(w, "direction", get_str_attr(&style["direction"], None));
+    maybe_write(w, "writing-mode", get_str_attr(&style["writingMode"], None));
     maybe_write(w, "position", get_str_attr(&style["position"], Some("relative")));
     maybe_write(w, "float", get_str_attr(&style["cssFloat"], None));
     maybe_write(w, "clear", get_str_attr(&style["clear"], None));
@@ -349,7 +338,7 @@ fn generate_node(w: &mut XmlWriter, node: &Value) {
     maybe_write(w, "grid-template-rows", serialize_array(&style["gridTemplateRows"], ' ', serialize_track_definition));
     maybe_write(
         w,
-        "grid-template-column",
+        "grid-template-columns",
         serialize_array(&style["gridTemplateColumns"], ' ', serialize_track_definition),
     );
     maybe_write(w, "grid-auto-rows", serialize_array(&style["gridAutoRows"], ' ', serialize_track_definition));
@@ -366,6 +355,10 @@ fn generate_node(w: &mut XmlWriter, node: &Value) {
             generate_node(w, child_desc);
         }
     };
+
+    if let Some(text_content) = text_content {
+        w.write_text(text_content.trim());
+    }
 
     w.end_element();
 }

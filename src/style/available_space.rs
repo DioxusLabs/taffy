@@ -6,7 +6,7 @@ use crate::{
 };
 
 #[cfg(feature = "from_str")]
-use core::str::FromStr;
+use super::from_str_helpers::{from_str_from_css, parse_css_str_entirely, FromCss, ParseResult, Parser, Token};
 
 /// The amount of space available to a node in a given axis
 /// <https://www.w3.org/TR/css-sizing-3/#available>
@@ -36,17 +36,19 @@ impl FromLength for AvailableSpace {
 }
 
 #[cfg(feature = "from_str")]
-impl core::str::FromStr for AvailableSpace {
-    type Err = ();
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s.trim() {
-            "max-content" => Ok(Self::MaxContent),
-            "min-content" => Ok(Self::MinContent),
-            // FIXME: parse definite AvailableSpace
-            _ => Err(()),
+impl FromCss for AvailableSpace {
+    fn from_css<'i>(parser: &mut Parser<'i, '_>) -> ParseResult<'i, Self> {
+        match parser.next()?.clone() {
+            Token::Number { value, .. } if value >= 0.0 => Ok(Self::Definite(value)),
+            Token::Dimension { value, .. } if value >= 0.0 => Ok(Self::Definite(value)),
+            Token::Ident(ident) if ident == "max-content" => Ok(Self::MaxContent),
+            Token::Ident(ident) if ident == "min-content" => Ok(Self::MinContent),
+            token => Err(parser.new_unexpected_token_error(token))?,
         }
     }
 }
+#[cfg(feature = "from_str")]
+from_str_from_css!(AvailableSpace);
 
 impl AvailableSpace {
     /// Returns true for definite values, else false

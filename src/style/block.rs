@@ -54,9 +54,9 @@ impl core::str::FromStr for TextAlign {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s.trim() {
             "auto" => Ok(Self::Auto),
-            "left" => Ok(Self::LegacyLeft),
-            "right" => Ok(Self::LegacyRight),
-            "center" => Ok(Self::LegacyCenter),
+            "-webkit-left" => Ok(Self::LegacyLeft),
+            "-webkit-right" => Ok(Self::LegacyRight),
+            "-webkit-center" => Ok(Self::LegacyCenter),
             _ => Err(()),
         }
     }
