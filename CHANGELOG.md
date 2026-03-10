@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.9.3
+
+### Added
+
+- Added write_tree method to utils.
+
 ## 0.9.2
 
 ### Fixed
