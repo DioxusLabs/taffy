@@ -250,13 +250,6 @@ fn generate_node(w: &mut XmlWriter, node: &Value) {
         }
     }
 
-    fn get_number_value(value: &Value) -> Option<f32> {
-        match value {
-            Value::Number(ref value) => Some(value.as_f64().unwrap() as f32),
-            _ => None,
-        }
-    }
-
     // Handle text/leaf node case
     let text_content = get_string_value(&node["textContent"]);
     if text_content.is_some() {
