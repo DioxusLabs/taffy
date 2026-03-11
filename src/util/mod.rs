@@ -14,6 +14,7 @@ pub(crate) mod debug;
 mod print;
 #[cfg(feature = "std")]
 pub use print::print_tree;
+#[cfg(feature = "std")]
 pub use print::write_tree;
 
 /// Deserialize a type `S` by deserializing a string, then using the `FromStr`
