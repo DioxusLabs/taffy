@@ -16,6 +16,19 @@ pub enum Float {
     None,
 }
 
+#[cfg(feature = "from_str")]
+impl core::str::FromStr for Float {
+    type Err = ();
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.trim() {
+            "left" => Ok(Self::Left),
+            "right" => Ok(Self::Right),
+            "none" => Ok(Self::None),
+            _ => Err(()),
+        }
+    }
+}
+
 /// Whether a box that is definitely floated is floated to the left
 /// of to the right.
 ///
@@ -62,4 +75,18 @@ pub enum Clear {
     /// The box does not clear floated boxes
     #[default]
     None,
+}
+
+#[cfg(feature = "from_str")]
+impl core::str::FromStr for Clear {
+    type Err = ();
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.trim() {
+            "left" => Ok(Self::Left),
+            "right" => Ok(Self::Right),
+            "both" => Ok(Self::Both),
+            "none" => Ok(Self::None),
+            _ => Err(()),
+        }
+    }
 }

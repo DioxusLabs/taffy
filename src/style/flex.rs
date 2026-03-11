@@ -85,6 +85,19 @@ pub enum FlexWrap {
     WrapReverse,
 }
 
+#[cfg(feature = "from_str")]
+impl core::str::FromStr for FlexWrap {
+    type Err = ();
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.trim() {
+            "nowrap" => Ok(Self::NoWrap),
+            "wrap" => Ok(Self::Wrap),
+            "wrap-reverse" => Ok(Self::WrapReverse),
+            _ => Err(()),
+        }
+    }
+}
+
 /// The direction of the flexbox layout main axis.
 ///
 /// There are always two perpendicular layout axes: main (or primary) and cross (or secondary).
@@ -116,6 +129,20 @@ pub enum FlexDirection {
     ///
     /// Items will be added from bottom to top in a column.
     ColumnReverse,
+}
+
+#[cfg(feature = "from_str")]
+impl core::str::FromStr for FlexDirection {
+    type Err = ();
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.trim() {
+            "row" => Ok(Self::Row),
+            "column" => Ok(Self::Column),
+            "row-reverse" => Ok(Self::RowReverse),
+            "column-reverse" => Ok(Self::ColumnReverse),
+            _ => Err(()),
+        }
+    }
 }
 
 impl FlexDirection {
