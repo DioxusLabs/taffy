@@ -21,7 +21,7 @@ document-features = { version = "0.2.7", optional = true }
 serde = { version = "1.0", default-features = false, optional = true, features = ["serde_derive"] }
 slotmap = { version = "1.0.6", default-features = false, optional = true }
 grid = { version = "1.0.0", default-features = false, optional = true }
-cssparser = { path = "../cssparser", version = "0.36.0", default-features = false, optional = true }
+cssparser = { version = "0.35.0", default-features = false, optional = true }
 
 [package.metadata.docs.rs]
 # To test all the documentation related features, run:
