@@ -1,4 +1,5 @@
 //! Computes the CSS block layout algorithm in the case that the block container being laid out contains only block-level boxes
+
 use crate::geometry::{Line, Point, Rect, Size};
 use crate::style::{AvailableSpace, CoreStyle, LengthPercentageAuto, Overflow, Position};
 use crate::style_helpers::TaffyMaxContent;
@@ -1121,90 +1122,61 @@ fn perform_absolute_layout_on_absolute_children(
             Line::FALSE,
         );
 
-        let non_auto_margin = Rect {
-            left: if left.is_some() { margin.left.unwrap_or(0.0) } else { 0.0 },
-            right: if right.is_some() { margin.right.unwrap_or(0.0) } else { 0.0 },
-            top: if top.is_some() { margin.top.unwrap_or(0.0) } else { 0.0 },
-            bottom: if bottom.is_some() { margin.bottom.unwrap_or(0.0) } else { 0.0 },
-        };
+        let (computed_left, _computed_right, computed_margin_left, computed_margin_right) =
+            resolve_absolute_margin_and_positions(
+                style_size.width,
+                area_width,
+                left,
+                right,
+                final_size.width,
+                margin.left,
+                margin.right,
+                border.left,
+                border.right,
+                padding.left,
+                padding.right,
+                item.static_position.x,
+            );
 
-        // Expand auto margins to fill available space
-        // https://www.w3.org/TR/CSS21/visudet.html#abs-non-replaced-width
-        let auto_margin = {
-            // Auto margins for absolutely positioned elements in block containers only resolve
-            // if inset is set. Otherwise they resolve to 0.
-            let absolute_auto_margin_space = Point {
-                x: right.map(|right| area_size.width - right - left.unwrap_or(0.0)).unwrap_or(final_size.width),
-                y: bottom.map(|bottom| area_size.height - bottom - top.unwrap_or(0.0)).unwrap_or(final_size.height),
-            };
-            let free_space = Size {
-                width: absolute_auto_margin_space.x - final_size.width - non_auto_margin.horizontal_axis_sum(),
-                height: absolute_auto_margin_space.y - final_size.height - non_auto_margin.vertical_axis_sum(),
-            };
-
-            let auto_margin_size = Size {
-                // If all three of 'left', 'width', and 'right' are 'auto': First set any 'auto' values for 'margin-left' and 'margin-right' to 0.
-                // Then, if the 'direction' property of the element establishing the static-position containing block is 'ltr' set 'left' to the
-                // static position and apply rule number three below; otherwise, set 'right' to the static position and apply rule number one below.
-                //
-                // If none of the three is 'auto': If both 'margin-left' and 'margin-right' are 'auto', solve the equation under the extra constraint
-                // that the two margins get equal values, unless this would make them negative, in which case when direction of the containing block is
-                // 'ltr' ('rtl'), set 'margin-left' ('margin-right') to zero and solve for 'margin-right' ('margin-left'). If one of 'margin-left' or
-                // 'margin-right' is 'auto', solve the equation for that value. If the values are over-constrained, ignore the value for 'left' (in case
-                // the 'direction' property of the containing block is 'rtl') or 'right' (in case 'direction' is 'ltr') and solve for that value.
-                width: {
-                    let auto_margin_count = margin.left.is_none() as u8 + margin.right.is_none() as u8;
-                    if auto_margin_count == 2
-                        && (style_size.width.is_none() || style_size.width.unwrap() >= free_space.width)
-                    {
-                        0.0
-                    } else if auto_margin_count > 0 {
-                        free_space.width / auto_margin_count as f32
-                    } else {
-                        0.0
-                    }
-                },
-                height: {
-                    let auto_margin_count = margin.top.is_none() as u8 + margin.bottom.is_none() as u8;
-                    if auto_margin_count == 2
-                        && (style_size.height.is_none() || style_size.height.unwrap() >= free_space.height)
-                    {
-                        0.0
-                    } else if auto_margin_count > 0 {
-                        free_space.height / auto_margin_count as f32
-                    } else {
-                        0.0
-                    }
-                },
-            };
-
-            Rect {
-                left: margin.left.map(|_| 0.0).unwrap_or(auto_margin_size.width),
-                right: margin.right.map(|_| 0.0).unwrap_or(auto_margin_size.width),
-                top: margin.top.map(|_| 0.0).unwrap_or(auto_margin_size.height),
-                bottom: margin.bottom.map(|_| 0.0).unwrap_or(auto_margin_size.height),
-            }
-        };
+        let (computed_top, _computed_bottom, computed_margin_top, computed_margin_bottom) =
+            resolve_absolute_margin_and_positions(
+                style_size.height,
+                area_height,
+                top,
+                bottom,
+                final_size.height,
+                margin.top,
+                margin.bottom,
+                border.top,
+                border.bottom,
+                padding.top,
+                padding.bottom,
+                item.static_position.y,
+            );
 
         let resolved_margin = Rect {
-            left: margin.left.unwrap_or(auto_margin.left),
-            right: margin.right.unwrap_or(auto_margin.right),
-            top: margin.top.unwrap_or(auto_margin.top),
-            bottom: margin.bottom.unwrap_or(auto_margin.bottom),
+            left: computed_margin_left,
+            right: computed_margin_right,
+            top: computed_margin_top,
+            bottom: computed_margin_bottom,
         };
 
+        let is_static_x = left.is_none() && right.is_none();
+        let is_static_y = top.is_none() && bottom.is_none();
+
         let location = Point {
-            x: left
-                .map(|left| left + resolved_margin.left)
-                .or(right.map(|right| area_size.width - final_size.width - right - resolved_margin.right))
-                .maybe_add(area_offset.x)
-                .unwrap_or(item.static_position.x + resolved_margin.left),
-            y: top
-                .map(|top| top + resolved_margin.top)
-                .or(bottom.map(|bottom| area_size.height - final_size.height - bottom - resolved_margin.bottom))
-                .maybe_add(area_offset.y)
-                .unwrap_or(item.static_position.y + resolved_margin.top),
+            x: if is_static_x {
+                computed_left + resolved_margin.left
+            } else {
+                computed_left + resolved_margin.left + area_offset.x
+            },
+            y: if is_static_y {
+                computed_top + resolved_margin.top
+            } else {
+                computed_top + resolved_margin.top + area_offset.y
+            },
         };
+
         // Note: axis intentionally switched here as scrollbars take up space in the opposite axis
         // to the axis in which scrolling is enabled.
         let scrollbar_size = Size {
@@ -1239,4 +1211,130 @@ fn perform_absolute_layout_on_absolute_children(
     }
 
     absolute_content_size
+}
+/// Compute margin and positons for absolutely positioned children.
+#[inline]
+fn resolve_absolute_margin_and_positions(
+    size: Option<f32>,
+    area_width: f32,
+    primary: Option<f32>,
+    secondary: Option<f32>,
+    final_size: f32,
+    margin_primary: Option<f32>,
+    margin_secondary: Option<f32>,
+    border_primary: f32,
+    border_secondary: f32,
+    padding_primary: f32,
+    padding_secondary: f32,
+    static_position: f32,
+) -> (f32, f32, f32, f32) {
+    // https://www.w3.org/TR/CSS2/visudet.html#abs-non-replaced-width
+
+    let mut computed_margin_primary = margin_primary.unwrap_or(0.0);
+    let mut computed_margin_secondary = margin_secondary.unwrap_or(0.0);
+
+    let mut _computed_size: f32 = size.unwrap_or(0.0);
+
+    let mut computed_primary: f32 = primary.unwrap_or(0.0);
+    let mut computed_secondary: f32 = secondary.unwrap_or(0.0);
+
+    // If all three of 'left', 'width', and 'right' are 'auto': First set any 'auto' values for 'margin-left' and 'margin-right' to 0.
+    if primary.is_none() && size.is_none() && secondary.is_none() {
+        computed_margin_primary = margin_primary.unwrap_or(0.0);
+        computed_margin_secondary = margin_secondary.unwrap_or(0.0);
+
+        // Then, if the 'direction' property of the element establishing the static-position containing block is 'ltr' set 'left' to the static position and apply rule number three below; otherwise, set 'right' to the static position and apply rule number one below.
+        // Assume always ltr
+
+        computed_primary = static_position;
+
+        // apply rule number three
+
+        // 'width' and 'right' are 'auto' and 'left' is not 'auto', then the width is shrink-to-fit . Then solve for 'right'
+        let width = final_size;
+
+        //  'right' = width of containing block - ('left' + 'margin-left' + 'border-left-width' + 'padding-left' + 'width' + 'padding-right' + 'border-right-width' + 'margin-right')
+        computed_secondary = area_width - (computed_primary + computed_margin_primary + computed_margin_secondary + width)
+    }
+    // If none of the three is 'auto'
+    else if primary.is_some() && size.is_some() && secondary.is_some() {
+        // If both 'margin-left' and 'margin-right' are 'auto'
+        if margin_primary.is_none() && margin_secondary.is_none() {
+            // solve the equation under the extra constraint that the two margins get equal values
+
+            // 'left' + '2M' + 'border-left-width' + 'padding-left' + 'width' + 'padding-right' + 'border-right-width' + 'right' = width of containing block
+            // M = (width of containing block - ('left' + 'border-left-width' + 'padding-left' + 'width' + 'padding-right' + 'border-right-width' + 'right')) / 2
+            let margin = (area_width - (primary.unwrap() + final_size + secondary.unwrap())) / 2.0;
+
+            if margin >= 0.0 {
+                computed_margin_secondary = margin;
+                computed_margin_primary = margin;
+            } else {
+                // unless this would make them negative, in which case when direction of the
+                // containing block is 'ltr' ('rtl'), set 'margin-left' ('margin-right') to
+                // zero and solve for 'margin-right' ('margin-left').
+                computed_margin_primary = 0.0;
+                computed_margin_secondary = area_width - (primary.unwrap() + final_size + secondary.unwrap());
+            }
+        } else if margin_primary.is_some() {
+            // If one of 'margin-left' or 'margin-right' is 'auto', solve the equation for that
+            computed_margin_secondary =
+                area_width - (primary.unwrap() + margin_primary.unwrap() + final_size + secondary.unwrap());
+        } else if margin_secondary.is_some() {
+            // If one of 'margin-left' or 'margin-right' is 'auto', solve the equation for that
+            computed_margin_primary =
+                area_width - (primary.unwrap() + final_size + margin_secondary.unwrap() + secondary.unwrap());
+        } else {
+            // If the values are over-constrained, ignore the value for 'left'
+            // (in case the 'direction' property of the containing block is 'rtl') or 'right'
+            // (in case 'direction' is 'ltr') and solve for that value.
+            computed_secondary =
+                area_width - (primary.unwrap() + margin_primary.unwrap() + final_size + margin_secondary.unwrap());
+        }
+    } else {
+        // Otherwise, set 'auto' values for 'margin-left' and 'margin-right' to 0, and pick the one of the following six rules that applies.
+        // These are already our initial values chosen above, so no need to do anything.
+
+        if primary.is_none() && size.is_none() && secondary.is_some() {
+            // 1. 'left' and 'width' are 'auto' and 'right' is not 'auto', then the width is shrink-to-fit. Then solve for 'left'
+            computed_primary =
+                area_width - (computed_margin_primary + final_size + computed_margin_secondary + secondary.unwrap());
+        } else if primary.is_none() && secondary.is_none() && size.is_some() {
+            // 2. 'left' and 'right' are 'auto' and 'width' is not 'auto',
+            // then if the 'direction' property of the element establishing the static-position
+            // containing block is 'ltr' set 'left' to the static position,
+            computed_primary = static_position;
+            computed_secondary =
+                area_width - (computed_primary + computed_margin_primary + final_size + computed_margin_secondary);
+            // otherwise set 'right' to the static position. Then solve for 'left'
+            // (if 'direction is 'rtl') or 'right' (if 'direction' is 'ltr').
+        } else if size.is_none() && secondary.is_none() && primary.is_some() {
+            // 3. 'width' and 'right' are 'auto' and 'left' is not 'auto', then the width is shrink-to-fit . Then solve for 'right'
+            computed_secondary =
+                area_width - (primary.unwrap() + computed_margin_primary + final_size + computed_margin_secondary)
+        } else if primary.is_none() && size.is_some() && secondary.is_some() {
+            // 4. 'left' is 'auto', 'width' and 'right' are not 'auto', then solve for 'left'
+            computed_primary =
+                area_width - (computed_margin_primary + final_size + computed_margin_secondary + secondary.unwrap());
+        } else if size.is_none() && primary.is_some() && secondary.is_some() {
+            // 5. 'width' is 'auto', 'left' and 'right' are not 'auto', then solve for 'width'
+            _computed_size = area_width
+                - (primary.unwrap()
+                    + computed_margin_primary
+                    + border_primary
+                    + padding_primary
+                    + padding_secondary
+                    + border_secondary
+                    + computed_margin_secondary
+                    + secondary.unwrap());
+        } else if secondary.is_none() && primary.is_some() && size.is_some() {
+            // 6. 'right' is 'auto', 'left' and 'width' are not 'auto', then solve for 'right'
+            computed_secondary =
+                area_width - (primary.unwrap() + computed_margin_primary + final_size + computed_margin_secondary);
+        } else {
+            unreachable!();
+        }
+    }
+
+    (computed_primary, computed_secondary, computed_margin_primary, computed_margin_secondary)
 }

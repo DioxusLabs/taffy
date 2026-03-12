@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script src="../../scripts/gentest/test_helper.js"></script>
+    <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+    <title>
+        Absolute positioning: 'left' and 'right' are 'auto' and 'width' is not 'auto', then if the 'direction' property of the element establishing the static-position containing block is 'ltr' set 'left' to the static position, otherwise set 'right' to the static position. Then solve for 'left' (if 'direction is 'rtl') or 'right' (if 'direction' is 'ltr').
+    </title>
+    <!--
+    This corresponds to case 2. This is the horizontal case.
+    https://www.w3.org/TR/CSS2/visudet.html#abs-non-replaced-width
+    -->
+</head>
+<body>
+
+<div id="test-root" style="display: block; width: 200px; height: 200px; position: relative; background: red;">
+    <div style="
+        position: absolute;
+        left: auto;
+        right: auto;
+        width: 100px;
+        top: 0;
+        height: 100px;
+        margin-top: 100px;
+        margin-left: auto;
+        margin-right: auto;
+        background: green;">
+    </div>
+</div>
+
+</body>
+</html>

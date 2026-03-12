@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script src="../../scripts/gentest/test_helper.js"></script>
+    <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+    <title>
+        Absolute positioning: Horizontal centering with vertical margin interference
+    </title>
+</head>
+<body>
+
+<div id="test-root" style="display: block; width: 200px; height: 200px; position: relative; background: red;">
+    <div style="
+        position: absolute;
+        left: 50px;
+        right: 0;
+        width: 100px;
+        top: 0;
+        height: 100px;
+        margin-top: 100px;
+        margin-left: auto;
+        margin-right: auto;
+        background: green;">
+    </div>
+</div>
+
+</body>
+</html>

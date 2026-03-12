@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script src="../../scripts/gentest/test_helper.js"></script>
+    <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+    <title>
+        Absolute positioning: 'left' and 'width' are 'auto' and 'right' is not 'auto', then the width is shrink-to-fit. Then solve for 'left'
+    </title>
+    <!--
+    This corresponds to case 1. This is the horizontal case.
+    https://www.w3.org/TR/CSS2/visudet.html#abs-non-replaced-width
+    -->
+</head>
+<body>
+
+<div id="test-root" style="display: block; width: 200px; height: 200px; position: relative; background: red;">
+    <div style="
+        position: absolute;
+        left: auto;
+        right: 20px;
+        width: auto;
+        top: 0;
+        height: 100px;
+        margin-top: 100px;
+        margin-left: auto;
+        margin-right: auto;
+        background: green;">
+    </div>
+</div>
+
+</body>
+</html>

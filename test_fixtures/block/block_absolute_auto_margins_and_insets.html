@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script src="../../scripts/gentest/test_helper.js"></script>
+    <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+    <title>
+        Absolute positioning: Border/Padding interference with Auto-Margins and Insets
+    </title>
+</head>
+<body>
+
+<div id="test-root" style="
+    display: block;
+    width: 120px;
+    height: 120px;
+    padding: 20px;
+    border: 20px solid black;
+    position: relative;
+    background: red;">
+
+    <div style="
+        position: absolute;
+        left: 0;
+        right: 0;
+        width: 60px;
+        height: 60px;
+        margin-left: auto;
+        margin-right: auto;
+        border: 10px solid black;
+        background: green;">
+    </div>
+</div>
+
+</body>
+</html>
