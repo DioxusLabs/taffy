@@ -13,7 +13,7 @@ use common::image::{image_measure_function, ImageContext};
 use common::text::{text_measure_function, FontMetrics, TextContext, WritingMode, LOREM_IPSUM};
 use taffy::{
     compute_cached_layout, compute_flexbox_layout, compute_grid_layout, compute_leaf_layout, compute_root_layout,
-    prelude::*, Cache, CacheTree, Layout, Style,
+    prelude::*, Cache, CacheTree, Layout, SizingMode, Style,
 };
 
 #[derive(Debug, Copy, Clone)]
@@ -192,9 +192,11 @@ impl CacheTree for Node {
         node_id: NodeId,
         known_dimensions: Size<Option<f32>>,
         available_space: Size<AvailableSpace>,
+        parent_size: Size<Option<f32>>,
         run_mode: taffy::RunMode,
+        sizing_mode: SizingMode,
     ) -> Option<taffy::LayoutOutput> {
-        self.node_from_id(node_id).cache.get(known_dimensions, available_space, run_mode)
+        self.node_from_id(node_id).cache.get(known_dimensions, available_space, parent_size, run_mode, sizing_mode)
     }
 
     fn cache_store(
@@ -202,10 +204,19 @@ impl CacheTree for Node {
         node_id: NodeId,
         known_dimensions: Size<Option<f32>>,
         available_space: Size<AvailableSpace>,
+        parent_size: Size<Option<f32>>,
         run_mode: taffy::RunMode,
+        sizing_mode: SizingMode,
         layout_output: taffy::LayoutOutput,
     ) {
-        self.node_from_id_mut(node_id).cache.store(known_dimensions, available_space, run_mode, layout_output)
+        self.node_from_id_mut(node_id).cache.store(
+            known_dimensions,
+            available_space,
+            parent_size,
+            run_mode,
+            sizing_mode,
+            layout_output,
+        )
     }
 
     fn cache_clear(&mut self, node_id: NodeId) {

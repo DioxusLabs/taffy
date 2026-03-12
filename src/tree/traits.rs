@@ -210,7 +210,9 @@ pub trait CacheTree {
         node_id: NodeId,
         known_dimensions: Size<Option<f32>>,
         available_space: Size<AvailableSpace>,
+        parent_size: Size<Option<f32>>,
         run_mode: RunMode,
+        sizing_mode: SizingMode,
     ) -> Option<LayoutOutput>;
 
     /// Store a computed size in the cache
@@ -219,7 +221,9 @@ pub trait CacheTree {
         node_id: NodeId,
         known_dimensions: Size<Option<f32>>,
         available_space: Size<AvailableSpace>,
+        parent_size: Size<Option<f32>>,
         run_mode: RunMode,
+        sizing_mode: SizingMode,
         layout_output: LayoutOutput,
     );
 

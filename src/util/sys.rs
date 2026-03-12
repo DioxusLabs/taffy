@@ -74,13 +74,6 @@ mod std {
         value.floor()
     }
 
-    /// Computes the absolute value
-    #[must_use]
-    #[inline(always)]
-    pub(crate) fn abs(value: f32) -> f32 {
-        value.abs()
-    }
-
     /// Returns the largest of two f32 values
     #[inline(always)]
     pub(crate) fn f32_max(a: f32, b: f32) -> f32 {
@@ -150,9 +143,6 @@ mod alloc {
     /// Rounds down to the nearest whole number
     pub(crate) use super::polyfill::floor;
 
-    /// Computes the absolute value
-    pub(crate) use super::polyfill::abs;
-
     /// Returns the largest of two f32 values
     #[inline(always)]
     pub(crate) fn f32_max(a: f32, b: f32) -> f32 {
@@ -210,9 +200,6 @@ mod core {
 
     /// Rounds to the nearest whole number
     pub(crate) use super::polyfill::round;
-
-    /// Computes the absolute value
-    pub(crate) use super::polyfill::abs;
 
     /// Returns the largest of two f32 values
     #[inline(always)]
@@ -283,19 +270,6 @@ mod polyfill {
             value - f + 1.0
         } else {
             value - f
-        }
-    }
-
-    /// Computes the absolute value
-    #[must_use]
-    #[inline(always)]
-    pub(crate) fn abs(value: f32) -> f32 {
-        if value.is_sign_positive() {
-            return value;
-        } else if value.is_sign_negative() {
-            return -value;
-        } else {
-            f32::NAN
         }
     }
 }

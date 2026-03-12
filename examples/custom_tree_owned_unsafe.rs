@@ -9,7 +9,7 @@ use taffy::tree::Cache;
 use taffy::util::print_tree;
 use taffy::{
     compute_cached_layout, compute_flexbox_layout, compute_grid_layout, compute_leaf_layout, compute_root_layout,
-    prelude::*, round_layout, CacheTree,
+    prelude::*, round_layout, CacheTree, SizingMode,
 };
 
 #[derive(Debug, Copy, Clone)]
@@ -190,9 +190,17 @@ impl CacheTree for StatelessLayoutTree {
         node_id: NodeId,
         known_dimensions: Size<Option<f32>>,
         available_space: Size<AvailableSpace>,
+        parent_size: Size<Option<f32>>,
         run_mode: taffy::RunMode,
+        sizing_mode: SizingMode,
     ) -> Option<taffy::LayoutOutput> {
-        unsafe { node_from_id(node_id) }.cache.get(known_dimensions, available_space, run_mode)
+        unsafe { node_from_id(node_id) }.cache.get(
+            known_dimensions,
+            available_space,
+            parent_size,
+            run_mode,
+            sizing_mode,
+        )
     }
 
     fn cache_store(
@@ -200,10 +208,19 @@ impl CacheTree for StatelessLayoutTree {
         node_id: NodeId,
         known_dimensions: Size<Option<f32>>,
         available_space: Size<AvailableSpace>,
+        parent_size: Size<Option<f32>>,
         run_mode: taffy::RunMode,
+        sizing_mode: SizingMode,
         layout_output: taffy::LayoutOutput,
     ) {
-        unsafe { node_from_id_mut(node_id) }.cache.store(known_dimensions, available_space, run_mode, layout_output)
+        unsafe { node_from_id_mut(node_id) }.cache.store(
+            known_dimensions,
+            available_space,
+            parent_size,
+            run_mode,
+            sizing_mode,
+            layout_output,
+        )
     }
 
     fn cache_clear(&mut self, node_id: NodeId) {

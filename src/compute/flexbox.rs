@@ -1060,6 +1060,7 @@ fn determine_container_main_size(
                                     child_known_dimensions,
                                     constants.node_inner_size,
                                     child_available_space,
+                                    // FIXME: apply "InherentSize" differences manually
                                     SizingMode::InherentSize,
                                     dir.main_axis(),
                                     Line::FALSE,
