@@ -256,6 +256,20 @@ pub trait GridItemStyle: CoreStyle {
         Style::<Self::CustomIdent>::DEFAULT.justify_self
     }
 
+    /// The CSS `order` property. Controls order-modified document order
+    /// for grid item placement.
+    ///
+    /// Items with lower order values are placed first. Items with the same
+    /// order value are placed in source order.
+    ///
+    /// Defaults to `0`.
+    ///
+    /// [Specification](https://www.w3.org/TR/css-display-3/#order-property)
+    #[inline(always)]
+    fn order(&self) -> i32 {
+        0
+    }
+
     /// Get a grid item's row or column placement depending on the axis passed
     #[inline(always)]
     fn grid_placement(&self, axis: AbsoluteAxis) -> Line<GridPlacement<Self::CustomIdent>> {

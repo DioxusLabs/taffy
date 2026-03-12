@@ -197,13 +197,20 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     // Match items (children) to a definite grid position (row start/end and column start/end position)
     let mut items = Vec::with_capacity(tree.child_count(node));
     let mut cell_occupancy_matrix = CellOccupancyMatrix::with_track_counts(est_col_counts, est_row_counts);
+    // CSS Grid §6.3: Items are placed in order-modified document order.
+    // Collect child indices sorted by (CSS order, source order).
+    let mut sorted_children: Vec<(usize, NodeId)> = tree
+        .child_ids(node)
+        .enumerate()
+        .filter(|(_, child_node)| {
+            let style = tree.get_grid_child_style(*child_node);
+            style.box_generation_mode() != BoxGenerationMode::None && style.position() != Position::Absolute
+        })
+        .collect();
+    sorted_children.sort_by_key(|(_, child_node)| tree.get_grid_child_style(*child_node).order());
+
     let in_flow_children_iter = || {
-        tree.child_ids(node)
-            .enumerate()
-            .map(|(index, child_node)| (index, child_node, tree.get_grid_child_style(child_node)))
-            .filter(|(_, _, style)| {
-                style.box_generation_mode() != BoxGenerationMode::None && style.position() != Position::Absolute
-            })
+        sorted_children.iter().map(|&(index, child_node)| (index, child_node, tree.get_grid_child_style(child_node)))
     };
     place_grid_items(
         &mut cell_occupancy_matrix,
@@ -214,6 +221,13 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
         justify_items.unwrap_or(AlignItems::Stretch),
         &name_resolver,
     );
+
+    // Assign visual order reflecting CSS `order`-modified document order.
+    // Items are currently in placement order (which respects CSS `order`).
+    // We assign before track sizing, which re-sorts items by other criteria.
+    for (i, item) in items.iter_mut().enumerate() {
+        item.order = i as u32;
+    }
 
     // Extract track counts from previous step (auto-placement can expand the number of tracks)
     let final_col_counts = *cell_occupancy_matrix.track_counts(AbsoluteAxis::Horizontal);
@@ -500,7 +514,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     let container_alignment_styles = InBothAbsAxis { horizontal: justify_items, vertical: align_items };
 
     // Position in-flow children (stored in items vector)
-    for (index, item) in items.iter_mut().enumerate() {
+    for item in items.iter_mut() {
         let grid_area = Rect {
             top: rows[item.row_indexes.start as usize + 1].offset,
             bottom: rows[item.row_indexes.end as usize].offset,
@@ -511,7 +525,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
         let (content_size_contribution, y_position, height) = align_and_position_item(
             tree,
             item.node,
-            index as u32,
+            item.order,
             grid_area,
             container_alignment_styles,
             item.baseline_shim,

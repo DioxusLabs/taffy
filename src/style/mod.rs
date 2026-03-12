@@ -479,6 +479,16 @@ pub struct Style<S: CheapCloneStr = DefaultCheapStr> {
     #[cfg(feature = "flexbox")]
     pub flex_shrink: f32,
 
+    // Order property (applies to both flex and grid items)
+    /// The CSS `order` property. Controls the visual order of flex and grid items.
+    ///
+    /// Items with lower values are laid out first. Items with the same value
+    /// maintain their source order. Defaults to `0`.
+    ///
+    /// [Specification](https://www.w3.org/TR/css-display-3/#order-property)
+    #[cfg(any(feature = "flexbox", feature = "grid"))]
+    pub order: i32,
+
     // Grid container properies
     /// Defines the track sizing functions (heights) of the grid rows
     #[cfg(feature = "grid")]
@@ -568,6 +578,9 @@ impl<S: CheapCloneStr> Style<S> {
         flex_shrink: 1.0,
         #[cfg(feature = "flexbox")]
         flex_basis: Dimension::AUTO,
+        // Order
+        #[cfg(any(feature = "flexbox", feature = "grid"))]
+        order: 0,
         // Grid
         #[cfg(feature = "grid")]
         grid_template_rows: GridTrackVec::new(),
@@ -862,6 +875,10 @@ impl<S: CheapCloneStr> FlexboxItemStyle for Style<S> {
     fn align_self(&self) -> Option<AlignSelf> {
         self.align_self
     }
+    #[inline(always)]
+    fn order(&self) -> i32 {
+        self.order
+    }
 }
 
 #[cfg(feature = "flexbox")]
@@ -881,6 +898,10 @@ impl<T: FlexboxItemStyle> FlexboxItemStyle for &'_ T {
     #[inline(always)]
     fn align_self(&self) -> Option<AlignSelf> {
         (*self).align_self()
+    }
+    #[inline(always)]
+    fn order(&self) -> i32 {
+        (*self).order()
     }
 }
 
@@ -1081,6 +1102,10 @@ impl<S: CheapCloneStr> GridItemStyle for Style<S> {
     fn justify_self(&self) -> Option<AlignSelf> {
         self.justify_self
     }
+    #[inline(always)]
+    fn order(&self) -> i32 {
+        self.order
+    }
 }
 
 #[cfg(feature = "grid")]
@@ -1100,6 +1125,10 @@ impl<T: GridItemStyle> GridItemStyle for &'_ T {
     #[inline(always)]
     fn justify_self(&self) -> Option<AlignSelf> {
         (*self).justify_self()
+    }
+    #[inline(always)]
+    fn order(&self) -> i32 {
+        (*self).order()
     }
 }
 
@@ -1158,6 +1187,8 @@ mod tests {
             flex_shrink: 1.0,
             #[cfg(feature = "flexbox")]
             flex_basis: super::Dimension::AUTO,
+            #[cfg(any(feature = "flexbox", feature = "grid"))]
+            order: 0,
             size: Size::auto(),
             min_size: Size::auto(),
             max_size: Size::auto(),
@@ -1252,12 +1283,12 @@ mod tests {
         assert_type_size::<GridTemplateComponent<String>>(56);
         assert_type_size::<GridPlacement<String>>(32);
         assert_type_size::<Line<GridPlacement<String>>>(64);
-        assert_type_size::<Style<String>>(536);
+        assert_type_size::<Style<String>>(544);
 
         // String-type dependent (Arc<str>)
         assert_type_size::<GridTemplateComponent<Arc<str>>>(56);
         assert_type_size::<GridPlacement<Arc<str>>>(24);
         assert_type_size::<Line<GridPlacement<Arc<str>>>>(48);
-        assert_type_size::<Style<Arc<str>>>(504);
+        assert_type_size::<Style<Arc<str>>>(512);
     }
 }
