@@ -264,4 +264,38 @@ impl CellOccupancyMatrix {
 
         maybe_index.map(|idx| track_counts.track_to_prev_oz_line(idx as u16))
     }
+
+    /// Given an axis and a track index
+    /// Search forwards from the start of the track and find the first grid cell matching the specified state (if any)
+    /// Return the index of that cell or None.
+    pub fn first_of_type(
+        &self,
+        track_type: AbsoluteAxis,
+        start_at: OriginZeroLine,
+        kind: CellOccupancyState,
+    ) -> Option<OriginZeroLine> {
+        let track_counts = self.track_counts(track_type.other_axis());
+        let track_computed_index = track_counts.oz_line_to_next_track(start_at);
+
+        let maybe_index = match track_type {
+            AbsoluteAxis::Horizontal => {
+                if track_computed_index < 0 || track_computed_index >= self.inner.rows() as i16 {
+                    // Index out of bounds: no tracks to search
+                    None
+                } else {
+                    self.inner.iter_row(track_computed_index as usize).position(|item| *item == kind)
+                }
+            }
+            AbsoluteAxis::Vertical => {
+                if track_computed_index < 0 || track_computed_index >= self.inner.cols() as i16 {
+                    // Index out of bounds: no tracks to search
+                    None
+                } else {
+                    self.inner.iter_col(track_computed_index as usize).position(|item| *item == kind)
+                }
+            }
+        };
+
+        maybe_index.map(|idx| track_counts.track_to_prev_oz_line(idx as u16))
+    }
 }

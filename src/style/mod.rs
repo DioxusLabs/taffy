@@ -102,6 +102,12 @@ pub trait CoreStyle {
         BoxSizing::BorderBox
     }
 
+    /// The direction of text, table and grid columns, and horizontal overflow.
+    #[inline(always)]
+    fn direction(&self) -> Direction {
+        Direction::Ltr
+    }
+
     // Overflow properties
     /// How children overflowing their container should affect layout
     #[inline(always)]
@@ -347,6 +353,26 @@ impl Overflow {
     }
 }
 
+/// Sets the direction of text, table and grid columns, and horizontal overflow.
+/// <https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/direction>
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub enum Direction {
+    #[default]
+    /// Left-to-right
+    Ltr,
+    /// Right-to-left
+    Rtl,
+}
+
+impl Direction {
+    /// Returns true if the direction is right-to-left
+    #[inline]
+    pub(crate) fn is_rtl(&self) -> bool {
+        matches!(self, Direction::Rtl)
+    }
+}
+
 /// A typed representation of the CSS style information for a single node.
 ///
 /// The most important idea in flexbox is the notion of a "main" and "cross" axis, which are always perpendicular to each other.
@@ -378,6 +404,8 @@ pub struct Style<S: CheapCloneStr = DefaultCheapStr> {
     pub item_is_replaced: bool,
     /// Should size styles apply to the content box or the border box of the node
     pub box_sizing: BoxSizing,
+    /// Sets the direction of text, table and grid columns, and horizontal overflow.
+    pub direction: Direction,
 
     // Overflow properties
     /// How children overflowing their container should affect layout
@@ -524,6 +552,7 @@ impl<S: CheapCloneStr> Style<S> {
         item_is_table: false,
         item_is_replaced: false,
         box_sizing: BoxSizing::BorderBox,
+        direction: Direction::Ltr,
         overflow: Point { x: Overflow::Visible, y: Overflow::Visible },
         scrollbar_width: 0.0,
         #[cfg(feature = "float_layout")]
@@ -622,6 +651,10 @@ impl<S: CheapCloneStr> CoreStyle for Style<S> {
         self.box_sizing
     }
     #[inline(always)]
+    fn direction(&self) -> Direction {
+        self.direction
+    }
+    #[inline(always)]
     fn overflow(&self) -> Point<Overflow> {
         self.overflow
     }
@@ -685,6 +718,10 @@ impl<T: CoreStyle> CoreStyle for &'_ T {
     #[inline(always)]
     fn box_sizing(&self) -> BoxSizing {
         (*self).box_sizing()
+    }
+    #[inline(always)]
+    fn direction(&self) -> Direction {
+        (*self).direction()
     }
     #[inline(always)]
     fn overflow(&self) -> Point<Overflow> {
@@ -1126,6 +1163,7 @@ mod tests {
             float: Default::default(),
             #[cfg(feature = "float_layout")]
             clear: Default::default(),
+            direction: Default::default(),
             overflow: Default::default(),
             scrollbar_width: 0.0,
             position: Default::default(),

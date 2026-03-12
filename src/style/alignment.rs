@@ -89,6 +89,20 @@ pub enum AlignContent {
     SpaceAround,
 }
 
+impl AlignContent {
+    /// Returns the reversed alignment for RTL (right-to-left) contexts.
+    pub(crate) fn reversed(self) -> Self {
+        match self {
+            Self::Start => Self::End,
+            Self::End => Self::Start,
+            Self::FlexStart => Self::FlexEnd,
+            Self::FlexEnd => Self::FlexStart,
+            Self::Stretch => Self::End,
+            style => style,
+        }
+    }
+}
+
 /// Sets the distribution of space between and around content items
 /// For Flexbox it controls alignment in the main axis
 /// For Grid it controls alignment in the inline axis
