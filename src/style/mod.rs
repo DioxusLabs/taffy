@@ -6,6 +6,8 @@ mod dimension;
 
 #[cfg(feature = "block_layout")]
 mod block;
+#[cfg(feature = "builder")]
+mod builder;
 #[cfg(feature = "flexbox")]
 mod flex;
 #[cfg(feature = "float_layout")]
@@ -21,6 +23,8 @@ use crate::sys::DefaultCheapStr;
 
 #[cfg(feature = "block_layout")]
 pub use self::block::{BlockContainerStyle, BlockItemStyle, TextAlign};
+#[cfg(feature = "builder")]
+pub use self::builder::StyleBuilder;
 #[cfg(feature = "flexbox")]
 pub use self::flex::{FlexDirection, FlexWrap, FlexboxContainerStyle, FlexboxItemStyle};
 #[cfg(feature = "float_layout")]
