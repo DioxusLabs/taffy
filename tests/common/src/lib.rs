@@ -9,7 +9,7 @@ pub fn new_test_tree() -> TaffyTree<TestNodeContext> {
 
 /// A sharednode context for tests which means that tests compiled with separate crates
 /// and using different styles of measure function. This saves on compile time when running tests.
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Clone)]
 pub struct TestNodeContext {
     /// How many times the measure function has been called
     pub count: usize,
@@ -40,14 +40,14 @@ impl TestNodeContext {
     }
 
     /// Create a `TestNodeContext` for a node with text using the Ahem font
-    pub const fn ahem_text(text_content: &'static str, writing_mode: WritingMode) -> Self {
+    pub const fn ahem_text(text_content: String, writing_mode: WritingMode) -> Self {
         let data = AhemTextMeasureData { text_content, writing_mode };
         Self::new(TestMeasureData::AhemText(data))
     }
 }
 
 /// The measurement data for the node
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Clone)]
 pub enum TestMeasureData {
     /// A zero-sized node
     Zero,
@@ -104,18 +104,33 @@ impl AspectRatioMeasureData {
 }
 
 /// Whether text is horizontal or vertical
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum WritingMode {
     /// Horizontal text
+    #[default]
     Horizontal,
     /// Vertical text
     Vertical,
 }
+
+impl core::str::FromStr for WritingMode {
+    type Err = ();
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        if s.contains("vertical") {
+            Ok(Self::Vertical)
+        } else if s.contains("horizontal") {
+            Ok(Self::Horizontal)
+        } else {
+            Err(())
+        }
+    }
+}
+
 /// Measure data for nodes contain text using the Ahem testing font
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone)]
 pub struct AhemTextMeasureData {
     /// The text string
-    pub text_content: &'static str,
+    pub text_content: String,
     /// The writing mode
     pub writing_mode: WritingMode,
 }
