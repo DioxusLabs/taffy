@@ -2,6 +2,8 @@
 use super::CompactLength;
 use crate::geometry::Rect;
 use crate::style_helpers::{FromLength, FromPercent, TaffyAuto, TaffyZero};
+#[cfg(feature = "parse")]
+use crate::util::parse::{from_str_from_css, parse_css_str_entirely, FromCss, ParseResult, Parser, Token};
 
 /// A unit of linear measurement
 ///
@@ -22,6 +24,20 @@ impl FromPercent for LengthPercentage {
         Self::percent(value.into())
     }
 }
+
+#[cfg(feature = "parse")]
+impl FromCss for LengthPercentage {
+    fn from_css<'i>(parser: &mut Parser<'i, '_>) -> ParseResult<'i, Self> {
+        match parser.next()?.clone() {
+            Token::Percentage { unit_value, .. } => Ok(Self::percent(unit_value)),
+            Token::Dimension { unit, value, .. } if unit == "px" => Ok(Self::length(value)),
+            token => Err(parser.new_unexpected_token_error(token))?,
+        }
+    }
+}
+#[cfg(feature = "parse")]
+from_str_from_css!(LengthPercentage);
+
 impl LengthPercentage {
     /// An absolute length in some abstract units. Users of Taffy may define what they correspond
     /// to in their application (pixels, logical pixels, mm, etc) as they see fit.
@@ -105,6 +121,20 @@ impl From<LengthPercentage> for LengthPercentageAuto {
         Self(input.0)
     }
 }
+
+#[cfg(feature = "parse")]
+impl FromCss for LengthPercentageAuto {
+    fn from_css<'i>(parser: &mut Parser<'i, '_>) -> ParseResult<'i, Self> {
+        match parser.next()?.clone() {
+            Token::Percentage { unit_value, .. } => Ok(Self::percent(unit_value)),
+            Token::Dimension { unit, value, .. } if unit == "px" => Ok(Self::length(value)),
+            Token::Ident(ident) if ident == "auto" => Ok(Self::auto()),
+            token => Err(parser.new_unexpected_token_error(token))?,
+        }
+    }
+}
+#[cfg(feature = "parse")]
+from_str_from_css!(LengthPercentageAuto);
 
 impl LengthPercentageAuto {
     /// An absolute length in some abstract units. Users of Taffy may define what they correspond
@@ -223,6 +253,20 @@ impl From<LengthPercentageAuto> for Dimension {
         Self(input.0)
     }
 }
+
+#[cfg(feature = "parse")]
+impl FromCss for Dimension {
+    fn from_css<'i>(parser: &mut Parser<'i, '_>) -> ParseResult<'i, Self> {
+        match parser.next()?.clone() {
+            Token::Percentage { unit_value, .. } => Ok(Self::percent(unit_value)),
+            Token::Dimension { unit, value, .. } if unit == "px" => Ok(Self::length(value)),
+            Token::Ident(ident) if ident == "auto" => Ok(Self::auto()),
+            token => Err(parser.new_unexpected_token_error(token))?,
+        }
+    }
+}
+#[cfg(feature = "parse")]
+from_str_from_css!(Dimension);
 
 impl Dimension {
     /// An absolute length in some abstract units. Users of Taffy may define what they correspond

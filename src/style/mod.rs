@@ -27,9 +27,9 @@ pub use self::flex::{FlexDirection, FlexWrap, FlexboxContainerStyle, FlexboxItem
 pub use self::float::{Clear, Float, FloatDirection};
 #[cfg(feature = "grid")]
 pub use self::grid::{
-    GenericGridPlacement, GenericGridTemplateComponent, GenericRepetition, GridAutoFlow, GridContainerStyle,
-    GridItemStyle, GridPlacement, GridTemplateComponent, GridTemplateRepetition, MaxTrackSizingFunction,
-    MinTrackSizingFunction, RepetitionCount, TrackSizingFunction,
+    GenericGridPlacement, GenericGridTemplateComponent, GenericRepetition, GridAutoFlow, GridAutoTracks,
+    GridContainerStyle, GridItemStyle, GridPlacement, GridTemplateComponent, GridTemplateRepetition,
+    GridTemplateTracks, MaxTrackSizingFunction, MinTrackSizingFunction, RepetitionCount, TrackSizingFunction,
 };
 #[cfg(feature = "grid")]
 pub(crate) use self::grid::{GridAreaAxis, GridAreaEnd};
@@ -210,6 +210,23 @@ impl Default for Display {
     }
 }
 
+#[cfg(feature = "parse")]
+impl core::str::FromStr for Display {
+    type Err = ();
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.trim() {
+            "none" => Ok(Self::None),
+            #[cfg(feature = "flexbox")]
+            "flex" => Ok(Self::Flex),
+            #[cfg(feature = "grid")]
+            "grid" => Ok(Self::Grid),
+            #[cfg(feature = "block_layout")]
+            "block" => Ok(Self::Block),
+            _ => Err(()),
+        }
+    }
+}
+
 impl core::fmt::Display for Display {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
@@ -270,6 +287,18 @@ pub enum Position {
     Absolute,
 }
 
+#[cfg(feature = "parse")]
+impl core::str::FromStr for Position {
+    type Err = ();
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.trim() {
+            "relative" => Ok(Self::Relative),
+            "absolute" => Ok(Self::Absolute),
+            _ => Err(()),
+        }
+    }
+}
+
 /// Specifies whether size styles for this node are assigned to the node's "content box" or "border box"
 ///
 /// - The "content box" is the node's inner size excluding padding, border and margin
@@ -291,6 +320,18 @@ pub enum BoxSizing {
     BorderBox,
     /// Size styles such size, min_size, max_size specify the box's "content box" (the size excluding padding/border/margin)
     ContentBox,
+}
+
+#[cfg(feature = "parse")]
+impl core::str::FromStr for BoxSizing {
+    type Err = ();
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.trim() {
+            "border-box" => Ok(Self::BorderBox),
+            "content-box" => Ok(Self::ContentBox),
+            _ => Err(()),
+        }
+    }
 }
 
 /// How children overflowing their container should affect layout
@@ -343,6 +384,20 @@ impl Overflow {
         match self.is_scroll_container() {
             true => Some(0.0),
             false => None,
+        }
+    }
+}
+
+#[cfg(feature = "parse")]
+impl core::str::FromStr for Overflow {
+    type Err = ();
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.trim() {
+            "visible" => Ok(Self::Visible),
+            "hidden" => Ok(Self::Hidden),
+            "clip" => Ok(Self::Clip),
+            "scroll" => Ok(Self::Scroll),
+            _ => Err(()),
         }
     }
 }
