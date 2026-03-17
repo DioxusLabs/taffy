@@ -49,15 +49,9 @@ pub enum TextAlign {
 }
 
 #[cfg(feature = "parse")]
-impl core::str::FromStr for TextAlign {
-    type Err = ();
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s.trim() {
-            "auto" => Ok(Self::Auto),
-            "-webkit-left" => Ok(Self::LegacyLeft),
-            "-webkit-right" => Ok(Self::LegacyRight),
-            "-webkit-center" => Ok(Self::LegacyCenter),
-            _ => Err(()),
-        }
-    }
-}
+crate::util::parse::impl_parse_for_keyword_enum!(TextAlign,
+    "auto" => Auto,
+    "-webkit-left" => LegacyLeft,
+    "-webkit-right" => LegacyRight,
+    "-webkit-center" => LegacyCenter,
+);

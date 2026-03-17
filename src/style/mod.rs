@@ -211,21 +211,15 @@ impl Default for Display {
 }
 
 #[cfg(feature = "parse")]
-impl core::str::FromStr for Display {
-    type Err = ();
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s.trim() {
-            "none" => Ok(Self::None),
-            #[cfg(feature = "flexbox")]
-            "flex" => Ok(Self::Flex),
-            #[cfg(feature = "grid")]
-            "grid" => Ok(Self::Grid),
-            #[cfg(feature = "block_layout")]
-            "block" => Ok(Self::Block),
-            _ => Err(()),
-        }
-    }
-}
+crate::util::parse::impl_parse_for_keyword_enum!(Display,
+    "none" => None,
+    #[cfg(feature = "flexbox")]
+    "flex" => Flex,
+    #[cfg(feature = "grid")]
+    "grid" => Grid,
+    #[cfg(feature = "block_layout")]
+    "block" => Block,
+);
 
 impl core::fmt::Display for Display {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
@@ -288,16 +282,10 @@ pub enum Position {
 }
 
 #[cfg(feature = "parse")]
-impl core::str::FromStr for Position {
-    type Err = ();
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s.trim() {
-            "relative" => Ok(Self::Relative),
-            "absolute" => Ok(Self::Absolute),
-            _ => Err(()),
-        }
-    }
-}
+crate::util::parse::impl_parse_for_keyword_enum!(Position,
+    "relative" => Relative,
+    "absolute" => Absolute,
+);
 
 /// Specifies whether size styles for this node are assigned to the node's "content box" or "border box"
 ///
@@ -323,16 +311,10 @@ pub enum BoxSizing {
 }
 
 #[cfg(feature = "parse")]
-impl core::str::FromStr for BoxSizing {
-    type Err = ();
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s.trim() {
-            "border-box" => Ok(Self::BorderBox),
-            "content-box" => Ok(Self::ContentBox),
-            _ => Err(()),
-        }
-    }
-}
+crate::util::parse::impl_parse_for_keyword_enum!(BoxSizing,
+    "border-box" => BorderBox,
+    "content-box" => ContentBox,
+);
 
 /// How children overflowing their container should affect layout
 ///
@@ -389,18 +371,12 @@ impl Overflow {
 }
 
 #[cfg(feature = "parse")]
-impl core::str::FromStr for Overflow {
-    type Err = ();
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s.trim() {
-            "visible" => Ok(Self::Visible),
-            "hidden" => Ok(Self::Hidden),
-            "clip" => Ok(Self::Clip),
-            "scroll" => Ok(Self::Scroll),
-            _ => Err(()),
-        }
-    }
-}
+crate::util::parse::impl_parse_for_keyword_enum!(Overflow,
+    "visible" => Visible,
+    "hidden" => Hidden,
+    "clip" => Clip,
+    "scroll" => Scroll,
+);
 
 /// A typed representation of the CSS style information for a single node.
 ///

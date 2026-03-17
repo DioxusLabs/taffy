@@ -86,17 +86,11 @@ pub enum FlexWrap {
 }
 
 #[cfg(feature = "parse")]
-impl core::str::FromStr for FlexWrap {
-    type Err = ();
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s.trim() {
-            "nowrap" => Ok(Self::NoWrap),
-            "wrap" => Ok(Self::Wrap),
-            "wrap-reverse" => Ok(Self::WrapReverse),
-            _ => Err(()),
-        }
-    }
-}
+crate::util::parse::impl_parse_for_keyword_enum!(FlexWrap,
+    "nowrap" => NoWrap,
+    "wrap" => Wrap,
+    "wrap-reverse" => WrapReverse,
+);
 
 /// The direction of the flexbox layout main axis.
 ///
@@ -132,18 +126,12 @@ pub enum FlexDirection {
 }
 
 #[cfg(feature = "parse")]
-impl core::str::FromStr for FlexDirection {
-    type Err = ();
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s.trim() {
-            "row" => Ok(Self::Row),
-            "column" => Ok(Self::Column),
-            "row-reverse" => Ok(Self::RowReverse),
-            "column-reverse" => Ok(Self::ColumnReverse),
-            _ => Err(()),
-        }
-    }
-}
+crate::util::parse::impl_parse_for_keyword_enum!(FlexDirection,
+    "row" => Row,
+    "column" => Column,
+    "row-reverse" => RowReverse,
+    "column-reverse" => ColumnReverse,
+);
 
 impl FlexDirection {
     #[inline]

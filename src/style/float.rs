@@ -17,17 +17,11 @@ pub enum Float {
 }
 
 #[cfg(feature = "parse")]
-impl core::str::FromStr for Float {
-    type Err = ();
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s.trim() {
-            "left" => Ok(Self::Left),
-            "right" => Ok(Self::Right),
-            "none" => Ok(Self::None),
-            _ => Err(()),
-        }
-    }
-}
+crate::util::parse::impl_parse_for_keyword_enum!(Float,
+    "left" => Left,
+    "right" => Right,
+    "none" => None,
+);
 
 /// Whether a box that is definitely floated is floated to the left
 /// of to the right.
@@ -78,15 +72,9 @@ pub enum Clear {
 }
 
 #[cfg(feature = "parse")]
-impl core::str::FromStr for Clear {
-    type Err = ();
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s.trim() {
-            "left" => Ok(Self::Left),
-            "right" => Ok(Self::Right),
-            "both" => Ok(Self::Both),
-            "none" => Ok(Self::None),
-            _ => Err(()),
-        }
-    }
-}
+crate::util::parse::impl_parse_for_keyword_enum!(Clear,
+    "left" => Left,
+    "right" => Right,
+    "both" => Both,
+    "none" => None,
+);

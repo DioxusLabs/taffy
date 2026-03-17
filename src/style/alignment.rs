@@ -31,21 +31,15 @@ pub enum AlignItems {
 }
 
 #[cfg(feature = "parse")]
-impl core::str::FromStr for AlignItems {
-    type Err = ();
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s.trim() {
-            "start" => Ok(Self::Start),
-            "end" => Ok(Self::End),
-            "flex-start" => Ok(Self::FlexStart),
-            "flex-end" => Ok(Self::FlexEnd),
-            "center" => Ok(Self::Center),
-            "baseline" => Ok(Self::Baseline),
-            "stretch" => Ok(Self::Stretch),
-            _ => Err(()),
-        }
-    }
-}
+crate::util::parse::impl_parse_for_keyword_enum!(AlignItems,
+    "start" => Start,
+    "end" => End,
+    "flex-start" => FlexStart,
+    "flex-end" => FlexEnd,
+    "center" => Center,
+    "baseline" => Baseline,
+    "stretch" => Stretch,
+);
 
 /// Used to control how child nodes are aligned.
 /// Does not apply to Flexbox, and will be ignored if specified on a flex container
@@ -108,24 +102,17 @@ pub enum AlignContent {
 }
 
 #[cfg(feature = "parse")]
-impl core::str::FromStr for AlignContent {
-    type Err = ();
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s.trim() {
-            "start" => Ok(Self::Start),
-            "end" => Ok(Self::End),
-            "flex-start" => Ok(Self::FlexStart),
-            "flex-end" => Ok(Self::FlexEnd),
-            "center" => Ok(Self::Center),
-            "stretch" => Ok(Self::Stretch),
-            "space-between" => Ok(Self::SpaceBetween),
-            "space-evenly" => Ok(Self::SpaceEvenly),
-            "space-around" => Ok(Self::SpaceAround),
-            _ => Err(()),
-        }
-    }
-}
-
+crate::util::parse::impl_parse_for_keyword_enum!(AlignContent,
+    "start" => Start,
+    "end" => End,
+    "flex-start" => FlexStart,
+    "flex-end" => FlexEnd,
+    "center" => Center,
+    "stretch" => Stretch,
+    "space-between" => SpaceBetween,
+    "space-evenly" => SpaceEvenly,
+    "space-around" => SpaceAround,
+);
 /// Sets the distribution of space between and around content items
 /// For Flexbox it controls alignment in the main axis
 /// For Grid it controls alignment in the inline axis
