@@ -4,8 +4,10 @@ use std::io;
 
 /// Prints a debug representation of the computed layout for a tree of nodes, starting with the passed root node.
 pub fn print_tree(tree: &impl PrintTree, root: NodeId) {
-    // Rust code generally makes the assumption that writes to Stdout won't fail, so paincing on error is fine here.
-    write_tree(io::stdout().lock(), tree, root).expect("Wrote tree debug representation to Stdout");
+    // Buffer into a string so that output can be captured in tests
+    let mut buffer = Vec::<u8>::new();
+    write_tree(&mut buffer, tree, root).expect("Wrote tree debug representation to Stdout");
+    println!("{}", std::str::from_utf8(&buffer).unwrap());
 }
 
 /// Writes a debug representation of the computed layout to the writer, starting with the passed root node.
