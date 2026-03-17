@@ -1,5 +1,5 @@
 use roxmltree::Document;
-use std::{io::Write, path::PathBuf, str::FromStr};
+use std::{fmt::Debug, io::Write, path::PathBuf, str::FromStr};
 use taffy::{
     prelude::TaffyZero as _, AvailableSpace, CheapCloneStr, Dimension, GridAutoTracks, GridTemplateComponent,
     GridTemplateTracks, LengthPercentage, LengthPercentageAuto, Line, NodeId, Point, PrintTree, Rect, Size, TaffyTree,
@@ -176,13 +176,12 @@ fn construct_tree(
     }
 }
 
-fn parse_or_default<T: FromStr + Default>(input: Option<&str>) -> T {
+fn parse_or_default<T: FromStr<Err: Debug> + Default>(input: Option<&str>) -> T {
     parse_or(input, Default::default())
 }
 
-fn parse_or<T: FromStr>(input: Option<&str>, fallback: T) -> T {
-    // input.map(|input| input.parse().map_err(|_| "").unwrap()).unwrap_or(fallback)
-    input.and_then(|input| input.parse().ok()).unwrap_or(fallback)
+fn parse_or<T: FromStr<Err: Debug>>(input: Option<&str>, fallback: T) -> T {
+    input.map(|input| input.parse().unwrap()).unwrap_or(fallback)
 }
 
 fn maybe_parse<T: FromStr>(input: Option<&str>) -> Option<T> {
