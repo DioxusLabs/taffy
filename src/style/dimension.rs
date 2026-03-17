@@ -3,7 +3,7 @@ use super::CompactLength;
 use crate::geometry::Rect;
 use crate::style_helpers::{FromLength, FromPercent, TaffyAuto, TaffyZero};
 #[cfg(feature = "parse")]
-use crate::util::parse::{from_str_from_css, parse_css_str_entirely, FromCss, ParseResult, Parser, Token};
+use crate::util::parse::{from_str_from_css, parse_css_str_entirely, CssParseResult, FromCss, Parser, Token};
 
 /// A unit of linear measurement
 ///
@@ -27,7 +27,7 @@ impl FromPercent for LengthPercentage {
 
 #[cfg(feature = "parse")]
 impl FromCss for LengthPercentage {
-    fn from_css<'i>(parser: &mut Parser<'i, '_>) -> ParseResult<'i, Self> {
+    fn from_css<'i>(parser: &mut Parser<'i, '_>) -> CssParseResult<'i, Self> {
         match parser.next()?.clone() {
             Token::Percentage { unit_value, .. } => Ok(Self::percent(unit_value)),
             Token::Dimension { unit, value, .. } if unit == "px" => Ok(Self::length(value)),
@@ -124,7 +124,7 @@ impl From<LengthPercentage> for LengthPercentageAuto {
 
 #[cfg(feature = "parse")]
 impl FromCss for LengthPercentageAuto {
-    fn from_css<'i>(parser: &mut Parser<'i, '_>) -> ParseResult<'i, Self> {
+    fn from_css<'i>(parser: &mut Parser<'i, '_>) -> CssParseResult<'i, Self> {
         match parser.next()?.clone() {
             Token::Percentage { unit_value, .. } => Ok(Self::percent(unit_value)),
             Token::Dimension { unit, value, .. } if unit == "px" => Ok(Self::length(value)),
@@ -256,7 +256,7 @@ impl From<LengthPercentageAuto> for Dimension {
 
 #[cfg(feature = "parse")]
 impl FromCss for Dimension {
-    fn from_css<'i>(parser: &mut Parser<'i, '_>) -> ParseResult<'i, Self> {
+    fn from_css<'i>(parser: &mut Parser<'i, '_>) -> CssParseResult<'i, Self> {
         match parser.next()?.clone() {
             Token::Percentage { unit_value, .. } => Ok(Self::percent(unit_value)),
             Token::Dimension { unit, value, .. } if unit == "px" => Ok(Self::length(value)),

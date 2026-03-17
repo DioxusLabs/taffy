@@ -19,6 +19,8 @@ pub use print::write_tree;
 
 #[cfg(feature = "parse")]
 pub(crate) mod parse;
+#[cfg(feature = "parse")]
+pub use parse::{ParseError, ParseResult};
 
 /// Deserialize a type `S` by deserializing a string, then using the `FromStr`
 /// impl of `S` to create the result. The generic type `S` is not required to

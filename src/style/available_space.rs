@@ -6,7 +6,7 @@ use crate::{
 };
 
 #[cfg(feature = "parse")]
-use crate::util::parse::{from_str_from_css, parse_css_str_entirely, FromCss, ParseResult, Parser, Token};
+use crate::util::parse::{from_str_from_css, parse_css_str_entirely, CssParseResult, FromCss, Parser, Token};
 
 /// The amount of space available to a node in a given axis
 /// <https://www.w3.org/TR/css-sizing-3/#available>
@@ -37,7 +37,7 @@ impl FromLength for AvailableSpace {
 
 #[cfg(feature = "parse")]
 impl FromCss for AvailableSpace {
-    fn from_css<'i>(parser: &mut Parser<'i, '_>) -> ParseResult<'i, Self> {
+    fn from_css<'i>(parser: &mut Parser<'i, '_>) -> CssParseResult<'i, Self> {
         match parser.next()?.clone() {
             Token::Number { value, .. } if value >= 0.0 => Ok(Self::Definite(value)),
             Token::Dimension { value, .. } if value >= 0.0 => Ok(Self::Definite(value)),
