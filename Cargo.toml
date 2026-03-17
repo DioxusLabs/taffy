@@ -7,7 +7,7 @@ authors = [
     "Nico Burns <nico@nicoburns.com>",
 ]
 edition = "2021"
-rust-version = "1.65"
+rust-version = "1.71"
 include = ["src/**/*", "examples/**/*", "Cargo.toml", "README.md"]
 description = "A flexible UI layout library "
 repository = "https://github.com/DioxusLabs/taffy"
@@ -21,6 +21,7 @@ document-features = { version = "0.2.7", optional = true }
 serde = { version = "1.0", default-features = false, optional = true, features = ["serde_derive"] }
 slotmap = { version = "1.0.6", default-features = false, optional = true }
 grid = { version = "1.0.0", default-features = false, optional = true }
+cssparser = { version = "0.37.0", default-features = false, optional = true }
 
 [package.metadata.docs.rs]
 # To test all the documentation related features, run:
@@ -42,6 +43,8 @@ default = [
     "calc",
     "content_size",
     "detailed_layout_info",
+    "parse",
+    "parse_faster"
 ]
 #! ## Feature Flags
 #!
@@ -73,6 +76,10 @@ taffy_tree = ["dep:slotmap"]
 
 ## Add [`serde`] derives to Style structs
 serde = ["dep:serde"]
+## Implement `FromStr` trait for Taffy style types
+parse = ["dep:cssparser"]
+## Enable the `parse` feature with proc-macro dependent optimisations
+parse_faster = ["parse", "cssparser/fast_match_byte"]
 ## Allow Taffy to depend on the [`Rust Standard Library`](std)
 std = ["grid?/std", "serde?/std", "slotmap?/std"]
 ## Allow Taffy to depend on the alloc library

@@ -29,6 +29,18 @@ pub enum AlignItems {
     /// Stretch to fill the container
     Stretch,
 }
+
+#[cfg(feature = "parse")]
+crate::util::parse::impl_parse_for_keyword_enum!(AlignItems,
+    "start" => Start,
+    "end" => End,
+    "flex-start" => FlexStart,
+    "flex-end" => FlexEnd,
+    "center" => Center,
+    "baseline" => Baseline,
+    "stretch" => Stretch,
+);
+
 /// Used to control how child nodes are aligned.
 /// Does not apply to Flexbox, and will be ignored if specified on a flex container
 /// For Grid it controls alignment in the inline axis
@@ -89,6 +101,18 @@ pub enum AlignContent {
     SpaceAround,
 }
 
+#[cfg(feature = "parse")]
+crate::util::parse::impl_parse_for_keyword_enum!(AlignContent,
+    "start" => Start,
+    "end" => End,
+    "flex-start" => FlexStart,
+    "flex-end" => FlexEnd,
+    "center" => Center,
+    "stretch" => Stretch,
+    "space-between" => SpaceBetween,
+    "space-evenly" => SpaceEvenly,
+    "space-around" => SpaceAround,
+);
 /// Sets the distribution of space between and around content items
 /// For Flexbox it controls alignment in the main axis
 /// For Grid it controls alignment in the inline axis

@@ -47,3 +47,11 @@ pub enum TextAlign {
     /// Corresponds to `-webkit-center` or `-moz-center` in browsers
     LegacyCenter,
 }
+
+#[cfg(feature = "parse")]
+crate::util::parse::impl_parse_for_keyword_enum!(TextAlign,
+    "auto" => Auto,
+    "-webkit-left" => LegacyLeft,
+    "-webkit-right" => LegacyRight,
+    "-webkit-center" => LegacyCenter,
+);
