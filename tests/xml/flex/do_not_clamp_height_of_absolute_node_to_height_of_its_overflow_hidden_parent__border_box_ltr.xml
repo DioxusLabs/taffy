@@ -1,0 +1,17 @@
+<test name="do_not_clamp_height_of_absolute_node_to_height_of_its_overflow_hidden_parent__border_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div direction="ltr" overflow-x="hidden" overflow-y="hidden" scrollbar-width="15" width="50px" height="50px">
+      <div direction="ltr" position="absolute" flex-direction="column" top="0px" left="0px">
+        <div direction="ltr" width="100px" height="100px"/>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="50" height="50" scroll_width="50" scroll_height="50">
+      <node x="0" y="0" width="100" height="100">
+        <node x="0" y="0" width="100" height="100"/>
+      </node>
+    </node>
+  </expectations>
+</test>

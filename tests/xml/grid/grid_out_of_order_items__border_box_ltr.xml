@@ -1,0 +1,29 @@
+<test name="grid_out_of_order_items__border_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" direction="ltr" width="120px" height="120px" grid-auto-flow="row dense" grid-template-rows="40px 40px 40px" grid-template-columns="40px 40px 40px">
+      <div direction="ltr"/>
+      <div direction="ltr"/>
+      <div direction="ltr" width="35px" height="35px" grid-column-start="1"/>
+      <div direction="ltr"/>
+      <div direction="ltr"/>
+      <div direction="ltr" width="20px" height="20px" grid-row-start="1" grid-column-start="1"/>
+      <div direction="ltr"/>
+      <div direction="ltr" width="10px" height="10px" grid-row-start="1"/>
+      <div direction="ltr"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="120" height="120">
+      <node x="80" y="0" width="40" height="40"/>
+      <node x="0" y="40" width="40" height="40"/>
+      <node x="0" y="80" width="35" height="35"/>
+      <node x="40" y="40" width="40" height="40"/>
+      <node x="80" y="40" width="40" height="40"/>
+      <node x="0" y="0" width="20" height="20"/>
+      <node x="40" y="80" width="40" height="40"/>
+      <node x="40" y="0" width="10" height="10"/>
+      <node x="80" y="80" width="40" height="40"/>
+    </node>
+  </expectations>
+</test>

@@ -1,0 +1,9 @@
+<test name="min_height_overrides_height_on_root__content_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div box-sizing="content-box" direction="rtl" height="50px" min-height="100px"/>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="0" height="100"/>
+  </expectations>
+</test>

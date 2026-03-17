@@ -1,0 +1,23 @@
+<test name="gridflex_kitchen_sink_minimise3__border_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div direction="ltr" width="50px">
+      <div display="grid" direction="ltr" grid-template-rows="30% 10%" grid-template-columns="auto 10%">
+        <div direction="ltr" width="20px" height="20px"/>
+        <div direction="ltr"/>
+        <div direction="ltr"/>
+        <div direction="ltr"/>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="50" height="20">
+      <node x="0" y="0" width="20" height="20">
+        <node x="0" y="0" width="20" height="20"/>
+        <node x="20" y="0" width="2" height="6"/>
+        <node x="0" y="6" width="20" height="2"/>
+        <node x="20" y="6" width="2" height="2"/>
+      </node>
+    </node>
+  </expectations>
+</test>

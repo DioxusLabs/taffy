@@ -1,0 +1,19 @@
+<test name="wrapped_row_within_align_items_flex_start__content_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div box-sizing="content-box" direction="rtl" flex-direction="column" align-items="flex-start" width="200px" height="200px">
+      <div box-sizing="content-box" direction="rtl" flex-wrap="wrap">
+        <div box-sizing="content-box" direction="rtl" width="150px" height="80px"/>
+        <div box-sizing="content-box" direction="rtl" width="80px" height="80px"/>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="200" height="200">
+      <node x="0" y="0" width="200" height="160">
+        <node x="50" y="0" width="150" height="80"/>
+        <node x="120" y="80" width="80" height="80"/>
+      </node>
+    </node>
+  </expectations>
+</test>

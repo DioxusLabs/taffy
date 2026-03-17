@@ -1,0 +1,15 @@
+<test name="padding_border_overrides_size_flex_basis_0_growable__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div direction="rtl">
+      <div direction="rtl" flex-grow="1" flex-basis="0px" width="12px" height="12px" padding-top="2px" padding-left="8px" padding-bottom="6px" padding-right="4px" border-top="1px" border-left="7px" border-bottom="5px" border-right="3px"/>
+      <div direction="rtl" flex-grow="1" flex-basis="0px" width="12px" height="12px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="34" height="14">
+      <node x="6" y="0" width="28" height="14"/>
+      <node x="0" y="0" width="6" height="12"/>
+    </node>
+  </expectations>
+</test>

@@ -1,0 +1,25 @@
+<test name="align_baseline_child_multiline_override__content_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div box-sizing="content-box" direction="rtl" align-items="baseline" width="100px" height="100px">
+      <div box-sizing="content-box" direction="rtl" width="50px" height="60px"/>
+      <div box-sizing="content-box" direction="rtl" flex-wrap="wrap" width="50px" height="25px">
+        <div box-sizing="content-box" direction="rtl" width="25px" height="20px"/>
+        <div box-sizing="content-box" direction="rtl" align-self="baseline" width="25px" height="10px"/>
+        <div box-sizing="content-box" direction="rtl" width="25px" height="20px"/>
+        <div box-sizing="content-box" direction="rtl" align-self="baseline" width="25px" height="10px"/>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="100" height="100">
+      <node x="50" y="0" width="50" height="60"/>
+      <node x="0" y="50" width="50" height="25">
+        <node x="25" y="0" width="25" height="20"/>
+        <node x="0" y="0" width="25" height="10"/>
+        <node x="25" y="20" width="25" height="20"/>
+        <node x="0" y="20" width="25" height="10"/>
+      </node>
+    </node>
+  </expectations>
+</test>

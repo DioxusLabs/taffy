@@ -1,0 +1,17 @@
+<test name="grid_percent_items_nested_moderate__border_box_ltr" use-rounding="false">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" direction="ltr" width="200px" padding-top="3px" padding-left="3px" padding-bottom="3px" padding-right="3px">
+      <div display="grid" direction="ltr" width="50%" margin-top="5px" margin-left="5px" margin-bottom="5px" margin-right="5px" padding-top="3%" padding-left="3%" padding-bottom="3%" padding-right="3%">
+        <div direction="ltr" width="45%" margin-top="5%" margin-left="5%" margin-bottom="5%" margin-right="5%" padding-top="3px" padding-left="3px" padding-bottom="3px" padding-right="3px"/>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="200" height="42.15625">
+      <node x="8" y="8" width="97" height="26.15625">
+        <node x="10.078125" y="10.078125" width="38.40625" height="6"/>
+      </node>
+    </node>
+  </expectations>
+</test>

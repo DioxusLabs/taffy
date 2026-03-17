@@ -1,0 +1,13 @@
+<test name="min_max_percent_no_width_height__content_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div box-sizing="content-box" direction="rtl" flex-direction="column" align-items="flex-start" width="100px" height="100px">
+      <div box-sizing="content-box" direction="rtl" min-width="10%" min-height="10%" max-width="10%" max-height="10%"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="100" height="100">
+      <node x="90" y="0" width="10" height="10"/>
+    </node>
+  </expectations>
+</test>

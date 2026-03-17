@@ -1,0 +1,21 @@
+<test name="block_margin_y_first_child_collapse_blocked_by_overflow_y_hidden__border_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="block" direction="ltr" width="50px">
+      <div display="block" direction="ltr" overflow-y="hidden" scrollbar-width="15" margin-top="10px">
+        <div display="block" direction="ltr" margin-top="10px">
+          <div direction="ltr" height="10px"/>
+        </div>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="50" height="30">
+      <node x="0" y="10" width="50" height="20" scroll_width="0" scroll_height="0">
+        <node x="0" y="10" width="50" height="10">
+          <node x="0" y="0" width="50" height="10"/>
+        </node>
+      </node>
+    </node>
+  </expectations>
+</test>

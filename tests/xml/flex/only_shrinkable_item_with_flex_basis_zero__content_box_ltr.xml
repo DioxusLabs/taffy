@@ -1,0 +1,17 @@
+<test name="only_shrinkable_item_with_flex_basis_zero__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div box-sizing="content-box" direction="ltr" flex-direction="column" width="480px" max-height="764px">
+      <div box-sizing="content-box" direction="ltr" flex-basis="0px"/>
+      <div box-sizing="content-box" direction="ltr" flex-shrink="0" flex-basis="93px" margin-bottom="6px"/>
+      <div box-sizing="content-box" direction="ltr" flex-shrink="0" flex-basis="764px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="480" height="764">
+      <node x="0" y="0" width="480" height="0"/>
+      <node x="0" y="0" width="480" height="93"/>
+      <node x="0" y="99" width="480" height="764"/>
+    </node>
+  </expectations>
+</test>

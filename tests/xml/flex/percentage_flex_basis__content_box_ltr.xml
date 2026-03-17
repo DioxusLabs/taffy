@@ -1,0 +1,15 @@
+<test name="percentage_flex_basis__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div box-sizing="content-box" direction="ltr" width="200px" height="200px">
+      <div box-sizing="content-box" direction="ltr" flex-grow="1" flex-basis="50%"/>
+      <div box-sizing="content-box" direction="ltr" flex-grow="1" flex-basis="25%"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="200" height="200">
+      <node x="0" y="0" width="125" height="200"/>
+      <node x="125" y="0" width="75" height="200"/>
+    </node>
+  </expectations>
+</test>

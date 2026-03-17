@@ -1,0 +1,13 @@
+<test name="absolute_layout_align_items_center_on_child_only__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div box-sizing="content-box" direction="ltr" width="110px" height="100px">
+      <div box-sizing="content-box" direction="ltr" position="absolute" align-self="center" width="60px" height="40px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="110" height="100">
+      <node x="0" y="30" width="60" height="40"/>
+    </node>
+  </expectations>
+</test>

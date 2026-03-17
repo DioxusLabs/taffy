@@ -1,0 +1,17 @@
+<test name="flex_justify_content_center_direction_rtl__content_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div box-sizing="content-box" direction="rtl" justify-content="center" width="200px" height="100px">
+      <div box-sizing="content-box" direction="rtl" width="20px" height="20px"/>
+      <div box-sizing="content-box" direction="rtl" width="20px" height="20px"/>
+      <div box-sizing="content-box" direction="rtl" width="20px" height="20px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="200" height="100">
+      <node x="110" y="0" width="20" height="20"/>
+      <node x="90" y="0" width="20" height="20"/>
+      <node x="70" y="0" width="20" height="20"/>
+    </node>
+  </expectations>
+</test>

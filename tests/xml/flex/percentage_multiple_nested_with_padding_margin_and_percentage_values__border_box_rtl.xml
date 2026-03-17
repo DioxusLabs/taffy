@@ -1,0 +1,23 @@
+<test name="percentage_multiple_nested_with_padding_margin_and_percentage_values__border_box_rtl" use-rounding="false">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div direction="rtl" flex-direction="column" width="200px" height="200px">
+      <div direction="rtl" flex-direction="column" flex-grow="1" flex-basis="10%" min-width="60%" margin-top="5px" margin-left="5px" margin-bottom="5px" margin-right="5px" padding-top="3px" padding-left="3px" padding-bottom="3px" padding-right="3px">
+        <div direction="rtl" flex-direction="column" width="50%" margin-top="5px" margin-left="5px" margin-bottom="5px" margin-right="5px" padding-top="3%" padding-left="3%" padding-bottom="3%" padding-right="3%">
+          <div direction="rtl" width="45%" margin-top="5%" margin-left="5%" margin-bottom="5%" margin-right="5%" padding-top="3px" padding-left="3px" padding-bottom="3px" padding-right="3px"/>
+        </div>
+      </div>
+      <div direction="rtl" flex-grow="4" flex-basis="15%" min-width="20%"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="200" height="200">
+      <node x="5" y="5" width="190" height="48">
+        <node x="90" y="8" width="92" height="25.125">
+          <node x="46.015625" y="9.5625" width="36.421875" height="6"/>
+        </node>
+      </node>
+      <node x="0" y="58" width="200" height="142"/>
+    </node>
+  </expectations>
+</test>

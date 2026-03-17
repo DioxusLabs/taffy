@@ -1,0 +1,15 @@
+<test name="block_absolute_no_styles__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="block" box-sizing="content-box" direction="ltr">
+      <div display="block" box-sizing="content-box" direction="ltr" width="50px" height="10px"/>
+      <div display="block" box-sizing="content-box" direction="ltr" position="absolute"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="50" height="10">
+      <node x="0" y="0" width="50" height="10"/>
+      <node x="0" y="10" width="0" height="0"/>
+    </node>
+  </expectations>
+</test>

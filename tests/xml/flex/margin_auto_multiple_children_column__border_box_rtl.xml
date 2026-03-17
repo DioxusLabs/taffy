@@ -1,0 +1,17 @@
+<test name="margin_auto_multiple_children_column__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div direction="rtl" flex-direction="column" align-items="center" width="200px" height="200px">
+      <div direction="rtl" width="50px" height="50px" margin-top="auto"/>
+      <div direction="rtl" width="50px" height="50px" margin-top="auto"/>
+      <div direction="rtl" width="50px" height="50px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="200" height="200">
+      <node x="75" y="25" width="50" height="50"/>
+      <node x="75" y="100" width="50" height="50"/>
+      <node x="75" y="150" width="50" height="50"/>
+    </node>
+  </expectations>
+</test>

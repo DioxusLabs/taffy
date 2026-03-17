@@ -1,0 +1,15 @@
+<test name="flex_shrink_flex_grow_row__border_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div direction="ltr" width="500px" height="500px">
+      <div direction="ltr" width="500px" height="100px"/>
+      <div direction="ltr" width="500px" height="100px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="500" height="500">
+      <node x="0" y="0" width="250" height="100"/>
+      <node x="250" y="0" width="250" height="100"/>
+    </node>
+  </expectations>
+</test>

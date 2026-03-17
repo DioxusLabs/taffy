@@ -1,0 +1,21 @@
+<test name="rounding_flex_basis_flex_grow_row_prime_number_width__content_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div box-sizing="content-box" direction="rtl" width="113px" height="100px">
+      <div box-sizing="content-box" direction="rtl" flex-grow="1"/>
+      <div box-sizing="content-box" direction="rtl" flex-grow="1"/>
+      <div box-sizing="content-box" direction="rtl" flex-grow="1"/>
+      <div box-sizing="content-box" direction="rtl" flex-grow="1"/>
+      <div box-sizing="content-box" direction="rtl" flex-grow="1"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="113" height="100">
+      <node x="90" y="0" width="23" height="100"/>
+      <node x="68" y="0" width="22" height="100"/>
+      <node x="45" y="0" width="23" height="100"/>
+      <node x="23" y="0" width="22" height="100"/>
+      <node x="0" y="0" width="23" height="100"/>
+    </node>
+  </expectations>
+</test>

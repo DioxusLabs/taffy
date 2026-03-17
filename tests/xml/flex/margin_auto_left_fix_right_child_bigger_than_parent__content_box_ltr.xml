@@ -1,0 +1,13 @@
+<test name="margin_auto_left_fix_right_child_bigger_than_parent__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div box-sizing="content-box" direction="ltr" justify-content="center" width="52px" height="52px">
+      <div box-sizing="content-box" direction="ltr" width="72px" height="72px" margin-left="auto" margin-right="10px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="52" height="52">
+      <node x="0" y="0" width="42" height="72"/>
+    </node>
+  </expectations>
+</test>

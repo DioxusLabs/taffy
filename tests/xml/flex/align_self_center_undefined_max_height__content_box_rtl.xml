@@ -1,0 +1,15 @@
+<test name="align_self_center_undefined_max_height__content_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div box-sizing="content-box" direction="rtl" width="280px" min-height="52px">
+      <div box-sizing="content-box" direction="rtl" width="240px" height="44px"/>
+      <div box-sizing="content-box" direction="rtl" align-self="center" width="40px" height="56px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="280" height="56">
+      <node x="40" y="0" width="240" height="44"/>
+      <node x="0" y="0" width="40" height="56"/>
+    </node>
+  </expectations>
+</test>

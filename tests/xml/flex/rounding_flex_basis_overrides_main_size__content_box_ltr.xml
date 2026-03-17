@@ -1,0 +1,17 @@
+<test name="rounding_flex_basis_overrides_main_size__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div box-sizing="content-box" direction="ltr" flex-direction="column" width="100px" height="113px">
+      <div box-sizing="content-box" direction="ltr" flex-grow="1" flex-basis="50px" height="20px"/>
+      <div box-sizing="content-box" direction="ltr" flex-grow="1" height="10px"/>
+      <div box-sizing="content-box" direction="ltr" flex-grow="1" height="10px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="100" height="113">
+      <node x="0" y="0" width="100" height="64"/>
+      <node x="0" y="64" width="100" height="25"/>
+      <node x="0" y="89" width="100" height="24"/>
+    </node>
+  </expectations>
+</test>

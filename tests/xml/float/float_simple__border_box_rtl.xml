@@ -1,0 +1,21 @@
+<test name="float_simple__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="block" direction="rtl" height="300px" border-top="2px" border-left="2px" border-bottom="2px" border-right="2px">
+      <div direction="rtl" float="right" width="50px" height="50px"/>
+      <div direction="rtl" float="right" width="50px" height="50px"/>
+      <div direction="rtl" float="right" width="50px" height="50px"/>
+      <div direction="rtl" float="right" width="50px" height="50px"/>
+      <div direction="rtl" float="right" width="50px" height="50px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="254" height="300">
+      <node x="202" y="2" width="50" height="50"/>
+      <node x="152" y="2" width="50" height="50"/>
+      <node x="102" y="2" width="50" height="50"/>
+      <node x="52" y="2" width="50" height="50"/>
+      <node x="2" y="2" width="50" height="50"/>
+    </node>
+  </expectations>
+</test>

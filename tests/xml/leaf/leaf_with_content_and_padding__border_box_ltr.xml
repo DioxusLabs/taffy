@@ -1,0 +1,11 @@
+<test name="leaf_with_content_and_padding__border_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <text direction="ltr" padding-top="2px" padding-left="8px" padding-bottom="6px" padding-right="4px">
+      HHHH
+    </text>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="52" height="18"/>
+  </expectations>
+</test>

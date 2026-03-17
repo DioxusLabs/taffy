@@ -1,0 +1,15 @@
+<test name="grid_basic_implicit_tracks__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" direction="rtl" grid-template-rows="40px" grid-template-columns="40px">
+      <div direction="rtl"/>
+      <div direction="rtl" width="35px" height="35px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="40" height="75">
+      <node x="0" y="0" width="40" height="40"/>
+      <node x="5" y="40" width="35" height="35"/>
+    </node>
+  </expectations>
+</test>

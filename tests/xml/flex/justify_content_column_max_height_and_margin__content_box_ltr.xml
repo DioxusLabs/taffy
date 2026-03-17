@@ -1,0 +1,17 @@
+<test name="justify_content_column_max_height_and_margin__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div box-sizing="content-box" direction="ltr">
+      <div box-sizing="content-box" direction="ltr" flex-direction="column" justify-content="center" height="100px" max-height="80px" margin-top="100px">
+        <div box-sizing="content-box" direction="ltr" width="20px" height="20px"/>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="20" height="180">
+      <node x="0" y="100" width="20" height="80">
+        <node x="0" y="30" width="20" height="20"/>
+      </node>
+    </node>
+  </expectations>
+</test>

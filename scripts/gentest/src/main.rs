@@ -70,12 +70,20 @@ async fn main() {
         .flat_map(|(name, fixture_path, description)| {
             debug!("generating test contents for {}", &name);
 
-            let border_box_test = generate_test(format!("{name}__border_box"), &description["borderBoxData"]);
-            let content_box_test = generate_test(format!("{name}__content_box"), &description["contentBoxData"]);
+            let border_box_ltr_test =
+                generate_test(format!("{name}__border_box_ltr"), &description["borderBoxLtrData"]);
+            let content_box_ltr_test =
+                generate_test(format!("{name}__content_box_ltr"), &description["contentBoxLtrData"]);
+            let border_box_rtl_test =
+                generate_test(format!("{name}__border_box_rtl"), &description["borderBoxRtlData"]);
+            let content_box_rtl_test =
+                generate_test(format!("{name}__content_box_rtl"), &description["contentBoxRtlData"]);
 
             [
-                (format!("{name}__border_box"), fixture_path, border_box_test),
-                (format!("{name}__content_box"), fixture_path, content_box_test),
+                (format!("{name}__border_box_ltr"), fixture_path, border_box_ltr_test),
+                (format!("{name}__content_box_ltr"), fixture_path, content_box_ltr_test),
+                (format!("{name}__border_box_rtl"), fixture_path, border_box_rtl_test),
+                (format!("{name}__content_box_rtl"), fixture_path, content_box_rtl_test),
             ]
         })
         .collect();

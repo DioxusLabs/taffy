@@ -1,0 +1,27 @@
+<test name="grid_justify_self_sized_all__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" box-sizing="content-box" direction="ltr" width="120px" height="120px" grid-template-rows="40px 40px 40px" grid-template-columns="40px 40px 40px">
+      <div box-sizing="content-box" direction="ltr" justify-self="start" width="20px" height="20px"/>
+      <div box-sizing="content-box" direction="ltr" justify-self="start" width="60px" height="60px"/>
+      <div box-sizing="content-box" direction="ltr" justify-self="end" width="20px" height="20px"/>
+      <div box-sizing="content-box" direction="ltr" justify-self="end" width="60px" height="60px"/>
+      <div box-sizing="content-box" direction="ltr" justify-self="center" width="20px" height="20px"/>
+      <div box-sizing="content-box" direction="ltr" justify-self="center" width="60px" height="60px"/>
+      <div box-sizing="content-box" direction="ltr" justify-self="stretch" width="20px" height="20px"/>
+      <div box-sizing="content-box" direction="ltr" justify-self="stretch" width="60px" height="60px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="120" height="120">
+      <node x="0" y="0" width="20" height="20"/>
+      <node x="40" y="0" width="60" height="60"/>
+      <node x="100" y="0" width="20" height="20"/>
+      <node x="-20" y="40" width="60" height="60"/>
+      <node x="50" y="40" width="20" height="20"/>
+      <node x="70" y="40" width="60" height="60"/>
+      <node x="0" y="80" width="20" height="20"/>
+      <node x="40" y="80" width="60" height="60"/>
+    </node>
+  </expectations>
+</test>

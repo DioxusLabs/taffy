@@ -1,0 +1,51 @@
+<test name="multiline_column_max_height__border_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="flex" direction="ltr" flex-direction="column" flex-wrap="wrap" max-height="200px">
+      <div direction="ltr" flex-shrink="0" width="40px" height="20px"/>
+      <div direction="ltr" flex-shrink="0" width="40px" height="20px"/>
+      <div direction="ltr" flex-shrink="0" width="40px" height="20px"/>
+      <div direction="ltr" flex-shrink="0" width="40px" height="20px"/>
+      <div direction="ltr" flex-shrink="0" width="40px" height="20px"/>
+      <div direction="ltr" flex-shrink="0" width="40px" height="20px"/>
+      <div direction="ltr" flex-shrink="0" width="40px" height="20px"/>
+      <div direction="ltr" flex-shrink="0" width="40px" height="20px"/>
+      <div direction="ltr" flex-shrink="0" width="40px" height="20px"/>
+      <div direction="ltr" flex-shrink="0" width="40px" height="20px"/>
+      <div direction="ltr" flex-shrink="0" width="40px" height="20px"/>
+      <div direction="ltr" flex-shrink="0" width="40px" height="20px"/>
+      <div direction="ltr" flex-shrink="0" width="40px" height="20px"/>
+      <div direction="ltr" flex-shrink="0" width="40px" height="20px"/>
+      <div direction="ltr" flex-shrink="0" width="40px" height="20px"/>
+      <div direction="ltr" flex-shrink="0" width="40px" height="20px"/>
+      <div direction="ltr" flex-shrink="0" width="40px" height="20px"/>
+      <div direction="ltr" flex-shrink="0" width="40px" height="20px"/>
+      <div direction="ltr" flex-shrink="0" width="40px" height="20px"/>
+      <div direction="ltr" flex-shrink="0" width="40px" height="20px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="80" height="200">
+      <node x="0" y="0" width="40" height="20"/>
+      <node x="0" y="20" width="40" height="20"/>
+      <node x="0" y="40" width="40" height="20"/>
+      <node x="0" y="60" width="40" height="20"/>
+      <node x="0" y="80" width="40" height="20"/>
+      <node x="0" y="100" width="40" height="20"/>
+      <node x="0" y="120" width="40" height="20"/>
+      <node x="0" y="140" width="40" height="20"/>
+      <node x="0" y="160" width="40" height="20"/>
+      <node x="0" y="180" width="40" height="20"/>
+      <node x="40" y="0" width="40" height="20"/>
+      <node x="40" y="20" width="40" height="20"/>
+      <node x="40" y="40" width="40" height="20"/>
+      <node x="40" y="60" width="40" height="20"/>
+      <node x="40" y="80" width="40" height="20"/>
+      <node x="40" y="100" width="40" height="20"/>
+      <node x="40" y="120" width="40" height="20"/>
+      <node x="40" y="140" width="40" height="20"/>
+      <node x="40" y="160" width="40" height="20"/>
+      <node x="40" y="180" width="40" height="20"/>
+    </node>
+  </expectations>
+</test>

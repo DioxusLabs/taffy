@@ -1,0 +1,15 @@
+<test name="intrinsic_sizing_main_size_column_nested__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div direction="rtl" flex-direction="column">
+      <text direction="rtl" writing-mode="vertical-lr" flex-direction="column">
+        HH​HH
+      </text>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="10" height="40">
+      <node x="0" y="0" width="10" height="40"/>
+    </node>
+  </expectations>
+</test>

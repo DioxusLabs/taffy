@@ -1,0 +1,23 @@
+<test name="grid_percent_tracks_definite_underflow__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" box-sizing="content-box" direction="ltr" width="120px" height="60px" grid-template-rows="30% 60%" grid-template-columns="10% 20% 30%">
+      <div box-sizing="content-box" direction="ltr"/>
+      <div box-sizing="content-box" direction="ltr"/>
+      <div box-sizing="content-box" direction="ltr"/>
+      <div box-sizing="content-box" direction="ltr"/>
+      <div box-sizing="content-box" direction="ltr"/>
+      <div box-sizing="content-box" direction="ltr"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="120" height="60">
+      <node x="0" y="0" width="12" height="18"/>
+      <node x="12" y="0" width="24" height="18"/>
+      <node x="36" y="0" width="36" height="18"/>
+      <node x="0" y="18" width="12" height="36"/>
+      <node x="12" y="18" width="24" height="36"/>
+      <node x="36" y="18" width="36" height="36"/>
+    </node>
+  </expectations>
+</test>

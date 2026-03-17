@@ -1,0 +1,17 @@
+<test name="block_display_none__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="block" box-sizing="content-box" direction="ltr" width="50px">
+      <div box-sizing="content-box" direction="ltr" height="10px"/>
+      <div display="none" box-sizing="content-box" direction="ltr" height="10px"/>
+      <div box-sizing="content-box" direction="ltr" height="10px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="50" height="20">
+      <node x="0" y="0" width="50" height="10"/>
+      <node x="0" y="0" width="0" height="0"/>
+      <node x="0" y="10" width="50" height="10"/>
+    </node>
+  </expectations>
+</test>

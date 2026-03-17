@@ -1,0 +1,23 @@
+<test name="grid_max_width_greater_than_max_content__content_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" box-sizing="content-box" direction="rtl" grid-template-columns="max-content">
+      <div display="grid" box-sizing="content-box" direction="rtl" max-width="400px" grid-template-columns="auto auto">
+        <text box-sizing="content-box" direction="rtl">
+          HH​HH​HH​HH
+        </text>
+        <text box-sizing="content-box" direction="rtl">
+          HH​HH​HH​HH
+        </text>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="160" height="10">
+      <node x="0" y="0" width="160" height="10">
+        <node x="80" y="0" width="80" height="10"/>
+        <node x="0" y="0" width="80" height="10"/>
+      </node>
+    </node>
+  </expectations>
+</test>

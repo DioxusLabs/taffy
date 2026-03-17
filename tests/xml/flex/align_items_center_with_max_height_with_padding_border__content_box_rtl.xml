@@ -1,0 +1,27 @@
+<test name="align_items_center_with_max_height_with_padding_border__content_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div box-sizing="content-box" direction="rtl" flex-direction="column">
+      <div display="flex" box-sizing="content-box" direction="rtl" align-items="center" align-content="flex-start" width="100px" max-height="100px" padding-top="10px" padding-left="10px" padding-bottom="10px" padding-right="10px" border-top="10px" border-left="10px" border-bottom="10px" border-right="10px">
+        <div box-sizing="content-box" direction="rtl" width="10px" height="10px"/>
+        <div box-sizing="content-box" direction="rtl" width="10px" height="150px"/>
+      </div>
+      <div display="flex" box-sizing="content-box" direction="rtl" flex-wrap="wrap" align-items="center" align-content="flex-start" width="100px" max-height="100px" padding-top="10px" padding-left="10px" padding-bottom="10px" padding-right="10px" border-top="10px" border-left="10px" border-bottom="10px" border-right="10px">
+        <div box-sizing="content-box" direction="rtl" width="10px" height="10px"/>
+        <div box-sizing="content-box" direction="rtl" width="10px" height="150px"/>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="140" height="280">
+      <node x="0" y="0" width="140" height="140">
+        <node x="110" y="65" width="10" height="10"/>
+        <node x="100" y="-5" width="10" height="150"/>
+      </node>
+      <node x="0" y="140" width="140" height="140">
+        <node x="110" y="90" width="10" height="10"/>
+        <node x="100" y="20" width="10" height="150"/>
+      </node>
+    </node>
+  </expectations>
+</test>

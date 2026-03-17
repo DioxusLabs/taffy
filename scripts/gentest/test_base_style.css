@@ -58,6 +58,14 @@ body > * {
   box-sizing: content-box;
 }
 
+.ltr * {
+  direction: ltr;
+}
+
+.rtl * {
+  direction: rtl;
+}
+
 div {
   background-color: #222;
 }

@@ -1,0 +1,19 @@
+<test name="block_absolute_layout_within_border__border_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="block" direction="ltr" width="100px" height="100px" padding-top="10px" padding-left="10px" padding-bottom="10px" padding-right="10px" border-top="10px" border-left="10px" border-bottom="10px" border-right="10px">
+      <div display="block" direction="ltr" position="absolute" width="50px" height="50px" top="0px" left="0px"/>
+      <div display="block" direction="ltr" position="absolute" width="50px" height="50px" bottom="0px" right="0px"/>
+      <div display="block" direction="ltr" position="absolute" width="50px" height="50px" margin-top="10px" margin-left="10px" margin-bottom="10px" margin-right="10px" top="0px" left="0px"/>
+      <div display="block" direction="ltr" position="absolute" width="50px" height="50px" margin-top="10px" margin-left="10px" margin-bottom="10px" margin-right="10px" bottom="0px" right="0px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="100" height="100">
+      <node x="10" y="10" width="50" height="50"/>
+      <node x="40" y="40" width="50" height="50"/>
+      <node x="20" y="20" width="50" height="50"/>
+      <node x="30" y="30" width="50" height="50"/>
+    </node>
+  </expectations>
+</test>

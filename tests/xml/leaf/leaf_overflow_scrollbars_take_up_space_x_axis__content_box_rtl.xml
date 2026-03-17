@@ -1,0 +1,11 @@
+<test name="leaf_overflow_scrollbars_take_up_space_x_axis__content_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <text box-sizing="content-box" direction="rtl" overflow-x="scroll" scrollbar-width="15">
+      HH
+    </text>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="20" height="25" scroll_width="0" scroll_height="0"/>
+  </expectations>
+</test>
