@@ -293,27 +293,45 @@ pub enum GridAutoFlow {
 }
 
 #[cfg(feature = "parse")]
-impl core::str::FromStr for GridAutoFlow {
-    type Err = ();
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let s = s.trim();
-        // TODO: check for space between keywords
-        let is_dense = s.contains("dense");
-        if s.starts_with("row") {
-            return match is_dense {
-                true => Ok(Self::RowDense),
-                false => Ok(Self::Row),
-            };
+impl FromCss for GridAutoFlow {
+    fn from_css<'i>(parser: &mut Parser<'i, '_>) -> CssParseResult<'i, Self> {
+        let mut axis: Option<&'static str> = None;
+        let mut dense = false;
+
+        for _ in 0..2 {
+            if let Ok(ident) = parser.try_parse(|parser| parser.expect_ident_cloned()) {
+                match &*ident {
+                    "row" => {
+                        axis = Some("row");
+                    }
+                    "column" => {
+                        axis = Some("column");
+                    }
+                    "dense" => dense = true,
+                    _ => {
+                        return Err(parser.new_unexpected_token_error(Token::Ident(ident)));
+                    }
+                }
+            } else {
+                break;
+            }
         }
-        if s.starts_with("column") {
-            return match is_dense {
-                true => Ok(Self::ColumnDense),
-                false => Ok(Self::Column),
-            };
+
+        match (axis, dense) {
+            (Some("row"), false) => Ok(Self::Row),
+            (Some("row") | None, true) => Ok(Self::RowDense),
+            (Some("column"), false) => Ok(Self::Column),
+            (Some("column"), true) => Ok(Self::ColumnDense),
+            (None, false) => {
+                let token = parser.next().cloned()?;
+                Err(parser.new_unexpected_token_error(token))
+            }
+            _ => unreachable!(),
         }
-        Err(())
     }
 }
+#[cfg(feature = "parse")]
+from_str_from_css!(GridAutoFlow);
 
 impl GridAutoFlow {
     /// Whether grid auto placement uses the sparse placement algorithm or the dense placement algorithm
@@ -1586,9 +1604,4 @@ impl FromCss for GridAutoTracks {
     }
 }
 #[cfg(feature = "parse")]
-impl core::str::FromStr for GridAutoTracks {
-    type Err = ParseError;
-    fn from_str(input: &str) -> Result<Self, Self::Err> {
-        parse_css_str_entirely(input)
-    }
-}
+from_str_from_css!(GridAutoTracks);
