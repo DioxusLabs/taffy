@@ -208,8 +208,8 @@ impl FloatContext {
         let old_segment = &mut self.segments[idx];
         let new_segment = Segment { insets: old_segment.insets, y: divide_at_y..old_segment.y.end };
         if !old_segment.y.contains(&divide_at_y) || old_segment.y.start == divide_at_y {
-            debug_log!("old_segment", &old_segment);
-            debug_log!("divide_at_y", divide_at_y);
+            debug_log!("old_segment", dbg:&mut *old_segment);
+            debug_log!("divide_at_y", dbg:divide_at_y);
             assert!(old_segment.y.contains(&divide_at_y) && old_segment.y.start != divide_at_y);
         }
         old_segment.y.end = divide_at_y;
