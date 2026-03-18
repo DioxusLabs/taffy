@@ -28,7 +28,7 @@
 
 use core::ops::Range;
 
-use crate::{AvailableSpace, Clear, FloatDirection, Point, Size};
+use crate::{sys::Vec, AvailableSpace, Clear, FloatDirection, Point, Size};
 
 /// An empty "slot" that avoids floats that is suitable for non-floated content
 /// to be laid out into
