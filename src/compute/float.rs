@@ -28,7 +28,7 @@
 
 use core::ops::Range;
 
-use crate::{sys::Vec, AvailableSpace, Clear, FloatDirection, Point, Size};
+use crate::{debug::debug_log, sys::Vec, AvailableSpace, Clear, FloatDirection, Point, Size};
 
 /// An empty "slot" that avoids floats that is suitable for non-floated content
 /// to be laid out into
@@ -208,8 +208,8 @@ impl FloatContext {
         let old_segment = &mut self.segments[idx];
         let new_segment = Segment { insets: old_segment.insets, y: divide_at_y..old_segment.y.end };
         if !old_segment.y.contains(&divide_at_y) || old_segment.y.start == divide_at_y {
-            dbg!(&old_segment);
-            dbg!(divide_at_y);
+            debug_log!("old_segment", &old_segment);
+            debug_log!("divide_at_y", divide_at_y);
             assert!(old_segment.y.contains(&divide_at_y) && old_segment.y.start != divide_at_y);
         }
         old_segment.y.end = divide_at_y;
