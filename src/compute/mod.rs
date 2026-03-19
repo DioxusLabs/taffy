@@ -181,23 +181,22 @@ where
     ComputeFunction: FnOnce(&mut Tree, NodeId, LayoutInput) -> LayoutOutput,
 {
     debug_push_node!(node);
-    let LayoutInput { known_dimensions, available_space, run_mode, .. } = inputs;
 
     // First we check if we have a cached result for the given input
-    let cache_entry = tree.cache_get(node, known_dimensions, available_space, run_mode);
+    let cache_entry = tree.cache_get(node, &inputs);
     if let Some(cached_size_and_baselines) = cache_entry {
-        debug_log_node!(known_dimensions, inputs.parent_size, available_space, run_mode, inputs.sizing_mode);
+        debug_log_node!(inputs);
         debug_log!("RESULT (CACHED)", dbg:cached_size_and_baselines.size);
         debug_pop_node!();
         return cached_size_and_baselines;
     }
 
-    debug_log_node!(known_dimensions, inputs.parent_size, available_space, run_mode, inputs.sizing_mode);
+    debug_log_node!(inputs);
 
     let computed_size_and_baselines = compute_uncached(tree, node, inputs);
 
     // Cache result
-    tree.cache_store(node, known_dimensions, available_space, run_mode, computed_size_and_baselines);
+    tree.cache_store(node, &inputs, computed_size_and_baselines);
 
     debug_log!("RESULT", dbg:computed_size_and_baselines.size);
     debug_pop_node!();

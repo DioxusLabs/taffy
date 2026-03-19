@@ -210,25 +210,12 @@ impl<NodeContext> TraverseTree for TaffyTree<NodeContext> {}
 
 // CacheTree impl for TaffyTree
 impl<NodeContext> CacheTree for TaffyTree<NodeContext> {
-    fn cache_get(
-        &self,
-        node_id: NodeId,
-        known_dimensions: Size<Option<f32>>,
-        available_space: Size<AvailableSpace>,
-        run_mode: RunMode,
-    ) -> Option<LayoutOutput> {
-        self.nodes[node_id.into()].cache.get(known_dimensions, available_space, run_mode)
+    fn cache_get(&self, node_id: NodeId, input: &LayoutInput) -> Option<LayoutOutput> {
+        self.nodes[node_id.into()].cache.get(input)
     }
 
-    fn cache_store(
-        &mut self,
-        node_id: NodeId,
-        known_dimensions: Size<Option<f32>>,
-        available_space: Size<AvailableSpace>,
-        run_mode: RunMode,
-        layout_output: LayoutOutput,
-    ) {
-        self.nodes[node_id.into()].cache.store(known_dimensions, available_space, run_mode, layout_output)
+    fn cache_store(&mut self, node_id: NodeId, input: &LayoutInput, layout_output: LayoutOutput) {
+        self.nodes[node_id.into()].cache.store(input, layout_output)
     }
 
     fn cache_clear(&mut self, node_id: NodeId) {
@@ -317,13 +304,7 @@ where
             let has_children = tree.child_count(node_id) > 0;
 
             debug_log!(display_mode);
-            debug_log_node!(
-                inputs.known_dimensions,
-                inputs.parent_size,
-                inputs.available_space,
-                inputs.run_mode,
-                inputs.sizing_mode
-            );
+            debug_log_node!(inputs);
 
             // Dispatch to a layout algorithm based on the node's display style and whether the node has children or not.
             match (display_mode, has_children) {
@@ -427,25 +408,12 @@ where
     MeasureFunction:
         FnMut(Size<Option<f32>>, Size<AvailableSpace>, NodeId, Option<&mut NodeContext>, &Style) -> Size<f32>,
 {
-    fn cache_get(
-        &self,
-        node_id: NodeId,
-        known_dimensions: Size<Option<f32>>,
-        available_space: Size<AvailableSpace>,
-        run_mode: RunMode,
-    ) -> Option<LayoutOutput> {
-        self.taffy.nodes[node_id.into()].cache.get(known_dimensions, available_space, run_mode)
+    fn cache_get(&self, node_id: NodeId, input: &LayoutInput) -> Option<LayoutOutput> {
+        self.taffy.nodes[node_id.into()].cache.get(input)
     }
 
-    fn cache_store(
-        &mut self,
-        node_id: NodeId,
-        known_dimensions: Size<Option<f32>>,
-        available_space: Size<AvailableSpace>,
-        run_mode: RunMode,
-        layout_output: LayoutOutput,
-    ) {
-        self.taffy.nodes[node_id.into()].cache.store(known_dimensions, available_space, run_mode, layout_output)
+    fn cache_store(&mut self, node_id: NodeId, input: &LayoutInput, layout_output: LayoutOutput) {
+        self.taffy.nodes[node_id.into()].cache.store(input, layout_output)
     }
 
     fn cache_clear(&mut self, node_id: NodeId) {
