@@ -10,8 +10,8 @@ use crate::util::sys::Vec;
 use crate::util::MaybeMath;
 use crate::util::{MaybeResolve, ResolveOrZero};
 use crate::{
-    BlockContainerStyle, BlockItemStyle, BoxGenerationMode, BoxSizing, Direction, LayoutBlockContainer, RequestedAxis,
-    TextAlign,
+    AbsoluteAxis, BlockContainerStyle, BlockItemStyle, BoxGenerationMode, BoxSizing, Direction, LayoutBlockContainer,
+    RequestedAxis, TextAlign,
 };
 
 #[cfg(feature = "float_layout")]
@@ -448,6 +448,7 @@ fn compute_inner(
             direction,
             own_margins_collapse_with_children,
             block_ctx,
+            run_mode,
         );
 
     // Root BFCs contain floats
@@ -628,16 +629,15 @@ fn determine_content_based_container_width(
             .resolve_or_zero(available_space.width.into_option(), |val, basis| tree.calc(val, basis))
             .horizontal_axis_sum();
         let width = known_dimensions.width.unwrap_or_else(|| {
-            let size_and_baselines = tree.perform_child_layout(
+            tree.measure_child_size(
                 item.node_id,
                 known_dimensions,
                 Size::NONE,
                 available_space.map_width(|w| w.maybe_sub(item_x_margin_sum)),
                 SizingMode::InherentSize,
+                AbsoluteAxis::Horizontal,
                 Line::TRUE,
-            );
-
-            size_and_baselines.size.width
+            )
         });
 
         let width = f32_max(width, item.padding_border_sum.width) + item_x_margin_sum;
@@ -673,6 +673,7 @@ fn perform_final_layout_on_in_flow_children(
     direction: Direction,
     own_margins_collapse_with_children: Line<bool>,
     block_ctx: &mut BlockContext<'_>,
+    run_mode: RunMode,
 ) -> (Size<f32>, f32, CollapsibleMarginSet, CollapsibleMarginSet) {
     // Resolve container_inner_width for sizing child nodes using initial content_box_inset
     let container_inner_width = container_outer_width - resolved_content_box_inset.horizontal_axis_sum();
@@ -843,7 +844,7 @@ fn perform_final_layout_on_in_flow_children(
             //
 
             let inputs = LayoutInput {
-                run_mode: RunMode::PerformLayout,
+                run_mode,
                 sizing_mode: SizingMode::InherentSize,
                 axis: RequestedAxis::Both,
                 known_dimensions,
@@ -1002,20 +1003,22 @@ fn perform_final_layout_on_in_flow_children(
                 }
             }
 
-            tree.set_unrounded_layout(
-                item.node_id,
-                &Layout {
-                    order: item.order,
-                    size: item_layout.size,
-                    #[cfg(feature = "content_size")]
-                    content_size: item_layout.content_size,
-                    scrollbar_size,
-                    location,
-                    padding: item.padding,
-                    border: item.border,
-                    margin: resolved_margin,
-                },
-            );
+            if run_mode == RunMode::PerformLayout {
+                tree.set_unrounded_layout(
+                    item.node_id,
+                    &Layout {
+                        order: item.order,
+                        size: item_layout.size,
+                        #[cfg(feature = "content_size")]
+                        content_size: item_layout.content_size,
+                        scrollbar_size,
+                        location,
+                        padding: item.padding,
+                        border: item.border,
+                        margin: resolved_margin,
+                    },
+                );
+            }
 
             #[cfg(feature = "content_size")]
             {
