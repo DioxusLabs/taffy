@@ -3,6 +3,8 @@ use crate::geometry::Size;
 use crate::style::AvailableSpace;
 use crate::tree::{LayoutInput, LayoutOutput, RunMode};
 
+use crate::RequestedAxis;
+
 /// The number of cache entries for each node in the tree
 const CACHE_SIZE: usize = 9;
 
@@ -14,6 +16,8 @@ pub(crate) struct CacheEntry<T> {
     known_dimensions: Size<Option<f32>>,
     /// The initial cached size of the parent's node
     available_space: Size<AvailableSpace>,
+    /// The initial cached size of the parent's node
+    axis: RequestedAxis,
     /// The cached size and baselines of the item
     content: T,
 }
@@ -125,6 +129,7 @@ impl Cache {
                             || entry.available_space.width.is_roughly_equal(available_space.width))
                         && (known_dimensions.height.is_some()
                             || entry.available_space.height.is_roughly_equal(available_space.height))
+                        && input.axis == entry.axis
                 })
                 .map(|e| e.content),
             RunMode::ComputeSize => {
@@ -139,6 +144,7 @@ impl Cache {
                             || entry.available_space.width.is_roughly_equal(available_space.width))
                         && (known_dimensions.height.is_some()
                             || entry.available_space.height.is_roughly_equal(available_space.height))
+                        && input.axis == entry.axis
                     {
                         return Some(LayoutOutput::from_outer_size(cached_size));
                     }
@@ -154,17 +160,19 @@ impl Cache {
     pub fn store(&mut self, input: &LayoutInput, layout_output: LayoutOutput) {
         let known_dimensions = input.known_dimensions;
         let available_space = input.available_space;
+        let axis = input.axis;
 
         match input.run_mode {
             RunMode::PerformLayout => {
                 self.is_empty = false;
-                self.final_layout_entry = Some(CacheEntry { known_dimensions, available_space, content: layout_output })
+                self.final_layout_entry =
+                    Some(CacheEntry { axis, known_dimensions, available_space, content: layout_output })
             }
             RunMode::ComputeSize => {
                 self.is_empty = false;
                 let cache_slot = Self::compute_cache_slot(known_dimensions, available_space);
                 self.measure_entries[cache_slot] =
-                    Some(CacheEntry { known_dimensions, available_space, content: layout_output.size });
+                    Some(CacheEntry { axis, known_dimensions, available_space, content: layout_output.size });
             }
             RunMode::PerformHiddenLayout => {}
         }
