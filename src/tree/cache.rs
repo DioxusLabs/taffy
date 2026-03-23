@@ -18,6 +18,8 @@ pub(crate) struct CacheEntry<T> {
     available_space: Size<AvailableSpace>,
     /// The initial cached size of the parent's node
     axis: RequestedAxis,
+    /// The initial cached size of the parent's node
+    parent_size: Size<Option<f32>>,
     /// The cached size and baselines of the item
     content: T,
 }
@@ -130,6 +132,7 @@ impl Cache {
                         && (known_dimensions.height.is_some()
                             || entry.available_space.height.is_roughly_equal(available_space.height))
                         && input.axis == entry.axis
+                        && input.parent_size == entry.parent_size
                 })
                 .map(|e| e.content),
             RunMode::ComputeSize => {
@@ -161,18 +164,24 @@ impl Cache {
         let known_dimensions = input.known_dimensions;
         let available_space = input.available_space;
         let axis = input.axis;
+        let parent_size = input.parent_size;
 
         match input.run_mode {
             RunMode::PerformLayout => {
                 self.is_empty = false;
                 self.final_layout_entry =
-                    Some(CacheEntry { axis, known_dimensions, available_space, content: layout_output })
+                    Some(CacheEntry { axis, parent_size, known_dimensions, available_space, content: layout_output })
             }
             RunMode::ComputeSize => {
                 self.is_empty = false;
                 let cache_slot = Self::compute_cache_slot(known_dimensions, available_space);
-                self.measure_entries[cache_slot] =
-                    Some(CacheEntry { axis, known_dimensions, available_space, content: layout_output.size });
+                self.measure_entries[cache_slot] = Some(CacheEntry {
+                    axis,
+                    parent_size,
+                    known_dimensions,
+                    available_space,
+                    content: layout_output.size,
+                });
             }
             RunMode::PerformHiddenLayout => {}
         }
