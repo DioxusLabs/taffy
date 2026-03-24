@@ -1693,25 +1693,24 @@ fn distribute_remaining_free_space(flex_lines: &mut [FlexLine], constants: &Algo
                     }
                 }
             }
+        }
+
+        let num_items = line.items.len();
+        let layout_reverse = constants.dir.is_reverse();
+        let gap = constants.gap.main(constants.dir);
+        let is_safe = false; // TODO: Implement safe alignment
+        let raw_justify_content_mode = constants.justify_content.unwrap_or(JustifyContent::FlexStart);
+        let justify_content_mode = apply_alignment_fallback(free_space, num_items, raw_justify_content_mode, is_safe);
+
+        let justify_item = |(i, child): (usize, &mut FlexItem)| {
+            child.offset_main =
+                compute_alignment_offset(free_space, num_items, gap, justify_content_mode, layout_reverse, i == 0);
+        };
+
+        if layout_reverse {
+            line.items.iter_mut().rev().enumerate().for_each(justify_item);
         } else {
-            let num_items = line.items.len();
-            let layout_reverse = constants.dir.is_reverse();
-            let gap = constants.gap.main(constants.dir);
-            let is_safe = false; // TODO: Implement safe alignment
-            let raw_justify_content_mode = constants.justify_content.unwrap_or(JustifyContent::FlexStart);
-            let justify_content_mode =
-                apply_alignment_fallback(free_space, num_items, raw_justify_content_mode, is_safe);
-
-            let justify_item = |(i, child): (usize, &mut FlexItem)| {
-                child.offset_main =
-                    compute_alignment_offset(free_space, num_items, gap, justify_content_mode, layout_reverse, i == 0);
-            };
-
-            if layout_reverse {
-                line.items.iter_mut().rev().enumerate().for_each(justify_item);
-            } else {
-                line.items.iter_mut().enumerate().for_each(justify_item);
-            }
+            line.items.iter_mut().enumerate().for_each(justify_item);
         }
     }
 }
