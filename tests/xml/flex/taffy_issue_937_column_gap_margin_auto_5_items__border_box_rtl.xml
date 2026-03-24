@@ -1,0 +1,21 @@
+<test name="taffy_issue_937_column_gap_margin_auto_5_items__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="flex" direction="rtl" flex-direction="column" width="200px" height="200px" row-gap="10px" column-gap="10px">
+      <div direction="rtl" width="50px" height="50px" margin-bottom="auto"/>
+      <div direction="rtl" width="50px" height="50px"/>
+      <div direction="rtl" width="50px" height="50px"/>
+      <div direction="rtl" width="50px" height="50px"/>
+      <div direction="rtl" width="50px" height="50px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="200" height="200">
+      <node x="150" y="0" width="50" height="32"/>
+      <node x="150" y="42" width="50" height="32"/>
+      <node x="150" y="84" width="50" height="32"/>
+      <node x="150" y="126" width="50" height="32"/>
+      <node x="150" y="168" width="50" height="32"/>
+    </node>
+  </expectations>
+</test>
