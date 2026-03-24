@@ -129,6 +129,7 @@ fn mixed_benchmark(c: &mut Criterion) {
     let layout_ctx = std::cell::RefCell::new(LayoutContext::new());
     let font_ctx = std::cell::RefCell::new(FontContext::new());
     let mut group = c.benchmark_group("mixed_flex_grid");
+    group.sample_size(40);
 
     let depths = [2, 4];
     let widths = [4, 8];
