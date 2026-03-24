@@ -290,6 +290,8 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - uses: dtolnay/rust-toolchain@stable
+      - name: Install fontconfig
+        run: sudo apt-get update && sudo apt-get install libfontconfig-dev
       - run: cd benches && cargo bench --no-run
         name: Build benchmarks
         env:
@@ -301,6 +303,8 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - uses: dtolnay/rust-toolchain@stable
+      - name: Install fontconfig
+        run: sudo apt-get update && sudo apt-get install libfontconfig-dev
       - run: cd benches && cargo bench --no-run --features yoga
         name: Build benchmarks (w/yoga)
         env:
