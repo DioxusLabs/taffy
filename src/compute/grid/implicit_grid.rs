@@ -2,7 +2,7 @@
 //! to reduce the number of allocations required when creating a grid.
 use crate::geometry::Line;
 use crate::style::{GenericGridPlacement, GridPlacement};
-use crate::{CheapCloneStr, Direction, GridItemStyle};
+use crate::{CheapCloneStr, Direction, GridItemStyle, Units};
 use core::cmp::{max, min};
 
 use super::types::TrackCounts;
@@ -77,9 +77,9 @@ fn get_known_child_positions<'a, S: GridItemStyle + 'a>(
         // Note: that the children reference the lines in between (and around) the tracks not tracks themselves,
         // and thus we must subtract 1 to get an accurate estimate of the number of tracks
         let (mut child_col_min, mut child_col_max, child_col_span) =
-            child_min_line_max_line_span::<S::CustomIdent>(col_line, explicit_col_count);
+            child_min_line_max_line_span::<<S::Units as Units>::Str>(col_line, explicit_col_count);
         let (child_row_min, child_row_max, child_row_span) =
-            child_min_line_max_line_span::<S::CustomIdent>(row_line, explicit_row_count);
+            child_min_line_max_line_span::<<S::Units as Units>::Str>(row_line, explicit_row_count);
 
         // Placement mirrors horizontal spans in RTL, so mirror known column line bounds here
         // to keep implicit-grid pre-sizing consistent with actual placement.
