@@ -64,6 +64,20 @@ pub trait FlexboxItemStyle: CoreStyle {
     fn align_self(&self) -> Option<AlignSelf> {
         Style::<Self::CustomIdent>::DEFAULT.align_self
     }
+
+    /// The CSS `order` property. Controls the order in which flex items appear
+    /// within their flex container.
+    ///
+    /// Items with lower order values are laid out first. Items with the same
+    /// order value are laid out in source order.
+    ///
+    /// Defaults to `0`.
+    ///
+    /// [Specification](https://www.w3.org/TR/css-display-3/#order-property)
+    #[inline(always)]
+    fn order(&self) -> i32 {
+        0
+    }
 }
 
 use crate::geometry::AbsoluteAxis;
