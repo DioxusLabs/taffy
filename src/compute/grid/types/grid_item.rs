@@ -493,15 +493,27 @@ impl GridItem {
                 // it is not a scroll container
                 // TODO: support overflow property
 
-                // it spans at least one track in that axis whose min track sizing function is auto
-                let spans_auto_min_track = axis_tracks
+                // `item_axis_tracks` is a GridTrackVec slice laid out as `track, gutter, track, ...`.
+                // The automatic-minimum-size rule is phrased in terms of the grid tracks the item spans,
+                // while gutters exist only between tracks and are not themselves tracks, so `step_by(2)`
+                // walks the spanned tracks and skips the interleaved gutter entries.
+                // Spec: automatic minimum size https://www.w3.org/TR/css-grid-2/#min-size-auto,
+                // grid track https://www.w3.org/TR/css-grid-2/#grid-track,
+                // gutter https://www.w3.org/TR/css-align-3/#gutter.
+                // It spans at least one track in that axis whose min track sizing function is auto.
+                let spans_auto_min_track = item_axis_tracks
                     .iter()
+                    .step_by(2)
                     // TODO: should this be 'behaves as auto' rather than just literal auto?
                     .any(|track| track.min_track_sizing_function.is_auto());
 
-                // if it spans more than one track in that axis, none of those tracks are flexible
+                // Inspect only the spanned tracks, not the gutters between them,
+                // because the spec condition is whether any of those tracks are flexible.
+                // Spec: automatic minimum size https://www.w3.org/TR/css-grid-2/#min-size-auto,
+                // flexible tracks https://www.w3.org/TR/css-grid-2/#fr-unit.
                 let only_span_one_track = item_axis_tracks.len() == 1;
-                let spans_a_flexible_track = axis_tracks.iter().any(|track| track.max_track_sizing_function.is_fr());
+                let spans_a_flexible_track =
+                    item_axis_tracks.iter().step_by(2).any(|track| track.max_track_sizing_function.is_fr());
 
                 let use_content_based_minimum =
                     spans_auto_min_track && (only_span_one_track || !spans_a_flexible_track);
