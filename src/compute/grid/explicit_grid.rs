@@ -1,6 +1,6 @@
 //! Helper functions for initialising GridTrack's from styles
 //! This mainly consists of evaluating GridAutoTracks
-use super::types::{GridTrack, TrackCounts};
+use super::types::{GridTrack, GridTrackKind, TrackCounts};
 use crate::geometry::AbsoluteAxis;
 use crate::style::{LengthPercentage, RepetitionCount, TrackSizingFunction};
 use crate::style_helpers::TaffyAuto;
@@ -213,6 +213,20 @@ pub(super) fn initialize_grid_tracks(
     tracks.push(GridTrack::gutter(gap));
 
     let auto_track_count = auto_tracks.len();
+    let non_auto_repeating_track_count = track_template
+        .clone()
+        .map(|track_template| {
+            track_template
+                .map(|track_def| match track_def {
+                    GenericGridTemplateComponent::Single(_) => 1,
+                    GenericGridTemplateComponent::Repeat(repeat) => match repeat.count() {
+                        RepetitionCount::Count(count) => count * repeat.track_count(),
+                        RepetitionCount::AutoFit | RepetitionCount::AutoFill => 0,
+                    },
+                })
+                .sum::<u16>()
+        })
+        .unwrap_or(0);
 
     // Create negative implicit tracks
     if counts.negative_implicit > 0 {
@@ -233,7 +247,7 @@ pub(super) fn initialize_grid_tracks(
     // because a count of zero can result from the track_template being invalid, in which case it should be ignored.
     if counts.explicit > 0 {
         if let Some(track_template) = track_template {
-            track_template.clone().for_each(|track_sizing_function| {
+            track_template.for_each(|track_sizing_function| {
                 match track_sizing_function {
                     GenericGridTemplateComponent::Single(sizing_function) => {
                         tracks.push(GridTrack::new(
@@ -257,8 +271,7 @@ pub(super) fn initialize_grid_tracks(
                             });
                         }
                         RepetitionCount::AutoFit | RepetitionCount::AutoFill => {
-                            let auto_repeated_track_count =
-                                (counts.explicit - (track_template.len() as u16 - 1)) as usize;
+                            let auto_repeated_track_count = (counts.explicit - non_auto_repeating_track_count) as usize;
                             let iter = repeat.tracks().cycle();
                             for track_def in iter.take(auto_repeated_track_count) {
                                 let mut track =
@@ -275,6 +288,28 @@ pub(super) fn initialize_grid_tracks(
                                 tracks.push(gutter);
 
                                 current_track_index += 1;
+                            }
+
+                            // Is this auto-repeat at the very end of the track list?
+                            let is_last = current_track_index == counts.len();
+
+                            // When collapsing auto-fit tracks (in the loop just above), we collapse the gutter after collapsed
+                            // tracks but not the gutter before. This is correct so long as there is another non-collapsed track
+                            // somewhere in the track list after the collapsed track.
+                            //
+                            // However, if the auto-fit repeat is at the very end of the track list, then there will be no such track.
+                            // In this case we need to iterate backwards through the track list until we find a non-collapsed track and
+                            // collapse the gutter just after that track.
+                            //
+                            // As all of the other tracks and gutters we find along the way will already be collapsed, we simplify the
+                            // implementation to collapsing all tracks and gutters until we find the first non-collapsed track.
+                            if repeat.count() == RepetitionCount::AutoFit && is_last {
+                                for previous_track in tracks.iter_mut().rev() {
+                                    if previous_track.kind == GridTrackKind::Track && !previous_track.is_collapsed {
+                                        break;
+                                    }
+                                    previous_track.collapse();
+                                }
                             }
                         }
                     },
