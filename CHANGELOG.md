@@ -20,6 +20,8 @@ All of Taffy's style types (except the top-level `Style` struct) now have `FromS
 
 CSS parsing is feature flagged by the `parse` feature.
 
+Additionally the `parse_faster` feature enables optimizations for faster parsing at the cost of pulling in proc-macro dependencies such as `syn`.
+
 ### Changed
 
 - Make DetailedGridTracksInfo accessible from a public module (#899)
