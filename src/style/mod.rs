@@ -223,6 +223,7 @@ impl Default for Display {
 #[cfg(feature = "parse")]
 crate::util::parse::impl_parse_for_keyword_enum!(Display,
     "none" => None,
+    "contents" => Contents,
     #[cfg(feature = "flexbox")]
     "flex" => Flex,
     #[cfg(feature = "grid")]
