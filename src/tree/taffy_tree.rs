@@ -168,9 +168,10 @@ pub struct TaffyTree<NodeContext = ()> {
     /// Recomputed before each layout pass via `resolve_contents_children()`.
     resolved_children: SecondaryMap<DefaultKey, ChildrenVec<NodeId>>,
 
-    /// Number of nodes with `Display::Contents`. When zero, the
-    /// `resolve_contents_children` walk is skipped entirely.
-    contents_count: usize,
+    /// Set when a mutation could affect contents resolution. Cleared after resolve.
+    /// If the resolve walk finds no contents nodes, it clears this flag so future
+    /// layouts skip the walk entirely.
+    contents_dirty: bool,
 
     /// Layout mode configuration
     config: TaffyConfig,
@@ -343,8 +344,8 @@ where
                 // Contents nodes generate no box. Zero layout, but children are NOT hidden —
                 // they are promoted to this node's parent by TraversePartialTree::child_ids.
                 (Display::Contents, _) => {
-                    tree.set_unrounded_layout(node, &Layout::with_order(0));
-                    tree.cache_clear(node);
+                    tree.set_unrounded_layout(node_id, &Layout::with_order(0));
+                    tree.cache_clear(node_id);
                     LayoutOutput::HIDDEN
                 }
                 #[cfg(feature = "block_layout")]
@@ -591,7 +592,7 @@ impl<NodeContext> TaffyTree<NodeContext> {
             parents: SlotMap::with_capacity(capacity),
             node_context_data: SecondaryMap::with_capacity(capacity),
             resolved_children: SecondaryMap::new(),
-            contents_count: 0,
+            contents_dirty: false,
             config: TaffyConfig::default(),
         }
     }
@@ -608,7 +609,7 @@ impl<NodeContext> TaffyTree<NodeContext> {
 
     /// Creates and adds a new unattached leaf node to the tree, and returns the node of the new node
     pub fn new_leaf(&mut self, layout: Style) -> TaffyResult<NodeId> {
-        if layout.display == Display::Contents { self.contents_count += 1; }
+        if layout.display == Display::Contents { self.contents_dirty = true; }
         let id = self.nodes.insert(NodeData::new(layout));
         let _ = self.children.insert(new_vec_with_capacity(0));
         let _ = self.parents.insert(None);
@@ -620,7 +621,7 @@ impl<NodeContext> TaffyTree<NodeContext> {
     ///
     /// Creates and adds a new leaf node with a supplied context
     pub fn new_leaf_with_context(&mut self, layout: Style, context: NodeContext) -> TaffyResult<NodeId> {
-        if layout.display == Display::Contents { self.contents_count += 1; }
+        if layout.display == Display::Contents { self.contents_dirty = true; }
         let mut data = NodeData::new(layout);
         data.has_context = true;
 
@@ -635,7 +636,7 @@ impl<NodeContext> TaffyTree<NodeContext> {
 
     /// Creates and adds a new node, which may have any number of `children`
     pub fn new_with_children(&mut self, layout: Style, children: &[NodeId]) -> TaffyResult<NodeId> {
-        if layout.display == Display::Contents { self.contents_count += 1; }
+        if layout.display == Display::Contents { self.contents_dirty = true; }
         let id = NodeId::from(self.nodes.insert(NodeData::new(layout)));
 
         for child in children {
@@ -654,7 +655,7 @@ impl<NodeContext> TaffyTree<NodeContext> {
         self.children.clear();
         self.parents.clear();
         self.resolved_children.clear();
-        self.contents_count = 0;
+        self.contents_dirty = false;
     }
 
     /// Remove a specific node from the tree and drop it
@@ -662,7 +663,7 @@ impl<NodeContext> TaffyTree<NodeContext> {
     /// Returns the id of the node removed.
     pub fn remove(&mut self, node: NodeId) -> TaffyResult<NodeId> {
         let key = node.into();
-        if self.nodes[key].style.display == Display::Contents { self.contents_count -= 1; }
+        if self.nodes[key].style.display == Display::Contents { self.contents_dirty = true; }
         if let Some(parent) = self.parents[key] {
             if let Some(children) = self.children.get_mut(parent.into()) {
                 children.retain(|f| *f != node);
@@ -881,10 +882,8 @@ impl<NodeContext> TaffyTree<NodeContext> {
         let key = node.into();
         let old_display = self.nodes[key].style.display;
         let new_display = style.display;
-        if old_display != Display::Contents && new_display == Display::Contents {
-            self.contents_count += 1;
-        } else if old_display == Display::Contents && new_display != Display::Contents {
-            self.contents_count -= 1;
+        if old_display == Display::Contents || new_display == Display::Contents {
+            self.contents_dirty = true;
         }
         self.nodes[key].style = style;
         self.mark_dirty(node)?;
@@ -964,8 +963,8 @@ impl<NodeContext> TaffyTree<NodeContext> {
     fn resolve_contents_children(&mut self, root: NodeId) {
         self.resolved_children.clear();
 
-        // Fast path: no contents nodes in the entire tree.
-        if self.contents_count == 0 {
+        // Fast path: no contents-related mutations since last resolve.
+        if !self.contents_dirty {
             return;
         }
 
@@ -983,21 +982,26 @@ impl<NodeContext> TaffyTree<NodeContext> {
             result
         };
 
+        let mut found_any = false;
         for node_id in all_nodes {
             let key: DefaultKey = node_id.into();
             let children = &self.children[key];
 
-            // Fast path: check if any direct child is Display::Contents.
             let has_contents_child = children.iter().any(|child| {
                 self.nodes[(*child).into()].style.display == Display::Contents
             });
 
             if has_contents_child {
+                found_any = true;
                 let mut resolved = ChildrenVec::new();
                 self.collect_resolved_children(node_id, &mut resolved);
                 self.resolved_children.insert(key, resolved);
             }
         }
+
+        // If no contents nodes were found, clear the flag so future layouts
+        // skip the walk entirely (e.g. after all contents nodes are removed).
+        self.contents_dirty = found_any;
     }
 
     /// Recursively collect the resolved children for a node, flattening through
