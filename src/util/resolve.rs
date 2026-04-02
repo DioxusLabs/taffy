@@ -149,6 +149,19 @@ impl<Out: TaffyZero, T: ResolveOrZero<Option<f32>, Out>> ResolveOrZero<Option<f3
     }
 }
 
+// Generic ResolveOrZero for resolving Rect against f32
+impl<Out: TaffyZero, T: ResolveOrZero<f32, Out>> ResolveOrZero<f32, Rect<Out>> for Rect<T> {
+    /// Converts any `parent`-relative values for Rect into an absolute Rect
+    fn resolve_or_zero(self, context: f32, calc: impl Fn(*const (), f32) -> f32) -> Rect<Out> {
+        Rect {
+            left: self.left.resolve_or_zero(context, &calc),
+            right: self.right.resolve_or_zero(context, &calc),
+            top: self.top.resolve_or_zero(context, &calc),
+            bottom: self.bottom.resolve_or_zero(context, &calc),
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::{MaybeResolve, ResolveOrZero};
