@@ -120,13 +120,17 @@ where
     /// Compute the item's resolved margins for size contributions. Horizontal percentage margins always resolve
     /// to zero if the container size is indefinite as otherwise this would introduce a cyclic dependency.
     #[inline(always)]
-    fn margins_axis_sums_with_baseline_shims(&self, item: &GridItem, axis_tracks: &[GridTrack]) -> Size<f32> {
-        let percentage_basis = item.definite_grid_area_size_in_axis(
-            AbstractAxis::Inline,
-            if self.axis == AbstractAxis::Inline { axis_tracks } else { self.other_axis_tracks },
-            self.inner_node_size.width,
-            &|val, basis| self.tree.calc(val, basis),
-        );
+    fn margins_axis_sums_with_baseline_shims(&self, item: &mut GridItem, axis_tracks: &[GridTrack]) -> Size<f32> {
+        let percentage_basis = if self.axis == AbstractAxis::Block {
+            self.available_space(item).width
+        } else {
+            item.definite_grid_area_size_in_axis(
+                AbstractAxis::Inline,
+                axis_tracks,
+                self.inner_node_size.width,
+                &|val, basis| self.tree.calc(val, basis),
+            )
+        };
         item.margins_axis_sums_with_baseline_shims(percentage_basis, self.tree)
     }
 
