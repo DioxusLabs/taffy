@@ -323,27 +323,27 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
 
     // 6. Compute container size
     let resolved_style_size = known_dimensions.or(preferred_size);
-    let container_border_box = Size {
-        width: resolved_style_size
-            .get(AbstractAxis::Inline)
-            .unwrap_or_else(|| initial_column_sum + content_box_inset.horizontal_axis_sum())
-            .maybe_clamp(min_size.width, max_size.width)
-            .max(padding_border_size.width),
-        height: resolved_style_size
-            .get(AbstractAxis::Block)
-            .unwrap_or_else(|| initial_row_sum + content_box_inset.vertical_axis_sum())
-            .maybe_clamp(min_size.height, max_size.height)
-            .max(padding_border_size.height),
+    let compute_container_boxes = |column_sum: f32, row_sum: f32| {
+        let container_border_box = Size {
+            width: resolved_style_size
+                .get(AbstractAxis::Inline)
+                .unwrap_or_else(|| column_sum + content_box_inset.horizontal_axis_sum())
+                .maybe_clamp(min_size.width, max_size.width)
+                .max(padding_border_size.width),
+            height: resolved_style_size
+                .get(AbstractAxis::Block)
+                .unwrap_or_else(|| row_sum + content_box_inset.vertical_axis_sum())
+                .maybe_clamp(min_size.height, max_size.height)
+                .max(padding_border_size.height),
+        };
+        let container_content_box = Size {
+            width: f32_max(0.0, container_border_box.width - content_box_inset.horizontal_axis_sum()),
+            height: f32_max(0.0, container_border_box.height - content_box_inset.vertical_axis_sum()),
+        };
+        (container_border_box, container_content_box)
     };
-    let container_content_box = Size {
-        width: f32_max(0.0, container_border_box.width - content_box_inset.horizontal_axis_sum()),
-        height: f32_max(0.0, container_border_box.height - content_box_inset.vertical_axis_sum()),
-    };
-
-    // If only the container's size has been requested
-    if run_mode == RunMode::ComputeSize {
-        return LayoutOutput::from_outer_size(container_border_box);
-    }
+    let (mut container_border_box, mut container_content_box) =
+        compute_container_boxes(initial_column_sum, initial_row_sum);
 
     // 7. Resolve percentage track base sizes
     // In the case of an indefinitely sized container these resolve to zero during the "Initialise Tracks" step
@@ -376,13 +376,15 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     //   - Any grid item crossing an intrinsically sized track's min content contribution width has changed
     // TODO: Only rerun sizing for tracks that actually require it rather than for all tracks if any need it.
     let mut rerun_column_sizing;
+    let mut intrinsic_column_contribution_changed = false;
 
     let has_percentage_column = columns.iter().any(|track| track.uses_percentage());
+    let has_percentage_row = rows.iter().any(|track| track.uses_percentage());
     let parent_width_indefinite = !available_space.width.is_definite();
     rerun_column_sizing = parent_width_indefinite && has_percentage_column;
 
     if !rerun_column_sizing {
-        let min_content_contribution_changed =
+        intrinsic_column_contribution_changed =
             items.iter_mut().filter(|item| item.crosses_intrinsic_column).any(|item| {
                 let available_space = item.available_space(
                     AbstractAxis::Inline,
@@ -411,7 +413,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
 
                 has_changed
             });
-        rerun_column_sizing = min_content_contribution_changed;
+        rerun_column_sizing = intrinsic_column_contribution_changed;
     } else {
         // Clear intrinsic width caches
         items.iter_mut().for_each(|item| {
@@ -421,6 +423,8 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
             item.minimum_contribution_cache.width = None;
         });
     }
+
+    let mut intrinsic_row_contribution_changed = false;
 
     if rerun_column_sizing {
         // Re-run track sizing algorithm for Inline axis
@@ -446,12 +450,11 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
         // TODO: Only rerun sizing for tracks that actually require it rather than for all tracks if any need it.
         let mut rerun_row_sizing;
 
-        let has_percentage_row = rows.iter().any(|track| track.uses_percentage());
         let parent_height_indefinite = !available_space.height.is_definite();
         rerun_row_sizing = parent_height_indefinite && has_percentage_row;
 
         if !rerun_row_sizing {
-            let min_content_contribution_changed =
+            intrinsic_row_contribution_changed =
                 items.iter_mut().filter(|item| item.crosses_intrinsic_column).any(|item| {
                     let available_space = item.available_space(
                         AbstractAxis::Block,
@@ -480,7 +483,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
 
                     has_changed
                 });
-            rerun_row_sizing = min_content_contribution_changed;
+            rerun_row_sizing = intrinsic_row_contribution_changed;
         } else {
             items.iter_mut().for_each(|item| {
                 // Clear intrinsic height caches
@@ -509,6 +512,38 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
                 false, // TODO: Support baseline alignment in the vertical axis
             );
         }
+    }
+
+    if (intrinsic_column_contribution_changed && !has_percentage_column)
+        || (intrinsic_row_contribution_changed && !has_percentage_row)
+    {
+        let final_column_sum = columns.iter().map(|track| track.base_size).sum::<f32>();
+        let final_row_sum = rows.iter().map(|track| track.base_size).sum::<f32>();
+
+        if intrinsic_column_contribution_changed && !has_percentage_column {
+            container_border_box.width = resolved_style_size
+                .get(AbstractAxis::Inline)
+                .unwrap_or_else(|| final_column_sum + content_box_inset.horizontal_axis_sum())
+                .maybe_clamp(min_size.width, max_size.width)
+                .max(padding_border_size.width);
+            container_content_box.width =
+                f32_max(0.0, container_border_box.width - content_box_inset.horizontal_axis_sum());
+        }
+
+        if intrinsic_row_contribution_changed && !has_percentage_row {
+            container_border_box.height = resolved_style_size
+                .get(AbstractAxis::Block)
+                .unwrap_or_else(|| final_row_sum + content_box_inset.vertical_axis_sum())
+                .maybe_clamp(min_size.height, max_size.height)
+                .max(padding_border_size.height);
+            container_content_box.height =
+                f32_max(0.0, container_border_box.height - content_box_inset.vertical_axis_sum());
+        }
+    }
+
+    // If only the container's size has been requested
+    if run_mode == RunMode::ComputeSize {
+        return LayoutOutput::from_outer_size(container_border_box);
     }
 
     // 8. Track Alignment
