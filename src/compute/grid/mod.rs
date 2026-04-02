@@ -390,8 +390,17 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
                     inner_node_size.height,
                     |track: &GridTrack, _| Some(track.base_size),
                 );
+                let grid_area_size = Size {
+                    width: item.definite_grid_area_size_in_axis(
+                        AbstractAxis::Inline,
+                        &columns,
+                        inner_node_size.width,
+                        &|val, basis| tree.calc(val, basis),
+                    ),
+                    height: available_space.height,
+                };
                 let new_min_content_contribution =
-                    item.min_content_contribution(AbstractAxis::Inline, tree, available_space, inner_node_size);
+                    item.min_content_contribution(AbstractAxis::Inline, tree, grid_area_size, available_space);
 
                 let has_changed = Some(new_min_content_contribution) != item.min_content_contribution_cache.width;
 
@@ -450,8 +459,17 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
                         inner_node_size.width,
                         |track: &GridTrack, _| Some(track.base_size),
                     );
+                    let grid_area_size = Size {
+                        width: available_space.width,
+                        height: item.definite_grid_area_size_in_axis(
+                            AbstractAxis::Block,
+                            &rows,
+                            inner_node_size.height,
+                            &|val, basis| tree.calc(val, basis),
+                        ),
+                    };
                     let new_min_content_contribution =
-                        item.min_content_contribution(AbstractAxis::Block, tree, available_space, inner_node_size);
+                        item.min_content_contribution(AbstractAxis::Block, tree, grid_area_size, available_space);
 
                     let has_changed = Some(new_min_content_contribution) != item.min_content_contribution_cache.height;
 
