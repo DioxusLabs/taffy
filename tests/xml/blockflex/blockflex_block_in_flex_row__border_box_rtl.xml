@@ -1,0 +1,15 @@
+<test name="blockflex_block_in_flex_row__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="flex" direction="rtl" width="200px" height="50px">
+      <div display="block" direction="rtl"/>
+      <div display="block" direction="rtl" width="50px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="200" height="50">
+      <node x="200" y="0" width="0" height="50"/>
+      <node x="150" y="0" width="50" height="50"/>
+    </node>
+  </expectations>
+</test>

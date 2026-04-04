@@ -1,0 +1,29 @@
+<test name="simple_child__border_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div direction="ltr" width="100px" height="100px">
+      <div direction="ltr" width="100%" height="100%">
+        <div direction="ltr" width="10px" height="10px">
+          <div direction="ltr" width="10px" height="10px"/>
+        </div>
+        <div direction="ltr">
+          <div direction="ltr" align-self="center" width="10px" height="10px"/>
+          <div direction="ltr" align-self="center" width="10px" height="10px"/>
+        </div>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="100" height="100">
+      <node x="0" y="0" width="100" height="100">
+        <node x="0" y="0" width="10" height="10">
+          <node x="0" y="0" width="10" height="10"/>
+        </node>
+        <node x="10" y="0" width="20" height="100">
+          <node x="0" y="45" width="10" height="10"/>
+          <node x="10" y="45" width="10" height="10"/>
+        </node>
+      </node>
+    </node>
+  </expectations>
+</test>

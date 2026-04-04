@@ -1,0 +1,13 @@
+<test name="grid_percent_items_width_and_margin__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" box-sizing="content-box" direction="ltr" width="200px" padding-top="3px" padding-left="3px" padding-bottom="3px" padding-right="3px">
+      <div box-sizing="content-box" direction="ltr" width="45%" margin-top="5%" margin-left="5%" margin-bottom="5%" margin-right="5%" padding-top="3px" padding-left="3px" padding-bottom="3px" padding-right="3px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="206" height="32">
+      <node x="13" y="13" width="96" height="6"/>
+    </node>
+  </expectations>
+</test>

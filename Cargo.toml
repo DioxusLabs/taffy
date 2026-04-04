@@ -1,13 +1,13 @@
 [package]
 name = "taffy"
-version = "0.9.2"
+version = "0.10.0"
 authors = [
     "Alice Cecile <alice.i.cecile@gmail.com>",
     "Johnathan Kelley <jkelleyrtp@gmail.com>",
     "Nico Burns <nico@nicoburns.com>",
 ]
 edition = "2021"
-rust-version = "1.65"
+rust-version = "1.71"
 include = ["src/**/*", "examples/**/*", "Cargo.toml", "README.md"]
 description = "A flexible UI layout library "
 repository = "https://github.com/DioxusLabs/taffy"
@@ -21,6 +21,7 @@ document-features = { version = "0.2.7", optional = true }
 serde = { version = "1.0", default-features = false, optional = true, features = ["serde_derive"] }
 slotmap = { version = "1.0.6", default-features = false, optional = true }
 grid = { version = "1.0.0", default-features = false, optional = true }
+cssparser = { version = "0.37.0", default-features = false, optional = true }
 
 [package.metadata.docs.rs]
 # To test all the documentation related features, run:
@@ -38,6 +39,7 @@ default = [
     "flexbox",
     "grid",
     "block_layout",
+    "float_layout",
     "calc",
     "content_size",
     "detailed_layout_info",
@@ -48,6 +50,8 @@ default = [
 
 ## Enables the Block layout algorithm. See [`compute_block_layout`](crate::compute_block_layout).
 block_layout = []
+## Enables the Float layout algorithm. This is a sub-feature of block layout.
+float_layout = []
 ## Enables the Flexbox layout algorithm. See [`compute_flexbox_layout`](crate::compute_flexbox_layout).
 flexbox = []
 ## Enables the CSS Grid layout algorithm. See [`compute_grid_layout`](crate::compute_grid_layout).
@@ -70,6 +74,10 @@ taffy_tree = ["dep:slotmap"]
 
 ## Add [`serde`] derives to Style structs
 serde = ["dep:serde"]
+## Implement `FromStr` trait for Taffy style types
+parse = ["dep:cssparser"]
+## Enable the `parse` feature with proc-macro dependent optimisations
+parse_faster = ["parse", "cssparser/fast_match_byte"]
 ## Allow Taffy to depend on the [`Rust Standard Library`](std)
 std = ["grid?/std", "serde?/std", "slotmap?/std"]
 ## Allow Taffy to depend on the alloc library
@@ -81,10 +89,11 @@ profile = ["std"]
 
 [dev-dependencies]
 serde_json = "1.0.93"
+roxmltree = "0.21.1"
 taffy_test_helpers = { path = "tests/common"}
 
 # Enable default features for tests and examples
-taffy = { path = "." }
+taffy = { path = ".", features = ["parse"] }
 
 [profile.release]
 lto = true

@@ -1,0 +1,17 @@
+<test name="blockgrid_block_in_grid_auto__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" direction="rtl" grid-template-columns="auto">
+      <text display="block" direction="rtl">
+        HH​HH
+      </text>
+      <div display="block" direction="rtl"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="40" height="10">
+      <node x="0" y="0" width="40" height="10"/>
+      <node x="0" y="10" width="40" height="0"/>
+    </node>
+  </expectations>
+</test>

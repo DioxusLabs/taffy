@@ -1,0 +1,13 @@
+<test name="absolute_layout_percentage_height__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div box-sizing="content-box" direction="ltr" width="200px" height="100px">
+      <div box-sizing="content-box" direction="ltr" position="absolute" width="10px" height="50%" top="10px" left="10px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="200" height="100">
+      <node x="10" y="10" width="10" height="50"/>
+    </node>
+  </expectations>
+</test>

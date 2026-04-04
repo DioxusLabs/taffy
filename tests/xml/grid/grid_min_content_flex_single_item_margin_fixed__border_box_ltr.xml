@@ -1,0 +1,29 @@
+<test name="grid_min_content_flex_single_item_margin_fixed__border_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" direction="ltr" grid-template-rows="40px 40px 40px" grid-template-columns="40px min-content 1fr">
+      <div direction="ltr"/>
+      <div direction="ltr" min-width="10px" margin-top="5px" margin-left="20px" margin-bottom="15px" margin-right="10px"/>
+      <div direction="ltr"/>
+      <div direction="ltr"/>
+      <text direction="ltr" margin-top="5px" margin-left="20px" margin-bottom="15px" margin-right="10px" grid-column-start="span 2">
+        HH​HH
+      </text>
+      <div direction="ltr"/>
+      <div direction="ltr"/>
+      <div direction="ltr"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="110" height="120">
+      <node x="0" y="0" width="40" height="40"/>
+      <node x="60" y="5" width="10" height="20"/>
+      <node x="80" y="0" width="30" height="40"/>
+      <node x="0" y="40" width="40" height="40"/>
+      <node x="60" y="45" width="40" height="20"/>
+      <node x="0" y="80" width="40" height="40"/>
+      <node x="40" y="80" width="40" height="40"/>
+      <node x="80" y="80" width="30" height="40"/>
+    </node>
+  </expectations>
+</test>

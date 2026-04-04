@@ -1,0 +1,15 @@
+<test name="flex_wrap_align_stretch_fits_one_row__content_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div box-sizing="content-box" direction="rtl" flex-wrap="wrap" width="150px" height="100px">
+      <div box-sizing="content-box" direction="rtl" width="50px"/>
+      <div box-sizing="content-box" direction="rtl" width="50px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="150" height="100">
+      <node x="100" y="0" width="50" height="100"/>
+      <node x="50" y="0" width="50" height="100"/>
+    </node>
+  </expectations>
+</test>

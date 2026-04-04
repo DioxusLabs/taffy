@@ -1,0 +1,15 @@
+<test name="measure_child_constraint_padding_parent__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div direction="rtl" width="50px" padding-top="10px" padding-left="10px" padding-bottom="10px" padding-right="10px">
+      <text direction="rtl">
+        HHHHHHHHHH​HHHHHHHHHH​HHHHHHHHHH​HHHHHHHHHH​HHHHHHHHHH​HHHHHHHHHH​HHHHHHHHHH​HHHHHHHHHH​HHHHHHHHHH​HHHHHHHHHH
+      </text>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="50" height="120">
+      <node x="-60" y="10" width="100" height="100"/>
+    </node>
+  </expectations>
+</test>

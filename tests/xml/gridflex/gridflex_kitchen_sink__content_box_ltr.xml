@@ -1,0 +1,49 @@
+<test name="gridflex_kitchen_sink__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div box-sizing="content-box" direction="ltr">
+      <div display="grid" box-sizing="content-box" direction="ltr" grid-template-rows="1fr 1fr" grid-template-columns="1fr 1fr">
+        <div box-sizing="content-box" direction="ltr">
+          <div box-sizing="content-box" direction="ltr" width="20px"/>
+          <div box-sizing="content-box" direction="ltr" flex-grow="1" width="50px">
+            <div display="grid" box-sizing="content-box" direction="ltr" grid-template-rows="30% 10%" grid-template-columns="auto 10%">
+              <div box-sizing="content-box" direction="ltr" width="20px"/>
+              <div box-sizing="content-box" direction="ltr"/>
+              <div box-sizing="content-box" direction="ltr"/>
+              <div box-sizing="content-box" direction="ltr"/>
+            </div>
+          </div>
+        </div>
+        <text box-sizing="content-box" direction="ltr">
+          HH
+        </text>
+        <text box-sizing="content-box" direction="ltr">
+          HH
+        </text>
+        <text box-sizing="content-box" direction="ltr">
+          HH
+        </text>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="140" height="20">
+      <node x="0" y="0" width="140" height="20">
+        <node x="0" y="0" width="70" height="10">
+          <node x="0" y="0" width="20" height="10"/>
+          <node x="20" y="0" width="50" height="10">
+            <node x="0" y="0" width="20" height="10">
+              <node x="0" y="0" width="20" height="3"/>
+              <node x="20" y="0" width="2" height="3"/>
+              <node x="0" y="3" width="20" height="1"/>
+              <node x="20" y="3" width="2" height="1"/>
+            </node>
+          </node>
+        </node>
+        <node x="70" y="0" width="70" height="10"/>
+        <node x="0" y="10" width="70" height="10"/>
+        <node x="70" y="10" width="70" height="10"/>
+      </node>
+    </node>
+  </expectations>
+</test>

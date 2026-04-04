@@ -1,0 +1,21 @@
+<test name="align_flex_start_with_stretching_children__content_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div box-sizing="content-box" direction="rtl" width="500px" height="500px">
+      <div box-sizing="content-box" direction="rtl" align-items="stretch">
+        <div box-sizing="content-box" direction="rtl" flex-grow="1">
+          <div box-sizing="content-box" direction="rtl" flex-grow="1"/>
+        </div>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="500" height="500">
+      <node x="500" y="0" width="0" height="500">
+        <node x="0" y="0" width="0" height="500">
+          <node x="0" y="0" width="0" height="500"/>
+        </node>
+      </node>
+    </node>
+  </expectations>
+</test>

@@ -85,6 +85,13 @@ pub enum FlexWrap {
     WrapReverse,
 }
 
+#[cfg(feature = "parse")]
+crate::util::parse::impl_parse_for_keyword_enum!(FlexWrap,
+    "nowrap" => NoWrap,
+    "wrap" => Wrap,
+    "wrap-reverse" => WrapReverse,
+);
+
 /// The direction of the flexbox layout main axis.
 ///
 /// There are always two perpendicular layout axes: main (or primary) and cross (or secondary).
@@ -117,6 +124,14 @@ pub enum FlexDirection {
     /// Items will be added from bottom to top in a column.
     ColumnReverse,
 }
+
+#[cfg(feature = "parse")]
+crate::util::parse::impl_parse_for_keyword_enum!(FlexDirection,
+    "row" => Row,
+    "column" => Column,
+    "row-reverse" => RowReverse,
+    "column-reverse" => ColumnReverse,
+);
 
 impl FlexDirection {
     #[inline]

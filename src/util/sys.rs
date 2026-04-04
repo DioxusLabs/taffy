@@ -57,7 +57,7 @@ mod std {
     #[must_use]
     #[inline(always)]
     pub(crate) fn round(value: f32) -> f32 {
-        value.round()
+        (value + 0.5).floor()
     }
 
     /// Rounds up to the nearest whole number

@@ -1,0 +1,29 @@
+<test name="gap_column_row_gap_wrapping__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div direction="rtl" flex-wrap="wrap" width="80px" row-gap="20px" column-gap="10px">
+      <div direction="rtl" width="20px" height="20px"/>
+      <div direction="rtl" width="20px" height="20px"/>
+      <div direction="rtl" width="20px" height="20px"/>
+      <div direction="rtl" width="20px" height="20px"/>
+      <div direction="rtl" width="20px" height="20px"/>
+      <div direction="rtl" width="20px" height="20px"/>
+      <div direction="rtl" width="20px" height="20px"/>
+      <div direction="rtl" width="20px" height="20px"/>
+      <div direction="rtl" width="20px" height="20px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="80" height="100">
+      <node x="60" y="0" width="20" height="20"/>
+      <node x="30" y="0" width="20" height="20"/>
+      <node x="0" y="0" width="20" height="20"/>
+      <node x="60" y="40" width="20" height="20"/>
+      <node x="30" y="40" width="20" height="20"/>
+      <node x="0" y="40" width="20" height="20"/>
+      <node x="60" y="80" width="20" height="20"/>
+      <node x="30" y="80" width="20" height="20"/>
+      <node x="0" y="80" width="20" height="20"/>
+    </node>
+  </expectations>
+</test>

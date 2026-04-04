@@ -1,0 +1,29 @@
+<test name="rounding_inner_node_controversy_combined__border_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div direction="ltr" width="640px" height="320px">
+      <div direction="ltr" flex-grow="1" height="100%"/>
+      <div direction="ltr" flex-direction="column" flex-grow="1" height="100%">
+        <div direction="ltr" flex-grow="1" width="100%"/>
+        <div direction="ltr" flex-direction="column" flex-grow="1" width="100%">
+          <div direction="ltr" flex-grow="1" width="100%"/>
+        </div>
+        <div direction="ltr" flex-grow="1" width="100%"/>
+      </div>
+      <div direction="ltr" flex-grow="1" height="100%"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="640" height="320">
+      <node x="0" y="0" width="213" height="320"/>
+      <node x="213" y="0" width="214" height="320">
+        <node x="0" y="0" width="214" height="107"/>
+        <node x="0" y="107" width="214" height="106">
+          <node x="0" y="0" width="214" height="106"/>
+        </node>
+        <node x="0" y="213" width="214" height="107"/>
+      </node>
+      <node x="427" y="0" width="213" height="320"/>
+    </node>
+  </expectations>
+</test>

@@ -1,0 +1,17 @@
+<test name="flex_shrink_to_zero__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div direction="rtl" width="75px">
+      <div direction="rtl" flex-shrink="0" width="50px" height="50px"/>
+      <div direction="rtl" width="50px" height="50px"/>
+      <div direction="rtl" flex-shrink="0" width="50px" height="50px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="75" height="50">
+      <node x="25" y="0" width="50" height="50"/>
+      <node x="25" y="0" width="0" height="50"/>
+      <node x="-25" y="0" width="50" height="50"/>
+    </node>
+  </expectations>
+</test>

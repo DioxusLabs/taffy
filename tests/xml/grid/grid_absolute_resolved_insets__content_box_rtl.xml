@@ -1,0 +1,43 @@
+<test name="grid_absolute_resolved_insets__content_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div box-sizing="content-box" direction="rtl">
+      <div display="grid" box-sizing="content-box" direction="rtl" width="200px" height="200px" padding-top="15px" padding-left="15px" padding-bottom="15px" padding-right="15px" border-top="20px" border-left="20px" border-bottom="20px" border-right="20px">
+        <div box-sizing="content-box" direction="rtl" position="absolute" top="auto" left="auto"/>
+        <div box-sizing="content-box" direction="rtl" position="absolute" top="0px" left="0px"/>
+        <div box-sizing="content-box" direction="rtl" position="absolute" top="100%" left="100%"/>
+        <div box-sizing="content-box" direction="rtl" position="absolute" bottom="100%" right="100%"/>
+        <div box-sizing="content-box" direction="rtl" position="absolute" top="30px" left="30px"/>
+        <div box-sizing="content-box" direction="rtl" position="absolute" width="100%" height="100%" top="0px" left="0px"/>
+      </div>
+      <div display="grid" box-sizing="content-box" direction="rtl" overflow-x="scroll" overflow-y="scroll" scrollbar-width="15" width="200px" height="200px" padding-top="15px" padding-left="15px" padding-bottom="15px" padding-right="15px" border-top="20px" border-left="20px" border-bottom="20px" border-right="20px">
+        <div box-sizing="content-box" direction="rtl" position="absolute" top="auto" left="auto"/>
+        <div box-sizing="content-box" direction="rtl" position="absolute" top="0px" left="0px"/>
+        <div box-sizing="content-box" direction="rtl" position="absolute" top="100%" left="100%"/>
+        <div box-sizing="content-box" direction="rtl" position="absolute" bottom="100%" right="100%"/>
+        <div box-sizing="content-box" direction="rtl" position="absolute" top="30px" left="30px"/>
+        <div box-sizing="content-box" direction="rtl" position="absolute" width="100%" height="100%" top="0px" left="0px"/>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="540" height="270">
+      <node x="270" y="0" width="270" height="270">
+        <node x="250" y="20" width="0" height="0"/>
+        <node x="20" y="20" width="0" height="0"/>
+        <node x="250" y="250" width="0" height="0"/>
+        <node x="20" y="20" width="0" height="0"/>
+        <node x="50" y="50" width="0" height="0"/>
+        <node x="20" y="20" width="230" height="230"/>
+      </node>
+      <node x="0" y="0" width="270" height="270" scroll_width="0" scroll_height="0">
+        <node x="250" y="20" width="0" height="0"/>
+        <node x="35" y="20" width="0" height="0"/>
+        <node x="250" y="235" width="0" height="0"/>
+        <node x="35" y="20" width="0" height="0"/>
+        <node x="65" y="50" width="0" height="0"/>
+        <node x="35" y="20" width="215" height="215"/>
+      </node>
+    </node>
+  </expectations>
+</test>

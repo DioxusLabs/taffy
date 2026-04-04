@@ -1,0 +1,27 @@
+<test name="grid_align_items_baseline_multiline_column__border_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" direction="ltr" align-items="baseline" width="100px" height="100px" grid-template-columns="auto auto">
+      <div display="grid" direction="ltr" width="50px" height="50px"/>
+      <div display="grid" direction="ltr" width="30px" height="50px">
+        <div display="grid" direction="ltr" width="20px" height="20px"/>
+      </div>
+      <div display="grid" direction="ltr" width="40px" height="70px">
+        <div display="grid" direction="ltr" width="10px" height="10px"/>
+      </div>
+      <div display="grid" direction="ltr" width="50px" height="20px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="100" height="100">
+      <node x="0" y="0" width="50" height="50"/>
+      <node x="50" y="30" width="30" height="50">
+        <node x="0" y="0" width="20" height="20"/>
+      </node>
+      <node x="0" y="90" width="40" height="70">
+        <node x="0" y="0" width="10" height="10"/>
+      </node>
+      <node x="50" y="80" width="50" height="20"/>
+    </node>
+  </expectations>
+</test>

@@ -1,0 +1,19 @@
+<test name="grid_relayout_vertical_text__content_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" box-sizing="content-box" direction="rtl" grid-template-rows="40px" grid-template-columns="min-content">
+      <text box-sizing="content-box" direction="rtl" writing-mode="vertical-lr">
+        HH​HH​HH​HH​HH​HH​HH
+      </text>
+      <text box-sizing="content-box" direction="rtl">
+        HH​HH​HH
+      </text>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="40" height="60">
+      <node x="0" y="0" width="40" height="40"/>
+      <node x="0" y="40" width="40" height="20"/>
+    </node>
+  </expectations>
+</test>

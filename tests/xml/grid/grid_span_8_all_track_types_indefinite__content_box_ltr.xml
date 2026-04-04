@@ -1,0 +1,31 @@
+<test name="grid_span_8_all_track_types_indefinite__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" box-sizing="content-box" direction="ltr" grid-template-rows="40px 40px" grid-template-columns="min-content max-content fit-content(20px) auto 10px 20% 1fr 2fr">
+      <text box-sizing="content-box" direction="ltr" grid-column-start="1" grid-column-end="span 8">
+        HHHHHHHH​HHHHHHHH
+      </text>
+      <div box-sizing="content-box" direction="ltr"/>
+      <div box-sizing="content-box" direction="ltr"/>
+      <div box-sizing="content-box" direction="ltr"/>
+      <div box-sizing="content-box" direction="ltr"/>
+      <div box-sizing="content-box" direction="ltr"/>
+      <div box-sizing="content-box" direction="ltr"/>
+      <div box-sizing="content-box" direction="ltr"/>
+      <div box-sizing="content-box" direction="ltr"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="160" height="80">
+      <node x="0" y="0" width="160" height="40"/>
+      <node x="0" y="40" width="0" height="40"/>
+      <node x="0" y="40" width="0" height="40"/>
+      <node x="0" y="40" width="0" height="40"/>
+      <node x="0" y="40" width="0" height="40"/>
+      <node x="0" y="40" width="10" height="40"/>
+      <node x="10" y="40" width="32" height="40"/>
+      <node x="42" y="40" width="39" height="40"/>
+      <node x="81" y="40" width="79" height="40"/>
+    </node>
+  </expectations>
+</test>

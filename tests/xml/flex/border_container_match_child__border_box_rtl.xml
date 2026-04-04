@@ -1,0 +1,13 @@
+<test name="border_container_match_child__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div direction="rtl" flex-direction="column" border-top="10px" border-left="10px" border-bottom="10px" border-right="10px">
+      <div direction="rtl" width="10px" height="10px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="30" height="30">
+      <node x="10" y="10" width="10" height="10"/>
+    </node>
+  </expectations>
+</test>

@@ -1,0 +1,17 @@
+<test name="gridflex_kitchen_sink_minimise2__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div direction="rtl" flex-grow="1" width="50px">
+      <div display="grid" direction="rtl" grid-template-rows="auto" grid-template-columns="auto">
+        <div direction="rtl" width="20px" height="20px"/>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="50" height="20">
+      <node x="30" y="0" width="20" height="20">
+        <node x="0" y="0" width="20" height="20"/>
+      </node>
+    </node>
+  </expectations>
+</test>

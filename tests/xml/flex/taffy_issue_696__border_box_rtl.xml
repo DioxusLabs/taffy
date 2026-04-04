@@ -1,0 +1,17 @@
+<test name="taffy_issue_696__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="flex" direction="rtl" flex-direction="column" width="200px">
+      <div display="flex" direction="rtl" flex-direction="column" overflow-x="hidden" overflow-y="hidden" scrollbar-width="15" flex-basis="0px" min-height="100px" padding-top="20px" padding-left="20px" padding-bottom="20px" padding-right="20px">
+        <div display="flex" direction="rtl" flex-shrink="0" height="200px"/>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="200" height="100">
+      <node x="0" y="0" width="200" height="100" scroll_width="0" scroll_height="140">
+        <node x="20" y="20" width="160" height="200"/>
+      </node>
+    </node>
+  </expectations>
+</test>

@@ -1,0 +1,15 @@
+<test name="margin_auto_bottom_and_top_justify_center__border_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div direction="ltr" justify-content="center" width="200px" height="200px">
+      <div direction="ltr" width="50px" height="50px" margin-top="auto" margin-bottom="auto"/>
+      <div direction="ltr" width="50px" height="50px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="200" height="200">
+      <node x="50" y="75" width="50" height="50"/>
+      <node x="100" y="0" width="50" height="50"/>
+    </node>
+  </expectations>
+</test>

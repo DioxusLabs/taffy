@@ -1,0 +1,31 @@
+<test name="grid_size_child_fixed_tracks__content_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" box-sizing="content-box" direction="rtl" width="120px" height="120px" grid-template-rows="40px 40px 40px" grid-template-columns="40px 40px 40px">
+      <text box-sizing="content-box" direction="rtl" align-self="start" justify-self="start">
+        HH​HH​HH​HH
+      </text>
+      <text box-sizing="content-box" direction="rtl" align-self="start" justify-self="start">
+        HHH​HHH
+      </text>
+      <text box-sizing="content-box" direction="rtl" align-self="start" justify-self="start">
+        HH​HHHH
+      </text>
+      <text box-sizing="content-box" direction="rtl" align-self="start" justify-self="start" width="20px">
+        HH​HH​HH​HH
+      </text>
+      <text box-sizing="content-box" direction="rtl" align-self="start" justify-self="start" max-width="30px">
+        HH​HH​HH​HH
+      </text>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="120" height="120">
+      <node x="80" y="0" width="40" height="20"/>
+      <node x="40" y="0" width="40" height="20"/>
+      <node x="0" y="0" width="40" height="20"/>
+      <node x="100" y="40" width="20" height="40"/>
+      <node x="50" y="40" width="30" height="40"/>
+    </node>
+  </expectations>
+</test>

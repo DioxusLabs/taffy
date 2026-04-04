@@ -1,0 +1,15 @@
+<test name="grid_fit_content_percent_definite_argument__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" direction="rtl" width="60px" grid-template-rows="40px" grid-template-columns="fit-content(50%)">
+      <text direction="rtl">
+        HH​HH
+      </text>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="60" height="40">
+      <node x="30" y="0" width="30" height="40"/>
+    </node>
+  </expectations>
+</test>

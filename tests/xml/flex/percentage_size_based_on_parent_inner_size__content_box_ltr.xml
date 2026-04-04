@@ -1,0 +1,13 @@
+<test name="percentage_size_based_on_parent_inner_size__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div box-sizing="content-box" direction="ltr" flex-direction="column" width="200px" height="400px" padding-top="20px" padding-left="20px" padding-bottom="20px" padding-right="20px">
+      <div box-sizing="content-box" direction="ltr" width="50%" height="50%"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="240" height="440">
+      <node x="20" y="20" width="100" height="200"/>
+    </node>
+  </expectations>
+</test>

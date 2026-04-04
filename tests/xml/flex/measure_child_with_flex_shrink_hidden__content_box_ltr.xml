@@ -1,0 +1,17 @@
+<test name="measure_child_with_flex_shrink_hidden__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div box-sizing="content-box" direction="ltr" width="100px">
+      <div box-sizing="content-box" direction="ltr" width="50px" height="50px"/>
+      <text box-sizing="content-box" direction="ltr" overflow-x="hidden" overflow-y="hidden" scrollbar-width="15">
+        HHHHHHHHHH​HHHHHHHHHH​HHHHHHHHHH​HHHHHHHHHH​HHHHHHHHHH
+      </text>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="100" height="50">
+      <node x="0" y="0" width="9" height="50"/>
+      <node x="9" y="0" width="91" height="50" scroll_width="9" scroll_height="0"/>
+    </node>
+  </expectations>
+</test>

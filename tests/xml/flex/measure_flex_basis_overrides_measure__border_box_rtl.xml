@@ -1,0 +1,15 @@
+<test name="measure_flex_basis_overrides_measure__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div direction="rtl" width="50px" height="50px">
+      <text direction="rtl">
+        H
+      </text>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="50" height="50">
+      <node x="40" y="0" width="10" height="50"/>
+    </node>
+  </expectations>
+</test>

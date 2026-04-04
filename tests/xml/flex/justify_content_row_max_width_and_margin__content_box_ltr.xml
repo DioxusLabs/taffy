@@ -1,0 +1,13 @@
+<test name="justify_content_row_max_width_and_margin__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div box-sizing="content-box" direction="ltr" justify-content="center" width="100px" max-width="80px">
+      <div box-sizing="content-box" direction="ltr" width="20px" height="20px" margin-left="100px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="80" height="20">
+      <node x="90" y="0" width="0" height="20"/>
+    </node>
+  </expectations>
+</test>

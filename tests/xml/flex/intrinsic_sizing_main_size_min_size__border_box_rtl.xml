@@ -1,0 +1,17 @@
+<test name="intrinsic_sizing_main_size_min_size__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="flex" direction="rtl" width="300px" height="200px">
+      <div display="flex" direction="rtl" position="absolute" align-items="center" justify-content="center" max-width="100px" max-height="100px" padding-top="10px" padding-left="10px" padding-bottom="10px" padding-right="10px" top="0px" left="0px">
+        <div display="flex" direction="rtl" min-width="50px" min-height="50px" padding-top="10px" padding-left="10px" padding-bottom="10px" padding-right="10px"/>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="300" height="200">
+      <node x="0" y="0" width="70" height="70">
+        <node x="10" y="10" width="50" height="50"/>
+      </node>
+    </node>
+  </expectations>
+</test>

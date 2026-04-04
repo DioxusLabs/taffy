@@ -1,0 +1,27 @@
+<test name="flex_grow_0_min_size__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="flex" direction="rtl" width="400px" height="100px" border-top="1px" border-left="1px" border-bottom="1px" border-right="1px">
+      <text direction="rtl" flex-shrink="0" flex-basis="0%">
+        one
+      </text>
+      <text direction="rtl" flex-shrink="0" flex-basis="0%">
+        two
+      </text>
+      <text direction="rtl" flex-shrink="0" flex-basis="0%">
+        three
+      </text>
+      <text direction="rtl" flex-shrink="0" flex-basis="0%">
+        four
+      </text>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="400" height="100">
+      <node x="369" y="1" width="30" height="98"/>
+      <node x="339" y="1" width="30" height="98"/>
+      <node x="289" y="1" width="50" height="98"/>
+      <node x="249" y="1" width="40" height="98"/>
+    </node>
+  </expectations>
+</test>

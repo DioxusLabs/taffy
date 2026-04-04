@@ -190,7 +190,7 @@ where
     ///
     /// **NOTE:** this is *not* the width of the rectangle.
     #[inline(always)]
-    pub(crate) fn horizontal_axis_sum(&self) -> U {
+    pub fn horizontal_axis_sum(&self) -> U {
         self.left + self.right
     }
 
@@ -200,16 +200,16 @@ where
     ///
     /// **NOTE:** this is *not* the height of the rectangle.
     #[inline(always)]
-    pub(crate) fn vertical_axis_sum(&self) -> U {
+    pub fn vertical_axis_sum(&self) -> U {
         self.top + self.bottom
     }
 
-    /// Both horizontal_axis_sum and vertical_axis_sum as a Size<T>
+    /// Both horizontal_axis_sum and vertical_axis_sum as a `Size<T>`
     ///
     /// **NOTE:** this is *not* the width/height of the rectangle.
     #[inline(always)]
     #[allow(dead_code)] // Fixes spurious clippy warning: this function is used!
-    pub(crate) fn sum_axes(&self) -> Size<U> {
+    pub fn sum_axes(&self) -> Size<U> {
         Size { width: self.horizontal_axis_sum(), height: self.vertical_axis_sum() }
     }
 

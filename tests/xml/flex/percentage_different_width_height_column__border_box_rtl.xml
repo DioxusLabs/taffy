@@ -1,0 +1,15 @@
+<test name="percentage_different_width_height_column__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div direction="rtl" flex-direction="column" width="200px" height="300px">
+      <div direction="rtl" flex-grow="1"/>
+      <div direction="rtl" height="30%"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="200" height="300">
+      <node x="0" y="0" width="200" height="210"/>
+      <node x="0" y="210" width="200" height="90"/>
+    </node>
+  </expectations>
+</test>

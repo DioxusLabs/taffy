@@ -1,0 +1,27 @@
+<test name="grid_auto_rows__border_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" direction="ltr" grid-template-rows="40px" grid-template-columns="100px" grid-auto-rows="10px 20px 30px">
+      <div direction="ltr" grid-row-start="-4"/>
+      <div direction="ltr"/>
+      <div direction="ltr"/>
+      <div direction="ltr"/>
+      <div direction="ltr"/>
+      <div direction="ltr"/>
+      <div direction="ltr"/>
+      <div direction="ltr"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="100" height="180">
+      <node x="0" y="0" width="100" height="20"/>
+      <node x="0" y="20" width="100" height="30"/>
+      <node x="0" y="50" width="100" height="40"/>
+      <node x="0" y="90" width="100" height="10"/>
+      <node x="0" y="100" width="100" height="20"/>
+      <node x="0" y="120" width="100" height="30"/>
+      <node x="0" y="150" width="100" height="10"/>
+      <node x="0" y="160" width="100" height="20"/>
+    </node>
+  </expectations>
+</test>

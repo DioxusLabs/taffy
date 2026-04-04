@@ -1,0 +1,13 @@
+<test name="max_height_overrides_height__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div box-sizing="content-box" direction="ltr">
+      <div box-sizing="content-box" direction="ltr" height="200px" max-height="100px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="0" height="100">
+      <node x="0" y="0" width="0" height="100"/>
+    </node>
+  </expectations>
+</test>

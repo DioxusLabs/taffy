@@ -1,0 +1,15 @@
+<test name="block_margin_x_intrinsic_size_positive__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="block" direction="rtl">
+      <div direction="rtl" height="10px" margin-left="10px" margin-right="5px"/>
+      <div direction="rtl" height="10px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="15" height="20">
+      <node x="10" y="0" width="0" height="10"/>
+      <node x="0" y="10" width="15" height="10"/>
+    </node>
+  </expectations>
+</test>

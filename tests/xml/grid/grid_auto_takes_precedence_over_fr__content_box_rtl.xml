@@ -1,0 +1,15 @@
+<test name="grid_auto_takes_precedence_over_fr__content_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" box-sizing="content-box" direction="rtl" width="200px" height="200px" grid-template-rows="40px" grid-template-columns="auto 1fr">
+      <div box-sizing="content-box" direction="rtl"/>
+      <div box-sizing="content-box" direction="rtl"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="200" height="200">
+      <node x="200" y="0" width="0" height="40"/>
+      <node x="0" y="0" width="200" height="40"/>
+    </node>
+  </expectations>
+</test>

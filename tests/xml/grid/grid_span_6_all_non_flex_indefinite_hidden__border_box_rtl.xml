@@ -1,0 +1,27 @@
+<test name="grid_span_6_all_non_flex_indefinite_hidden__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" direction="rtl" grid-template-rows="40px 40px" grid-template-columns="min-content max-content fit-content(20px) auto 10px 20%">
+      <text direction="rtl" overflow-x="hidden" overflow-y="hidden" scrollbar-width="15" grid-column-start="1" grid-column-end="span 6">
+        HHHHHHHH​HHHHHHHH
+      </text>
+      <div direction="rtl"/>
+      <div direction="rtl"/>
+      <div direction="rtl"/>
+      <div direction="rtl"/>
+      <div direction="rtl"/>
+      <div direction="rtl"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="160" height="80">
+      <node x="0" y="0" width="160" height="40" scroll_width="0" scroll_height="0"/>
+      <node x="141" y="40" width="19" height="40"/>
+      <node x="42" y="40" width="99" height="40"/>
+      <node x="42" y="40" width="0" height="40"/>
+      <node x="42" y="40" width="0" height="40"/>
+      <node x="32" y="40" width="10" height="40"/>
+      <node x="0" y="40" width="32" height="40"/>
+    </node>
+  </expectations>
+</test>

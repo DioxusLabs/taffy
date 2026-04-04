@@ -1,0 +1,15 @@
+<test name="block_margin_y_simple_negative_percentage_other__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="block" direction="rtl" width="50px">
+      <div direction="rtl" height="10px" margin-top="-10%" margin-bottom="-10%"/>
+      <div direction="rtl" width="50px" height="10px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="50" height="10">
+      <node x="0" y="-5" width="50" height="10"/>
+      <node x="0" y="0" width="50" height="10"/>
+    </node>
+  </expectations>
+</test>

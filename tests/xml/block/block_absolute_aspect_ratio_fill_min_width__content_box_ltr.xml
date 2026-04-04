@@ -1,0 +1,13 @@
+<test name="block_absolute_aspect_ratio_fill_min_width__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="block" box-sizing="content-box" direction="ltr" width="400px" height="300px">
+      <div box-sizing="content-box" direction="ltr" position="absolute" min-height="50px" aspect-ratio="0.5"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="400" height="300">
+      <node x="0" y="0" width="25" height="50"/>
+    </node>
+  </expectations>
+</test>

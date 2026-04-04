@@ -1,0 +1,41 @@
+<test name="grid_span_13_most_non_flex_with_minmax_indefinite__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" direction="rtl" grid-template-rows="40px 40px" grid-template-columns="min-content max-content fit-content(20px) auto 10px 20% minmax(2px,auto) minmax(2px,4px) minmax(2px,min-content) minmax(2px,max-content) minmax(min-content,max-content) minmax(min-content,auto) minmax(max-content,auto)">
+      <text direction="rtl" grid-column-start="1" grid-column-end="span 13">
+        HHHHHHHHHHHHHHHH​HHHHHHHHHHHHHHHH
+      </text>
+      <div direction="rtl"/>
+      <div direction="rtl"/>
+      <div direction="rtl"/>
+      <div direction="rtl"/>
+      <div direction="rtl"/>
+      <div direction="rtl"/>
+      <div direction="rtl"/>
+      <div direction="rtl"/>
+      <div direction="rtl"/>
+      <div direction="rtl"/>
+      <div direction="rtl"/>
+      <div direction="rtl"/>
+      <div direction="rtl"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="322" height="80">
+      <node x="0" y="0" width="322" height="40"/>
+      <node x="311" y="40" width="11" height="40"/>
+      <node x="220" y="40" width="91" height="40"/>
+      <node x="209" y="40" width="11" height="40"/>
+      <node x="198" y="40" width="11" height="40"/>
+      <node x="188" y="40" width="10" height="40"/>
+      <node x="123" y="40" width="65" height="40"/>
+      <node x="121" y="40" width="2" height="40"/>
+      <node x="117" y="40" width="4" height="40"/>
+      <node x="115" y="40" width="2" height="40"/>
+      <node x="113" y="40" width="2" height="40"/>
+      <node x="102" y="40" width="11" height="40"/>
+      <node x="91" y="40" width="11" height="40"/>
+      <node x="0" y="40" width="91" height="40"/>
+    </node>
+  </expectations>
+</test>

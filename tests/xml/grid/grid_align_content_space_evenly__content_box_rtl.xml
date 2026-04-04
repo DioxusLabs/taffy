@@ -1,0 +1,29 @@
+<test name="grid_align_content_space_evenly__content_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" box-sizing="content-box" direction="rtl" align-content="space-evenly" width="200px" height="200px" grid-template-rows="40px 40px 40px" grid-template-columns="40px 40px 40px">
+      <div box-sizing="content-box" direction="rtl"/>
+      <div box-sizing="content-box" direction="rtl"/>
+      <div box-sizing="content-box" direction="rtl"/>
+      <div box-sizing="content-box" direction="rtl"/>
+      <div box-sizing="content-box" direction="rtl"/>
+      <div box-sizing="content-box" direction="rtl"/>
+      <div box-sizing="content-box" direction="rtl"/>
+      <div box-sizing="content-box" direction="rtl"/>
+      <div box-sizing="content-box" direction="rtl"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="200" height="200">
+      <node x="160" y="20" width="40" height="40"/>
+      <node x="120" y="20" width="40" height="40"/>
+      <node x="80" y="20" width="40" height="40"/>
+      <node x="160" y="80" width="40" height="40"/>
+      <node x="120" y="80" width="40" height="40"/>
+      <node x="80" y="80" width="40" height="40"/>
+      <node x="160" y="140" width="40" height="40"/>
+      <node x="120" y="140" width="40" height="40"/>
+      <node x="80" y="140" width="40" height="40"/>
+    </node>
+  </expectations>
+</test>

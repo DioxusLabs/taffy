@@ -1,0 +1,17 @@
+<test name="block_margin_y_collapse_through_positive_and_negative__border_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="block" direction="ltr" width="50px">
+      <div display="block" direction="ltr" height="10px" margin-bottom="-10px"/>
+      <div display="block" direction="ltr" margin-top="5px" margin-bottom="-4px"/>
+      <div display="block" direction="ltr" height="10px" margin-top="7px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="50" height="17">
+      <node x="0" y="0" width="50" height="10"/>
+      <node x="0" y="5" width="50" height="0"/>
+      <node x="0" y="7" width="50" height="10"/>
+    </node>
+  </expectations>
+</test>

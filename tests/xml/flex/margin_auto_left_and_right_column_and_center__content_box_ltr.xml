@@ -1,0 +1,15 @@
+<test name="margin_auto_left_and_right_column_and_center__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div box-sizing="content-box" direction="ltr" align-items="center" width="200px" height="200px">
+      <div box-sizing="content-box" direction="ltr" width="50px" height="50px" margin-left="auto" margin-right="auto"/>
+      <div box-sizing="content-box" direction="ltr" width="50px" height="50px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="200" height="200">
+      <node x="50" y="75" width="50" height="50"/>
+      <node x="150" y="75" width="50" height="50"/>
+    </node>
+  </expectations>
+</test>

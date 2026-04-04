@@ -1,0 +1,15 @@
+<test name="block_margin_x_percentage_fixed_size_positive__content_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="block" box-sizing="content-box" direction="rtl" width="50px">
+      <div box-sizing="content-box" direction="rtl" height="10px" margin-left="20%" margin-right="10%"/>
+      <div box-sizing="content-box" direction="rtl" height="10px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="50" height="20">
+      <node x="10" y="0" width="35" height="10"/>
+      <node x="0" y="10" width="50" height="10"/>
+    </node>
+  </expectations>
+</test>

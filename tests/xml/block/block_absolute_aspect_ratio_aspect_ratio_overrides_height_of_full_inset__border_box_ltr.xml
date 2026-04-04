@@ -1,0 +1,13 @@
+<test name="block_absolute_aspect_ratio_aspect_ratio_overrides_height_of_full_inset__border_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="block" direction="ltr" width="400px" height="300px">
+      <div direction="ltr" position="absolute" aspect-ratio="3" top="5%" left="5%" bottom="5%" right="5%"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="400" height="300">
+      <node x="20" y="15" width="360" height="120"/>
+    </node>
+  </expectations>
+</test>

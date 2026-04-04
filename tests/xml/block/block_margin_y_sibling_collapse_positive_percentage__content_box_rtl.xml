@@ -1,0 +1,19 @@
+<test name="block_margin_y_sibling_collapse_positive_percentage__content_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="block" box-sizing="content-box" direction="rtl" width="50px">
+      <div box-sizing="content-box" direction="rtl" height="10px" margin-top="10%" margin-bottom="10%"/>
+      <div box-sizing="content-box" direction="rtl" height="10px" margin-top="10%" margin-bottom="10%"/>
+      <div box-sizing="content-box" direction="rtl" height="10px" margin-top="5%" margin-bottom="5%"/>
+      <div box-sizing="content-box" direction="rtl" height="10px" margin-top="10%" margin-bottom="10%"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="50" height="65">
+      <node x="0" y="5" width="50" height="10"/>
+      <node x="0" y="20" width="50" height="10"/>
+      <node x="0" y="35" width="50" height="10"/>
+      <node x="0" y="50" width="50" height="10"/>
+    </node>
+  </expectations>
+</test>

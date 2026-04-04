@@ -1,0 +1,15 @@
+<test name="percentage_flex_basis_cross_max_width__border_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div direction="ltr" flex-direction="column" width="200px" height="400px">
+      <div direction="ltr" flex-grow="1" flex-basis="10%" max-width="60%"/>
+      <div direction="ltr" flex-grow="4" flex-basis="15%" max-width="20%"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="200" height="400">
+      <node x="0" y="0" width="120" height="100"/>
+      <node x="0" y="100" width="40" height="300"/>
+    </node>
+  </expectations>
+</test>

@@ -1,0 +1,15 @@
+<test name="blockflex_block_in_flex_column__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="flex" box-sizing="content-box" direction="ltr" flex-direction="column" width="200px" height="50px">
+      <div display="block" box-sizing="content-box" direction="ltr"/>
+      <div display="block" box-sizing="content-box" direction="ltr" width="50px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="200" height="50">
+      <node x="0" y="0" width="200" height="0"/>
+      <node x="0" y="0" width="50" height="0"/>
+    </node>
+  </expectations>
+</test>

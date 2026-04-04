@@ -1,0 +1,13 @@
+<test name="overflow_scrollbars_overridden_by_max_size__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div direction="rtl" overflow-x="scroll" overflow-y="scroll" scrollbar-width="15" max-width="2px" max-height="4px">
+      <div direction="rtl" flex-grow="1"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="2" height="4" scroll_width="0" scroll_height="0">
+      <node x="2" y="0" width="0" height="0"/>
+    </node>
+  </expectations>
+</test>

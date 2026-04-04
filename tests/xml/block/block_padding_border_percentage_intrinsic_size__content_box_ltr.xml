@@ -1,0 +1,17 @@
+<test name="block_padding_border_percentage_intrinsic_size__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="block" box-sizing="content-box" direction="ltr">
+      <div display="block" box-sizing="content-box" direction="ltr" padding-top="1%" padding-left="4%" padding-bottom="3%" padding-right="2%">
+        <div display="block" box-sizing="content-box" direction="ltr" height="10px"/>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="0" height="10">
+      <node x="0" y="0" width="0" height="10">
+        <node x="0" y="0" width="0" height="10"/>
+      </node>
+    </node>
+  </expectations>
+</test>

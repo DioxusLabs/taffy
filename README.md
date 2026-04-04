@@ -8,6 +8,7 @@
 [![GitHub CI](https://github.com/DioxusLabs/taffy/actions/workflows/ci.yml/badge.svg)](https://github.com/DioxusLabs/taffy/actions/workflows/ci.yml)
 [![crates.io](https://img.shields.io/crates/v/taffy.svg)](https://crates.io/crates/taffy)
 [![docs.rs](https://img.shields.io/docsrs/taffy)](https://docs.rs/taffy)
+![Crates.io MSRV](https://img.shields.io/crates/msrv/taffy)
 
 Taffy is a flexible, high-performance, cross-platform UI layout library written in [Rust](https://www.rust-lang.org).
 
@@ -21,6 +22,7 @@ Right now, it powers:
 - [Bevy](https://bevyengine.org/): an ergonomic, ECS-first Rust game engine
 - [Takumi](https://github.com/kane50613/takumi): Renders your React components to images
 - [iocraft](https://github.com/ccbrown/iocraft): crafting beautiful interfaces for the terminal
+- [Slint](https://github.com/slint-ui/slint): a declarative GUI toolkit for building native user interfaces
 - The [Lapce](https://lapce.dev/) text editor via the [Floem](https://github.com/lapce/floem) UI framework
 - The [Zed](https://zed.dev/) text editor via the [GPUI](https://github.com/zed-industries/zed/tree/main/crates/gpui) UI framework
 

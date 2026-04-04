@@ -27,6 +27,9 @@ pub(crate) mod leaf;
 #[cfg(feature = "block_layout")]
 pub(crate) mod block;
 
+#[cfg(feature = "float_layout")]
+pub(crate) mod float;
+
 #[cfg(feature = "flexbox")]
 pub(crate) mod flexbox;
 
@@ -36,13 +39,16 @@ pub(crate) mod grid;
 pub use leaf::compute_leaf_layout;
 
 #[cfg(feature = "block_layout")]
-pub use self::block::compute_block_layout;
+pub use self::block::{compute_block_layout, BlockContext, BlockFormattingContext};
 
 #[cfg(feature = "flexbox")]
 pub use self::flexbox::compute_flexbox_layout;
 
 #[cfg(feature = "grid")]
 pub use self::grid::compute_grid_layout;
+
+#[cfg(feature = "float_layout")]
+pub use self::float::{ContentSlot, FloatContext, FloatIntrinsicWidthCalculator};
 
 use crate::geometry::{Line, Point, Size};
 use crate::style::{AvailableSpace, CoreStyle, Overflow};
@@ -123,7 +129,6 @@ pub fn compute_root_layout(tree: &mut impl LayoutPartialTree, root: NodeId, avai
         SizingMode::InherentSize,
         Line::FALSE,
     );
-
     let style = tree.get_core_container_style(root);
     let padding =
         style.padding().resolve_or_zero(available_space.width.into_option(), |val, basis| tree.calc(val, basis));
@@ -135,13 +140,21 @@ pub fn compute_root_layout(tree: &mut impl LayoutPartialTree, root: NodeId, avai
         width: if style.overflow().y == Overflow::Scroll { style.scrollbar_width() } else { 0.0 },
         height: if style.overflow().x == Overflow::Scroll { style.scrollbar_width() } else { 0.0 },
     };
+    let location = Point {
+        x: if style.direction().is_rtl() {
+            available_space.width.into_option().map_or(0.0, |available_width| available_width - output.size.width)
+        } else {
+            0.0
+        },
+        y: 0.0,
+    };
     drop(style);
 
     tree.set_unrounded_layout(
         root,
         &Layout {
             order: 0,
-            location: Point::ZERO,
+            location,
             size: output.size,
             #[cfg(feature = "content_size")]
             content_size: output.content_size,
@@ -162,29 +175,28 @@ pub fn compute_cached_layout<Tree: CacheTree + ?Sized, ComputeFunction>(
     tree: &mut Tree,
     node: NodeId,
     inputs: LayoutInput,
-    mut compute_uncached: ComputeFunction,
+    compute_uncached: ComputeFunction,
 ) -> LayoutOutput
 where
-    ComputeFunction: FnMut(&mut Tree, NodeId, LayoutInput) -> LayoutOutput,
+    ComputeFunction: FnOnce(&mut Tree, NodeId, LayoutInput) -> LayoutOutput,
 {
     debug_push_node!(node);
-    let LayoutInput { known_dimensions, available_space, run_mode, .. } = inputs;
 
     // First we check if we have a cached result for the given input
-    let cache_entry = tree.cache_get(node, known_dimensions, available_space, run_mode);
+    let cache_entry = tree.cache_get(node, &inputs);
     if let Some(cached_size_and_baselines) = cache_entry {
-        debug_log_node!(known_dimensions, inputs.parent_size, available_space, run_mode, inputs.sizing_mode);
+        debug_log_node!(inputs);
         debug_log!("RESULT (CACHED)", dbg:cached_size_and_baselines.size);
         debug_pop_node!();
         return cached_size_and_baselines;
     }
 
-    debug_log_node!(known_dimensions, inputs.parent_size, available_space, run_mode, inputs.sizing_mode);
+    debug_log_node!(inputs);
 
     let computed_size_and_baselines = compute_uncached(tree, node, inputs);
 
     // Cache result
-    tree.cache_store(node, known_dimensions, available_space, run_mode, computed_size_and_baselines);
+    tree.cache_store(node, &inputs, computed_size_and_baselines);
 
     debug_log!("RESULT", dbg:computed_size_and_baselines.size);
     debug_pop_node!();

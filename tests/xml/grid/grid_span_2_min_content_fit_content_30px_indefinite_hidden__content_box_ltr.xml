@@ -1,0 +1,19 @@
+<test name="grid_span_2_min_content_fit_content_30px_indefinite_hidden__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" box-sizing="content-box" direction="ltr" grid-template-rows="40px" grid-template-columns="min-content fit-content(30px)">
+      <div box-sizing="content-box" direction="ltr" grid-row-start="1" grid-column-start="1"/>
+      <div box-sizing="content-box" direction="ltr" grid-row-start="1" grid-column-start="2"/>
+      <text box-sizing="content-box" direction="ltr" overflow-x="hidden" overflow-y="hidden" scrollbar-width="15" grid-row-start="1" grid-column-start="1" grid-column-end="span 2">
+        HHHH​HHHH
+      </text>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="70" height="40">
+      <node x="0" y="0" width="40" height="40"/>
+      <node x="40" y="0" width="30" height="40"/>
+      <node x="0" y="0" width="70" height="40" scroll_width="0" scroll_height="0"/>
+    </node>
+  </expectations>
+</test>

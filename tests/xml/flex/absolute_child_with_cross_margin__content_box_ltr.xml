@@ -1,0 +1,19 @@
+<test name="absolute_child_with_cross_margin__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div box-sizing="content-box" direction="ltr" justify-content="space-between" min-width="311px" min-height="0px" max-width="311px" max-height="36893500000000000000px">
+      <div box-sizing="content-box" direction="ltr" align-content="stretch" width="28px" height="27px"/>
+      <text box-sizing="content-box" direction="ltr" position="absolute" align-content="stretch" width="100%" height="15px" margin-top="4px">
+        
+      </text>
+      <div box-sizing="content-box" direction="ltr" align-content="stretch" width="25px" height="27px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="311" height="27">
+      <node x="0" y="0" width="28" height="27"/>
+      <node x="0" y="4" width="311" height="15"/>
+      <node x="286" y="0" width="25" height="27"/>
+    </node>
+  </expectations>
+</test>

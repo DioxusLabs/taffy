@@ -1,0 +1,21 @@
+<test name="grid_fr_span_2_proportion_with_non_spanned_track__border_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" direction="ltr" grid-template-rows="40px 40px" grid-template-columns="1fr 2fr 3fr">
+      <div direction="ltr" width="60px" grid-column-start="span 2"/>
+      <div direction="ltr"/>
+      <div direction="ltr"/>
+      <div direction="ltr"/>
+      <div direction="ltr"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="120" height="80">
+      <node x="0" y="0" width="60" height="40"/>
+      <node x="60" y="0" width="60" height="40"/>
+      <node x="0" y="40" width="20" height="40"/>
+      <node x="20" y="40" width="40" height="40"/>
+      <node x="60" y="40" width="60" height="40"/>
+    </node>
+  </expectations>
+</test>

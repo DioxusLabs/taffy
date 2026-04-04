@@ -1,0 +1,45 @@
+<test name="grid_align_items_baseline_complex__border_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" direction="ltr" align-items="baseline" width="120px" height="120px" grid-template-rows="40px 40px 40px" grid-template-columns="40px 40px 40px">
+      <div direction="ltr" width="20px" height="20px"/>
+      <div direction="ltr" width="20px" height="20px">
+        <div direction="ltr" height="10px"/>
+      </div>
+      <div direction="ltr" width="20px" height="20px">
+        <div direction="ltr" height="10px"/>
+      </div>
+      <div direction="ltr" width="20px" height="20px"/>
+      <div direction="ltr" width="20px" height="20px"/>
+      <div direction="ltr" width="20px" height="20px"/>
+      <div direction="ltr" width="20px" height="20px">
+        <div direction="ltr" height="10px"/>
+      </div>
+      <div direction="ltr" width="20px" height="20px">
+        <div direction="ltr" height="5px"/>
+      </div>
+      <div direction="ltr" width="20px" height="20px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="120" height="120">
+      <node x="0" y="0" width="20" height="20"/>
+      <node x="40" y="10" width="20" height="20">
+        <node x="0" y="0" width="0" height="10"/>
+      </node>
+      <node x="80" y="10" width="20" height="20">
+        <node x="0" y="0" width="0" height="10"/>
+      </node>
+      <node x="0" y="40" width="20" height="20"/>
+      <node x="40" y="40" width="20" height="20"/>
+      <node x="80" y="40" width="20" height="20"/>
+      <node x="0" y="90" width="20" height="20">
+        <node x="0" y="0" width="0" height="10"/>
+      </node>
+      <node x="40" y="95" width="20" height="20">
+        <node x="0" y="0" width="0" height="5"/>
+      </node>
+      <node x="80" y="80" width="20" height="20"/>
+    </node>
+  </expectations>
+</test>
