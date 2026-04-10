@@ -1602,8 +1602,6 @@ fn resolve_absolute_margin_and_positions_v(
         // then the height is based on the content per 10.6.7, set 'auto' values for
         // 'margin-top' and 'margin-bottom' to 0, and solve for 'bottom'
         // TODO: HANDLE 10.6.7
-        computed_margin_top = 0.0;
-        computed_margin_bottom = 0.0;
         computed_height = content_height;
         computed_bottom = height_of_containing_block
             - (computed_top
