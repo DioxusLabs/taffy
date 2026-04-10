@@ -1,0 +1,21 @@
+<test name="wrap_reverse_row_single_line_different_size__border_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div direction="ltr" flex-wrap="wrap-reverse" align-content="flex-start" width="300px">
+      <div direction="ltr" width="30px" height="10px"/>
+      <div direction="ltr" width="30px" height="20px"/>
+      <div direction="ltr" width="30px" height="30px"/>
+      <div direction="ltr" width="30px" height="40px"/>
+      <div direction="ltr" width="30px" height="50px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="300" height="50">
+      <node x="0" y="40" width="30" height="10"/>
+      <node x="30" y="30" width="30" height="20"/>
+      <node x="60" y="20" width="30" height="30"/>
+      <node x="90" y="10" width="30" height="40"/>
+      <node x="120" y="0" width="30" height="50"/>
+    </node>
+  </expectations>
+</test>

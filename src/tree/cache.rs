@@ -1,7 +1,7 @@
 //! A cache for storing the results of layout computation
 use crate::geometry::Size;
 use crate::style::AvailableSpace;
-use crate::tree::{LayoutOutput, RunMode};
+use crate::tree::{LayoutInput, LayoutOutput, RunMode};
 
 /// The number of cache entries for each node in the tree
 const CACHE_SIZE: usize = 9;
@@ -108,13 +108,11 @@ impl Cache {
 
     /// Try to retrieve a cached result from the cache
     #[inline]
-    pub fn get(
-        &self,
-        known_dimensions: Size<Option<f32>>,
-        available_space: Size<AvailableSpace>,
-        run_mode: RunMode,
-    ) -> Option<LayoutOutput> {
-        match run_mode {
+    pub fn get(&self, input: &LayoutInput) -> Option<LayoutOutput> {
+        let known_dimensions = input.known_dimensions;
+        let available_space = input.available_space;
+
+        match input.run_mode {
             RunMode::PerformLayout => self
                 .final_layout_entry
                 .filter(|entry| {
@@ -153,14 +151,11 @@ impl Cache {
     }
 
     /// Store a computed size in the cache
-    pub fn store(
-        &mut self,
-        known_dimensions: Size<Option<f32>>,
-        available_space: Size<AvailableSpace>,
-        run_mode: RunMode,
-        layout_output: LayoutOutput,
-    ) {
-        match run_mode {
+    pub fn store(&mut self, input: &LayoutInput, layout_output: LayoutOutput) {
+        let known_dimensions = input.known_dimensions;
+        let available_space = input.available_space;
+
+        match input.run_mode {
             RunMode::PerformLayout => {
                 self.is_empty = false;
                 self.final_layout_entry = Some(CacheEntry { known_dimensions, available_space, content: layout_output })

@@ -1,0 +1,23 @@
+<test name="grid_percent_items_nested_with_padding_margin__content_box_ltr" use-rounding="false">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" box-sizing="content-box" direction="ltr" width="200px" height="200px" grid-template-rows="1fr 4fr">
+      <div display="grid" box-sizing="content-box" direction="ltr" min-width="60%" margin-top="5px" margin-left="5px" margin-bottom="5px" margin-right="5px" padding-top="3px" padding-left="3px" padding-bottom="3px" padding-right="3px">
+        <div display="grid" box-sizing="content-box" direction="ltr" width="50%" margin-top="5px" margin-left="5px" margin-bottom="5px" margin-right="5px" padding-top="3%" padding-left="3%" padding-bottom="3%" padding-right="3%">
+          <div box-sizing="content-box" direction="ltr" width="45%" margin-top="5%" margin-left="5%" margin-bottom="5%" margin-right="5%" padding-top="3px" padding-left="3px" padding-bottom="3px" padding-right="3px"/>
+        </div>
+      </div>
+      <div box-sizing="content-box" direction="ltr"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="200" height="200">
+      <node x="5" y="5" width="190" height="42.21875">
+        <node x="8" y="8" width="103.03125" height="26.21875">
+          <node x="10.109375" y="10.109375" width="47.390625" height="6"/>
+        </node>
+      </node>
+      <node x="0" y="52.21875" width="200" height="147.78125"/>
+    </node>
+  </expectations>
+</test>

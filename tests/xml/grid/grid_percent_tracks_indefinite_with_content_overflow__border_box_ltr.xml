@@ -1,0 +1,25 @@
+<test name="grid_percent_tracks_indefinite_with_content_overflow__border_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" direction="ltr" grid-template-rows="50% 80%" grid-template-columns="40% 40% 40%">
+      <div direction="ltr" width="100px" height="100px" grid-row-start="1" grid-column-start="1"/>
+      <div direction="ltr" grid-row-start="1" grid-column-start="1"/>
+      <div direction="ltr"/>
+      <div direction="ltr"/>
+      <div direction="ltr"/>
+      <div direction="ltr"/>
+      <div direction="ltr"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="100" height="100">
+      <node x="0" y="0" width="100" height="100"/>
+      <node x="0" y="0" width="40" height="50"/>
+      <node x="40" y="0" width="40" height="50"/>
+      <node x="80" y="0" width="40" height="50"/>
+      <node x="0" y="50" width="40" height="80"/>
+      <node x="40" y="50" width="40" height="80"/>
+      <node x="80" y="50" width="40" height="80"/>
+    </node>
+  </expectations>
+</test>

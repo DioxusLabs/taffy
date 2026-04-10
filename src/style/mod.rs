@@ -27,9 +27,9 @@ pub use self::flex::{FlexDirection, FlexWrap, FlexboxContainerStyle, FlexboxItem
 pub use self::float::{Clear, Float, FloatDirection};
 #[cfg(feature = "grid")]
 pub use self::grid::{
-    GenericGridPlacement, GenericGridTemplateComponent, GenericRepetition, GridAutoFlow, GridContainerStyle,
-    GridItemStyle, GridPlacement, GridTemplateComponent, GridTemplateRepetition, MaxTrackSizingFunction,
-    MinTrackSizingFunction, RepetitionCount, TrackSizingFunction,
+    GenericGridPlacement, GenericGridTemplateComponent, GenericRepetition, GridAutoFlow, GridAutoTracks,
+    GridContainerStyle, GridItemStyle, GridPlacement, GridTemplateComponent, GridTemplateRepetition,
+    GridTemplateTracks, MaxTrackSizingFunction, MinTrackSizingFunction, RepetitionCount, TrackSizingFunction,
 };
 #[cfg(feature = "grid")]
 pub(crate) use self::grid::{GridAreaAxis, GridAreaEnd};
@@ -100,6 +100,12 @@ pub trait CoreStyle {
     #[inline(always)]
     fn box_sizing(&self) -> BoxSizing {
         BoxSizing::BorderBox
+    }
+
+    /// The direction of text, table and grid columns, and horizontal overflow.
+    #[inline(always)]
+    fn direction(&self) -> Direction {
+        Direction::Ltr
     }
 
     // Overflow properties
@@ -210,6 +216,17 @@ impl Default for Display {
     }
 }
 
+#[cfg(feature = "parse")]
+crate::util::parse::impl_parse_for_keyword_enum!(Display,
+    "none" => None,
+    #[cfg(feature = "flexbox")]
+    "flex" => Flex,
+    #[cfg(feature = "grid")]
+    "grid" => Grid,
+    #[cfg(feature = "block_layout")]
+    "block" => Block,
+);
+
 impl core::fmt::Display for Display {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
@@ -270,6 +287,12 @@ pub enum Position {
     Absolute,
 }
 
+#[cfg(feature = "parse")]
+crate::util::parse::impl_parse_for_keyword_enum!(Position,
+    "relative" => Relative,
+    "absolute" => Absolute,
+);
+
 /// Specifies whether size styles for this node are assigned to the node's "content box" or "border box"
 ///
 /// - The "content box" is the node's inner size excluding padding, border and margin
@@ -292,6 +315,12 @@ pub enum BoxSizing {
     /// Size styles such size, min_size, max_size specify the box's "content box" (the size excluding padding/border/margin)
     ContentBox,
 }
+
+#[cfg(feature = "parse")]
+crate::util::parse::impl_parse_for_keyword_enum!(BoxSizing,
+    "border-box" => BorderBox,
+    "content-box" => ContentBox,
+);
 
 /// How children overflowing their container should affect layout
 ///
@@ -347,6 +376,40 @@ impl Overflow {
     }
 }
 
+#[cfg(feature = "parse")]
+crate::util::parse::impl_parse_for_keyword_enum!(Overflow,
+    "visible" => Visible,
+    "hidden" => Hidden,
+    "clip" => Clip,
+    "scroll" => Scroll,
+);
+
+/// Sets the direction of text, table and grid columns, and horizontal overflow.
+/// <https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/direction>
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub enum Direction {
+    #[default]
+    /// Left-to-right
+    Ltr,
+    /// Right-to-left
+    Rtl,
+}
+
+impl Direction {
+    /// Returns true if the direction is right-to-left
+    #[inline]
+    pub(crate) fn is_rtl(&self) -> bool {
+        matches!(self, Direction::Rtl)
+    }
+}
+
+#[cfg(feature = "parse")]
+crate::util::parse::impl_parse_for_keyword_enum!(Direction,
+    "ltr" => Ltr,
+    "rtl" => Rtl,
+);
+
 /// A typed representation of the CSS style information for a single node.
 ///
 /// The most important idea in flexbox is the notion of a "main" and "cross" axis, which are always perpendicular to each other.
@@ -378,6 +441,8 @@ pub struct Style<S: CheapCloneStr = DefaultCheapStr> {
     pub item_is_replaced: bool,
     /// Should size styles apply to the content box or the border box of the node
     pub box_sizing: BoxSizing,
+    /// Sets the direction of text, table and grid columns, and horizontal overflow.
+    pub direction: Direction,
 
     // Overflow properties
     /// How children overflowing their container should affect layout
@@ -524,6 +589,7 @@ impl<S: CheapCloneStr> Style<S> {
         item_is_table: false,
         item_is_replaced: false,
         box_sizing: BoxSizing::BorderBox,
+        direction: Direction::Ltr,
         overflow: Point { x: Overflow::Visible, y: Overflow::Visible },
         scrollbar_width: 0.0,
         #[cfg(feature = "float_layout")]
@@ -622,6 +688,10 @@ impl<S: CheapCloneStr> CoreStyle for Style<S> {
         self.box_sizing
     }
     #[inline(always)]
+    fn direction(&self) -> Direction {
+        self.direction
+    }
+    #[inline(always)]
     fn overflow(&self) -> Point<Overflow> {
         self.overflow
     }
@@ -685,6 +755,10 @@ impl<T: CoreStyle> CoreStyle for &'_ T {
     #[inline(always)]
     fn box_sizing(&self) -> BoxSizing {
         (*self).box_sizing()
+    }
+    #[inline(always)]
+    fn direction(&self) -> Direction {
+        (*self).direction()
     }
     #[inline(always)]
     fn overflow(&self) -> Point<Overflow> {
@@ -1126,6 +1200,7 @@ mod tests {
             float: Default::default(),
             #[cfg(feature = "float_layout")]
             clear: Default::default(),
+            direction: Default::default(),
             overflow: Default::default(),
             scrollbar_width: 0.0,
             position: Default::default(),

@@ -1,0 +1,13 @@
+<test name="grid_padding_border_overrides_container_size__content_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" box-sizing="content-box" direction="rtl" width="12px" height="12px" padding-top="2px" padding-left="8px" padding-bottom="6px" padding-right="4px" border-top="1px" border-left="7px" border-bottom="5px" border-right="3px">
+      <div box-sizing="content-box" direction="rtl"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="34" height="26">
+      <node x="15" y="3" width="12" height="12"/>
+    </node>
+  </expectations>
+</test>

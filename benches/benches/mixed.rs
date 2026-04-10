@@ -1,5 +1,5 @@
-use cosmic_text::{Attrs, Buffer, FontSystem, Metrics, Shaping};
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
+use parley::{style::StyleProperty, FontContext, LayoutContext};
 use rand::prelude::*;
 use rand_chacha::ChaCha8Rng;
 use std::iter;
@@ -8,37 +8,39 @@ use taffy::style::Style;
 
 pub const LOREM_IPSUM : &str = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.";
 
-struct CosmicTextContext {
-    buffer: cosmic_text::Buffer,
+struct ParleyTextContext {
+    layout: parley::Layout<[u8; 4]>,
 }
 
-impl CosmicTextContext {
-    fn new(metrics: Metrics, text: &str, attrs: Attrs, font_system: &mut FontSystem) -> Self {
-        let mut buffer = Buffer::new_empty(metrics);
-        buffer.set_size(font_system, None, None);
-        buffer.set_text(font_system, text, attrs, Shaping::Advanced);
-        buffer.shape_until_scroll(font_system, false);
-        Self { buffer }
+impl ParleyTextContext {
+    fn new(text: &str, font_size: f32, layout_ctx: &mut LayoutContext, font_ctx: &mut FontContext) -> Self {
+        let mut builder = layout_ctx.ranged_builder(font_ctx, text, 1.0, false);
+        builder.push_default(StyleProperty::FontSize(font_size));
+
+        let layout = builder.build(text);
+
+        Self { layout }
     }
 
     fn measure(
         &mut self,
         known_dimensions: taffy::Size<Option<f32>>,
         available_space: taffy::Size<taffy::AvailableSpace>,
-        font_system: &mut FontSystem,
     ) -> taffy::Size<f32> {
-        let width_constraint = known_dimensions.width.or(match available_space.width {
-            AvailableSpace::MinContent => Some(0.0),
-            AvailableSpace::MaxContent => None,
-            AvailableSpace::Definite(width) => Some(width),
+        // Compute width
+        let width: f32 = known_dimensions.width.unwrap_or_else(|| {
+            let widths = self.layout.calculate_content_widths();
+            match available_space.width {
+                AvailableSpace::MinContent => widths.min,
+                AvailableSpace::MaxContent => widths.max,
+                AvailableSpace::Definite(limit) => limit.min(widths.max).max(widths.min),
+            }
+            .ceil()
         });
-        self.buffer.set_size(font_system, width_constraint, None);
 
-        let (width, total_lines) = self
-            .buffer
-            .layout_runs()
-            .fold((0.0, 0usize), |(width, total_lines), run| (run.line_w.max(width), total_lines + 1));
-        let height = total_lines as f32 * self.buffer.metrics().line_height;
+        // Compute height
+        self.layout.break_all_lines(Some(width));
+        let height = self.layout.height();
 
         taffy::Size { width, height }
     }
@@ -47,8 +49,7 @@ impl CosmicTextContext {
 fn measure_function(
     known_dimensions: taffy::Size<Option<f32>>,
     available_space: taffy::Size<taffy::AvailableSpace>,
-    node_context: Option<&mut CosmicTextContext>,
-    font_system: &mut FontSystem,
+    node_context: Option<&mut ParleyTextContext>,
 ) -> Size<f32> {
     if let Size { width: Some(width), height: Some(height) } = known_dimensions {
         return Size { width, height };
@@ -56,7 +57,7 @@ fn measure_function(
 
     match node_context {
         None => Size::ZERO,
-        Some(text_context) => text_context.measure(known_dimensions, available_space, font_system),
+        Some(text_context) => text_context.measure(known_dimensions, available_space),
     }
 }
 
@@ -98,21 +99,22 @@ fn random_flex_style<R: Rng>(rng: &mut R) -> Style {
 }
 
 fn build_mixed_tree(
-    taffy: &mut TaffyTree<CosmicTextContext>,
-    font_system: &mut FontSystem,
+    taffy: &mut TaffyTree<ParleyTextContext>,
+    layout_ctx: &mut LayoutContext,
+    font_ctx: &mut FontContext,
     depth: usize,
     width: usize,
     rng: &mut ChaCha8Rng,
     is_grid: bool,
 ) -> NodeId {
     if depth == 0 {
-        let metrics = Metrics { font_size: 14.0, line_height: 16.0 };
-        let context = CosmicTextContext::new(metrics, LOREM_IPSUM, Attrs::new(), font_system);
+        let font_size = 14.0;
+        let context = ParleyTextContext::new(LOREM_IPSUM, font_size, layout_ctx, font_ctx);
         return taffy.new_leaf_with_context(Style::default(), context).unwrap();
     }
 
     let children: Vec<NodeId> =
-        (0..width).map(|_| build_mixed_tree(taffy, font_system, depth - 1, width, rng, !is_grid)).collect();
+        (0..width).map(|_| build_mixed_tree(taffy, layout_ctx, font_ctx, depth - 1, width, rng, !is_grid)).collect();
 
     let style = if is_grid {
         random_nxn_grid_style(rng, (width as f32).sqrt().ceil() as usize)
@@ -124,8 +126,10 @@ fn build_mixed_tree(
 }
 
 fn mixed_benchmark(c: &mut Criterion) {
-    let font_system = std::cell::RefCell::new(FontSystem::new());
+    let layout_ctx = std::cell::RefCell::new(LayoutContext::new());
+    let font_ctx = std::cell::RefCell::new(FontContext::new());
     let mut group = c.benchmark_group("mixed_flex_grid");
+    group.sample_size(40);
 
     let depths = [2, 4];
     let widths = [4, 8];
@@ -138,8 +142,15 @@ fn mixed_benchmark(c: &mut Criterion) {
                     || {
                         let mut taffy = TaffyTree::new();
                         let mut rng = ChaCha8Rng::seed_from_u64(12345);
-                        let root =
-                            build_mixed_tree(&mut taffy, &mut font_system.borrow_mut(), depth, width, &mut rng, true);
+                        let root = build_mixed_tree(
+                            &mut taffy,
+                            &mut layout_ctx.borrow_mut(),
+                            &mut font_ctx.borrow_mut(),
+                            depth,
+                            width,
+                            &mut rng,
+                            true,
+                        );
                         (taffy, root)
                     },
                     |(mut taffy, root)| {
@@ -148,12 +159,7 @@ fn mixed_benchmark(c: &mut Criterion) {
                                 root,
                                 Size::MAX_CONTENT,
                                 |known_dimensions, available_space, _node_id, node_context, _style| {
-                                    measure_function(
-                                        known_dimensions,
-                                        available_space,
-                                        node_context,
-                                        &mut font_system.borrow_mut(),
-                                    )
+                                    measure_function(known_dimensions, available_space, node_context)
                                 },
                             )
                             .unwrap();

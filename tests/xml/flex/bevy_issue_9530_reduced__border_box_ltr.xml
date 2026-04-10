@@ -1,0 +1,19 @@
+<test name="bevy_issue_9530_reduced__border_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div direction="ltr" flex-direction="column" width="40px">
+      <div direction="ltr" flex-direction="column" flex-grow="1">
+        <text direction="ltr" flex-grow="1">
+          HH​HH​HH​HH
+        </text>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="40" height="20">
+      <node x="0" y="0" width="40" height="20">
+        <node x="0" y="0" width="40" height="20"/>
+      </node>
+    </node>
+  </expectations>
+</test>

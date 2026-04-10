@@ -1,0 +1,19 @@
+<test name="blockflex_flex_in_block__content_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="block" box-sizing="content-box" direction="rtl" width="200px">
+      <div display="flex" box-sizing="content-box" direction="rtl">
+        <div box-sizing="content-box" direction="rtl" width="50px" height="50px"/>
+      </div>
+      <div display="block" box-sizing="content-box" direction="rtl" width="50px" height="20px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="200" height="70">
+      <node x="0" y="0" width="200" height="50">
+        <node x="150" y="0" width="50" height="50"/>
+      </node>
+      <node x="150" y="50" width="50" height="20"/>
+    </node>
+  </expectations>
+</test>

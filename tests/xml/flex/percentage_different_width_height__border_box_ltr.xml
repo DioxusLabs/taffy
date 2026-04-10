@@ -1,0 +1,15 @@
+<test name="percentage_different_width_height__border_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div direction="ltr" width="200px" height="300px">
+      <div direction="ltr" flex-grow="1" height="30%"/>
+      <div direction="ltr" height="30%"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="200" height="300">
+      <node x="0" y="0" width="200" height="90"/>
+      <node x="200" y="0" width="0" height="90"/>
+    </node>
+  </expectations>
+</test>

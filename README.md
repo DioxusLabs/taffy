@@ -8,6 +8,7 @@
 [![GitHub CI](https://github.com/DioxusLabs/taffy/actions/workflows/ci.yml/badge.svg)](https://github.com/DioxusLabs/taffy/actions/workflows/ci.yml)
 [![crates.io](https://img.shields.io/crates/v/taffy.svg)](https://crates.io/crates/taffy)
 [![docs.rs](https://img.shields.io/docsrs/taffy)](https://docs.rs/taffy)
+![Crates.io MSRV](https://img.shields.io/crates/msrv/taffy)
 
 Taffy is a flexible, high-performance, cross-platform UI layout library written in [Rust](https://www.rust-lang.org).
 

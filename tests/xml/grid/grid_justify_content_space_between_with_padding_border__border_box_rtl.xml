@@ -1,0 +1,29 @@
+<test name="grid_justify_content_space_between_with_padding_border__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" direction="rtl" justify-content="space-between" width="200px" height="200px" padding-top="10px" padding-left="40px" padding-bottom="30px" padding-right="20px" border-top="2px" border-left="8px" border-bottom="6px" border-right="4px" grid-template-rows="40px 40px 40px" grid-template-columns="40px 40px 40px">
+      <div direction="rtl"/>
+      <div direction="rtl"/>
+      <div direction="rtl"/>
+      <div direction="rtl"/>
+      <div direction="rtl"/>
+      <div direction="rtl"/>
+      <div direction="rtl"/>
+      <div direction="rtl"/>
+      <div direction="rtl"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="200" height="200">
+      <node x="136" y="12" width="40" height="40"/>
+      <node x="92" y="12" width="40" height="40"/>
+      <node x="48" y="12" width="40" height="40"/>
+      <node x="136" y="52" width="40" height="40"/>
+      <node x="92" y="52" width="40" height="40"/>
+      <node x="48" y="52" width="40" height="40"/>
+      <node x="136" y="92" width="40" height="40"/>
+      <node x="92" y="92" width="40" height="40"/>
+      <node x="48" y="92" width="40" height="40"/>
+    </node>
+  </expectations>
+</test>

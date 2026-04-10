@@ -1,0 +1,23 @@
+<test name="block_margin_y_collapse_through_with_absolute_child__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="block" box-sizing="content-box" direction="ltr" width="50px">
+      <div display="block" box-sizing="content-box" direction="ltr" height="10px" margin-bottom="10px"/>
+      <div display="block" box-sizing="content-box" direction="ltr" margin-top="10px" margin-bottom="10px">
+        <text box-sizing="content-box" direction="ltr" position="absolute">
+          HH
+        </text>
+      </div>
+      <div display="block" box-sizing="content-box" direction="ltr" height="10px" margin-top="10px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="50" height="30">
+      <node x="0" y="0" width="50" height="10"/>
+      <node x="0" y="20" width="50" height="0">
+        <node x="0" y="0" width="20" height="10"/>
+      </node>
+      <node x="0" y="20" width="50" height="10"/>
+    </node>
+  </expectations>
+</test>

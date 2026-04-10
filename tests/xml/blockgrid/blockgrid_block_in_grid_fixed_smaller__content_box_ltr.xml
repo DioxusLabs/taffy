@@ -1,0 +1,17 @@
+<test name="blockgrid_block_in_grid_fixed_smaller__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" box-sizing="content-box" direction="ltr" grid-template-columns="10px">
+      <text display="block" box-sizing="content-box" direction="ltr">
+        HH​HH
+      </text>
+      <div display="block" box-sizing="content-box" direction="ltr"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="10" height="20">
+      <node x="0" y="0" width="10" height="20"/>
+      <node x="0" y="20" width="10" height="0"/>
+    </node>
+  </expectations>
+</test>

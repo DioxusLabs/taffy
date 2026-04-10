@@ -1,0 +1,41 @@
+<test name="block_margin_y_first_child_collapse_positive_and_negative__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="block" box-sizing="content-box" direction="ltr" width="50px">
+      <div display="block" box-sizing="content-box" direction="ltr" margin-top="-10px">
+        <div display="block" box-sizing="content-box" direction="ltr" margin-top="10px">
+          <div box-sizing="content-box" direction="ltr" height="10px"/>
+        </div>
+      </div>
+      <div display="block" box-sizing="content-box" direction="ltr" margin-top="-10px">
+        <div display="block" box-sizing="content-box" direction="ltr" margin-top="5px">
+          <div box-sizing="content-box" direction="ltr" height="10px"/>
+        </div>
+      </div>
+      <div display="block" box-sizing="content-box" direction="ltr" margin-top="-5px">
+        <div display="block" box-sizing="content-box" direction="ltr" margin-top="10px">
+          <div box-sizing="content-box" direction="ltr" height="10px"/>
+        </div>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="50" height="30">
+      <node x="0" y="0" width="50" height="10">
+        <node x="0" y="0" width="50" height="10">
+          <node x="0" y="0" width="50" height="10"/>
+        </node>
+      </node>
+      <node x="0" y="5" width="50" height="10">
+        <node x="0" y="0" width="50" height="10">
+          <node x="0" y="0" width="50" height="10"/>
+        </node>
+      </node>
+      <node x="0" y="20" width="50" height="10">
+        <node x="0" y="0" width="50" height="10">
+          <node x="0" y="0" width="50" height="10"/>
+        </node>
+      </node>
+    </node>
+  </expectations>
+</test>

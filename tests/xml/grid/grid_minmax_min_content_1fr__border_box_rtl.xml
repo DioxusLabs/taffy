@@ -1,0 +1,15 @@
+<test name="grid_minmax_min_content_1fr__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" direction="rtl" grid-template-rows="40px" grid-template-columns="minmax(min-content,1fr)">
+      <text direction="rtl">
+        HH​HH
+      </text>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="40" height="40">
+      <node x="0" y="0" width="40" height="40"/>
+    </node>
+  </expectations>
+</test>

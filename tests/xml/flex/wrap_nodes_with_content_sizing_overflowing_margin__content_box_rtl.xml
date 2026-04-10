@@ -1,0 +1,27 @@
+<test name="wrap_nodes_with_content_sizing_overflowing_margin__content_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div box-sizing="content-box" direction="rtl" flex-direction="column" width="500px" height="500px">
+      <div box-sizing="content-box" direction="rtl" flex-wrap="wrap" width="85px">
+        <div box-sizing="content-box" direction="rtl" flex-direction="column">
+          <div box-sizing="content-box" direction="rtl" width="40px" height="40px"/>
+        </div>
+        <div box-sizing="content-box" direction="rtl" flex-direction="column" margin-right="10px">
+          <div box-sizing="content-box" direction="rtl" width="40px" height="40px"/>
+        </div>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="500" height="500">
+      <node x="415" y="0" width="85" height="80">
+        <node x="45" y="0" width="40" height="40">
+          <node x="0" y="0" width="40" height="40"/>
+        </node>
+        <node x="35" y="40" width="40" height="40">
+          <node x="0" y="0" width="40" height="40"/>
+        </node>
+      </node>
+    </node>
+  </expectations>
+</test>

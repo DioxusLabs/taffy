@@ -1,0 +1,19 @@
+<test name="wrap_row__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div direction="rtl" flex-wrap="wrap" width="100px">
+      <div direction="rtl" width="31px" height="30px"/>
+      <div direction="rtl" width="32px" height="30px"/>
+      <div direction="rtl" width="33px" height="30px"/>
+      <div direction="rtl" width="34px" height="30px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="100" height="60">
+      <node x="69" y="0" width="31" height="30"/>
+      <node x="37" y="0" width="32" height="30"/>
+      <node x="4" y="0" width="33" height="30"/>
+      <node x="66" y="30" width="34" height="30"/>
+    </node>
+  </expectations>
+</test>

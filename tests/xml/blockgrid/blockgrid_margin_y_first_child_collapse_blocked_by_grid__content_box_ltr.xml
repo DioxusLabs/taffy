@@ -1,0 +1,21 @@
+<test name="blockgrid_margin_y_first_child_collapse_blocked_by_grid__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="block" box-sizing="content-box" direction="ltr" width="50px">
+      <div display="grid" box-sizing="content-box" direction="ltr" margin-top="10px">
+        <div display="block" box-sizing="content-box" direction="ltr" margin-top="10px">
+          <div box-sizing="content-box" direction="ltr" height="10px"/>
+        </div>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="50" height="30">
+      <node x="0" y="10" width="50" height="20">
+        <node x="0" y="10" width="50" height="10">
+          <node x="0" y="0" width="50" height="10"/>
+        </node>
+      </node>
+    </node>
+  </expectations>
+</test>

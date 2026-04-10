@@ -1,0 +1,13 @@
+<test name="undefined_height_with_min_max__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div box-sizing="content-box" direction="ltr" flex-direction="column" width="320px" min-height="0px">
+      <div box-sizing="content-box" direction="ltr" min-height="0px" max-height="100px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="320" height="0">
+      <node x="0" y="0" width="320" height="0"/>
+    </node>
+  </expectations>
+</test>

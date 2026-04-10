@@ -1,0 +1,15 @@
+<test name="block_border_intrinsic_size__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="block" direction="rtl" border-top="2px" border-left="8px" border-bottom="6px" border-right="4px">
+      <div direction="rtl" width="50px" height="10px"/>
+      <div direction="rtl" height="10px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="62" height="28">
+      <node x="8" y="2" width="50" height="10"/>
+      <node x="8" y="12" width="50" height="10"/>
+    </node>
+  </expectations>
+</test>

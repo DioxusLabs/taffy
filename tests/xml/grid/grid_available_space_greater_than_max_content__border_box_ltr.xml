@@ -1,0 +1,19 @@
+<test name="grid_available_space_greater_than_max_content__border_box_ltr" use-rounding="true">
+  <viewport width="400px" height="max-content"/>
+  <input>
+    <div display="grid" direction="ltr" grid-template-columns="auto auto">
+      <text direction="ltr">
+        HH​HH​HH​HH
+      </text>
+      <text direction="ltr">
+        HH​HH​HH​HH
+      </text>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="160" height="10">
+      <node x="0" y="0" width="80" height="10"/>
+      <node x="80" y="0" width="80" height="10"/>
+    </node>
+  </expectations>
+</test>

@@ -1,0 +1,17 @@
+<test name="wrapped_column_max_height_flex__border_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div direction="ltr" flex-direction="column" flex-wrap="wrap" align-items="center" align-content="center" justify-content="center" width="700px" height="500px">
+      <div direction="ltr" flex-grow="1" flex-basis="0%" width="100px" height="500px" max-height="200px"/>
+      <div direction="ltr" flex-grow="1" flex-basis="0%" width="200px" height="200px" margin-top="20px" margin-left="20px" margin-bottom="20px" margin-right="20px"/>
+      <div direction="ltr" width="100px" height="100px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="700" height="500">
+      <node x="300" y="0" width="100" height="180"/>
+      <node x="250" y="200" width="200" height="180"/>
+      <node x="300" y="400" width="100" height="100"/>
+    </node>
+  </expectations>
+</test>

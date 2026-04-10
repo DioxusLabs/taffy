@@ -1,0 +1,13 @@
+<test name="percentage_width_height__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div box-sizing="content-box" direction="ltr" width="200px" height="400px">
+      <div box-sizing="content-box" direction="ltr" width="30%" height="30%"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="200" height="400">
+      <node x="0" y="0" width="60" height="120"/>
+    </node>
+  </expectations>
+</test>

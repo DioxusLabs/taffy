@@ -1,0 +1,17 @@
+<test name="undefined_width_with_min_max_row__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div direction="rtl" height="50px">
+      <div direction="rtl" min-width="60px" max-width="300px">
+        <div direction="rtl" width="30px" height="20px"/>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="60" height="50">
+      <node x="0" y="0" width="60" height="50">
+        <node x="30" y="0" width="30" height="20"/>
+      </node>
+    </node>
+  </expectations>
+</test>

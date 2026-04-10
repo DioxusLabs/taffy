@@ -1,0 +1,17 @@
+<test name="align_content_stretch_is_not_overriding_align_items__content_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div box-sizing="content-box" direction="rtl" align-content="stretch">
+      <div box-sizing="content-box" direction="rtl" align-items="center" align-content="stretch" width="100px" height="100px">
+        <div box-sizing="content-box" direction="rtl" align-content="stretch" width="10px" height="10px"/>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="100" height="100">
+      <node x="0" y="0" width="100" height="100">
+        <node x="90" y="45" width="10" height="10"/>
+      </node>
+    </node>
+  </expectations>
+</test>

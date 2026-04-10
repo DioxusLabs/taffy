@@ -1,0 +1,13 @@
+<test name="absolute_layout_align_items_and_justify_content_center_and_bottom_position__border_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div direction="ltr" align-items="center" justify-content="center" width="110px" height="100px">
+      <div direction="ltr" position="absolute" width="60px" height="40px" bottom="10px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="110" height="100">
+      <node x="25" y="50" width="60" height="40"/>
+    </node>
+  </expectations>
+</test>

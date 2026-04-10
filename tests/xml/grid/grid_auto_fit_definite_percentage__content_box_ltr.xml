@@ -1,0 +1,31 @@
+<test name="grid_auto_fit_definite_percentage__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div box-sizing="content-box" direction="ltr" width="730px" height="300px">
+      <div display="grid" box-sizing="content-box" direction="ltr" width="100%" height="100%" row-gap="10px" column-gap="10px" padding-top="10px" padding-left="10px" padding-bottom="10px" padding-right="10px" grid-template-columns="repeat(auto-fill, minmax(150px,1fr))">
+        <div display="block" box-sizing="content-box" direction="ltr"/>
+        <div display="block" box-sizing="content-box" direction="ltr"/>
+        <div display="block" box-sizing="content-box" direction="ltr"/>
+        <div display="block" box-sizing="content-box" direction="ltr"/>
+        <div display="block" box-sizing="content-box" direction="ltr"/>
+        <div display="block" box-sizing="content-box" direction="ltr"/>
+        <div display="block" box-sizing="content-box" direction="ltr"/>
+        <div display="block" box-sizing="content-box" direction="ltr"/>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="730" height="300">
+      <node x="0" y="0" width="730" height="320">
+        <node x="10" y="10" width="170" height="145"/>
+        <node x="190" y="10" width="170" height="145"/>
+        <node x="370" y="10" width="170" height="145"/>
+        <node x="550" y="10" width="170" height="145"/>
+        <node x="10" y="165" width="170" height="145"/>
+        <node x="190" y="165" width="170" height="145"/>
+        <node x="370" y="165" width="170" height="145"/>
+        <node x="550" y="165" width="170" height="145"/>
+      </node>
+    </node>
+  </expectations>
+</test>

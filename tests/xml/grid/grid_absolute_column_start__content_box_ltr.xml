@@ -1,0 +1,13 @@
+<test name="grid_absolute_column_start__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" box-sizing="content-box" direction="ltr" padding-top="10px" padding-left="40px" padding-bottom="30px" padding-right="20px" grid-template-rows="40px 40px 40px" grid-template-columns="40px 40px 40px">
+      <div box-sizing="content-box" direction="ltr" position="absolute" top="1px" left="4px" bottom="2px" right="3px" grid-column-start="1"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="180" height="160">
+      <node x="44" y="1" width="133" height="157"/>
+    </node>
+  </expectations>
+</test>

@@ -1,0 +1,23 @@
+<test name="grid_margins_fixed_end__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" box-sizing="content-box" direction="ltr" padding-top="10px" padding-left="40px" padding-bottom="30px" padding-right="20px" grid-template-rows="40px 40px 40px" grid-template-columns="40px 40px 40px">
+      <div box-sizing="content-box" direction="ltr" align-self="end" justify-self="end" width="20px" height="20px" margin-top="1px" margin-left="4px" margin-bottom="3px" margin-right="2px"/>
+      <div box-sizing="content-box" direction="ltr"/>
+      <div box-sizing="content-box" direction="ltr"/>
+      <div box-sizing="content-box" direction="ltr"/>
+      <div box-sizing="content-box" direction="ltr"/>
+      <div box-sizing="content-box" direction="ltr"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="180" height="160">
+      <node x="58" y="27" width="20" height="20"/>
+      <node x="80" y="10" width="40" height="40"/>
+      <node x="120" y="10" width="40" height="40"/>
+      <node x="40" y="50" width="40" height="40"/>
+      <node x="80" y="50" width="40" height="40"/>
+      <node x="120" y="50" width="40" height="40"/>
+    </node>
+  </expectations>
+</test>

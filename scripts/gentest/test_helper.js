@@ -23,7 +23,7 @@ class TrackSizingParser {
   }
 
   parseSingleItem() {
-    return this.parseItem();
+    return this._parseItem();
   }
 
   _parseItemList(separator, terminator = null) {
@@ -208,7 +208,7 @@ function describeElement(e) {
       boxSizing: parseEnum(computedStyle.boxSizing),
 
       position: parseEnum(e.style.position),
-      direction: parseEnum(e.style.direction),
+      direction: parseEnum(computedStyle.direction),
 
       writingMode: parseEnum(e.style.writingMode),
 
@@ -335,12 +335,16 @@ function describeElement(e) {
 }
 
 function getTestData() {
-  document.body.className = "border-box";
-  const borderBoxData = describeElement(document.getElementById('test-root'));
-  document.body.className = "content-box";
-  const contentBoxData = describeElement(document.getElementById('test-root'));
+  document.body.className = "border-box ltr";
+  const borderBoxLtrData = describeElement(document.getElementById('test-root'));
+  document.body.className = "content-box ltr";
+  const contentBoxLtrData = describeElement(document.getElementById('test-root'));
+  document.body.className = "border-box rtl";
+  const borderBoxRtlData = describeElement(document.getElementById('test-root'));
+  document.body.className = "content-box rtl";
+  const contentBoxRtlData = describeElement(document.getElementById('test-root'));
 
-  return JSON.stringify({ borderBoxData, contentBoxData });
+  return JSON.stringify({ borderBoxLtrData, contentBoxLtrData, borderBoxRtlData, contentBoxRtlData });
 }
 
 // Useful when developing this script. Logs the parsed style to the console when any test fixture is opened in a browser.

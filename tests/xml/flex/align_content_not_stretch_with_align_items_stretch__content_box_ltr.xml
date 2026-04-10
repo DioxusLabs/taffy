@@ -1,0 +1,23 @@
+<test name="align_content_not_stretch_with_align_items_stretch__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div box-sizing="content-box" direction="ltr" flex-wrap="wrap" align-content="flex-start" width="328px" height="52px">
+      <div box-sizing="content-box" direction="ltr" flex-direction="column">
+        <div box-sizing="content-box" direction="ltr" width="272px" height="44px"/>
+      </div>
+      <div box-sizing="content-box" direction="ltr" flex-direction="column">
+        <div box-sizing="content-box" direction="ltr" width="56px" height="44px"/>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="328" height="52">
+      <node x="0" y="0" width="272" height="44">
+        <node x="0" y="0" width="272" height="44"/>
+      </node>
+      <node x="272" y="0" width="56" height="44">
+        <node x="0" y="0" width="56" height="44"/>
+      </node>
+    </node>
+  </expectations>
+</test>

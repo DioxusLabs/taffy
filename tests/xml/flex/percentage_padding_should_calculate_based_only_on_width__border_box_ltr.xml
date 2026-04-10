@@ -1,0 +1,17 @@
+<test name="percentage_padding_should_calculate_based_only_on_width__border_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div direction="ltr" flex-direction="column" width="200px" height="100px">
+      <div direction="ltr" flex-direction="column" flex-grow="1" padding-top="10%" padding-left="10%" padding-bottom="10%" padding-right="10%">
+        <div direction="ltr" width="10px" height="10px"/>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="200" height="100">
+      <node x="0" y="0" width="200" height="100">
+        <node x="20" y="20" width="10" height="10"/>
+      </node>
+    </node>
+  </expectations>
+</test>

@@ -1,0 +1,15 @@
+<test name="flex_grow_within_constrained_min_max_column__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div direction="rtl" flex-direction="column" min-height="100px" max-height="200px">
+      <div direction="rtl" flex-grow="1"/>
+      <div direction="rtl" height="50px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="0" height="100">
+      <node x="0" y="0" width="0" height="50"/>
+      <node x="0" y="50" width="0" height="50"/>
+    </node>
+  </expectations>
+</test>

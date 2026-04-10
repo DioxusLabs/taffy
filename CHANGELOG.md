@@ -1,5 +1,43 @@
 # Changelog
 
+## 0.10.0
+
+The MSRV for this release is 1.71.
+
+### Support for `direction`
+
+The `direction` property is now supported, allowing for RTL layout of boxes in Block, Flexbox, and CSS Grid layout modes.
+
+### Support for floats
+
+The `float` and `clear` properties are now supported. Support consists of a general-purpose `FloatContext` in the `compute` module, and integration of float layout into Block layout. Block layout now also has a `BlockContext` that allows a `FloatContext` to be shared across an entire Block formatting context.
+
+Float support is feature flagged by the `float_layout` feature.
+
+### Support for parsing styles from CSS string (#929)
+
+All of Taffy's style types (except the top-level `Style` struct) now have `FromStr` implementations that parses the type from the CSS representation of that value (e.g. `30px` or `50%` for `LengthPercentage`. A future version of Taffy will likely add support for parsing `Style` from `;`-seperated CSS.
+
+CSS parsing is feature flagged by the `parse` feature.
+
+Additionally the `parse_faster` feature enables optimizations for faster parsing at the cost of pulling in proc-macro dependencies such as `syn`.
+
+### Changed
+
+- Make DetailedGridTracksInfo accessible from a public module (#899)
+- Add `TaffyTree::write_tree` method to debug print the tree into an arbitrary writer (#925)
+- The cache `set` and `set` APIs now take `&LayoutInput` rather than individual values (#933)
+
+### Fixed
+
+- Flexbox: apply gap even when there are auto margins (#938)
+
+## 0.9.3
+
+### Added
+
+- Added write_tree method to utils.
+
 ## 0.9.2
 
 ### Fixed
@@ -19,6 +57,8 @@
 - Flexbox: don't apply cross-axis stretch alignment to children with auto margins (#861)
 
 ## 0.9.0
+
+The MSRV for this release is 1.65.
 
 ### Support for named grid lines and grid areas
 

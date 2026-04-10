@@ -1,0 +1,21 @@
+<test name="justify_content_column_center_negative_space__content_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="flex" box-sizing="content-box" direction="rtl" flex-direction="column" width="320px" height="320px" border-top="60px" border-left="60px" border-bottom="60px" border-right="60px">
+      <div display="flex" box-sizing="content-box" direction="rtl" flex-direction="column" align-items="center" justify-content="center" height="10px">
+        <div box-sizing="content-box" direction="rtl" flex-shrink="0" width="80%" height="20px"/>
+        <div box-sizing="content-box" direction="rtl" flex-shrink="0" width="80%" height="20px"/>
+        <div box-sizing="content-box" direction="rtl" flex-shrink="0" width="80%" height="20px"/>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="440" height="440">
+      <node x="60" y="60" width="320" height="10">
+        <node x="32" y="-25" width="256" height="20"/>
+        <node x="32" y="-5" width="256" height="20"/>
+        <node x="32" y="15" width="256" height="20"/>
+      </node>
+    </node>
+  </expectations>
+</test>

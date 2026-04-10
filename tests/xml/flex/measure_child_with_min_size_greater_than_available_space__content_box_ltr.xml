@@ -1,0 +1,15 @@
+<test name="measure_child_with_min_size_greater_than_available_space__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="flex" box-sizing="content-box" direction="ltr" flex-direction="column" width="100px">
+      <text box-sizing="content-box" direction="ltr" min-width="200px">
+        HHHHHHHH​HHHHHHHH
+      </text>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="100" height="10">
+      <node x="0" y="0" width="200" height="10"/>
+    </node>
+  </expectations>
+</test>

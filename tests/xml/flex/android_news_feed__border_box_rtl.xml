@@ -1,0 +1,63 @@
+<test name="android_news_feed__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div direction="rtl" flex-direction="column" align-content="stretch" flex-shrink="0" width="1080px">
+      <div direction="rtl" flex-direction="column" flex-shrink="0">
+        <div direction="rtl" flex-direction="column" align-content="stretch">
+          <div direction="rtl" flex-direction="column" align-content="stretch">
+            <div direction="rtl" align-items="flex-start" align-content="stretch" margin-top="24px" margin-left="36px">
+              <div direction="rtl" align-content="stretch" flex-shrink="0">
+                <div direction="rtl" align-content="stretch" flex-shrink="0" width="120px" height="120px"/>
+              </div>
+              <div direction="rtl" flex-direction="column" align-content="stretch" margin-right="36px" padding-top="21px" padding-left="36px" padding-bottom="18px" padding-right="36px">
+                <div direction="rtl" align-content="stretch"/>
+                <div direction="rtl" align-content="stretch"/>
+              </div>
+            </div>
+          </div>
+          <div direction="rtl" flex-direction="column" align-content="stretch">
+            <div direction="rtl" align-items="flex-start" align-content="stretch" margin-top="24px" margin-left="174px">
+              <div direction="rtl" align-content="stretch" flex-shrink="0">
+                <div direction="rtl" align-content="stretch" flex-shrink="0" width="72px" height="72px"/>
+              </div>
+              <div direction="rtl" flex-direction="column" align-content="stretch" margin-right="36px" padding-top="21px" padding-left="36px" padding-bottom="18px" padding-right="36px">
+                <div direction="rtl" align-content="stretch"/>
+                <div direction="rtl" align-content="stretch"/>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="1080" height="240">
+      <node x="0" y="0" width="1080" height="240">
+        <node x="0" y="0" width="1080" height="240">
+          <node x="0" y="0" width="1080" height="144">
+            <node x="36" y="24" width="1044" height="120">
+              <node x="924" y="0" width="120" height="120">
+                <node x="0" y="0" width="120" height="120"/>
+              </node>
+              <node x="816" y="0" width="72" height="39">
+                <node x="36" y="21" width="0" height="0"/>
+                <node x="36" y="21" width="0" height="0"/>
+              </node>
+            </node>
+          </node>
+          <node x="0" y="144" width="1080" height="96">
+            <node x="174" y="24" width="906" height="72">
+              <node x="834" y="0" width="72" height="72">
+                <node x="0" y="0" width="72" height="72"/>
+              </node>
+              <node x="726" y="0" width="72" height="39">
+                <node x="36" y="21" width="0" height="0"/>
+                <node x="36" y="21" width="0" height="0"/>
+              </node>
+            </node>
+          </node>
+        </node>
+      </node>
+    </node>
+  </expectations>
+</test>

@@ -1,0 +1,17 @@
+<test name="gap_row_gap_row_wrap_child_margins__content_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div box-sizing="content-box" direction="rtl" flex-wrap="wrap" width="100px" height="200px" row-gap="10px">
+      <div box-sizing="content-box" direction="rtl" width="60px" margin-top="2px" margin-bottom="2px"/>
+      <div box-sizing="content-box" direction="rtl" width="60px" margin-top="10px" margin-bottom="10px"/>
+      <div box-sizing="content-box" direction="rtl" width="60px" margin-top="15px" margin-bottom="15px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="100" height="200">
+      <node x="40" y="2" width="60" height="42"/>
+      <node x="40" y="66" width="60" height="42"/>
+      <node x="40" y="143" width="60" height="42"/>
+    </node>
+  </expectations>
+</test>

@@ -1,0 +1,13 @@
+<test name="block_overflow_scroll_direction_rtl__content_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="block" box-sizing="content-box" direction="rtl" overflow-y="scroll" scrollbar-width="15" width="200px" height="200px">
+      <div box-sizing="content-box" direction="rtl" width="50px" height="20px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="200" height="200" scroll_width="0" scroll_height="0">
+      <node x="150" y="0" width="50" height="20"/>
+    </node>
+  </expectations>
+</test>

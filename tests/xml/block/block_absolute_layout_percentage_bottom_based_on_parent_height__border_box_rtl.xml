@@ -1,0 +1,17 @@
+<test name="block_absolute_layout_percentage_bottom_based_on_parent_height__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="block" direction="rtl" width="100px" height="200px">
+      <div display="block" direction="rtl" position="absolute" width="10px" height="10px" top="50%"/>
+      <div display="block" direction="rtl" position="absolute" width="10px" height="10px" bottom="50%"/>
+      <div display="block" direction="rtl" position="absolute" width="10px" top="10%" bottom="10%"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="100" height="200">
+      <node x="90" y="100" width="10" height="10"/>
+      <node x="90" y="90" width="10" height="10"/>
+      <node x="90" y="20" width="10" height="160"/>
+    </node>
+  </expectations>
+</test>

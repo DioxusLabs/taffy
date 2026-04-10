@@ -1,0 +1,9 @@
+<test name="max_width_overrides_width_on_root__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div direction="rtl" width="200px" max-width="100px"/>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="100" height="0"/>
+  </expectations>
+</test>

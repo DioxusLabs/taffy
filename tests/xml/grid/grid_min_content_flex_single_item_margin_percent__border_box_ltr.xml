@@ -1,0 +1,29 @@
+<test name="grid_min_content_flex_single_item_margin_percent__border_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" direction="ltr" grid-template-rows="40px 40px 40px" grid-template-columns="40px min-content 1fr">
+      <div direction="ltr"/>
+      <div direction="ltr" min-width="10px" margin-top="5%" margin-left="20%" margin-bottom="15%" margin-right="10%"/>
+      <div direction="ltr"/>
+      <div direction="ltr"/>
+      <text direction="ltr" margin-top="5%" margin-left="20%" margin-bottom="15%" margin-right="10%" grid-column-start="span 2">
+        HH​HH
+      </text>
+      <div direction="ltr"/>
+      <div direction="ltr"/>
+      <div direction="ltr"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="80" height="120">
+      <node x="0" y="0" width="40" height="40"/>
+      <node x="42" y="1" width="10" height="38"/>
+      <node x="50" y="0" width="30" height="40"/>
+      <node x="0" y="40" width="40" height="40"/>
+      <node x="48" y="42" width="28" height="32"/>
+      <node x="0" y="80" width="40" height="40"/>
+      <node x="40" y="80" width="10" height="40"/>
+      <node x="50" y="80" width="30" height="40"/>
+    </node>
+  </expectations>
+</test>

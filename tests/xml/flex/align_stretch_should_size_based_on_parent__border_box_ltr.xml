@@ -1,0 +1,21 @@
+<test name="align_stretch_should_size_based_on_parent__border_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div direction="ltr" width="100px" height="100px">
+      <div direction="ltr" justify-content="center">
+        <div direction="ltr" flex-grow="1">
+          <div direction="ltr" width="20px" height="20px"/>
+        </div>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="100" height="100">
+      <node x="0" y="0" width="20" height="100">
+        <node x="0" y="0" width="20" height="100">
+          <node x="0" y="0" width="20" height="20"/>
+        </node>
+      </node>
+    </node>
+  </expectations>
+</test>

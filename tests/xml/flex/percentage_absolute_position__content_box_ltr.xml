@@ -1,0 +1,13 @@
+<test name="percentage_absolute_position__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div box-sizing="content-box" direction="ltr" flex-direction="column" width="200px" height="100px">
+      <div box-sizing="content-box" direction="ltr" position="absolute" width="10px" height="10px" top="10%" left="30%"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="200" height="100">
+      <node x="60" y="10" width="10" height="10"/>
+    </node>
+  </expectations>
+</test>

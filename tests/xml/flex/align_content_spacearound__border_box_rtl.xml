@@ -1,0 +1,21 @@
+<test name="align_content_spacearound__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div direction="rtl" flex-wrap="wrap" align-content="space-around" width="140px" height="120px">
+      <div direction="rtl" width="50px" height="10px"/>
+      <div direction="rtl" width="50px" height="10px"/>
+      <div direction="rtl" width="50px" height="10px"/>
+      <div direction="rtl" width="50px" height="10px"/>
+      <div direction="rtl" width="50px" height="10px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="140" height="120">
+      <node x="90" y="15" width="50" height="10"/>
+      <node x="40" y="15" width="50" height="10"/>
+      <node x="90" y="55" width="50" height="10"/>
+      <node x="40" y="55" width="50" height="10"/>
+      <node x="90" y="95" width="50" height="10"/>
+    </node>
+  </expectations>
+</test>

@@ -1,0 +1,15 @@
+<test name="grid_auto_fit_with_empty_auto_track__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" direction="rtl" justify-content="space-evenly" width="120px" height="120px" grid-template-rows="40px 40px 40px" grid-template-columns="repeat(auto-fit, 40px)">
+      <div direction="rtl"/>
+      <div direction="rtl"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="120" height="120">
+      <node x="67" y="0" width="40" height="40"/>
+      <node x="13" y="0" width="40" height="40"/>
+    </node>
+  </expectations>
+</test>

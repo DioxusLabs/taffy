@@ -1,0 +1,11 @@
+<test name="intrinsic_sizing_cross_size_column__border_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <text direction="ltr" flex-direction="column">
+      HH​HH
+    </text>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="40" height="10"/>
+  </expectations>
+</test>

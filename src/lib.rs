@@ -123,6 +123,9 @@ pub use crate::tree::TaffyTree;
 #[doc(inline)]
 pub use crate::util::print_tree;
 
+#[cfg(feature = "parse")]
+pub use parse::{ParseError, ParseResult};
+
 pub use crate::compute::*;
 pub use crate::geometry::*;
 pub use crate::style::*;

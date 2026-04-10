@@ -1,0 +1,43 @@
+<test name="grid_auto_columns_fixed_width__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" box-sizing="content-box" direction="ltr" width="200px" height="200px" grid-template-rows="40px auto 40px auto" grid-template-columns="40px auto 40px auto">
+      <div box-sizing="content-box" direction="ltr"/>
+      <div box-sizing="content-box" direction="ltr"/>
+      <div box-sizing="content-box" direction="ltr"/>
+      <div box-sizing="content-box" direction="ltr"/>
+      <div box-sizing="content-box" direction="ltr"/>
+      <div box-sizing="content-box" direction="ltr"/>
+      <div box-sizing="content-box" direction="ltr"/>
+      <div box-sizing="content-box" direction="ltr"/>
+      <div box-sizing="content-box" direction="ltr"/>
+      <div box-sizing="content-box" direction="ltr"/>
+      <div box-sizing="content-box" direction="ltr"/>
+      <div box-sizing="content-box" direction="ltr"/>
+      <div box-sizing="content-box" direction="ltr"/>
+      <div box-sizing="content-box" direction="ltr"/>
+      <div box-sizing="content-box" direction="ltr"/>
+      <div box-sizing="content-box" direction="ltr"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="200" height="200">
+      <node x="0" y="0" width="40" height="40"/>
+      <node x="40" y="0" width="60" height="40"/>
+      <node x="100" y="0" width="40" height="40"/>
+      <node x="140" y="0" width="60" height="40"/>
+      <node x="0" y="40" width="40" height="60"/>
+      <node x="40" y="40" width="60" height="60"/>
+      <node x="100" y="40" width="40" height="60"/>
+      <node x="140" y="40" width="60" height="60"/>
+      <node x="0" y="100" width="40" height="40"/>
+      <node x="40" y="100" width="60" height="40"/>
+      <node x="100" y="100" width="40" height="40"/>
+      <node x="140" y="100" width="60" height="40"/>
+      <node x="0" y="140" width="40" height="60"/>
+      <node x="40" y="140" width="60" height="60"/>
+      <node x="100" y="140" width="40" height="60"/>
+      <node x="140" y="140" width="60" height="60"/>
+    </node>
+  </expectations>
+</test>

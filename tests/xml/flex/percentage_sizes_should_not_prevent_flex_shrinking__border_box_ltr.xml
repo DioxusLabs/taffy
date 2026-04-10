@@ -1,0 +1,17 @@
+<test name="percentage_sizes_should_not_prevent_flex_shrinking__border_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div direction="ltr" width="200px" height="200px">
+      <div direction="ltr" width="120%">
+        <div direction="ltr"/>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="200" height="200">
+      <node x="0" y="0" width="200" height="200">
+        <node x="0" y="0" width="0" height="200"/>
+      </node>
+    </node>
+  </expectations>
+</test>
