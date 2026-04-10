@@ -1185,7 +1185,7 @@ fn perform_absolute_layout_on_absolute_children(
                 max_size.width,
             );
 
-        final_size.width = computed_width.maybe_clamp(min_size.width, max_size.width);
+        final_size.width = computed_width;
 
         let layout_output = tree.perform_child_layout(
             item.node_id,
