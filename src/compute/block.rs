@@ -1099,6 +1099,7 @@ fn perform_absolute_layout_on_absolute_children(
         let margin =
             child_style.margin().map(|margin| margin.resolve_to_option(area_width, |val, basis| tree.calc(val, basis)));
         let padding = child_style.padding().resolve_or_zero(Some(area_width), |val, basis| tree.calc(val, basis));
+
         let border = child_style.border().resolve_or_zero(Some(area_width), |val, basis| tree.calc(val, basis));
         let padding_border_sum = (padding + border).sum_axes();
         let box_sizing_adjustment =
@@ -1165,14 +1166,14 @@ fn perform_absolute_layout_on_absolute_children(
 
         let mut final_size = known_dimensions.unwrap_or(measured_size).maybe_clamp(min_size, max_size);
 
-        let content_width = measured_size.width - border.left - padding.left - padding.right - border.right;
+        let containing_block_width = area_width + border.left + padding.left + padding.right + border.right;
         let (computed_left, _computed_right, computed_margin_left, computed_margin_right, computed_width) =
             resolve_absolute_margin_and_positions(
                 style_size.width,
-                area_width,
+                containing_block_width,
                 left,
                 right,
-                content_width,
+                measured_size.width,
                 margin.left,
                 margin.right,
                 border.left,
@@ -1199,14 +1200,14 @@ fn perform_absolute_layout_on_absolute_children(
             Line::FALSE,
         );
 
-        let content_height = measured_size.height - border.top - padding.top - padding.bottom - border.bottom;
+        let containing_block_height = area_height + border.top + padding.top + padding.bottom + border.bottom;
         let (computed_top, _computed_bottom, computed_margin_top, computed_margin_bottom, computed_height) =
             resolve_absolute_margin_and_positions_v(
                 known_dimensions.height, // We use known dimensions here to factor in aspect ratio, is that correct?
-                area_height,
+                containing_block_height,
                 top,
                 bottom,
-                content_height,
+                measured_size.height,
                 margin.top,
                 margin.bottom,
                 border.top,
@@ -1334,7 +1335,15 @@ fn resolve_absolute_margin_and_positions(
                         + computed_margin_right)
             }
             Direction::Rtl => {
-                computed_right = width_of_containing_block - static_position;
+                computed_right = width_of_containing_block
+                    - (static_position
+                        + computed_margin_left
+                        + border_left
+                        + padding_left
+                        + computed_width
+                        + padding_right
+                        + border_right
+                        + computed_margin_right);
 
                 // 1. 'left' and 'width' are 'auto' and 'right' is not 'auto', then the width is shrink-to-fit. Then solve for 'left'
                 computed_width = content_width;
@@ -1358,7 +1367,15 @@ fn resolve_absolute_margin_and_positions(
 
             // 'left' + '2M' + 'border-left-width' + 'padding-left' + 'width' + 'padding-right' + 'border-right-width' + 'right' = width of containing block
             // M = (width of containing block - ('left' + 'border-left-width' + 'padding-left' + 'width' + 'padding-right' + 'border-right-width' + 'right')) / 2
-            let margin = (width_of_containing_block - (left.unwrap() + computed_width + right.unwrap())) / 2.0;
+            let margin = (width_of_containing_block
+                - (computed_left
+                    + border_left
+                    + padding_left
+                    + computed_width
+                    + padding_right
+                    + border_right
+                    + computed_right))
+                / 2.0;
 
             if margin >= 0.0 {
                 computed_margin_right = margin;
@@ -1620,13 +1637,13 @@ fn resolve_absolute_margin_and_positions_v(
             // solve the equation under the extra constraint that the two margins get equal values.
 
             let margin = (height_of_containing_block
-                - (top.unwrap()
+                - (computed_top
                     + border_top
                     + padding_top
                     + computed_height
                     + padding_bottom
                     + border_bottom
-                    + bottom.unwrap()))
+                    + computed_bottom))
                 / 2.0;
 
             computed_margin_bottom = margin;
@@ -1634,25 +1651,25 @@ fn resolve_absolute_margin_and_positions_v(
         } else if margin_top.is_some() {
             // If one of 'margin-top' or 'margin-bottom' is 'auto', solve the equation for that value
             computed_margin_bottom = height_of_containing_block
-                - (top.unwrap()
-                    + margin_top.unwrap()
+                - (computed_top
+                    + computed_margin_top
                     + border_top
                     + padding_top
                     + computed_height
                     + padding_bottom
                     + border_bottom
-                    + bottom.unwrap());
+                    + computed_bottom);
         } else if margin_bottom.is_some() {
             // If one of 'margin-top' or 'margin-bottom' is 'auto', solve the equation for that value
             computed_margin_top = height_of_containing_block
-                - (top.unwrap()
+                - (computed_top
                     + border_top
                     + padding_top
                     + computed_height
                     + padding_bottom
                     + border_bottom
-                    + margin_bottom.unwrap()
-                    + bottom.unwrap());
+                    + computed_margin_bottom
+                    + computed_bottom);
         } else {
             // If the values are over-constrained, ignore the value for 'bottom' and solve for that value.
             computed_bottom = height_of_containing_block
@@ -1750,7 +1767,7 @@ fn resolve_absolute_margin_and_positions_v(
             //computed_margin_top = 0.0;
             //computed_margin_bottom = 0.0;
             computed_bottom = height_of_containing_block
-                - (top.unwrap()
+                - (computed_top
                     + computed_margin_top
                     + border_top
                     + padding_top
