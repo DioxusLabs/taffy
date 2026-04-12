@@ -1170,14 +1170,12 @@ fn perform_absolute_layout_on_absolute_children(
 
         let mut final_size = known_dimensions.unwrap_or(measured_size).maybe_clamp(min_size, max_size);
 
-        let containing_block_width = area_width + border.left + padding.left + padding.right + border.right;
         let resolved_box_properties_horizontal = resolve_absolutely_positioned_non_replaced_box_properties_horizontal(
-            style_size.width,
-            containing_block_width,
+            known_dimensions.width,
+            area_width,
             resolved_inset.horizontal_components(),
             measured_size.width,
             margin.horizontal_components(),
-            padding_border.width,
             item.static_position.x,
             direction,
             min_size.width.unwrap_or_default(),
@@ -1198,14 +1196,12 @@ fn perform_absolute_layout_on_absolute_children(
             Line::FALSE,
         );
 
-        let containing_block_height = area_height + border.top + padding.top + padding.bottom + border.bottom;
         let resolved_box_properties_vertical = resolve_absolutely_positioned_non_replaced_box_properties_vertical(
-            known_dimensions.height, // We use known dimensions here to factor in aspect ratio, is that correct?
-            containing_block_height,
+            known_dimensions.height,
+            area_height,
             resolved_inset.vertical_components(),
             measured_size.height,
             margin.vertical_components(),
-            padding_border.height,
             item.static_position.y,
             min_size.height.unwrap_or(0.0),
             max_size.height,
@@ -1274,7 +1270,6 @@ fn resolve_absolutely_positioned_non_replaced_box_properties_horizontal(
     inset: Line<Option<f32>>,
     content_width: f32,
     margin: Line<Option<f32>>,
-    padding_border: f32,
     static_position: f32,
     direction: Direction,
     min_width: f32,
@@ -1305,17 +1300,17 @@ fn resolve_absolutely_positioned_non_replaced_box_properties_horizontal(
                     // 'width' and 'right' are 'auto' and 'left' is not 'auto', then the width is shrink-to-fit . Then solve for 'right'
                     computed_width = content_width;
 
-                    computed_inset.end = width_of_containing_block
-                        - (computed_inset.start + computed_width + computed_margin.sum() + padding_border)
+                    computed_inset.end =
+                        width_of_containing_block - (computed_inset.start + computed_width + computed_margin.sum())
                 }
                 Direction::Rtl => {
-                    computed_inset.end = width_of_containing_block
-                        - (static_position + computed_width + padding_border + computed_margin.sum());
+                    computed_inset.end =
+                        width_of_containing_block - (static_position + computed_width + computed_margin.sum());
 
                     // 1. 'left' and 'width' are 'auto' and 'right' is not 'auto', then the width is shrink-to-fit. Then solve for 'left'
                     computed_width = content_width;
-                    computed_inset.start = width_of_containing_block
-                        - (computed_width + computed_inset.end + padding_border + computed_margin.sum());
+                    computed_inset.start =
+                        width_of_containing_block - (computed_width + computed_inset.end + computed_margin.sum());
                 }
             }
         }
@@ -1326,7 +1321,7 @@ fn resolve_absolutely_positioned_non_replaced_box_properties_horizontal(
                     // If both 'margin-left' and 'margin-right' are 'auto'
                     // solve the equation under the extra constraint that the two margins get equal values
 
-                    let margin = (width_of_containing_block - (left + width + right + padding_border)) / 2.0;
+                    let margin = (width_of_containing_block - (left + width + right)) / 2.0;
 
                     if margin >= 0.0 {
                         computed_margin.start = margin;
@@ -1338,26 +1333,22 @@ fn resolve_absolutely_positioned_non_replaced_box_properties_horizontal(
                         match direction {
                             Direction::Ltr => {
                                 computed_margin.start = 0.0;
-                                computed_margin.end =
-                                    width_of_containing_block - (left + computed_width + right + padding_border);
+                                computed_margin.end = width_of_containing_block - (left + computed_width + right);
                             }
                             Direction::Rtl => {
                                 computed_margin.end = 0.0;
-                                computed_margin.start =
-                                    width_of_containing_block - (left + computed_width + right + padding_border);
+                                computed_margin.start = width_of_containing_block - (left + computed_width + right);
                             }
                         }
                     }
                 }
                 (Some(margin_left), None) => {
                     // If one of 'margin-left' or 'margin-right' is 'auto', solve the equation for that
-                    computed_margin.end =
-                        width_of_containing_block - (left + margin_left + computed_width + right + padding_border);
+                    computed_margin.end = width_of_containing_block - (left + margin_left + computed_width + right);
                 }
                 (None, Some(margin_right)) => {
                     // If one of 'margin-left' or 'margin-right' is 'auto', solve the equation for that
-                    computed_margin.start =
-                        width_of_containing_block - (left + computed_width + margin_right + right + padding_border);
+                    computed_margin.start = width_of_containing_block - (left + computed_width + margin_right + right);
                 }
                 (Some(margin_left), Some(margin_right)) => {
                     // If the values are over-constrained, ignore the value for 'left'
@@ -1365,12 +1356,12 @@ fn resolve_absolutely_positioned_non_replaced_box_properties_horizontal(
                     // (in case 'direction' is 'ltr') and solve for that value.
                     match direction {
                         Direction::Ltr => {
-                            computed_inset.end = width_of_containing_block
-                                - (left + margin_left + computed_width + padding_border + margin_right);
+                            computed_inset.end =
+                                width_of_containing_block - (left + margin_left + computed_width + margin_right);
                         }
                         Direction::Rtl => {
-                            computed_inset.start = width_of_containing_block
-                                - (right + margin_left + computed_width + padding_border + margin_right);
+                            computed_inset.start =
+                                width_of_containing_block - (right + margin_left + computed_width + margin_right);
                         }
                     }
                 }
@@ -1382,8 +1373,7 @@ fn resolve_absolutely_positioned_non_replaced_box_properties_horizontal(
         (None, None, Some(right)) => {
             // 1. 'left' and 'width' are 'auto' and 'right' is not 'auto', then the width is shrink-to-fit. Then solve for 'left'
             computed_width = content_width;
-            computed_inset.start =
-                width_of_containing_block - (computed_width + right + padding_border + computed_margin.sum());
+            computed_inset.start = width_of_containing_block - (computed_width + right + computed_margin.sum());
         }
         (None, Some(width), None) => {
             // 2. 'left' and 'right' are 'auto' and 'width' is not 'auto',
@@ -1392,35 +1382,34 @@ fn resolve_absolutely_positioned_non_replaced_box_properties_horizontal(
                     // then if the 'direction' property of the element establishing the static-position
                     // containing block is 'ltr' set 'left' to the static position,
                     computed_inset.start = static_position;
-                    computed_inset.end = width_of_containing_block
-                        - (computed_inset.start + width + padding_border + computed_margin.sum());
+                    computed_inset.end =
+                        width_of_containing_block - (computed_inset.start + width + computed_margin.sum());
                 }
                 Direction::Rtl => {
                     // otherwise set 'right' to the static position. Then solve for 'left'
                     // (if 'direction is 'rtl') or 'right' (if 'direction' is 'ltr').
-                    computed_inset.end = width_of_containing_block - static_position - padding_border;
-                    computed_inset.start = width_of_containing_block
-                        - (computed_inset.end + computed_width + padding_border + computed_margin.sum());
+                    computed_inset.end = width_of_containing_block - static_position;
+                    computed_inset.start =
+                        width_of_containing_block - (computed_inset.end + computed_width + computed_margin.sum());
                 }
             }
         }
         (Some(left), None, None) => {
             // 3. 'width' and 'right' are 'auto' and 'left' is not 'auto', then the width is shrink-to-fit . Then solve for 'right'
             computed_width = content_width;
-            computed_inset.end =
-                width_of_containing_block - (left + computed_width + padding_border + computed_margin.sum())
+            computed_inset.end = width_of_containing_block - (left + computed_width + computed_margin.sum())
         }
         (None, Some(width), Some(right)) => {
             // 4. 'left' is 'auto', 'width' and 'right' are not 'auto', then solve for 'left'
-            computed_inset.start = width_of_containing_block - (width + right + padding_border + computed_margin.sum());
+            computed_inset.start = width_of_containing_block - (width + right + computed_margin.sum());
         }
         (Some(left), None, Some(right)) => {
             // 5. 'width' is 'auto', 'left' and 'right' are not 'auto', then solve for 'width'
-            computed_width = width_of_containing_block - (left + right + padding_border + computed_margin.sum());
+            computed_width = width_of_containing_block - (left + right + computed_margin.sum());
         }
         (Some(left), Some(width), None) => {
             // 6. 'right' is 'auto', 'left' and 'width' are not 'auto', then solve for 'right'
-            computed_inset.end = width_of_containing_block - (left + width + padding_border + computed_margin.sum());
+            computed_inset.end = width_of_containing_block - (left + width + computed_margin.sum());
         }
     }
 
@@ -1435,7 +1424,6 @@ fn resolve_absolutely_positioned_non_replaced_box_properties_horizontal(
             inset,
             content_width,
             margin,
-            padding_border,
             static_position,
             direction,
             min_width,
@@ -1451,7 +1439,6 @@ fn resolve_absolutely_positioned_non_replaced_box_properties_horizontal(
             inset,
             content_width,
             margin,
-            padding_border,
             static_position,
             direction,
             min_width,
@@ -1471,7 +1458,6 @@ fn resolve_absolutely_positioned_non_replaced_box_properties_vertical(
     inset: Line<Option<f32>>,
     content_height: f32,
     margin: Line<Option<f32>>,
-    padding_border: f32,
     static_position: f32,
     min_height: f32,
     max_height: Option<f32>,
@@ -1495,8 +1481,8 @@ fn resolve_absolutely_positioned_non_replaced_box_properties_vertical(
             // 'margin-top' and 'margin-bottom' to 0, and solve for 'bottom'
             // TODO: HANDLE 10.6.7
             computed_height = content_height;
-            computed_inset.end = height_of_containing_block
-                - (computed_inset.start + content_height + padding_border + computed_margin.sum())
+            computed_inset.end =
+                height_of_containing_block - (computed_inset.start + content_height + computed_margin.sum())
         }
         (Some(top), Some(height), Some(bottom)) => {
             // If none of the three are 'auto'
@@ -1505,25 +1491,22 @@ fn resolve_absolutely_positioned_non_replaced_box_properties_vertical(
                 (None, None) => {
                     // solve the equation under the extra constraint that the two margins get equal values.
 
-                    let margin = (height_of_containing_block - (top + height + bottom + padding_border)) / 2.0;
+                    let margin = (height_of_containing_block - (top + height + bottom)) / 2.0;
 
                     computed_margin.start = margin;
                     computed_margin.end = margin;
                 }
                 (Some(margin_top), None) => {
                     // If one of 'margin-top' or 'margin-bottom' is 'auto', solve the equation for that value
-                    computed_margin.end =
-                        height_of_containing_block - (top + margin_top + computed_height + bottom + padding_border);
+                    computed_margin.end = height_of_containing_block - (top + margin_top + computed_height + bottom);
                 }
                 (None, Some(margin_bottom)) => {
                     // If one of 'margin-top' or 'margin-bottom' is 'auto', solve the equation for that value
-                    computed_margin.start =
-                        height_of_containing_block - (top + height + margin_bottom + bottom + padding_border);
+                    computed_margin.start = height_of_containing_block - (top + height + margin_bottom + bottom);
                 }
                 (Some(margin_top), Some(margin_bottom)) => {
                     // If the values are over-constrained, ignore the value for 'bottom' and solve for that value.
-                    computed_inset.end =
-                        height_of_containing_block - (top + height + padding_border + margin_top + margin_bottom);
+                    computed_inset.end = height_of_containing_block - (top + height + margin_top + margin_bottom);
                 }
             }
         }
@@ -1535,15 +1518,13 @@ fn resolve_absolutely_positioned_non_replaced_box_properties_vertical(
             //computed_margin_bottom = 0.0;
             // TODO: HANDLE 10.6.7
             computed_height = content_height;
-            computed_inset.start =
-                height_of_containing_block - (content_height + bottom + padding_border + computed_margin.sum());
+            computed_inset.start = height_of_containing_block - (content_height + bottom + computed_margin.sum());
         }
         (None, Some(height), None) => {
             // 2. 'top' and 'bottom' are 'auto' and 'height' is not 'auto', then set 'top' to the
             // static position, set 'auto' values for 'margin-top' and 'margin-bottom' to 0, and solve for 'bottom'
             computed_inset.start = static_position;
-            computed_inset.end =
-                height_of_containing_block - (computed_inset.start + height + padding_border + computed_margin.sum());
+            computed_inset.end = height_of_containing_block - (computed_inset.start + height + computed_margin.sum());
         }
         (Some(top), None, None) => {
             // 3. 'height' and 'bottom' are 'auto' and 'top' is not 'auto',
@@ -1551,24 +1532,22 @@ fn resolve_absolutely_positioned_non_replaced_box_properties_vertical(
             // 'margin-top' and 'margin-bottom' to 0, and solve for 'bottom'
             // TODO: HANDLE 10.6.7
             computed_height = content_height;
-            computed_inset.end =
-                height_of_containing_block - (top + computed_height + padding_border + computed_margin.sum())
+            computed_inset.end = height_of_containing_block - (top + computed_height + computed_margin.sum())
         }
         (None, Some(height), Some(bottom)) => {
             // 4. 'top' is 'auto', 'height' and 'bottom' are not 'auto', then set 'auto' values for
             // 'margin-top' and 'margin-bottom' to 0, and solve for 'top'
-            computed_inset.start =
-                height_of_containing_block - (height + bottom + padding_border + computed_margin.sum());
+            computed_inset.start = height_of_containing_block - (height + bottom + computed_margin.sum());
         }
         (Some(top), None, Some(bottom)) => {
             // 5. 'height' is 'auto', 'top' and 'bottom' are not 'auto', then 'auto' values for
             // 'margin-top' and 'margin-bottom' are set to 0 and solve for 'height'
-            computed_height = height_of_containing_block - (top + bottom + padding_border + computed_margin.sum());
+            computed_height = height_of_containing_block - (top + bottom + computed_margin.sum());
         }
         (Some(top), Some(height), None) => {
             // 6. 'bottom' is 'auto', 'top' and 'height' are not 'auto', then set 'auto' values for
             // 'margin-top' and 'margin-bottom' to 0 and solve for 'bottom'
-            computed_inset.end = height_of_containing_block - (top + height + padding_border + computed_margin.sum());
+            computed_inset.end = height_of_containing_block - (top + height + computed_margin.sum());
         }
     }
 
@@ -1583,7 +1562,6 @@ fn resolve_absolutely_positioned_non_replaced_box_properties_vertical(
             inset,
             content_height,
             margin,
-            padding_border,
             static_position,
             min_height,
             None,
@@ -1598,7 +1576,6 @@ fn resolve_absolutely_positioned_non_replaced_box_properties_vertical(
             inset,
             content_height,
             margin,
-            padding_border,
             static_position,
             min_height,
             max_height,
