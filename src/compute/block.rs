@@ -1172,8 +1172,6 @@ fn perform_absolute_layout_on_absolute_children(
             Line::FALSE,
         );
 
-        let mut final_size = known_dimensions.unwrap_or(measured_size).maybe_clamp(min_size, max_size);
-
         let resolved_box_properties_horizontal = resolve_absolutely_positioned_non_replaced_box_properties_horizontal(
             known_dimensions.width,
             area_width,
@@ -1186,7 +1184,19 @@ fn perform_absolute_layout_on_absolute_children(
             max_size.width,
         );
 
-        final_size.width = resolved_box_properties_horizontal.size;
+        let resolved_box_properties_vertical = resolve_absolutely_positioned_non_replaced_box_properties_vertical(
+            known_dimensions.height,
+            area_height,
+            resolved_inset.vertical_components(),
+            measured_size.height,
+            margin.vertical_components(),
+            item.static_position.y,
+            min_size.height.unwrap_or(0.0),
+            max_size.height,
+        );
+
+        let final_size = Size::new(resolved_box_properties_horizontal.size, resolved_box_properties_vertical.size)
+            .map(Option::unwrap_or_default);
 
         let layout_output = tree.perform_child_layout(
             item.node_id,
@@ -1199,18 +1209,6 @@ fn perform_absolute_layout_on_absolute_children(
             SizingMode::ContentSize,
             Line::FALSE,
         );
-
-        let resolved_box_properties_vertical = resolve_absolutely_positioned_non_replaced_box_properties_vertical(
-            known_dimensions.height,
-            area_height,
-            resolved_inset.vertical_components(),
-            measured_size.height,
-            margin.vertical_components(),
-            item.static_position.y,
-            min_size.height.unwrap_or(0.0),
-            max_size.height,
-        );
-        final_size.height = resolved_box_properties_vertical.size;
 
         let resolved_margin =
             Rect::from_lines(resolved_box_properties_horizontal.margin, resolved_box_properties_vertical.margin);
