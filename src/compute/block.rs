@@ -74,9 +74,13 @@ pub struct BlockContext<'bfc> {
     is_root: bool,
 }
 
+/// Stores the results of a resolved block.
 struct ResolvedBoxProperties {
+    /// The resolved size.
     size: f32,
+    /// The resolved insets.
     inset: Line<f32>,
+    /// The resolved margin.
     margin: Line<f32>,
 }
 
@@ -1264,6 +1268,7 @@ fn perform_absolute_layout_on_absolute_children(
 }
 /// Compute the left, margin-left, width, margin-right, and right for non-replaced absolutely positioned boxes.
 #[inline]
+#[allow(clippy::too_many_arguments)]
 fn resolve_absolutely_positioned_non_replaced_box_properties_horizontal(
     width: Option<f32>,
     width_of_containing_block: f32,
@@ -1452,6 +1457,7 @@ fn resolve_absolutely_positioned_non_replaced_box_properties_horizontal(
 
 /// Compute the top, margin-top, height, margin-bottom, and bottom for non-replaced absolutely positioned boxes.
 #[inline]
+#[allow(clippy::too_many_arguments)]
 fn resolve_absolutely_positioned_non_replaced_box_properties_vertical(
     height: Option<f32>,
     height_of_containing_block: f32,
