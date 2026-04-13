@@ -1556,8 +1556,8 @@ fn resolve_absolutely_positioned_non_replaced_box_properties_vertical(
     // 10.7 Minimum and maximum heights:
     if max_height.is_some() && computed_height > max_height.unwrap() {
         // 2.0
-        // If the tentative used width is greater than 'max-width', the rules above are applied again,
-        // but this time using the computed value of 'max-width' as the computed value for 'width'.
+        // If this tentative height is greater than 'max-height', the rules above are applied again,
+        // but this time using the value of 'max-height' as the computed value for 'height'.
         resolve_absolutely_positioned_non_replaced_box_properties_vertical(
             max_height,
             height_of_containing_block,
