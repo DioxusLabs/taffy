@@ -1518,8 +1518,6 @@ fn resolve_absolutely_positioned_non_replaced_box_properties_vertical(
         (None, None, Some(bottom)) => {
             // 1. 'top' and 'height' are 'auto' and 'bottom' is not 'auto', then the height is based
             // on the content per 10.6.7, set 'auto' values for 'margin-top' and 'margin-bottom' to 0, and solve for 'top'
-            //computed_margin_top = 0.0;
-            //computed_margin_bottom = 0.0;
             // TODO: HANDLE 10.6.7
             computed_height = content_height;
             computed_inset.start = height_of_containing_block - (content_height + bottom + computed_margin.sum());
