@@ -7,7 +7,7 @@ use crate::geometry::{AbsoluteAxis, InBothAbsAxis};
 use crate::style::{AlignItems, GridAutoFlow, OriginZeroGridPlacement};
 use crate::tree::NodeId;
 use crate::util::sys::Vec;
-use crate::{CoreStyle, Direction, GridItemStyle};
+use crate::{Direction, GridItemStyle};
 
 #[inline]
 /// Returns whether placement/search should run in reverse for this axis.
@@ -87,7 +87,7 @@ pub(super) fn place_grid_items<'a, S, ChildIter>(
     grid_auto_flow: GridAutoFlow,
     align_items: AlignItems,
     justify_items: AlignItems,
-    named_line_resolver: &NamedLineResolver<<S as CoreStyle>::CustomIdent>,
+    named_line_resolver: &NamedLineResolver<S::Units>,
 ) where
     S: GridItemStyle + 'a,
     ChildIter: Iterator<Item = (usize, NodeId, S)>,
