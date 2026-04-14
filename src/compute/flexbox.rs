@@ -506,7 +506,8 @@ fn generate_anonymous_flex_items(
     node: NodeId,
     constants: &AlgoConstants,
 ) -> Vec<FlexItem> {
-    tree.child_ids(node)
+    let mut flex_items: Vec<FlexItem> = tree
+        .child_ids(node)
         .enumerate()
         .map(|(index, child)| (index, child, tree.get_flexbox_child_style(child)))
         .filter(|(_, _, style)| style.position() != Position::Absolute)
@@ -577,7 +578,20 @@ fn generate_anonymous_flex_items(
                 offset_cross: 0.0,
             }
         })
-        .collect()
+        .collect();
+
+    // CSS Flexbox §5.4: Reorder flex items by the CSS `order` property.
+    // Stable sort preserves source order for items with equal `order` values.
+    flex_items.sort_by(|a, b| {
+        tree.get_flexbox_child_style(a.node).order().cmp(&tree.get_flexbox_child_style(b.node).order())
+    });
+
+    // Reassign rendering order to reflect the new visual sequence.
+    for (i, item) in flex_items.iter_mut().enumerate() {
+        item.order = i as u32;
+    }
+
+    flex_items
 }
 
 /// Determine the available main and cross space for the flex items.
