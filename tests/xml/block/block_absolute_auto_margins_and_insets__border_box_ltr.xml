@@ -1,0 +1,15 @@
+<test name="block_absolute_auto_margins_and_insets__border_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="block" direction="ltr" width="120px" height="120px" padding-top="20px" padding-left="20px" padding-bottom="20px" padding-right="20px" border-top="20px" border-left="20px" border-bottom="20px" border-right="20px">
+      <text direction="ltr" position="absolute" width="60px" height="60px" margin-left="auto" margin-right="auto" border-top="10px" border-left="10px" border-bottom="10px" border-right="10px" left="0px" right="0px">
+        
+      </text>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="120" height="120">
+      <node x="30" y="40" width="60" height="60"/>
+    </node>
+  </expectations>
+</test>

@@ -296,6 +296,12 @@ impl Rect<f32> {
     pub const fn new(start: f32, end: f32, top: f32, bottom: f32) -> Self {
         Self { left: start, right: end, top, bottom }
     }
+
+    /// Creates a new Rect from a horizontal and vertical line.
+    #[must_use]
+    pub const fn from_lines(horizontal: Line<f32>, vertical: Line<f32>) -> Self {
+        Self { left: horizontal.start, right: horizontal.end, top: vertical.start, bottom: vertical.end }
+    }
 }
 
 /// An abstract "line". Represents any type that has a start and an end

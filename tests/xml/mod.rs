@@ -254,6 +254,46 @@ mod block {
     }
 
     #[test]
+    fn block_absolute_auto_margin__border_box_ltr() {
+        crate::run_xml_test("block", "block_absolute_auto_margin__border_box_ltr");
+    }
+
+    #[test]
+    fn block_absolute_auto_margin__content_box_ltr() {
+        crate::run_xml_test("block", "block_absolute_auto_margin__content_box_ltr");
+    }
+
+    #[test]
+    fn block_absolute_auto_margin__border_box_rtl() {
+        crate::run_xml_test("block", "block_absolute_auto_margin__border_box_rtl");
+    }
+
+    #[test]
+    fn block_absolute_auto_margin__content_box_rtl() {
+        crate::run_xml_test("block", "block_absolute_auto_margin__content_box_rtl");
+    }
+
+    #[test]
+    fn block_absolute_auto_margins_and_insets__border_box_ltr() {
+        crate::run_xml_test("block", "block_absolute_auto_margins_and_insets__border_box_ltr");
+    }
+
+    #[test]
+    fn block_absolute_auto_margins_and_insets__content_box_ltr() {
+        crate::run_xml_test("block", "block_absolute_auto_margins_and_insets__content_box_ltr");
+    }
+
+    #[test]
+    fn block_absolute_auto_margins_and_insets__border_box_rtl() {
+        crate::run_xml_test("block", "block_absolute_auto_margins_and_insets__border_box_rtl");
+    }
+
+    #[test]
+    fn block_absolute_auto_margins_and_insets__content_box_rtl() {
+        crate::run_xml_test("block", "block_absolute_auto_margins_and_insets__content_box_rtl");
+    }
+
+    #[test]
     fn block_absolute_child_with_margin_x__border_box_ltr() {
         crate::run_xml_test("block", "block_absolute_child_with_margin_x__border_box_ltr");
     }
