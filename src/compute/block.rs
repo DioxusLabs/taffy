@@ -389,12 +389,12 @@ fn compute_inner(
     let own_margins_collapse_with_children = Line {
         start: vertical_margins_are_collapsible.start
             && !is_scroll_container
-            && style.position() == Position::Relative
+            && style.position().is_in_flow()
             && padding.top == 0.0
             && border.top == 0.0,
         end: vertical_margins_are_collapsible.end
             && !is_scroll_container
-            && style.position() == Position::Relative
+            && style.position().is_in_flow()
             && padding.bottom == 0.0
             && border.bottom == 0.0
             && size.height.is_none(),
@@ -402,7 +402,7 @@ fn compute_inner(
     let has_styles_preventing_being_collapsed_through = !style.is_block()
         || block_ctx.is_bfc_root()
         || is_scroll_container
-        || style.position() == Position::Absolute
+        || style.position().is_out_of_flow()
         || padding.top > 0.0
         || padding.bottom > 0.0
         || border.top > 0.0
@@ -500,7 +500,7 @@ fn compute_inner(
 
     // 7. Determine whether this node can be collapsed through
     let all_in_flow_children_can_be_collapsed_through =
-        items.iter().all(|item| item.position == Position::Absolute || item.can_be_collapsed_through);
+        items.iter().all(|item| item.position.is_out_of_flow() || item.can_be_collapsed_through);
     let can_be_collapsed_through =
         !has_styles_preventing_being_collapsed_through && all_in_flow_children_can_be_collapsed_through;
 
@@ -564,7 +564,7 @@ fn generate_item_list(
             let is_scroll_container = overflow.x.is_scroll_container() || overflow.y.is_scroll_container();
 
             let is_in_same_bfc: bool =
-                is_block && !is_table && position != Position::Absolute && is_not_floated && !is_scroll_container;
+                is_block && !is_table && position.is_in_flow() && is_not_floated && !is_scroll_container;
 
             BlockItem {
                 node_id: child_node_id,
@@ -620,7 +620,7 @@ fn determine_content_based_container_width(
     let mut max_child_width = 0.0;
     #[cfg(feature = "float_layout")]
     let mut float_contribution = FloatIntrinsicWidthCalculator::new(available_width);
-    for item in items.iter().filter(|item| item.position != Position::Absolute) {
+    for item in items.iter().filter(|item| item.position.is_in_flow()) {
         let known_dimensions = item.size.maybe_clamp(item.min_size, item.max_size);
 
         let item_x_margin_sum = item
@@ -705,7 +705,7 @@ fn perform_final_layout_on_in_flow_children(
     let mut y_offset_for_float = resolved_content_box_inset.top;
 
     for item in items.iter_mut() {
-        if item.position == Position::Absolute {
+        if item.position.is_out_of_flow() {
             let x = match direction {
                 Direction::Ltr => resolved_content_box_inset.left,
                 Direction::Rtl => container_outer_width - resolved_content_box_inset.right,
@@ -956,30 +956,33 @@ fn perform_final_layout_on_in_flow_children(
             let mut location = if item.is_in_same_bfc {
                 Point {
                     x: match direction {
-                        Direction::Ltr => resolved_content_box_inset.left + inset_offset.x + resolved_margin.left,
+                        Direction::Ltr => resolved_content_box_inset.left + resolved_margin.left,
                         Direction::Rtl => {
                             container_outer_width
                                 - resolved_content_box_inset.right
                                 - final_size.width
                                 - resolved_margin.right
-                                + inset_offset.x
                         }
                     },
-                    y: committed_y_offset.max(clear_pos) + y_margin_offset + inset_offset.y,
+                    y: committed_y_offset.max(clear_pos) + y_margin_offset,
                 }
             } else {
                 // TODO: handle inset and margins
                 Point {
                     x: match direction {
-                        Direction::Ltr => float_avoiding_position.x + resolved_margin.left + inset_offset.x,
+                        Direction::Ltr => float_avoiding_position.x + resolved_margin.left,
                         Direction::Rtl => {
                             float_avoiding_position.x + float_avoiding_width - final_size.width - resolved_margin.right
-                                + inset_offset.x
                         }
                     },
-                    y: float_avoiding_position.y + inset_offset.y,
+                    y: float_avoiding_position.y,
                 }
             };
+
+            if item.position == Position::Relative {
+                location.x += inset_offset.x;
+                location.y += inset_offset.y;
+            }
 
             // Apply alignment
             let item_outer_width = item_layout.size.width + resolved_margin.horizontal_axis_sum();
@@ -1085,12 +1088,11 @@ fn perform_absolute_layout_on_absolute_children(
     #[cfg_attr(not(feature = "content_size"), allow(unused_mut))]
     let mut absolute_content_size = Size::ZERO;
 
-    for item in items.iter().filter(|item| item.position == Position::Absolute) {
+    for item in items.iter().filter(|item| item.position.is_out_of_flow()) {
         let child_style = tree.get_block_child_style(item.node_id);
 
         // Skip items that are display:none or are not position:absolute
-        if child_style.box_generation_mode() == BoxGenerationMode::None || child_style.position() != Position::Absolute
-        {
+        if child_style.box_generation_mode() == BoxGenerationMode::None {
             continue;
         }
 

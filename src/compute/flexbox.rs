@@ -3,7 +3,6 @@ use crate::compute::common::alignment::compute_alignment_offset;
 use crate::geometry::{Line, Point, Rect, Size};
 use crate::style::{
     AlignContent, AlignItems, AlignSelf, AvailableSpace, FlexWrap, JustifyContent, LengthPercentageAuto, Overflow,
-    Position,
 };
 use crate::style::{CoreStyle, FlexDirection, FlexboxContainerStyle, FlexboxItemStyle};
 use crate::style_helpers::{TaffyMaxContent, TaffyMinContent};
@@ -13,7 +12,7 @@ use crate::util::debug::debug_log;
 use crate::util::sys::{f32_max, new_vec_with_capacity, Vec};
 use crate::util::MaybeMath;
 use crate::util::{MaybeResolve, ResolveOrZero};
-use crate::{BoxGenerationMode, BoxSizing, Direction};
+use crate::{BoxGenerationMode, BoxSizing, Direction, Position};
 
 use super::common::alignment::apply_alignment_fallback;
 #[cfg(feature = "content_size")]
@@ -35,6 +34,9 @@ struct FlexItem {
     max_size: Size<Option<f32>>,
     /// The cross-alignment of this item
     align_self: AlignSelf,
+
+    /// The position style of the item
+    position: Position,
 
     /// The overflow style of the item
     overflow: Point<Overflow>,
@@ -509,7 +511,7 @@ fn generate_anonymous_flex_items(
     tree.child_ids(node)
         .enumerate()
         .map(|(index, child)| (index, child, tree.get_flexbox_child_style(child)))
-        .filter(|(_, _, style)| style.position() != Position::Absolute)
+        .filter(|(_, _, style)| style.position().is_in_flow())
         .filter(|(_, _, style)| style.box_generation_mode() != BoxGenerationMode::None)
         .map(|(index, child, child_style)| {
             let aspect_ratio = child_style.aspect_ratio();
@@ -525,6 +527,7 @@ fn generate_anonymous_flex_items(
             FlexItem {
                 node: child,
                 order: index as u32,
+                position: child_style.position(),
                 size: child_style
                     .size()
                     .maybe_resolve(constants.node_inner_size, |val, basis| tree.calc(val, basis))
@@ -1927,15 +1930,23 @@ fn calculate_flex_item(
 
     let is_rtl_row = direction.is_row() && layout_direction.is_rtl();
     let is_rtl_column = direction.is_column() && layout_direction.is_rtl();
-    let main_relative_inset = if is_rtl_row {
-        item.inset.main_end(direction).or(item.inset.main_start(direction).map(|pos| -pos)).unwrap_or(0.0)
+    let main_relative_inset = if item.position == Position::Relative {
+        if is_rtl_row {
+            item.inset.main_end(direction).or(item.inset.main_start(direction).map(|pos| -pos)).unwrap_or(0.0)
+        } else {
+            item.inset.main_start(direction).or(item.inset.main_end(direction).map(|pos| -pos)).unwrap_or(0.0)
+        }
     } else {
-        item.inset.main_start(direction).or(item.inset.main_end(direction).map(|pos| -pos)).unwrap_or(0.0)
+        0.0
     };
-    let cross_relative_inset = if is_rtl_column {
-        item.inset.cross_end(direction).map(|pos| -pos).or(item.inset.cross_start(direction)).unwrap_or(0.0)
+    let cross_relative_inset = if item.position == Position::Relative {
+        if is_rtl_column {
+            item.inset.cross_end(direction).map(|pos| -pos).or(item.inset.cross_start(direction)).unwrap_or(0.0)
+        } else {
+            item.inset.cross_start(direction).or(item.inset.cross_end(direction).map(|pos| -pos)).unwrap_or(0.0)
+        }
     } else {
-        item.inset.cross_start(direction).or(item.inset.cross_end(direction).map(|pos| -pos)).unwrap_or(0.0)
+        0.0
     };
     let effective_line_offset_cross = if is_rtl_column { 0.0 } else { line_offset_cross };
 
@@ -2151,8 +2162,7 @@ fn perform_absolute_layout_on_absolute_children(
         let child_style = tree.get_flexbox_child_style(child);
 
         // Skip items that are display:none or are not position:absolute
-        if child_style.box_generation_mode() == BoxGenerationMode::None || child_style.position() != Position::Absolute
-        {
+        if child_style.box_generation_mode() == BoxGenerationMode::None || child_style.position().is_in_flow() {
             continue;
         }
 
