@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.10.1
+
+### Fixed
+
+- CSS Grid auto-repeat and minimum-size handling (#946)
+
 ## 0.10.0
 
 The MSRV for this release is 1.71.
