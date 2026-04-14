@@ -330,7 +330,13 @@ fn compute_inner(
     #[allow(unused_mut)] mut block_ctx: &mut BlockContext<'_>,
 ) -> LayoutOutput {
     let LayoutInput {
-        known_dimensions, parent_size, available_space, run_mode, vertical_margins_are_collapsible, ..
+        axis,
+        known_dimensions,
+        parent_size,
+        available_space,
+        run_mode,
+        vertical_margins_are_collapsible,
+        ..
     } = inputs;
 
     let style = tree.get_block_container_style(node_id);
@@ -425,8 +431,11 @@ fn compute_inner(
     });
 
     // Short-circuit if computing size and both dimensions known
-    if let (RunMode::ComputeSize, Some(container_outer_height)) = (run_mode, known_dimensions.height) {
-        return LayoutOutput::from_outer_size(Size { width: container_outer_width, height: container_outer_height });
+    if run_mode == RunMode::ComputeSize && (axis == RequestedAxis::Horizontal || known_dimensions.height.is_some()) {
+        return LayoutOutput::from_outer_size(Size {
+            width: container_outer_width,
+            height: known_dimensions.height.unwrap_or(0.0),
+        });
     }
 
     let container_percentage_resolution_height =
@@ -628,16 +637,15 @@ fn determine_content_based_container_width(
             .resolve_or_zero(available_space.width.into_option(), |val, basis| tree.calc(val, basis))
             .horizontal_axis_sum();
         let width = known_dimensions.width.unwrap_or_else(|| {
-            let size_and_baselines = tree.perform_child_layout(
+            tree.measure_child_size(
                 item.node_id,
                 known_dimensions,
                 Size::NONE,
                 available_space.map_width(|w| w.maybe_sub(item_x_margin_sum)),
                 SizingMode::InherentSize,
+                crate::AbsoluteAxis::Horizontal,
                 Line::TRUE,
-            );
-
-            size_and_baselines.size.width
+            )
         });
 
         let width = f32_max(width, item.padding_border_sum.width) + item_x_margin_sum;
