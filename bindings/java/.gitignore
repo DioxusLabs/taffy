@@ -4,4 +4,3 @@ rust/target/
 # Gradle
 java/.gradle/
 java/build/
-java/gradle/wrapper/
