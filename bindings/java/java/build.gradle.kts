@@ -2,7 +2,7 @@ plugins {
     `java-library`
 }
 
-group = "dev.dioxus"
+group = "com.dioxuslabs"
 version = "0.1.0-SNAPSHOT"
 
 java {
@@ -55,5 +55,27 @@ tasks.named<Test>("test") {
     testLogging {
         events("passed", "failed", "skipped")
         showStandardStreams = true
+    }
+}
+
+// ---- Examples --------------------------------------------------------------
+// Each file under src/examples/java/com/dioxuslabs/taffy/examples/<Name>.java
+// becomes a `./gradlew example<Name>` task, analogous to `cargo run --example`.
+
+val examples by sourceSets.creating {
+    java.srcDir("src/examples/java")
+    compileClasspath += sourceSets["main"].output
+    runtimeClasspath += sourceSets["main"].output
+}
+
+listOf("Basic", "FlexboxGap", "Nested", "Measure", "GridHolyGrail").forEach { name ->
+    tasks.register<JavaExec>("example$name") {
+        group = "examples"
+        description = "Run the $name example."
+        dependsOn(cargoBuild, tasks.named("examplesClasses"))
+        classpath = examples.runtimeClasspath
+        mainClass.set("com.dioxuslabs.taffy.examples.$name")
+        systemProperty("taffy.native.dir", rustTargetDir.asFile.absolutePath)
+        jvmArgs("--enable-native-access=ALL-UNNAMED")
     }
 }

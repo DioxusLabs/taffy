@@ -35,7 +35,7 @@ the output directory into `java.library.path` for tests via the
 ## Using the library
 
 ```java
-import dev.dioxus.taffy.*;
+import com.dioxuslabs.taffy.*;
 
 try (TaffyTree tree = new TaffyTree()) {
     long child = tree.newLeaf(Style.builder()
@@ -103,7 +103,7 @@ Not yet exposed:
   and discards it immediately after. This favors clarity over raw throughput;
   if needed we can later add a batched/serialized path.
 - **Error reporting.** Taffy errors (`TaffyError`) are thrown as
-  `dev.dioxus.taffy.TaffyException` across the JNI boundary.
+  `com.dioxuslabs.taffy.TaffyException` across the JNI boundary.
 - **Tagged value types.** `Dimension` and friends are encoded as a
   `(tag, float)` pair instead of a subclass hierarchy; this keeps the JNI
   ABI simple — every setter takes primitives only.
