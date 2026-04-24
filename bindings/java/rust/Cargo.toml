@@ -1,0 +1,33 @@
+[package]
+name = "taffy-java"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.71"
+description = "JNI bindings to the Taffy layout engine"
+repository = "https://github.com/DioxusLabs/taffy"
+license = "MIT"
+publish = false
+
+[lib]
+name = "taffy_java"
+crate-type = ["cdylib"]
+
+[workspace]
+# Standalone crate: excluded from the main Taffy workspace so `cargo` in the
+# repo root does not require a JDK.
+
+[dependencies]
+taffy = { path = "../../..", default-features = false, features = [
+    "std",
+    "taffy_tree",
+    "flexbox",
+    "grid",
+    "block_layout",
+    "float_layout",
+    "content_size",
+] }
+jni = { version = "0.21", default-features = false }
+
+[profile.release]
+lto = true
+panic = "abort"

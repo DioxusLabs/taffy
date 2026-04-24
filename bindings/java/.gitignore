@@ -1,6 +1,7 @@
-.idea
-*.iml
-out
-*.class
-/target
-/java/target
+# Rust
+rust/target/
+
+# Gradle
+java/.gradle/
+java/build/
+java/gradle/wrapper/
