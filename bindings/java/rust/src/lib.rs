@@ -161,19 +161,12 @@ fn align_items_from_tag(tag: jint) -> Option<AlignItems> {
 // --- Tree lifecycle --------------------------------------------------------
 
 #[no_mangle]
-pub extern "system" fn Java_dev_dioxus_taffy_NativeBridge_treeNew(
-    _env: JNIEnv,
-    _class: JClass,
-) -> jlong {
+pub extern "system" fn Java_dev_dioxus_taffy_NativeBridge_treeNew(_env: JNIEnv, _class: JClass) -> jlong {
     Box::into_raw(Box::new(TaffyTree::<()>::new())) as jlong
 }
 
 #[no_mangle]
-pub unsafe extern "system" fn Java_dev_dioxus_taffy_NativeBridge_treeFree(
-    _env: JNIEnv,
-    _class: JClass,
-    handle: jlong,
-) {
+pub unsafe extern "system" fn Java_dev_dioxus_taffy_NativeBridge_treeFree(_env: JNIEnv, _class: JClass, handle: jlong) {
     if handle != 0 {
         drop(Box::from_raw(handle as *mut TaffyTree<()>));
     }
@@ -396,10 +389,7 @@ pub extern "system" fn Java_dev_dioxus_taffy_NativeBridge_treeLayout<'local>(
 // --- Style lifecycle -------------------------------------------------------
 
 #[no_mangle]
-pub extern "system" fn Java_dev_dioxus_taffy_NativeBridge_styleNew(
-    _env: JNIEnv,
-    _class: JClass,
-) -> jlong {
+pub extern "system" fn Java_dev_dioxus_taffy_NativeBridge_styleNew(_env: JNIEnv, _class: JClass) -> jlong {
     Box::into_raw(Box::new(JStyle::default())) as jlong
 }
 
@@ -491,8 +481,7 @@ pub extern "system" fn Java_dev_dioxus_taffy_NativeBridge_styleSetMinSize(
     h_tag: jint,
     h_val: jfloat,
 ) {
-    style_from_handle(handle).min_size =
-        Size { width: dim(w_tag, w_val), height: dim(h_tag, h_val) };
+    style_from_handle(handle).min_size = Size { width: dim(w_tag, w_val), height: dim(h_tag, h_val) };
 }
 
 #[no_mangle]
@@ -505,8 +494,7 @@ pub extern "system" fn Java_dev_dioxus_taffy_NativeBridge_styleSetMaxSize(
     h_tag: jint,
     h_val: jfloat,
 ) {
-    style_from_handle(handle).max_size =
-        Size { width: dim(w_tag, w_val), height: dim(h_tag, h_val) };
+    style_from_handle(handle).max_size = Size { width: dim(w_tag, w_val), height: dim(h_tag, h_val) };
 }
 
 #[no_mangle]
@@ -523,12 +511,8 @@ pub extern "system" fn Java_dev_dioxus_taffy_NativeBridge_styleSetMargin(
     b_tag: jint,
     b_val: jfloat,
 ) {
-    style_from_handle(handle).margin = Rect {
-        left: lpa(l_tag, l_val),
-        right: lpa(r_tag, r_val),
-        top: lpa(t_tag, t_val),
-        bottom: lpa(b_tag, b_val),
-    };
+    style_from_handle(handle).margin =
+        Rect { left: lpa(l_tag, l_val), right: lpa(r_tag, r_val), top: lpa(t_tag, t_val), bottom: lpa(b_tag, b_val) };
 }
 
 #[no_mangle]
@@ -545,12 +529,8 @@ pub extern "system" fn Java_dev_dioxus_taffy_NativeBridge_styleSetInset(
     b_tag: jint,
     b_val: jfloat,
 ) {
-    style_from_handle(handle).inset = Rect {
-        left: lpa(l_tag, l_val),
-        right: lpa(r_tag, r_val),
-        top: lpa(t_tag, t_val),
-        bottom: lpa(b_tag, b_val),
-    };
+    style_from_handle(handle).inset =
+        Rect { left: lpa(l_tag, l_val), right: lpa(r_tag, r_val), top: lpa(t_tag, t_val), bottom: lpa(b_tag, b_val) };
 }
 
 #[no_mangle]
@@ -567,12 +547,8 @@ pub extern "system" fn Java_dev_dioxus_taffy_NativeBridge_styleSetPadding(
     b_tag: jint,
     b_val: jfloat,
 ) {
-    style_from_handle(handle).padding = Rect {
-        left: lp(l_tag, l_val),
-        right: lp(r_tag, r_val),
-        top: lp(t_tag, t_val),
-        bottom: lp(b_tag, b_val),
-    };
+    style_from_handle(handle).padding =
+        Rect { left: lp(l_tag, l_val), right: lp(r_tag, r_val), top: lp(t_tag, t_val), bottom: lp(b_tag, b_val) };
 }
 
 #[no_mangle]
@@ -589,12 +565,8 @@ pub extern "system" fn Java_dev_dioxus_taffy_NativeBridge_styleSetBorder(
     b_tag: jint,
     b_val: jfloat,
 ) {
-    style_from_handle(handle).border = Rect {
-        left: lp(l_tag, l_val),
-        right: lp(r_tag, r_val),
-        top: lp(t_tag, t_val),
-        bottom: lp(b_tag, b_val),
-    };
+    style_from_handle(handle).border =
+        Rect { left: lp(l_tag, l_val), right: lp(r_tag, r_val), top: lp(t_tag, t_val), bottom: lp(b_tag, b_val) };
 }
 
 #[no_mangle]
@@ -794,13 +766,7 @@ unsafe fn read_template_tracks(
     let mut val_buf: Vec<jfloat> = vec![0.0; n];
     env.get_int_array_region(&tags, 0, &mut tag_buf).ok()?;
     env.get_float_array_region(&values, 0, &mut val_buf).ok()?;
-    Some(
-        tag_buf
-            .into_iter()
-            .zip(val_buf.into_iter())
-            .map(|(t, v)| template_component_from_tag(t, v))
-            .collect(),
-    )
+    Some(tag_buf.into_iter().zip(val_buf).map(|(t, v)| template_component_from_tag(t, v)).collect())
 }
 
 unsafe fn read_tracks(
@@ -818,13 +784,7 @@ unsafe fn read_tracks(
     let mut val_buf: Vec<jfloat> = vec![0.0; n];
     env.get_int_array_region(&tags, 0, &mut tag_buf).ok()?;
     env.get_float_array_region(&values, 0, &mut val_buf).ok()?;
-    Some(
-        tag_buf
-            .into_iter()
-            .zip(val_buf.into_iter())
-            .map(|(t, v)| track_from_tag(t, v))
-            .collect(),
-    )
+    Some(tag_buf.into_iter().zip(val_buf).map(|(t, v)| track_from_tag(t, v)).collect())
 }
 
 #[no_mangle]
@@ -836,7 +796,7 @@ pub unsafe extern "system" fn Java_dev_dioxus_taffy_NativeBridge_styleSetGridTem
     values: jni::objects::JFloatArray<'local>,
 ) {
     if let Some(v) = read_template_tracks(&mut env, tags, values) {
-        style_from_handle(handle).grid_template_columns = v.into();
+        style_from_handle(handle).grid_template_columns = v;
     }
 }
 
@@ -849,7 +809,7 @@ pub unsafe extern "system" fn Java_dev_dioxus_taffy_NativeBridge_styleSetGridTem
     values: jni::objects::JFloatArray<'local>,
 ) {
     if let Some(v) = read_template_tracks(&mut env, tags, values) {
-        style_from_handle(handle).grid_template_rows = v.into();
+        style_from_handle(handle).grid_template_rows = v;
     }
 }
 
@@ -862,7 +822,7 @@ pub unsafe extern "system" fn Java_dev_dioxus_taffy_NativeBridge_styleSetGridAut
     values: jni::objects::JFloatArray<'local>,
 ) {
     if let Some(v) = read_tracks(&mut env, tags, values) {
-        style_from_handle(handle).grid_auto_columns = v.into();
+        style_from_handle(handle).grid_auto_columns = v;
     }
 }
 
@@ -875,7 +835,7 @@ pub unsafe extern "system" fn Java_dev_dioxus_taffy_NativeBridge_styleSetGridAut
     values: jni::objects::JFloatArray<'local>,
 ) {
     if let Some(v) = read_tracks(&mut env, tags, values) {
-        style_from_handle(handle).grid_auto_rows = v.into();
+        style_from_handle(handle).grid_auto_rows = v;
     }
 }
 
@@ -889,10 +849,8 @@ pub extern "system" fn Java_dev_dioxus_taffy_NativeBridge_styleSetGridColumn(
     end_tag: jint,
     end_val: jfloat,
 ) {
-    style_from_handle(handle).grid_column = Line {
-        start: placement_from_tag(start_tag, start_val),
-        end: placement_from_tag(end_tag, end_val),
-    };
+    style_from_handle(handle).grid_column =
+        Line { start: placement_from_tag(start_tag, start_val), end: placement_from_tag(end_tag, end_val) };
 }
 
 #[no_mangle]
@@ -905,10 +863,8 @@ pub extern "system" fn Java_dev_dioxus_taffy_NativeBridge_styleSetGridRow(
     end_tag: jint,
     end_val: jfloat,
 ) {
-    style_from_handle(handle).grid_row = Line {
-        start: placement_from_tag(start_tag, start_val),
-        end: placement_from_tag(end_tag, end_val),
-    };
+    style_from_handle(handle).grid_row =
+        Line { start: placement_from_tag(start_tag, start_val), end: placement_from_tag(end_tag, end_val) };
 }
 
 #[no_mangle]
@@ -920,4 +876,3 @@ pub extern "system" fn Java_dev_dioxus_taffy_NativeBridge_styleSetGridAutoFlow(
 ) {
     style_from_handle(handle).grid_auto_flow = grid_auto_flow_from_tag(tag);
 }
-
