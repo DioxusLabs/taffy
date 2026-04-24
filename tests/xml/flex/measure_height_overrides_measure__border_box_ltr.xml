@@ -1,0 +1,15 @@
+<test name="measure_height_overrides_measure__border_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div direction="ltr">
+      <text direction="ltr" height="5px">
+        H
+      </text>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="10" height="5">
+      <node x="0" y="0" width="10" height="5"/>
+    </node>
+  </expectations>
+</test>

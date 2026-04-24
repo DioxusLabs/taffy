@@ -1,316 +1,380 @@
 //! Style types for representing lengths / sizes
-
-use crate::geometry::{Rect, Size};
-use crate::style_helpers::{FromLength, FromPercent, TaffyAuto, TaffyMaxContent, TaffyMinContent, TaffyZero};
-use crate::util::sys::abs;
+use super::CompactLength;
+use crate::geometry::Rect;
+use crate::style_helpers::{FromLength, FromPercent, TaffyAuto, TaffyZero};
+#[cfg(feature = "parse")]
+use crate::util::parse::{from_str_from_css, parse_css_str_entirely, CssParseResult, FromCss, Parser, Token};
 
 /// A unit of linear measurement
 ///
-/// This is commonly combined with [`Rect`], [`Point`](crate::geometry::Point) and [`Size<T>`].
+/// This is commonly combined with [`Rect`], [`Point`](crate::geometry::Point) and [`Size<T>`](crate::geometry::Size).
 #[derive(Copy, Clone, PartialEq, Debug)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-pub enum LengthPercentage {
-    /// An absolute length in some abstract units. Users of Taffy may define what they correspond
-    /// to in their application (pixels, logical pixels, mm, etc) as they see fit.
-    Length(f32),
-    /// The dimension is stored in percentage relative to the parent item.
-    Percent(f32),
-}
+#[cfg_attr(feature = "serde", derive(Serialize))]
+pub struct LengthPercentage(pub(crate) CompactLength);
 impl TaffyZero for LengthPercentage {
-    const ZERO: Self = Self::Length(0.0);
+    const ZERO: Self = Self(CompactLength::ZERO);
 }
 impl FromLength for LengthPercentage {
     fn from_length<Input: Into<f32> + Copy>(value: Input) -> Self {
-        Self::Length(value.into())
+        Self::length(value.into())
     }
 }
 impl FromPercent for LengthPercentage {
-    fn from_percent<Input: Into<f32> + Copy>(percent: Input) -> Self {
-        Self::Percent(percent.into())
+    fn from_percent<Input: Into<f32> + Copy>(value: Input) -> Self {
+        Self::percent(value.into())
     }
 }
 
-/// A unit of linear measurement
-///
-/// This is commonly combined with [`Rect`], [`Point`](crate::geometry::Point) and [`Size<T>`].
-#[derive(Copy, Clone, PartialEq, Debug)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-pub enum LengthPercentageAuto {
+#[cfg(feature = "parse")]
+impl FromCss for LengthPercentage {
+    fn from_css<'i>(parser: &mut Parser<'i, '_>) -> CssParseResult<'i, Self> {
+        match parser.next()?.clone() {
+            Token::Percentage { unit_value, .. } => Ok(Self::percent(unit_value)),
+            Token::Dimension { unit, value, .. } if unit == "px" => Ok(Self::length(value)),
+            token => Err(parser.new_unexpected_token_error(token))?,
+        }
+    }
+}
+#[cfg(feature = "parse")]
+from_str_from_css!(LengthPercentage);
+
+impl LengthPercentage {
     /// An absolute length in some abstract units. Users of Taffy may define what they correspond
     /// to in their application (pixels, logical pixels, mm, etc) as they see fit.
-    Length(f32),
-    /// The dimension is stored in percentage relative to the parent item.
-    Percent(f32),
-    /// The dimension should be automatically computed
-    Auto,
-}
-impl TaffyZero for LengthPercentageAuto {
-    const ZERO: Self = Self::Length(0.0);
-}
-impl TaffyAuto for LengthPercentageAuto {
-    const AUTO: Self = Self::Auto;
-}
-impl FromLength for LengthPercentageAuto {
-    fn from_length<Input: Into<f32> + Copy>(value: Input) -> Self {
-        Self::Length(value.into())
+    #[inline(always)]
+    pub const fn length(val: f32) -> Self {
+        Self(CompactLength::length(val))
     }
-}
-impl FromPercent for LengthPercentageAuto {
-    fn from_percent<Input: Into<f32> + Copy>(percent: Input) -> Self {
-        Self::Percent(percent.into())
+
+    /// A percentage length relative to the size of the containing block.
+    ///
+    /// **NOTE: percentages are represented as a f32 value in the range [0.0, 1.0] NOT the range [0.0, 100.0]**
+    #[inline(always)]
+    pub const fn percent(val: f32) -> Self {
+        Self(CompactLength::percent(val))
+    }
+
+    /// A `calc()` value. The value passed here is treated as an opaque handle to
+    /// the actual calc representation and may be a pointer, index, etc.
+    ///
+    /// The low 3 bits are used as a tag value and will be returned as 0.
+    #[inline(always)]
+    #[cfg(feature = "calc")]
+    pub fn calc(ptr: *const ()) -> Self {
+        Self(CompactLength::calc(ptr))
+    }
+
+    /// Create a LengthPercentage from a raw `CompactLength`.
+    /// # Safety
+    /// CompactLength must represent a valid variant for LengthPercentage
+    #[allow(unsafe_code)]
+    pub const unsafe fn from_raw(val: CompactLength) -> Self {
+        Self(val)
+    }
+
+    /// Get the underlying `CompactLength` representation of the value
+    pub const fn into_raw(self) -> CompactLength {
+        self.0
     }
 }
 
-impl From<LengthPercentage> for LengthPercentageAuto {
-    fn from(input: LengthPercentage) -> Self {
-        match input {
-            LengthPercentage::Length(value) => Self::Length(value),
-            LengthPercentage::Percent(value) => Self::Percent(value),
+#[cfg(feature = "serde")]
+impl<'de> serde::Deserialize<'de> for LengthPercentage {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let inner = CompactLength::deserialize(deserializer)?;
+        // Note: validation intentionally excludes the CALC_TAG as deserializing calc() values is not supported
+        if matches!(inner.tag(), CompactLength::LENGTH_TAG | CompactLength::PERCENT_TAG) {
+            Ok(Self(inner))
+        } else {
+            Err(serde::de::Error::custom("Invalid tag"))
         }
     }
 }
 
+/// A unit of linear measurement
+///
+/// This is commonly combined with [`Rect`], [`Point`](crate::geometry::Point) and [`Size<T>`](crate::geometry::Size).
+#[derive(Copy, Clone, PartialEq, Debug)]
+#[cfg_attr(feature = "serde", derive(Serialize))]
+pub struct LengthPercentageAuto(pub(crate) CompactLength);
+impl TaffyZero for LengthPercentageAuto {
+    const ZERO: Self = Self(CompactLength::ZERO);
+}
+impl TaffyAuto for LengthPercentageAuto {
+    const AUTO: Self = Self(CompactLength::AUTO);
+}
+impl FromLength for LengthPercentageAuto {
+    fn from_length<Input: Into<f32> + Copy>(value: Input) -> Self {
+        Self::length(value.into())
+    }
+}
+impl FromPercent for LengthPercentageAuto {
+    fn from_percent<Input: Into<f32> + Copy>(value: Input) -> Self {
+        Self::percent(value.into())
+    }
+}
+impl From<LengthPercentage> for LengthPercentageAuto {
+    fn from(input: LengthPercentage) -> Self {
+        Self(input.0)
+    }
+}
+
+#[cfg(feature = "parse")]
+impl FromCss for LengthPercentageAuto {
+    fn from_css<'i>(parser: &mut Parser<'i, '_>) -> CssParseResult<'i, Self> {
+        match parser.next()?.clone() {
+            Token::Percentage { unit_value, .. } => Ok(Self::percent(unit_value)),
+            Token::Dimension { unit, value, .. } if unit == "px" => Ok(Self::length(value)),
+            Token::Ident(ident) if ident == "auto" => Ok(Self::auto()),
+            token => Err(parser.new_unexpected_token_error(token))?,
+        }
+    }
+}
+#[cfg(feature = "parse")]
+from_str_from_css!(LengthPercentageAuto);
+
 impl LengthPercentageAuto {
+    /// An absolute length in some abstract units. Users of Taffy may define what they correspond
+    /// to in their application (pixels, logical pixels, mm, etc) as they see fit.
+    #[inline(always)]
+    pub const fn length(val: f32) -> Self {
+        Self(CompactLength::length(val))
+    }
+
+    /// A percentage length relative to the size of the containing block.
+    ///
+    /// **NOTE: percentages are represented as a f32 value in the range [0.0, 1.0] NOT the range [0.0, 100.0]**
+    #[inline(always)]
+    pub const fn percent(val: f32) -> Self {
+        Self(CompactLength::percent(val))
+    }
+
+    /// The dimension should be automatically computed according to algorithm-specific rules
+    /// regarding the default size of boxes.
+    #[inline(always)]
+    pub const fn auto() -> Self {
+        Self(CompactLength::auto())
+    }
+
+    /// A `calc()` value. The value passed here is treated as an opaque handle to
+    /// the actual calc representation and may be a pointer, index, etc.
+    ///
+    /// The low 3 bits are used as a tag value and will be returned as 0.
+    #[inline]
+    #[cfg(feature = "calc")]
+    pub fn calc(ptr: *const ()) -> Self {
+        Self(CompactLength::calc(ptr))
+    }
+
+    /// Create a LengthPercentageAuto from a raw `CompactLength`.
+    /// # Safety
+    /// CompactLength must represent a valid variant for LengthPercentageAuto
+    #[allow(unsafe_code)]
+    pub const unsafe fn from_raw(val: CompactLength) -> Self {
+        Self(val)
+    }
+
+    /// Get the underlying `CompactLength` representation of the value
+    pub const fn into_raw(self) -> CompactLength {
+        self.0
+    }
+
     /// Returns:
     ///   - Some(length) for Length variants
     ///   - Some(resolved) using the provided context for Percent variants
     ///   - None for Auto variants
     #[inline(always)]
-    pub fn resolve_to_option(self, context: f32) -> Option<f32> {
-        match self {
-            Self::Length(length) => Some(length),
-            Self::Percent(percent) => Some(context * percent),
-            Self::Auto => None,
+    pub fn resolve_to_option(self, context: f32, calc_resolver: impl Fn(*const (), f32) -> f32) -> Option<f32> {
+        match self.0.tag() {
+            CompactLength::LENGTH_TAG => Some(self.0.value()),
+            CompactLength::PERCENT_TAG => Some(context * self.0.value()),
+            CompactLength::AUTO_TAG => None,
+            #[cfg(feature = "calc")]
+            _ if self.0.is_calc() => Some(calc_resolver(self.0.calc_value(), context)),
+            _ => unreachable!("LengthPercentageAuto values cannot be constructed with other tags"),
         }
     }
 
     /// Returns true if value is LengthPercentageAuto::Auto
     #[inline(always)]
     pub fn is_auto(self) -> bool {
-        self == Self::Auto
+        self.0.is_auto()
+    }
+}
+
+#[cfg(feature = "serde")]
+impl<'de> serde::Deserialize<'de> for LengthPercentageAuto {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let inner = CompactLength::deserialize(deserializer)?;
+        // Note: validation intentionally excludes the CALC_TAG as deserializing calc() values is not supported
+        if matches!(inner.tag(), CompactLength::LENGTH_TAG | CompactLength::PERCENT_TAG | CompactLength::AUTO_TAG) {
+            Ok(Self(inner))
+        } else {
+            Err(serde::de::Error::custom("Invalid tag"))
+        }
     }
 }
 
 /// A unit of linear measurement
 ///
-/// This is commonly combined with [`Rect`], [`Point`](crate::geometry::Point) and [`Size<T>`].
+/// This is commonly combined with [`Rect`], [`Point`](crate::geometry::Point) and [`Size<T>`](crate::geometry::Size).
 #[derive(Copy, Clone, PartialEq, Debug)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-pub enum Dimension {
-    /// An absolute length in some abstract units. Users of Taffy may define what they correspond
-    /// to in their application (pixels, logical pixels, mm, etc) as they see fit.
-    Length(f32),
-    /// The dimension is stored in percentage relative to the parent item.
-    Percent(f32),
-    /// The dimension should be automatically computed
-    Auto,
-}
+#[cfg_attr(feature = "serde", derive(Serialize))]
+pub struct Dimension(pub(crate) CompactLength);
 impl TaffyZero for Dimension {
-    const ZERO: Self = Self::Length(0.0);
+    const ZERO: Self = Self(CompactLength::ZERO);
 }
 impl TaffyAuto for Dimension {
-    const AUTO: Self = Self::Auto;
+    const AUTO: Self = Self(CompactLength::AUTO);
 }
 impl FromLength for Dimension {
     fn from_length<Input: Into<f32> + Copy>(value: Input) -> Self {
-        Self::Length(value.into())
+        Self::length(value.into())
     }
 }
 impl FromPercent for Dimension {
-    fn from_percent<Input: Into<f32> + Copy>(percent: Input) -> Self {
-        Self::Percent(percent.into())
+    fn from_percent<Input: Into<f32> + Copy>(value: Input) -> Self {
+        Self::percent(value.into())
     }
 }
-
 impl From<LengthPercentage> for Dimension {
     fn from(input: LengthPercentage) -> Self {
-        match input {
-            LengthPercentage::Length(value) => Self::Length(value),
-            LengthPercentage::Percent(value) => Self::Percent(value),
-        }
+        Self(input.0)
     }
 }
-
 impl From<LengthPercentageAuto> for Dimension {
     fn from(input: LengthPercentageAuto) -> Self {
-        match input {
-            LengthPercentageAuto::Length(value) => Self::Length(value),
-            LengthPercentageAuto::Percent(value) => Self::Percent(value),
-            LengthPercentageAuto::Auto => Self::Auto,
-        }
+        Self(input.0)
     }
 }
 
+#[cfg(feature = "parse")]
+impl FromCss for Dimension {
+    fn from_css<'i>(parser: &mut Parser<'i, '_>) -> CssParseResult<'i, Self> {
+        match parser.next()?.clone() {
+            Token::Percentage { unit_value, .. } => Ok(Self::percent(unit_value)),
+            Token::Dimension { unit, value, .. } if unit == "px" => Ok(Self::length(value)),
+            Token::Ident(ident) if ident == "auto" => Ok(Self::auto()),
+            token => Err(parser.new_unexpected_token_error(token))?,
+        }
+    }
+}
+#[cfg(feature = "parse")]
+from_str_from_css!(Dimension);
+
 impl Dimension {
+    /// An absolute length in some abstract units. Users of Taffy may define what they correspond
+    /// to in their application (pixels, logical pixels, mm, etc) as they see fit.
+    #[inline(always)]
+    pub const fn length(val: f32) -> Self {
+        Self(CompactLength::length(val))
+    }
+
+    /// A percentage length relative to the size of the containing block.
+    ///
+    /// **NOTE: percentages are represented as a f32 value in the range [0.0, 1.0] NOT the range [0.0, 100.0]**
+    #[inline(always)]
+    pub const fn percent(val: f32) -> Self {
+        Self(CompactLength::percent(val))
+    }
+
+    /// The dimension should be automatically computed according to algorithm-specific rules
+    /// regarding the default size of boxes.
+    #[inline(always)]
+    pub const fn auto() -> Self {
+        Self(CompactLength::auto())
+    }
+
+    /// A `calc()` value. The value passed here is treated as an opaque handle to
+    /// the actual calc representation and may be a pointer, index, etc.
+    ///
+    /// The low 3 bits are used as a tag value and will be returned as 0.
+    #[inline]
+    #[cfg(feature = "calc")]
+    pub fn calc(ptr: *const ()) -> Self {
+        Self(CompactLength::calc(ptr))
+    }
+
+    /// Create a LengthPercentageAuto from a raw `CompactLength`.
+    /// # Safety
+    /// CompactLength must represent a valid variant for LengthPercentageAuto
+    #[allow(unsafe_code)]
+    pub const unsafe fn from_raw(val: CompactLength) -> Self {
+        Self(val)
+    }
+
+    /// Get the underlying `CompactLength` representation of the value
+    pub const fn into_raw(self) -> CompactLength {
+        self.0
+    }
+
     /// Get Length value if value is Length variant
     #[cfg(feature = "grid")]
     pub fn into_option(self) -> Option<f32> {
-        match self {
-            Dimension::Length(value) => Some(value),
+        match self.0.tag() {
+            CompactLength::LENGTH_TAG => Some(self.0.value()),
             _ => None,
+        }
+    }
+    /// Returns true if value is Auto
+    #[inline(always)]
+    pub fn is_auto(self) -> bool {
+        self.0.is_auto()
+    }
+
+    /// Get the raw `CompactLength` tag
+    pub fn tag(self) -> usize {
+        self.0.tag()
+    }
+
+    /// Get the raw `CompactLength` value for non-calc variants that have a numeric parameter
+    pub fn value(self) -> f32 {
+        self.0.value()
+    }
+}
+
+#[cfg(feature = "serde")]
+impl<'de> serde::Deserialize<'de> for Dimension {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let inner = CompactLength::deserialize(deserializer)?;
+        // Note: validation intentionally excludes the CALC_TAG as deserializing calc() values is not supported
+        if matches!(inner.tag(), CompactLength::LENGTH_TAG | CompactLength::PERCENT_TAG | CompactLength::AUTO_TAG) {
+            Ok(Self(inner))
+        } else {
+            Err(serde::de::Error::custom("Invalid tag"))
         }
     }
 }
 
 impl Rect<Dimension> {
-    /// Create a new Rect with [`Dimension::Length`]
+    /// Create a new Rect with length values
     #[must_use]
     pub const fn from_length(start: f32, end: f32, top: f32, bottom: f32) -> Self {
         Rect {
-            left: Dimension::Length(start),
-            right: Dimension::Length(end),
-            top: Dimension::Length(top),
-            bottom: Dimension::Length(bottom),
+            left: Dimension(CompactLength::length(start)),
+            right: Dimension(CompactLength::length(end)),
+            top: Dimension(CompactLength::length(top)),
+            bottom: Dimension(CompactLength::length(bottom)),
         }
     }
 
-    /// Create a new Rect with [`Dimension::Percent`]
+    /// Create a new Rect with percentage values
     #[must_use]
     pub const fn from_percent(start: f32, end: f32, top: f32, bottom: f32) -> Self {
         Rect {
-            left: Dimension::Percent(start),
-            right: Dimension::Percent(end),
-            top: Dimension::Percent(top),
-            bottom: Dimension::Percent(bottom),
+            left: Dimension(CompactLength::percent(start)),
+            right: Dimension(CompactLength::percent(end)),
+            top: Dimension(CompactLength::percent(top)),
+            bottom: Dimension(CompactLength::percent(bottom)),
         }
-    }
-}
-
-/// The amount of space available to a node in a given axis
-/// <https://www.w3.org/TR/css-sizing-3/#available>
-#[derive(Copy, Clone, Debug, PartialEq)]
-#[cfg_attr(feature = "serde", derive(Serialize))]
-pub enum AvailableSpace {
-    /// The amount of space available is the specified number of pixels
-    Definite(f32),
-    /// The amount of space available is indefinite and the node should be laid out under a min-content constraint
-    MinContent,
-    /// The amount of space available is indefinite and the node should be laid out under a max-content constraint
-    MaxContent,
-}
-impl TaffyZero for AvailableSpace {
-    const ZERO: Self = Self::Definite(0.0);
-}
-impl TaffyMaxContent for AvailableSpace {
-    const MAX_CONTENT: Self = Self::MaxContent;
-}
-impl TaffyMinContent for AvailableSpace {
-    const MIN_CONTENT: Self = Self::MinContent;
-}
-impl FromLength for AvailableSpace {
-    fn from_length<Input: Into<f32> + Copy>(value: Input) -> Self {
-        Self::Definite(value.into())
-    }
-}
-
-impl AvailableSpace {
-    /// Returns true for definite values, else false
-    pub fn is_definite(self) -> bool {
-        matches!(self, AvailableSpace::Definite(_))
-    }
-
-    /// Convert to Option
-    /// Definite values become Some(value). Constraints become None.
-    pub fn into_option(self) -> Option<f32> {
-        match self {
-            AvailableSpace::Definite(value) => Some(value),
-            _ => None,
-        }
-    }
-
-    /// Return the definite value or a default value
-    pub fn unwrap_or(self, default: f32) -> f32 {
-        self.into_option().unwrap_or(default)
-    }
-
-    /// Return the definite value. Panic is the value is not definite.
-    #[track_caller]
-    pub fn unwrap(self) -> f32 {
-        self.into_option().unwrap()
-    }
-
-    /// Return self if definite or a default value
-    pub fn or(self, default: AvailableSpace) -> AvailableSpace {
-        match self {
-            AvailableSpace::Definite(_) => self,
-            _ => default,
-        }
-    }
-
-    /// Return self if definite or a the result of the default value callback
-    pub fn or_else(self, default_cb: impl FnOnce() -> AvailableSpace) -> AvailableSpace {
-        match self {
-            AvailableSpace::Definite(_) => self,
-            _ => default_cb(),
-        }
-    }
-
-    /// Return the definite value or the result of the default value callback
-    pub fn unwrap_or_else(self, default_cb: impl FnOnce() -> f32) -> f32 {
-        self.into_option().unwrap_or_else(default_cb)
-    }
-
-    /// If passed value is Some then return AvailableSpace::Definite containing that value, else return self
-    pub fn maybe_set(self, value: Option<f32>) -> AvailableSpace {
-        match value {
-            Some(value) => AvailableSpace::Definite(value),
-            None => self,
-        }
-    }
-
-    /// If passed value is Some then return AvailableSpace::Definite containing that value, else return self
-    pub fn map_definite_value(self, map_function: impl FnOnce(f32) -> f32) -> AvailableSpace {
-        match self {
-            AvailableSpace::Definite(value) => AvailableSpace::Definite(map_function(value)),
-            _ => self,
-        }
-    }
-
-    /// Compute free_space given the passed used_space
-    pub fn compute_free_space(&self, used_space: f32) -> f32 {
-        match self {
-            AvailableSpace::MaxContent => f32::INFINITY,
-            AvailableSpace::MinContent => 0.0,
-            AvailableSpace::Definite(available_space) => available_space - used_space,
-        }
-    }
-
-    /// Compare equality with another AvailableSpace, treating definite values
-    /// that are within f32::EPSILON of each other as equal
-    pub fn is_roughly_equal(self, other: AvailableSpace) -> bool {
-        use AvailableSpace::*;
-        match (self, other) {
-            (Definite(a), Definite(b)) => abs(a - b) < f32::EPSILON,
-            (MinContent, MinContent) => true,
-            (MaxContent, MaxContent) => true,
-            _ => false,
-        }
-    }
-}
-
-impl From<f32> for AvailableSpace {
-    fn from(value: f32) -> Self {
-        Self::Definite(value)
-    }
-}
-
-impl From<Option<f32>> for AvailableSpace {
-    fn from(option: Option<f32>) -> Self {
-        match option {
-            Some(value) => Self::Definite(value),
-            None => Self::MaxContent,
-        }
-    }
-}
-
-impl Size<AvailableSpace> {
-    /// Convert `Size<AvailableSpace>` into `Size<Option<f32>>`
-    pub fn into_options(self) -> Size<Option<f32>> {
-        Size { width: self.width.into_option(), height: self.height.into_option() }
-    }
-
-    /// If passed value is Some then return AvailableSpace::Definite containing that value, else return self
-    pub fn maybe_set(self, value: Size<Option<f32>>) -> Size<AvailableSpace> {
-        Size { width: self.width.maybe_set(value.width), height: self.height.maybe_set(value.height) }
     }
 }

@@ -1,0 +1,15 @@
+<test name="flex_shrink_flex_grow_row__content_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div box-sizing="content-box" direction="rtl" width="500px" height="500px">
+      <div box-sizing="content-box" direction="rtl" width="500px" height="100px"/>
+      <div box-sizing="content-box" direction="rtl" width="500px" height="100px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="500" height="500">
+      <node x="250" y="0" width="250" height="100"/>
+      <node x="0" y="0" width="250" height="100"/>
+    </node>
+  </expectations>
+</test>

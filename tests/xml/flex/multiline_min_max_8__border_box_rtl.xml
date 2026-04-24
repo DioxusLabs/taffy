@@ -1,0 +1,19 @@
+<test name="multiline_min_max_8__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="flex" box-sizing="content-box" direction="rtl" flex-wrap="wrap" width="600px" height="20px" border-top="5px" border-left="5px" border-bottom="5px" border-right="5px">
+      <div direction="rtl" flex-grow="1" flex-basis="600px" height="10px" max-width="300px" margin-left="10px"/>
+      <div direction="rtl" flex-grow="1" width="100px" height="10px"/>
+      <div direction="rtl" flex-grow="1" width="100px" height="10px"/>
+      <div direction="rtl" flex-grow="1" width="100px" height="10px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="610" height="30">
+      <node x="305" y="5" width="300" height="10"/>
+      <node x="150" y="5" width="145" height="10"/>
+      <node x="5" y="5" width="145" height="10"/>
+      <node x="5" y="15" width="600" height="10"/>
+    </node>
+  </expectations>
+</test>

@@ -1,3 +1,10 @@
+//! ## Example: Partial Tree with Directly Owned Children
+//!
+//! The following example demonstrate an implementation of Taffy's Partial trait and usage of the low-level compute APIs.
+//! This example uses directly owned children with NodeId's being index's into vec on parent node.
+//! Since an iterator created from a node can't access grandchildren, we are limited to only implement `TraversePartialTree`.
+//! See the [`crate::tree::traits`] module for more details about the low-level traits.
+
 mod common {
     pub mod image;
     pub mod text;
@@ -6,7 +13,7 @@ use common::image::{image_measure_function, ImageContext};
 use common::text::{text_measure_function, FontMetrics, TextContext, WritingMode, LOREM_IPSUM};
 use taffy::{
     compute_cached_layout, compute_flexbox_layout, compute_grid_layout, compute_leaf_layout, compute_root_layout,
-    prelude::*, Cache, Layout, Style,
+    prelude::*, Cache, CacheTree, Layout, Style,
 };
 
 #[derive(Debug, Copy, Clone)]
@@ -126,10 +133,12 @@ impl taffy::TraversePartialTree for Node {
 }
 
 impl taffy::LayoutPartialTree for Node {
-    type CoreContainerStyle<'a> = &'a Style where
+    type CoreContainerStyle<'a>
+        = &'a Style
+    where
         Self: 'a;
 
-    type CacheMut<'b> = &'b mut Cache where Self: 'b;
+    type CustomIdent = String;
 
     fn get_core_container_style(&self, node_id: NodeId) -> Self::CoreContainerStyle<'_> {
         &self.node_from_id(node_id).style
@@ -139,8 +148,8 @@ impl taffy::LayoutPartialTree for Node {
         self.node_from_id_mut(node_id).layout = *layout
     }
 
-    fn get_cache_mut(&mut self, node_id: NodeId) -> &mut Cache {
-        &mut self.node_from_id_mut(node_id).cache
+    fn resolve_calc_value(&self, _val: *const (), _basis: f32) -> f32 {
+        0.0
     }
 
     fn compute_child_layout(&mut self, node_id: NodeId, inputs: taffy::tree::LayoutInput) -> taffy::tree::LayoutOutput {
@@ -151,27 +160,55 @@ impl taffy::LayoutPartialTree for Node {
             match node.kind {
                 NodeKind::Flexbox => compute_flexbox_layout(node, node_id, inputs),
                 NodeKind::Grid => compute_grid_layout(node, node_id, inputs),
-                NodeKind::Text => compute_leaf_layout(inputs, &node.style, |known_dimensions, available_space| {
-                    text_measure_function(
-                        known_dimensions,
-                        available_space,
-                        node.text_data.as_ref().unwrap(),
-                        &font_metrics,
-                    )
-                }),
-                NodeKind::Image => compute_leaf_layout(inputs, &node.style, |known_dimensions, _available_space| {
-                    image_measure_function(known_dimensions, node.image_data.as_ref().unwrap())
-                }),
+                NodeKind::Text => compute_leaf_layout(
+                    inputs,
+                    &node.style,
+                    |_val, _basis| 0.0,
+                    |known_dimensions, available_space| {
+                        text_measure_function(
+                            known_dimensions,
+                            available_space,
+                            node.text_data.as_ref().unwrap(),
+                            &font_metrics,
+                        )
+                    },
+                ),
+                NodeKind::Image => compute_leaf_layout(
+                    inputs,
+                    &node.style,
+                    |_val, _basis| 0.0,
+                    |known_dimensions, _available_space| {
+                        image_measure_function(known_dimensions, node.image_data.as_ref().unwrap())
+                    },
+                ),
             }
         })
     }
 }
 
+impl CacheTree for Node {
+    fn cache_get(&self, node_id: NodeId, inputs: &taffy::LayoutInput) -> Option<taffy::LayoutOutput> {
+        self.node_from_id(node_id).cache.get(inputs)
+    }
+
+    fn cache_store(&mut self, node_id: NodeId, inputs: &taffy::LayoutInput, layout_output: taffy::LayoutOutput) {
+        self.node_from_id_mut(node_id).cache.store(inputs, layout_output)
+    }
+
+    fn cache_clear(&mut self, node_id: NodeId) {
+        self.node_from_id_mut(node_id).cache.clear();
+    }
+}
+
 impl taffy::LayoutFlexboxContainer for Node {
-    type FlexboxContainerStyle<'a> = &'a Style where
+    type FlexboxContainerStyle<'a>
+        = &'a Style
+    where
         Self: 'a;
 
-    type FlexboxItemStyle<'a> = &'a Style where
+    type FlexboxItemStyle<'a>
+        = &'a Style
+    where
         Self: 'a;
 
     fn get_flexbox_container_style(&self, node_id: NodeId) -> Self::FlexboxContainerStyle<'_> {
@@ -184,10 +221,14 @@ impl taffy::LayoutFlexboxContainer for Node {
 }
 
 impl taffy::LayoutGridContainer for Node {
-    type GridContainerStyle<'a> = &'a Style where
+    type GridContainerStyle<'a>
+        = &'a Style
+    where
         Self: 'a;
 
-    type GridItemStyle<'a> = &'a Style where
+    type GridItemStyle<'a>
+        = &'a Style
+    where
         Self: 'a;
 
     fn get_grid_container_style(&self, node_id: NodeId) -> Self::GridContainerStyle<'_> {

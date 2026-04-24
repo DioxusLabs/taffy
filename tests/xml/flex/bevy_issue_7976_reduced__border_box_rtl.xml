@@ -1,0 +1,13 @@
+<test name="bevy_issue_7976_reduced__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div direction="rtl" align-content="start" height="200px">
+      <div direction="rtl" width="40px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="40" height="200">
+      <node x="0" y="0" width="40" height="200"/>
+    </node>
+  </expectations>
+</test>

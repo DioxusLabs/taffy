@@ -1,0 +1,17 @@
+<test name="flex_direction_row_no_width__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div direction="rtl" height="100px">
+      <div direction="rtl" width="10px"/>
+      <div direction="rtl" width="10px"/>
+      <div direction="rtl" width="10px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="30" height="100">
+      <node x="20" y="0" width="10" height="100"/>
+      <node x="10" y="0" width="10" height="100"/>
+      <node x="0" y="0" width="10" height="100"/>
+    </node>
+  </expectations>
+</test>

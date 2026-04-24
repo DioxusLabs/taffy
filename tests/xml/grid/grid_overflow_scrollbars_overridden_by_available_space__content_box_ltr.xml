@@ -1,0 +1,17 @@
+<test name="grid_overflow_scrollbars_overridden_by_available_space__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" box-sizing="content-box" direction="ltr" width="2px" height="4px">
+      <div display="grid" box-sizing="content-box" direction="ltr" overflow-x="scroll" overflow-y="scroll" scrollbar-width="15">
+        <div box-sizing="content-box" direction="ltr"/>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="2" height="4">
+      <node x="0" y="0" width="2" height="4" scroll_width="0" scroll_height="0">
+        <node x="0" y="0" width="0" height="0"/>
+      </node>
+    </node>
+  </expectations>
+</test>

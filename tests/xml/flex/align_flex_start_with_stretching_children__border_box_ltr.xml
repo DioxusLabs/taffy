@@ -1,0 +1,21 @@
+<test name="align_flex_start_with_stretching_children__border_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div direction="ltr" width="500px" height="500px">
+      <div direction="ltr" align-items="stretch">
+        <div direction="ltr" flex-grow="1">
+          <div direction="ltr" flex-grow="1"/>
+        </div>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="500" height="500">
+      <node x="0" y="0" width="0" height="500">
+        <node x="0" y="0" width="0" height="500">
+          <node x="0" y="0" width="0" height="500"/>
+        </node>
+      </node>
+    </node>
+  </expectations>
+</test>

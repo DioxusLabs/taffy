@@ -8,27 +8,33 @@ use crate::{
 use crate::{
     geometry::MinMax,
     style::{
-        GridTrackRepetition, MaxTrackSizingFunction, MinTrackSizingFunction, NonRepeatedTrackSizingFunction,
+        GridTemplateComponent, GridTemplateRepetition, MaxTrackSizingFunction, MinTrackSizingFunction, RepetitionCount,
         TrackSizingFunction,
     },
     util::sys::Vec,
+    CheapCloneStr,
 };
 #[cfg(feature = "grid")]
 use core::fmt::Debug;
 
 /// Returns an auto-repeated track definition
 #[cfg(feature = "grid")]
-pub fn repeat<Input>(repetition_kind: Input, track_list: Vec<NonRepeatedTrackSizingFunction>) -> TrackSizingFunction
+pub fn repeat<Input, S>(repetition_kind: Input, tracks: Vec<TrackSizingFunction>) -> GridTemplateComponent<S>
 where
-    Input: TryInto<GridTrackRepetition>,
-    <Input as TryInto<GridTrackRepetition>>::Error: Debug,
+    Input: TryInto<RepetitionCount>,
+    <Input as TryInto<RepetitionCount>>::Error: Debug,
+    S: CheapCloneStr,
 {
-    TrackSizingFunction::Repeat(repetition_kind.try_into().unwrap(), track_list)
+    GridTemplateComponent::Repeat(GridTemplateRepetition {
+        count: repetition_kind.try_into().unwrap(),
+        tracks,
+        line_names: Vec::new(),
+    })
 }
 
 #[cfg(feature = "grid")]
 /// Returns a grid template containing `count` evenly sized tracks
-pub fn evenly_sized_tracks(count: u16) -> Vec<TrackSizingFunction> {
+pub fn evenly_sized_tracks<S: CheapCloneStr>(count: u16) -> Vec<GridTemplateComponent<S>> {
     use crate::util::sys::new_vec_with_capacity;
     let mut repeated_tracks = new_vec_with_capacity(1);
     repeated_tracks.push(flex(1.0f32));
@@ -56,7 +62,7 @@ pub fn span<T: TaffyGridSpan>(span: u16) -> T {
 }
 /// Trait to abstract over grid span values
 pub trait TaffyGridSpan {
-    /// Converts an iu6 into Self
+    /// Converts an u16 into Self
     fn from_span(span: u16) -> Self;
 }
 
@@ -511,36 +517,61 @@ impl<T: FromPercent> Rect<T> {
 
 /// Create a `Fraction` track sizing function (`fr` in CSS)
 #[cfg(feature = "grid")]
-pub fn fr<Input: Into<f32> + Copy, T: FromFlex>(flex: Input) -> T {
-    T::from_flex(flex)
+pub fn fr<Input: Into<f32> + Copy, T: FromFr>(flex: Input) -> T {
+    T::from_fr(flex)
 }
 
 /// Trait to create constant percent values from plain numbers
-pub trait FromFlex {
+pub trait FromFr {
     /// Converts into an `Into<f32>` into Self
-    fn from_flex<Input: Into<f32> + Copy>(flex: Input) -> Self;
+    fn from_fr<Input: Into<f32> + Copy>(flex: Input) -> Self;
 }
 
 #[cfg(feature = "grid")]
 #[cfg(test)]
 mod repeat_fn_tests {
+    type S = crate::sys::DefaultCheapStr;
     use super::repeat;
-    use crate::style::{GridTrackRepetition, NonRepeatedTrackSizingFunction, TrackSizingFunction};
+    use crate::{
+        style::{GridTemplateComponent, RepetitionCount, TrackSizingFunction},
+        GridTemplateRepetition,
+    };
 
-    const TEST_VEC: Vec<NonRepeatedTrackSizingFunction> = Vec::new();
+    const TEST_VEC: Vec<TrackSizingFunction> = Vec::new();
 
     #[test]
     fn test_repeat_u16() {
-        assert_eq!(repeat(123, TEST_VEC), TrackSizingFunction::Repeat(GridTrackRepetition::Count(123), TEST_VEC));
+        assert_eq!(
+            repeat::<_, S>(123, TEST_VEC),
+            GridTemplateComponent::Repeat(GridTemplateRepetition {
+                count: RepetitionCount::Count(123),
+                tracks: TEST_VEC,
+                line_names: Vec::new(),
+            })
+        );
     }
 
     #[test]
     fn test_repeat_auto_fit_str() {
-        assert_eq!(repeat("auto-fit", TEST_VEC), TrackSizingFunction::Repeat(GridTrackRepetition::AutoFit, TEST_VEC));
+        assert_eq!(
+            repeat::<_, S>("auto-fit", TEST_VEC),
+            GridTemplateComponent::Repeat(GridTemplateRepetition {
+                count: RepetitionCount::AutoFit,
+                tracks: TEST_VEC,
+                line_names: Vec::new(),
+            })
+        );
     }
 
     #[test]
     fn test_repeat_auto_fill_str() {
-        assert_eq!(repeat("auto-fill", TEST_VEC), TrackSizingFunction::Repeat(GridTrackRepetition::AutoFill, TEST_VEC));
+        assert_eq!(
+            repeat::<_, S>("auto-fill", TEST_VEC),
+            GridTemplateComponent::Repeat(GridTemplateRepetition {
+                count: RepetitionCount::AutoFill,
+                tracks: TEST_VEC,
+                line_names: Vec::new(),
+            })
+        );
     }
 }

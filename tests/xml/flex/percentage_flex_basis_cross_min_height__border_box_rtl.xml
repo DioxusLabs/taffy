@@ -1,0 +1,15 @@
+<test name="percentage_flex_basis_cross_min_height__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div direction="rtl" flex-direction="column" width="200px" height="400px">
+      <div direction="rtl" flex-grow="1" min-height="60%"/>
+      <div direction="rtl" flex-grow="2" min-height="10%"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="200" height="400">
+      <node x="0" y="0" width="200" height="240"/>
+      <node x="0" y="240" width="200" height="160"/>
+    </node>
+  </expectations>
+</test>

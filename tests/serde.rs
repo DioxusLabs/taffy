@@ -1,13 +1,12 @@
 #[cfg(test)]
 #[cfg(feature = "serde")]
 mod serde {
-
     use serde_json::{self, Value};
     use taffy::style::Style;
 
     #[test]
     fn serde_can_serialize() {
-        let style = Style::DEFAULT;
+        let style: Style<String> = Style::DEFAULT;
         let _ = serde_json::to_string(&style).unwrap();
     }
 

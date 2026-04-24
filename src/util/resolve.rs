@@ -3,6 +3,7 @@
 use crate::geometry::{Rect, Size};
 use crate::style::{Dimension, LengthPercentage, LengthPercentageAuto};
 use crate::style_helpers::TaffyZero;
+use crate::CompactLength;
 
 /// Trait to encapsulate behaviour where we need to resolve from a
 /// potentially context-dependent size or dimension into
@@ -11,7 +12,7 @@ use crate::style_helpers::TaffyZero;
 /// Will return a `None` if it unable to resolve.
 pub trait MaybeResolve<In, Out> {
     /// Resolve a dimension that might be dependent on a context, with `None` as fallback value
-    fn maybe_resolve(self, context: In) -> Out;
+    fn maybe_resolve(self, context: In, calc: impl Fn(*const (), f32) -> f32) -> Out;
 }
 
 /// Trait to encapsulate behaviour where we need to resolve from a
@@ -21,16 +22,19 @@ pub trait MaybeResolve<In, Out> {
 /// Will return a default value if it unable to resolve.
 pub trait ResolveOrZero<TContext, TOutput: TaffyZero> {
     /// Resolve a dimension that might be dependent on a context, with a default fallback value
-    fn resolve_or_zero(self, context: TContext) -> TOutput;
+    fn resolve_or_zero(self, context: TContext, calc: impl Fn(*const (), f32) -> f32) -> TOutput;
 }
 
 impl MaybeResolve<Option<f32>, Option<f32>> for LengthPercentage {
     /// Converts the given [`LengthPercentage`] into an absolute length
     /// Can return `None`
-    fn maybe_resolve(self, context: Option<f32>) -> Option<f32> {
-        match self {
-            LengthPercentage::Length(length) => Some(length),
-            LengthPercentage::Percent(percent) => context.map(|dim| dim * percent),
+    fn maybe_resolve(self, context: Option<f32>, calc: impl Fn(*const (), f32) -> f32) -> Option<f32> {
+        match self.0.tag() {
+            CompactLength::LENGTH_TAG => Some(self.0.value()),
+            CompactLength::PERCENT_TAG => context.map(|dim| dim * self.0.value()),
+            #[cfg(feature = "calc")]
+            _ if self.0.is_calc() => context.map(|dim| calc(self.0.calc_value(), dim)),
+            _ => unreachable!(),
         }
     }
 }
@@ -38,11 +42,14 @@ impl MaybeResolve<Option<f32>, Option<f32>> for LengthPercentage {
 impl MaybeResolve<Option<f32>, Option<f32>> for LengthPercentageAuto {
     /// Converts the given [`LengthPercentageAuto`] into an absolute length
     /// Can return `None`
-    fn maybe_resolve(self, context: Option<f32>) -> Option<f32> {
-        match self {
-            LengthPercentageAuto::Length(length) => Some(length),
-            LengthPercentageAuto::Percent(percent) => context.map(|dim| dim * percent),
-            LengthPercentageAuto::Auto => None,
+    fn maybe_resolve(self, context: Option<f32>, calc: impl Fn(*const (), f32) -> f32) -> Option<f32> {
+        match self.0.tag() {
+            CompactLength::AUTO_TAG => None,
+            CompactLength::LENGTH_TAG => Some(self.0.value()),
+            CompactLength::PERCENT_TAG => context.map(|dim| dim * self.0.value()),
+            #[cfg(feature = "calc")]
+            _ if self.0.is_calc() => context.map(|dim| calc(self.0.calc_value(), dim)),
+            _ => unreachable!(),
         }
     }
 }
@@ -51,11 +58,14 @@ impl MaybeResolve<Option<f32>, Option<f32>> for Dimension {
     /// Converts the given [`Dimension`] into an absolute length
     ///
     /// Can return `None`
-    fn maybe_resolve(self, context: Option<f32>) -> Option<f32> {
-        match self {
-            Dimension::Length(length) => Some(length),
-            Dimension::Percent(percent) => context.map(|dim| dim * percent),
-            Dimension::Auto => None,
+    fn maybe_resolve(self, context: Option<f32>, calc: impl Fn(*const (), f32) -> f32) -> Option<f32> {
+        match self.0.tag() {
+            CompactLength::AUTO_TAG => None,
+            CompactLength::LENGTH_TAG => Some(self.0.value()),
+            CompactLength::PERCENT_TAG => context.map(|dim| dim * self.0.value()),
+            #[cfg(feature = "calc")]
+            _ if self.0.is_calc() => context.map(|dim| calc(self.0.calc_value(), dim)),
+            _ => unreachable!(),
         }
     }
 }
@@ -65,57 +75,63 @@ impl MaybeResolve<Option<f32>, Option<f32>> for Dimension {
 impl<T: MaybeResolve<Option<f32>, Option<f32>>> MaybeResolve<f32, Option<f32>> for T {
     /// Converts the given MaybeResolve value into an absolute length
     /// Can return `None`
-    fn maybe_resolve(self, context: f32) -> Option<f32> {
-        self.maybe_resolve(Some(context))
+    fn maybe_resolve(self, context: f32, calc: impl Fn(*const (), f32) -> f32) -> Option<f32> {
+        self.maybe_resolve(Some(context), calc)
     }
 }
 
 // Generic MaybeResolve for Size
 impl<In, Out, T: MaybeResolve<In, Out>> MaybeResolve<Size<In>, Size<Out>> for Size<T> {
     /// Converts any `parent`-relative values for size into an absolute size
-    fn maybe_resolve(self, context: Size<In>) -> Size<Out> {
-        Size { width: self.width.maybe_resolve(context.width), height: self.height.maybe_resolve(context.height) }
+    fn maybe_resolve(self, context: Size<In>, calc: impl Fn(*const (), f32) -> f32) -> Size<Out> {
+        Size {
+            width: self.width.maybe_resolve(context.width, &calc),
+            height: self.height.maybe_resolve(context.height, &calc),
+        }
     }
 }
 
 impl ResolveOrZero<Option<f32>, f32> for LengthPercentage {
     /// Will return a default value of result is evaluated to `None`
-    fn resolve_or_zero(self, context: Option<f32>) -> f32 {
-        self.maybe_resolve(context).unwrap_or(0.0)
+    fn resolve_or_zero(self, context: Option<f32>, calc: impl Fn(*const (), f32) -> f32) -> f32 {
+        self.maybe_resolve(context, calc).unwrap_or(0.0)
     }
 }
 
 impl ResolveOrZero<Option<f32>, f32> for LengthPercentageAuto {
     /// Will return a default value of result is evaluated to `None`
-    fn resolve_or_zero(self, context: Option<f32>) -> f32 {
-        self.maybe_resolve(context).unwrap_or(0.0)
+    fn resolve_or_zero(self, context: Option<f32>, calc: impl Fn(*const (), f32) -> f32) -> f32 {
+        self.maybe_resolve(context, calc).unwrap_or(0.0)
     }
 }
 
 impl ResolveOrZero<Option<f32>, f32> for Dimension {
     /// Will return a default value of result is evaluated to `None`
-    fn resolve_or_zero(self, context: Option<f32>) -> f32 {
-        self.maybe_resolve(context).unwrap_or(0.0)
+    fn resolve_or_zero(self, context: Option<f32>, calc: impl Fn(*const (), f32) -> f32) -> f32 {
+        self.maybe_resolve(context, calc).unwrap_or(0.0)
     }
 }
 
 // Generic ResolveOrZero for Size
 impl<In, Out: TaffyZero, T: ResolveOrZero<In, Out>> ResolveOrZero<Size<In>, Size<Out>> for Size<T> {
     /// Converts any `parent`-relative values for size into an absolute size
-    fn resolve_or_zero(self, context: Size<In>) -> Size<Out> {
-        Size { width: self.width.resolve_or_zero(context.width), height: self.height.resolve_or_zero(context.height) }
+    fn resolve_or_zero(self, context: Size<In>, calc: impl Fn(*const (), f32) -> f32) -> Size<Out> {
+        Size {
+            width: self.width.resolve_or_zero(context.width, &calc),
+            height: self.height.resolve_or_zero(context.height, &calc),
+        }
     }
 }
 
 // Generic ResolveOrZero for resolving Rect against Size
 impl<In: Copy, Out: TaffyZero, T: ResolveOrZero<In, Out>> ResolveOrZero<Size<In>, Rect<Out>> for Rect<T> {
     /// Converts any `parent`-relative values for Rect into an absolute Rect
-    fn resolve_or_zero(self, context: Size<In>) -> Rect<Out> {
+    fn resolve_or_zero(self, context: Size<In>, calc: impl Fn(*const (), f32) -> f32) -> Rect<Out> {
         Rect {
-            left: self.left.resolve_or_zero(context.width),
-            right: self.right.resolve_or_zero(context.width),
-            top: self.top.resolve_or_zero(context.height),
-            bottom: self.bottom.resolve_or_zero(context.height),
+            left: self.left.resolve_or_zero(context.width, &calc),
+            right: self.right.resolve_or_zero(context.width, &calc),
+            top: self.top.resolve_or_zero(context.height, &calc),
+            bottom: self.bottom.resolve_or_zero(context.height, &calc),
         }
     }
 }
@@ -123,12 +139,12 @@ impl<In: Copy, Out: TaffyZero, T: ResolveOrZero<In, Out>> ResolveOrZero<Size<In>
 // Generic ResolveOrZero for resolving Rect against Option
 impl<Out: TaffyZero, T: ResolveOrZero<Option<f32>, Out>> ResolveOrZero<Option<f32>, Rect<Out>> for Rect<T> {
     /// Converts any `parent`-relative values for Rect into an absolute Rect
-    fn resolve_or_zero(self, context: Option<f32>) -> Rect<Out> {
+    fn resolve_or_zero(self, context: Option<f32>, calc: impl Fn(*const (), f32) -> f32) -> Rect<Out> {
         Rect {
-            left: self.left.resolve_or_zero(context),
-            right: self.right.resolve_or_zero(context),
-            top: self.top.resolve_or_zero(context),
-            bottom: self.bottom.resolve_or_zero(context),
+            left: self.left.resolve_or_zero(context, &calc),
+            right: self.right.resolve_or_zero(context, &calc),
+            top: self.top.resolve_or_zero(context, &calc),
+            bottom: self.bottom.resolve_or_zero(context, &calc),
         }
     }
 }
@@ -145,7 +161,7 @@ mod tests {
         Lhs: MaybeResolve<Rhs, Out>,
         Out: PartialEq + Debug,
     {
-        assert_eq!(input.maybe_resolve(context), expected);
+        assert_eq!(input.maybe_resolve(context, |_, _| 42.42), expected);
     }
 
     // ResolveOrZero test runner
@@ -154,22 +170,23 @@ mod tests {
         Lhs: ResolveOrZero<Rhs, Out>,
         Out: PartialEq + Debug + TaffyZero,
     {
-        assert_eq!(input.resolve_or_zero(context), expected);
+        assert_eq!(input.resolve_or_zero(context, |_, _| 42.42), expected);
     }
 
     mod maybe_resolve_dimension {
         use super::mr_case;
         use crate::style::Dimension;
+        use crate::style_helpers::*;
 
         /// `Dimension::Auto` should always return `None`
         ///
         /// The parent / context should not affect the outcome.
         #[test]
         fn resolve_auto() {
-            mr_case(Dimension::Auto, None, None);
-            mr_case(Dimension::Auto, Some(5.0), None);
-            mr_case(Dimension::Auto, Some(-5.0), None);
-            mr_case(Dimension::Auto, Some(0.), None);
+            mr_case(Dimension::AUTO, None, None);
+            mr_case(Dimension::AUTO, Some(5.0), None);
+            mr_case(Dimension::AUTO, Some(-5.0), None);
+            mr_case(Dimension::AUTO, Some(0.), None);
         }
 
         /// `Dimension::Length` should always return `Some(f32)`
@@ -178,10 +195,10 @@ mod tests {
         /// The parent / context should not affect the outcome.
         #[test]
         fn resolve_length() {
-            mr_case(Dimension::Length(1.0), None, Some(1.0));
-            mr_case(Dimension::Length(1.0), Some(5.0), Some(1.0));
-            mr_case(Dimension::Length(1.0), Some(-5.0), Some(1.0));
-            mr_case(Dimension::Length(1.0), Some(0.), Some(1.0));
+            mr_case(Dimension::from_length(1.0), None, Some(1.0));
+            mr_case(Dimension::from_length(1.0), Some(5.0), Some(1.0));
+            mr_case(Dimension::from_length(1.0), Some(-5.0), Some(1.0));
+            mr_case(Dimension::from_length(1.0), Some(0.), Some(1.0));
         }
 
         /// `Dimension::Percent` should return `None` if context is  `None`.
@@ -191,10 +208,10 @@ mod tests {
         /// The parent / context __should__ affect the outcome.
         #[test]
         fn resolve_percent() {
-            mr_case(Dimension::Percent(1.0), None, None);
-            mr_case(Dimension::Percent(1.0), Some(5.0), Some(5.0));
-            mr_case(Dimension::Percent(1.0), Some(-5.0), Some(-5.0));
-            mr_case(Dimension::Percent(1.0), Some(50.0), Some(50.0));
+            mr_case(Dimension::from_percent(1.0), None, None);
+            mr_case(Dimension::from_percent(1.0), Some(5.0), Some(5.0));
+            mr_case(Dimension::from_percent(1.0), Some(-5.0), Some(-5.0));
+            mr_case(Dimension::from_percent(1.0), Some(50.0), Some(50.0));
         }
     }
 
@@ -243,27 +260,28 @@ mod tests {
     mod resolve_or_zero_dimension_to_option_f32 {
         use super::roz_case;
         use crate::style::Dimension;
+        use crate::style_helpers::*;
 
         #[test]
         fn resolve_or_zero_auto() {
-            roz_case(Dimension::Auto, None, 0.0);
-            roz_case(Dimension::Auto, Some(5.0), 0.0);
-            roz_case(Dimension::Auto, Some(-5.0), 0.0);
-            roz_case(Dimension::Auto, Some(0.0), 0.0);
+            roz_case(Dimension::AUTO, None, 0.0);
+            roz_case(Dimension::AUTO, Some(5.0), 0.0);
+            roz_case(Dimension::AUTO, Some(-5.0), 0.0);
+            roz_case(Dimension::AUTO, Some(0.0), 0.0);
         }
         #[test]
         fn resolve_or_zero_length() {
-            roz_case(Dimension::Length(5.0), None, 5.0);
-            roz_case(Dimension::Length(5.0), Some(5.0), 5.0);
-            roz_case(Dimension::Length(5.0), Some(-5.0), 5.0);
-            roz_case(Dimension::Length(5.0), Some(0.0), 5.0);
+            roz_case(Dimension::from_length(5.0), None, 5.0);
+            roz_case(Dimension::from_length(5.0), Some(5.0), 5.0);
+            roz_case(Dimension::from_length(5.0), Some(-5.0), 5.0);
+            roz_case(Dimension::from_length(5.0), Some(0.0), 5.0);
         }
         #[test]
         fn resolve_or_zero_percent() {
-            roz_case(Dimension::Percent(5.0), None, 0.0);
-            roz_case(Dimension::Percent(5.0), Some(5.0), 25.0);
-            roz_case(Dimension::Percent(5.0), Some(-5.0), -25.0);
-            roz_case(Dimension::Percent(5.0), Some(0.0), 0.0);
+            roz_case(Dimension::from_percent(5.0), None, 0.0);
+            roz_case(Dimension::from_percent(5.0), Some(5.0), 25.0);
+            roz_case(Dimension::from_percent(5.0), Some(-5.0), -25.0);
+            roz_case(Dimension::from_percent(5.0), Some(0.0), 0.0);
         }
     }
 

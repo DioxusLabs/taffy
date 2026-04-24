@@ -11,8 +11,8 @@ fn build_random_leaf(taffy: &mut TaffyTree, _rng: &mut ChaCha8Rng) -> NodeId {
     taffy.new_with_children(Style { size: length(20.0), ..Default::default() }, &[]).unwrap()
 }
 
-fn random_grid_track<R: Rng>(rng: &mut R) -> TrackSizingFunction {
-    let switch: f32 = rng.gen_range(0.0..=1.0);
+fn random_grid_track<R: Rng>(rng: &mut R) -> GridTemplateComponent<String> {
+    let switch: f32 = rng.random_range(0.0..=1.0);
     if switch < 0.1 {
         auto()
     } else if switch < 0.2 {

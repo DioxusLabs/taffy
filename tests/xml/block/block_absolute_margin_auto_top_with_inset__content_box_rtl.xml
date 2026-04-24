@@ -1,0 +1,13 @@
+<test name="block_absolute_margin_auto_top_with_inset__content_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="block" box-sizing="content-box" direction="rtl" align-items="center" width="200px" height="200px">
+      <div box-sizing="content-box" direction="rtl" position="absolute" width="50px" height="50px" margin-top="auto" top="20px" bottom="10px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="200" height="200">
+      <node x="150" y="140" width="50" height="50"/>
+    </node>
+  </expectations>
+</test>

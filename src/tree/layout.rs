@@ -109,7 +109,7 @@ impl TryFrom<RequestedAxis> for AbsoluteAxis {
 #[derive(Debug, Copy, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize))]
 pub struct LayoutInput {
-    /// Whether we only need to know the Node's size, or whe
+    /// Whether we only need to know the Node's size, or whether we need to perform a full layout
     pub run_mode: RunMode,
     /// Whether a Node's style sizes should be taken into account or ignored
     pub sizing_mode: SizingMode,
@@ -209,12 +209,12 @@ impl LayoutOutput {
         }
     }
 
-    /// Construct a SizeBaselinesAndMargins from just the container and content sizes
+    /// Construct a `LayoutOutput` from just the container and content sizes
     pub fn from_sizes(size: Size<f32>, content_size: Size<f32>) -> Self {
         Self::from_sizes_and_baselines(size, content_size, Point::NONE)
     }
 
-    /// Construct a SizeBaselinesAndMargins from just the container's size.
+    /// Construct a `LayoutOutput` from just the container's size.
     pub fn from_outer_size(size: Size<f32>) -> Self {
         Self::from_sizes(size, Size::zero())
     }
@@ -292,6 +292,34 @@ impl Layout {
             margin: Rect::zero(),
         }
     }
+
+    /// Get the width of the node's content box
+    #[inline]
+    pub fn content_box_width(&self) -> f32 {
+        self.size.width - self.padding.left - self.padding.right - self.border.left - self.border.right
+    }
+
+    /// Get the height of the node's content box
+    #[inline]
+    pub fn content_box_height(&self) -> f32 {
+        self.size.height - self.padding.top - self.padding.bottom - self.border.top - self.border.bottom
+    }
+
+    /// Get the size of the node's content box
+    #[inline]
+    pub fn content_box_size(&self) -> Size<f32> {
+        Size { width: self.content_box_width(), height: self.content_box_height() }
+    }
+
+    /// Get x offset of the node's content box relative to it's parent's border box
+    pub fn content_box_x(&self) -> f32 {
+        self.location.x + self.border.left + self.padding.left
+    }
+
+    /// Get x offset of the node's content box relative to it's parent's border box
+    pub fn content_box_y(&self) -> f32 {
+        self.location.y + self.border.top + self.padding.top
+    }
 }
 
 #[cfg(feature = "content_size")]
@@ -306,8 +334,8 @@ impl Layout {
         )
     }
 
-    /// Return the scroll width of the node.
-    /// The scroll width is the difference between the width and the content width, floored at zero
+    /// Return the scroll height of the node.
+    /// The scroll height is the difference between the height and the content height, floored at zero
     pub fn scroll_height(&self) -> f32 {
         f32_max(
             0.0,
@@ -315,4 +343,15 @@ impl Layout {
                 + self.border.bottom,
         )
     }
+}
+
+/// The additional information from layout algorithm
+#[cfg(feature = "detailed_layout_info")]
+#[derive(Debug, Clone, PartialEq)]
+pub enum DetailedLayoutInfo {
+    /// Enum variant for [`DetailedGridInfo`](crate::compute::grid::DetailedGridInfo)
+    #[cfg(feature = "grid")]
+    Grid(Box<crate::compute::grid::DetailedGridInfo>),
+    /// For node that hasn't had any detailed information yet
+    None,
 }

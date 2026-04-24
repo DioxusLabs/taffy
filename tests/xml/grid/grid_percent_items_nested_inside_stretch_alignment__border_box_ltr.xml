@@ -1,0 +1,17 @@
+<test name="grid_percent_items_nested_inside_stretch_alignment__border_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" direction="ltr" width="200px">
+      <div display="grid" direction="ltr">
+        <div display="grid" direction="ltr" padding-top="20%"/>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="200" height="40">
+      <node x="0" y="0" width="200" height="40">
+        <node x="0" y="0" width="200" height="40"/>
+      </node>
+    </node>
+  </expectations>
+</test>

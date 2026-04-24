@@ -1,0 +1,27 @@
+<test name="grid_min_content_flex_row__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" direction="rtl" grid-template-rows="40px" grid-template-columns="min-content">
+      <div display="flex" direction="rtl">
+        <text direction="rtl">
+          HH​HH
+        </text>
+        <text direction="rtl">
+          HH​HH
+        </text>
+        <text direction="rtl">
+          HH​HH
+        </text>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="60" height="40">
+      <node x="0" y="0" width="60" height="40">
+        <node x="40" y="0" width="20" height="40"/>
+        <node x="20" y="0" width="20" height="40"/>
+        <node x="0" y="0" width="20" height="40"/>
+      </node>
+    </node>
+  </expectations>
+</test>

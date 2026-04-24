@@ -1,0 +1,13 @@
+<test name="padding_stretch_child__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div box-sizing="content-box" direction="ltr" width="100px" height="100px" padding-top="10px" padding-left="10px" padding-bottom="10px" padding-right="10px">
+      <div box-sizing="content-box" direction="ltr" height="10px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="120" height="120">
+      <node x="10" y="10" width="0" height="10"/>
+    </node>
+  </expectations>
+</test>

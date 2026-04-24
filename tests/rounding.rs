@@ -1,9 +1,10 @@
 use taffy::prelude::*;
+use taffy_test_helpers::new_test_tree;
 
 #[test]
 fn rounding_doesnt_leave_gaps() {
     // First create an instance of TaffyTree
-    let mut taffy: TaffyTree<()> = TaffyTree::new();
+    let mut taffy = new_test_tree();
 
     let w_square = Size { width: length(100.3), height: length(100.3) };
     let child_a = taffy.new_leaf(Style { size: w_square, ..Default::default() }).unwrap();

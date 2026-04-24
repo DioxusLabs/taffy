@@ -1,0 +1,29 @@
+<test name="grid_min_content_flex_single_item__content_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" box-sizing="content-box" direction="rtl" grid-template-rows="40px 40px 40px" grid-template-columns="40px min-content 1fr">
+      <div box-sizing="content-box" direction="rtl"/>
+      <div box-sizing="content-box" direction="rtl" min-width="10px"/>
+      <div box-sizing="content-box" direction="rtl"/>
+      <div box-sizing="content-box" direction="rtl"/>
+      <text box-sizing="content-box" direction="rtl" grid-column-start="span 2">
+        HH​HH
+      </text>
+      <div box-sizing="content-box" direction="rtl"/>
+      <div box-sizing="content-box" direction="rtl"/>
+      <div box-sizing="content-box" direction="rtl"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="80" height="120">
+      <node x="40" y="0" width="40" height="40"/>
+      <node x="30" y="0" width="10" height="40"/>
+      <node x="0" y="0" width="30" height="40"/>
+      <node x="40" y="40" width="40" height="40"/>
+      <node x="0" y="40" width="40" height="40"/>
+      <node x="40" y="80" width="40" height="40"/>
+      <node x="30" y="80" width="10" height="40"/>
+      <node x="0" y="80" width="30" height="40"/>
+    </node>
+  </expectations>
+</test>

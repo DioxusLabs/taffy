@@ -36,7 +36,7 @@
 //!
 //!   - [basic](https://github.com/DioxusLabs/taffy/blob/main/examples/basic.rs)
 //!   - [flexbox_gap](https://github.com/DioxusLabs/taffy/blob/main/examples/flexbox_gap.rs)
-//!   - [grid_holy_grail](https://github.com/DioxusLabs/taffy/blob/main/examples/basic.rs)
+//!   - [grid_holy_grail](https://github.com/DioxusLabs/taffy/blob/main/examples/grid_holy_grail.rs)
 //!   - [measure](https://github.com/DioxusLabs/taffy/blob/main/examples/measure.rs)
 //!   - [cosmic_text](https://github.com/DioxusLabs/taffy/blob/main/examples/cosmic_text.rs)
 //!
@@ -54,18 +54,22 @@
 //! Examples which show usage of the low-level API are:
 //!
 //!   - [custom_tree_vec](https://github.com/DioxusLabs/taffy/blob/main/examples/custom_tree_vec.rs) which implements a custom Taffy tree using a `Vec` as an arena with NodeId's being index's into the Vec.
-//!   - [custom_tree_owned_partial](https://github.com/DioxusLabs/taffy/blob/main/examples/custom_tree_owned_partial.rs) which implements a custom Taffy tree using directly owned children with NodeId's being pointers.
+//!   - [custom_tree_owned_partial](https://github.com/DioxusLabs/taffy/blob/main/examples/custom_tree_owned_partial.rs) which implements a custom Taffy tree using directly owned children with NodeId's being index's into vec on parent node.
 //!   - [custom_tree_owned_unsafe](https://github.com/DioxusLabs/taffy/blob/main/examples/custom_tree_owned_unsafe.rs) which implements a custom Taffy tree using directly owned children with NodeId's being pointers.
 
 // document the feature flags for the crate by extracting the comments from Cargo.toml
 #![cfg_attr(feature = "document-features", doc = document_features::document_features!())]
 // annotate items with their required features (gated by docsrs flag as this requires the nightly toolchain)
-#![cfg_attr(docsrs, feature(doc_auto_cfg))]
+#![cfg_attr(docsrs, feature(doc_cfg))]
 #![cfg_attr(not(feature = "std"), no_std)]
 #![deny(unsafe_code)]
-#![forbid(unsafe_code)]
 #![warn(missing_docs)]
 #![warn(clippy::missing_docs_in_private_items)]
+// Disable "unused_x" warnings when default features aren't enabled.
+#![cfg_attr(not(feature = "default"), allow(dead_code))]
+#![cfg_attr(not(feature = "default"), allow(unused_imports))]
+#![cfg_attr(not(feature = "default"), allow(unused_variables))]
+#![cfg_attr(not(feature = "default"), allow(unused_mut))]
 
 // We always need std for the tests
 // See <https://github.com/la10736/rstest/issues/149#issuecomment-1156402989>
@@ -102,6 +106,8 @@ pub use crate::compute::compute_flexbox_layout;
 #[cfg(feature = "grid")]
 #[doc(inline)]
 pub use crate::compute::compute_grid_layout;
+#[cfg(feature = "detailed_layout_info")]
+pub use crate::compute::detailed_info::*;
 #[doc(inline)]
 pub use crate::compute::{
     compute_cached_layout, compute_hidden_layout, compute_leaf_layout, compute_root_layout, round_layout,
@@ -117,6 +123,10 @@ pub use crate::tree::TaffyTree;
 #[doc(inline)]
 pub use crate::util::print_tree;
 
+#[cfg(feature = "parse")]
+pub use parse::{ParseError, ParseResult};
+
+pub use crate::compute::*;
 pub use crate::geometry::*;
 pub use crate::style::*;
 pub use crate::tree::*;

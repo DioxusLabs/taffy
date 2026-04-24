@@ -15,6 +15,7 @@ use core::unreachable;
 pub fn compute_leaf_layout<MeasureFunction>(
     inputs: LayoutInput,
     style: &impl CoreStyle,
+    resolve_calc_value: impl Fn(*const (), f32) -> f32,
     measure_function: MeasureFunction,
 ) -> LayoutOutput
 where
@@ -24,9 +25,9 @@ where
 
     // Note: both horizontal and vertical percentage padding/borders are resolved against the container's inline size (i.e. width).
     // This is not a bug, but is how CSS is specified (see: https://developer.mozilla.org/en-US/docs/Web/CSS/padding#values)
-    let margin = style.margin().resolve_or_zero(parent_size.width);
-    let padding = style.padding().resolve_or_zero(parent_size.width);
-    let border = style.border().resolve_or_zero(parent_size.width);
+    let margin = style.margin().resolve_or_zero(parent_size.width, &resolve_calc_value);
+    let padding = style.padding().resolve_or_zero(parent_size.width, &resolve_calc_value);
+    let border = style.border().resolve_or_zero(parent_size.width, &resolve_calc_value);
     let padding_border = padding + border;
     let pb_sum = padding_border.sum_axes();
     let box_sizing_adjustment = if style.box_sizing() == BoxSizing::ContentBox { pb_sum } else { Size::ZERO };
@@ -44,15 +45,16 @@ where
             let aspect_ratio = style.aspect_ratio();
             let style_size = style
                 .size()
-                .maybe_resolve(parent_size)
+                .maybe_resolve(parent_size, &resolve_calc_value)
                 .maybe_apply_aspect_ratio(aspect_ratio)
                 .maybe_add(box_sizing_adjustment);
             let style_min_size = style
                 .min_size()
-                .maybe_resolve(parent_size)
+                .maybe_resolve(parent_size, &resolve_calc_value)
                 .maybe_apply_aspect_ratio(aspect_ratio)
                 .maybe_add(box_sizing_adjustment);
-            let style_max_size = style.max_size().maybe_resolve(parent_size).maybe_add(box_sizing_adjustment);
+            let style_max_size =
+                style.max_size().maybe_resolve(parent_size, &resolve_calc_value).maybe_add(box_sizing_adjustment);
 
             let node_size = known_dimensions.or(style_size);
             (node_size, style_min_size, style_max_size, aspect_ratio)
@@ -114,7 +116,6 @@ where
             .maybe_sub(margin.horizontal_axis_sum())
             .maybe_set(known_dimensions.width)
             .maybe_set(node_size.width)
-            .maybe_set(node_max_size.width)
             .map_definite_value(|size| {
                 size.maybe_clamp(node_min_size.width, node_max_size.width) - content_box_inset.horizontal_axis_sum()
             }),
@@ -125,7 +126,6 @@ where
             .maybe_sub(margin.vertical_axis_sum())
             .maybe_set(known_dimensions.height)
             .maybe_set(node_size.height)
-            .maybe_set(node_max_size.height)
             .map_definite_value(|size| {
                 size.maybe_clamp(node_min_size.height, node_max_size.height) - content_box_inset.vertical_axis_sum()
             }),

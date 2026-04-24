@@ -1,0 +1,15 @@
+<test name="block_padding_border_fixed_size__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="block" box-sizing="content-box" direction="ltr" width="50px" height="50px" padding-top="1px" padding-left="7px" padding-bottom="5px" padding-right="3px" border-top="2px" border-left="8px" border-bottom="6px" border-right="4px">
+      <div box-sizing="content-box" direction="ltr" height="10px"/>
+      <div box-sizing="content-box" direction="ltr" height="10px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="72" height="64">
+      <node x="15" y="3" width="50" height="10"/>
+      <node x="15" y="13" width="50" height="10"/>
+    </node>
+  </expectations>
+</test>

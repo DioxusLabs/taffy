@@ -1,0 +1,21 @@
+<test name="justify_content_min_width_with_padding_child_width_lower_than_parent__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div direction="rtl" flex-direction="column" align-content="stretch" width="1080px" height="1584px">
+      <div direction="rtl" align-content="stretch">
+        <div direction="rtl" align-content="stretch" justify-content="center" min-width="400px" padding-left="100px" padding-right="100px">
+          <div direction="rtl" align-content="stretch" width="199px" height="100px"/>
+        </div>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="1080" height="1584">
+      <node x="0" y="0" width="1080" height="100">
+        <node x="680" y="0" width="400" height="100">
+          <node x="101" y="0" width="199" height="100"/>
+        </node>
+      </node>
+    </node>
+  </expectations>
+</test>

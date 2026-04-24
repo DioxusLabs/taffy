@@ -1,8 +1,9 @@
 use taffy::prelude::*;
+use taffy_test_helpers::new_test_tree;
 
 #[test]
 fn relayout() {
-    let mut taffy: TaffyTree<()> = taffy::TaffyTree::new();
+    let mut taffy = new_test_tree();
     let node1 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size { width: length(8.0), height: length(80.0) },
@@ -13,7 +14,7 @@ fn relayout() {
         .new_with_children(
             taffy::style::Style {
                 align_self: Some(taffy::prelude::AlignSelf::Center),
-                size: taffy::geometry::Size { width: Dimension::Auto, height: Dimension::Auto },
+                size: taffy::geometry::Size { width: Dimension::AUTO, height: Dimension::AUTO },
                 // size: taffy::geometry::Size { width: Dimension::Percent(1.0), height: Dimension::Percent(1.0) },
                 ..Default::default()
             },
@@ -23,7 +24,10 @@ fn relayout() {
     let node = taffy
         .new_with_children(
             taffy::style::Style {
-                size: taffy::geometry::Size { width: Dimension::Percent(1f32), height: Dimension::Percent(1f32) },
+                size: taffy::geometry::Size {
+                    width: Dimension::from_percent(1f32),
+                    height: Dimension::from_percent(1f32),
+                },
                 ..Default::default()
             },
             &[node0],
@@ -69,7 +73,7 @@ fn toggle_root_display_none() {
     };
 
     // Setup
-    let mut taffy: TaffyTree<()> = taffy::TaffyTree::new();
+    let mut taffy = new_test_tree();
     let node = taffy.new_leaf(hidden_style.clone()).unwrap();
 
     // Layout 1 (None)
@@ -103,7 +107,7 @@ fn toggle_root_display_none() {
 fn toggle_root_display_none_with_children() {
     use taffy::prelude::*;
 
-    let mut taffy: TaffyTree<()> = taffy::TaffyTree::new();
+    let mut taffy = new_test_tree();
 
     let child = taffy
         .new_leaf(Style { size: Size { width: length(800.0), height: length(100.0) }, ..Default::default() })
@@ -149,7 +153,7 @@ fn toggle_flex_child_display_none() {
     };
 
     // Setup
-    let mut taffy: TaffyTree<()> = taffy::TaffyTree::new();
+    let mut taffy = new_test_tree();
     let node = taffy.new_leaf(hidden_style.clone()).unwrap();
     let root = taffy.new_with_children(flex_style.clone(), &[node]).unwrap();
 
@@ -195,7 +199,7 @@ fn toggle_flex_container_display_none() {
     };
 
     // Setup
-    let mut taffy: TaffyTree<()> = taffy::TaffyTree::new();
+    let mut taffy = new_test_tree();
     let node = taffy.new_leaf(hidden_style.clone()).unwrap();
     let root = taffy.new_with_children(hidden_style.clone(), &[node]).unwrap();
 
@@ -241,7 +245,7 @@ fn toggle_grid_child_display_none() {
     };
 
     // Setup
-    let mut taffy: TaffyTree<()> = taffy::TaffyTree::new();
+    let mut taffy = new_test_tree();
     let node = taffy.new_leaf(hidden_style.clone()).unwrap();
     let root = taffy.new_with_children(grid_style.clone(), &[node]).unwrap();
 
@@ -287,7 +291,7 @@ fn toggle_grid_container_display_none() {
     };
 
     // Setup
-    let mut taffy: TaffyTree<()> = taffy::TaffyTree::new();
+    let mut taffy = new_test_tree();
     let node = taffy.new_leaf(hidden_style.clone()).unwrap();
     let root = taffy.new_with_children(hidden_style.clone(), &[node]).unwrap();
 
@@ -320,7 +324,7 @@ fn toggle_grid_container_display_none() {
 
 #[test]
 fn relayout_is_stable_with_rounding() {
-    let mut taffy: TaffyTree<()> = taffy::TaffyTree::new();
+    let mut taffy = new_test_tree();
     taffy.enable_rounding();
 
     // <div style="width: 1920px; height: 1080px">
@@ -359,33 +363,61 @@ fn relayout_is_stable_with_rounding() {
             &[outer],
         )
         .unwrap();
+
+    // Compute and assert initial layout.
+
+    taffy.compute_layout(root, Size::MAX_CONTENT).ok();
+    taffy.print_tree(root);
+
+    let initial_root_layout = taffy.layout(root).unwrap().clone();
+    assert_eq!(initial_root_layout.location.x, 0.0);
+    assert_eq!(initial_root_layout.location.y, 0.0);
+    assert_eq!(initial_root_layout.size.width, 1920.0);
+    assert_eq!(initial_root_layout.size.height, 1080.0);
+
+    let initial_outer_layout = taffy.layout(outer).unwrap().clone();
+    assert_eq!(initial_outer_layout.location.x, 2.0);
+    assert_eq!(initial_outer_layout.location.y, 0.0);
+    assert_eq!(initial_outer_layout.size.width, 1920.0);
+    assert_eq!(initial_outer_layout.size.height, 1080.0);
+
+    let initial_wrapper_layout = taffy.layout(wrapper).unwrap().clone();
+    assert_eq!(initial_wrapper_layout.location.x, 0.0);
+    assert_eq!(initial_wrapper_layout.location.y, 0.0);
+    assert_eq!(initial_wrapper_layout.size.width, 150.0);
+    assert_eq!(initial_wrapper_layout.size.height, 1080.0);
+
+    let initial_inner_layout = taffy.layout(inner).unwrap().clone();
+    assert_eq!(initial_inner_layout.location.x, -150.0);
+    assert_eq!(initial_inner_layout.location.y, 0.0);
+    assert_eq!(initial_inner_layout.size.width, 300.0);
+    assert_eq!(initial_inner_layout.size.height, 1080.0);
+
+    // Recompute and assert that new layout marks initial layout each time
     for _ in 0..5 {
         taffy.mark_dirty(root).ok();
         taffy.compute_layout(root, Size::MAX_CONTENT).ok();
         taffy.print_tree(root);
 
         let root_layout = taffy.layout(root).unwrap();
-        assert_eq!(root_layout.location.x, 0.0);
-        assert_eq!(root_layout.location.y, 0.0);
-        assert_eq!(root_layout.size.width, 1920.0);
-        assert_eq!(root_layout.size.height, 1080.0);
-
+        assert_eq!(initial_root_layout.location.x, root_layout.location.x);
+        assert_eq!(initial_root_layout.location.y, root_layout.location.y);
+        assert_eq!(initial_root_layout.size.width, root_layout.size.width);
+        assert_eq!(initial_root_layout.size.height, root_layout.size.height);
         let outer_layout = taffy.layout(outer).unwrap();
-        assert_eq!(outer_layout.location.x, 2.0);
-        assert_eq!(outer_layout.location.y, 0.0);
-        assert_eq!(outer_layout.size.width, 1920.0);
-        assert_eq!(outer_layout.size.height, 1080.0);
-
+        assert_eq!(initial_outer_layout.location.x, outer_layout.location.x);
+        assert_eq!(initial_outer_layout.location.y, outer_layout.location.y);
+        assert_eq!(initial_outer_layout.size.width, outer_layout.size.width);
+        assert_eq!(initial_outer_layout.size.height, outer_layout.size.height);
         let wrapper_layout = taffy.layout(wrapper).unwrap();
-        assert_eq!(wrapper_layout.location.x, 0.0);
-        assert_eq!(wrapper_layout.location.y, 0.0);
-        assert_eq!(wrapper_layout.size.width, 150.0);
-        assert_eq!(wrapper_layout.size.height, 1080.0);
-
+        assert_eq!(initial_wrapper_layout.location.x, wrapper_layout.location.x);
+        assert_eq!(initial_wrapper_layout.location.x, wrapper_layout.location.y);
+        assert_eq!(initial_wrapper_layout.size.width, wrapper_layout.size.width);
+        assert_eq!(initial_wrapper_layout.size.height, wrapper_layout.size.height);
         let inner_layout = taffy.layout(inner).unwrap();
-        assert_eq!(inner_layout.location.x, -150.0);
-        assert_eq!(inner_layout.location.y, 0.0);
-        assert_eq!(inner_layout.size.width, 301.0);
-        assert_eq!(inner_layout.size.height, 1080.0);
+        assert_eq!(initial_inner_layout.location.x, inner_layout.location.x);
+        assert_eq!(initial_inner_layout.location.y, inner_layout.location.y);
+        assert_eq!(initial_inner_layout.size.width, inner_layout.size.width);
+        assert_eq!(initial_inner_layout.size.height, inner_layout.size.height);
     }
 }

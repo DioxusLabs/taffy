@@ -19,102 +19,182 @@ jobs:
   #
   # We only run `cargo build` (not `cargo test`) so as to avoid requiring dev-dependencies to build with the MSRV
   # version. Building is likely sufficient as runtime errors varying between rust versions is very unlikely.
-  test-features-msrv:
-    name: "MSRV Build [Rust 1.65]"
+  build-features-msrv:
+    name: "MSRV Build [Rust 1.71]"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: dtolnay/rust-toolchain@master
         with:
-          toolchain: 1.65
+          toolchain: 1.71
       - run: cargo build
 
-  test-features-debug:
+  build-features-debug:
     name: "Build [debug feature]"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: dtolnay/rust-toolchain@stable
       - run: cargo build --features debug
+
+  build-examples:
+    name: "Build Examples"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dtolnay/rust-toolchain@stable
+      - run: cargo build --examples
+
+  # cosmic_text example is excluded from the workspace as it breaks compilation of all crates
+  # in the workspace with our MSRV compiler
+  build-cosmic-text-example:
+    name: "Build cosmic-text example"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dtolnay/rust-toolchain@stable
+      - run: cd examples/cosmic_text && cargo build
 
   # No features
   test-features-none:
     name: "Test Suite [no features]"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: dtolnay/rust-toolchain@stable
       - run: cargo build --no-default-features
-      - run: cargo test --no-default-features --features taffy_tree
+      - run: cargo test --tests --no-default-features --features taffy_tree
 
   # Default
   test-features-default:
     name: "Test Suite [default features]"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: dtolnay/rust-toolchain@stable
       - run: cargo build
-      - run: cargo test
+      - run: cargo test --tests
+
+  test-features-all:
+    name: "Test Suite [all features]"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dtolnay/rust-toolchain@stable
+      - run: cargo build --all-features
+      - run: cargo test --tests --all-features
+
+  # The main reason for this target is to test compilation on 32bit targets
+  test-features-android-32bit:
+    name: "Test Suite [all features (i686-linux-android)]"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: i686-linux-android
+      - run: cargo build --all-features --target i686-linux-android
+      # TODO: enable tests (currently running into linking errors)
+      # - run: cargo test --tests --all-features --target i686-linux-android
 
   test-features-default-with-serde:
     name: "Test Suite [default + serde]"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: dtolnay/rust-toolchain@stable
       - run: cargo build --features serde
-      - run: cargo test --features serde
+      - run: cargo test --tests --features serde
+
+  test-features-default-with-parse-faster:
+    name: "Test Suite [default + parse_faster]"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dtolnay/rust-toolchain@stable
+      - run: cargo build --features parse_faster
+      - run: cargo test --tests --features parse_faster
 
   test-features-default-except-content-size:
     name: "Test Suite [default except content_size]"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: dtolnay/rust-toolchain@stable
       - run: cargo build --no-default-features --features std,taffy_tree,grid,flexbox,block_layout
-      - run: cargo test --no-default-features --features std,taffy_tree,grid,flexbox,block_layout
+      - run: cargo test --tests --no-default-features --features std,taffy_tree,grid,flexbox,block_layout,calc
+
+  test-features-default-except-calc:
+    name: "Test Suite [default except calc]"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dtolnay/rust-toolchain@stable
+      - run: cargo build --no-default-features --features std,taffy_tree,grid,flexbox,block_layout
+      - run: cargo test --tests --no-default-features --features std,taffy_tree,grid,flexbox,block_layout
 
   test-features-no-grid-nor-flexbox:
     name: "Test Suite [std (no algorithms)]"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: dtolnay/rust-toolchain@stable
       - run: cargo build --no-default-features --features std
       - run: cargo build --no-default-features --features std,taffy_tree
-      - run: cargo test --no-default-features --features std,taffy_tree
+      - run: cargo test --tests --no-default-features --features std,taffy_tree,calc
 
   # With std feature
   test-features-flexbox:
     name: "Test Suite [std + flexbox]"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: dtolnay/rust-toolchain@stable
       - run: cargo build --no-default-features --features flexbox,std
       - run: cargo build --no-default-features --features flexbox,std,taffy_tree
-      - run: cargo test --no-default-features --features flexbox,std,taffy_tree
+      - run: cargo test --tests --no-default-features --features flexbox,std,taffy_tree
 
   test-features-grid:
     name: "Test Suite [std + grid]"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: dtolnay/rust-toolchain@stable
       - run: cargo build --no-default-features --features grid,std
       - run: cargo build --no-default-features --features grid,std,taffy_tree
-      - run: cargo test --no-default-features --features grid,std,taffy_tree
+      - run: cargo test --tests --no-default-features --features grid,std,taffy_tree
 
   test-features-block:
     name: "Test Suite [std + block)]"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: dtolnay/rust-toolchain@stable
       - run: cargo build --no-default-features --features block_layout,std
       - run: cargo build --no-default-features --features block_layout,std,taffy_tree
-      - run: cargo test --no-default-features --features block_layout,std,taffy_tree
+      - run: cargo test --tests --no-default-features --features block_layout,std,taffy_tree
+
+  # With detailed layout info
+  test-features-grid-detailed-info:
+    name: "Test Suite [std + grid + detailed_layout_info]"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dtolnay/rust-toolchain@stable
+      - run: cargo build --no-default-features --features grid,detailed_layout_info,std
+      - run: cargo build --no-default-features --features grid,detailed_layout_info,std,taffy_tree
+      - run: cargo test --tests --no-default-features --features grid,detailed_layout_info,std,taffy_tree
+
+  # With detailed layout info
+  test-features-flex-detailed-info:
+    name: "Test Suite [std + flexbox + detailed_layout_info]"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dtolnay/rust-toolchain@stable
+      - run: cargo build --no-default-features --features flexbox,detailed_layout_info,std
+      - run: cargo build --no-default-features --features flexbox,detailed_layout_info,std,taffy_tree
+      - run: cargo test --tests --no-default-features --features flexbox,detailed_layout_info,std,taffy_tree
 
   # With alloc feature
 
@@ -122,27 +202,27 @@ jobs:
     name: "Test Suite [alloc + no algorithms]"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: dtolnay/rust-toolchain@stable
       - run: cargo build --no-default-features --features alloc
       - run: cargo build --no-default-features --features alloc,taffy_tree
-      - run: cargo test --no-default-features --features alloc,taffy_tree
+      - run: cargo test --tests --no-default-features --features alloc,taffy_tree
 
   test-features-alloc:
     name: "Test Suite [alloc + all algorithms]"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: dtolnay/rust-toolchain@stable
       - run: cargo build --no-default-features --features alloc,grid,flexbox,block_layout
       - run: cargo build --no-default-features --features alloc,grid,flexbox,block_layout,taffy_tree
-      - run: cargo test  --no-default-features --features alloc,grid,flexbox,block_layout,taffy_tree
+      - run: cargo test --tests  --no-default-features --features alloc,grid,flexbox,block_layout,taffy_tree
 
   fmt:
     name: Rustfmt
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: stable
@@ -153,12 +233,12 @@ jobs:
     name: Clippy
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: dtolnay/rust-toolchain@master
         with:
-          toolchain: nightly
+          toolchain: stable
           components: clippy
-      - run: cargo +nightly clippy --workspace -- -D warnings
+      - run: cargo clippy --workspace -- -D warnings
 
   # Run rustdoc with the `docsrs` cfg to ensure that the documentation is compatible with docs.rs.
   # This enables the doc_auto_cfg feature, which requires the nightly toolchain.
@@ -169,7 +249,7 @@ jobs:
     env:
       RUSTDOCFLAGS: "--cfg docsrs"
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: nightly
@@ -180,9 +260,9 @@ jobs:
     name: Markdown Lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Run Markdown Lint
-        uses: DavidAnson/markdownlint-cli2-action@v16
+        uses: DavidAnson/markdownlint-cli2-action@v23
         with:
           globs: "**/*.md"
 
@@ -190,9 +270,9 @@ jobs:
     name: Test Fixture Formatting
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Run format script
-        run: cargo format-fixtures
+        run: cargo run -p format-fixtures
       - name: Ensure no changes
         run: |
           if [ -z "$(git status --porcelain)" ]; then 
@@ -202,13 +282,17 @@ jobs:
             exit 1
           fi
 
+  # benches is excluded from the workspace as it depends on cosmic-text which breaks compilation
+  # of all crates in the workspace with our MSRV compiler
   benchmarks:
     name: Build Benchmarks
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: dtolnay/rust-toolchain@stable
-      - run: cargo xbench --no-run
+      - name: Install fontconfig
+        run: sudo apt-get update && sudo apt-get install libfontconfig-dev
+      - run: cd benches && cargo bench --no-run
         name: Build benchmarks
         env:
           RUSTFLAGS: "-C opt-level=0"
@@ -217,9 +301,11 @@ jobs:
     name: Build Benchmarks (w/ yoga)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: dtolnay/rust-toolchain@stable
-      - run: cargo xbench --no-run --features yoga
+      - name: Install fontconfig
+        run: sudo apt-get update && sudo apt-get install libfontconfig-dev
+      - run: cd benches && cargo bench --no-run --features yoga
         name: Build benchmarks (w/yoga)
         env:
           RUSTFLAGS: "-C opt-level=0"

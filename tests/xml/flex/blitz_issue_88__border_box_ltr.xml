@@ -1,0 +1,23 @@
+<test name="blitz_issue_88__border_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="block" direction="ltr" width="600px">
+      <div display="flex" direction="ltr" flex-direction="column" justify-content="start">
+        <div display="flex" direction="ltr" flex-grow="1">
+          <text display="block" direction="ltr" flex-grow="1" flex-basis="0px">
+            HHHH​HHHH​HHHH​HHHH​HHHH
+          </text>
+        </div>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="600" height="10">
+      <node x="0" y="0" width="600" height="10">
+        <node x="0" y="0" width="600" height="10">
+          <node x="0" y="0" width="600" height="10"/>
+        </node>
+      </node>
+    </node>
+  </expectations>
+</test>

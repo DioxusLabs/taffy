@@ -1,0 +1,17 @@
+<test name="gap_column_gap_determines_parent_width__content_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div box-sizing="content-box" direction="rtl" align-items="stretch" height="100px" column-gap="10px">
+      <div box-sizing="content-box" direction="rtl" width="10px"/>
+      <div box-sizing="content-box" direction="rtl" width="20px"/>
+      <div box-sizing="content-box" direction="rtl" width="30px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="80" height="100">
+      <node x="70" y="0" width="10" height="100"/>
+      <node x="40" y="0" width="20" height="100"/>
+      <node x="0" y="0" width="30" height="100"/>
+    </node>
+  </expectations>
+</test>

@@ -1,0 +1,21 @@
+<test name="align_flex_start_with_shrinking_children__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div direction="rtl" width="500px" height="500px">
+      <div direction="rtl" align-items="flex-start">
+        <div direction="rtl" flex-grow="1">
+          <div direction="rtl" flex-grow="1"/>
+        </div>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="500" height="500">
+      <node x="500" y="0" width="0" height="500">
+        <node x="0" y="0" width="0" height="0">
+          <node x="0" y="0" width="0" height="0"/>
+        </node>
+      </node>
+    </node>
+  </expectations>
+</test>

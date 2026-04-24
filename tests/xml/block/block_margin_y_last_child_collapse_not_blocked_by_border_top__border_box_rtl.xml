@@ -1,0 +1,21 @@
+<test name="block_margin_y_last_child_collapse_not_blocked_by_border_top__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="block" direction="rtl" width="50px">
+      <div display="block" direction="rtl" margin-bottom="10px">
+        <div display="block" direction="rtl" margin-bottom="10px">
+          <div direction="rtl" height="10px"/>
+        </div>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="50" height="20">
+      <node x="0" y="0" width="50" height="10">
+        <node x="0" y="0" width="50" height="10">
+          <node x="0" y="0" width="50" height="10"/>
+        </node>
+      </node>
+    </node>
+  </expectations>
+</test>

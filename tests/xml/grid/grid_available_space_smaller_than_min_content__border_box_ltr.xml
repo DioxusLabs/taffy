@@ -1,0 +1,19 @@
+<test name="grid_available_space_smaller_than_min_content__border_box_ltr" use-rounding="true">
+  <viewport width="60px" height="max-content"/>
+  <input>
+    <div display="grid" direction="ltr" grid-template-columns="auto auto">
+      <text direction="ltr">
+        HHHH​HHHH
+      </text>
+      <text direction="ltr">
+        HHHH​HHHH
+      </text>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="80" height="20">
+      <node x="0" y="0" width="40" height="20"/>
+      <node x="40" y="0" width="40" height="20"/>
+    </node>
+  </expectations>
+</test>

@@ -1,0 +1,21 @@
+<test name="gap_column_gap_wrap_align_stretch__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div box-sizing="content-box" direction="ltr" flex-wrap="wrap" align-content="stretch" width="300px" height="300px" column-gap="5px">
+      <div box-sizing="content-box" direction="ltr" flex-grow="1" min-width="60px"/>
+      <div box-sizing="content-box" direction="ltr" flex-grow="1" min-width="60px"/>
+      <div box-sizing="content-box" direction="ltr" flex-grow="1" min-width="60px"/>
+      <div box-sizing="content-box" direction="ltr" flex-grow="1" min-width="60px"/>
+      <div box-sizing="content-box" direction="ltr" flex-grow="1" min-width="60px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="300" height="300">
+      <node x="0" y="0" width="71" height="150"/>
+      <node x="76" y="0" width="72" height="150"/>
+      <node x="153" y="0" width="71" height="150"/>
+      <node x="229" y="0" width="71" height="150"/>
+      <node x="0" y="150" width="300" height="150"/>
+    </node>
+  </expectations>
+</test>

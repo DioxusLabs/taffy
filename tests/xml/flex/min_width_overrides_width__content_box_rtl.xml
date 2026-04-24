@@ -1,0 +1,13 @@
+<test name="min_width_overrides_width__content_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div box-sizing="content-box" direction="rtl">
+      <div box-sizing="content-box" direction="rtl" width="50px" min-width="100px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="100" height="0">
+      <node x="0" y="0" width="100" height="0"/>
+    </node>
+  </expectations>
+</test>

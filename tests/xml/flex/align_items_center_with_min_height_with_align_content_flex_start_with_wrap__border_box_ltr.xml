@@ -1,0 +1,43 @@
+<test name="align_items_center_with_min_height_with_align_content_flex_start_with_wrap__border_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div direction="ltr">
+      <div display="flex" direction="ltr" flex-wrap="wrap" align-items="center" align-content="flex-start" width="100px" min-height="100px">
+        <div direction="ltr" width="10px" height="10px"/>
+        <div direction="ltr" width="10px" height="20px"/>
+      </div>
+      <div display="flex" direction="ltr" flex-wrap="wrap" align-items="center" width="100px" min-height="100px">
+        <div direction="ltr" width="10px" height="10px"/>
+        <div direction="ltr" width="10px" height="20px"/>
+      </div>
+      <div display="flex" direction="ltr" align-items="center" width="100px" min-height="100px">
+        <div direction="ltr" width="10px" height="10px"/>
+        <div direction="ltr" width="10px" height="20px"/>
+      </div>
+      <div display="flex" direction="ltr" align-items="center" align-content="flex-start" width="100px" min-height="100px">
+        <div direction="ltr" width="10px" height="10px"/>
+        <div direction="ltr" width="10px" height="20px"/>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="400" height="100">
+      <node x="0" y="0" width="100" height="100">
+        <node x="0" y="5" width="10" height="10"/>
+        <node x="10" y="0" width="10" height="20"/>
+      </node>
+      <node x="100" y="0" width="100" height="100">
+        <node x="0" y="45" width="10" height="10"/>
+        <node x="10" y="40" width="10" height="20"/>
+      </node>
+      <node x="200" y="0" width="100" height="100">
+        <node x="0" y="45" width="10" height="10"/>
+        <node x="10" y="40" width="10" height="20"/>
+      </node>
+      <node x="300" y="0" width="100" height="100">
+        <node x="0" y="45" width="10" height="10"/>
+        <node x="10" y="40" width="10" height="20"/>
+      </node>
+    </node>
+  </expectations>
+</test>

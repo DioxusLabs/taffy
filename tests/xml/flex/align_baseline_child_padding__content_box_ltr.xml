@@ -1,0 +1,19 @@
+<test name="align_baseline_child_padding__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div box-sizing="content-box" direction="ltr" align-items="baseline" width="100px" height="100px" padding-top="5px" padding-left="5px" padding-bottom="5px" padding-right="5px">
+      <div box-sizing="content-box" direction="ltr" width="50px" height="50px"/>
+      <div box-sizing="content-box" direction="ltr" flex-direction="column" width="50px" height="20px" padding-top="5px" padding-left="5px" padding-bottom="5px" padding-right="5px">
+        <div box-sizing="content-box" direction="ltr" width="50px" height="10px"/>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="110" height="110">
+      <node x="5" y="5" width="40" height="50"/>
+      <node x="45" y="40" width="60" height="30">
+        <node x="5" y="5" width="50" height="10"/>
+      </node>
+    </node>
+  </expectations>
+</test>

@@ -1,0 +1,27 @@
+<test name="grid_auto_columns__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" direction="rtl" grid-auto-flow="column" grid-template-rows="100px" grid-template-columns="40px" grid-auto-columns="10px 20px 30px">
+      <div direction="rtl" grid-column-start="-3"/>
+      <div direction="rtl"/>
+      <div direction="rtl"/>
+      <div direction="rtl"/>
+      <div direction="rtl"/>
+      <div direction="rtl"/>
+      <div direction="rtl"/>
+      <div direction="rtl"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="190" height="100">
+      <node x="160" y="0" width="30" height="100"/>
+      <node x="120" y="0" width="40" height="100"/>
+      <node x="110" y="0" width="10" height="100"/>
+      <node x="90" y="0" width="20" height="100"/>
+      <node x="60" y="0" width="30" height="100"/>
+      <node x="50" y="0" width="10" height="100"/>
+      <node x="30" y="0" width="20" height="100"/>
+      <node x="0" y="0" width="30" height="100"/>
+    </node>
+  </expectations>
+</test>

@@ -1,0 +1,11 @@
+<test name="leaf_with_content_and_padding__content_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <text box-sizing="content-box" direction="rtl" padding-top="2px" padding-left="8px" padding-bottom="6px" padding-right="4px">
+      HHHH
+    </text>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="52" height="18"/>
+  </expectations>
+</test>

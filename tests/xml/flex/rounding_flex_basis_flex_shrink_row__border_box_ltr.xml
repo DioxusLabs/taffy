@@ -1,0 +1,17 @@
+<test name="rounding_flex_basis_flex_shrink_row__border_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div direction="ltr" width="101px" height="100px">
+      <div direction="ltr" flex-basis="100px"/>
+      <div direction="ltr" flex-basis="25px"/>
+      <div direction="ltr" flex-basis="25px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="101" height="100">
+      <node x="0" y="0" width="67" height="100"/>
+      <node x="67" y="0" width="17" height="100"/>
+      <node x="84" y="0" width="17" height="100"/>
+    </node>
+  </expectations>
+</test>

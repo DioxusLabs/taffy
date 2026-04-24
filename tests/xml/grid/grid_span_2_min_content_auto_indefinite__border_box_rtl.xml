@@ -1,0 +1,19 @@
+<test name="grid_span_2_min_content_auto_indefinite__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" direction="rtl" grid-template-rows="40px" grid-template-columns="min-content auto">
+      <div direction="rtl"/>
+      <div direction="rtl"/>
+      <text direction="rtl" grid-column-start="1" grid-column-end="span 2">
+        HHHH​HHHH
+      </text>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="80" height="50">
+      <node x="60" y="0" width="20" height="40"/>
+      <node x="0" y="0" width="60" height="40"/>
+      <node x="0" y="40" width="80" height="10"/>
+    </node>
+  </expectations>
+</test>

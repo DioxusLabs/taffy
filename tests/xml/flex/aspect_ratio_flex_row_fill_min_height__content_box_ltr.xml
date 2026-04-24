@@ -1,0 +1,13 @@
+<test name="aspect_ratio_flex_row_fill_min_height__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="flex" box-sizing="content-box" direction="ltr" align-items="start" width="100px" height="100px">
+      <div box-sizing="content-box" direction="ltr" min-width="40px" aspect-ratio="2"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="100" height="100">
+      <node x="0" y="0" width="40" height="20"/>
+    </node>
+  </expectations>
+</test>

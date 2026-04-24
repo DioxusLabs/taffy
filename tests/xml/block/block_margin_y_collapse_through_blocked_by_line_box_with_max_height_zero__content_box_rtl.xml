@@ -1,0 +1,19 @@
+<test name="block_margin_y_collapse_through_blocked_by_line_box_with_max_height_zero__content_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="block" box-sizing="content-box" direction="rtl" width="50px">
+      <div display="block" box-sizing="content-box" direction="rtl" height="10px" margin-bottom="10px"/>
+      <text display="block" box-sizing="content-box" direction="rtl" max-height="0px" margin-top="10px" margin-bottom="10px">
+        HH
+      </text>
+      <div display="block" box-sizing="content-box" direction="rtl" height="10px" margin-top="10px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="50" height="40">
+      <node x="0" y="0" width="50" height="10"/>
+      <node x="0" y="20" width="50" height="0"/>
+      <node x="0" y="30" width="50" height="10"/>
+    </node>
+  </expectations>
+</test>

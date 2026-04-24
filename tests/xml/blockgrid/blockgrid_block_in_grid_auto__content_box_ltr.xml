@@ -1,0 +1,17 @@
+<test name="blockgrid_block_in_grid_auto__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" box-sizing="content-box" direction="ltr" grid-template-columns="auto">
+      <text display="block" box-sizing="content-box" direction="ltr">
+        HH​HH
+      </text>
+      <div display="block" box-sizing="content-box" direction="ltr"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="40" height="10">
+      <node x="0" y="0" width="40" height="10"/>
+      <node x="0" y="10" width="40" height="0"/>
+    </node>
+  </expectations>
+</test>

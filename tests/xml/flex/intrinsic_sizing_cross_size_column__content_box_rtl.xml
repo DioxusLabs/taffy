@@ -1,0 +1,11 @@
+<test name="intrinsic_sizing_cross_size_column__content_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <text box-sizing="content-box" direction="rtl" flex-direction="column">
+      HH​HH
+    </text>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="40" height="10"/>
+  </expectations>
+</test>

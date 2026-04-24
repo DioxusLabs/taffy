@@ -1,0 +1,17 @@
+<test name="single_flex_child_after_absolute_child__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div direction="rtl" flex-direction="column" width="428px" height="845px">
+      <div direction="rtl" position="absolute" width="100%" height="100%"/>
+      <div direction="rtl" flex-grow="1"/>
+      <div direction="rtl" flex-shrink="0" flex-basis="174px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="428" height="845">
+      <node x="0" y="0" width="428" height="845"/>
+      <node x="0" y="0" width="428" height="671"/>
+      <node x="0" y="671" width="428" height="174"/>
+    </node>
+  </expectations>
+</test>

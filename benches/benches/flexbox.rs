@@ -13,10 +13,10 @@ use taffy_benchmarks::taffy_03_helpers::Taffy03TreeBuilder;
 use taffy_benchmarks::yoga_helpers::YogaTreeBuilder;
 
 fn random_dimension(rng: &mut impl Rng) -> Dimension {
-    match rng.gen_range(0.0..=1.0) {
-        rand if rand < 0.2 => Dimension::Auto,
-        rand if rand < 0.8 => Dimension::Length(rng.gen_range(0.0..500.0)),
-        _ => Dimension::Percent(rng.gen_range(0.0..1.0)),
+    match rng.random_range(0.0..=1.0) {
+        rand if rand < 0.2 => auto(),
+        rand if rand < 0.8 => length(rng.random_range(0.0..500.0)),
+        _ => percent(rng.random_range(0.0..1.0)),
     }
 }
 
@@ -55,7 +55,7 @@ macro_rules! benchmark_each_library {
         #[cfg(feature = "taffy03")]
         run_benchmark!(Taffy03TreeBuilder<_, _>, "Taffy 0.3", $benchmark_name, $group, $builder, $params, $generate_style, $generate_tree);
 
-        run_benchmark!(TaffyTreeBuilder<_, _>, "Taffy 0.4", $benchmark_name, $group, $builder, $params, $generate_style, $generate_tree);
+        run_benchmark!(TaffyTreeBuilder<_, _>, "Taffy 0.7", $benchmark_name, $group, $builder, $params, $generate_style, $generate_tree);
     };
 }
 
@@ -206,7 +206,7 @@ fn super_deep_benchmarks(c: &mut Criterion) {
 
         run_benchmark!(
             TaffyTreeBuilder<_,_>,
-            "Taffy 0.4",
+            "Taffy 0.7",
             "",
             group,
             builder,

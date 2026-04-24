@@ -1,0 +1,27 @@
+<test name="wrap_nodes_with_content_sizing_margin_cross__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div box-sizing="content-box" direction="ltr" flex-direction="column" width="500px" height="500px">
+      <div box-sizing="content-box" direction="ltr" flex-wrap="wrap" width="70px">
+        <div box-sizing="content-box" direction="ltr" flex-direction="column">
+          <div box-sizing="content-box" direction="ltr" width="40px" height="40px"/>
+        </div>
+        <div box-sizing="content-box" direction="ltr" flex-direction="column" margin-top="10px">
+          <div box-sizing="content-box" direction="ltr" width="40px" height="40px"/>
+        </div>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="500" height="500">
+      <node x="0" y="0" width="70" height="90">
+        <node x="0" y="0" width="40" height="40">
+          <node x="0" y="0" width="40" height="40"/>
+        </node>
+        <node x="0" y="50" width="40" height="40">
+          <node x="0" y="0" width="40" height="40"/>
+        </node>
+      </node>
+    </node>
+  </expectations>
+</test>

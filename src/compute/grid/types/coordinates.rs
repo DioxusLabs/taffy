@@ -87,15 +87,35 @@ impl Sub<u16> for OriginZeroLine {
 impl OriginZeroLine {
     /// Converts a grid line in OriginZero coordinates into the index of that same grid line in the GridTrackVec.
     pub(crate) fn into_track_vec_index(self, track_counts: TrackCounts) -> usize {
-        assert!(
-            self.0 >= -(track_counts.negative_implicit as i16),
-            "OriginZero grid line cannot be less than the number of negative grid lines"
-        );
-        assert!(
-            self.0 <= (track_counts.explicit + track_counts.positive_implicit) as i16,
-            "OriginZero grid line cannot be more than the number of positive grid lines"
-        );
-        2 * ((self.0 + track_counts.negative_implicit as i16) as usize)
+        self.try_into_track_vec_index(track_counts).unwrap_or_else(|| {
+            if self.0 > 0 {
+                panic!("OriginZero grid line cannot be more than the number of positive grid lines");
+            } else {
+                panic!("OriginZero grid line cannot be less than the number of negative grid lines");
+            }
+        })
+    }
+
+    /// Converts a grid line in OriginZero coordinates into the index of that same grid line in the GridTrackVec.
+    ///
+    /// This fallible version is used for the placement of absolutely positioned grid items:
+    ///
+    ///    If a grid-placement property refers to a non-existent line either by explicitly specifying such a line or by
+    ///    spanning outside of the existing implicit grid, it is instead treated as specifying auto (instead of creating
+    ///    new implicit grid lines).
+    ///
+    /// The infallible version above if used when placing regular in-flow grid items.
+    pub(crate) fn try_into_track_vec_index(self, track_counts: TrackCounts) -> Option<usize> {
+        // OriginZero grid line cannot be less than the number of negative grid lines
+        if self.0 < -(track_counts.negative_implicit as i16) {
+            return None;
+        };
+        // OriginZero grid line cannot be more than the number of positive grid lines
+        if self.0 > (track_counts.explicit + track_counts.positive_implicit) as i16 {
+            return None;
+        };
+
+        Some(2 * ((self.0 + track_counts.negative_implicit as i16) as usize))
     }
 
     /// The minimum number of negative implicit track there must be if a grid item starts at this line.

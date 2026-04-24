@@ -1,0 +1,25 @@
+<test name="grid_align_items_baseline_child_multiline__border_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" direction="ltr" align-items="baseline" width="100px">
+      <div display="grid" direction="ltr" width="50px" height="60px"/>
+      <div display="grid" direction="ltr" flex-wrap="wrap" width="50px" grid-template-columns="auto auto">
+        <div display="grid" direction="ltr" width="25px" height="20px"/>
+        <div display="grid" direction="ltr" width="25px" height="10px"/>
+        <div display="grid" direction="ltr" width="25px" height="20px"/>
+        <div display="grid" direction="ltr" width="25px" height="10px"/>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="100" height="100">
+      <node x="0" y="0" width="50" height="60"/>
+      <node x="0" y="60" width="50" height="40">
+        <node x="0" y="0" width="25" height="20"/>
+        <node x="25" y="0" width="25" height="10"/>
+        <node x="0" y="20" width="25" height="20"/>
+        <node x="25" y="20" width="25" height="10"/>
+      </node>
+    </node>
+  </expectations>
+</test>

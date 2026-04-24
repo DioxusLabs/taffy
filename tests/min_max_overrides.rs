@@ -1,16 +1,17 @@
 #[cfg(test)]
 mod min_max_overrides {
     use taffy::prelude::*;
+    use taffy_test_helpers::new_test_tree;
 
     #[test]
     fn min_overrides_max() {
-        let mut taffy: TaffyTree<()> = TaffyTree::new();
+        let mut taffy = new_test_tree();
 
         let child = taffy
             .new_leaf(Style {
-                size: Size { width: Dimension::Length(50.0), height: Dimension::Length(50.0) },
-                min_size: Size { width: Dimension::Length(100.0), height: Dimension::Length(100.0) },
-                max_size: Size { width: Dimension::Length(10.0), height: Dimension::Length(10.0) },
+                size: Size { width: Dimension::from_length(50.0), height: Dimension::from_length(50.0) },
+                min_size: Size { width: Dimension::from_length(100.0), height: Dimension::from_length(100.0) },
+                max_size: Size { width: Dimension::from_length(10.0), height: Dimension::from_length(10.0) },
                 ..Default::default()
             })
             .unwrap();
@@ -27,12 +28,12 @@ mod min_max_overrides {
 
     #[test]
     fn max_overrides_size() {
-        let mut taffy: TaffyTree<()> = TaffyTree::new();
+        let mut taffy = new_test_tree();
 
         let child = taffy
             .new_leaf(Style {
-                size: Size { width: Dimension::Length(50.0), height: Dimension::Length(50.0) },
-                max_size: Size { width: Dimension::Length(10.0), height: Dimension::Length(10.0) },
+                size: Size { width: Dimension::from_length(50.0), height: Dimension::from_length(50.0) },
+                max_size: Size { width: Dimension::from_length(10.0), height: Dimension::from_length(10.0) },
                 ..Default::default()
             })
             .unwrap();
@@ -49,12 +50,12 @@ mod min_max_overrides {
 
     #[test]
     fn min_overrides_size() {
-        let mut taffy: TaffyTree<()> = TaffyTree::new();
+        let mut taffy = new_test_tree();
 
         let child = taffy
             .new_leaf(Style {
-                size: Size { width: Dimension::Length(50.0), height: Dimension::Length(50.0) },
-                min_size: Size { width: Dimension::Length(100.0), height: Dimension::Length(100.0) },
+                size: Size { width: Dimension::from_length(50.0), height: Dimension::from_length(50.0) },
+                min_size: Size { width: Dimension::from_length(100.0), height: Dimension::from_length(100.0) },
                 ..Default::default()
             })
             .unwrap();

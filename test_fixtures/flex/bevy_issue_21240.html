@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    Test description
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="display: grid; padding: 8px; gap: 8px; grid-template-columns: 40px 40px 40px 40px; grid-template-rows: 40px 40px 40px; background: #333;">
+  <div style="background: red;"></div>
+  <div style="background: green;"></div>
+  <div style="background: blue;"></div>
+  <div style="background: orange;"></div>
+  <div style="background: pink; grid-column-start: 1; grid-column-end: -1;"></div>
+  <div style="background: purple; grid-column-start: 1; grid-column-end: span 4;"></div>
+</div>
+
+</body>
+</html>

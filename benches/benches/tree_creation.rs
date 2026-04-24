@@ -26,7 +26,7 @@ fn build_taffy_flat_hierarchy(total_node_count: u32, use_with_capacity: bool) ->
     let mut node_count = 0;
 
     while node_count < total_node_count {
-        let sub_children_count = rng.gen_range(1..=4);
+        let sub_children_count = rng.random_range(1..=4);
         let sub_children: Vec<NodeId> = (0..sub_children_count).map(|_| build_random_leaf(&mut taffy)).collect();
         let node = taffy.new_with_children(Style::DEFAULT, &sub_children).unwrap();
 
@@ -47,7 +47,7 @@ fn build_yoga_flat_hierarchy(total_node_count: u32) -> (yg::YogaTree, yg::NodeId
     let mut node_count = 0;
 
     while node_count < total_node_count {
-        let sub_children_count = rng.gen_range(1..=4);
+        let sub_children_count = rng.random_range(1..=4);
         let sub_children: Vec<yg::NodeId> =
             (0..sub_children_count).map(|_| yoga_helpers::new_default_style_with_children(&mut tree, &[])).collect();
         let node = yoga_helpers::new_default_style_with_children(&mut tree, &sub_children);
@@ -73,7 +73,7 @@ fn taffy_benchmarks(c: &mut Criterion) {
                 std::hint::black_box(root);
             })
         });
-        let benchmark_id = BenchmarkId::new(format!("TaffyTree::new"), node_count);
+        let benchmark_id = BenchmarkId::new("TaffyTree::new".to_string(), node_count);
         group.bench_with_input(benchmark_id, node_count, |b, &node_count| {
             b.iter(|| {
                 let (tree, root) = build_taffy_flat_hierarchy(node_count, false);
@@ -82,7 +82,7 @@ fn taffy_benchmarks(c: &mut Criterion) {
             })
         });
 
-        let benchmark_id = BenchmarkId::new(format!("TaffyTree::with_capacity"), node_count);
+        let benchmark_id = BenchmarkId::new("TaffyTree::with_capacity".to_string(), node_count);
         group.bench_with_input(benchmark_id, node_count, |b, &node_count| {
             b.iter(|| {
                 let (tree, root) = build_taffy_flat_hierarchy(node_count, true);

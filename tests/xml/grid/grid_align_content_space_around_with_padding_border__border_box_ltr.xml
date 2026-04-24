@@ -1,0 +1,29 @@
+<test name="grid_align_content_space_around_with_padding_border__border_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" direction="ltr" align-content="space-around" width="200px" height="200px" padding-top="10px" padding-left="40px" padding-bottom="30px" padding-right="20px" border-top="2px" border-left="8px" border-bottom="6px" border-right="4px" grid-template-rows="40px 40px 40px" grid-template-columns="40px 40px 40px">
+      <div direction="ltr"/>
+      <div direction="ltr"/>
+      <div direction="ltr"/>
+      <div direction="ltr"/>
+      <div direction="ltr"/>
+      <div direction="ltr"/>
+      <div direction="ltr"/>
+      <div direction="ltr"/>
+      <div direction="ltr"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="200" height="200">
+      <node x="48" y="17" width="40" height="40"/>
+      <node x="88" y="17" width="40" height="40"/>
+      <node x="128" y="17" width="40" height="40"/>
+      <node x="48" y="68" width="40" height="40"/>
+      <node x="88" y="68" width="40" height="40"/>
+      <node x="128" y="68" width="40" height="40"/>
+      <node x="48" y="119" width="40" height="40"/>
+      <node x="88" y="119" width="40" height="40"/>
+      <node x="128" y="119" width="40" height="40"/>
+    </node>
+  </expectations>
+</test>

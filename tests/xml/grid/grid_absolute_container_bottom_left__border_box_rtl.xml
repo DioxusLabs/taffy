@@ -1,0 +1,29 @@
+<test name="grid_absolute_container_bottom_left__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" direction="rtl" padding-top="10px" padding-left="40px" padding-bottom="30px" padding-right="20px" grid-template-rows="40px 40px 40px" grid-template-columns="40px 40px 40px">
+      <div direction="rtl" position="absolute" left="0px" bottom="0px"/>
+      <div direction="rtl"/>
+      <div direction="rtl"/>
+      <div direction="rtl"/>
+      <div direction="rtl"/>
+      <div direction="rtl"/>
+      <div direction="rtl"/>
+      <div direction="rtl"/>
+      <div direction="rtl"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="180" height="160">
+      <node x="0" y="160" width="0" height="0"/>
+      <node x="120" y="10" width="40" height="40"/>
+      <node x="80" y="10" width="40" height="40"/>
+      <node x="40" y="10" width="40" height="40"/>
+      <node x="120" y="50" width="40" height="40"/>
+      <node x="80" y="50" width="40" height="40"/>
+      <node x="40" y="50" width="40" height="40"/>
+      <node x="120" y="90" width="40" height="40"/>
+      <node x="80" y="90" width="40" height="40"/>
+    </node>
+  </expectations>
+</test>

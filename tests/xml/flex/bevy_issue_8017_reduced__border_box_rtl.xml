@@ -1,0 +1,23 @@
+<test name="bevy_issue_8017_reduced__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div direction="rtl" flex-direction="column" width="200px" height="400px" row-gap="8px" column-gap="8px">
+      <div direction="rtl" height="50%">
+        <div direction="rtl"/>
+      </div>
+      <div direction="rtl" height="50%">
+        <div direction="rtl"/>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="200" height="400">
+      <node x="0" y="0" width="200" height="196">
+        <node x="200" y="0" width="0" height="196"/>
+      </node>
+      <node x="0" y="204" width="200" height="196">
+        <node x="200" y="0" width="0" height="196"/>
+      </node>
+    </node>
+  </expectations>
+</test>

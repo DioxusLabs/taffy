@@ -1,0 +1,15 @@
+<test name="bevy_issue_9530_reduced4__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div box-sizing="content-box" direction="ltr" flex-direction="column" width="80px">
+      <text box-sizing="content-box" direction="ltr" margin-top="20px" margin-left="20px" margin-bottom="20px" margin-right="20px">
+        HH​HH​HH​HH​HH​HH​HH​HH
+      </text>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="80" height="80">
+      <node x="20" y="20" width="40" height="40"/>
+    </node>
+  </expectations>
+</test>

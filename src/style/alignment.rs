@@ -29,20 +29,34 @@ pub enum AlignItems {
     /// Stretch to fill the container
     Stretch,
 }
+
+#[cfg(feature = "parse")]
+crate::util::parse::impl_parse_for_keyword_enum!(AlignItems,
+    "start" => Start,
+    "end" => End,
+    "flex-start" => FlexStart,
+    "flex-end" => FlexEnd,
+    "center" => Center,
+    "baseline" => Baseline,
+    "stretch" => Stretch,
+);
+
 /// Used to control how child nodes are aligned.
 /// Does not apply to Flexbox, and will be ignored if specified on a flex container
 /// For Grid it controls alignment in the inline axis
 ///
 /// [MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/justify-items)
 pub type JustifyItems = AlignItems;
-/// Used to control how the specified nodes is aligned.
+/// Controls alignment of an individual node
+///
 /// Overrides the parent Node's `AlignItems` property.
 /// For Flexbox it controls alignment in the cross axis
 /// For Grid it controls alignment in the block axis
 ///
 /// [MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/align-self)
 pub type AlignSelf = AlignItems;
-/// Used to control how the specified nodes is aligned.
+/// Controls alignment of an individual node
+///
 /// Overrides the parent Node's `JustifyItems` property.
 /// Does not apply to Flexbox, and will be ignored if specified on a flex child
 /// For Grid it controls alignment in the inline axis
@@ -85,6 +99,33 @@ pub enum AlignContent {
     /// The gap between the first and last items is exactly HALF the gap between items.
     /// The gaps are distributed evenly in proportion to these ratios.
     SpaceAround,
+}
+
+#[cfg(feature = "parse")]
+crate::util::parse::impl_parse_for_keyword_enum!(AlignContent,
+    "start" => Start,
+    "end" => End,
+    "flex-start" => FlexStart,
+    "flex-end" => FlexEnd,
+    "center" => Center,
+    "stretch" => Stretch,
+    "space-between" => SpaceBetween,
+    "space-evenly" => SpaceEvenly,
+    "space-around" => SpaceAround,
+);
+
+impl AlignContent {
+    /// Returns the reversed alignment for RTL (right-to-left) contexts.
+    pub(crate) fn reversed(self) -> Self {
+        match self {
+            Self::Start => Self::End,
+            Self::End => Self::Start,
+            Self::FlexStart => Self::FlexEnd,
+            Self::FlexEnd => Self::FlexStart,
+            Self::Stretch => Self::End,
+            style => style,
+        }
+    }
 }
 
 /// Sets the distribution of space between and around content items

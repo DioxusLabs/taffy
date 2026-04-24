@@ -1,7 +1,10 @@
 /target
 /scripts/gentest/target
+/benches/target
+/examples/cosmic_text/target
 /yoga_test_fixtures
 /yoga_test_fixtures_grouped
+/test_fixtures/_scratch
 
 **/*.rs.bk
 Cargo.lock

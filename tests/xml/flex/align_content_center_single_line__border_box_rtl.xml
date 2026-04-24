@@ -1,0 +1,23 @@
+<test name="align_content_center_single_line__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div direction="rtl" align-content="center" width="120px" height="100px">
+      <div direction="rtl" width="50px" height="10px"/>
+      <div direction="rtl" width="50px" height="10px"/>
+      <div direction="rtl" width="50px" height="10px"/>
+      <div direction="rtl" width="50px" height="10px"/>
+      <div direction="rtl" width="50px" height="10px"/>
+      <div direction="rtl" width="50px" height="10px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="120" height="100">
+      <node x="100" y="0" width="20" height="10"/>
+      <node x="80" y="0" width="20" height="10"/>
+      <node x="60" y="0" width="20" height="10"/>
+      <node x="40" y="0" width="20" height="10"/>
+      <node x="20" y="0" width="20" height="10"/>
+      <node x="0" y="0" width="20" height="10"/>
+    </node>
+  </expectations>
+</test>

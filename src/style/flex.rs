@@ -7,18 +7,18 @@ pub trait FlexboxContainerStyle: CoreStyle {
     /// Which direction does the main axis flow in?
     #[inline(always)]
     fn flex_direction(&self) -> FlexDirection {
-        Style::DEFAULT.flex_direction
+        Style::<Self::CustomIdent>::DEFAULT.flex_direction
     }
     /// Should elements wrap, or stay in a single line?
     #[inline(always)]
     fn flex_wrap(&self) -> FlexWrap {
-        Style::DEFAULT.flex_wrap
+        Style::<Self::CustomIdent>::DEFAULT.flex_wrap
     }
 
     /// How large should the gaps between items in a grid or flex container be?
     #[inline(always)]
     fn gap(&self) -> Size<LengthPercentage> {
-        Style::DEFAULT.gap
+        Style::<Self::CustomIdent>::DEFAULT.gap
     }
 
     // Alignment properties
@@ -26,17 +26,17 @@ pub trait FlexboxContainerStyle: CoreStyle {
     /// How should content contained within this item be aligned in the cross/block axis
     #[inline(always)]
     fn align_content(&self) -> Option<AlignContent> {
-        Style::DEFAULT.align_content
+        Style::<Self::CustomIdent>::DEFAULT.align_content
     }
     /// How this node's children aligned in the cross/block axis?
     #[inline(always)]
     fn align_items(&self) -> Option<AlignItems> {
-        Style::DEFAULT.align_items
+        Style::<Self::CustomIdent>::DEFAULT.align_items
     }
     /// How this node's children should be aligned in the inline axis
     #[inline(always)]
     fn justify_content(&self) -> Option<JustifyContent> {
-        Style::DEFAULT.justify_content
+        Style::<Self::CustomIdent>::DEFAULT.justify_content
     }
 }
 
@@ -45,24 +45,24 @@ pub trait FlexboxItemStyle: CoreStyle {
     /// Sets the initial main axis size of the item
     #[inline(always)]
     fn flex_basis(&self) -> Dimension {
-        Style::DEFAULT.flex_basis
+        Style::<Self::CustomIdent>::DEFAULT.flex_basis
     }
     /// The relative rate at which this item grows when it is expanding to fill space
     #[inline(always)]
     fn flex_grow(&self) -> f32 {
-        Style::DEFAULT.flex_grow
+        Style::<Self::CustomIdent>::DEFAULT.flex_grow
     }
     /// The relative rate at which this item shrinks when it is contracting to fit into space
     #[inline(always)]
     fn flex_shrink(&self) -> f32 {
-        Style::DEFAULT.flex_shrink
+        Style::<Self::CustomIdent>::DEFAULT.flex_shrink
     }
 
     /// How this node should be aligned in the cross/block axis
     /// Falls back to the parents [`AlignItems`] if not set
     #[inline(always)]
     fn align_self(&self) -> Option<AlignSelf> {
-        Style::DEFAULT.align_self
+        Style::<Self::CustomIdent>::DEFAULT.align_self
     }
 }
 
@@ -73,10 +73,11 @@ use crate::geometry::AbsoluteAxis;
 /// Defaults to [`FlexWrap::NoWrap`]
 ///
 /// [Specification](https://www.w3.org/TR/css-flexbox-1/#flex-wrap-property)
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum FlexWrap {
     /// Items will not wrap and stay on a single line
+    #[default]
     NoWrap,
     /// Items will wrap according to this item's [`FlexDirection`]
     Wrap,
@@ -84,11 +85,12 @@ pub enum FlexWrap {
     WrapReverse,
 }
 
-impl Default for FlexWrap {
-    fn default() -> Self {
-        Self::NoWrap
-    }
-}
+#[cfg(feature = "parse")]
+crate::util::parse::impl_parse_for_keyword_enum!(FlexWrap,
+    "nowrap" => NoWrap,
+    "wrap" => Wrap,
+    "wrap-reverse" => WrapReverse,
+);
 
 /// The direction of the flexbox layout main axis.
 ///
@@ -101,12 +103,13 @@ impl Default for FlexWrap {
 /// The default behavior is [`FlexDirection::Row`].
 ///
 /// [Specification](https://www.w3.org/TR/css-flexbox-1/#flex-direction-property)
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum FlexDirection {
     /// Defines +x as the main axis
     ///
     /// Items will be added from left to right in a row.
+    #[default]
     Row,
     /// Defines +y as the main axis
     ///
@@ -122,34 +125,36 @@ pub enum FlexDirection {
     ColumnReverse,
 }
 
-impl Default for FlexDirection {
-    fn default() -> Self {
-        Self::Row
-    }
-}
+#[cfg(feature = "parse")]
+crate::util::parse::impl_parse_for_keyword_enum!(FlexDirection,
+    "row" => Row,
+    "column" => Column,
+    "row-reverse" => RowReverse,
+    "column-reverse" => ColumnReverse,
+);
 
 impl FlexDirection {
     #[inline]
     /// Is the direction [`FlexDirection::Row`] or [`FlexDirection::RowReverse`]?
-    pub(crate) fn is_row(self) -> bool {
+    pub(crate) const fn is_row(self) -> bool {
         matches!(self, Self::Row | Self::RowReverse)
     }
 
     #[inline]
     /// Is the direction [`FlexDirection::Column`] or [`FlexDirection::ColumnReverse`]?
-    pub(crate) fn is_column(self) -> bool {
+    pub(crate) const fn is_column(self) -> bool {
         matches!(self, Self::Column | Self::ColumnReverse)
     }
 
     #[inline]
     /// Is the direction [`FlexDirection::RowReverse`] or [`FlexDirection::ColumnReverse`]?
-    pub(crate) fn is_reverse(self) -> bool {
+    pub(crate) const fn is_reverse(self) -> bool {
         matches!(self, Self::RowReverse | Self::ColumnReverse)
     }
 
     #[inline]
     /// The `AbsoluteAxis` that corresponds to the main axis
-    pub(crate) fn main_axis(self) -> AbsoluteAxis {
+    pub(crate) const fn main_axis(self) -> AbsoluteAxis {
         match self {
             Self::Row | Self::RowReverse => AbsoluteAxis::Horizontal,
             Self::Column | Self::ColumnReverse => AbsoluteAxis::Vertical,
@@ -158,7 +163,7 @@ impl FlexDirection {
 
     #[inline]
     /// The `AbsoluteAxis` that corresponds to the cross axis
-    pub(crate) fn cross_axis(self) -> AbsoluteAxis {
+    pub(crate) const fn cross_axis(self) -> AbsoluteAxis {
         match self {
             Self::Row | Self::RowReverse => AbsoluteAxis::Vertical,
             Self::Column | Self::ColumnReverse => AbsoluteAxis::Horizontal,

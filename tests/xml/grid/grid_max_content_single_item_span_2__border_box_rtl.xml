@@ -1,0 +1,31 @@
+<test name="grid_max_content_single_item_span_2__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" direction="rtl" grid-template-rows="40px 40px 40px" grid-template-columns="40px max-content max-content">
+      <div direction="rtl"/>
+      <text direction="rtl" grid-column-start="span 2">
+        HH​HH
+      </text>
+      <div direction="rtl"/>
+      <div direction="rtl"/>
+      <div direction="rtl"/>
+      <div direction="rtl"/>
+      <div direction="rtl"/>
+      <div direction="rtl"/>
+      <div direction="rtl"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="80" height="120">
+      <node x="40" y="0" width="40" height="40"/>
+      <node x="0" y="0" width="40" height="40"/>
+      <node x="40" y="40" width="40" height="40"/>
+      <node x="20" y="40" width="20" height="40"/>
+      <node x="0" y="40" width="20" height="40"/>
+      <node x="40" y="80" width="40" height="40"/>
+      <node x="20" y="80" width="20" height="40"/>
+      <node x="0" y="80" width="20" height="40"/>
+      <node x="40" y="120" width="40" height="0"/>
+    </node>
+  </expectations>
+</test>

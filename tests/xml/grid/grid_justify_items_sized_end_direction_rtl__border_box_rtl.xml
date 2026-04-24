@@ -1,0 +1,15 @@
+<test name="grid_justify_items_sized_end_direction_rtl__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" direction="rtl" justify-items="end" width="120px" height="120px" grid-template-rows="40px 40px 40px" grid-template-columns="40px 40px 40px">
+      <div direction="rtl" width="20px" height="20px" grid-row-start="1" grid-column-start="1"/>
+      <div direction="rtl" width="20px" height="20px" grid-row-start="3" grid-column-start="3"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="120" height="120">
+      <node x="80" y="0" width="20" height="20"/>
+      <node x="0" y="80" width="20" height="20"/>
+    </node>
+  </expectations>
+</test>

@@ -1,0 +1,15 @@
+<test name="flex_grow_flex_basis_percent_min_max__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div box-sizing="content-box" direction="ltr" width="120px">
+      <div box-sizing="content-box" direction="ltr" flex-grow="1" flex-shrink="0" flex-basis="0px" height="20px" min-width="60px"/>
+      <div box-sizing="content-box" direction="ltr" flex-grow="1" flex-shrink="0" flex-basis="50%" width="20px" height="20px" max-width="20px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="120" height="20">
+      <node x="0" y="0" width="100" height="20"/>
+      <node x="100" y="0" width="20" height="20"/>
+    </node>
+  </expectations>
+</test>

@@ -1,0 +1,17 @@
+<test name="nested_overflowing_child_in_constraint_parent__content_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div box-sizing="content-box" direction="rtl" width="100px" height="100px">
+      <div box-sizing="content-box" direction="rtl" width="100px" height="100px">
+        <div box-sizing="content-box" direction="rtl" width="200px" height="200px"/>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="100" height="100">
+      <node x="0" y="0" width="100" height="100">
+        <node x="0" y="0" width="100" height="200"/>
+      </node>
+    </node>
+  </expectations>
+</test>

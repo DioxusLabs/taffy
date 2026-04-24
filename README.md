@@ -1,8 +1,14 @@
-# Taffy
+<!-- markdownlint-disable-next-line MD041 -->
+<p>
+<picture>
+  <img src="assets/logo.svg" alt="Taffy" height="70">
+</picture>
+</p>
 
 [![GitHub CI](https://github.com/DioxusLabs/taffy/actions/workflows/ci.yml/badge.svg)](https://github.com/DioxusLabs/taffy/actions/workflows/ci.yml)
 [![crates.io](https://img.shields.io/crates/v/taffy.svg)](https://crates.io/crates/taffy)
 [![docs.rs](https://img.shields.io/docsrs/taffy)](https://docs.rs/taffy)
+![Crates.io MSRV](https://img.shields.io/crates/msrv/taffy)
 
 Taffy is a flexible, high-performance, cross-platform UI layout library written in [Rust](https://www.rust-lang.org).
 
@@ -11,8 +17,12 @@ It currently implements the CSS **Block**, **Flexbox** and **CSS Grid** layout a
 This crate is a collaborative, cross-team project, and is designed to be used as a dependency for other UI and GUI libraries.
 Right now, it powers:
 
-- [Dioxus](https://dioxuslabs.com/): a React-like library for building fast, portable, and beautiful user interfaces with Rust
+- [Servo](https://github.com/servo/servo): an alternative web browser
+- [Blitz](https://github.com/DioxusLabs/blitz): a radically modular web engine
 - [Bevy](https://bevyengine.org/): an ergonomic, ECS-first Rust game engine
+- [Takumi](https://github.com/kane50613/takumi): Renders your React components to images
+- [iocraft](https://github.com/ccbrown/iocraft): crafting beautiful interfaces for the terminal
+- [Slint](https://github.com/slint-ui/slint): a declarative GUI toolkit for building native user interfaces
 - The [Lapce](https://lapce.dev/) text editor via the [Floem](https://github.com/lapce/floem) UI framework
 - The [Zed](https://zed.dev/) text editor via the [GPUI](https://github.com/zed-industries/zed/tree/main/crates/gpui) UI framework
 

@@ -6,7 +6,7 @@ pub trait BlockContainerStyle: CoreStyle {
     /// Defines which row in the grid the item should start and end at
     #[inline(always)]
     fn text_align(&self) -> TextAlign {
-        Style::DEFAULT.text_align
+        Style::<Self::CustomIdent>::DEFAULT.text_align
     }
 }
 
@@ -16,6 +16,20 @@ pub trait BlockItemStyle: CoreStyle {
     #[inline(always)]
     fn is_table(&self) -> bool {
         false
+    }
+
+    /// Whether the item is a floated
+    #[cfg(feature = "float_layout")]
+    #[inline(always)]
+    fn float(&self) -> super::Float {
+        super::Float::None
+    }
+
+    /// Whether the item is a floated
+    #[cfg(feature = "float_layout")]
+    #[inline(always)]
+    fn clear(&self) -> super::Clear {
+        super::Clear::None
     }
 }
 
@@ -33,3 +47,11 @@ pub enum TextAlign {
     /// Corresponds to `-webkit-center` or `-moz-center` in browsers
     LegacyCenter,
 }
+
+#[cfg(feature = "parse")]
+crate::util::parse::impl_parse_for_keyword_enum!(TextAlign,
+    "auto" => Auto,
+    "-webkit-left" => LegacyLeft,
+    "-webkit-right" => LegacyRight,
+    "-webkit-center" => LegacyCenter,
+);

@@ -1,6 +1,7 @@
 //! Geometric primitives useful for layout
 
 use crate::util::sys::f32_max;
+use crate::CompactLength;
 use crate::{style::Dimension, util::sys::f32_min};
 use core::ops::{Add, Sub};
 
@@ -62,7 +63,7 @@ pub enum AbstractAxis {
 impl AbstractAxis {
     /// Returns the other variant of the enum
     #[inline]
-    pub fn other(&self) -> AbstractAxis {
+    pub const fn other(&self) -> AbstractAxis {
         match *self {
             AbstractAxis::Inline => AbstractAxis::Block,
             AbstractAxis::Block => AbstractAxis::Inline,
@@ -72,7 +73,7 @@ impl AbstractAxis {
     /// Convert an `AbstractAxis` into an `AbsoluteAxis` naively assuming that the Inline axis is Horizontal
     /// This is currently always true, but will change if Taffy ever implements the `writing_mode` property
     #[inline]
-    pub fn as_abs_naive(&self) -> AbsoluteAxis {
+    pub const fn as_abs_naive(&self) -> AbsoluteAxis {
         match self {
             AbstractAxis::Inline => AbsoluteAxis::Horizontal,
             AbstractAxis::Block => AbsoluteAxis::Vertical,
@@ -93,7 +94,7 @@ pub(crate) struct InBothAbsAxis<T> {
 impl<T: Copy> InBothAbsAxis<T> {
     #[cfg(feature = "grid")]
     /// Get the contained item based on the AbsoluteAxis passed
-    pub fn get(&self, axis: AbsoluteAxis) -> T {
+    pub const fn get(&self, axis: AbsoluteAxis) -> T {
         match axis {
             AbsoluteAxis::Horizontal => self.horizontal,
             AbsoluteAxis::Vertical => self.vertical,
@@ -189,7 +190,7 @@ where
     ///
     /// **NOTE:** this is *not* the width of the rectangle.
     #[inline(always)]
-    pub(crate) fn horizontal_axis_sum(&self) -> U {
+    pub fn horizontal_axis_sum(&self) -> U {
         self.left + self.right
     }
 
@@ -199,16 +200,16 @@ where
     ///
     /// **NOTE:** this is *not* the height of the rectangle.
     #[inline(always)]
-    pub(crate) fn vertical_axis_sum(&self) -> U {
+    pub fn vertical_axis_sum(&self) -> U {
         self.top + self.bottom
     }
 
-    /// Both horizontal_axis_sum and vertical_axis_sum as a Size<T>
+    /// Both horizontal_axis_sum and vertical_axis_sum as a `Size<T>`
     ///
     /// **NOTE:** this is *not* the width/height of the rectangle.
     #[inline(always)]
     #[allow(dead_code)] // Fixes spurious clippy warning: this function is used!
-    pub(crate) fn sum_axes(&self) -> Size<U> {
+    pub fn sum_axes(&self) -> Size<U> {
         Size { width: self.horizontal_axis_sum(), height: self.vertical_axis_sum() }
     }
 
@@ -247,7 +248,7 @@ where
 {
     /// The `start` or `top` value of the [`Rect`], from the perspective of the main layout axis
     #[cfg(feature = "flexbox")]
-    pub(crate) fn main_start(&self, direction: FlexDirection) -> T {
+    pub(crate) const fn main_start(&self, direction: FlexDirection) -> T {
         if direction.is_row() {
             self.left
         } else {
@@ -257,7 +258,7 @@ where
 
     /// The `end` or `bottom` value of the [`Rect`], from the perspective of the main layout axis
     #[cfg(feature = "flexbox")]
-    pub(crate) fn main_end(&self, direction: FlexDirection) -> T {
+    pub(crate) const fn main_end(&self, direction: FlexDirection) -> T {
         if direction.is_row() {
             self.right
         } else {
@@ -267,7 +268,7 @@ where
 
     /// The `start` or `top` value of the [`Rect`], from the perspective of the cross layout axis
     #[cfg(feature = "flexbox")]
-    pub(crate) fn cross_start(&self, direction: FlexDirection) -> T {
+    pub(crate) const fn cross_start(&self, direction: FlexDirection) -> T {
         if direction.is_row() {
             self.top
         } else {
@@ -277,7 +278,7 @@ where
 
     /// The `end` or `bottom` value of the [`Rect`], from the perspective of the main layout axis
     #[cfg(feature = "flexbox")]
-    pub(crate) fn cross_end(&self, direction: FlexDirection) -> T {
+    pub(crate) const fn cross_end(&self, direction: FlexDirection) -> T {
         if direction.is_row() {
             self.bottom
         } else {
@@ -561,7 +562,7 @@ impl Size<Option<f32>> {
 
     /// Creates a new [`Size<Option<f32>>`] with either the width or height set based on the provided `direction`
     #[cfg(feature = "flexbox")]
-    pub fn from_cross(direction: FlexDirection, value: Option<f32>) -> Self {
+    pub const fn from_cross(direction: FlexDirection, value: Option<f32>) -> Self {
         let mut new = Self::NONE;
         if direction.is_row() {
             new.height = value
@@ -607,16 +608,16 @@ impl<T> Size<Option<T>> {
 }
 
 impl Size<Dimension> {
-    /// Generates a [`Size<Dimension>`] using [`Dimension::Length`] values
+    /// Generates a [`Size<Dimension>`] using length values
     #[must_use]
     pub const fn from_lengths(width: f32, height: f32) -> Self {
-        Size { width: Dimension::Length(width), height: Dimension::Length(height) }
+        Size { width: Dimension(CompactLength::length(width)), height: Dimension(CompactLength::length(height)) }
     }
 
-    /// Generates a [`Size<Dimension>`] using [`Dimension::Percent`] values
+    /// Generates a [`Size<Dimension>`] using percentage values
     #[must_use]
     pub const fn from_percent(width: f32, height: f32) -> Self {
-        Size { width: Dimension::Percent(width), height: Dimension::Percent(height) }
+        Size { width: Dimension(CompactLength::percent(width)), height: Dimension(CompactLength::percent(height)) }
     }
 }
 
