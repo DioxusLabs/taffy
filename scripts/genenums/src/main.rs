@@ -61,13 +61,11 @@ fn main() {
 }
 
 /// Enum generators
-
 fn create_enum(name: &str, values: &[&str]) {
     create_java_enum(name, values);
 }
 
 /// Transformer generators
-
 fn create_transformer(name: &str, values: &[&str], default: bool) {
     create_java_tranformer(name, values, default);
 }
