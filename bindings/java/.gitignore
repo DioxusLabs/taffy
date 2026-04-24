@@ -1,0 +1,6 @@
+# Rust
+rust/target/
+
+# Gradle
+java/.gradle/
+java/build/

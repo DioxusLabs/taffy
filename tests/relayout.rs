@@ -369,25 +369,25 @@ fn relayout_is_stable_with_rounding() {
     taffy.compute_layout(root, Size::MAX_CONTENT).ok();
     taffy.print_tree(root);
 
-    let initial_root_layout = taffy.layout(root).unwrap().clone();
+    let initial_root_layout = *taffy.layout(root).unwrap();
     assert_eq!(initial_root_layout.location.x, 0.0);
     assert_eq!(initial_root_layout.location.y, 0.0);
     assert_eq!(initial_root_layout.size.width, 1920.0);
     assert_eq!(initial_root_layout.size.height, 1080.0);
 
-    let initial_outer_layout = taffy.layout(outer).unwrap().clone();
+    let initial_outer_layout = *taffy.layout(outer).unwrap();
     assert_eq!(initial_outer_layout.location.x, 2.0);
     assert_eq!(initial_outer_layout.location.y, 0.0);
     assert_eq!(initial_outer_layout.size.width, 1920.0);
     assert_eq!(initial_outer_layout.size.height, 1080.0);
 
-    let initial_wrapper_layout = taffy.layout(wrapper).unwrap().clone();
+    let initial_wrapper_layout = *taffy.layout(wrapper).unwrap();
     assert_eq!(initial_wrapper_layout.location.x, 0.0);
     assert_eq!(initial_wrapper_layout.location.y, 0.0);
     assert_eq!(initial_wrapper_layout.size.width, 150.0);
     assert_eq!(initial_wrapper_layout.size.height, 1080.0);
 
-    let initial_inner_layout = taffy.layout(inner).unwrap().clone();
+    let initial_inner_layout = *taffy.layout(inner).unwrap();
     assert_eq!(initial_inner_layout.location.x, -150.0);
     assert_eq!(initial_inner_layout.location.y, 0.0);
     assert_eq!(initial_inner_layout.size.width, 300.0);
