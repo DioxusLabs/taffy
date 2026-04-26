@@ -6,6 +6,7 @@ use taffy::{
 };
 use taffy_test_helpers::{test_measure_function, TestNodeContext};
 
+#[path = "./xml/mod.rs"]
 mod xml;
 
 #[derive(Debug)]
