@@ -22913,3 +22913,34 @@ mod leaf {
         crate::run_xml_test("leaf", "leaf_with_content_and_padding_border__content_box_rtl");
     }
 }
+mod contents {
+    #[test]
+    fn contents_flex_basic__border_box_ltr() {
+        crate::run_xml_test("contents", "contents_flex_basic__border_box_ltr");
+    }
+
+    #[test]
+    fn contents_flex_nested__border_box_ltr() {
+        crate::run_xml_test("contents", "contents_flex_nested__border_box_ltr");
+    }
+
+    #[test]
+    fn contents_flex_single_child__border_box_ltr() {
+        crate::run_xml_test("contents", "contents_flex_single_child__border_box_ltr");
+    }
+
+    #[test]
+    fn contents_flex_with_flex_child__border_box_ltr() {
+        crate::run_xml_test("contents", "contents_flex_with_flex_child__border_box_ltr");
+    }
+
+    #[test]
+    fn contents_flex_mixed_with_none__border_box_ltr() {
+        crate::run_xml_test("contents", "contents_flex_mixed_with_none__border_box_ltr");
+    }
+
+    #[test]
+    fn contents_flex_deeply_nested__border_box_ltr() {
+        crate::run_xml_test("contents", "contents_flex_deeply_nested__border_box_ltr");
+    }
+}
