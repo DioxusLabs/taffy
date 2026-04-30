@@ -15,8 +15,15 @@ const CACHE_SIZE: usize = 9;
 
 /// `f32::INFINITY` as a u32
 const INFINITY_BITS: u32 = 0b_0_11111111_00000000000000000000000_u32;
+/// `f32::INFINITY` as a u32
+const NEG_INFINITY_BITS: u32 = 0b_1_11111111_00000000000000000000000_u32;
 /// A positive NaN f32 values as a u32
 const SPECIFIC_NAN_BITS: u32 = 0b0_11111111_10000000000000000000001_u32;
+
+const A_ONE: u64 = 1u64 << 63;
+const B_ONE: u64 = 1u64 << 31;
+const CHECK_MASK: u64 = A_ONE | B_ONE;
+const SET_MASK: u64 = !CHECK_MASK;
 
 /// Pack `Option<f32>` into `u32`
 #[inline(always)]
@@ -37,8 +44,8 @@ fn size_option_cache_key(input: Size<Option<f32>>) -> u64 {
 #[inline(always)]
 fn available_space_cache_key(input: AvailableSpace) -> u32 {
     match input {
-        AvailableSpace::Definite(value) => value.to_bits(),
-        AvailableSpace::MinContent => SPECIFIC_NAN_BITS,
+        AvailableSpace::Definite(value) => (-value).to_bits(),
+        AvailableSpace::MinContent => NEG_INFINITY_BITS,
         AvailableSpace::MaxContent => INFINITY_BITS,
     }
 }
@@ -49,14 +56,22 @@ fn size_available_space_cache_key(input: Size<AvailableSpace>) -> u64 {
     (available_space_cache_key(input.width) as u64) << 32 | available_space_cache_key(input.height) as u64
 }
 
+#[inline(always)]
+fn mixed_cache_key(kd: Option<f32>, avs: AvailableSpace) -> u32 {
+    kd.map(|kd| kd.to_bits()).unwrap_or_else(|| available_space_cache_key(avs))
+}
+
+#[inline(always)]
+fn size_mixed_cache_key(kd: Size<Option<f32>>, avs: Size<AvailableSpace>) -> u64 {
+    (mixed_cache_key(kd.width, avs.width) as u64) << 32 | mixed_cache_key(kd.height, avs.height) as u64
+}
+
 /// Space-optimised cache key that packs bits into as small a size as possible
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(Serialize))]
 struct CacheKey {
     /// The initial cached size of the node itself
-    known_dimensions: u64,
-    /// The initial cached size of the parent's node
-    available_space: u64,
+    kd_available_space: u64,
     /// The initial cached size of the parent's node
     parent_size: u64,
 }
@@ -64,19 +79,15 @@ struct CacheKey {
 impl From<&LayoutInput> for CacheKey {
     fn from(input: &LayoutInput) -> Self {
         // Pack axis enum into spare bits in the known_dimensions and available_space values
-        const ONE: u64 = 1u64 << 63;
-        const ZERO: u64 = 0;
-        const MASK: u64 = !ONE;
-        let (kd_mask, as_mask) = match input.axis {
-            RequestedAxis::Horizontal => (ONE, ZERO),
-            RequestedAxis::Vertical => (ZERO, ONE),
-            RequestedAxis::Both => (ONE, ONE),
+        let extra_bits = match input.axis {
+            RequestedAxis::Horizontal => A_ONE,
+            RequestedAxis::Vertical => B_ONE,
+            RequestedAxis::Both => A_ONE | B_ONE,
         };
 
         Self {
-            known_dimensions: (size_option_cache_key(input.known_dimensions) & MASK) | kd_mask,
-            available_space: (size_available_space_cache_key(input.available_space) & MASK) | as_mask,
-            parent_size: size_option_cache_key(input.parent_size),
+            kd_available_space: size_mixed_cache_key(input.known_dimensions, input.available_space),
+            parent_size: (size_option_cache_key(input.parent_size) & SET_MASK) | extra_bits,
         }
     }
 }
@@ -187,8 +198,8 @@ impl Cache {
             RunMode::PerformLayout => self.final_layout_entry.filter(|entry| entry.key == key).map(|e| e.content),
             RunMode::ComputeSize => {
                 for entry in self.measure_entries.iter().flatten() {
-                    if entry.key.known_dimensions == key.known_dimensions
-                        && entry.key.available_space == key.available_space
+                    if entry.key.kd_available_space == key.kd_available_space
+                        && (entry.key.parent_size & CHECK_MASK == key.parent_size & CHECK_MASK)
                     {
                         return Some(LayoutOutput::from_outer_size(entry.content));
                     }
