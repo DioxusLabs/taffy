@@ -1,19 +1,103 @@
 //! A cache for storing the results of layout computation
+
+#![allow(clippy::unusual_byte_groupings)]
+
 use crate::geometry::Size;
 use crate::style::AvailableSpace;
 use crate::tree::{LayoutInput, LayoutOutput, RunMode};
+use crate::RequestedAxis;
 
 /// The number of cache entries for each node in the tree
 const CACHE_SIZE: usize = 9;
+
+// Manually written-out results of float to u32 bit casts because
+// `f32::to_bits` is not yet const at our MSRV.
+
+/// `f32::INFINITY` as a u32
+const INFINITY_BITS: u32 = 0b_0_11111111_00000000000000000000000_u32;
+/// `f32::INFINITY` as a u32
+const NEG_INFINITY_BITS: u32 = 0b_1_11111111_00000000000000000000000_u32;
+/// A positive NaN f32 values as a u32
+const SPECIFIC_NAN_BITS: u32 = 0b0_11111111_10000000000000000000001_u32;
+
+const A_ONE: u64 = 1u64 << 63;
+const B_ONE: u64 = 1u64 << 31;
+const CHECK_MASK: u64 = A_ONE | B_ONE;
+const SET_MASK: u64 = !CHECK_MASK;
+
+/// Pack `Option<f32>` into `u32`
+#[inline(always)]
+fn option_cache_key(input: Option<f32>) -> u32 {
+    match input {
+        Some(value) => value.to_bits(),
+        None => INFINITY_BITS,
+    }
+}
+
+/// Pack `Size<Option<f32>>` into `u64`
+#[inline(always)]
+fn size_option_cache_key(input: Size<Option<f32>>) -> u64 {
+    (option_cache_key(input.width) as u64) << 32 | option_cache_key(input.height) as u64
+}
+
+/// Pack `AvailableSpace` into `u32`
+#[inline(always)]
+fn available_space_cache_key(input: AvailableSpace) -> u32 {
+    match input {
+        AvailableSpace::Definite(value) => (-value).to_bits(),
+        AvailableSpace::MinContent => NEG_INFINITY_BITS,
+        AvailableSpace::MaxContent => INFINITY_BITS,
+    }
+}
+
+/// Pack `Size<AvailableSpace>` into `u64`
+#[inline(always)]
+fn size_available_space_cache_key(input: Size<AvailableSpace>) -> u64 {
+    (available_space_cache_key(input.width) as u64) << 32 | available_space_cache_key(input.height) as u64
+}
+
+#[inline(always)]
+fn mixed_cache_key(kd: Option<f32>, avs: AvailableSpace) -> u32 {
+    kd.map(|kd| kd.to_bits()).unwrap_or_else(|| available_space_cache_key(avs))
+}
+
+#[inline(always)]
+fn size_mixed_cache_key(kd: Size<Option<f32>>, avs: Size<AvailableSpace>) -> u64 {
+    (mixed_cache_key(kd.width, avs.width) as u64) << 32 | mixed_cache_key(kd.height, avs.height) as u64
+}
+
+/// Space-optimised cache key that packs bits into as small a size as possible
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(Serialize))]
+struct CacheKey {
+    /// The initial cached size of the node itself
+    kd_available_space: u64,
+    /// The initial cached size of the parent's node
+    parent_size: u64,
+}
+
+impl From<&LayoutInput> for CacheKey {
+    fn from(input: &LayoutInput) -> Self {
+        // Pack axis enum into spare bits in the known_dimensions and available_space values
+        let extra_bits = match input.axis {
+            RequestedAxis::Horizontal => A_ONE,
+            RequestedAxis::Vertical => B_ONE,
+            RequestedAxis::Both => A_ONE | B_ONE,
+        };
+
+        Self {
+            kd_available_space: size_mixed_cache_key(input.known_dimensions, input.available_space),
+            parent_size: (size_option_cache_key(input.parent_size) & SET_MASK) | extra_bits,
+        }
+    }
+}
 
 /// Cached intermediate layout results
 #[derive(Debug, Clone, Copy, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize))]
 pub(crate) struct CacheEntry<T> {
-    /// The initial cached size of the node itself
-    known_dimensions: Size<Option<f32>>,
-    /// The initial cached size of the parent's node
-    available_space: Size<AvailableSpace>,
+    /// The key for the cache entry
+    key: CacheKey,
     /// The cached size and baselines of the item
     content: T,
 }
@@ -109,38 +193,15 @@ impl Cache {
     /// Try to retrieve a cached result from the cache
     #[inline]
     pub fn get(&self, input: &LayoutInput) -> Option<LayoutOutput> {
-        let known_dimensions = input.known_dimensions;
-        let available_space = input.available_space;
-
+        let key = CacheKey::from(input);
         match input.run_mode {
-            RunMode::PerformLayout => self
-                .final_layout_entry
-                .filter(|entry| {
-                    let cached_size = entry.content.size;
-                    (known_dimensions.width == entry.known_dimensions.width
-                        || known_dimensions.width == Some(cached_size.width))
-                        && (known_dimensions.height == entry.known_dimensions.height
-                            || known_dimensions.height == Some(cached_size.height))
-                        && (known_dimensions.width.is_some()
-                            || entry.available_space.width.is_roughly_equal(available_space.width))
-                        && (known_dimensions.height.is_some()
-                            || entry.available_space.height.is_roughly_equal(available_space.height))
-                })
-                .map(|e| e.content),
+            RunMode::PerformLayout => self.final_layout_entry.filter(|entry| entry.key == key).map(|e| e.content),
             RunMode::ComputeSize => {
                 for entry in self.measure_entries.iter().flatten() {
-                    let cached_size = entry.content;
-
-                    if (known_dimensions.width == entry.known_dimensions.width
-                        || known_dimensions.width == Some(cached_size.width))
-                        && (known_dimensions.height == entry.known_dimensions.height
-                            || known_dimensions.height == Some(cached_size.height))
-                        && (known_dimensions.width.is_some()
-                            || entry.available_space.width.is_roughly_equal(available_space.width))
-                        && (known_dimensions.height.is_some()
-                            || entry.available_space.height.is_roughly_equal(available_space.height))
+                    if entry.key.kd_available_space == key.kd_available_space
+                        && (entry.key.parent_size & CHECK_MASK == key.parent_size & CHECK_MASK)
                     {
-                        return Some(LayoutOutput::from_outer_size(cached_size));
+                        return Some(LayoutOutput::from_outer_size(entry.content));
                     }
                 }
 
@@ -152,19 +213,16 @@ impl Cache {
 
     /// Store a computed size in the cache
     pub fn store(&mut self, input: &LayoutInput, layout_output: LayoutOutput) {
-        let known_dimensions = input.known_dimensions;
-        let available_space = input.available_space;
-
+        let key = CacheKey::from(input);
         match input.run_mode {
             RunMode::PerformLayout => {
                 self.is_empty = false;
-                self.final_layout_entry = Some(CacheEntry { known_dimensions, available_space, content: layout_output })
+                self.final_layout_entry = Some(CacheEntry { key, content: layout_output })
             }
             RunMode::ComputeSize => {
                 self.is_empty = false;
-                let cache_slot = Self::compute_cache_slot(known_dimensions, available_space);
-                self.measure_entries[cache_slot] =
-                    Some(CacheEntry { known_dimensions, available_space, content: layout_output.size });
+                let cache_slot = Self::compute_cache_slot(input.known_dimensions, input.available_space);
+                self.measure_entries[cache_slot] = Some(CacheEntry { key, content: layout_output.size });
             }
             RunMode::PerformHiddenLayout => {}
         }
