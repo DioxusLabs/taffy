@@ -1,7 +1,9 @@
 //! Style types for representing lengths / sizes
 use super::CompactLength;
 use crate::geometry::Rect;
-use crate::style_helpers::{FromLength, FromPercent, TaffyAuto, TaffyZero};
+use crate::style_helpers::{
+    FromLength, FromPercent, TaffyAuto, TaffyFitContent, TaffyMaxContent, TaffyMinContent, TaffyZero,
+};
 #[cfg(feature = "parse")]
 use crate::util::parse::{from_str_from_css, parse_css_str_entirely, CssParseResult, FromCss, Parser, Token};
 
@@ -159,6 +161,12 @@ impl LengthPercentageAuto {
         Self(CompactLength::auto())
     }
 
+    /// The `fit-content` keyword.
+    #[inline(always)]
+    pub const fn fit_content_keyword() -> Self {
+        Self(CompactLength::fit_content_keyword())
+    }
+
     /// A `calc()` value. The value passed here is treated as an opaque handle to
     /// the actual calc representation and may be a pointer, index, etc.
     ///
@@ -213,7 +221,17 @@ impl<'de> serde::Deserialize<'de> for LengthPercentageAuto {
     {
         let inner = CompactLength::deserialize(deserializer)?;
         // Note: validation intentionally excludes the CALC_TAG as deserializing calc() values is not supported
-        if matches!(inner.tag(), CompactLength::LENGTH_TAG | CompactLength::PERCENT_TAG | CompactLength::AUTO_TAG) {
+        if matches!(
+            inner.tag(),
+            CompactLength::LENGTH_TAG
+                | CompactLength::PERCENT_TAG
+                | CompactLength::AUTO_TAG
+                | CompactLength::MIN_CONTENT_TAG
+                | CompactLength::MAX_CONTENT_TAG
+                | CompactLength::FIT_CONTENT_PX_TAG
+                | CompactLength::FIT_CONTENT_PERCENT_TAG
+                | CompactLength::FIT_CONTENT_KEYWORD_TAG
+        ) {
             Ok(Self(inner))
         } else {
             Err(serde::de::Error::custom("Invalid tag"))
@@ -232,6 +250,17 @@ impl TaffyZero for Dimension {
 }
 impl TaffyAuto for Dimension {
     const AUTO: Self = Self(CompactLength::AUTO);
+}
+impl TaffyMinContent for Dimension {
+    const MIN_CONTENT: Self = Self(CompactLength::MIN_CONTENT);
+}
+impl TaffyMaxContent for Dimension {
+    const MAX_CONTENT: Self = Self(CompactLength::MAX_CONTENT);
+}
+impl TaffyFitContent for Dimension {
+    fn fit_content(argument: LengthPercentage) -> Self {
+        Self(CompactLength::fit_content(argument))
+    }
 }
 impl FromLength for Dimension {
     fn from_length<Input: Into<f32> + Copy>(value: Input) -> Self {
@@ -291,6 +320,12 @@ impl Dimension {
         Self(CompactLength::auto())
     }
 
+    /// The `fit-content` keyword.
+    #[inline(always)]
+    pub const fn fit_content_keyword() -> Self {
+        Self(CompactLength::fit_content_keyword())
+    }
+
     /// A `calc()` value. The value passed here is treated as an opaque handle to
     /// the actual calc representation and may be a pointer, index, etc.
     ///
@@ -328,6 +363,78 @@ impl Dimension {
         self.0.is_auto()
     }
 
+    /// Returns true if value is any intrinsic size keyword/function.
+    #[inline(always)]
+    pub fn is_intrinsic(self) -> bool {
+        self.0.is_intrinsic() && !self.is_auto()
+    }
+
+    /// Returns true if value is min-content.
+    #[inline(always)]
+    pub fn is_min_content(self) -> bool {
+        self.0.is_min_content()
+    }
+
+    /// Returns true if value is max-content.
+    #[inline(always)]
+    pub fn is_max_content(self) -> bool {
+        self.0.is_max_content()
+    }
+
+    /// Returns true if value is any fit-content keyword/function.
+    #[inline(always)]
+    pub fn is_fit_content(self) -> bool {
+        self.0.is_fit_content()
+    }
+
+    /// Returns true if value is the `fit-content` keyword.
+    #[inline(always)]
+    pub fn is_fit_content_keyword(self) -> bool {
+        self.0.is_fit_content_keyword()
+    }
+
+    /// Returns whether the value can be resolved using `Self::definite_value`.
+    #[inline(always)]
+    pub fn has_definite_value(self, parent_size: Option<f32>) -> bool {
+        match self.0.tag() {
+            CompactLength::LENGTH_TAG => true,
+            CompactLength::PERCENT_TAG => parent_size.is_some(),
+            #[cfg(feature = "calc")]
+            _ if self.0.is_calc() => parent_size.is_some(),
+            _ => false,
+        }
+    }
+
+    /// Resolve fixed point values directly and percentages against the parent size.
+    #[inline(always)]
+    pub fn definite_value(
+        self,
+        parent_size: Option<f32>,
+        calc_resolver: impl Fn(*const (), f32) -> f32,
+    ) -> Option<f32> {
+        match self.0.tag() {
+            CompactLength::LENGTH_TAG => Some(self.0.value()),
+            CompactLength::PERCENT_TAG => parent_size.map(|size| self.0.value() * size),
+            #[cfg(feature = "calc")]
+            _ if self.0.is_calc() => parent_size.map(|size| calc_resolver(self.0.calc_value(), size)),
+            _ => None,
+        }
+    }
+
+    /// Resolve the explicit limit used by `fit-content(<length-percentage>)`.
+    #[inline(always)]
+    pub fn definite_limit(
+        self,
+        parent_size: Option<f32>,
+        calc_resolver: impl Fn(*const (), f32) -> f32,
+    ) -> Option<f32> {
+        match self.0.tag() {
+            CompactLength::FIT_CONTENT_PX_TAG => Some(self.0.value()),
+            CompactLength::FIT_CONTENT_PERCENT_TAG => parent_size.map(|size| self.0.value() * size),
+            _ => self.definite_value(parent_size, calc_resolver),
+        }
+    }
+
     /// Get the raw `CompactLength` tag
     pub fn tag(self) -> usize {
         self.0.tag()
@@ -347,7 +454,17 @@ impl<'de> serde::Deserialize<'de> for Dimension {
     {
         let inner = CompactLength::deserialize(deserializer)?;
         // Note: validation intentionally excludes the CALC_TAG as deserializing calc() values is not supported
-        if matches!(inner.tag(), CompactLength::LENGTH_TAG | CompactLength::PERCENT_TAG | CompactLength::AUTO_TAG) {
+        if matches!(
+            inner.tag(),
+            CompactLength::LENGTH_TAG
+                | CompactLength::PERCENT_TAG
+                | CompactLength::AUTO_TAG
+                | CompactLength::MIN_CONTENT_TAG
+                | CompactLength::MAX_CONTENT_TAG
+                | CompactLength::FIT_CONTENT_PX_TAG
+                | CompactLength::FIT_CONTENT_PERCENT_TAG
+                | CompactLength::FIT_CONTENT_KEYWORD_TAG
+        ) {
             Ok(Self(inner))
         } else {
             Err(serde::de::Error::custom("Invalid tag"))

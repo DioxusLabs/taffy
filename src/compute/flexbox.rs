@@ -2,8 +2,8 @@
 use crate::compute::common::alignment::compute_alignment_offset;
 use crate::geometry::{Line, Point, Rect, Size};
 use crate::style::{
-    AlignContent, AlignItems, AlignSelf, AvailableSpace, FlexWrap, JustifyContent, LengthPercentageAuto, Overflow,
-    Position,
+    AlignContent, AlignItems, AlignSelf, AvailableSpace, Dimension, FlexWrap, JustifyContent, LengthPercentageAuto,
+    Overflow, Position,
 };
 use crate::style::{CoreStyle, FlexDirection, FlexboxContainerStyle, FlexboxItemStyle};
 use crate::style_helpers::{TaffyMaxContent, TaffyMinContent};
@@ -29,6 +29,8 @@ struct FlexItem {
 
     /// The base size of this item
     size: Size<Option<f32>>,
+    /// The raw specified size of this item
+    raw_size: Size<Dimension>,
     /// The minimum allowable size of this item
     min_size: Size<Option<f32>>,
     /// The maximum allowable size of this item
@@ -60,6 +62,8 @@ struct FlexItem {
     /// The border of this item
     border: Rect<f32>,
 
+    /// The raw flex-basis style of this item
+    raw_flex_basis: Dimension,
     /// The default size of this item
     flex_basis: f32,
     /// The default size of this item, minus padding and border
@@ -530,6 +534,7 @@ fn generate_anonymous_flex_items(
                     .maybe_resolve(constants.node_inner_size, |val, basis| tree.calc(val, basis))
                     .maybe_apply_aspect_ratio(aspect_ratio)
                     .maybe_add(box_sizing_adjustment),
+                raw_size: child_style.size(),
                 min_size: child_style
                     .min_size()
                     .maybe_resolve(constants.node_inner_size, |val, basis| tree.calc(val, basis))
@@ -559,6 +564,7 @@ fn generate_anonymous_flex_items(
                 scrollbar_width: child_style.scrollbar_width(),
                 flex_grow: child_style.flex_grow(),
                 flex_shrink: child_style.flex_shrink(),
+                raw_flex_basis: child_style.flex_basis(),
                 flex_basis: 0.0,
                 inner_flex_basis: 0.0,
                 violation: 0.0,
@@ -645,6 +651,34 @@ fn determine_available_space(
 ///   Furthermore, the sizing calculations that floor the content box size at zero when applying box-sizing are also ignored.
 ///   (For example, an item with a specified size of zero, positive padding, and box-sizing: border-box will have an outer flex base size of zero—and hence a negative inner flex base size.)
 #[inline]
+fn flex_intrinsic_available_space(
+    dimension: Dimension,
+    parent_size: Option<f32>,
+    available_space: AvailableSpace,
+    calc_resolver: impl Fn(*const (), f32) -> f32,
+) -> Option<AvailableSpace> {
+    if dimension.is_min_content() {
+        Some(AvailableSpace::MinContent)
+    } else if dimension.is_max_content() {
+        Some(AvailableSpace::MaxContent)
+    } else if dimension.is_fit_content_keyword() {
+        Some(match available_space {
+            AvailableSpace::Definite(limit) => AvailableSpace::Definite(limit),
+            AvailableSpace::MinContent => AvailableSpace::MinContent,
+            AvailableSpace::MaxContent => AvailableSpace::MaxContent,
+        })
+    } else if dimension.is_fit_content() {
+        Some(
+            dimension
+                .definite_limit(parent_size, calc_resolver)
+                .map(AvailableSpace::Definite)
+                .unwrap_or(AvailableSpace::MaxContent),
+        )
+    } else {
+        None
+    }
+}
+
 fn determine_flex_base_size(
     tree: &mut impl LayoutFlexboxContainer,
     constants: &AlgoConstants,
@@ -709,8 +743,30 @@ fn determine_flex_base_size(
             .flex_basis()
             .maybe_resolve(container_width, |val, basis| tree.calc(val, basis))
             .maybe_add(box_sizing_adjustment);
+        let raw_flex_basis = child.raw_flex_basis;
 
         drop(child_style);
+
+        let intrinsic_main_size = flex_intrinsic_available_space(
+            child.raw_size.main(dir),
+            constants.node_inner_size.main(dir),
+            available_space.main(dir),
+            |val, basis| tree.calc(val, basis),
+        )
+        .map(|main_available_space| {
+            let child_available_space =
+                Size::MAX_CONTENT.with_main(dir, main_available_space).with_cross(dir, cross_axis_available_space);
+
+            tree.measure_child_size(
+                child.node,
+                child_known_dimensions.with_main(dir, None),
+                child_parent_size,
+                child_available_space,
+                SizingMode::InherentSize,
+                dir.main_axis(),
+                Line::FALSE,
+            )
+        });
 
         child.flex_basis = 'flex_basis: {
             // A. If the item has a definite used flex basis, that’s the flex base size.
@@ -722,10 +778,30 @@ fn determine_flex_base_size(
 
             // Note: `child.size` has already been resolved against aspect_ratio in generate_anonymous_flex_items
             // So B will just work here by using main_size without special handling for aspect_ratio
-            let main_size = child.size.main(dir);
+            let main_size = intrinsic_main_size.or(child.size.main(dir));
             if let Some(flex_basis) = flex_basis.or(main_size) {
                 break 'flex_basis flex_basis;
             };
+
+            if let Some(main_available_space) = flex_intrinsic_available_space(
+                raw_flex_basis,
+                container_width,
+                available_space.main(dir),
+                |val, basis| tree.calc(val, basis),
+            ) {
+                let child_available_space =
+                    Size::MAX_CONTENT.with_main(dir, main_available_space).with_cross(dir, cross_axis_available_space);
+
+                break 'flex_basis tree.measure_child_size(
+                    child.node,
+                    child_known_dimensions.with_main(dir, None),
+                    child_parent_size,
+                    child_available_space,
+                    SizingMode::ContentSize,
+                    dir.main_axis(),
+                    Line::FALSE,
+                );
+            }
 
             // C. If the used flex basis is content or depends on its available space,
             //    and the flex container is being sized under a min-content or max-content

@@ -227,6 +227,8 @@ impl CompactLength {
     pub const MAX_CONTENT_TAG: usize = 0b00001111;
     /// The tag indicating a fit-content value with px limit
     pub const FIT_CONTENT_PX_TAG: usize = 0b00010111;
+    /// The tag indicating the `fit-content` keyword
+    pub const FIT_CONTENT_KEYWORD_TAG: usize = 0b00100111;
     /// The tag indicating a fit-content value with percent limit
     pub const FIT_CONTENT_PERCENT_TAG: usize = 0b00011111;
 }
@@ -300,6 +302,13 @@ impl CompactLength {
     #[inline(always)]
     pub const fn fit_content_px(limit: f32) -> Self {
         Self(CompactLengthInner::from_val(limit, Self::FIT_CONTENT_PX_TAG))
+    }
+
+    /// The size should be computed according to the `fit-content` keyword formula:
+    /// stretch-fit clamped between the min-content and max-content sizes.
+    #[inline(always)]
+    pub const fn fit_content_keyword() -> Self {
+        Self(CompactLengthInner::from_tag(Self::FIT_CONTENT_KEYWORD_TAG))
     }
 
     /// The size should be computed according to the "fit content" formula:
@@ -376,13 +385,25 @@ impl CompactLength {
     /// Returns true if the value is a fit-content(...) value
     #[inline(always)]
     pub fn is_fit_content(self) -> bool {
-        matches!(self.tag(), Self::FIT_CONTENT_PX_TAG | Self::FIT_CONTENT_PERCENT_TAG)
+        matches!(self.tag(), Self::FIT_CONTENT_PX_TAG | Self::FIT_CONTENT_PERCENT_TAG | Self::FIT_CONTENT_KEYWORD_TAG)
+    }
+
+    /// Returns true if the value is the `fit-content` keyword
+    #[inline(always)]
+    pub fn is_fit_content_keyword(self) -> bool {
+        self.tag() == Self::FIT_CONTENT_KEYWORD_TAG
     }
 
     /// Returns true if the value is max-content or a fit-content(...) value
     #[inline(always)]
     pub fn is_max_or_fit_content(self) -> bool {
-        matches!(self.tag(), Self::MAX_CONTENT_TAG | Self::FIT_CONTENT_PX_TAG | Self::FIT_CONTENT_PERCENT_TAG)
+        matches!(
+            self.tag(),
+            Self::MAX_CONTENT_TAG
+                | Self::FIT_CONTENT_PX_TAG
+                | Self::FIT_CONTENT_PERCENT_TAG
+                | Self::FIT_CONTENT_KEYWORD_TAG
+        )
     }
 
     /// Returns true if the max track sizing function is `MaxContent`, `FitContent` or `Auto` else false.
@@ -394,6 +415,7 @@ impl CompactLength {
             self.tag(),
             CompactLength::AUTO_TAG
                 | CompactLength::MAX_CONTENT_TAG
+                | CompactLength::FIT_CONTENT_KEYWORD_TAG
                 | CompactLength::FIT_CONTENT_PX_TAG
                 | CompactLength::FIT_CONTENT_PERCENT_TAG
         )
@@ -412,6 +434,7 @@ impl CompactLength {
             self.tag(),
             Self::AUTO_TAG
                 | Self::MIN_CONTENT_TAG
+                | Self::FIT_CONTENT_KEYWORD_TAG
                 | Self::MAX_CONTENT_TAG
                 | Self::FIT_CONTENT_PX_TAG
                 | Self::FIT_CONTENT_PERCENT_TAG
@@ -528,6 +551,7 @@ impl<'de> serde::Deserialize<'de> for CompactLength {
                 | CompactLength::AUTO_TAG
                 | CompactLength::MIN_CONTENT_TAG
                 | CompactLength::MAX_CONTENT_TAG
+                | CompactLength::FIT_CONTENT_KEYWORD_TAG
                 | CompactLength::FIT_CONTENT_PX_TAG
                 | CompactLength::FIT_CONTENT_PERCENT_TAG
                 | CompactLength::FR_TAG
