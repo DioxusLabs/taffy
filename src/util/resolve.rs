@@ -46,10 +46,16 @@ impl MaybeResolve<Option<f32>, Option<f32>> for LengthPercentageAuto {
         match self.0.tag() {
             CompactLength::AUTO_TAG => None,
             CompactLength::LENGTH_TAG => Some(self.0.value()),
-            CompactLength::PERCENT_TAG => context.map(|dim| dim * self.0.value()),
+            CompactLength::PERCENT_TAG | CompactLength::FIT_CONTENT_PERCENT_TAG => {
+                context.map(|dim| dim * self.0.value())
+            }
+            CompactLength::MIN_CONTENT_TAG
+            | CompactLength::MAX_CONTENT_TAG
+            | CompactLength::FIT_CONTENT_PX_TAG
+            | CompactLength::FIT_CONTENT_KEYWORD_TAG => None,
             #[cfg(feature = "calc")]
             _ if self.0.is_calc() => context.map(|dim| calc(self.0.calc_value(), dim)),
-            _ => unreachable!(),
+            _ => None,
         }
     }
 }
@@ -62,10 +68,16 @@ impl MaybeResolve<Option<f32>, Option<f32>> for Dimension {
         match self.0.tag() {
             CompactLength::AUTO_TAG => None,
             CompactLength::LENGTH_TAG => Some(self.0.value()),
-            CompactLength::PERCENT_TAG => context.map(|dim| dim * self.0.value()),
+            CompactLength::PERCENT_TAG | CompactLength::FIT_CONTENT_PERCENT_TAG => {
+                context.map(|dim| dim * self.0.value())
+            }
+            CompactLength::MIN_CONTENT_TAG
+            | CompactLength::MAX_CONTENT_TAG
+            | CompactLength::FIT_CONTENT_PX_TAG
+            | CompactLength::FIT_CONTENT_KEYWORD_TAG => None,
             #[cfg(feature = "calc")]
             _ if self.0.is_calc() => context.map(|dim| calc(self.0.calc_value(), dim)),
-            _ => unreachable!(),
+            _ => None,
         }
     }
 }
@@ -212,6 +224,26 @@ mod tests {
             mr_case(Dimension::from_percent(1.0), Some(5.0), Some(5.0));
             mr_case(Dimension::from_percent(1.0), Some(-5.0), Some(-5.0));
             mr_case(Dimension::from_percent(1.0), Some(50.0), Some(50.0));
+        }
+
+        /// Intrinsic size keywords/functions should remain unresolved in the generic numeric resolver.
+        #[test]
+        fn intrinsic_sizes_do_not_resolve_to_numeric_values() {
+            mr_case(Dimension::MIN_CONTENT, None, None);
+            mr_case(Dimension::MIN_CONTENT, Some(50.0), None);
+            mr_case(Dimension::MAX_CONTENT, None, None);
+            mr_case(Dimension::MAX_CONTENT, Some(50.0), None);
+            mr_case(Dimension::fit_content_keyword(), None, None);
+            mr_case(Dimension::fit_content_keyword(), Some(50.0), None);
+            mr_case(fit_content::<Dimension>(length(12.0)), None, None);
+            mr_case(fit_content::<Dimension>(length(12.0)), Some(50.0), None);
+        }
+
+        /// `fit-content(percentage)` carries the percentage limit until the algorithm consumes it.
+        #[test]
+        fn fit_content_percent_resolves_its_limit() {
+            mr_case(fit_content::<Dimension>(percent(0.5)), None, None);
+            mr_case(fit_content::<Dimension>(percent(0.5)), Some(80.0), Some(40.0));
         }
     }
 
