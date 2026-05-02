@@ -15298,6 +15298,126 @@ mod flex {
     }
 
     #[test]
+    fn taffy_issue_937_column_gap_margin_auto__border_box_ltr() {
+        crate::run_xml_test("flex", "taffy_issue_937_column_gap_margin_auto__border_box_ltr");
+    }
+
+    #[test]
+    fn taffy_issue_937_column_gap_margin_auto__content_box_ltr() {
+        crate::run_xml_test("flex", "taffy_issue_937_column_gap_margin_auto__content_box_ltr");
+    }
+
+    #[test]
+    fn taffy_issue_937_column_gap_margin_auto__border_box_rtl() {
+        crate::run_xml_test("flex", "taffy_issue_937_column_gap_margin_auto__border_box_rtl");
+    }
+
+    #[test]
+    fn taffy_issue_937_column_gap_margin_auto__content_box_rtl() {
+        crate::run_xml_test("flex", "taffy_issue_937_column_gap_margin_auto__content_box_rtl");
+    }
+
+    #[test]
+    fn taffy_issue_937_column_gap_margin_auto_3_items_no_flex_grow__border_box_ltr() {
+        crate::run_xml_test("flex", "taffy_issue_937_column_gap_margin_auto_3_items_no_flex_grow__border_box_ltr");
+    }
+
+    #[test]
+    fn taffy_issue_937_column_gap_margin_auto_3_items_no_flex_grow__content_box_ltr() {
+        crate::run_xml_test("flex", "taffy_issue_937_column_gap_margin_auto_3_items_no_flex_grow__content_box_ltr");
+    }
+
+    #[test]
+    fn taffy_issue_937_column_gap_margin_auto_3_items_no_flex_grow__border_box_rtl() {
+        crate::run_xml_test("flex", "taffy_issue_937_column_gap_margin_auto_3_items_no_flex_grow__border_box_rtl");
+    }
+
+    #[test]
+    fn taffy_issue_937_column_gap_margin_auto_3_items_no_flex_grow__content_box_rtl() {
+        crate::run_xml_test("flex", "taffy_issue_937_column_gap_margin_auto_3_items_no_flex_grow__content_box_rtl");
+    }
+
+    #[test]
+    fn taffy_issue_937_column_gap_margin_auto_5_items__border_box_ltr() {
+        crate::run_xml_test("flex", "taffy_issue_937_column_gap_margin_auto_5_items__border_box_ltr");
+    }
+
+    #[test]
+    fn taffy_issue_937_column_gap_margin_auto_5_items__content_box_ltr() {
+        crate::run_xml_test("flex", "taffy_issue_937_column_gap_margin_auto_5_items__content_box_ltr");
+    }
+
+    #[test]
+    fn taffy_issue_937_column_gap_margin_auto_5_items__border_box_rtl() {
+        crate::run_xml_test("flex", "taffy_issue_937_column_gap_margin_auto_5_items__border_box_rtl");
+    }
+
+    #[test]
+    fn taffy_issue_937_column_gap_margin_auto_5_items__content_box_rtl() {
+        crate::run_xml_test("flex", "taffy_issue_937_column_gap_margin_auto_5_items__content_box_rtl");
+    }
+
+    #[test]
+    fn taffy_issue_937_row_gap_margin_auto__border_box_ltr() {
+        crate::run_xml_test("flex", "taffy_issue_937_row_gap_margin_auto__border_box_ltr");
+    }
+
+    #[test]
+    fn taffy_issue_937_row_gap_margin_auto__content_box_ltr() {
+        crate::run_xml_test("flex", "taffy_issue_937_row_gap_margin_auto__content_box_ltr");
+    }
+
+    #[test]
+    fn taffy_issue_937_row_gap_margin_auto__border_box_rtl() {
+        crate::run_xml_test("flex", "taffy_issue_937_row_gap_margin_auto__border_box_rtl");
+    }
+
+    #[test]
+    fn taffy_issue_937_row_gap_margin_auto__content_box_rtl() {
+        crate::run_xml_test("flex", "taffy_issue_937_row_gap_margin_auto__content_box_rtl");
+    }
+
+    #[test]
+    fn taffy_issue_937_row_gap_margin_auto_3_items_no_flex_grow__border_box_ltr() {
+        crate::run_xml_test("flex", "taffy_issue_937_row_gap_margin_auto_3_items_no_flex_grow__border_box_ltr");
+    }
+
+    #[test]
+    fn taffy_issue_937_row_gap_margin_auto_3_items_no_flex_grow__content_box_ltr() {
+        crate::run_xml_test("flex", "taffy_issue_937_row_gap_margin_auto_3_items_no_flex_grow__content_box_ltr");
+    }
+
+    #[test]
+    fn taffy_issue_937_row_gap_margin_auto_3_items_no_flex_grow__border_box_rtl() {
+        crate::run_xml_test("flex", "taffy_issue_937_row_gap_margin_auto_3_items_no_flex_grow__border_box_rtl");
+    }
+
+    #[test]
+    fn taffy_issue_937_row_gap_margin_auto_3_items_no_flex_grow__content_box_rtl() {
+        crate::run_xml_test("flex", "taffy_issue_937_row_gap_margin_auto_3_items_no_flex_grow__content_box_rtl");
+    }
+
+    #[test]
+    fn taffy_issue_937_row_gap_margin_auto_5_items__border_box_ltr() {
+        crate::run_xml_test("flex", "taffy_issue_937_row_gap_margin_auto_5_items__border_box_ltr");
+    }
+
+    #[test]
+    fn taffy_issue_937_row_gap_margin_auto_5_items__content_box_ltr() {
+        crate::run_xml_test("flex", "taffy_issue_937_row_gap_margin_auto_5_items__content_box_ltr");
+    }
+
+    #[test]
+    fn taffy_issue_937_row_gap_margin_auto_5_items__border_box_rtl() {
+        crate::run_xml_test("flex", "taffy_issue_937_row_gap_margin_auto_5_items__border_box_rtl");
+    }
+
+    #[test]
+    fn taffy_issue_937_row_gap_margin_auto_5_items__content_box_rtl() {
+        crate::run_xml_test("flex", "taffy_issue_937_row_gap_margin_auto_5_items__content_box_rtl");
+    }
+
+    #[test]
     fn undefined_height_with_min_max__border_box_ltr() {
         crate::run_xml_test("flex", "undefined_height_with_min_max__border_box_ltr");
     }

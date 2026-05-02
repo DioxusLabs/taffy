@@ -205,23 +205,10 @@ pub trait LayoutPartialTree: TraversePartialTree {
 /// The `Cache` struct implements a per-node cache that is compatible with this trait.
 pub trait CacheTree {
     /// Try to retrieve a cached result from the cache
-    fn cache_get(
-        &self,
-        node_id: NodeId,
-        known_dimensions: Size<Option<f32>>,
-        available_space: Size<AvailableSpace>,
-        run_mode: RunMode,
-    ) -> Option<LayoutOutput>;
+    fn cache_get(&self, node_id: NodeId, input: &LayoutInput) -> Option<LayoutOutput>;
 
     /// Store a computed size in the cache
-    fn cache_store(
-        &mut self,
-        node_id: NodeId,
-        known_dimensions: Size<Option<f32>>,
-        available_space: Size<AvailableSpace>,
-        run_mode: RunMode,
-        layout_output: LayoutOutput,
-    );
+    fn cache_store(&mut self, node_id: NodeId, input: &LayoutInput, layout_output: LayoutOutput);
 
     /// Clear all cache entries for the node
     fn cache_clear(&mut self, node_id: NodeId);

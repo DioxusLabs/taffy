@@ -187,25 +187,12 @@ impl taffy::LayoutPartialTree for Node {
 }
 
 impl CacheTree for Node {
-    fn cache_get(
-        &self,
-        node_id: NodeId,
-        known_dimensions: Size<Option<f32>>,
-        available_space: Size<AvailableSpace>,
-        run_mode: taffy::RunMode,
-    ) -> Option<taffy::LayoutOutput> {
-        self.node_from_id(node_id).cache.get(known_dimensions, available_space, run_mode)
+    fn cache_get(&self, node_id: NodeId, inputs: &taffy::LayoutInput) -> Option<taffy::LayoutOutput> {
+        self.node_from_id(node_id).cache.get(inputs)
     }
 
-    fn cache_store(
-        &mut self,
-        node_id: NodeId,
-        known_dimensions: Size<Option<f32>>,
-        available_space: Size<AvailableSpace>,
-        run_mode: taffy::RunMode,
-        layout_output: taffy::LayoutOutput,
-    ) {
-        self.node_from_id_mut(node_id).cache.store(known_dimensions, available_space, run_mode, layout_output)
+    fn cache_store(&mut self, node_id: NodeId, inputs: &taffy::LayoutInput, layout_output: taffy::LayoutOutput) {
+        self.node_from_id_mut(node_id).cache.store(inputs, layout_output)
     }
 
     fn cache_clear(&mut self, node_id: NodeId) {

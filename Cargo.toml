@@ -1,6 +1,6 @@
 [package]
 name = "taffy"
-version = "0.9.2"
+version = "0.10.1"
 authors = [
     "Alice Cecile <alice.i.cecile@gmail.com>",
     "Johnathan Kelley <jkelleyrtp@gmail.com>",
@@ -43,8 +43,6 @@ default = [
     "calc",
     "content_size",
     "detailed_layout_info",
-    "parse",
-    "parse_faster"
 ]
 #! ## Feature Flags
 #!
@@ -95,7 +93,7 @@ roxmltree = "0.21.1"
 taffy_test_helpers = { path = "tests/common"}
 
 # Enable default features for tests and examples
-taffy = { path = "." }
+taffy = { path = ".", features = ["parse"] }
 
 [profile.release]
 lto = true
