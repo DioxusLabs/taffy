@@ -2347,7 +2347,8 @@ fn perform_absolute_layout_on_absolute_children(
             // treat it as if it wasn't set (and thus we default to FlexStart behaviour)
             // TODO (safe alignment): apply Start fallback when justify_content.is_safe() and the
             // resolved size overflows the containing block. Wired in a follow-up commit.
-            match (constants.justify_content.unwrap_or(JustifyContent::Start).position(), main_axis_flex_start_reversed) {
+            match (constants.justify_content.unwrap_or(JustifyContent::Start).position(), main_axis_flex_start_reversed)
+            {
                 (JustifyContent::SpaceBetween, _)
                 | (JustifyContent::Stretch, false)
                 | (JustifyContent::FlexStart, false)

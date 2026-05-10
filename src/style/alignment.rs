@@ -52,10 +52,7 @@ impl AlignItems {
     /// Returns true if this is a safe overflow-aware variant.
     #[inline]
     pub const fn is_safe(self) -> bool {
-        matches!(
-            self,
-            Self::SafeStart | Self::SafeEnd | Self::SafeFlexStart | Self::SafeFlexEnd | Self::SafeCenter
-        )
+        matches!(self, Self::SafeStart | Self::SafeEnd | Self::SafeFlexStart | Self::SafeFlexEnd | Self::SafeCenter)
     }
 
     /// Strips the safe modifier and returns the underlying position keyword.
@@ -194,10 +191,7 @@ impl AlignContent {
     /// Returns true if this is a safe overflow-aware variant.
     #[inline]
     pub const fn is_safe(self) -> bool {
-        matches!(
-            self,
-            Self::SafeStart | Self::SafeEnd | Self::SafeFlexStart | Self::SafeFlexEnd | Self::SafeCenter
-        )
+        matches!(self, Self::SafeStart | Self::SafeEnd | Self::SafeFlexStart | Self::SafeFlexEnd | Self::SafeCenter)
     }
 
     /// Strips the safe modifier and returns the underlying position keyword.
