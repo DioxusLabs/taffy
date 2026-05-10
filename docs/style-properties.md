@@ -47,3 +47,26 @@ N = Supported in spec but not implemented in Taffy
 | `grid_row`               | -    | Y    | `Line<GridPlacement>`                 | 8     | -      | The vertical (row) placement of a grid item                                                 |
 | `grid_column`            | -    | Y    | `Line<GridPlacement>`                 | 8     | -      | The horizontal (row) placement of a grid item                                               |
 | `grid_area`              | -    | 5    | -                                     | -     | -      | Accepts either shorthand row/column-start/end or a named grid area                          |
+
+## Safe and unsafe overflow alignment
+
+The `AlignItems` and `AlignContent` enums (and their `AlignSelf`, `JustifyItems`, `JustifySelf`,
+and `JustifyContent` aliases) carry a set of `Safe*` variants that pair the spec's
+[overflow-position keyword](https://www.w3.org/TR/css-align-3/#overflow-values) `safe` with the
+underlying position keyword. The variants are:
+
+- `SafeStart`, `SafeEnd`, `SafeFlexStart`, `SafeFlexEnd`, `SafeCenter`
+
+When the alignment subject would overflow its alignment container, a `Safe*` value falls back
+to logical `Start` so the start edge of the content stays visible. When the subject fits, the
+`Safe*` variant behaves identically to its underlying position keyword. The plain (non-`Safe*`)
+variants are equivalent to the spec's `unsafe` keyword and keep their requested position even
+when that causes overflow at the start edge.
+
+The CSS modifier is only valid against the position keywords listed above. Combinations such
+as `safe stretch`, `safe baseline`, and `safe space-between` are not representable and are
+rejected by the parser when the `parse` feature is enabled.
+
+The `safe`/`unsafe` overflow-position keyword is supported by both the Flexbox and CSS Grid
+layout algorithms for both content-level (`align-content`, `justify-content`) and self-level
+(`align-self`, `justify-self`) alignment.
