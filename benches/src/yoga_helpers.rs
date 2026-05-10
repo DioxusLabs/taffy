@@ -152,6 +152,13 @@ fn items_into_align(align: Option<tf::AlignSelf>) -> yg::Align {
         Some(tf::AlignSelf::Stretch) => yg::Align::Stretch,
         Some(tf::AlignSelf::Start) => unimplemented!(),
         Some(tf::AlignSelf::End) => unimplemented!(),
+        Some(
+            tf::AlignSelf::SafeStart
+            | tf::AlignSelf::SafeEnd
+            | tf::AlignSelf::SafeFlexStart
+            | tf::AlignSelf::SafeFlexEnd
+            | tf::AlignSelf::SafeCenter,
+        ) => unimplemented!(),
     }
 }
 
@@ -167,6 +174,13 @@ fn content_into_align(align: Option<tf::AlignContent>) -> yg::Align {
         Some(tf::AlignContent::SpaceBetween) => yg::Align::SpaceBetween,
         Some(tf::AlignContent::SpaceAround) => yg::Align::SpaceAround,
         Some(tf::AlignContent::SpaceEvenly) => unimplemented!(),
+        Some(
+            tf::AlignContent::SafeStart
+            | tf::AlignContent::SafeEnd
+            | tf::AlignContent::SafeFlexStart
+            | tf::AlignContent::SafeFlexEnd
+            | tf::AlignContent::SafeCenter,
+        ) => unimplemented!(),
     }
 }
 
@@ -182,6 +196,13 @@ fn content_into_justify(align: Option<tf::JustifyContent>) -> yg::Justify {
         Some(tf::JustifyContent::SpaceAround) => yg::Justify::SpaceAround,
         Some(tf::JustifyContent::Stretch) => unimplemented!(),
         Some(tf::JustifyContent::SpaceEvenly) => unimplemented!(),
+        Some(
+            tf::JustifyContent::SafeStart
+            | tf::JustifyContent::SafeEnd
+            | tf::JustifyContent::SafeFlexStart
+            | tf::JustifyContent::SafeFlexEnd
+            | tf::JustifyContent::SafeCenter,
+        ) => unimplemented!(),
     }
 }
 

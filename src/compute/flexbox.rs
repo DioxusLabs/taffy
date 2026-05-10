@@ -1698,11 +1698,8 @@ fn distribute_remaining_free_space(flex_lines: &mut [FlexLine], constants: &Algo
         let num_items = line.items.len();
         let layout_reverse = constants.dir.is_reverse();
         let gap = constants.gap.main(constants.dir);
-        // The Safe* overflow-position modifier (if present on the resolved justify-content
-        // keyword) is folded into the `is_safe` flag inside `apply_alignment_fallback`.
-        let is_safe = false;
         let raw_justify_content_mode = constants.justify_content.unwrap_or(JustifyContent::FlexStart);
-        let justify_content_mode = apply_alignment_fallback(free_space, num_items, raw_justify_content_mode, is_safe);
+        let justify_content_mode = apply_alignment_fallback(free_space, num_items, raw_justify_content_mode);
 
         let justify_item = |(i, child): (usize, &mut FlexItem)| {
             child.offset_main =
@@ -1783,12 +1780,15 @@ fn align_flex_items_along_cross_axis(
 
     // If align-self uses a "safe" overflow-position keyword and the item would overflow its
     // line cross size, fall back to logical Start to avoid data loss. See CSS Box Alignment 3
-    // §4.3 <https://www.w3.org/TR/css-align-3/#overflow-values>.
-    if child.align_self.is_safe() && free_space < 0.0 {
-        return if cross_axis_should_reverse { free_space } else { 0.0 };
-    }
+    // §4.3 <https://www.w3.org/TR/css-align-3/#overflow-values>. Otherwise, strip the Safe*
+    // modifier so the regular match below sees only the position keyword.
+    let align_self = if child.align_self.is_safe() && free_space < 0.0 {
+        AlignSelf::Start
+    } else {
+        child.align_self.position()
+    };
 
-    match child.align_self.position() {
+    match align_self {
         AlignSelf::Start => {
             if cross_axis_should_reverse {
                 free_space
@@ -1844,7 +1844,7 @@ fn align_flex_items_along_cross_axis(
         | AlignSelf::SafeFlexStart
         | AlignSelf::SafeFlexEnd
         | AlignSelf::SafeCenter => {
-            // Unreachable: `position()` strips Safe* into the underlying position keyword.
+            // Unreachable: Safe* variants are stripped above into the underlying position keyword.
             unreachable!()
         }
     }
@@ -1897,11 +1897,8 @@ fn align_flex_lines_per_align_content(flex_lines: &mut [FlexLine], constants: &A
     let gap = constants.gap.cross(constants.dir);
     let total_cross_axis_gap = sum_axis_gaps(gap, num_lines);
     let free_space = constants.inner_container_size.cross(constants.dir) - total_cross_size - total_cross_axis_gap;
-    // The Safe* overflow-position modifier (if present on the resolved align-content keyword)
-    // is folded into the `is_safe` flag inside `apply_alignment_fallback`.
-    let is_safe = false;
 
-    let align_content_mode = apply_alignment_fallback(free_space, num_lines, constants.align_content, is_safe);
+    let align_content_mode = apply_alignment_fallback(free_space, num_lines, constants.align_content);
 
     let align_line = |(i, line): (usize, &mut FlexLine)| {
         line.offset_cross =

@@ -9,12 +9,11 @@ pub(crate) fn apply_alignment_fallback(
     free_space: f32,
     num_items: usize,
     mut alignment_mode: AlignContent,
-    mut is_safe: bool,
 ) -> AlignContent {
-    // If a Safe* variant was passed in, fold its overflow-position modifier into the
-    // is_safe flag and continue with the underlying position keyword.
-    if alignment_mode.is_safe() {
-        is_safe = true;
+    // Pick up the overflow-position modifier from the alignment style itself, then continue
+    // with the underlying position keyword.
+    let mut is_safe = alignment_mode.is_safe();
+    if is_safe {
         alignment_mode = alignment_mode.position();
     }
 

@@ -33,10 +33,7 @@ pub(super) fn align_tracks(
     // simply pass zero here. Grid layout is never reversed.
     let gap = 0.0;
     let layout_is_reversed = false;
-    // The Safe* overflow-position modifier (if present on `track_alignment_style`) is folded
-    // into the `is_safe` flag inside `apply_alignment_fallback`.
-    let is_safe = false;
-    let track_alignment = apply_alignment_fallback(free_space, num_tracks, track_alignment_style, is_safe);
+    let track_alignment = apply_alignment_fallback(free_space, num_tracks, track_alignment_style);
     let track_alignment = if axis_is_reversed { track_alignment.reversed() } else { track_alignment };
 
     // Compute offsets
@@ -319,42 +316,40 @@ pub(super) fn align_item_within_area(
 
     // If the alignment uses a "safe" overflow-position keyword and the item would overflow
     // its grid area, fall back to logical Start to avoid data loss. See CSS Box Alignment 3
-    // §4.3 <https://www.w3.org/TR/css-align-3/#overflow-values>.
+    // §4.3 <https://www.w3.org/TR/css-align-3/#overflow-values>. Otherwise, strip the
+    // Safe* modifier so the regular match below sees only the position keyword.
     let overflows = resolved_size + non_auto_margin.sum() > grid_area_size;
+    let alignment_style = if alignment_style.is_safe() && overflows {
+        AlignSelf::Start
+    } else {
+        alignment_style.position()
+    };
 
     // Compute offset in the axis
-    let alignment_based_offset = if alignment_style.is_safe() && overflows {
-        if direction.is_rtl() {
-            grid_area_size - resolved_size - resolved_margin.end
-        } else {
-            resolved_margin.start
+    let alignment_based_offset = match alignment_style {
+        // TODO: Add support for baseline alignment. For now we treat it as "start".
+        AlignSelf::Start | AlignSelf::FlexStart | AlignSelf::Baseline | AlignSelf::Stretch => {
+            if direction.is_rtl() {
+                grid_area_size - resolved_size - resolved_margin.end
+            } else {
+                resolved_margin.start
+            }
         }
-    } else {
-        match alignment_style.position() {
-            // TODO: Add support for baseline alignment. For now we treat it as "start".
-            AlignSelf::Start | AlignSelf::FlexStart | AlignSelf::Baseline | AlignSelf::Stretch => {
-                if direction.is_rtl() {
-                    grid_area_size - resolved_size - resolved_margin.end
-                } else {
-                    resolved_margin.start
-                }
+        AlignSelf::End | AlignSelf::FlexEnd => {
+            if direction.is_rtl() {
+                resolved_margin.start
+            } else {
+                grid_area_size - resolved_size - resolved_margin.end
             }
-            AlignSelf::End | AlignSelf::FlexEnd => {
-                if direction.is_rtl() {
-                    resolved_margin.start
-                } else {
-                    grid_area_size - resolved_size - resolved_margin.end
-                }
-            }
-            AlignSelf::Center => (grid_area_size - resolved_size + resolved_margin.start - resolved_margin.end) / 2.0,
-            AlignSelf::SafeStart
-            | AlignSelf::SafeEnd
-            | AlignSelf::SafeFlexStart
-            | AlignSelf::SafeFlexEnd
-            | AlignSelf::SafeCenter => {
-                // Unreachable: `position()` strips Safe* into the underlying position keyword.
-                unreachable!()
-            }
+        }
+        AlignSelf::Center => (grid_area_size - resolved_size + resolved_margin.start - resolved_margin.end) / 2.0,
+        AlignSelf::SafeStart
+        | AlignSelf::SafeEnd
+        | AlignSelf::SafeFlexStart
+        | AlignSelf::SafeFlexEnd
+        | AlignSelf::SafeCenter => {
+            // Unreachable: Safe* variants are stripped above into the underlying position keyword.
+            unreachable!()
         }
     };
 
