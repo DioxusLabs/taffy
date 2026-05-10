@@ -316,7 +316,9 @@ pub(super) fn align_item_within_area(
     };
 
     // Compute offset in the axis
-    let alignment_based_offset = match alignment_style {
+    // TODO (safe alignment): when alignment_style.is_safe() and the resolved size exceeds the
+    // grid area, fall back to literal Start. Wired in a follow-up commit (Phase T2b).
+    let alignment_based_offset = match alignment_style.position() {
         // TODO: Add support for baseline alignment. For now we treat it as "start".
         AlignSelf::Start | AlignSelf::FlexStart | AlignSelf::Baseline | AlignSelf::Stretch => {
             if direction.is_rtl() {
@@ -333,6 +335,14 @@ pub(super) fn align_item_within_area(
             }
         }
         AlignSelf::Center => (grid_area_size - resolved_size + resolved_margin.start - resolved_margin.end) / 2.0,
+        AlignSelf::SafeStart
+        | AlignSelf::SafeEnd
+        | AlignSelf::SafeFlexStart
+        | AlignSelf::SafeFlexEnd
+        | AlignSelf::SafeCenter => {
+            // Unreachable: `position()` strips Safe* into the underlying position keyword.
+            unreachable!()
+        }
     };
 
     let offset_within_area = if position == Position::Absolute {

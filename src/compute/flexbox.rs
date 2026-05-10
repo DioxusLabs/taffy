@@ -1779,7 +1779,9 @@ fn align_flex_items_along_cross_axis(
 ) -> f32 {
     let cross_axis_should_reverse = constants.is_column && matches!(constants.layout_direction, Direction::Rtl);
 
-    match child.align_self {
+    // TODO (safe alignment): when child.align_self.is_safe() and free_space < 0, fall back to
+    // literal Start. Wired in a follow-up commit (Phase T2b).
+    match child.align_self.position() {
         AlignSelf::Start => {
             if cross_axis_should_reverse {
                 free_space
@@ -1829,6 +1831,14 @@ fn align_flex_items_along_cross_axis(
             } else {
                 0.0
             }
+        }
+        AlignSelf::SafeStart
+        | AlignSelf::SafeEnd
+        | AlignSelf::SafeFlexStart
+        | AlignSelf::SafeFlexEnd
+        | AlignSelf::SafeCenter => {
+            // Unreachable: `position()` strips Safe* into the underlying position keyword.
+            unreachable!()
         }
     }
 }
@@ -2326,7 +2336,9 @@ fn perform_absolute_layout_on_absolute_children(
         } else {
             // Stretch is an invalid value for justify_content in the flexbox algorithm, so we
             // treat it as if it wasn't set (and thus we default to FlexStart behaviour)
-            match (constants.justify_content.unwrap_or(JustifyContent::Start), main_axis_flex_start_reversed) {
+            // TODO (safe alignment): apply Start fallback when justify_content.is_safe() and the
+            // resolved size overflows the containing block. Wired in a follow-up commit.
+            match (constants.justify_content.unwrap_or(JustifyContent::Start).position(), main_axis_flex_start_reversed) {
                 (JustifyContent::SpaceBetween, _)
                 | (JustifyContent::Stretch, false)
                 | (JustifyContent::FlexStart, false)
@@ -2368,6 +2380,17 @@ fn perform_absolute_layout_on_absolute_children(
                         - resolved_margin.main_end(constants.dir))
                         / 2.0
                 }
+                (
+                    JustifyContent::SafeStart
+                    | JustifyContent::SafeEnd
+                    | JustifyContent::SafeFlexStart
+                    | JustifyContent::SafeFlexEnd
+                    | JustifyContent::SafeCenter,
+                    _,
+                ) => {
+                    // Unreachable: `position()` strips Safe* into the underlying position keyword.
+                    unreachable!()
+                }
             }
         };
 
@@ -2395,7 +2418,9 @@ fn perform_absolute_layout_on_absolute_children(
                     - resolved_margin.cross_end(constants.dir)
             }
         } else {
-            match (align_self, cross_axis_flex_start_reversed) {
+            // TODO (safe alignment): apply Start fallback when align_self.is_safe() and the
+            // resolved size overflows the containing block. Wired in a follow-up commit.
+            match (align_self.position(), cross_axis_flex_start_reversed) {
                 // Stretch alignment does not apply to absolutely positioned items
                 // See "Example 3" at https://www.w3.org/TR/css-flexbox-1/#abspos-items
                 // Note: Stretch should be FlexStart not Start when we support both
@@ -2436,6 +2461,17 @@ fn perform_absolute_layout_on_absolute_children(
                         + resolved_margin.cross_start(constants.dir)
                         - resolved_margin.cross_end(constants.dir))
                         / 2.0
+                }
+                (
+                    AlignSelf::SafeStart
+                    | AlignSelf::SafeEnd
+                    | AlignSelf::SafeFlexStart
+                    | AlignSelf::SafeFlexEnd
+                    | AlignSelf::SafeCenter,
+                    _,
+                ) => {
+                    // Unreachable: `position()` strips Safe* into the underlying position keyword.
+                    unreachable!()
                 }
             }
         };

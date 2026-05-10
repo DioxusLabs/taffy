@@ -189,13 +189,14 @@ pub(super) fn compute_alignment_gutter_adjustment(
     }
 
     // As items never cross the outermost gutters in a grid, we can simplify our calculations by treating
-    // AlignContent::Start and AlignContent::End the same
+    // AlignContent::Start and AlignContent::End the same. Safe* variants share the gutter weight
+    // of their underlying position; overflow fallback is handled when offsets are computed.
     let outer_gutter_weight = match alignment {
-        AlignContent::Start => 1,
-        AlignContent::FlexStart => 1,
-        AlignContent::End => 1,
-        AlignContent::FlexEnd => 1,
-        AlignContent::Center => 1,
+        AlignContent::Start | AlignContent::SafeStart => 1,
+        AlignContent::FlexStart | AlignContent::SafeFlexStart => 1,
+        AlignContent::End | AlignContent::SafeEnd => 1,
+        AlignContent::FlexEnd | AlignContent::SafeFlexEnd => 1,
+        AlignContent::Center | AlignContent::SafeCenter => 1,
         AlignContent::Stretch => 0,
         AlignContent::SpaceBetween => 0,
         AlignContent::SpaceAround => 1,
@@ -203,11 +204,11 @@ pub(super) fn compute_alignment_gutter_adjustment(
     };
 
     let inner_gutter_weight = match alignment {
-        AlignContent::FlexStart => 0,
-        AlignContent::Start => 0,
-        AlignContent::FlexEnd => 0,
-        AlignContent::End => 0,
-        AlignContent::Center => 0,
+        AlignContent::FlexStart | AlignContent::SafeFlexStart => 0,
+        AlignContent::Start | AlignContent::SafeStart => 0,
+        AlignContent::FlexEnd | AlignContent::SafeFlexEnd => 0,
+        AlignContent::End | AlignContent::SafeEnd => 0,
+        AlignContent::Center | AlignContent::SafeCenter => 0,
         AlignContent::Stretch => 0,
         AlignContent::SpaceBetween => 1,
         AlignContent::SpaceAround => 2,

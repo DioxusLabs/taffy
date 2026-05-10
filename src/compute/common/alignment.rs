@@ -11,6 +11,13 @@ pub(crate) fn apply_alignment_fallback(
     mut alignment_mode: AlignContent,
     mut is_safe: bool,
 ) -> AlignContent {
+    // If a Safe* variant was passed in, fold its overflow-position modifier into the
+    // is_safe flag and continue with the underlying position keyword.
+    if alignment_mode.is_safe() {
+        is_safe = true;
+        alignment_mode = alignment_mode.position();
+    }
+
     // Fallback occurs in two cases:
 
     // 1. If there is only a single item being aligned and alignment is a distributed alignment keyword
@@ -47,25 +54,27 @@ pub(crate) fn compute_alignment_offset(
     layout_is_flex_reversed: bool,
     is_first: bool,
 ) -> f32 {
+    // Safe* variants share the offset math of their underlying position keyword. The
+    // overflow-aware fallback to Start is applied upstream by `apply_alignment_fallback`.
     if is_first {
         match alignment_mode {
-            AlignContent::Start => 0.0,
-            AlignContent::FlexStart => {
+            AlignContent::Start | AlignContent::SafeStart => 0.0,
+            AlignContent::FlexStart | AlignContent::SafeFlexStart => {
                 if layout_is_flex_reversed {
                     free_space
                 } else {
                     0.0
                 }
             }
-            AlignContent::End => free_space,
-            AlignContent::FlexEnd => {
+            AlignContent::End | AlignContent::SafeEnd => free_space,
+            AlignContent::FlexEnd | AlignContent::SafeFlexEnd => {
                 if layout_is_flex_reversed {
                     0.0
                 } else {
                     free_space
                 }
             }
-            AlignContent::Center => free_space / 2.0,
+            AlignContent::Center | AlignContent::SafeCenter => free_space / 2.0,
             AlignContent::Stretch => 0.0,
             AlignContent::SpaceBetween => 0.0,
             AlignContent::SpaceAround => {
@@ -86,11 +95,11 @@ pub(crate) fn compute_alignment_offset(
     } else {
         let free_space = free_space.max(0.0);
         gap + match alignment_mode {
-            AlignContent::Start => 0.0,
-            AlignContent::FlexStart => 0.0,
-            AlignContent::End => 0.0,
-            AlignContent::FlexEnd => 0.0,
-            AlignContent::Center => 0.0,
+            AlignContent::Start | AlignContent::SafeStart => 0.0,
+            AlignContent::FlexStart | AlignContent::SafeFlexStart => 0.0,
+            AlignContent::End | AlignContent::SafeEnd => 0.0,
+            AlignContent::FlexEnd | AlignContent::SafeFlexEnd => 0.0,
+            AlignContent::Center | AlignContent::SafeCenter => 0.0,
             AlignContent::Stretch => 0.0,
             AlignContent::SpaceBetween => free_space / (num_items - 1) as f32,
             AlignContent::SpaceAround => free_space / num_items as f32,
