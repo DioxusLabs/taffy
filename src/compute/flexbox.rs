@@ -1698,7 +1698,9 @@ fn distribute_remaining_free_space(flex_lines: &mut [FlexLine], constants: &Algo
         let num_items = line.items.len();
         let layout_reverse = constants.dir.is_reverse();
         let gap = constants.gap.main(constants.dir);
-        let is_safe = false; // TODO: Implement safe alignment
+        // The Safe* overflow-position modifier (if present on the resolved justify-content
+        // keyword) is folded into the `is_safe` flag inside `apply_alignment_fallback`.
+        let is_safe = false;
         let raw_justify_content_mode = constants.justify_content.unwrap_or(JustifyContent::FlexStart);
         let justify_content_mode = apply_alignment_fallback(free_space, num_items, raw_justify_content_mode, is_safe);
 
@@ -1779,8 +1781,13 @@ fn align_flex_items_along_cross_axis(
 ) -> f32 {
     let cross_axis_should_reverse = constants.is_column && matches!(constants.layout_direction, Direction::Rtl);
 
-    // TODO (safe alignment): when child.align_self.is_safe() and free_space < 0, fall back to
-    // literal Start. Wired in a follow-up commit (Phase T2b).
+    // If align-self uses a "safe" overflow-position keyword and the item would overflow its
+    // line cross size, fall back to logical Start to avoid data loss. See CSS Box Alignment 3
+    // §4.3 <https://www.w3.org/TR/css-align-3/#overflow-values>.
+    if child.align_self.is_safe() && free_space < 0.0 {
+        return if cross_axis_should_reverse { free_space } else { 0.0 };
+    }
+
     match child.align_self.position() {
         AlignSelf::Start => {
             if cross_axis_should_reverse {
@@ -1890,7 +1897,9 @@ fn align_flex_lines_per_align_content(flex_lines: &mut [FlexLine], constants: &A
     let gap = constants.gap.cross(constants.dir);
     let total_cross_axis_gap = sum_axis_gaps(gap, num_lines);
     let free_space = constants.inner_container_size.cross(constants.dir) - total_cross_size - total_cross_axis_gap;
-    let is_safe = false; // TODO: Implement safe alignment
+    // The Safe* overflow-position modifier (if present on the resolved align-content keyword)
+    // is folded into the `is_safe` flag inside `apply_alignment_fallback`.
+    let is_safe = false;
 
     let align_content_mode = apply_alignment_fallback(free_space, num_lines, constants.align_content, is_safe);
 
