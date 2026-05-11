@@ -158,8 +158,15 @@ fn mixed_benchmark(c: &mut Criterion) {
                             .compute_layout_with_measure(
                                 root,
                                 Size::MAX_CONTENT,
-                                |known_dimensions, available_space, _node_id, node_context, _style| {
-                                    measure_function(known_dimensions, available_space, node_context)
+                                |inputs, _node_id, node_context, style| {
+                                    taffy::compute_leaf_layout(
+                                        inputs,
+                                        style,
+                                        |_, _| 0.0,
+                                        |known_dimensions, available_space| {
+                                            measure_function(known_dimensions, available_space, node_context)
+                                        },
+                                    )
                                 },
                             )
                             .unwrap();

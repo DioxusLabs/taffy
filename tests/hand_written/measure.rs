@@ -1,6 +1,7 @@
 #[cfg(test)]
 mod measure {
     use taffy::prelude::*;
+    use taffy::{LayoutInput, LayoutOutput};
     use taffy_test_helpers::{new_test_tree, test_measure_function, TestNodeContext};
 
     const HUNDRED_HUNDRED: TestNodeContext = TestNodeContext::fixed(100.0, 100.0);
@@ -209,15 +210,21 @@ mod measure {
         let mut taffy: TaffyTree<()> = TaffyTree::new();
 
         fn custom_measure_function(
-            known_dimensions: Size<Option<f32>>,
-            _available_space: Size<AvailableSpace>,
+            inputs: LayoutInput,
             _node_id: NodeId,
             _node_context: Option<&mut ()>,
-            _style: &Style,
-        ) -> taffy::geometry::Size<f32> {
-            let height = known_dimensions.height.unwrap_or(50.0);
-            let width = known_dimensions.width.unwrap_or(height);
-            Size { width, height }
+            style: &Style,
+        ) -> LayoutOutput {
+            taffy::compute_leaf_layout(
+                inputs,
+                style,
+                |_, _| 0.0,
+                |known_dimensions, _available_space| {
+                    let height = known_dimensions.height.unwrap_or(50.0);
+                    let width = known_dimensions.width.unwrap_or(height);
+                    Size { width, height }
+                },
+            )
         }
 
         let child = taffy.new_leaf_with_context(Style::default(), ()).unwrap();

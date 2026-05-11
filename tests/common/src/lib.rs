@@ -1,4 +1,4 @@
-use taffy::{AvailableSpace, NodeId, Size, Style, TaffyTree};
+use taffy::{compute_leaf_layout, LayoutInput, LayoutOutput, NodeId, Size, Style, TaffyTree};
 
 /// Creates a `TaffyTree` that uses `TestNodeContext`. The purpose of this function is
 /// to allow `TaffyTree` to be monomophised once in this crate rather than separately for
@@ -61,32 +61,38 @@ pub enum TestMeasureData {
 
 /// A measure function for tests that works with `TestNodeContext`
 pub fn test_measure_function(
-    known_dimensions: Size<Option<f32>>,
-    available_space: Size<AvailableSpace>,
+    inputs: LayoutInput,
     _node_id: NodeId,
     context: Option<&mut TestNodeContext>,
-    _style: &Style,
-) -> Size<f32> {
-    if let Size { width: Some(width), height: Some(height) } = known_dimensions {
-        return Size { width, height };
-    }
+    style: &Style,
+) -> LayoutOutput {
+    compute_leaf_layout(
+        inputs,
+        style,
+        |_, _| 0.0,
+        |known_dimensions, available_space| {
+            if let Size { width: Some(width), height: Some(height) } = known_dimensions {
+                return Size { width, height };
+            }
 
-    let Some(context) = context else { return known_dimensions.map(|d| d.unwrap_or(0.0)) };
+            let Some(context) = context else { return known_dimensions.map(|d| d.unwrap_or(0.0)) };
 
-    // Increment count
-    context.count += 1;
+            // Increment count
+            context.count += 1;
 
-    let compute_size = match &context.measure_data {
-        TestMeasureData::Zero => Size::ZERO,
-        TestMeasureData::Fixed(size) => *size,
-        TestMeasureData::AspectRatio(data) => data.measure(known_dimensions),
-        TestMeasureData::AhemText(data) => data.measure(known_dimensions, available_space),
-    };
+            let compute_size = match &context.measure_data {
+                TestMeasureData::Zero => Size::ZERO,
+                TestMeasureData::Fixed(size) => *size,
+                TestMeasureData::AspectRatio(data) => data.measure(known_dimensions),
+                TestMeasureData::AhemText(data) => data.measure(known_dimensions, available_space),
+            };
 
-    Size {
-        width: known_dimensions.width.unwrap_or(compute_size.width),
-        height: known_dimensions.height.unwrap_or(compute_size.height),
-    }
+            Size {
+                width: known_dimensions.width.unwrap_or(compute_size.width),
+                height: known_dimensions.height.unwrap_or(compute_size.height),
+            }
+        },
+    )
 }
 
 /// Measure data for nodes that returns results based on an intrinsic aspect ratio
