@@ -17,8 +17,8 @@ const CACHE_SIZE: usize = 9;
 const INFINITY_BITS: u32 = 0b_0_11111111_00000000000000000000000_u32;
 /// `f32::INFINITY` as a u32
 const NEG_INFINITY_BITS: u32 = 0b_1_11111111_00000000000000000000000_u32;
-/// A positive NaN f32 values as a u32
-const SPECIFIC_NAN_BITS: u32 = 0b0_11111111_10000000000000000000001_u32;
+// /// A positive NaN f32 values as a u32
+// const SPECIFIC_NAN_BITS: u32 = 0b0_11111111_10000000000000000000001_u32;
 
 const A_ONE: u64 = 1u64 << 63;
 const B_ONE: u64 = 1u64 << 31;
@@ -52,6 +52,7 @@ fn available_space_cache_key(input: AvailableSpace) -> u32 {
 
 /// Pack `Size<AvailableSpace>` into `u64`
 #[inline(always)]
+#[allow(dead_code)]
 fn size_available_space_cache_key(input: Size<AvailableSpace>) -> u64 {
     (available_space_cache_key(input.width) as u64) << 32 | available_space_cache_key(input.height) as u64
 }
