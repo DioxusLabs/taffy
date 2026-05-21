@@ -521,7 +521,14 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
 
     // 9. Size, Align, and Position Grid Items
 
-    #[cfg_attr(not(feature = "content_size"), allow(unused_mut))]
+    let content_box_origin = Point { x: content_box_inset.left, y: content_box_inset.top };
+
+    #[cfg(feature = "content_size")]
+    let mut item_content_size_contribution = Size {
+        width: grid_axis_content_size_contribution(&columns, content_box_origin.x),
+        height: grid_axis_content_size_contribution(&rows, content_box_origin.y),
+    };
+    #[cfg(not(feature = "content_size"))]
     let mut item_content_size_contribution = Size::ZERO;
 
     // Sort items back into original order to allow them to be matched up with styles
@@ -543,6 +550,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
             item.node,
             index as u32,
             grid_area,
+            content_box_origin,
             container_alignment_styles,
             item.baseline_shim,
             direction,
@@ -637,8 +645,16 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
 
             // TODO: Baseline alignment support for absolutely positioned items (should check if is actually specified)
             #[cfg_attr(not(feature = "content_size"), allow(unused_variables))]
-            let (content_size_contribution, _, _) =
-                align_and_position_item(tree, child, order, grid_area, container_alignment_styles, 0.0, direction);
+            let (content_size_contribution, _, _) = align_and_position_item(
+                tree,
+                child,
+                order,
+                grid_area,
+                content_box_origin,
+                container_alignment_styles,
+                0.0,
+                direction,
+            );
             #[cfg(feature = "content_size")]
             {
                 item_content_size_contribution = item_content_size_contribution.f32_max(content_size_contribution);
@@ -661,7 +677,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
 
     // If there are not items then return just the container size (no baseline)
     if items.is_empty() {
-        return LayoutOutput::from_outer_size(container_border_box);
+        return LayoutOutput::from_sizes(container_border_box, item_content_size_contribution);
     }
 
     // Determine the grid container baseline(s) (currently we only compute the first baseline)
@@ -692,6 +708,13 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
         item_content_size_contribution,
         Point { x: None, y: Some(grid_container_baseline) },
     )
+}
+
+#[cfg(feature = "content_size")]
+fn grid_axis_content_size_contribution(tracks: &[GridTrack], content_box_start: f32) -> f32 {
+    tracks
+        .iter()
+        .fold(0.0, |content_size, track| f32_max(content_size, track.offset + track.base_size - content_box_start))
 }
 
 /// Reverses only non-gutter column tracks in-place while preserving line/gutter slots.

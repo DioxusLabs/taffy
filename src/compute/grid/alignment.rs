@@ -68,6 +68,7 @@ pub(super) fn align_and_position_item(
     node: NodeId,
     order: u32,
     grid_area: Rect<f32>,
+    content_box_origin: Point<f32>,
     container_alignment_styles: InBothAbsAxis<Option<AlignItems>>,
     baseline_shim: f32,
     direction: Direction,
@@ -279,7 +280,7 @@ pub(super) fn align_and_position_item(
 
     #[cfg(feature = "content_size")]
     let contribution = compute_content_size_contribution(
-        Point { x: x - grid_area.left, y: y - grid_area.top },
+        Point { x: x - content_box_origin.x, y: y - content_box_origin.y },
         Size { width, height },
         layout_output.content_size,
         overflow,
