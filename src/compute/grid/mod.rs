@@ -711,6 +711,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
 }
 
 #[cfg(feature = "content_size")]
+/// Compute the content-size contribution of a grid axis from its aligned track extents.
 fn grid_axis_content_size_contribution(tracks: &[GridTrack], content_box_start: f32) -> f32 {
     tracks
         .iter()

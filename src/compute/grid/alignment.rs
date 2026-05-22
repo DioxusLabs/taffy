@@ -63,6 +63,7 @@ pub(super) fn align_tracks(
 }
 
 /// Align and size a grid item into it's final position
+#[allow(clippy::too_many_arguments)]
 pub(super) fn align_and_position_item(
     tree: &mut impl LayoutGridContainer,
     node: NodeId,
