@@ -13,7 +13,10 @@ mod float;
 #[cfg(feature = "grid")]
 mod grid;
 
-pub use self::alignment::{AlignContent, AlignItems, AlignSelf, JustifyContent, JustifyItems, JustifySelf};
+pub use self::alignment::{
+    AlignContent, AlignContentKeyword, AlignItems, AlignItemsKeyword, AlignSelf, AlignmentSafety, JustifyContent,
+    JustifyItems, JustifySelf,
+};
 pub use self::available_space::AvailableSpace;
 pub use self::compact_length::CompactLength;
 pub use self::dimension::{Dimension, LengthPercentage, LengthPercentageAuto};
@@ -365,12 +368,12 @@ impl Overflow {
         }
     }
 
-    /// Returns `Some(0.0)` if the overflow mode would cause the automatic minimum size of a Flexbox or CSS Grid item
+    /// Returns `Some(0.0_f32)` if the overflow mode would cause the automatic minimum size of a Flexbox or CSS Grid item
     /// to be `0`. Else returns None.
     #[inline(always)]
     pub(crate) fn maybe_into_automatic_min_size(self) -> Option<f32> {
         match self.is_scroll_container() {
-            true => Some(0.0),
+            true => Some(0.0_f32),
             false => None,
         }
     }
@@ -535,12 +538,12 @@ pub struct Style<S: CheapCloneStr = DefaultCheapStr> {
     pub flex_basis: Dimension,
     /// The relative rate at which this item grows when it is expanding to fill space
     ///
-    /// 0.0 is the default value, and this value must be positive.
+    /// 0.0_f32 is the default value, and this value must be positive.
     #[cfg(feature = "flexbox")]
     pub flex_grow: f32,
     /// The relative rate at which this item shrinks when it is contracting to fit into space
     ///
-    /// 1.0 is the default value, and this value must be positive.
+    /// 1.0_f32 is the default value, and this value must be positive.
     #[cfg(feature = "flexbox")]
     pub flex_shrink: f32,
 
@@ -591,7 +594,7 @@ impl<S: CheapCloneStr> Style<S> {
         box_sizing: BoxSizing::BorderBox,
         direction: Direction::Ltr,
         overflow: Point { x: Overflow::Visible, y: Overflow::Visible },
-        scrollbar_width: 0.0,
+        scrollbar_width: 0.0_f32,
         #[cfg(feature = "float_layout")]
         float: Float::None,
         #[cfg(feature = "float_layout")]
@@ -629,9 +632,9 @@ impl<S: CheapCloneStr> Style<S> {
         #[cfg(feature = "flexbox")]
         flex_wrap: FlexWrap::NoWrap,
         #[cfg(feature = "flexbox")]
-        flex_grow: 0.0,
+        flex_grow: 0.0_f32,
         #[cfg(feature = "flexbox")]
-        flex_shrink: 1.0,
+        flex_shrink: 1.0_f32,
         #[cfg(feature = "flexbox")]
         flex_basis: Dimension::AUTO,
         // Grid
@@ -1202,7 +1205,7 @@ mod tests {
             clear: Default::default(),
             direction: Default::default(),
             overflow: Default::default(),
-            scrollbar_width: 0.0,
+            scrollbar_width: 0.0_f32,
             position: Default::default(),
             #[cfg(feature = "flexbox")]
             flex_direction: Default::default(),
@@ -1228,9 +1231,9 @@ mod tests {
             #[cfg(feature = "block_layout")]
             text_align: Default::default(),
             #[cfg(feature = "flexbox")]
-            flex_grow: 0.0,
+            flex_grow: 0.0_f32,
             #[cfg(feature = "flexbox")]
-            flex_shrink: 1.0,
+            flex_shrink: 1.0_f32,
             #[cfg(feature = "flexbox")]
             flex_basis: super::Dimension::AUTO,
             size: Size::auto(),
@@ -1306,10 +1309,16 @@ mod tests {
         assert_type_size::<Rect<LengthPercentageAuto>>(32);
         assert_type_size::<Rect<Dimension>>(32);
 
-        // Alignment
-        assert_type_size::<AlignContent>(1);
-        assert_type_size::<AlignItems>(1);
-        assert_type_size::<Option<AlignItems>>(1);
+        // Alignment — `AlignContent` and `AlignItems` are structs of two `#[repr(u8)]` enums
+        // (position keyword + safety modifier). Niche-packing in the safety byte (only 2 of
+        // 256 values used) lets `Option<_>` stay the same size as the bare struct.
+        assert_type_size::<AlignContentKeyword>(1);
+        assert_type_size::<AlignItemsKeyword>(1);
+        assert_type_size::<AlignmentSafety>(1);
+        assert_type_size::<AlignContent>(2);
+        assert_type_size::<AlignItems>(2);
+        assert_type_size::<Option<AlignItems>>(2);
+        assert_type_size::<Option<AlignContent>>(2);
 
         // Flexbox Container
         assert_type_size::<FlexDirection>(1);
@@ -1327,12 +1336,12 @@ mod tests {
         assert_type_size::<GridTemplateComponent<String>>(56);
         assert_type_size::<GridPlacement<String>>(32);
         assert_type_size::<Line<GridPlacement<String>>>(64);
-        assert_type_size::<Style<String>>(536);
+        assert_type_size::<Style<String>>(544);
 
         // String-type dependent (Arc<str>)
         assert_type_size::<GridTemplateComponent<Arc<str>>>(56);
         assert_type_size::<GridPlacement<Arc<str>>>(24);
         assert_type_size::<Line<GridPlacement<Arc<str>>>>(48);
-        assert_type_size::<Style<Arc<str>>>(504);
+        assert_type_size::<Style<Arc<str>>>(512);
     }
 }

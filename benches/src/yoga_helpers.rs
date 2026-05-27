@@ -139,70 +139,45 @@ fn into_yg_units(dim: impl Into<tf::Dimension>) -> yg::StyleUnit {
 }
 
 fn into_pixels(dim: impl Into<tf::Dimension>) -> f32 {
-    dim.into().into_option().unwrap_or(0.0)
+    dim.into().into_option().unwrap_or(0.0_f32)
 }
 
 fn items_into_align(align: Option<tf::AlignSelf>) -> yg::Align {
-    match align {
-        None => yg::Align::Auto,
-        Some(tf::AlignSelf::FlexStart) => yg::Align::FlexStart,
-        Some(tf::AlignSelf::FlexEnd) => yg::Align::FlexEnd,
-        Some(tf::AlignSelf::Center) => yg::Align::Center,
-        Some(tf::AlignSelf::Baseline) => yg::Align::Baseline,
-        Some(tf::AlignSelf::Stretch) => yg::Align::Stretch,
-        Some(tf::AlignSelf::Start) => unimplemented!(),
-        Some(tf::AlignSelf::End) => unimplemented!(),
-        Some(
-            tf::AlignSelf::SafeStart
-            | tf::AlignSelf::SafeEnd
-            | tf::AlignSelf::SafeFlexStart
-            | tf::AlignSelf::SafeFlexEnd
-            | tf::AlignSelf::SafeCenter,
-        ) => unimplemented!(),
+    // Yoga has no safe/unsafe overflow-position concept — drop the safety field and dispatch
+    // on the bare keyword. Safe and unsafe alike fold to the same yoga keyword.
+    let Some(align) = align else { return yg::Align::Auto };
+    match align.keyword {
+        tf::AlignItemsKeyword::FlexStart => yg::Align::FlexStart,
+        tf::AlignItemsKeyword::FlexEnd => yg::Align::FlexEnd,
+        tf::AlignItemsKeyword::Center => yg::Align::Center,
+        tf::AlignItemsKeyword::Baseline => yg::Align::Baseline,
+        tf::AlignItemsKeyword::Stretch => yg::Align::Stretch,
+        tf::AlignItemsKeyword::Start | tf::AlignItemsKeyword::End => unimplemented!(),
     }
 }
 
 fn content_into_align(align: Option<tf::AlignContent>) -> yg::Align {
-    match align {
-        None => yg::Align::Auto,
-        Some(tf::AlignContent::FlexStart) => yg::Align::FlexStart,
-        Some(tf::AlignContent::Start) => yg::Align::FlexStart,
-        Some(tf::AlignContent::FlexEnd) => yg::Align::FlexEnd,
-        Some(tf::AlignContent::End) => yg::Align::FlexEnd,
-        Some(tf::AlignContent::Center) => yg::Align::Center,
-        Some(tf::AlignContent::Stretch) => yg::Align::Stretch,
-        Some(tf::AlignContent::SpaceBetween) => yg::Align::SpaceBetween,
-        Some(tf::AlignContent::SpaceAround) => yg::Align::SpaceAround,
-        Some(tf::AlignContent::SpaceEvenly) => unimplemented!(),
-        Some(
-            tf::AlignContent::SafeStart
-            | tf::AlignContent::SafeEnd
-            | tf::AlignContent::SafeFlexStart
-            | tf::AlignContent::SafeFlexEnd
-            | tf::AlignContent::SafeCenter,
-        ) => unimplemented!(),
+    let Some(align) = align else { return yg::Align::Auto };
+    match align.keyword {
+        tf::AlignContentKeyword::FlexStart | tf::AlignContentKeyword::Start => yg::Align::FlexStart,
+        tf::AlignContentKeyword::FlexEnd | tf::AlignContentKeyword::End => yg::Align::FlexEnd,
+        tf::AlignContentKeyword::Center => yg::Align::Center,
+        tf::AlignContentKeyword::Stretch => yg::Align::Stretch,
+        tf::AlignContentKeyword::SpaceBetween => yg::Align::SpaceBetween,
+        tf::AlignContentKeyword::SpaceAround => yg::Align::SpaceAround,
+        tf::AlignContentKeyword::SpaceEvenly => unimplemented!(),
     }
 }
 
 fn content_into_justify(align: Option<tf::JustifyContent>) -> yg::Justify {
-    match align {
-        None => yg::Justify::FlexStart,
-        Some(tf::JustifyContent::FlexStart) => yg::Justify::FlexStart,
-        Some(tf::JustifyContent::Start) => yg::Justify::FlexStart,
-        Some(tf::JustifyContent::FlexEnd) => yg::Justify::FlexEnd,
-        Some(tf::JustifyContent::End) => yg::Justify::FlexEnd,
-        Some(tf::JustifyContent::Center) => yg::Justify::Center,
-        Some(tf::JustifyContent::SpaceBetween) => yg::Justify::SpaceBetween,
-        Some(tf::JustifyContent::SpaceAround) => yg::Justify::SpaceAround,
-        Some(tf::JustifyContent::Stretch) => unimplemented!(),
-        Some(tf::JustifyContent::SpaceEvenly) => unimplemented!(),
-        Some(
-            tf::JustifyContent::SafeStart
-            | tf::JustifyContent::SafeEnd
-            | tf::JustifyContent::SafeFlexStart
-            | tf::JustifyContent::SafeFlexEnd
-            | tf::JustifyContent::SafeCenter,
-        ) => unimplemented!(),
+    let Some(align) = align else { return yg::Justify::FlexStart };
+    match align.keyword {
+        tf::AlignContentKeyword::FlexStart | tf::AlignContentKeyword::Start => yg::Justify::FlexStart,
+        tf::AlignContentKeyword::FlexEnd | tf::AlignContentKeyword::End => yg::Justify::FlexEnd,
+        tf::AlignContentKeyword::Center => yg::Justify::Center,
+        tf::AlignContentKeyword::SpaceBetween => yg::Justify::SpaceBetween,
+        tf::AlignContentKeyword::SpaceAround => yg::Justify::SpaceAround,
+        tf::AlignContentKeyword::Stretch | tf::AlignContentKeyword::SpaceEvenly => unimplemented!(),
     }
 }
 
