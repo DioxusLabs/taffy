@@ -91,7 +91,7 @@ impl AlignContentKeyword {
     }
 }
 
-/// The overflow-position modifier per [CSS Box Alignment §4.3_f32][css-align-overflow].
+/// The overflow-position modifier per [CSS Box Alignment §4.3][css-align-overflow].
 ///
 /// `Safe` falls back to start-edge alignment when the alignment subject would
 /// overflow the alignment container, so the start of the content stays visible.

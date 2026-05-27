@@ -368,12 +368,12 @@ impl Overflow {
         }
     }
 
-    /// Returns `Some(0.0_f32)` if the overflow mode would cause the automatic minimum size of a Flexbox or CSS Grid item
+    /// Returns `Some(0.0)` if the overflow mode would cause the automatic minimum size of a Flexbox or CSS Grid item
     /// to be `0`. Else returns None.
     #[inline(always)]
     pub(crate) fn maybe_into_automatic_min_size(self) -> Option<f32> {
         match self.is_scroll_container() {
-            true => Some(0.0_f32),
+            true => Some(0.0),
             false => None,
         }
     }
@@ -538,12 +538,12 @@ pub struct Style<S: CheapCloneStr = DefaultCheapStr> {
     pub flex_basis: Dimension,
     /// The relative rate at which this item grows when it is expanding to fill space
     ///
-    /// 0.0_f32 is the default value, and this value must be positive.
+    /// 0.0 is the default value, and this value must be positive.
     #[cfg(feature = "flexbox")]
     pub flex_grow: f32,
     /// The relative rate at which this item shrinks when it is contracting to fit into space
     ///
-    /// 1.0_f32 is the default value, and this value must be positive.
+    /// 1.0 is the default value, and this value must be positive.
     #[cfg(feature = "flexbox")]
     pub flex_shrink: f32,
 
@@ -594,7 +594,7 @@ impl<S: CheapCloneStr> Style<S> {
         box_sizing: BoxSizing::BorderBox,
         direction: Direction::Ltr,
         overflow: Point { x: Overflow::Visible, y: Overflow::Visible },
-        scrollbar_width: 0.0_f32,
+        scrollbar_width: 0.0,
         #[cfg(feature = "float_layout")]
         float: Float::None,
         #[cfg(feature = "float_layout")]
@@ -632,9 +632,9 @@ impl<S: CheapCloneStr> Style<S> {
         #[cfg(feature = "flexbox")]
         flex_wrap: FlexWrap::NoWrap,
         #[cfg(feature = "flexbox")]
-        flex_grow: 0.0_f32,
+        flex_grow: 0.0,
         #[cfg(feature = "flexbox")]
-        flex_shrink: 1.0_f32,
+        flex_shrink: 1.0,
         #[cfg(feature = "flexbox")]
         flex_basis: Dimension::AUTO,
         // Grid
@@ -1205,7 +1205,7 @@ mod tests {
             clear: Default::default(),
             direction: Default::default(),
             overflow: Default::default(),
-            scrollbar_width: 0.0_f32,
+            scrollbar_width: 0.0,
             position: Default::default(),
             #[cfg(feature = "flexbox")]
             flex_direction: Default::default(),
@@ -1231,9 +1231,9 @@ mod tests {
             #[cfg(feature = "block_layout")]
             text_align: Default::default(),
             #[cfg(feature = "flexbox")]
-            flex_grow: 0.0_f32,
+            flex_grow: 0.0,
             #[cfg(feature = "flexbox")]
-            flex_shrink: 1.0_f32,
+            flex_shrink: 1.0,
             #[cfg(feature = "flexbox")]
             flex_basis: super::Dimension::AUTO,
             size: Size::auto(),

@@ -34,7 +34,7 @@ pub(super) fn align_tracks(
 
     // Grid layout treats gaps as full tracks rather than applying them at alignment so we
     // simply pass zero here. Grid layout is never reversed.
-    let gap = 0.0_f32;
+    let gap = 0.0;
     let layout_is_reversed = false;
     let track_alignment = apply_alignment_fallback(free_space, num_tracks, track_alignment_style);
     let track_alignment = if axis_is_reversed { track_alignment.reversed() } else { track_alignment };
@@ -158,7 +158,7 @@ pub(super) fn align_and_position_item(
         // positioned element being set
         if position == Position::Absolute {
             if let (Some(left), Some(right)) = (inset_horizontal.start, inset_horizontal.end) {
-                return Some(f32_max(grid_area_minus_item_margins_size.width - left - right, 0.0_f32));
+                return Some(f32_max(grid_area_minus_item_margins_size.width - left - right, 0.0));
             }
         }
 
@@ -183,7 +183,7 @@ pub(super) fn align_and_position_item(
     let height = height.or_else(|| {
         if position == Position::Absolute {
             if let (Some(top), Some(bottom)) = (inset_vertical.start, inset_vertical.end) {
-                return Some(f32_max(grid_area_minus_item_margins_size.height - top - bottom, 0.0_f32));
+                return Some(f32_max(grid_area_minus_item_margins_size.height - top - bottom, 0.0));
             }
         }
 
@@ -243,7 +243,7 @@ pub(super) fn align_and_position_item(
         position,
         inset_horizontal,
         margin.horizontal_components(),
-        0.0_f32,
+        0.0,
         direction,
     );
     let (y, y_margin) = align_item_within_area(
@@ -258,8 +258,8 @@ pub(super) fn align_and_position_item(
     );
 
     let scrollbar_size = Size {
-        width: if overflow.y == Overflow::Scroll { scrollbar_width } else { 0.0_f32 },
-        height: if overflow.x == Overflow::Scroll { scrollbar_width } else { 0.0_f32 },
+        width: if overflow.y == Overflow::Scroll { scrollbar_width } else { 0.0 },
+        height: if overflow.x == Overflow::Scroll { scrollbar_width } else { 0.0 },
     };
 
     let resolved_margin = Rect { left: x_margin.start, right: x_margin.end, top: y_margin.start, bottom: y_margin.end };
@@ -305,13 +305,13 @@ pub(super) fn align_item_within_area(
     direction: Direction,
 ) -> (f32, Line<f32>) {
     // Calculate grid area dimension in the axis
-    let non_auto_margin = Line { start: margin.start.unwrap_or(0.0_f32) + baseline_shim, end: margin.end.unwrap_or(0.0_f32) };
-    let grid_area_size = f32_max(grid_area.end - grid_area.start, 0.0_f32);
-    let free_space = f32_max(grid_area_size - resolved_size - non_auto_margin.sum(), 0.0_f32);
+    let non_auto_margin = Line { start: margin.start.unwrap_or(0.0) + baseline_shim, end: margin.end.unwrap_or(0.0) };
+    let grid_area_size = f32_max(grid_area.end - grid_area.start, 0.0);
+    let free_space = f32_max(grid_area_size - resolved_size - non_auto_margin.sum(), 0.0);
 
     // Expand auto margins to fill available space
     let auto_margin_count = margin.start.is_none() as u8 + margin.end.is_none() as u8;
-    let auto_margin_size = if auto_margin_count > 0 { free_space / auto_margin_count as f32 } else { 0.0_f32 };
+    let auto_margin_size = if auto_margin_count > 0 { free_space / auto_margin_count as f32 } else { 0.0 };
     let resolved_margin = Line {
         start: margin.start.unwrap_or(auto_margin_size) + baseline_shim,
         end: margin.end.unwrap_or(auto_margin_size),
@@ -319,7 +319,7 @@ pub(super) fn align_item_within_area(
 
     // If the alignment uses a "safe" overflow-position keyword and the item would overflow
     // its grid area, fall back to logical Start to avoid data loss. See CSS Box Alignment 3
-    // §4.3_f32 <https://www.w3.org/TR/css-align-3/#overflow-values>. Otherwise, drop the safety
+    // §4.3 <https://www.w3.org/TR/css-align-3/#overflow-values>. Otherwise, drop the safety
     // field so the match below operates on a bare keyword and stays exhaustive.
     let overflows = resolved_size + non_auto_margin.sum() > grid_area_size;
     let alignment_keyword =
@@ -374,7 +374,7 @@ pub(super) fn align_item_within_area(
         } else {
             inset.start.or(inset.end.map(|pos| -pos))
         };
-        start += relative_inset.unwrap_or(0.0_f32);
+        start += relative_inset.unwrap_or(0.0);
     }
 
     (start, resolved_margin)

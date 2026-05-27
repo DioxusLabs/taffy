@@ -139,7 +139,7 @@ fn into_yg_units(dim: impl Into<tf::Dimension>) -> yg::StyleUnit {
 }
 
 fn into_pixels(dim: impl Into<tf::Dimension>) -> f32 {
-    dim.into().into_option().unwrap_or(0.0_f32)
+    dim.into().into_option().unwrap_or(0.0)
 }
 
 fn items_into_align(align: Option<tf::AlignSelf>) -> yg::Align {

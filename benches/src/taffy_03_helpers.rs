@@ -14,7 +14,7 @@ pub struct Taffy03TreeBuilder<R: Rng, G: GenStyle<TaffyStyle>> {
 
 // Implement the BuildTree trait
 impl<R: Rng, G: GenStyle<TaffyStyle>> BuildTree<R, G> for Taffy03TreeBuilder<R, G> {
-    const NAME: &'static str = "Taffy 0.3_f32";
+    const NAME: &'static str = "Taffy 0.3";
     type Tree = taffy_03::Taffy;
     type Node = taffy_03::prelude::Node;
 
@@ -153,7 +153,7 @@ fn convert_display(input: taffy::style::Display) -> taffy_03::style::Display {
         taffy::style::Display::None => taffy_03::style::Display::None,
         taffy::style::Display::Flex => taffy_03::style::Display::Flex,
         taffy::style::Display::Grid => taffy_03::style::Display::Grid,
-        taffy::style::Display::Block => panic!("Block layout not implemented in taffy 0.3_f32"),
+        taffy::style::Display::Block => panic!("Block layout not implemented in taffy 0.3"),
     }
 }
 
