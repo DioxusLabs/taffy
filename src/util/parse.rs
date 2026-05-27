@@ -56,7 +56,7 @@ macro_rules! from_str_from_css {
         impl core::str::FromStr for $ty {
             type Err = $crate::ParseError;
             fn from_str(input: &str) -> Result<Self, Self::Err> {
-                parse_css_str_entirely(input)
+                $crate::util::parse::parse_css_str_entirely(input)
             }
         }
     };

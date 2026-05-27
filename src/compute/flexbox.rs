@@ -2,8 +2,8 @@
 use crate::compute::common::alignment::compute_alignment_offset;
 use crate::geometry::{Line, Point, Rect, Size};
 use crate::style::{
-    AlignContent, AlignItems, AlignSelf, AvailableSpace, FlexWrap, JustifyContent, LengthPercentageAuto, Overflow,
-    Position,
+    AlignContent, AlignContentKeyword, AlignItems, AlignItemsKeyword, AlignSelf, AvailableSpace, FlexWrap,
+    JustifyContent, LengthPercentageAuto, Overflow, Position,
 };
 use crate::style::{CoreStyle, FlexDirection, FlexboxContainerStyle, FlexboxItemStyle};
 use crate::style_helpers::{TaffyMaxContent, TaffyMinContent};
@@ -1698,9 +1698,8 @@ fn distribute_remaining_free_space(flex_lines: &mut [FlexLine], constants: &Algo
         let num_items = line.items.len();
         let layout_reverse = constants.dir.is_reverse();
         let gap = constants.gap.main(constants.dir);
-        let is_safe = false; // TODO: Implement safe alignment
         let raw_justify_content_mode = constants.justify_content.unwrap_or(JustifyContent::FlexStart);
-        let justify_content_mode = apply_alignment_fallback(free_space, num_items, raw_justify_content_mode, is_safe);
+        let justify_content_mode = apply_alignment_fallback(free_space, num_items, raw_justify_content_mode);
 
         let justify_item = |(i, child): (usize, &mut FlexItem)| {
             child.offset_main =
@@ -1779,37 +1778,47 @@ fn align_flex_items_along_cross_axis(
 ) -> f32 {
     let cross_axis_should_reverse = constants.is_column && matches!(constants.layout_direction, Direction::Rtl);
 
-    match child.align_self {
-        AlignSelf::Start => {
+    // If align-self uses a "safe" overflow-position keyword and the item would overflow its
+    // line cross size, fall back to logical Start to avoid data loss. See CSS Box Alignment 3
+    // §4.3 <https://www.w3.org/TR/css-align-3/#overflow-values>. Otherwise, drop the safety
+    // field so the match below operates on a bare keyword and stays exhaustive.
+    let align_keyword = if child.align_self.is_safe() && free_space < 0.0 {
+        AlignItemsKeyword::Start
+    } else {
+        child.align_self.keyword
+    };
+
+    match align_keyword {
+        AlignItemsKeyword::Start => {
             if cross_axis_should_reverse {
                 free_space
             } else {
                 0.0
             }
         }
-        AlignSelf::FlexStart => {
+        AlignItemsKeyword::FlexStart => {
             if constants.is_wrap_reverse ^ cross_axis_should_reverse {
                 free_space
             } else {
                 0.0
             }
         }
-        AlignSelf::End => {
+        AlignItemsKeyword::End => {
             if cross_axis_should_reverse {
                 0.0
             } else {
                 free_space
             }
         }
-        AlignSelf::FlexEnd => {
+        AlignItemsKeyword::FlexEnd => {
             if constants.is_wrap_reverse ^ cross_axis_should_reverse {
                 0.0
             } else {
                 free_space
             }
         }
-        AlignSelf::Center => free_space / 2.0,
-        AlignSelf::Baseline => {
+        AlignItemsKeyword::Center => free_space / 2.0,
+        AlignItemsKeyword::Baseline => {
             if constants.is_row {
                 max_baseline - child.baseline
             } else {
@@ -1823,7 +1832,7 @@ fn align_flex_items_along_cross_axis(
                 }
             }
         }
-        AlignSelf::Stretch => {
+        AlignItemsKeyword::Stretch => {
             if constants.is_wrap_reverse ^ cross_axis_should_reverse {
                 free_space
             } else {
@@ -1880,9 +1889,8 @@ fn align_flex_lines_per_align_content(flex_lines: &mut [FlexLine], constants: &A
     let gap = constants.gap.cross(constants.dir);
     let total_cross_axis_gap = sum_axis_gaps(gap, num_lines);
     let free_space = constants.inner_container_size.cross(constants.dir) - total_cross_size - total_cross_axis_gap;
-    let is_safe = false; // TODO: Implement safe alignment
 
-    let align_content_mode = apply_alignment_fallback(free_space, num_lines, constants.align_content, is_safe);
+    let align_content_mode = apply_alignment_fallback(free_space, num_lines, constants.align_content);
 
     let align_line = |(i, line): (usize, &mut FlexLine)| {
         line.offset_cross =
@@ -2326,40 +2334,45 @@ fn perform_absolute_layout_on_absolute_children(
         } else {
             // Stretch is an invalid value for justify_content in the flexbox algorithm, so we
             // treat it as if it wasn't set (and thus we default to FlexStart behaviour)
-            match (constants.justify_content.unwrap_or(JustifyContent::Start), main_axis_flex_start_reversed) {
-                (JustifyContent::SpaceBetween, _)
-                | (JustifyContent::Stretch, false)
-                | (JustifyContent::FlexStart, false)
-                | (JustifyContent::FlexEnd, true) => {
+            // TODO (safe alignment): apply Start fallback when justify_content.is_safe() and the
+            // resolved size overflows the containing block. Wired in a follow-up commit.
+            match (constants.justify_content.unwrap_or(JustifyContent::Start).keyword(), main_axis_flex_start_reversed)
+            {
+                (AlignContentKeyword::SpaceBetween, _)
+                | (AlignContentKeyword::Stretch, false)
+                | (AlignContentKeyword::FlexStart, false)
+                | (AlignContentKeyword::FlexEnd, true) => {
                     constants.content_box_inset.main_start(constants.dir) + resolved_margin.main_start(constants.dir)
                 }
-                (JustifyContent::Start, false) => {
+                (AlignContentKeyword::Start, false) => {
                     constants.content_box_inset.main_start(constants.dir) + resolved_margin.main_start(constants.dir)
                 }
-                (JustifyContent::Start, true) => {
+                (AlignContentKeyword::Start, true) => {
                     constants.container_size.main(constants.dir)
                         - constants.content_box_inset.main_end(constants.dir)
                         - final_size.main(constants.dir)
                         - resolved_margin.main_end(constants.dir)
                 }
-                (JustifyContent::End, false) => {
+                (AlignContentKeyword::End, false) => {
                     constants.container_size.main(constants.dir)
                         - constants.content_box_inset.main_end(constants.dir)
                         - final_size.main(constants.dir)
                         - resolved_margin.main_end(constants.dir)
                 }
-                (JustifyContent::End, true) => {
+                (AlignContentKeyword::End, true) => {
                     constants.content_box_inset.main_start(constants.dir) + resolved_margin.main_start(constants.dir)
                 }
-                (JustifyContent::FlexEnd, false)
-                | (JustifyContent::FlexStart, true)
-                | (JustifyContent::Stretch, true) => {
+                (AlignContentKeyword::FlexEnd, false)
+                | (AlignContentKeyword::FlexStart, true)
+                | (AlignContentKeyword::Stretch, true) => {
                     constants.container_size.main(constants.dir)
                         - constants.content_box_inset.main_end(constants.dir)
                         - final_size.main(constants.dir)
                         - resolved_margin.main_end(constants.dir)
                 }
-                (JustifyContent::SpaceEvenly, _) | (JustifyContent::SpaceAround, _) | (JustifyContent::Center, _) => {
+                (AlignContentKeyword::SpaceEvenly, _)
+                | (AlignContentKeyword::SpaceAround, _)
+                | (AlignContentKeyword::Center, _) => {
                     (constants.container_size.main(constants.dir)
                         + constants.content_box_inset.main_start(constants.dir)
                         - constants.content_box_inset.main_end(constants.dir)
@@ -2395,40 +2408,42 @@ fn perform_absolute_layout_on_absolute_children(
                     - resolved_margin.cross_end(constants.dir)
             }
         } else {
-            match (align_self, cross_axis_flex_start_reversed) {
+            // TODO (safe alignment): apply Start fallback when align_self.is_safe() and the
+            // resolved size overflows the containing block. Wired in a follow-up commit.
+            match (align_self.keyword(), cross_axis_flex_start_reversed) {
                 // Stretch alignment does not apply to absolutely positioned items
                 // See "Example 3" at https://www.w3.org/TR/css-flexbox-1/#abspos-items
                 // Note: Stretch should be FlexStart not Start when we support both
-                (AlignSelf::Start, false) => {
+                (AlignItemsKeyword::Start, false) => {
                     constants.content_box_inset.cross_start(constants.dir) + resolved_margin.cross_start(constants.dir)
                 }
-                (AlignSelf::Start, true) => {
+                (AlignItemsKeyword::Start, true) => {
                     constants.container_size.cross(constants.dir)
                         - constants.content_box_inset.cross_end(constants.dir)
                         - final_size.cross(constants.dir)
                         - resolved_margin.cross_end(constants.dir)
                 }
-                (AlignSelf::End, false) => {
+                (AlignItemsKeyword::End, false) => {
                     constants.container_size.cross(constants.dir)
                         - constants.content_box_inset.cross_end(constants.dir)
                         - final_size.cross(constants.dir)
                         - resolved_margin.cross_end(constants.dir)
                 }
-                (AlignSelf::End, true) => {
+                (AlignItemsKeyword::End, true) => {
                     constants.content_box_inset.cross_start(constants.dir) + resolved_margin.cross_start(constants.dir)
                 }
-                (AlignSelf::Baseline | AlignSelf::Stretch | AlignSelf::FlexStart, false)
-                | (AlignSelf::FlexEnd, true) => {
+                (AlignItemsKeyword::Baseline | AlignItemsKeyword::Stretch | AlignItemsKeyword::FlexStart, false)
+                | (AlignItemsKeyword::FlexEnd, true) => {
                     constants.content_box_inset.cross_start(constants.dir) + resolved_margin.cross_start(constants.dir)
                 }
-                (AlignSelf::Baseline | AlignSelf::Stretch | AlignSelf::FlexStart, true)
-                | (AlignSelf::FlexEnd, false) => {
+                (AlignItemsKeyword::Baseline | AlignItemsKeyword::Stretch | AlignItemsKeyword::FlexStart, true)
+                | (AlignItemsKeyword::FlexEnd, false) => {
                     constants.container_size.cross(constants.dir)
                         - constants.content_box_inset.cross_end(constants.dir)
                         - final_size.cross(constants.dir)
                         - resolved_margin.cross_end(constants.dir)
                 }
-                (AlignSelf::Center, _) => {
+                (AlignItemsKeyword::Center, _) => {
                     (constants.container_size.cross(constants.dir)
                         + constants.content_box_inset.cross_start(constants.dir)
                         - constants.content_box_inset.cross_end(constants.dir)

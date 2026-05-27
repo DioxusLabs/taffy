@@ -6,5 +6,6 @@ mod hand_written {
     mod relayout;
     mod root_constraints;
     mod rounding;
+    mod safe_alignment;
     mod serde;
 }
