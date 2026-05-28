@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+
+- CSS Grid content size now includes explicit track extents and auto-placed item positions (#954)
+
 ## 0.10.1
 
 ### Fixed
