@@ -815,6 +815,11 @@ impl<S: CheapCloneStr> BlockContainerStyle for Style<S> {
     fn text_align(&self) -> TextAlign {
         self.text_align
     }
+
+    #[inline(always)]
+    fn align_content(&self) -> Option<AlignContent> {
+        self.align_content
+    }
 }
 
 #[cfg(feature = "block_layout")]
@@ -822,6 +827,11 @@ impl<T: BlockContainerStyle> BlockContainerStyle for &'_ T {
     #[inline(always)]
     fn text_align(&self) -> TextAlign {
         (*self).text_align()
+    }
+
+    #[inline(always)]
+    fn align_content(&self) -> Option<AlignContent> {
+        (*self).align_content()
     }
 }
 
