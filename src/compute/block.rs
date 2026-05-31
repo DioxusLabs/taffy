@@ -181,8 +181,8 @@ impl BlockContext<'_> {
     }
 }
 
-#[cfg(feature = "content_size")]
 use super::common::alignment::{apply_alignment_fallback, compute_alignment_offset};
+#[cfg(feature = "content_size")]
 use super::common::content_size::compute_content_size_contribution;
 
 /// Per-child data that is accumulated and modified over the course of the layout algorithm
