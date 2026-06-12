@@ -1,5 +1,20 @@
 //! Generic CSS alignment code that is shared between both the Flexbox and CSS Grid algorithms.
-use crate::style::{AlignContent, AlignContentKeyword, AlignmentSafety};
+use crate::style::{AlignContent, AlignContentKeyword, AlignItems, AlignItemsKeyword, AlignmentSafety};
+
+/// Resolve the `safe`/`unsafe` overflow-position fallback for a self-level alignment value
+/// (used by `align-self` / `justify-self`-style sites and by absolutely-positioned items in
+/// flex/grid). If the alignment subject overflows its alignment container and the requested
+/// alignment is `safe`, fall back to logical `Start` per CSS Box Alignment
+/// <https://www.w3.org/TR/css-align-3/#overflow-values>. Otherwise drop the safety modifier
+/// and return the bare keyword.
+#[inline]
+pub(crate) fn resolve_self_alignment_safety(alignment: AlignItems, overflows: bool) -> AlignItemsKeyword {
+    if matches!(alignment.safety, AlignmentSafety::Safe) && overflows {
+        AlignItemsKeyword::Start
+    } else {
+        alignment.keyword
+    }
+}
 
 /// Resolve any spec-defined fallbacks for the given [`AlignContent`] value, returning the
 /// bare position keyword the alignment math should use.
