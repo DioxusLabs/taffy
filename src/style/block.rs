@@ -1,4 +1,5 @@
 //! Style types for Block layout
+use crate::style::AlignContent;
 use crate::{CoreStyle, Style};
 
 /// The set of styles required for a Block layout container
@@ -7,6 +8,12 @@ pub trait BlockContainerStyle: CoreStyle {
     #[inline(always)]
     fn text_align(&self) -> TextAlign {
         Style::<Self::CustomIdent>::DEFAULT.text_align
+    }
+
+    /// How children of this block container are aligned in the block (cross) axis
+    #[inline(always)]
+    fn align_content(&self) -> Option<AlignContent> {
+        Style::<Self::CustomIdent>::DEFAULT.align_content
     }
 }
 
