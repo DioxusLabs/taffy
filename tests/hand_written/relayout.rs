@@ -13,7 +13,7 @@ fn relayout() {
     let node0 = taffy
         .new_with_children(
             taffy::style::Style {
-                align_self: Some(taffy::prelude::AlignSelf::Center),
+                align_self: Some(taffy::prelude::AlignSelf::CENTER),
                 size: taffy::geometry::Size { width: Dimension::AUTO, height: Dimension::AUTO },
                 // size: taffy::geometry::Size { width: Dimension::Percent(1.0), height: Dimension::Percent(1.0) },
                 ..Default::default()
@@ -341,7 +341,7 @@ fn relayout_is_stable_with_rounding() {
         .new_with_children(
             Style {
                 size: Size { width: length(150.), height: auto() },
-                justify_content: Some(JustifyContent::End),
+                justify_content: Some(JustifyContent::END),
                 ..Default::default()
             },
             &[inner],
