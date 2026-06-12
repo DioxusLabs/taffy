@@ -734,8 +734,15 @@ fn perform_final_layout_on_in_flow_children(
     let container_percentage_resolution_height =
         container_percentage_resolution_height.maybe_sub(resolved_content_box_inset.vertical_axis_sum());
     let parent_size = Size { width: Some(container_inner_width), height: container_percentage_resolution_height };
+    // Vertical available space in block flow is indefinite, NOT a min-content
+    // constraint: MaxContent is taffy's representation of "indefinite".
+    // Passing MinContent here made every descendant grid believe it was being
+    // sized under a min-content constraint, in which the maximize-tracks step
+    // has zero free space — so auto rows containing only scroll-container
+    // items (overflow != visible, automatic minimum size = 0) collapsed to
+    // zero height. Browsers size such rows to the item's content.
     let available_space =
-        Size { width: AvailableSpace::Definite(container_inner_width), height: AvailableSpace::MinContent };
+        Size { width: AvailableSpace::Definite(container_inner_width), height: AvailableSpace::MaxContent };
 
     // TODO: handle nested blocks with different widths
     #[cfg(feature = "float_layout")]
