@@ -362,7 +362,7 @@ pub(super) fn track_sizing_algorithm<Tree: LayoutPartialTree>(
 
     // 11.8. Stretch auto Tracks
     // This step expands tracks that have an auto max track sizing function by dividing any remaining positive, definite free space equally amongst them.
-    if axis_alignment == AlignContent::Stretch {
+    if axis_alignment == AlignContent::STRETCH {
         stretch_auto_tracks(axis_tracks, axis_min_size, axis_available_space_for_expansion);
     }
 }
@@ -485,7 +485,7 @@ fn resolve_item_baselines(
         // Count how many items in *this row* are baseline aligned
         // If a row has one or zero items participating in baseline alignment then baseline alignment is a no-op
         // for those items and we skip further computations for that row
-        let row_baseline_item_count = row_items.iter().filter(|item| item.align_self == AlignSelf::Baseline).count();
+        let row_baseline_item_count = row_items.iter().filter(|item| item.align_self == AlignSelf::BASELINE).count();
         if row_baseline_item_count <= 1 {
             continue;
         }

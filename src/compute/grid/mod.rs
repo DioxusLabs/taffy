@@ -95,8 +95,8 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
         Direction::Rtl => content_box_inset.left += scrollbar_gutter.x,
     };
 
-    let align_content = style.align_content().unwrap_or(AlignContent::Stretch);
-    let justify_content = style.justify_content().unwrap_or(JustifyContent::Stretch);
+    let align_content = style.align_content().unwrap_or(AlignContent::STRETCH);
+    let justify_content = style.justify_content().unwrap_or(JustifyContent::STRETCH);
     let align_items = style.align_items();
     let justify_items = style.justify_items();
 
@@ -215,8 +215,8 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
         in_flow_children_iter,
         direction,
         style.grid_auto_flow(),
-        align_items.unwrap_or(AlignItems::Stretch),
-        justify_items.unwrap_or(AlignItems::Stretch),
+        align_items.unwrap_or(AlignItems::STRETCH),
+        justify_items.unwrap_or(AlignItems::STRETCH),
         &name_resolver,
     );
 
@@ -272,7 +272,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     determine_if_item_crosses_flexible_or_intrinsic_tracks(&mut items, &columns, &rows);
 
     // Determine if the grid has any baseline aligned items
-    let has_baseline_aligned_item = items.iter().any(|item| item.align_self == AlignSelf::Baseline);
+    let has_baseline_aligned_item = items.iter().any(|item| item.align_self == AlignSelf::BASELINE);
 
     // Run track sizing algorithm for Inline axis
     track_sizing_algorithm(
@@ -717,10 +717,10 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
         let first_row_items = &items[0..].split(|item| item.row_indexes.start != first_row).next().unwrap();
 
         // Check if any items in *this row* are baseline aligned
-        let row_has_baseline_item = first_row_items.iter().any(|item| item.align_self == AlignSelf::Baseline);
+        let row_has_baseline_item = first_row_items.iter().any(|item| item.align_self == AlignSelf::BASELINE);
 
         let item = if row_has_baseline_item {
-            first_row_items.iter().find(|item| item.align_self == AlignSelf::Baseline).unwrap()
+            first_row_items.iter().find(|item| item.align_self == AlignSelf::BASELINE).unwrap()
         } else {
             &first_row_items[0]
         };

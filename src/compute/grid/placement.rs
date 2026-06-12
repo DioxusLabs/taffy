@@ -545,8 +545,8 @@ mod tests {
                 children_iter,
                 Direction::Ltr,
                 flow,
-                AlignSelf::Start,
-                AlignSelf::Start,
+                AlignSelf::START,
+                AlignSelf::START,
                 // TODO: actually test named line resolution
                 &name_resolver,
             );
