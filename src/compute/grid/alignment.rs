@@ -1,6 +1,8 @@
 //! Alignment of tracks and final positioning of items
 use super::types::GridTrack;
-use crate::compute::common::alignment::{apply_alignment_fallback, compute_alignment_offset};
+use crate::compute::common::alignment::{
+    apply_alignment_fallback, compute_alignment_offset, resolve_self_alignment_safety,
+};
 use crate::geometry::{InBothAbsAxis, Line, Point, Rect, Size};
 use crate::style::{
     AlignContent, AlignItems, AlignItemsKeyword, AlignSelf, AvailableSpace, CoreStyle, GridItemStyle, Overflow,
@@ -317,13 +319,8 @@ pub(super) fn align_item_within_area(
         end: margin.end.unwrap_or(auto_margin_size),
     };
 
-    // If the alignment uses a "safe" overflow-position keyword and the item would overflow
-    // its grid area, fall back to logical Start to avoid data loss. See CSS Box Alignment 3
-    // §4.3 <https://www.w3.org/TR/css-align-3/#overflow-values>. Otherwise, drop the safety
-    // field so the match below operates on a bare keyword and stays exhaustive.
     let overflows = resolved_size + non_auto_margin.sum() > grid_area_size;
-    let alignment_keyword =
-        if alignment_style.is_safe() && overflows { AlignItemsKeyword::Start } else { alignment_style.keyword() };
+    let alignment_keyword = resolve_self_alignment_safety(alignment_style, overflows);
 
     // Compute offset in the axis
     let alignment_based_offset = match alignment_keyword {

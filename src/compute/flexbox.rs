@@ -1,5 +1,5 @@
 //! Computes the [flexbox](https://css-tricks.com/snippets/css/a-guide-to-flexbox/) layout algorithm on [`TaffyTree`](crate::TaffyTree) according to the [spec](https://www.w3.org/TR/css-flexbox-1/)
-use crate::compute::common::alignment::compute_alignment_offset;
+use crate::compute::common::alignment::{compute_alignment_offset, resolve_self_alignment_safety};
 use crate::geometry::{Line, Point, Rect, Size};
 use crate::style::{
     AlignContent, AlignContentKeyword, AlignItems, AlignItemsKeyword, AlignSelf, AvailableSpace, FlexWrap,
@@ -2333,9 +2333,13 @@ fn perform_absolute_layout_on_absolute_children(
             }
         } else {
             // Stretch is an invalid value for justify_content in the flexbox algorithm, so we
-            // treat it as if it wasn't set (and thus we default to FlexStart behaviour)
-            // TODO (safe alignment): apply Start fallback when justify_content.is_safe() and the
-            // resolved size overflows the containing block. Wired in a follow-up commit.
+            // treat it as if it wasn't set (and thus we default to FlexStart behaviour).
+            //
+            // The `safe` overflow-position keyword is intentionally NOT applied here, even when
+            // the abs-positioned item would overflow the main axis: Chrome does not apply safe
+            // fallback to `justify-content` on absolutely-positioned flex items (only the
+            // cross-axis `align-self` does so). Matching the layout authority over a strict
+            // spec read keeps gentest fixtures green; reconsider if Chromium changes behavior.
             match (constants.justify_content.unwrap_or(JustifyContent::START).keyword(), main_axis_flex_start_reversed)
             {
                 (AlignContentKeyword::SpaceBetween, _)
@@ -2408,9 +2412,11 @@ fn perform_absolute_layout_on_absolute_children(
                     - resolved_margin.cross_end(constants.dir)
             }
         } else {
-            // TODO (safe alignment): apply Start fallback when align_self.is_safe() and the
-            // resolved size overflows the containing block. Wired in a follow-up commit.
-            match (align_self.keyword(), cross_axis_flex_start_reversed) {
+            let cross_overflows = final_size.cross(constants.dir) + resolved_margin.cross_axis_sum(constants.dir)
+                > constants.container_size.cross(constants.dir)
+                    - constants.content_box_inset.cross_axis_sum(constants.dir);
+            let cross_keyword = resolve_self_alignment_safety(align_self, cross_overflows);
+            match (cross_keyword, cross_axis_flex_start_reversed) {
                 // Stretch alignment does not apply to absolutely positioned items
                 // See "Example 3" at https://www.w3.org/TR/css-flexbox-1/#abspos-items
                 // Note: Stretch should be FlexStart not Start when we support both
