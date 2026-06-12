@@ -471,24 +471,23 @@ fn compute_inner(
 
     // Apply `align-content` to in-flow non-floated items if requested. The per-item layouts were
     // held back in `item.final_layout` so that this step can shift `location.y` before tree commit.
+    //
+    // For block layout the entire stack of in-flow children is treated as a single alignment
+    // subject. That means distribution keywords (`space-between`, `space-around`,
+    // `space-evenly`, `stretch`) must invoke the single-subject fallback unconditionally —
+    // which is what passing `num_items = 1` to `apply_alignment_fallback` does. The whole
+    // group then shifts by one offset, with zero inter-item gap.
     if let Some(align_content) = align_content {
         let container_inner_height = container_outer_height - resolved_content_box_inset.vertical_axis_sum();
         let inflow_content_height = intrinsic_outer_height - resolved_content_box_inset.vertical_axis_sum();
         let free_space = container_inner_height - inflow_content_height;
-        let in_flow_count = items.iter().filter(|item| item.final_layout.is_some()).count();
-        if in_flow_count > 0 {
-            let keyword = apply_alignment_fallback(free_space, in_flow_count, align_content);
-            let first_offset = compute_alignment_offset(free_space, in_flow_count, 0.0, keyword, false, true);
-            let inter_gap = compute_alignment_offset(free_space, in_flow_count, 0.0, keyword, false, false);
-            let mut cumulative_offset = first_offset;
-            let mut idx = 0usize;
+        let any_in_flow = items.iter().any(|item| item.final_layout.is_some());
+        if any_in_flow {
+            let keyword = apply_alignment_fallback(free_space, 1, align_content);
+            let group_offset = compute_alignment_offset(free_space, 1, 0.0, keyword, false, true);
             for item in items.iter_mut() {
                 if let Some(layout) = item.final_layout.as_mut() {
-                    if idx > 0 {
-                        cumulative_offset += inter_gap;
-                    }
-                    layout.location.y += cumulative_offset;
-                    idx += 1;
+                    layout.location.y += group_offset;
                 }
             }
 
