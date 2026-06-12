@@ -127,16 +127,16 @@ pub(super) fn align_and_position_item(
     let alignment_styles = InBothAbsAxis {
         horizontal: justify_self.or(container_alignment_styles.horizontal).unwrap_or_else(|| {
             if inherent_size.width.is_some() {
-                AlignSelf::Start
+                AlignSelf::START
             } else {
-                AlignSelf::Stretch
+                AlignSelf::STRETCH
             }
         }),
         vertical: align_self.or(container_alignment_styles.vertical).unwrap_or_else(|| {
             if inherent_size.height.is_some() || aspect_ratio.is_some() {
-                AlignSelf::Start
+                AlignSelf::START
             } else {
-                AlignSelf::Stretch
+                AlignSelf::STRETCH
             }
         }),
     };
@@ -168,7 +168,7 @@ pub(super) fn align_and_position_item(
         //  - The node does not have auto margins in this axis.
         if margin.left.is_some()
             && margin.right.is_some()
-            && alignment_styles.horizontal == AlignSelf::Stretch
+            && alignment_styles.horizontal == AlignSelf::STRETCH
             && position != Position::Absolute
         {
             return Some(grid_area_minus_item_margins_size.width);
@@ -193,7 +193,7 @@ pub(super) fn align_and_position_item(
         //  - The node does not have auto margins in this axis.
         if margin.top.is_some()
             && margin.bottom.is_some()
-            && alignment_styles.vertical == AlignSelf::Stretch
+            && alignment_styles.vertical == AlignSelf::STRETCH
             && position != Position::Absolute
         {
             return Some(grid_area_minus_item_margins_size.height);

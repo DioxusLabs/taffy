@@ -11,7 +11,7 @@ fn main() -> Result<(), taffy::TaffyError> {
     let node = taffy.new_with_children(
         Style {
             size: Size { width: Dimension::from_length(100.0), height: Dimension::from_length(100.0) },
-            justify_content: Some(JustifyContent::Center),
+            justify_content: Some(JustifyContent::CENTER),
             ..Default::default()
         },
         &[child],

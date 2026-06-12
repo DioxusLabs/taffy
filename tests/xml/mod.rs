@@ -21563,6 +21563,54 @@ mod grid {
 
     #[cfg(feature = "grid")]
     #[test]
+    fn grid_percent_items_100_percent_2_col_auto__border_box_ltr() {
+        crate::run_xml_test("grid", "grid_percent_items_100_percent_2_col_auto__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_percent_items_100_percent_2_col_auto__content_box_ltr() {
+        crate::run_xml_test("grid", "grid_percent_items_100_percent_2_col_auto__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_percent_items_100_percent_2_col_auto__border_box_rtl() {
+        crate::run_xml_test("grid", "grid_percent_items_100_percent_2_col_auto__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_percent_items_100_percent_2_col_auto__content_box_rtl() {
+        crate::run_xml_test("grid", "grid_percent_items_100_percent_2_col_auto__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_percent_items_100_percent_2_col_fr__border_box_ltr() {
+        crate::run_xml_test("grid", "grid_percent_items_100_percent_2_col_fr__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_percent_items_100_percent_2_col_fr__content_box_ltr() {
+        crate::run_xml_test("grid", "grid_percent_items_100_percent_2_col_fr__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_percent_items_100_percent_2_col_fr__border_box_rtl() {
+        crate::run_xml_test("grid", "grid_percent_items_100_percent_2_col_fr__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_percent_items_100_percent_2_col_fr__content_box_rtl() {
+        crate::run_xml_test("grid", "grid_percent_items_100_percent_2_col_fr__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
     fn grid_percent_items_nested_inside_stretch_alignment__border_box_ltr() {
         crate::run_xml_test("grid", "grid_percent_items_nested_inside_stretch_alignment__border_box_ltr");
     }
@@ -21679,6 +21727,30 @@ mod grid {
     #[test]
     fn grid_percent_items_width_and_margin__content_box_rtl() {
         crate::run_xml_test("grid", "grid_percent_items_width_and_margin__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_percent_items_width_and_margin_2_col__border_box_ltr() {
+        crate::run_xml_test("grid", "grid_percent_items_width_and_margin_2_col__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_percent_items_width_and_margin_2_col__content_box_ltr() {
+        crate::run_xml_test("grid", "grid_percent_items_width_and_margin_2_col__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_percent_items_width_and_margin_2_col__border_box_rtl() {
+        crate::run_xml_test("grid", "grid_percent_items_width_and_margin_2_col__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_percent_items_width_and_margin_2_col__content_box_rtl() {
+        crate::run_xml_test("grid", "grid_percent_items_width_and_margin_2_col__content_box_rtl");
     }
 
     #[cfg(feature = "grid")]

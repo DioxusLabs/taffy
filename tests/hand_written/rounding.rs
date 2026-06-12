@@ -14,7 +14,7 @@ fn rounding_doesnt_leave_gaps() {
         .new_with_children(
             Style {
                 size: Size { width: length(963.3333), height: length(1000.) },
-                justify_content: Some(JustifyContent::Center),
+                justify_content: Some(JustifyContent::CENTER),
                 ..Default::default()
             },
             &[child_a, child_b],

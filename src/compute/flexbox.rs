@@ -399,7 +399,7 @@ fn compute_preliminary(tree: &mut impl LayoutFlexboxContainer, node: NodeId, inp
         flex_lines[0]
             .items
             .iter()
-            .find(|item| constants.is_column || item.align_self == AlignSelf::Baseline)
+            .find(|item| constants.is_column || item.align_self == AlignSelf::BASELINE)
             .or_else(|| flex_lines[0].items.iter().next())
             .map(|child| {
                 let offset_vertical = if constants.is_row { child.offset_cross } else { child.offset_main };
@@ -436,8 +436,8 @@ fn compute_constants(
     let box_sizing_adjustment =
         if style.box_sizing() == BoxSizing::ContentBox { padding_border_sum } else { Size::ZERO };
 
-    let align_items = style.align_items().unwrap_or(AlignItems::Stretch);
-    let align_content = style.align_content().unwrap_or(AlignContent::Stretch);
+    let align_items = style.align_items().unwrap_or(AlignItems::STRETCH);
+    let align_content = style.align_content().unwrap_or(AlignContent::STRETCH);
     let justify_content = style.justify_content();
     let layout_direction = style.direction();
 
@@ -683,7 +683,7 @@ fn determine_flex_base_size(
         // Known dimensions for child sizing
         let child_known_dimensions = {
             let mut ckd = child.size.with_main(dir, None);
-            if child.align_self == AlignSelf::Stretch
+            if child.align_self == AlignSelf::STRETCH
                 && !child.margin_is_auto.cross_start(constants.dir)
                 && !child.margin_is_auto.cross_end(constants.dir)
                 && ckd.cross(dir).is_none()
@@ -1048,7 +1048,7 @@ fn determine_container_main_size(
                                 // Known dimensions for child sizing
                                 let child_known_dimensions = {
                                     let mut ckd = item.size.with_main(dir, None);
-                                    if item.align_self == AlignSelf::Stretch && ckd.cross(dir).is_none() {
+                                    if item.align_self == AlignSelf::STRETCH && ckd.cross(dir).is_none() {
                                         ckd.set_cross(
                                             dir,
                                             cross_axis_available_space
@@ -1435,14 +1435,14 @@ fn calculate_children_base_lines(
     for line in flex_lines {
         // If a flex line has one or zero items participating in baseline alignment then baseline alignment is a no-op so we skip
         let line_baseline_child_count =
-            line.items.iter().filter(|child| child.align_self == AlignSelf::Baseline).count();
+            line.items.iter().filter(|child| child.align_self == AlignSelf::BASELINE).count();
         if line_baseline_child_count <= 1 {
             continue;
         }
 
         for child in line.items.iter_mut() {
             // Only calculate baselines for children participating in baseline alignment
-            if child.align_self != AlignSelf::Baseline {
+            if child.align_self != AlignSelf::BASELINE {
                 continue;
             }
 
@@ -1524,7 +1524,7 @@ fn calculate_cross_size(flex_lines: &mut [FlexLine], node_size: Size<Option<f32>
                 .items
                 .iter()
                 .map(|child| {
-                    if child.align_self == AlignSelf::Baseline
+                    if child.align_self == AlignSelf::BASELINE
                         && !child.margin_is_auto.cross_start(constants.dir)
                         && !child.margin_is_auto.cross_end(constants.dir)
                     {
@@ -1559,7 +1559,7 @@ fn calculate_cross_size(flex_lines: &mut [FlexLine], node_size: Size<Option<f32>
 ///   increase the cross size of each flex line by equal amounts such that the sum of their cross sizes exactly equals the flex container’s inner cross size.
 #[inline]
 fn handle_align_content_stretch(flex_lines: &mut [FlexLine], node_size: Size<Option<f32>>, constants: &AlgoConstants) {
-    if constants.align_content == AlignContent::Stretch {
+    if constants.align_content == AlignContent::STRETCH {
         let cross_axis_padding_border = constants.content_box_inset.cross_axis_sum(constants.dir);
         let cross_min_size = constants.min_size.cross(constants.dir);
         let cross_max_size = constants.max_size.cross(constants.dir);
@@ -1606,7 +1606,7 @@ fn determine_used_cross_size(
             let child_style = tree.get_flexbox_child_style(child.node);
             child.target_size.set_cross(
                 constants.dir,
-                if child.align_self == AlignSelf::Stretch
+                if child.align_self == AlignSelf::STRETCH
                     && !child.margin_is_auto.cross_start(constants.dir)
                     && !child.margin_is_auto.cross_end(constants.dir)
                     && child_style.size().cross(constants.dir).is_auto()
@@ -1698,7 +1698,7 @@ fn distribute_remaining_free_space(flex_lines: &mut [FlexLine], constants: &Algo
         let num_items = line.items.len();
         let layout_reverse = constants.dir.is_reverse();
         let gap = constants.gap.main(constants.dir);
-        let raw_justify_content_mode = constants.justify_content.unwrap_or(JustifyContent::FlexStart);
+        let raw_justify_content_mode = constants.justify_content.unwrap_or(JustifyContent::FLEX_START);
         let justify_content_mode = apply_alignment_fallback(free_space, num_items, raw_justify_content_mode);
 
         let justify_item = |(i, child): (usize, &mut FlexItem)| {
@@ -2336,7 +2336,7 @@ fn perform_absolute_layout_on_absolute_children(
             // treat it as if it wasn't set (and thus we default to FlexStart behaviour)
             // TODO (safe alignment): apply Start fallback when justify_content.is_safe() and the
             // resolved size overflows the containing block. Wired in a follow-up commit.
-            match (constants.justify_content.unwrap_or(JustifyContent::Start).keyword(), main_axis_flex_start_reversed)
+            match (constants.justify_content.unwrap_or(JustifyContent::START).keyword(), main_axis_flex_start_reversed)
             {
                 (AlignContentKeyword::SpaceBetween, _)
                 | (AlignContentKeyword::Stretch, false)
