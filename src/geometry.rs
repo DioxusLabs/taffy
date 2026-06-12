@@ -525,6 +525,17 @@ impl<T> Size<T> {
             AbstractAxis::Block => self.height = value,
         }
     }
+
+    /// Sets the extent of the specified layout axis
+    /// Whether this is the width or height depends on the `GridAxis` provided
+    #[cfg(feature = "grid")]
+    pub(crate) fn with(mut self, axis: AbstractAxis, value: T) -> Self {
+        match axis {
+            AbstractAxis::Inline => self.width = value,
+            AbstractAxis::Block => self.height = value,
+        }
+        self
+    }
 }
 
 impl Size<f32> {
