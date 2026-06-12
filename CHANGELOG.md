@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.11.0
+
+The MSRV for this release is 1.71.
+
+### Implemented safe alignment keywords (#952)
+
+Taffy now implements [safe alignment](https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/align-items#safe) (in addition to unsafe alignment).
+
+The alignment style types are now structs consisting of an `AlignmentKeyword` and an `AlignmentSafety` modifier. For most users this will mean changing from using enum variants like `AlignContent::Start` to associated constants like `AlignContent::START`.
+
+This change applies to the `AlignContent`, `JustifyContent`, `AlignItems`, `JustifyItems`, `AlignSelf`, and `JustifySelf` types.
+
+### Fixed
+
+- Grid: resolve item percentages against grid area rather than grid container (#960)
+
 ## 0.10.1
 
 ### Fixed
