@@ -363,7 +363,6 @@ fn compute_inner(
     let padding_border = padding + border;
     let padding_border_size = padding_border.sum_axes();
     let content_box_inset = padding_border + scrollbar_gutter;
-    let container_content_box_size = known_dimensions.maybe_sub(content_box_inset.sum_axes());
 
     // Apply content box inset
     #[cfg(feature = "float_layout")]
@@ -386,6 +385,19 @@ fn compute_inner(
         .maybe_resolve(parent_size, |val, basis| tree.calc(val, basis))
         .maybe_apply_aspect_ratio(aspect_ratio)
         .maybe_add(box_sizing_adjustment);
+
+    // css-sizing-4: a definite size in one axis transfers through `aspect-ratio`
+    // to make the other definite. Deriving it from `known_dimensions` self-gates
+    // the transfer — a block parent fills an axis only when it's a real
+    // constraint (e.g. the stretched width at final layout) and leaves it None
+    // while probing intrinsic sizes, so measure passes stay content-based. Only a
+    // newly-filled axis is adopted (and clamped); an incoming known size is left
+    // as the parent resolved it (re-clamping would undo padding/border overrides).
+    let known_dimensions = {
+        let derived = known_dimensions.maybe_apply_aspect_ratio(aspect_ratio).maybe_clamp(min_size, max_size);
+        Size { width: known_dimensions.width.or(derived.width), height: known_dimensions.height.or(derived.height) }
+    };
+    let container_content_box_size = known_dimensions.maybe_sub(content_box_inset.sum_axes());
 
     let overflow = style.overflow();
     let is_scroll_container = overflow.x.is_scroll_container() || overflow.y.is_scroll_container();
@@ -734,8 +746,15 @@ fn perform_final_layout_on_in_flow_children(
     let container_percentage_resolution_height =
         container_percentage_resolution_height.maybe_sub(resolved_content_box_inset.vertical_axis_sum());
     let parent_size = Size { width: Some(container_inner_width), height: container_percentage_resolution_height };
+    // Vertical available space in block flow is indefinite, NOT a min-content
+    // constraint: MaxContent is taffy's representation of "indefinite".
+    // Passing MinContent here made every descendant grid believe it was being
+    // sized under a min-content constraint, in which the maximize-tracks step
+    // has zero free space — so auto rows containing only scroll-container
+    // items (overflow != visible, automatic minimum size = 0) collapsed to
+    // zero height. Browsers size such rows to the item's content.
     let available_space =
-        Size { width: AvailableSpace::Definite(container_inner_width), height: AvailableSpace::MinContent };
+        Size { width: AvailableSpace::Definite(container_inner_width), height: AvailableSpace::MaxContent };
 
     // TODO: handle nested blocks with different widths
     #[cfg(feature = "float_layout")]

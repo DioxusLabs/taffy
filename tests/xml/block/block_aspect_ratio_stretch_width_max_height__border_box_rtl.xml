@@ -1,0 +1,17 @@
+<test name="block_aspect_ratio_stretch_width_max_height__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="block" direction="rtl" width="100px" height="200px">
+      <div display="block" direction="rtl" max-height="40px" aspect-ratio="1">
+        <div display="block" direction="rtl"/>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="100" height="200">
+      <node x="60" y="0" width="40" height="40">
+        <node x="0" y="0" width="40" height="0"/>
+      </node>
+    </node>
+  </expectations>
+</test>

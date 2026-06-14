@@ -1666,6 +1666,66 @@ mod block {
     }
 
     #[test]
+    fn block_aspect_ratio_stretch_width__border_box_ltr() {
+        crate::run_xml_test("block", "block_aspect_ratio_stretch_width__border_box_ltr");
+    }
+
+    #[test]
+    fn block_aspect_ratio_stretch_width__content_box_ltr() {
+        crate::run_xml_test("block", "block_aspect_ratio_stretch_width__content_box_ltr");
+    }
+
+    #[test]
+    fn block_aspect_ratio_stretch_width__border_box_rtl() {
+        crate::run_xml_test("block", "block_aspect_ratio_stretch_width__border_box_rtl");
+    }
+
+    #[test]
+    fn block_aspect_ratio_stretch_width__content_box_rtl() {
+        crate::run_xml_test("block", "block_aspect_ratio_stretch_width__content_box_rtl");
+    }
+
+    #[test]
+    fn block_aspect_ratio_stretch_width_max_height__border_box_ltr() {
+        crate::run_xml_test("block", "block_aspect_ratio_stretch_width_max_height__border_box_ltr");
+    }
+
+    #[test]
+    fn block_aspect_ratio_stretch_width_max_height__content_box_ltr() {
+        crate::run_xml_test("block", "block_aspect_ratio_stretch_width_max_height__content_box_ltr");
+    }
+
+    #[test]
+    fn block_aspect_ratio_stretch_width_max_height__border_box_rtl() {
+        crate::run_xml_test("block", "block_aspect_ratio_stretch_width_max_height__border_box_rtl");
+    }
+
+    #[test]
+    fn block_aspect_ratio_stretch_width_max_height__content_box_rtl() {
+        crate::run_xml_test("block", "block_aspect_ratio_stretch_width_max_height__content_box_rtl");
+    }
+
+    #[test]
+    fn block_aspect_ratio_stretch_width_percentage_child__border_box_ltr() {
+        crate::run_xml_test("block", "block_aspect_ratio_stretch_width_percentage_child__border_box_ltr");
+    }
+
+    #[test]
+    fn block_aspect_ratio_stretch_width_percentage_child__content_box_ltr() {
+        crate::run_xml_test("block", "block_aspect_ratio_stretch_width_percentage_child__content_box_ltr");
+    }
+
+    #[test]
+    fn block_aspect_ratio_stretch_width_percentage_child__border_box_rtl() {
+        crate::run_xml_test("block", "block_aspect_ratio_stretch_width_percentage_child__border_box_rtl");
+    }
+
+    #[test]
+    fn block_aspect_ratio_stretch_width_percentage_child__content_box_rtl() {
+        crate::run_xml_test("block", "block_aspect_ratio_stretch_width_percentage_child__content_box_rtl");
+    }
+
+    #[test]
     fn block_basic__border_box_ltr() {
         crate::run_xml_test("block", "block_basic__border_box_ltr");
     }
