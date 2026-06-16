@@ -14,4 +14,4 @@ walkdir = "2.3.3"
 xmlwriter = "0.1"
 
 # Pin time to fix https://github.com/time-rs/time/issues/783
-time = "=0.3.47"
+time = "=0.3.49"
