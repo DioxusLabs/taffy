@@ -13,7 +13,7 @@ use crate::util::debug::debug_log;
 use crate::util::sys::{f32_max, new_vec_with_capacity, Vec};
 use crate::util::MaybeMath;
 use crate::util::{MaybeResolve, ResolveOrZero};
-use crate::{BoxGenerationMode, BoxSizing, Direction};
+use crate::{BoxGenerationMode, BoxSizing, Direction, RequestedAxis};
 
 use super::common::alignment::apply_alignment_fallback;
 #[cfg(feature = "content_size")]
@@ -209,6 +209,21 @@ pub fn compute_flexbox_layout(
     // The size of the container should be floored by the padding and border
     let styled_based_known_dimensions =
         known_dimensions.or(min_max_definite_size.or(clamped_style_size).maybe_max(padding_border_sum));
+
+    // Short-circuit layout if the container's size is fully determined by the container's size and the run mode
+    // is ComputeSize (and thus the container's size is all that we're interested in)
+    if run_mode == RunMode::ComputeSize {
+        if let Size { width: Some(width), height: Some(height) } = styled_based_known_dimensions {
+            return LayoutOutput::from_outer_size(Size { width, height });
+        }
+
+        // We can also short-circuit if the width is known and only the width has been requested.
+        if inputs.axis == RequestedAxis::Horizontal {
+            if let Some(width) = styled_based_known_dimensions.width {
+                return LayoutOutput::from_outer_size(Size { width, height: 0.0 });
+            }
+        }
+    }
 
     // Short-circuit layout if the container's size is fully determined by the container's size and the run mode
     // is ComputeSize (and thus the container's size is all that we're interested in)

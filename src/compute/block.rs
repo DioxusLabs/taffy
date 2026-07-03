@@ -303,6 +303,13 @@ pub fn compute_block_layout(
         if let Size { width: Some(width), height: Some(height) } = styled_based_known_dimensions {
             return LayoutOutput::from_outer_size(Size { width, height });
         }
+
+        // We can also short-circuit if the width is known and only the width has been requested.
+        if inputs.axis == RequestedAxis::Horizontal {
+            if let Some(width) = styled_based_known_dimensions.width {
+                return LayoutOutput::from_outer_size(Size { width, height: 0.0 });
+            }
+        }
     }
 
     // Unwrap the block formatting context if one was passed, or else create a new one
@@ -445,6 +452,11 @@ fn compute_inner(
     // Short-circuit if computing size and both dimensions known
     if let (RunMode::ComputeSize, Some(container_outer_height)) = (run_mode, known_dimensions.height) {
         return LayoutOutput::from_outer_size(Size { width: container_outer_width, height: container_outer_height });
+    }
+
+    // We can also short-circuit if the width is known and only the width has been requested.
+    if run_mode == RunMode::ComputeSize && inputs.axis == RequestedAxis::Horizontal {
+        return LayoutOutput::from_outer_size(Size { width: container_outer_width, height: 0.0 });
     }
 
     let container_percentage_resolution_height =
@@ -695,16 +707,15 @@ fn determine_content_based_container_width(
             .resolve_or_zero(available_space.width.into_option(), |val, basis| tree.calc(val, basis))
             .horizontal_axis_sum();
         let width = known_dimensions.width.unwrap_or_else(|| {
-            let size_and_baselines = tree.perform_child_layout(
+            tree.measure_child_size(
                 item.node_id,
                 known_dimensions,
                 Size::NONE,
                 available_space.map_width(|w| w.maybe_sub(item_x_margin_sum)),
                 SizingMode::InherentSize,
+                crate::AbsoluteAxis::Horizontal,
                 Line::TRUE,
-            );
-
-            size_and_baselines.size.width
+            )
         });
 
         let width = f32_max(width, item.padding_border_sum.width) + item_x_margin_sum;
