@@ -31,6 +31,8 @@ const BOTH_SIGN_BITS_MASK: u64 = SIGN_BIT_1 | SIGN_BIT_2;
 /// Mask of excluding the sign bits (used when setting/getting the size excluding the packed bits)
 const NON_SIGN_BITS_MASK: u64 = !BOTH_SIGN_BITS_MASK;
 
+const X_AXIS_VALUE_MASK : u64 = (u32::MAX as u64) << 32;
+
 /// Pack `Option<f32>` into `u32`
 #[inline(always)]
 fn option_cache_key(input: Option<f32>) -> u32 {
@@ -89,10 +91,19 @@ struct CacheKey {
 
 impl CacheKey {
     #[inline(always)]
+    #[allow(dead_code)]
     /// Return the parent size with the extra bits that encode the requested axis masked out
     fn parent_size(&self) -> u64 {
         self.parent_size & NON_SIGN_BITS_MASK
     }
+
+    /// Return the parent size with the extra bits that encode the requested axis masked out
+    /// And the y-axis value masked out
+    fn x_axis_parent_size(&self) -> u64 {
+        self.parent_size & (X_AXIS_VALUE_MASK & NON_SIGN_BITS_MASK)
+    }
+
+    
 }
 
 impl From<&LayoutInput> for CacheKey {
@@ -218,7 +229,7 @@ impl Cache {
             RunMode::ComputeSize => {
                 for entry in self.measure_entries.iter().flatten() {
                     if entry.key.kd_available_space == key.kd_available_space
-                        && (entry.key.parent_size() == key.parent_size())
+                        && (entry.key.x_axis_parent_size() == key.x_axis_parent_size())
                     {
                         return Some(LayoutOutput::from_outer_size(entry.content));
                     }
