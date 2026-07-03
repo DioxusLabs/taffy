@@ -20,10 +20,18 @@ const NEG_INFINITY_BITS: u32 = 0b_1_11111111_00000000000000000000000_u32;
 // /// A positive NaN f32 values as a u32
 // const SPECIFIC_NAN_BITS: u32 = 0b0_11111111_10000000000000000000001_u32;
 
-const A_ONE: u64 = 1u64 << 63;
-const B_ONE: u64 = 1u64 << 31;
-const CHECK_MASK: u64 = A_ONE | B_ONE;
-const SET_MASK: u64 = !CHECK_MASK;
+// The `CacheKey` encodes two f32s as a u64. We know that the f32s will always be
+// non-negative, so we pack two extra bits encoding the `RequestedAxis` into the
+// sign bits of the f32s. These constants help to encode and decode those bits.
+
+/// The sign bit of the first f32
+const SIGN_BIT_1: u64 = 1u64 << 63;
+/// The sign bit of the second f32
+const SIGN_BIT_2: u64 = 1u64 << 31;
+/// Mask of both sign bits (used to compute NON_SIGN_BITS_MASK)
+const BOTH_SIGN_BITS_MASK: u64 = SIGN_BIT_1 | SIGN_BIT_2;
+/// Mask of excluding the sign bits (used when setting/getting the size excluding the packed bits)
+const NON_SIGN_BITS_MASK: u64 = !BOTH_SIGN_BITS_MASK;
 
 /// Pack `Option<f32>` into `u32`
 #[inline(always)]
@@ -57,11 +65,15 @@ fn size_available_space_cache_key(input: Size<AvailableSpace>) -> u64 {
     (available_space_cache_key(input.width) as u64) << 32 | available_space_cache_key(input.height) as u64
 }
 
+/// Encodes combination of a `known_dimension` (Option<f32>) and `AvailableSpace` in
+/// a single dimension into a cache key in a single dimension.
 #[inline(always)]
 fn mixed_cache_key(kd: Option<f32>, avs: AvailableSpace) -> u32 {
     kd.map(|kd| kd.to_bits()).unwrap_or_else(|| available_space_cache_key(avs))
 }
 
+/// Encodes combination of a `known_dimension` (Option<f32>) and `AvailableSpace` in
+/// two dimensions into a cache key in a single dimension.
 #[inline(always)]
 fn size_mixed_cache_key(kd: Size<Option<f32>>, avs: Size<AvailableSpace>) -> u64 {
     (mixed_cache_key(kd.width, avs.width) as u64) << 32 | mixed_cache_key(kd.height, avs.height) as u64
@@ -77,18 +89,26 @@ struct CacheKey {
     parent_size: u64,
 }
 
+impl CacheKey {
+    #[inline(always)]
+    /// Return the parent size with the extra bits that encode the requested axis masked out
+    fn parent_size(&self) -> u64 {
+        self.parent_size & NON_SIGN_BITS_MASK
+    }
+}
+
 impl From<&LayoutInput> for CacheKey {
     fn from(input: &LayoutInput) -> Self {
         // Pack axis enum into spare bits in the known_dimensions and available_space values
         let extra_bits = match input.axis {
-            RequestedAxis::Horizontal => A_ONE,
-            RequestedAxis::Vertical => B_ONE,
-            RequestedAxis::Both => A_ONE | B_ONE,
+            RequestedAxis::Horizontal => SIGN_BIT_1,
+            RequestedAxis::Vertical => SIGN_BIT_2,
+            RequestedAxis::Both => SIGN_BIT_1 | SIGN_BIT_2,
         };
 
         Self {
             kd_available_space: size_mixed_cache_key(input.known_dimensions, input.available_space),
-            parent_size: (size_option_cache_key(input.parent_size) & SET_MASK) | extra_bits,
+            parent_size: (size_option_cache_key(input.parent_size) & NON_SIGN_BITS_MASK) | extra_bits,
         }
     }
 }
@@ -200,7 +220,7 @@ impl Cache {
             RunMode::ComputeSize => {
                 for entry in self.measure_entries.iter().flatten() {
                     if entry.key.kd_available_space == key.kd_available_space
-                        && (entry.key.parent_size & CHECK_MASK == key.parent_size & CHECK_MASK)
+                        && (entry.key.parent_size() == key.parent_size())
                     {
                         return Some(LayoutOutput::from_outer_size(entry.content));
                     }
