@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.12.1
+
+This release container a couple of critical fixes for layout/caching bugs in the 0.12.0 release.
+
+### Fixed
+
+- Block: don't commit deferred in-flow layouts to the tree when only computing size (#971)
+- Block: pass through the requested `run_mode` when performing final layout on in-flow children, instead of always using `MeasureSize` (#972)
+
 ## 0.12.0
 
 The MSRV for this release is 1.71.
