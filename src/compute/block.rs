@@ -533,16 +533,16 @@ fn compute_inner(
         }
     }
 
+    // Short-circuit if computing size
+    if run_mode == RunMode::ComputeSize {
+        return LayoutOutput::from_outer_size(final_outer_size);
+    }
+
     // Commit deferred in-flow layouts to the tree. Floated items already wrote their own layouts.
     for item in items.iter() {
         if let Some(layout) = item.final_layout.as_ref() {
             tree.set_unrounded_layout(item.node_id, layout);
         }
-    }
-
-    // Short-circuit if computing size
-    if run_mode == RunMode::ComputeSize {
-        return LayoutOutput::from_outer_size(final_outer_size);
     }
 
     // 4. Layout absolutely positioned children
