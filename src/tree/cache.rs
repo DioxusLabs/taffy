@@ -15,10 +15,8 @@ const CACHE_SIZE: usize = 9;
 
 /// `f32::INFINITY` as a u32
 const INFINITY_BITS: u32 = 0b_0_11111111_00000000000000000000000_u32;
-/// `f32::INFINITY` as a u32
+/// `f32::NEG_INFINITY` as a u32
 const NEG_INFINITY_BITS: u32 = 0b_1_11111111_00000000000000000000000_u32;
-// /// A positive NaN f32 values as a u32
-// const SPECIFIC_NAN_BITS: u32 = 0b0_11111111_10000000000000000000001_u32;
 
 // The `CacheKey` encodes two f32s as a u64. We know that the f32s will always be
 // non-negative, so we pack two extra bits encoding the `RequestedAxis` into the
