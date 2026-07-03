@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.12.0
+
+The MSRV for this release is 1.71.
+
+### Block: support for `align-content` (#959)
+
+Block containers now implement `align_content` along the block axis for their in-flow children.
+
+### More correct caching logic
+
+- The cache key now includes the axis, parent size, and available space, and ignores available space in an axis when a known dimension is set there. This is a performance hit (~10% in common cases, ~60% in pathalogically ones) but is necessary for correctness. It does also enable early-return optimizations (in cases where only the horizontal size is needed, which can allow that performance to be recouped in some cases (#911)
+
+### Fixed
+
+- Flexbox: fall back to safe `align-self` of `start` on absolute-position overflow (#958)
+- Block: derive definite height from `aspect-ratio` at final layout. A block container with `aspect-ratio` and an automatic height now becomes definite when its width is filled/stretched, so children's percentage heights resolve correctly and the ratio is preserved (#965)
+
 ## 0.11.0
 
 The MSRV for this release is 1.71.
