@@ -31,7 +31,9 @@ const BOTH_SIGN_BITS_MASK: u64 = SIGN_BIT_1 | SIGN_BIT_2;
 /// Mask of excluding the sign bits (used when setting/getting the size excluding the packed bits)
 const NON_SIGN_BITS_MASK: u64 = !BOTH_SIGN_BITS_MASK;
 
-const X_AXIS_VALUE_MASK : u64 = (u32::MAX as u64) << 32;
+/// Mask which includes only the bits which encode the x-axis value that we can use to ignore the
+/// y-axis value when comparing a cache key.
+const X_AXIS_VALUE_MASK: u64 = (u32::MAX as u64) << 32;
 
 /// Pack `Option<f32>` into `u32`
 #[inline(always)]
@@ -102,8 +104,6 @@ impl CacheKey {
     fn x_axis_parent_size(&self) -> u64 {
         self.parent_size & (X_AXIS_VALUE_MASK & NON_SIGN_BITS_MASK)
     }
-
-    
 }
 
 impl From<&LayoutInput> for CacheKey {
