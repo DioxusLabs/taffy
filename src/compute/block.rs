@@ -470,6 +470,7 @@ fn compute_inner(
     let (mut inflow_content_size, mut intrinsic_outer_height, first_child_top_margin_set, last_child_bottom_margin_set) =
         perform_final_layout_on_in_flow_children(
             tree,
+            run_mode,
             &mut items,
             container_outer_width,
             container_percentage_resolution_height,
@@ -742,6 +743,7 @@ fn determine_content_based_container_width(
 #[allow(clippy::too_many_arguments)]
 fn perform_final_layout_on_in_flow_children(
     tree: &mut impl LayoutBlockContainer,
+    run_mode: RunMode,
     items: &mut [BlockItem],
     container_outer_width: f32,
     container_percentage_resolution_height: Option<f32>,
@@ -928,7 +930,7 @@ fn perform_final_layout_on_in_flow_children(
             //
 
             let inputs = LayoutInput {
-                run_mode: RunMode::PerformLayout,
+                run_mode,
                 sizing_mode: SizingMode::InherentSize,
                 axis: RequestedAxis::Both,
                 known_dimensions,
