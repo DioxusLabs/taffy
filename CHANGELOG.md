@@ -1,5 +1,53 @@
 # Changelog
 
+## 0.12.1
+
+This release container a couple of critical fixes for layout/caching bugs in the 0.12.0 release.
+
+### Fixed
+
+- Block: don't commit deferred in-flow layouts to the tree when only computing size (#971)
+- Block: pass through the requested `run_mode` when performing final layout on in-flow children, instead of always using `MeasureSize` (#972)
+
+## 0.12.0
+
+The MSRV for this release is 1.71.
+
+### Block: support for `align-content` (#959)
+
+Block containers now implement `align_content` along the block axis for their in-flow children.
+
+### More correct caching logic
+
+- The cache key now includes the axis, parent size, and available space, and ignores available space in an axis when a known dimension is set there. This is a performance hit (~10% in common cases, ~60% in pathalogically ones) but is necessary for correctness. It does also enable early-return optimizations (in cases where only the horizontal size is needed, which can allow that performance to be recouped in some cases (#911)
+
+### Fixed
+
+- Flexbox: fall back to safe `align-self` of `start` on absolute-position overflow (#958)
+- Block: derive definite height from `aspect-ratio` at final layout. A block container with `aspect-ratio` and an automatic height now becomes definite when its width is filled/stretched, so children's percentage heights resolve correctly and the ratio is preserved (#965)
+
+## 0.11.0
+
+The MSRV for this release is 1.71.
+
+### Implemented safe alignment keywords (#952)
+
+Taffy now implements [safe alignment](https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/align-items#safe) (in addition to unsafe alignment).
+
+The alignment style types are now structs consisting of an `AlignmentKeyword` and an `AlignmentSafety` modifier. For most users this will mean changing from using enum variants like `AlignContent::Start` to associated constants like `AlignContent::START`.
+
+This change applies to the `AlignContent`, `JustifyContent`, `AlignItems`, `JustifyItems`, `AlignSelf`, and `JustifySelf` types.
+
+### Fixed
+
+- Grid: resolve item percentages against grid area rather than grid container (#960)
+
+## 0.10.1
+
+### Fixed
+
+- CSS Grid auto-repeat and minimum-size handling (#946)
+
 ## 0.10.0
 
 The MSRV for this release is 1.71.

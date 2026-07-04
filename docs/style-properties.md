@@ -24,12 +24,12 @@ N = Supported in spec but not implemented in Taffy
 | `margin`                 | Y    | ~Y   | `Rect<LengthPercentageAuto>`          | 32    | -      | How large should the margin be on each side?                                                |
 | `gap`                    | Y    | Y    | `Size<LengthPercentage>`              | 16    | -      | The size of the vertical and horizontal gaps between flex items / grid rows                 |
 | **Alignment**            |      |      |                                       |       |        |                                                                                             |
-| `align_content`          | Y    | Y    | `AlignContent`                        | 1     | -      | How should content contained within this item be aligned relative to the cross axis?        |
-| `justify_content`        | Y    | Y    | `AlignContent`                        | 1     | -      | How should content contained within this item be aligned relative to the main axis?         |
-| `align_items`            | Y    | Y    | `AlignItems`                          | 1     | -      | How should items be aligned relative to the cross axis?                                     |
-| `align_self`             | Y    | Y    | `Option<AlignItems>`                  | 1     | -      | Should this item violate the cross axis alignment specified by its parent's [`AlignItems`]? |
-| `justify_items`          | -    | Y    | `AlignItems`                          | 1     | -      | How should items be aligned relative to the main axis?                                      |
-| `justify_self`           | -    | Y    | `Option<AlignItems>`                  | 1     | -      | Should this item violate the main axis alignment specified by its parent's [`AlignItems`]?  |
+| `align_content`          | Y    | Y    | `AlignContent`                        | 2     | -      | How should content contained within this item be aligned relative to the cross axis?        |
+| `justify_content`        | Y    | Y    | `AlignContent`                        | 2     | -      | How should content contained within this item be aligned relative to the main axis?         |
+| `align_items`            | Y    | Y    | `AlignItems`                          | 2     | -      | How should items be aligned relative to the cross axis?                                     |
+| `align_self`             | Y    | Y    | `Option<AlignItems>`                  | 2     | -      | Should this item violate the cross axis alignment specified by its parent's [`AlignItems`]? |
+| `justify_items`          | -    | Y    | `AlignItems`                          | 2     | -      | How should items be aligned relative to the main axis?                                      |
+| `justify_self`           | -    | Y    | `Option<AlignItems>`                  | 2     | -      | Should this item violate the main axis alignment specified by its parent's [`AlignItems`]?  |
 | **Flexbox**              |      |      |                                       |       |        |                                                                                             |
 | `flex_direction`         | Y    | -    | `FlexDirection`                       | 1     | -      | Which direction does the main axis flow in?                                                 |
 | `flex_wrap`              | Y    | -    | `FlexWrap`                            | 1     | -      | Should elements wrap, or stay in a single line?                                             |
@@ -47,3 +47,37 @@ N = Supported in spec but not implemented in Taffy
 | `grid_row`               | -    | Y    | `Line<GridPlacement>`                 | 8     | -      | The vertical (row) placement of a grid item                                                 |
 | `grid_column`            | -    | Y    | `Line<GridPlacement>`                 | 8     | -      | The horizontal (row) placement of a grid item                                               |
 | `grid_area`              | -    | 5    | -                                     | -     | -      | Accepts either shorthand row/column-start/end or a named grid area                          |
+
+## Safe and unsafe overflow alignment
+
+`AlignItems` and `AlignContent` (and their aliases `AlignSelf`, `JustifyItems`, `JustifySelf`,
+`JustifyContent`) are structs with two orthogonal fields:
+
+```rust
+pub struct AlignContent {
+    pub keyword: AlignContentKeyword,   // Start, End, FlexStart, FlexEnd, Center,
+                                        // Stretch, SpaceBetween, SpaceEvenly, SpaceAround
+    pub safety: AlignmentSafety,        // Safe | Unsafe
+}
+```
+
+For ergonomics every CSS spelling is exposed as an associated constant — `AlignContent::Start`,
+`AlignContent::SafeStart`, `AlignItems::SafeFlexEnd`, etc. — so call sites read identically to
+the previous enum form.
+
+The `safety` field corresponds to the spec's
+[overflow-position keyword](https://www.w3.org/TR/css-align-3/#overflow-values). When the
+alignment subject would overflow its alignment container, `AlignmentSafety::Safe` falls back
+to logical `Start` so the start edge of the content stays visible. `AlignmentSafety::Unsafe`
+(the default) keeps the requested alignment even when that causes overflow at the start edge.
+
+The spec only defines `safe`/`unsafe` against the position keywords `start`, `end`,
+`flex-start`, `flex-end`, `center`. Combinations such as `safe stretch`, `safe baseline`, and
+`safe space-between` are rejected by the parser when the `parse` feature is enabled, and the
+compute pass treats them as `Unsafe` if a value somehow reaches it via manual struct
+construction.
+
+Use the `is_safe()` method to check the safety modifier and `keyword()` to retrieve the bare
+position keyword. The `safe`/`unsafe` overflow-position keyword is supported by both the
+Flexbox and CSS Grid layout algorithms for both content-level (`align-content`,
+`justify-content`) and self-level (`align-self`, `justify-self`) alignment.

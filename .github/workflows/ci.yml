@@ -23,7 +23,7 @@ jobs:
     name: "MSRV Build [Rust 1.71]"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: 1.71
@@ -33,7 +33,7 @@ jobs:
     name: "Build [debug feature]"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
       - run: cargo build --features debug
 
@@ -41,7 +41,7 @@ jobs:
     name: "Build Examples"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
       - run: cargo build --examples
 
@@ -51,7 +51,7 @@ jobs:
     name: "Build cosmic-text example"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
       - run: cd examples/cosmic_text && cargo build
 
@@ -60,7 +60,7 @@ jobs:
     name: "Test Suite [no features]"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
       - run: cargo build --no-default-features
       - run: cargo test --tests --no-default-features --features taffy_tree
@@ -70,7 +70,7 @@ jobs:
     name: "Test Suite [default features]"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
       - run: cargo build
       - run: cargo test --tests
@@ -79,7 +79,7 @@ jobs:
     name: "Test Suite [all features]"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
       - run: cargo build --all-features
       - run: cargo test --tests --all-features
@@ -89,7 +89,7 @@ jobs:
     name: "Test Suite [all features (i686-linux-android)]"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: i686-linux-android
@@ -101,7 +101,7 @@ jobs:
     name: "Test Suite [default + serde]"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
       - run: cargo build --features serde
       - run: cargo test --tests --features serde
@@ -110,7 +110,7 @@ jobs:
     name: "Test Suite [default + parse_faster]"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
       - run: cargo build --features parse_faster
       - run: cargo test --tests --features parse_faster
@@ -119,7 +119,7 @@ jobs:
     name: "Test Suite [default except content_size]"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
       - run: cargo build --no-default-features --features std,taffy_tree,grid,flexbox,block_layout
       - run: cargo test --tests --no-default-features --features std,taffy_tree,grid,flexbox,block_layout,calc
@@ -128,7 +128,7 @@ jobs:
     name: "Test Suite [default except calc]"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
       - run: cargo build --no-default-features --features std,taffy_tree,grid,flexbox,block_layout
       - run: cargo test --tests --no-default-features --features std,taffy_tree,grid,flexbox,block_layout
@@ -137,7 +137,7 @@ jobs:
     name: "Test Suite [std (no algorithms)]"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
       - run: cargo build --no-default-features --features std
       - run: cargo build --no-default-features --features std,taffy_tree
@@ -148,7 +148,7 @@ jobs:
     name: "Test Suite [std + flexbox]"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
       - run: cargo build --no-default-features --features flexbox,std
       - run: cargo build --no-default-features --features flexbox,std,taffy_tree
@@ -158,7 +158,7 @@ jobs:
     name: "Test Suite [std + grid]"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
       - run: cargo build --no-default-features --features grid,std
       - run: cargo build --no-default-features --features grid,std,taffy_tree
@@ -168,7 +168,7 @@ jobs:
     name: "Test Suite [std + block)]"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
       - run: cargo build --no-default-features --features block_layout,std
       - run: cargo build --no-default-features --features block_layout,std,taffy_tree
@@ -179,7 +179,7 @@ jobs:
     name: "Test Suite [std + grid + detailed_layout_info]"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
       - run: cargo build --no-default-features --features grid,detailed_layout_info,std
       - run: cargo build --no-default-features --features grid,detailed_layout_info,std,taffy_tree
@@ -190,7 +190,7 @@ jobs:
     name: "Test Suite [std + flexbox + detailed_layout_info]"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
       - run: cargo build --no-default-features --features flexbox,detailed_layout_info,std
       - run: cargo build --no-default-features --features flexbox,detailed_layout_info,std,taffy_tree
@@ -202,7 +202,7 @@ jobs:
     name: "Test Suite [alloc + no algorithms]"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
       - run: cargo build --no-default-features --features alloc
       - run: cargo build --no-default-features --features alloc,taffy_tree
@@ -212,7 +212,7 @@ jobs:
     name: "Test Suite [alloc + all algorithms]"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
       - run: cargo build --no-default-features --features alloc,grid,flexbox,block_layout
       - run: cargo build --no-default-features --features alloc,grid,flexbox,block_layout,taffy_tree
@@ -222,7 +222,7 @@ jobs:
     name: Rustfmt
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: stable
@@ -233,7 +233,7 @@ jobs:
     name: Clippy
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: stable
@@ -249,7 +249,7 @@ jobs:
     env:
       RUSTDOCFLAGS: "--cfg docsrs"
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: nightly
@@ -260,7 +260,7 @@ jobs:
     name: Markdown Lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Run Markdown Lint
         uses: DavidAnson/markdownlint-cli2-action@v23
         with:
@@ -270,7 +270,7 @@ jobs:
     name: Test Fixture Formatting
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Run format script
         run: cargo run -p format-fixtures
       - name: Ensure no changes
@@ -288,7 +288,7 @@ jobs:
     name: Build Benchmarks
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
       - name: Install fontconfig
         run: sudo apt-get update && sudo apt-get install libfontconfig-dev
@@ -301,7 +301,7 @@ jobs:
     name: Build Benchmarks (w/ yoga)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
       - name: Install fontconfig
         run: sudo apt-get update && sudo apt-get install libfontconfig-dev

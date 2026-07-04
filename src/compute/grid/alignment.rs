@@ -1,8 +1,13 @@
 //! Alignment of tracks and final positioning of items
 use super::types::GridTrack;
-use crate::compute::common::alignment::{apply_alignment_fallback, compute_alignment_offset};
+use crate::compute::common::alignment::{
+    apply_alignment_fallback, compute_alignment_offset, resolve_self_alignment_safety,
+};
 use crate::geometry::{InBothAbsAxis, Line, Point, Rect, Size};
-use crate::style::{AlignContent, AlignItems, AlignSelf, AvailableSpace, CoreStyle, GridItemStyle, Overflow, Position};
+use crate::style::{
+    AlignContent, AlignItems, AlignItemsKeyword, AlignSelf, AvailableSpace, CoreStyle, GridItemStyle, Overflow,
+    Position,
+};
 use crate::tree::{Layout, LayoutPartialTreeExt, NodeId, SizingMode};
 use crate::util::sys::f32_max;
 use crate::util::{MaybeMath, MaybeResolve, ResolveOrZero};
@@ -33,8 +38,7 @@ pub(super) fn align_tracks(
     // simply pass zero here. Grid layout is never reversed.
     let gap = 0.0;
     let layout_is_reversed = false;
-    let is_safe = false; // TODO: Implement safe alignment
-    let track_alignment = apply_alignment_fallback(free_space, num_tracks, track_alignment_style, is_safe);
+    let track_alignment = apply_alignment_fallback(free_space, num_tracks, track_alignment_style);
     let track_alignment = if axis_is_reversed { track_alignment.reversed() } else { track_alignment };
 
     // Compute offsets
@@ -125,16 +129,16 @@ pub(super) fn align_and_position_item(
     let alignment_styles = InBothAbsAxis {
         horizontal: justify_self.or(container_alignment_styles.horizontal).unwrap_or_else(|| {
             if inherent_size.width.is_some() {
-                AlignSelf::Start
+                AlignSelf::START
             } else {
-                AlignSelf::Stretch
+                AlignSelf::STRETCH
             }
         }),
         vertical: align_self.or(container_alignment_styles.vertical).unwrap_or_else(|| {
             if inherent_size.height.is_some() || aspect_ratio.is_some() {
-                AlignSelf::Start
+                AlignSelf::START
             } else {
-                AlignSelf::Stretch
+                AlignSelf::STRETCH
             }
         }),
     };
@@ -166,7 +170,7 @@ pub(super) fn align_and_position_item(
         //  - The node does not have auto margins in this axis.
         if margin.left.is_some()
             && margin.right.is_some()
-            && alignment_styles.horizontal == AlignSelf::Stretch
+            && alignment_styles.horizontal == AlignSelf::STRETCH
             && position != Position::Absolute
         {
             return Some(grid_area_minus_item_margins_size.width);
@@ -191,7 +195,7 @@ pub(super) fn align_and_position_item(
         //  - The node does not have auto margins in this axis.
         if margin.top.is_some()
             && margin.bottom.is_some()
-            && alignment_styles.vertical == AlignSelf::Stretch
+            && alignment_styles.vertical == AlignSelf::STRETCH
             && position != Position::Absolute
         {
             return Some(grid_area_minus_item_margins_size.height);
@@ -315,24 +319,32 @@ pub(super) fn align_item_within_area(
         end: margin.end.unwrap_or(auto_margin_size),
     };
 
+    let overflows = resolved_size + non_auto_margin.sum() > grid_area_size;
+    let alignment_keyword = resolve_self_alignment_safety(alignment_style, overflows);
+
     // Compute offset in the axis
-    let alignment_based_offset = match alignment_style {
+    let alignment_based_offset = match alignment_keyword {
         // TODO: Add support for baseline alignment. For now we treat it as "start".
-        AlignSelf::Start | AlignSelf::FlexStart | AlignSelf::Baseline | AlignSelf::Stretch => {
+        AlignItemsKeyword::Start
+        | AlignItemsKeyword::FlexStart
+        | AlignItemsKeyword::Baseline
+        | AlignItemsKeyword::Stretch => {
             if direction.is_rtl() {
                 grid_area_size - resolved_size - resolved_margin.end
             } else {
                 resolved_margin.start
             }
         }
-        AlignSelf::End | AlignSelf::FlexEnd => {
+        AlignItemsKeyword::End | AlignItemsKeyword::FlexEnd => {
             if direction.is_rtl() {
                 resolved_margin.start
             } else {
                 grid_area_size - resolved_size - resolved_margin.end
             }
         }
-        AlignSelf::Center => (grid_area_size - resolved_size + resolved_margin.start - resolved_margin.end) / 2.0,
+        AlignItemsKeyword::Center => {
+            (grid_area_size - resolved_size + resolved_margin.start - resolved_margin.end) / 2.0
+        }
     };
 
     let offset_within_area = if position == Position::Absolute {

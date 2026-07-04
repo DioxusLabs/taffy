@@ -181,6 +181,7 @@ impl BlockContext<'_> {
     }
 }
 
+use super::common::alignment::{apply_alignment_fallback, compute_alignment_offset};
 #[cfg(feature = "content_size")]
 use super::common::content_size::compute_content_size_contribution;
 
@@ -238,6 +239,10 @@ struct BlockItem {
     static_position: Point<f32>,
     /// Whether margins can be collapsed through this item
     can_be_collapsed_through: bool,
+
+    /// Pending layout for in-flow non-floated items. Held back from `set_unrounded_layout` so the
+    /// post-loop `align-content` pass in `compute_inner` can shift `location.y` before commit.
+    final_layout: Option<Layout>,
 }
 
 /// Computes the layout of [`LayoutPartialTree`] according to the block layout algorithm
@@ -297,6 +302,13 @@ pub fn compute_block_layout(
     if run_mode == RunMode::ComputeSize {
         if let Size { width: Some(width), height: Some(height) } = styled_based_known_dimensions {
             return LayoutOutput::from_outer_size(Size { width, height });
+        }
+
+        // We can also short-circuit if the width is known and only the width has been requested.
+        if inputs.axis == RequestedAxis::Horizontal {
+            if let Some(width) = styled_based_known_dimensions.width {
+                return LayoutOutput::from_outer_size(Size { width, height: 0.0 });
+            }
         }
     }
 
@@ -358,7 +370,6 @@ fn compute_inner(
     let padding_border = padding + border;
     let padding_border_size = padding_border.sum_axes();
     let content_box_inset = padding_border + scrollbar_gutter;
-    let container_content_box_size = known_dimensions.maybe_sub(content_box_inset.sum_axes());
 
     // Apply content box inset
     #[cfg(feature = "float_layout")]
@@ -381,6 +392,19 @@ fn compute_inner(
         .maybe_resolve(parent_size, |val, basis| tree.calc(val, basis))
         .maybe_apply_aspect_ratio(aspect_ratio)
         .maybe_add(box_sizing_adjustment);
+
+    // css-sizing-4: a definite size in one axis transfers through `aspect-ratio`
+    // to make the other definite. Deriving it from `known_dimensions` self-gates
+    // the transfer — a block parent fills an axis only when it's a real
+    // constraint (e.g. the stretched width at final layout) and leaves it None
+    // while probing intrinsic sizes, so measure passes stay content-based. Only a
+    // newly-filled axis is adopted (and clamped); an incoming known size is left
+    // as the parent resolved it (re-clamping would undo padding/border overrides).
+    let known_dimensions = {
+        let derived = known_dimensions.maybe_apply_aspect_ratio(aspect_ratio).maybe_clamp(min_size, max_size);
+        Size { width: known_dimensions.width.or(derived.width), height: known_dimensions.height.or(derived.height) }
+    };
+    let container_content_box_size = known_dimensions.maybe_sub(content_box_inset.sum_axes());
 
     let overflow = style.overflow();
     let is_scroll_container = overflow.x.is_scroll_container() || overflow.y.is_scroll_container();
@@ -411,6 +435,7 @@ fn compute_inner(
         || matches!(min_size.height, Some(h) if h > 0.0);
 
     let text_align = style.text_align();
+    let align_content = style.align_content();
     drop(style);
 
     // 1. Generate items
@@ -429,6 +454,11 @@ fn compute_inner(
         return LayoutOutput::from_outer_size(Size { width: container_outer_width, height: container_outer_height });
     }
 
+    // We can also short-circuit if the width is known and only the width has been requested.
+    if run_mode == RunMode::ComputeSize && inputs.axis == RequestedAxis::Horizontal {
+        return LayoutOutput::from_outer_size(Size { width: container_outer_width, height: 0.0 });
+    }
+
     let container_percentage_resolution_height =
         known_dimensions.height.or(size.height.maybe_max(min_size.height)).or(min_size.height);
 
@@ -436,9 +466,11 @@ fn compute_inner(
     let resolved_padding = raw_padding.resolve_or_zero(Some(container_outer_width), |val, basis| tree.calc(val, basis));
     let resolved_border = raw_border.resolve_or_zero(Some(container_outer_width), |val, basis| tree.calc(val, basis));
     let resolved_content_box_inset = resolved_padding + resolved_border + scrollbar_gutter;
-    let (inflow_content_size, mut intrinsic_outer_height, first_child_top_margin_set, last_child_bottom_margin_set) =
+    #[cfg_attr(not(feature = "content_size"), allow(unused_mut))]
+    let (mut inflow_content_size, mut intrinsic_outer_height, first_child_top_margin_set, last_child_bottom_margin_set) =
         perform_final_layout_on_in_flow_children(
             tree,
+            run_mode,
             &mut items,
             container_outer_width,
             container_percentage_resolution_height,
@@ -462,9 +494,56 @@ fn compute_inner(
         .maybe_max(Some(padding_border_size.height));
     let final_outer_size = Size { width: container_outer_width, height: container_outer_height };
 
+    // Apply `align-content` to in-flow non-floated items if requested. The per-item layouts were
+    // held back in `item.final_layout` so that this step can shift `location.y` before tree commit.
+    //
+    // For block layout the entire stack of in-flow children is treated as a single alignment
+    // subject. That means distribution keywords (`space-between`, `space-around`,
+    // `space-evenly`, `stretch`) must invoke the single-subject fallback unconditionally —
+    // which is what passing `num_items = 1` to `apply_alignment_fallback` does. The whole
+    // group then shifts by one offset, with zero inter-item gap.
+    if let Some(align_content) = align_content {
+        let container_inner_height = container_outer_height - resolved_content_box_inset.vertical_axis_sum();
+        let inflow_content_height = intrinsic_outer_height - resolved_content_box_inset.vertical_axis_sum();
+        let free_space = container_inner_height - inflow_content_height;
+        let any_in_flow = items.iter().any(|item| item.final_layout.is_some());
+        if any_in_flow {
+            let keyword = apply_alignment_fallback(free_space, 1, align_content);
+            let group_offset = compute_alignment_offset(free_space, 1, 0.0, keyword, false, true);
+            for item in items.iter_mut() {
+                if let Some(layout) = item.final_layout.as_mut() {
+                    layout.location.y += group_offset;
+                }
+            }
+
+            #[cfg(feature = "content_size")]
+            {
+                inflow_content_size = Size::ZERO;
+                for item in items.iter() {
+                    if let Some(layout) = item.final_layout.as_ref() {
+                        inflow_content_size = inflow_content_size.f32_max(compute_content_size_contribution(
+                            layout.location
+                                + Point { x: -resolved_content_box_inset.left, y: -resolved_content_box_inset.top },
+                            layout.size,
+                            layout.content_size,
+                            item.overflow,
+                        ));
+                    }
+                }
+            }
+        }
+    }
+
     // Short-circuit if computing size
     if run_mode == RunMode::ComputeSize {
         return LayoutOutput::from_outer_size(final_outer_size);
+    }
+
+    // Commit deferred in-flow layouts to the tree. Floated items already wrote their own layouts.
+    for item in items.iter() {
+        if let Some(layout) = item.final_layout.as_ref() {
+            tree.set_unrounded_layout(item.node_id, layout);
+        }
     }
 
     // 4. Layout absolutely positioned children
@@ -603,6 +682,7 @@ fn generate_item_list(
                 computed_size: Size::zero(),
                 static_position: Point::zero(),
                 can_be_collapsed_through: false,
+                final_layout: None,
             }
         })
         .collect()
@@ -628,16 +708,15 @@ fn determine_content_based_container_width(
             .resolve_or_zero(available_space.width.into_option(), |val, basis| tree.calc(val, basis))
             .horizontal_axis_sum();
         let width = known_dimensions.width.unwrap_or_else(|| {
-            let size_and_baselines = tree.perform_child_layout(
+            tree.measure_child_size(
                 item.node_id,
                 known_dimensions,
                 Size::NONE,
                 available_space.map_width(|w| w.maybe_sub(item_x_margin_sum)),
                 SizingMode::InherentSize,
+                crate::AbsoluteAxis::Horizontal,
                 Line::TRUE,
-            );
-
-            size_and_baselines.size.width
+            )
         });
 
         let width = f32_max(width, item.padding_border_sum.width) + item_x_margin_sum;
@@ -664,6 +743,7 @@ fn determine_content_based_container_width(
 #[allow(clippy::too_many_arguments)]
 fn perform_final_layout_on_in_flow_children(
     tree: &mut impl LayoutBlockContainer,
+    run_mode: RunMode,
     items: &mut [BlockItem],
     container_outer_width: f32,
     container_percentage_resolution_height: Option<f32>,
@@ -679,8 +759,15 @@ fn perform_final_layout_on_in_flow_children(
     let container_percentage_resolution_height =
         container_percentage_resolution_height.maybe_sub(resolved_content_box_inset.vertical_axis_sum());
     let parent_size = Size { width: Some(container_inner_width), height: container_percentage_resolution_height };
+    // Vertical available space in block flow is indefinite, NOT a min-content
+    // constraint: MaxContent is taffy's representation of "indefinite".
+    // Passing MinContent here made every descendant grid believe it was being
+    // sized under a min-content constraint, in which the maximize-tracks step
+    // has zero free space — so auto rows containing only scroll-container
+    // items (overflow != visible, automatic minimum size = 0) collapsed to
+    // zero height. Browsers size such rows to the item's content.
     let available_space =
-        Size { width: AvailableSpace::Definite(container_inner_width), height: AvailableSpace::MinContent };
+        Size { width: AvailableSpace::Definite(container_inner_width), height: AvailableSpace::MaxContent };
 
     // TODO: handle nested blocks with different widths
     #[cfg(feature = "float_layout")]
@@ -843,7 +930,7 @@ fn perform_final_layout_on_in_flow_children(
             //
 
             let inputs = LayoutInput {
-                run_mode: RunMode::PerformLayout,
+                run_mode,
                 sizing_mode: SizingMode::InherentSize,
                 axis: RequestedAxis::Both,
                 known_dimensions,
@@ -1002,20 +1089,19 @@ fn perform_final_layout_on_in_flow_children(
                 }
             }
 
-            tree.set_unrounded_layout(
-                item.node_id,
-                &Layout {
-                    order: item.order,
-                    size: item_layout.size,
-                    #[cfg(feature = "content_size")]
-                    content_size: item_layout.content_size,
-                    scrollbar_size,
-                    location,
-                    padding: item.padding,
-                    border: item.border,
-                    margin: resolved_margin,
-                },
-            );
+            // Defer `set_unrounded_layout` to the post-loop pass in `compute_inner` so that
+            // `align-content` can shift `location.y` before the layout is committed to the tree.
+            item.final_layout = Some(Layout {
+                order: item.order,
+                size: item_layout.size,
+                #[cfg(feature = "content_size")]
+                content_size: item_layout.content_size,
+                scrollbar_size,
+                location,
+                padding: item.padding,
+                border: item.border,
+                margin: resolved_margin,
+            });
 
             #[cfg(feature = "content_size")]
             {

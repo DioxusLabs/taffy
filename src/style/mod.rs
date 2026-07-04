@@ -13,7 +13,10 @@ mod float;
 #[cfg(feature = "grid")]
 mod grid;
 
-pub use self::alignment::{AlignContent, AlignItems, AlignSelf, JustifyContent, JustifyItems, JustifySelf};
+pub use self::alignment::{
+    AlignContent, AlignContentKeyword, AlignItems, AlignItemsKeyword, AlignSelf, AlignmentSafety, JustifyContent,
+    JustifyItems, JustifySelf,
+};
 pub use self::available_space::AvailableSpace;
 pub use self::compact_length::CompactLength;
 pub use self::dimension::{Dimension, LengthPercentage, LengthPercentageAuto};
@@ -506,7 +509,7 @@ pub struct Style<S: CheapCloneStr = DefaultCheapStr> {
     #[cfg(feature = "grid")]
     pub justify_self: Option<AlignSelf>,
     /// How should content contained within this item be aligned in the cross/block axis
-    #[cfg(any(feature = "flexbox", feature = "grid"))]
+    #[cfg(any(feature = "flexbox", feature = "grid", feature = "block_layout"))]
     pub align_content: Option<AlignContent>,
     /// How should content contained within this item be aligned in the main/inline axis
     #[cfg(any(feature = "flexbox", feature = "grid"))]
@@ -616,7 +619,7 @@ impl<S: CheapCloneStr> Style<S> {
         justify_items: None,
         #[cfg(feature = "grid")]
         justify_self: None,
-        #[cfg(any(feature = "flexbox", feature = "grid"))]
+        #[cfg(any(feature = "flexbox", feature = "grid", feature = "block_layout"))]
         align_content: None,
         #[cfg(any(feature = "flexbox", feature = "grid"))]
         justify_content: None,
@@ -812,6 +815,11 @@ impl<S: CheapCloneStr> BlockContainerStyle for Style<S> {
     fn text_align(&self) -> TextAlign {
         self.text_align
     }
+
+    #[inline(always)]
+    fn align_content(&self) -> Option<AlignContent> {
+        self.align_content
+    }
 }
 
 #[cfg(feature = "block_layout")]
@@ -819,6 +827,11 @@ impl<T: BlockContainerStyle> BlockContainerStyle for &'_ T {
     #[inline(always)]
     fn text_align(&self) -> TextAlign {
         (*self).text_align()
+    }
+
+    #[inline(always)]
+    fn align_content(&self) -> Option<AlignContent> {
+        (*self).align_content()
     }
 }
 
@@ -1216,7 +1229,7 @@ mod tests {
             justify_items: Default::default(),
             #[cfg(feature = "grid")]
             justify_self: Default::default(),
-            #[cfg(any(feature = "flexbox", feature = "grid"))]
+            #[cfg(any(feature = "flexbox", feature = "grid", feature = "block_layout"))]
             align_content: Default::default(),
             #[cfg(any(feature = "flexbox", feature = "grid"))]
             justify_content: Default::default(),
@@ -1306,10 +1319,16 @@ mod tests {
         assert_type_size::<Rect<LengthPercentageAuto>>(32);
         assert_type_size::<Rect<Dimension>>(32);
 
-        // Alignment
-        assert_type_size::<AlignContent>(1);
-        assert_type_size::<AlignItems>(1);
-        assert_type_size::<Option<AlignItems>>(1);
+        // Alignment — `AlignContent` and `AlignItems` are structs of two `#[repr(u8)]` enums
+        // (position keyword + safety modifier). Niche-packing in the safety byte (only 2 of
+        // 256 values used) lets `Option<_>` stay the same size as the bare struct.
+        assert_type_size::<AlignContentKeyword>(1);
+        assert_type_size::<AlignItemsKeyword>(1);
+        assert_type_size::<AlignmentSafety>(1);
+        assert_type_size::<AlignContent>(2);
+        assert_type_size::<AlignItems>(2);
+        assert_type_size::<Option<AlignItems>>(2);
+        assert_type_size::<Option<AlignContent>>(2);
 
         // Flexbox Container
         assert_type_size::<FlexDirection>(1);
@@ -1327,12 +1346,12 @@ mod tests {
         assert_type_size::<GridTemplateComponent<String>>(56);
         assert_type_size::<GridPlacement<String>>(32);
         assert_type_size::<Line<GridPlacement<String>>>(64);
-        assert_type_size::<Style<String>>(536);
+        assert_type_size::<Style<String>>(544);
 
         // String-type dependent (Arc<str>)
         assert_type_size::<GridTemplateComponent<Arc<str>>>(56);
         assert_type_size::<GridPlacement<Arc<str>>>(24);
         assert_type_size::<Line<GridPlacement<Arc<str>>>>(48);
-        assert_type_size::<Style<Arc<str>>>(504);
+        assert_type_size::<Style<Arc<str>>>(512);
     }
 }

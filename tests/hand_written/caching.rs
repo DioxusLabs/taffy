@@ -18,7 +18,7 @@ mod caching {
 
         taffy.compute_layout_with_measure(node, Size::MAX_CONTENT, test_measure_function).unwrap();
 
-        assert_eq!(taffy.get_node_context_mut(leaf).unwrap().count, 4);
+        assert_eq!(taffy.get_node_context_mut(leaf).unwrap().count, 7);
     }
 
     #[test]
@@ -35,6 +35,6 @@ mod caching {
         }
 
         taffy.compute_layout_with_measure(node, Size::MAX_CONTENT, test_measure_function).unwrap();
-        assert_eq!(taffy.get_node_context_mut(leaf).unwrap().count, 4);
+        assert_eq!(taffy.get_node_context_mut(leaf).unwrap().count, 7);
     }
 }
