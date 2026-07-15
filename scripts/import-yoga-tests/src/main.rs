@@ -72,7 +72,7 @@ fn main() {
             new_fixture_path.set_extension("html");
             let new_fixture_content = fixture_template.replace("__HTML_GOES_HERE__", &fixture.content);
 
-            println!("Writing new fixture {}", &fixture.name);
+            println!("Writing new fixture {}", fixture.name);
             fs::write(new_fixture_path, new_fixture_content).unwrap();
         }
     }
