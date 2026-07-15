@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.12.2
+
+### Fixed
+
+- Block: return margin-collapsing outputs from vertical axis ComputeSize calls (#976)
+
 ## 0.12.1
 
 This release container a couple of critical fixes for layout/caching bugs in the 0.12.0 release.
