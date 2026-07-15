@@ -336,6 +336,7 @@ pub(crate) trait LayoutPartialTreeExt: LayoutPartialTree {
             node_id,
             LayoutInput {
                 known_dimensions,
+                known_dimensions_are_definite: Size { width: true, height: true },
                 parent_size,
                 available_space,
                 sizing_mode,
@@ -364,6 +365,7 @@ pub(crate) trait LayoutPartialTreeExt: LayoutPartialTree {
             node_id,
             LayoutInput {
                 known_dimensions,
+                known_dimensions_are_definite: Size { width: true, height: true },
                 parent_size,
                 available_space,
                 sizing_mode,
@@ -386,10 +388,42 @@ pub(crate) trait LayoutPartialTreeExt: LayoutPartialTree {
         sizing_mode: SizingMode,
         vertical_margins_are_collapsible: Line<bool>,
     ) -> LayoutOutput {
+        self.perform_child_layout_with_definiteness(
+            node_id,
+            known_dimensions,
+            Size { width: true, height: true },
+            parent_size,
+            available_space,
+            sizing_mode,
+            vertical_margins_are_collapsible,
+        )
+    }
+
+    /// Perform a full layout on the node, tagging which axes of `known_dimensions`
+    /// count as definite CSS lengths for descendant percentage resolution.
+    ///
+    /// Use this variant when a parent computes a size that is known for layout
+    /// but is not a definite basis — e.g. a flex item stretched purely by
+    /// `flex-grow`, or a grid item stretched into a track whose size depends on
+    /// an indefinite container axis. See
+    /// <https://www.w3.org/TR/css-flexbox-1/#definite-sizes>.
+    #[inline(always)]
+    #[allow(clippy::too_many_arguments)]
+    fn perform_child_layout_with_definiteness(
+        &mut self,
+        node_id: NodeId,
+        known_dimensions: Size<Option<f32>>,
+        known_dimensions_are_definite: Size<bool>,
+        parent_size: Size<Option<f32>>,
+        available_space: Size<AvailableSpace>,
+        sizing_mode: SizingMode,
+        vertical_margins_are_collapsible: Line<bool>,
+    ) -> LayoutOutput {
         self.compute_child_layout(
             node_id,
             LayoutInput {
                 known_dimensions,
+                known_dimensions_are_definite,
                 parent_size,
                 available_space,
                 sizing_mode,

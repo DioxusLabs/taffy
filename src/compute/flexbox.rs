@@ -64,6 +64,14 @@ struct FlexItem {
     flex_basis: f32,
     /// The default size of this item, minus padding and border
     inner_flex_basis: f32,
+    /// Whether the item's used main size counts as a definite CSS size for
+    /// descendant percentage resolution. True iff the style provided a
+    /// resolvable main-axis size or a resolvable flex-basis; false when the
+    /// used main size is derived purely from stretching an indefinite basis
+    /// via `flex-grow`/`flex-shrink`.
+    ///
+    /// See <https://www.w3.org/TR/css-flexbox-1/#definite-sizes>.
+    main_size_is_definite: bool,
     /// The amount by which this item has deviated from its target size
     violation: f32,
     /// Is the size of this item locked
@@ -155,6 +163,11 @@ struct AlgoConstants {
     node_outer_size: Size<Option<f32>>,
     /// The content-box size of the node being laid out (if known)
     node_inner_size: Size<Option<f32>>,
+    /// The content-box size that descendants may treat as a definite CSS
+    /// length when resolving percentage lengths. Equal to `node_inner_size`
+    /// except on axes where the parent flagged the incoming known dimension
+    /// as indefinite (see [`LayoutInput::known_dimensions_are_definite`]).
+    node_inner_size_percentage_basis: Size<Option<f32>>,
 
     /// The size of the virtual container containing the flex items.
     container_size: Size<f32>,
@@ -241,10 +254,17 @@ pub fn compute_flexbox_layout(
 
 /// Compute a preliminary size for an item
 fn compute_preliminary(tree: &mut impl LayoutFlexboxContainer, node: NodeId, inputs: LayoutInput) -> LayoutOutput {
-    let LayoutInput { known_dimensions, parent_size, available_space, run_mode, .. } = inputs;
+    let LayoutInput { known_dimensions, known_dimensions_are_definite, parent_size, available_space, run_mode, .. } =
+        inputs;
 
     // Define some general constants we will need for the remainder of the algorithm.
-    let mut constants = compute_constants(tree, tree.get_flexbox_container_style(node), known_dimensions, parent_size);
+    let mut constants = compute_constants(
+        tree,
+        tree.get_flexbox_container_style(node),
+        known_dimensions,
+        known_dimensions_are_definite,
+        parent_size,
+    );
 
     // 9. Flex Layout Algorithm
 
@@ -435,6 +455,7 @@ fn compute_constants(
     tree: &impl LayoutFlexboxContainer,
     style: impl FlexboxContainerStyle,
     known_dimensions: Size<Option<f32>>,
+    known_dimensions_are_definite: Size<bool>,
     parent_size: Size<Option<f32>>,
 ) -> AlgoConstants {
     let dir = style.flex_direction();
@@ -473,6 +494,17 @@ fn compute_constants(
 
     let node_outer_size = known_dimensions;
     let node_inner_size = node_outer_size.maybe_sub(content_box_inset.sum_axes());
+    // Subset of `node_inner_size` that may act as a definite basis for
+    // descendant percentages. Only the *block* axis is gated by the parent's
+    // definiteness flag: per CSS Sizing 3 (and CSS 2.1 §10.2), the inline
+    // axis is always considered definite for percent width resolution in
+    // normal flow. Applying the gate to width breaks legitimate width%
+    // resolution inside row-direction flex items that grew from an
+    // indefinite basis. Only height% is affected.
+    let node_inner_size_percentage_basis = Size {
+        width: node_inner_size.width,
+        height: node_inner_size.height.filter(|_| known_dimensions_are_definite.height),
+    };
     let gap = style.gap().resolve_or_zero(node_inner_size.or(Size::zero()), |val, basis| tree.calc(val, basis));
 
     let container_size = Size::zero();
@@ -505,6 +537,7 @@ fn compute_constants(
         justify_content,
         node_outer_size,
         node_inner_size,
+        node_inner_size_percentage_basis,
         container_size,
         inner_container_size,
     }
@@ -540,25 +573,28 @@ fn generate_anonymous_flex_items(
             FlexItem {
                 node: child,
                 order: index as u32,
+                // Item-style percentage sizes must resolve against a *definite*
+                // container basis; use the masked variant so percent-based
+                // sizes never leak from an indefinite outer axis.
                 size: child_style
                     .size()
-                    .maybe_resolve(constants.node_inner_size, |val, basis| tree.calc(val, basis))
+                    .maybe_resolve(constants.node_inner_size_percentage_basis, |val, basis| tree.calc(val, basis))
                     .maybe_apply_aspect_ratio(aspect_ratio)
                     .maybe_add(box_sizing_adjustment),
                 min_size: child_style
                     .min_size()
-                    .maybe_resolve(constants.node_inner_size, |val, basis| tree.calc(val, basis))
+                    .maybe_resolve(constants.node_inner_size_percentage_basis, |val, basis| tree.calc(val, basis))
                     .maybe_apply_aspect_ratio(aspect_ratio)
                     .maybe_add(box_sizing_adjustment),
                 max_size: child_style
                     .max_size()
-                    .maybe_resolve(constants.node_inner_size, |val, basis| tree.calc(val, basis))
+                    .maybe_resolve(constants.node_inner_size_percentage_basis, |val, basis| tree.calc(val, basis))
                     .maybe_apply_aspect_ratio(aspect_ratio)
                     .maybe_add(box_sizing_adjustment),
 
-                inset: child_style
-                    .inset()
-                    .zip_size(constants.node_inner_size, |p, s| p.maybe_resolve(s, |val, basis| tree.calc(val, basis))),
+                inset: child_style.inset().zip_size(constants.node_inner_size_percentage_basis, |p, s| {
+                    p.maybe_resolve(s, |val, basis| tree.calc(val, basis))
+                }),
                 margin: child_style
                     .margin()
                     .resolve_or_zero(constants.node_inner_size.width, |val, basis| tree.calc(val, basis)),
@@ -576,6 +612,7 @@ fn generate_anonymous_flex_items(
                 flex_shrink: child_style.flex_shrink(),
                 flex_basis: 0.0,
                 inner_flex_basis: 0.0,
+                main_size_is_definite: false,
                 violation: 0.0,
                 frozen: false,
 
@@ -720,9 +757,14 @@ fn determine_flex_base_size(
             Size::ZERO
         }
         .main(dir);
+        // A percentage flex-basis resolves against the container's inner main
+        // size only when that size is a definite CSS length; otherwise the
+        // percentage behaves as `auto` and flex-basis falls through to
+        // content-based sizing.
+        let flex_basis_percentage_basis = constants.node_inner_size_percentage_basis.main(dir);
         let flex_basis = child_style
             .flex_basis()
-            .maybe_resolve(container_width, |val, basis| tree.calc(val, basis))
+            .maybe_resolve(flex_basis_percentage_basis, |val, basis| tree.calc(val, basis))
             .maybe_add(box_sizing_adjustment);
 
         drop(child_style);
@@ -738,6 +780,12 @@ fn determine_flex_base_size(
             // Note: `child.size` has already been resolved against aspect_ratio in generate_anonymous_flex_items
             // So B will just work here by using main_size without special handling for aspect_ratio
             let main_size = child.size.main(dir);
+            // Record whether the used main size will be a definite CSS length.
+            // A style-provided main size or resolvable flex-basis makes the used
+            // main size definite; otherwise (case E below), any final size the
+            // item acquires comes from stretching an indefinite basis and must
+            // not act as a definite basis for descendant percentage lengths.
+            child.main_size_is_definite = flex_basis.is_some() || main_size.is_some();
             if let Some(flex_basis) = flex_basis.or(main_size) {
                 break 'flex_basis flex_basis;
             };
@@ -1933,9 +1981,18 @@ fn calculate_flex_item(
     direction: FlexDirection,
     layout_direction: Direction,
 ) {
-    let layout_output = tree.perform_child_layout(
+    // The "percent behaves as auto against an indefinite parent" rule applies
+    // to the *block* axis only. Per CSS Sizing 3 the inline (width) axis is
+    // treated as always definite in normal flow, so an item whose main size
+    // is width (row direction) never propagates indefiniteness to descendant
+    // width percentages — those resolve against the item's inner width.
+    // Only the block axis (height, for horizontal writing modes) is gated.
+    let block_axis_definite = if direction.is_column() { item.main_size_is_definite } else { true };
+    let known_dimensions_are_definite = Size { width: true, height: block_axis_definite };
+    let layout_output = tree.perform_child_layout_with_definiteness(
         item.node,
         item.target_size.map(|s| s.into()),
+        known_dimensions_are_definite,
         node_inner_size,
         container_size.map(|s| s.into()),
         SizingMode::ContentSize,
@@ -2121,7 +2178,7 @@ fn final_layout_pass(
                 #[cfg(feature = "content_size")]
                 &mut content_size,
                 constants.container_size,
-                constants.node_inner_size,
+                constants.node_inner_size_percentage_basis,
                 constants.content_box_inset,
                 constants.dir,
                 constants.layout_direction,
@@ -2136,7 +2193,7 @@ fn final_layout_pass(
                 #[cfg(feature = "content_size")]
                 &mut content_size,
                 constants.container_size,
-                constants.node_inner_size,
+                constants.node_inner_size_percentage_basis,
                 constants.content_box_inset,
                 constants.dir,
                 constants.layout_direction,
