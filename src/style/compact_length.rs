@@ -27,6 +27,7 @@ mod compat {
     /// Tag a pointer preserving provenance (requires Rust 1.84)
     #[inline(always)]
     #[cfg(all(target_pointer_width = "64", feature = "strict_provenance"))]
+    #[allow(clippy::incompatible_msrv)] // gated on `strict_provenance` feature which requires Rust 1.84+
     pub fn tag_ptr(ptr: *const (), tag: usize) -> *const () {
         ptr.map_addr(|a| a | tag)
     }
