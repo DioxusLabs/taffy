@@ -547,9 +547,39 @@ fn compute_inner(
         }
     }
 
-    // Short-circuit if computing size
+    // Determine whether this node can be collapsed through
+    let all_in_flow_children_can_be_collapsed_through =
+        items.iter().all(|item| item.position == Position::Absolute || item.can_be_collapsed_through);
+    let can_be_collapsed_through =
+        !has_styles_preventing_being_collapsed_through && all_in_flow_children_can_be_collapsed_through;
+
+    let mut output = LayoutOutput {
+        size: final_outer_size,
+        #[cfg(feature = "content_size")]
+        content_size: Size::ZERO,
+        first_baselines: Point::NONE,
+        top_margin: if own_margins_collapse_with_children.start {
+            first_child_top_margin_set
+        } else {
+            let margin_top = raw_margin.top.resolve_or_zero(parent_size.width, |val, basis| tree.calc(val, basis));
+            CollapsibleMarginSet::from_margin(margin_top)
+        },
+        bottom_margin: if own_margins_collapse_with_children.end {
+            last_child_bottom_margin_set
+        } else {
+            let margin_bottom =
+                raw_margin.bottom.resolve_or_zero(parent_size.width, |val, basis| tree.calc(val, basis));
+            CollapsibleMarginSet::from_margin(margin_bottom)
+        },
+        margins_can_collapse_through: can_be_collapsed_through,
+    };
+
+    // Short-circuit if computing size.
+    //
+    // Note: it is important that we return the margin-collapsing related outputs here as Parent block containers
+    // rely on the `top_margin`/`bottom_margin` of their children to compute their own intrinsic height.
     if run_mode == RunMode::ComputeSize {
-        return LayoutOutput::from_outer_size(final_outer_size);
+        return output;
     }
 
     // Commit deferred in-flow layouts to the tree. Floated items already wrote their own layouts.
@@ -571,6 +601,11 @@ fn compute_inner(
         direction,
     );
 
+    #[cfg(feature = "content_size")]
+    {
+        output.content_size = inflow_content_size.f32_max(absolute_content_size);
+    }
+
     // 5. Perform hidden layout on hidden children
     let len = tree.child_count(node_id);
     for order in 0..len {
@@ -590,35 +625,7 @@ fn compute_inner(
         }
     }
 
-    // 7. Determine whether this node can be collapsed through
-    let all_in_flow_children_can_be_collapsed_through =
-        items.iter().all(|item| item.position == Position::Absolute || item.can_be_collapsed_through);
-    let can_be_collapsed_through =
-        !has_styles_preventing_being_collapsed_through && all_in_flow_children_can_be_collapsed_through;
-
-    #[cfg_attr(not(feature = "content_size"), allow(unused_variables))]
-    let content_size = inflow_content_size.f32_max(absolute_content_size);
-
-    LayoutOutput {
-        size: final_outer_size,
-        #[cfg(feature = "content_size")]
-        content_size,
-        first_baselines: Point::NONE,
-        top_margin: if own_margins_collapse_with_children.start {
-            first_child_top_margin_set
-        } else {
-            let margin_top = raw_margin.top.resolve_or_zero(parent_size.width, |val, basis| tree.calc(val, basis));
-            CollapsibleMarginSet::from_margin(margin_top)
-        },
-        bottom_margin: if own_margins_collapse_with_children.end {
-            last_child_bottom_margin_set
-        } else {
-            let margin_bottom =
-                raw_margin.bottom.resolve_or_zero(parent_size.width, |val, basis| tree.calc(val, basis));
-            CollapsibleMarginSet::from_margin(margin_bottom)
-        },
-        margins_can_collapse_through: can_be_collapsed_through,
-    }
+    output
 }
 
 /// Create a `Vec` of `BlockItem` structs where each item in the `Vec` represents a child of the current node
