@@ -68,7 +68,7 @@ async fn main() {
     let test_descs: Vec<_> = test_descs
         .iter()
         .flat_map(|(name, fixture_path, description)| {
-            debug!("generating test contents for {}", &name);
+            debug!("generating test contents for {}", name);
 
             let border_box_ltr_test =
                 generate_test(format!("{name}__border_box_ltr"), &description["borderBoxLtrData"]);
@@ -136,7 +136,7 @@ async fn main() {
 
         let mut test_filename = test_path.join(&name);
         test_filename.set_extension("xml");
-        debug!("writing {} to disk...", &name);
+        debug!("writing {} to disk...", name);
         fs::write(test_filename, test_body).unwrap();
     }
 
