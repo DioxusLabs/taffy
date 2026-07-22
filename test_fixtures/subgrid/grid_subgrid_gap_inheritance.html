@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    A subgrid inherits the gutters of its parent grid in the subgridded axis (its own gap is ignored there)
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="width: 330px; height: 220px; display: grid; grid-template-columns: 100px 100px 100px; grid-template-rows: 100px 100px; gap: 20px 15px;">
+  <div style="display: grid; grid-template-columns: subgrid; grid-template-rows: subgrid; grid-column: 1 / 4; grid-row: 1 / 3; gap: 5px 5px;">
+    <div></div>
+    <div></div>
+    <div></div>
+    <div></div>
+    <div></div>
+    <div></div>
+  </div>
+</div>
+
+</body>
+</html>

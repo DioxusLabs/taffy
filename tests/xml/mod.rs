@@ -23689,3 +23689,341 @@ mod leaf {
         crate::run_xml_test("leaf", "leaf_with_content_and_padding_border__content_box_rtl");
     }
 }
+
+mod subgrid {
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_subgrid_auto_flow_wrap__border_box_ltr() {
+        crate::run_xml_test("subgrid", "grid_subgrid_auto_flow_wrap__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_subgrid_auto_flow_wrap__content_box_ltr() {
+        crate::run_xml_test("subgrid", "grid_subgrid_auto_flow_wrap__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_subgrid_auto_flow_wrap__border_box_rtl() {
+        crate::run_xml_test("subgrid", "grid_subgrid_auto_flow_wrap__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_subgrid_auto_flow_wrap__content_box_rtl() {
+        crate::run_xml_test("subgrid", "grid_subgrid_auto_flow_wrap__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_subgrid_basic__border_box_ltr() {
+        crate::run_xml_test("subgrid", "grid_subgrid_basic__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_subgrid_basic__content_box_ltr() {
+        crate::run_xml_test("subgrid", "grid_subgrid_basic__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_subgrid_basic__border_box_rtl() {
+        crate::run_xml_test("subgrid", "grid_subgrid_basic__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_subgrid_basic__content_box_rtl() {
+        crate::run_xml_test("subgrid", "grid_subgrid_basic__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_subgrid_columns__border_box_ltr() {
+        crate::run_xml_test("subgrid", "grid_subgrid_columns__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_subgrid_columns__content_box_ltr() {
+        crate::run_xml_test("subgrid", "grid_subgrid_columns__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_subgrid_columns__border_box_rtl() {
+        crate::run_xml_test("subgrid", "grid_subgrid_columns__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_subgrid_columns__content_box_rtl() {
+        crate::run_xml_test("subgrid", "grid_subgrid_columns__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_subgrid_fr_tracks__border_box_ltr() {
+        crate::run_xml_test("subgrid", "grid_subgrid_fr_tracks__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_subgrid_fr_tracks__content_box_ltr() {
+        crate::run_xml_test("subgrid", "grid_subgrid_fr_tracks__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_subgrid_fr_tracks__border_box_rtl() {
+        crate::run_xml_test("subgrid", "grid_subgrid_fr_tracks__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_subgrid_fr_tracks__content_box_rtl() {
+        crate::run_xml_test("subgrid", "grid_subgrid_fr_tracks__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_subgrid_gap_inheritance__border_box_ltr() {
+        crate::run_xml_test("subgrid", "grid_subgrid_gap_inheritance__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_subgrid_gap_inheritance__content_box_ltr() {
+        crate::run_xml_test("subgrid", "grid_subgrid_gap_inheritance__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_subgrid_gap_inheritance__border_box_rtl() {
+        crate::run_xml_test("subgrid", "grid_subgrid_gap_inheritance__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_subgrid_gap_inheritance__content_box_rtl() {
+        crate::run_xml_test("subgrid", "grid_subgrid_gap_inheritance__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_subgrid_intrinsic_tracks__border_box_ltr() {
+        crate::run_xml_test("subgrid", "grid_subgrid_intrinsic_tracks__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_subgrid_intrinsic_tracks__content_box_ltr() {
+        crate::run_xml_test("subgrid", "grid_subgrid_intrinsic_tracks__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_subgrid_intrinsic_tracks__border_box_rtl() {
+        crate::run_xml_test("subgrid", "grid_subgrid_intrinsic_tracks__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_subgrid_intrinsic_tracks__content_box_rtl() {
+        crate::run_xml_test("subgrid", "grid_subgrid_intrinsic_tracks__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_subgrid_intrinsic_with_padding__border_box_ltr() {
+        crate::run_xml_test("subgrid", "grid_subgrid_intrinsic_with_padding__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_subgrid_intrinsic_with_padding__content_box_ltr() {
+        crate::run_xml_test("subgrid", "grid_subgrid_intrinsic_with_padding__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_subgrid_intrinsic_with_padding__border_box_rtl() {
+        crate::run_xml_test("subgrid", "grid_subgrid_intrinsic_with_padding__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_subgrid_intrinsic_with_padding__content_box_rtl() {
+        crate::run_xml_test("subgrid", "grid_subgrid_intrinsic_with_padding__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_subgrid_margin__border_box_ltr() {
+        crate::run_xml_test("subgrid", "grid_subgrid_margin__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_subgrid_margin__content_box_ltr() {
+        crate::run_xml_test("subgrid", "grid_subgrid_margin__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_subgrid_margin__border_box_rtl() {
+        crate::run_xml_test("subgrid", "grid_subgrid_margin__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_subgrid_margin__content_box_rtl() {
+        crate::run_xml_test("subgrid", "grid_subgrid_margin__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_subgrid_nested__border_box_ltr() {
+        crate::run_xml_test("subgrid", "grid_subgrid_nested__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_subgrid_nested__content_box_ltr() {
+        crate::run_xml_test("subgrid", "grid_subgrid_nested__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_subgrid_nested__border_box_rtl() {
+        crate::run_xml_test("subgrid", "grid_subgrid_nested__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_subgrid_nested__content_box_rtl() {
+        crate::run_xml_test("subgrid", "grid_subgrid_nested__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_subgrid_not_grid_item_fallback__border_box_ltr() {
+        crate::run_xml_test("subgrid", "grid_subgrid_not_grid_item_fallback__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_subgrid_not_grid_item_fallback__content_box_ltr() {
+        crate::run_xml_test("subgrid", "grid_subgrid_not_grid_item_fallback__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_subgrid_not_grid_item_fallback__border_box_rtl() {
+        crate::run_xml_test("subgrid", "grid_subgrid_not_grid_item_fallback__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_subgrid_not_grid_item_fallback__content_box_rtl() {
+        crate::run_xml_test("subgrid", "grid_subgrid_not_grid_item_fallback__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_subgrid_padding_border__border_box_ltr() {
+        crate::run_xml_test("subgrid", "grid_subgrid_padding_border__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_subgrid_padding_border__content_box_ltr() {
+        crate::run_xml_test("subgrid", "grid_subgrid_padding_border__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_subgrid_padding_border__border_box_rtl() {
+        crate::run_xml_test("subgrid", "grid_subgrid_padding_border__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_subgrid_padding_border__content_box_rtl() {
+        crate::run_xml_test("subgrid", "grid_subgrid_padding_border__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_subgrid_placement_clamped__border_box_ltr() {
+        crate::run_xml_test("subgrid", "grid_subgrid_placement_clamped__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_subgrid_placement_clamped__content_box_ltr() {
+        crate::run_xml_test("subgrid", "grid_subgrid_placement_clamped__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_subgrid_placement_clamped__border_box_rtl() {
+        crate::run_xml_test("subgrid", "grid_subgrid_placement_clamped__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_subgrid_placement_clamped__content_box_rtl() {
+        crate::run_xml_test("subgrid", "grid_subgrid_placement_clamped__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_subgrid_rows__border_box_ltr() {
+        crate::run_xml_test("subgrid", "grid_subgrid_rows__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_subgrid_rows__content_box_ltr() {
+        crate::run_xml_test("subgrid", "grid_subgrid_rows__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_subgrid_rows__border_box_rtl() {
+        crate::run_xml_test("subgrid", "grid_subgrid_rows__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_subgrid_rows__content_box_rtl() {
+        crate::run_xml_test("subgrid", "grid_subgrid_rows__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_subgrid_span_offset__border_box_ltr() {
+        crate::run_xml_test("subgrid", "grid_subgrid_span_offset__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_subgrid_span_offset__content_box_ltr() {
+        crate::run_xml_test("subgrid", "grid_subgrid_span_offset__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_subgrid_span_offset__border_box_rtl() {
+        crate::run_xml_test("subgrid", "grid_subgrid_span_offset__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_subgrid_span_offset__content_box_rtl() {
+        crate::run_xml_test("subgrid", "grid_subgrid_span_offset__content_box_rtl");
+    }
+}

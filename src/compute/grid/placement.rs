@@ -78,6 +78,10 @@ fn maybe_mirror_span(
 /// Place items into the grid, generating new rows/column into the implicit grid as required
 ///
 /// [Specification](https://www.w3.org/TR/css-grid-2/#auto-placement-algo)
+///
+/// `subgrid_clamp` contains, for each axis which is subgridded, the number of explicit tracks
+/// in that axis. Placements in such axes are clamped to the explicit grid, as a subgrid cannot
+/// have implicit tracks. See <https://www.w3.org/TR/css-grid-2/#subgrid-of-subgrid>
 #[allow(clippy::too_many_arguments)]
 pub(super) fn place_grid_items<'a, S, ChildIter>(
     cell_occupancy_matrix: &mut CellOccupancyMatrix,
@@ -88,6 +92,7 @@ pub(super) fn place_grid_items<'a, S, ChildIter>(
     align_items: AlignItems,
     justify_items: AlignItems,
     named_line_resolver: &NamedLineResolver<<S as CoreStyle>::CustomIdent>,
+    subgrid_clamp: InBothAbsAxis<Option<u16>>,
 ) where
     S: GridItemStyle + 'a,
     ChildIter: Iterator<Item = (usize, NodeId, S)>,
@@ -135,6 +140,7 @@ pub(super) fn place_grid_items<'a, S, ChildIter>(
                 row_span,
                 col_span,
                 CellOccupancyState::DefinitelyPlaced,
+                subgrid_clamp,
             );
         });
 
@@ -170,6 +176,7 @@ pub(super) fn place_grid_items<'a, S, ChildIter>(
                 primary_span,
                 secondary_span,
                 CellOccupancyState::AutoPlaced,
+                subgrid_clamp,
             );
         });
 
@@ -240,6 +247,7 @@ pub(super) fn place_grid_items<'a, S, ChildIter>(
                 primary_span,
                 secondary_span,
                 CellOccupancyState::AutoPlaced,
+                subgrid_clamp,
             );
 
             // If using the "dense" placement algorithm then reset the grid position back to grid_start_position ready for the next item
@@ -454,6 +462,16 @@ fn place_indefinitely_positioned_item(
     }
 }
 
+/// Clamp a placement to the explicit grid (used for subgridded axes, which cannot have
+/// implicit tracks). Items are clamped such that they cover at least one track.
+/// See <https://www.w3.org/TR/css-grid-2/#subgrid-of-subgrid>
+fn clamp_span_to_explicit_grid(span: Line<OriginZeroLine>, explicit_track_count: u16) -> Line<OriginZeroLine> {
+    let max_line = (explicit_track_count as i16).max(1);
+    let end = span.end.0.clamp(1, max_line);
+    let start = span.start.0.clamp(0, end - 1);
+    Line { start: OriginZeroLine(start), end: OriginZeroLine(end) }
+}
+
 /// Record the grid item in both CellOccupancyMatric and the GridItems list
 /// once a definite placement has been determined
 #[allow(clippy::too_many_arguments)]
@@ -469,11 +487,22 @@ fn record_grid_placement<S: GridItemStyle>(
     primary_span: Line<OriginZeroLine>,
     secondary_span: Line<OriginZeroLine>,
     placement_type: CellOccupancyState,
+    subgrid_clamp: InBothAbsAxis<Option<u16>>,
 ) {
     #[cfg(test)]
     println!("BEFORE placement:");
     #[cfg(test)]
     println!("{cell_occupancy_matrix:?}");
+
+    // Clamp placements in subgridded axes to the explicit grid
+    let primary_span = match subgrid_clamp.get(primary_axis) {
+        Some(explicit_track_count) => clamp_span_to_explicit_grid(primary_span, explicit_track_count),
+        None => primary_span,
+    };
+    let secondary_span = match subgrid_clamp.get(primary_axis.other_axis()) {
+        Some(explicit_track_count) => clamp_span_to_explicit_grid(secondary_span, explicit_track_count),
+        None => secondary_span,
+    };
 
     // Mark area of grid as occupied
     cell_occupancy_matrix.mark_area_as(primary_axis, primary_span, secondary_span, placement_type);
@@ -510,6 +539,7 @@ mod tests {
         use crate::compute::grid::util::*;
         use crate::compute::grid::CellOccupancyMatrix;
         use crate::compute::grid::NamedLineResolver;
+        use crate::geometry::InBothAbsAxis;
         use crate::prelude::*;
         use crate::style::GridAutoFlow;
         use crate::Direction;
@@ -549,6 +579,7 @@ mod tests {
                 AlignSelf::START,
                 // TODO: actually test named line resolution
                 &name_resolver,
+                InBothAbsAxis { horizontal: None, vertical: None },
             );
 
             // Assert that each item has been placed in the right location
