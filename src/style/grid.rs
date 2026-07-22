@@ -688,13 +688,13 @@ impl TaffyMaxContent for MaxTrackSizingFunction {
     const MAX_CONTENT: Self = Self(CompactLength::MAX_CONTENT);
 }
 impl FromLength for MaxTrackSizingFunction {
-    fn from_length<Input: Into<f32> + Copy>(value: Input) -> Self {
-        Self::length(value.into())
+    fn from_length<Input: Into<f64> + Copy>(value: Input) -> Self {
+        Self::length(value.into() as f32)
     }
 }
 impl FromPercent for MaxTrackSizingFunction {
-    fn from_percent<Input: Into<f32> + Copy>(value: Input) -> Self {
-        Self::percent(value.into())
+    fn from_percent<Input: Into<f64> + Copy>(value: Input) -> Self {
+        Self::percent(value.into() as f32)
     }
 }
 impl TaffyFitContent for MaxTrackSizingFunction {
@@ -703,8 +703,8 @@ impl TaffyFitContent for MaxTrackSizingFunction {
     }
 }
 impl FromFr for MaxTrackSizingFunction {
-    fn from_fr<Input: Into<f32> + Copy>(value: Input) -> Self {
-        Self::fr(value.into())
+    fn from_fr<Input: Into<f64> + Copy>(value: Input) -> Self {
+        Self::fr(value.into() as f32)
     }
 }
 impl From<LengthPercentage> for MaxTrackSizingFunction {
@@ -1018,13 +1018,13 @@ impl TaffyMaxContent for MinTrackSizingFunction {
     const MAX_CONTENT: Self = Self(CompactLength::MAX_CONTENT);
 }
 impl FromLength for MinTrackSizingFunction {
-    fn from_length<Input: Into<f32> + Copy>(value: Input) -> Self {
-        Self::length(value.into())
+    fn from_length<Input: Into<f64> + Copy>(value: Input) -> Self {
+        Self::length(value.into() as f32)
     }
 }
 impl FromPercent for MinTrackSizingFunction {
-    fn from_percent<Input: Into<f32> + Copy>(value: Input) -> Self {
-        Self::percent(value.into())
+    fn from_percent<Input: Into<f64> + Copy>(value: Input) -> Self {
+        Self::percent(value.into() as f32)
     }
 }
 impl From<LengthPercentage> for MinTrackSizingFunction {
@@ -1276,17 +1276,17 @@ impl TaffyZero for TrackSizingFunction {
     const ZERO: Self = Self { min: MinTrackSizingFunction::ZERO, max: MaxTrackSizingFunction::ZERO };
 }
 impl FromLength for TrackSizingFunction {
-    fn from_length<Input: Into<f32> + Copy>(value: Input) -> Self {
+    fn from_length<Input: Into<f64> + Copy>(value: Input) -> Self {
         Self { min: MinTrackSizingFunction::from_length(value), max: MaxTrackSizingFunction::from_length(value) }
     }
 }
 impl FromPercent for TrackSizingFunction {
-    fn from_percent<Input: Into<f32> + Copy>(percent: Input) -> Self {
+    fn from_percent<Input: Into<f64> + Copy>(percent: Input) -> Self {
         Self { min: MinTrackSizingFunction::from_percent(percent), max: MaxTrackSizingFunction::from_percent(percent) }
     }
 }
 impl FromFr for TrackSizingFunction {
-    fn from_fr<Input: Into<f32> + Copy>(flex: Input) -> Self {
+    fn from_fr<Input: Into<f64> + Copy>(flex: Input) -> Self {
         Self { min: MinTrackSizingFunction::AUTO, max: MaxTrackSizingFunction::from_fr(flex) }
     }
 }
@@ -1477,17 +1477,17 @@ impl<S: CheapCloneStr> TaffyZero for GridTemplateComponent<S> {
     const ZERO: Self = Self::Single(TrackSizingFunction::ZERO);
 }
 impl<S: CheapCloneStr> FromLength for GridTemplateComponent<S> {
-    fn from_length<Input: Into<f32> + Copy>(value: Input) -> Self {
+    fn from_length<Input: Into<f64> + Copy>(value: Input) -> Self {
         Self::Single(TrackSizingFunction::from_length(value))
     }
 }
 impl<S: CheapCloneStr> FromPercent for GridTemplateComponent<S> {
-    fn from_percent<Input: Into<f32> + Copy>(percent: Input) -> Self {
+    fn from_percent<Input: Into<f64> + Copy>(percent: Input) -> Self {
         Self::Single(TrackSizingFunction::from_percent(percent))
     }
 }
 impl<S: CheapCloneStr> FromFr for GridTemplateComponent<S> {
-    fn from_fr<Input: Into<f32> + Copy>(flex: Input) -> Self {
+    fn from_fr<Input: Into<f64> + Copy>(flex: Input) -> Self {
         Self::Single(TrackSizingFunction::from_fr(flex))
     }
 }

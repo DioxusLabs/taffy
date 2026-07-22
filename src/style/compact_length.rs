@@ -467,18 +467,18 @@ impl TaffyMaxContent for CompactLength {
     const MAX_CONTENT: Self = Self::max_content();
 }
 impl FromLength for CompactLength {
-    fn from_length<Input: Into<f32> + Copy>(value: Input) -> Self {
-        Self::length(value.into())
+    fn from_length<Input: Into<f64> + Copy>(value: Input) -> Self {
+        Self::length(value.into() as f32)
     }
 }
 impl FromPercent for CompactLength {
-    fn from_percent<Input: Into<f32> + Copy>(value: Input) -> Self {
-        Self::percent(value.into())
+    fn from_percent<Input: Into<f64> + Copy>(value: Input) -> Self {
+        Self::percent(value.into() as f32)
     }
 }
 impl FromFr for CompactLength {
-    fn from_fr<Input: Into<f32> + Copy>(value: Input) -> Self {
-        Self::fr(value.into())
+    fn from_fr<Input: Into<f64> + Copy>(value: Input) -> Self {
+        Self::fr(value.into() as f32)
     }
 }
 impl TaffyFitContent for CompactLength {

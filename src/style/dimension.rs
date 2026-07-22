@@ -15,13 +15,13 @@ impl TaffyZero for LengthPercentage {
     const ZERO: Self = Self(CompactLength::ZERO);
 }
 impl FromLength for LengthPercentage {
-    fn from_length<Input: Into<f32> + Copy>(value: Input) -> Self {
-        Self::length(value.into())
+    fn from_length<Input: Into<f64> + Copy>(value: Input) -> Self {
+        Self::length(value.into() as f32)
     }
 }
 impl FromPercent for LengthPercentage {
-    fn from_percent<Input: Into<f32> + Copy>(value: Input) -> Self {
-        Self::percent(value.into())
+    fn from_percent<Input: Into<f64> + Copy>(value: Input) -> Self {
+        Self::percent(value.into() as f32)
     }
 }
 
@@ -107,13 +107,13 @@ impl TaffyAuto for LengthPercentageAuto {
     const AUTO: Self = Self(CompactLength::AUTO);
 }
 impl FromLength for LengthPercentageAuto {
-    fn from_length<Input: Into<f32> + Copy>(value: Input) -> Self {
-        Self::length(value.into())
+    fn from_length<Input: Into<f64> + Copy>(value: Input) -> Self {
+        Self::length(value.into() as f32)
     }
 }
 impl FromPercent for LengthPercentageAuto {
-    fn from_percent<Input: Into<f32> + Copy>(value: Input) -> Self {
-        Self::percent(value.into())
+    fn from_percent<Input: Into<f64> + Copy>(value: Input) -> Self {
+        Self::percent(value.into() as f32)
     }
 }
 impl From<LengthPercentage> for LengthPercentageAuto {
@@ -234,13 +234,13 @@ impl TaffyAuto for Dimension {
     const AUTO: Self = Self(CompactLength::AUTO);
 }
 impl FromLength for Dimension {
-    fn from_length<Input: Into<f32> + Copy>(value: Input) -> Self {
-        Self::length(value.into())
+    fn from_length<Input: Into<f64> + Copy>(value: Input) -> Self {
+        Self::length(value.into() as f32)
     }
 }
 impl FromPercent for Dimension {
-    fn from_percent<Input: Into<f32> + Copy>(value: Input) -> Self {
-        Self::percent(value.into())
+    fn from_percent<Input: Into<f64> + Copy>(value: Input) -> Self {
+        Self::percent(value.into() as f32)
     }
 }
 impl From<LengthPercentage> for Dimension {

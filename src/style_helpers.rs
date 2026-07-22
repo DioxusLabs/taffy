@@ -79,10 +79,10 @@ where
 #[cfg(feature = "grid")]
 pub fn flex<Input, Output>(flex_fraction: Input) -> Output
 where
-    Input: Into<f32> + Copy,
+    Input: Into<f64> + Copy,
     Output: From<MinMax<MinTrackSizingFunction, MaxTrackSizingFunction>>,
 {
-    MinMax { min: zero(), max: fr(flex_fraction.into()) }.into()
+    MinMax { min: zero(), max: fr(flex_fraction) }.into()
 }
 
 /// Returns the zero value for that type
@@ -372,159 +372,159 @@ impl<T: TaffyFitContent> Rect<T> {
 }
 
 /// Returns a value of the inferred type which represent an absolute length
-pub fn length<Input: Into<f32> + Copy, T: FromLength>(value: Input) -> T {
+pub fn length<Input: Into<f64> + Copy, T: FromLength>(value: Input) -> T {
     T::from_length(value)
 }
 
 /// Trait to create absolute length values from plain numbers
 pub trait FromLength {
-    /// Converts into an `Into<f32>` into Self
-    fn from_length<Input: Into<f32> + Copy>(value: Input) -> Self;
+    /// Converts into an `Into<f64>` into Self
+    fn from_length<Input: Into<f64> + Copy>(value: Input) -> Self;
 }
 impl FromLength for f32 {
-    fn from_length<Input: Into<f32> + Copy>(value: Input) -> Self {
-        value.into()
+    fn from_length<Input: Into<f64> + Copy>(value: Input) -> Self {
+        value.into() as f32
     }
 }
 impl FromLength for Option<f32> {
-    fn from_length<Input: Into<f32> + Copy>(value: Input) -> Self {
-        Some(value.into())
+    fn from_length<Input: Into<f64> + Copy>(value: Input) -> Self {
+        Some(value.into() as f32)
     }
 }
 impl<T: FromLength> FromLength for Point<T> {
-    fn from_length<Input: Into<f32> + Copy>(value: Input) -> Self {
-        Point { x: T::from_length(value.into()), y: T::from_length(value.into()) }
+    fn from_length<Input: Into<f64> + Copy>(value: Input) -> Self {
+        Point { x: T::from_length(value), y: T::from_length(value) }
     }
 }
 impl<T: FromLength> Point<T> {
     /// Returns a Point where x and y values are the same given absolute length
-    pub fn length<Input: Into<f32> + Copy>(value: Input) -> Self {
+    pub fn length<Input: Into<f64> + Copy>(value: Input) -> Self {
         length::<Input, Self>(value)
     }
 }
 impl<T: FromLength> FromLength for Line<T> {
-    fn from_length<Input: Into<f32> + Copy>(value: Input) -> Self {
-        Line { start: T::from_length(value.into()), end: T::from_length(value.into()) }
+    fn from_length<Input: Into<f64> + Copy>(value: Input) -> Self {
+        Line { start: T::from_length(value), end: T::from_length(value) }
     }
 }
 impl<T: FromLength> Line<T> {
     /// Returns a Line where both the start and end values are the same given absolute length
-    pub fn length<Input: Into<f32> + Copy>(value: Input) -> Self {
+    pub fn length<Input: Into<f64> + Copy>(value: Input) -> Self {
         length::<Input, Self>(value)
     }
 }
 impl<T: FromLength> FromLength for Size<T> {
-    fn from_length<Input: Into<f32> + Copy>(value: Input) -> Self {
-        Size { width: T::from_length(value.into()), height: T::from_length(value.into()) }
+    fn from_length<Input: Into<f64> + Copy>(value: Input) -> Self {
+        Size { width: T::from_length(value), height: T::from_length(value) }
     }
 }
 impl<T: FromLength> Size<T> {
     /// Returns a Size where both the width and height values the same given absolute length
-    pub fn length<Input: Into<f32> + Copy>(value: Input) -> Self {
+    pub fn length<Input: Into<f64> + Copy>(value: Input) -> Self {
         length::<Input, Self>(value)
     }
 }
 impl<T: FromLength> FromLength for Rect<T> {
-    fn from_length<Input: Into<f32> + Copy>(value: Input) -> Self {
+    fn from_length<Input: Into<f64> + Copy>(value: Input) -> Self {
         Rect {
-            left: T::from_length(value.into()),
-            right: T::from_length(value.into()),
-            top: T::from_length(value.into()),
-            bottom: T::from_length(value.into()),
+            left: T::from_length(value),
+            right: T::from_length(value),
+            top: T::from_length(value),
+            bottom: T::from_length(value),
         }
     }
 }
 impl<T: FromLength> Rect<T> {
     /// Returns a Rect where the left, right, top and bottom values are all the same given absolute length
-    pub fn length<Input: Into<f32> + Copy>(value: Input) -> Self {
+    pub fn length<Input: Into<f64> + Copy>(value: Input) -> Self {
         length::<Input, Self>(value)
     }
 }
 
 /// Returns a value of the inferred type which represent a percentage
-pub fn percent<Input: Into<f32> + Copy, T: FromPercent>(percent: Input) -> T {
+pub fn percent<Input: Into<f64> + Copy, T: FromPercent>(percent: Input) -> T {
     T::from_percent(percent)
 }
 
 /// Trait to create constant percent values from plain numbers
 pub trait FromPercent {
-    /// Converts into an `Into<f32>` into Self
-    fn from_percent<Input: Into<f32> + Copy>(percent: Input) -> Self;
+    /// Converts into an `Into<f64>` into Self
+    fn from_percent<Input: Into<f64> + Copy>(percent: Input) -> Self;
 }
 impl FromPercent for f32 {
-    fn from_percent<Input: Into<f32> + Copy>(percent: Input) -> Self {
-        percent.into()
+    fn from_percent<Input: Into<f64> + Copy>(percent: Input) -> Self {
+        percent.into() as f32
     }
 }
 impl FromPercent for Option<f32> {
-    fn from_percent<Input: Into<f32> + Copy>(percent: Input) -> Self {
-        Some(percent.into())
+    fn from_percent<Input: Into<f64> + Copy>(percent: Input) -> Self {
+        Some(percent.into() as f32)
     }
 }
 impl<T: FromPercent> FromPercent for Point<T> {
-    fn from_percent<Input: Into<f32> + Copy>(percent: Input) -> Self {
-        Point { x: T::from_percent(percent.into()), y: T::from_percent(percent.into()) }
+    fn from_percent<Input: Into<f64> + Copy>(percent: Input) -> Self {
+        Point { x: T::from_percent(percent), y: T::from_percent(percent) }
     }
 }
 impl<T: FromPercent> Point<T> {
     /// Returns a Point where both the x and y values are the constant percent value of the contained type
     /// (e.g. 2.1, Some(2.1), or Dimension::Length(2.1))
-    pub fn percent<Input: Into<f32> + Copy>(percent_value: Input) -> Self {
+    pub fn percent<Input: Into<f64> + Copy>(percent_value: Input) -> Self {
         percent::<Input, Self>(percent_value)
     }
 }
 impl<T: FromPercent> FromPercent for Line<T> {
-    fn from_percent<Input: Into<f32> + Copy>(percent: Input) -> Self {
-        Line { start: T::from_percent(percent.into()), end: T::from_percent(percent.into()) }
+    fn from_percent<Input: Into<f64> + Copy>(percent: Input) -> Self {
+        Line { start: T::from_percent(percent), end: T::from_percent(percent) }
     }
 }
 impl<T: FromPercent> Line<T> {
     /// Returns a Line where both the start and end values are the constant percent value of the contained type
     /// (e.g. 2.1, Some(2.1), or Dimension::Length(2.1))
-    pub fn percent<Input: Into<f32> + Copy>(percent_value: Input) -> Self {
+    pub fn percent<Input: Into<f64> + Copy>(percent_value: Input) -> Self {
         percent::<Input, Self>(percent_value)
     }
 }
 impl<T: FromPercent> FromPercent for Size<T> {
-    fn from_percent<Input: Into<f32> + Copy>(percent: Input) -> Self {
-        Size { width: T::from_percent(percent.into()), height: T::from_percent(percent.into()) }
+    fn from_percent<Input: Into<f64> + Copy>(percent: Input) -> Self {
+        Size { width: T::from_percent(percent), height: T::from_percent(percent) }
     }
 }
 impl<T: FromPercent> Size<T> {
     /// Returns a Size where both the width and height values are the constant percent value of the contained type
     /// (e.g. 2.1, Some(2.1), or Dimension::Length(2.1))
-    pub fn percent<Input: Into<f32> + Copy>(percent_value: Input) -> Self {
+    pub fn percent<Input: Into<f64> + Copy>(percent_value: Input) -> Self {
         percent::<Input, Self>(percent_value)
     }
 }
 impl<T: FromPercent> FromPercent for Rect<T> {
-    fn from_percent<Input: Into<f32> + Copy>(percent: Input) -> Self {
+    fn from_percent<Input: Into<f64> + Copy>(percent: Input) -> Self {
         Rect {
-            left: T::from_percent(percent.into()),
-            right: T::from_percent(percent.into()),
-            top: T::from_percent(percent.into()),
-            bottom: T::from_percent(percent.into()),
+            left: T::from_percent(percent),
+            right: T::from_percent(percent),
+            top: T::from_percent(percent),
+            bottom: T::from_percent(percent),
         }
     }
 }
 impl<T: FromPercent> Rect<T> {
     /// Returns a Rect where the left, right, top and bottom values are all constant percent value of the contained type
     /// (e.g. 2.1, Some(2.1), or Dimension::Length(2.1))
-    pub fn percent<Input: Into<f32> + Copy>(percent_value: Input) -> Self {
+    pub fn percent<Input: Into<f64> + Copy>(percent_value: Input) -> Self {
         percent::<Input, Self>(percent_value)
     }
 }
 
 /// Create a `Fraction` track sizing function (`fr` in CSS)
 #[cfg(feature = "grid")]
-pub fn fr<Input: Into<f32> + Copy, T: FromFr>(flex: Input) -> T {
+pub fn fr<Input: Into<f64> + Copy, T: FromFr>(flex: Input) -> T {
     T::from_fr(flex)
 }
 
 /// Trait to create constant percent values from plain numbers
 pub trait FromFr {
-    /// Converts into an `Into<f32>` into Self
-    fn from_fr<Input: Into<f32> + Copy>(flex: Input) -> Self;
+    /// Converts into an `Into<f64>` into Self
+    fn from_fr<Input: Into<f64> + Copy>(flex: Input) -> Self;
 }
 
 #[cfg(feature = "grid")]
