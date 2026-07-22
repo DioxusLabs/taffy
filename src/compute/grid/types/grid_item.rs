@@ -1,10 +1,13 @@
 //! Contains GridItem used to represent a single grid item during layout
 use super::GridTrack;
-use crate::compute::grid::OriginZeroLine;
+use crate::compute::grid::{OriginZeroLine, SubgridContext};
 use crate::geometry::AbstractAxis;
-use crate::geometry::{Line, Point, Rect, Size};
+use crate::geometry::{InBothAbsAxis, Line, Point, Rect, Size};
 use crate::style::{AlignItems, AlignSelf, AvailableSpace, Dimension, LengthPercentageAuto, Overflow};
-use crate::tree::{LayoutPartialTree, LayoutPartialTreeExt, NodeId, SizingMode};
+use crate::tree::{
+    LayoutGridContainer, LayoutInput, LayoutPartialTree, LayoutPartialTreeExt, NodeId, RequestedAxis, RunMode,
+    SizingMode,
+};
 use crate::util::{MaybeMath, MaybeResolve, ResolveOrZero};
 use crate::{BoxSizing, GridItemStyle, LengthPercentage};
 use core::ops::Range;
@@ -75,6 +78,14 @@ pub(in super::super) struct GridItem {
     /// Whether the item crosses a intrinsic column
     pub crosses_intrinsic_column: bool,
 
+    /// Whether the item is itself a grid container which is subgridded in each axis
+    /// (i.e. has `grid_template_columns`/`grid_template_rows` set to `subgrid`)
+    pub subgridded_axes: InBothAbsAxis<bool>,
+    /// The subgrid context (adopted tracks) to pass down when measuring or laying out this item.
+    /// `None` unless the item is subgridded in at least one axis. Refreshed whenever the parent's
+    /// track sizes change.
+    pub subgrid_ctx: Option<SubgridContext>,
+
     // Caches for intrinsic size computation. These caches are only valid for a single run of the track-sizing algorithm.
     /// Cache for the known_dimensions input to intrinsic sizing computation
     pub grid_area_size_cache: Option<Size<Option<f32>>>,
@@ -127,12 +138,62 @@ impl GridItem {
             crosses_flexible_column: false,         // Properly initialised later
             crosses_intrinsic_row: false,           // Properly initialised later
             crosses_intrinsic_column: false,        // Properly initialised later
+            subgridded_axes: InBothAbsAxis { horizontal: false, vertical: false }, // Properly initialised later
+            subgrid_ctx: None,
             grid_area_size_cache: None,
             min_content_contribution_cache: Size::NONE,
             max_content_contribution_cache: Size::NONE,
             minimum_contribution_cache: Size::NONE,
             y_position: 0.0,
             height: 0.0,
+        }
+    }
+
+    /// Whether the item is itself a grid container which is subgridded in at least one axis
+    #[inline(always)]
+    pub fn is_subgrid(&self) -> bool {
+        self.subgridded_axes.horizontal || self.subgridded_axes.vertical
+    }
+
+    /// Measure the child's size in the given axis. Equivalent to `tree.measure_child_size` except
+    /// that if the item is a subgrid then the subgrid context (adopted tracks) is passed through
+    /// to the child layout algorithm.
+    #[allow(clippy::too_many_arguments)]
+    fn measure_child_size_maybe_subgridded(
+        &self,
+        tree: &mut impl LayoutGridContainer,
+        known_dimensions: Size<Option<f32>>,
+        parent_size: Size<Option<f32>>,
+        available_space: Size<AvailableSpace>,
+        sizing_mode: SizingMode,
+        axis: AbstractAxis,
+    ) -> f32 {
+        if let Some(subgrid_ctx) = &self.subgrid_ctx {
+            tree.compute_grid_child_layout(
+                self.node,
+                LayoutInput {
+                    known_dimensions,
+                    parent_size,
+                    available_space,
+                    sizing_mode,
+                    axis: RequestedAxis::from(axis.as_abs_naive()),
+                    run_mode: RunMode::ComputeSize,
+                    vertical_margins_are_collapsible: Line::FALSE,
+                },
+                Some(subgrid_ctx),
+            )
+            .size
+            .get_abs(axis.as_abs_naive())
+        } else {
+            tree.measure_child_size(
+                self.node,
+                known_dimensions,
+                parent_size,
+                available_space,
+                sizing_mode,
+                axis.as_abs_naive(),
+                Line::FALSE,
+            )
         }
     }
 
@@ -416,11 +477,23 @@ impl GridItem {
         .sum_axes()
     }
 
+    /// The item's resolved margins per-side. Percentage margins resolve against the passed width
+    /// (used when constructing a subgrid context to pass down to a subgridded child).
+    #[inline(always)]
+    pub fn resolved_margins(&self, inner_node_width: Option<f32>, tree: &impl LayoutPartialTree) -> Rect<f32> {
+        Rect {
+            left: self.margin.left.resolve_or_zero(inner_node_width, |val, basis| tree.calc(val, basis)),
+            right: self.margin.right.resolve_or_zero(inner_node_width, |val, basis| tree.calc(val, basis)),
+            top: self.margin.top.resolve_or_zero(inner_node_width, |val, basis| tree.calc(val, basis)),
+            bottom: self.margin.bottom.resolve_or_zero(inner_node_width, |val, basis| tree.calc(val, basis)),
+        }
+    }
+
     /// Compute the item's min content contribution from the provided parameters
     pub fn min_content_contribution(
         &self,
         axis: AbstractAxis,
-        tree: &mut impl LayoutPartialTree,
+        tree: &mut impl LayoutGridContainer,
         grid_area_size: Size<Option<f32>>,
         available_space: Size<Option<f32>>,
     ) -> f32 {
@@ -430,8 +503,8 @@ impl GridItem {
         // Spec:
         // https://www.w3.org/TR/css-grid-1/#grid-item-sizing
         // https://www.w3.org/TR/css-grid-1/#algo-overview
-        tree.measure_child_size(
-            self.node,
+        self.measure_child_size_maybe_subgridded(
+            tree,
             known_dimensions,
             grid_area_size,
             available_space.map(|opt| match opt {
@@ -439,8 +512,7 @@ impl GridItem {
                 None => AvailableSpace::MinContent,
             }),
             SizingMode::InherentSize,
-            axis.as_abs_naive(),
-            Line::FALSE,
+            axis,
         )
     }
 
@@ -449,7 +521,7 @@ impl GridItem {
     pub fn min_content_contribution_cached(
         &mut self,
         axis: AbstractAxis,
-        tree: &mut impl LayoutPartialTree,
+        tree: &mut impl LayoutGridContainer,
         grid_area_size: Size<Option<f32>>,
         available_space: Size<Option<f32>>,
     ) -> f32 {
@@ -464,7 +536,7 @@ impl GridItem {
     pub fn max_content_contribution(
         &self,
         axis: AbstractAxis,
-        tree: &mut impl LayoutPartialTree,
+        tree: &mut impl LayoutGridContainer,
         grid_area_size: Size<Option<f32>>,
         available_space: Size<Option<f32>>,
     ) -> f32 {
@@ -472,8 +544,8 @@ impl GridItem {
         // See the min-content path above. Max-content measurement uses the same containing-block
         // basis so percentage-dependent item geometry is measured from the grid area rather than
         // from the container.
-        tree.measure_child_size(
-            self.node,
+        self.measure_child_size_maybe_subgridded(
+            tree,
             known_dimensions,
             grid_area_size,
             available_space.map(|opt| match opt {
@@ -481,8 +553,7 @@ impl GridItem {
                 None => AvailableSpace::MaxContent,
             }),
             SizingMode::InherentSize,
-            axis.as_abs_naive(),
-            Line::FALSE,
+            axis,
         )
     }
 
@@ -491,7 +562,7 @@ impl GridItem {
     pub fn max_content_contribution_cached(
         &mut self,
         axis: AbstractAxis,
-        tree: &mut impl LayoutPartialTree,
+        tree: &mut impl LayoutGridContainer,
         grid_area_size: Size<Option<f32>>,
         available_space: Size<Option<f32>>,
     ) -> f32 {
@@ -512,7 +583,7 @@ impl GridItem {
     /// See: https://www.w3.org/TR/css-grid-1/#min-size-auto
     pub fn minimum_contribution(
         &mut self,
-        tree: &mut impl LayoutPartialTree,
+        tree: &mut impl LayoutGridContainer,
         axis: AbstractAxis,
         axis_tracks: &[GridTrack],
         grid_area_size: Size<Option<f32>>,
@@ -594,7 +665,7 @@ impl GridItem {
     #[inline(always)]
     pub fn minimum_contribution_cached(
         &mut self,
-        tree: &mut impl LayoutPartialTree,
+        tree: &mut impl LayoutGridContainer,
         axis: AbstractAxis,
         axis_tracks: &[GridTrack],
         grid_area_size: Size<Option<f32>>,
