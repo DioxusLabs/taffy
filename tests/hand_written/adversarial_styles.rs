@@ -34,7 +34,8 @@ mod adversarial_styles {
                         grid_template_columns: vec![GridTemplateComponent::Single(TrackSizingFunction {
                             min: MinTrackSizingFunction::AUTO,
                             max: MaxTrackSizingFunction::from_fr(flex_factor),
-                        })],
+                        })]
+                        .into(),
                         ..Default::default()
                     },
                     &[child],
@@ -57,7 +58,7 @@ mod adversarial_styles {
                     Style {
                         display: Display::Grid,
                         size: Size { width: Dimension::from_length(width), height: Dimension::from_length(100.0) },
-                        grid_template_columns: vec![repeat(2, vec![fr(1.0)])],
+                        grid_template_columns: vec![repeat(2, vec![fr(1.0)])].into(),
                         ..Default::default()
                     },
                     &[child],
@@ -86,7 +87,7 @@ mod adversarial_styles {
                 Style {
                     display: Display::Grid,
                     size: Size { width: Dimension::from_length(100.0), height: Dimension::from_length(100.0) },
-                    grid_template_columns: vec![repeat(2, vec![length(10.0)]), length(10.0)],
+                    grid_template_columns: vec![repeat(2, vec![length(10.0)]), length(10.0)].into(),
                     grid_template_column_names: vec![vec![], vec![], vec!["c".into()]],
                     ..Default::default()
                 },
@@ -141,7 +142,8 @@ mod adversarial_styles {
                         count: RepetitionCount::Count(2),
                         tracks: vec![length(10.0)],
                         line_names: vec![vec!["a".into()]],
-                    })],
+                    })]
+                    .into(),
                     grid_template_column_names: vec![vec![], vec![]],
                     ..Default::default()
                 },

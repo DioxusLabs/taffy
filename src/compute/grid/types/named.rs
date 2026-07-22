@@ -1,8 +1,8 @@
 //! Code for resolving name grid lines and areas
 
 use crate::{
-    CheapCloneStr, GenericGridTemplateComponent, GenericRepetition as _, GridAreaAxis, GridAreaEnd, GridContainerStyle,
-    GridPlacement, GridTemplateArea, Line, NonNamedGridPlacement, RepetitionCount,
+    CheapCloneStr, GenericGridTemplate, GenericGridTemplateComponent, GenericRepetition as _, GridAreaAxis,
+    GridAreaEnd, GridContainerStyle, GridPlacement, GridTemplateArea, Line, NonNamedGridPlacement, RepetitionCount,
 };
 use core::{borrow::Borrow, cmp::Ordering, fmt::Debug};
 
@@ -247,111 +247,141 @@ impl<S: CheapCloneStr> NamedLineResolver<S> {
         let mut row_line_name_pairs: Vec<(u32, S)> = Vec::new();
 
         let mut current_line = 0;
-        if let Some(mut column_tracks) = style.grid_template_columns() {
-            if let Some(column_line_names_iter) = style.grid_template_column_names() {
-                for line_names in column_line_names_iter {
+        match style.grid_template_columns() {
+            GenericGridTemplate::Tracks(mut column_tracks) => {
+                if let Some(column_line_names_iter) = style.grid_template_column_names() {
+                    for line_names in column_line_names_iter {
+                        current_line += 1;
+                        for line_name in line_names.into_iter() {
+                            column_line_name_pairs.push((current_line, line_name.clone()));
+                            upsert_line_name_map(&mut column_lines, line_name.clone(), current_line);
+                        }
+
+                        if let Some(GenericGridTemplateComponent::Repeat(repeat)) = column_tracks.next() {
+                            let repeat_count = match repeat.count() {
+                                RepetitionCount::Count(count) => count,
+                                RepetitionCount::AutoFill | RepetitionCount::AutoFit => column_auto_repetitions,
+                            };
+
+                            // Line name sets are positional: set `i` names the `i`th line of each
+                            // repetition, and the final line name set of each repetition collapses
+                            // with the first line name set of the following one. An empty list means
+                            // the repetition's lines are unnamed; any other length must be exactly
+                            // `track_count + 1` (one set per line, including both edge lines).
+                            let line_name_set_count = repeat.lines_names().len() as u32;
+                            let lines_per_repetition = repeat.track_count() as u32;
+                            assert!(
+                            line_name_set_count == 0 || line_name_set_count == lines_per_repetition + 1,
+                            "grid template repetition must have no line name sets or exactly track count + 1 of them ({} tracks but {} line name sets)",
+                            lines_per_repetition,
+                            line_name_set_count,
+                        );
+
+                            for _ in 0..repeat_count {
+                                for (line, line_name_set) in (current_line..).zip(repeat.lines_names()) {
+                                    for line_name in line_name_set {
+                                        column_line_name_pairs.push((line, line_name.clone()));
+                                        upsert_line_name_map(&mut column_lines, line_name.clone(), line);
+                                    }
+                                }
+                                current_line += lines_per_repetition;
+
+                                // Names for lines beyond the maximum track limit are never resolvable:
+                                // stop generating them (the explicit grid is clamped to MAX_GRID_TRACKS)
+                                if current_line > MAX_GRID_TRACKS as u32 {
+                                    break;
+                                }
+                            }
+                            // Last line name set collapses with following line name set
+                            if repeat_count > 0 {
+                                current_line = current_line.saturating_sub(1);
+                            }
+                        }
+                    }
+                }
+            }
+            // A subgridded axis takes its line names from its own `<line-name-list>`.
+            // TODO: also inherit the line names of the spanned tracks from the parent grid
+            // TODO: support `repeat()` within a subgrid `<line-name-list>`
+            GenericGridTemplate::Subgrid(line_names_iter) => {
+                for line_names in line_names_iter {
                     current_line += 1;
                     for line_name in line_names.into_iter() {
                         column_line_name_pairs.push((current_line, line_name.clone()));
                         upsert_line_name_map(&mut column_lines, line_name.clone(), current_line);
                     }
+                }
+            }
+            GenericGridTemplate::None => {}
+        }
 
-                    if let Some(GenericGridTemplateComponent::Repeat(repeat)) = column_tracks.next() {
-                        let repeat_count = match repeat.count() {
-                            RepetitionCount::Count(count) => count,
-                            RepetitionCount::AutoFill | RepetitionCount::AutoFit => column_auto_repetitions,
-                        };
+        let mut current_line = 0;
+        match style.grid_template_rows() {
+            GenericGridTemplate::Tracks(mut row_tracks) => {
+                if let Some(row_line_names_iter) = style.grid_template_row_names() {
+                    for line_names in row_line_names_iter {
+                        current_line += 1;
+                        for line_name in line_names.into_iter() {
+                            row_line_name_pairs.push((current_line, line_name.clone()));
+                            upsert_line_name_map(&mut row_lines, line_name.clone(), current_line);
+                        }
 
-                        // Line name sets are positional: set `i` names the `i`th line of each
-                        // repetition, and the final line name set of each repetition collapses
-                        // with the first line name set of the following one. An empty list means
-                        // the repetition's lines are unnamed; any other length must be exactly
-                        // `track_count + 1` (one set per line, including both edge lines).
-                        let line_name_set_count = repeat.lines_names().len() as u32;
-                        let lines_per_repetition = repeat.track_count() as u32;
-                        assert!(
+                        if let Some(GenericGridTemplateComponent::Repeat(repeat)) = row_tracks.next() {
+                            let repeat_count = match repeat.count() {
+                                RepetitionCount::Count(count) => count,
+                                RepetitionCount::AutoFill | RepetitionCount::AutoFit => row_auto_repetitions,
+                            };
+
+                            // Line name sets are positional: set `i` names the `i`th line of each
+                            // repetition, and the final line name set of each repetition collapses
+                            // with the first line name set of the following one. An empty list means
+                            // the repetition's lines are unnamed; any other length must be exactly
+                            // `track_count + 1` (one set per line, including both edge lines).
+                            let line_name_set_count = repeat.lines_names().len() as u32;
+                            let lines_per_repetition = repeat.track_count() as u32;
+                            assert!(
                             line_name_set_count == 0 || line_name_set_count == lines_per_repetition + 1,
                             "grid template repetition must have no line name sets or exactly track count + 1 of them ({} tracks but {} line name sets)",
                             lines_per_repetition,
                             line_name_set_count,
                         );
 
-                        for _ in 0..repeat_count {
-                            for (line, line_name_set) in (current_line..).zip(repeat.lines_names()) {
-                                for line_name in line_name_set {
-                                    column_line_name_pairs.push((line, line_name.clone()));
-                                    upsert_line_name_map(&mut column_lines, line_name.clone(), line);
+                            for _ in 0..repeat_count {
+                                for (line, line_name_set) in (current_line..).zip(repeat.lines_names()) {
+                                    for line_name in line_name_set {
+                                        row_line_name_pairs.push((line, line_name.clone()));
+                                        upsert_line_name_map(&mut row_lines, line_name.clone(), line);
+                                    }
+                                }
+                                current_line += lines_per_repetition;
+
+                                // Names for lines beyond the maximum track limit are never resolvable:
+                                // stop generating them (the explicit grid is clamped to MAX_GRID_TRACKS)
+                                if current_line > MAX_GRID_TRACKS as u32 {
+                                    break;
                                 }
                             }
-                            current_line += lines_per_repetition;
-
-                            // Names for lines beyond the maximum track limit are never resolvable:
-                            // stop generating them (the explicit grid is clamped to MAX_GRID_TRACKS)
-                            if current_line > MAX_GRID_TRACKS as u32 {
-                                break;
+                            // Last line name set collapses with following line name set
+                            if repeat_count > 0 {
+                                current_line = current_line.saturating_sub(1);
                             }
-                        }
-                        // Last line name set collapses with following line name set
-                        if repeat_count > 0 {
-                            current_line = current_line.saturating_sub(1);
                         }
                     }
                 }
             }
-        }
-
-        let mut current_line = 0;
-        if let Some(mut row_tracks) = style.grid_template_rows() {
-            if let Some(row_line_names_iter) = style.grid_template_row_names() {
-                for line_names in row_line_names_iter {
+            // A subgridded axis takes its line names from its own `<line-name-list>`.
+            // TODO: also inherit the line names of the spanned tracks from the parent grid
+            // TODO: support `repeat()` within a subgrid `<line-name-list>`
+            GenericGridTemplate::Subgrid(line_names_iter) => {
+                for line_names in line_names_iter {
                     current_line += 1;
                     for line_name in line_names.into_iter() {
                         row_line_name_pairs.push((current_line, line_name.clone()));
                         upsert_line_name_map(&mut row_lines, line_name.clone(), current_line);
                     }
-
-                    if let Some(GenericGridTemplateComponent::Repeat(repeat)) = row_tracks.next() {
-                        let repeat_count = match repeat.count() {
-                            RepetitionCount::Count(count) => count,
-                            RepetitionCount::AutoFill | RepetitionCount::AutoFit => row_auto_repetitions,
-                        };
-
-                        // Line name sets are positional: set `i` names the `i`th line of each
-                        // repetition, and the final line name set of each repetition collapses
-                        // with the first line name set of the following one. An empty list means
-                        // the repetition's lines are unnamed; any other length must be exactly
-                        // `track_count + 1` (one set per line, including both edge lines).
-                        let line_name_set_count = repeat.lines_names().len() as u32;
-                        let lines_per_repetition = repeat.track_count() as u32;
-                        assert!(
-                            line_name_set_count == 0 || line_name_set_count == lines_per_repetition + 1,
-                            "grid template repetition must have no line name sets or exactly track count + 1 of them ({} tracks but {} line name sets)",
-                            lines_per_repetition,
-                            line_name_set_count,
-                        );
-
-                        for _ in 0..repeat_count {
-                            for (line, line_name_set) in (current_line..).zip(repeat.lines_names()) {
-                                for line_name in line_name_set {
-                                    row_line_name_pairs.push((line, line_name.clone()));
-                                    upsert_line_name_map(&mut row_lines, line_name.clone(), line);
-                                }
-                            }
-                            current_line += lines_per_repetition;
-
-                            // Names for lines beyond the maximum track limit are never resolvable:
-                            // stop generating them (the explicit grid is clamped to MAX_GRID_TRACKS)
-                            if current_line > MAX_GRID_TRACKS as u32 {
-                                break;
-                            }
-                        }
-                        // Last line name set collapses with following line name set
-                        if repeat_count > 0 {
-                            current_line = current_line.saturating_sub(1);
-                        }
-                    }
                 }
             }
+            GenericGridTemplate::None => {}
         }
         // The size of the area template may be larger than the extents of the named areas
         // due to unnamed (`.`) cells, so it is taken from the style rather than being derived

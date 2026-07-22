@@ -20,8 +20,8 @@ mod grid_percentage_rerun {
             .new_with_children(
                 Style {
                     display: Display::Grid,
-                    grid_template_columns: vec![fit_content(percent(0.5))],
-                    grid_template_rows: vec![length(40.0)],
+                    grid_template_columns: vec![fit_content(percent(0.5))].into(),
+                    grid_template_rows: vec![length(40.0)].into(),
                     ..Default::default()
                 },
                 &[item],
@@ -62,8 +62,8 @@ mod grid_percentage_rerun {
             .new_with_children(
                 Style {
                     display: Display::Grid,
-                    grid_template_columns: vec![auto()],
-                    grid_template_rows: vec![auto(), percent(0.2), auto()],
+                    grid_template_columns: vec![auto()].into(),
+                    grid_template_rows: vec![auto(), percent(0.2), auto()].into(),
                     ..Default::default()
                 },
                 &[a, b, c],

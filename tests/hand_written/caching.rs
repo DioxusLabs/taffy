@@ -120,7 +120,7 @@ mod caching {
             .new_with_children(
                 Style {
                     display: Display::Grid,
-                    grid_template_columns: vec![length(100.0), auto()],
+                    grid_template_columns: vec![length(100.0), auto()].into(),
                     ..Default::default()
                 },
                 &[leaf, sibling],
@@ -199,7 +199,7 @@ mod caching {
                     display: Display::Grid,
                     // The `auto` column is required to trigger intrinsic (width) sizing of the
                     // items before the row-sizing (height) pass.
-                    grid_template_columns: vec![percent(0.6), auto()],
+                    grid_template_columns: vec![percent(0.6), auto()].into(),
                     size: Size { width: length(1000.0), height: auto() },
                     ..Default::default()
                 },
@@ -237,8 +237,8 @@ mod caching {
                 Style {
                     display: Display::Grid,
                     size: Size { width: length(400.0), height: length(50.0) },
-                    grid_template_columns: vec![length(100.0), minmax(length(0.0), fr(1.0))],
-                    grid_template_rows: vec![length(50.0)],
+                    grid_template_columns: vec![length(100.0), minmax(length(0.0), fr(1.0))].into(),
+                    grid_template_rows: vec![length(50.0)].into(),
                     ..Default::default()
                 },
                 &[leaf],
