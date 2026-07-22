@@ -1,8 +1,8 @@
 //! Code for resolving name grid lines and areas
 
 use crate::{
-    CheapCloneStr, GenericGridTemplateComponent, GenericRepetition as _, GridAreaAxis, GridAreaEnd, GridContainerStyle,
-    GridPlacement, GridTemplateArea, Line, NonNamedGridPlacement, RepetitionCount,
+    CheapCloneStr, GenericGridTemplate, GenericGridTemplateComponent, GenericRepetition as _, GridAreaAxis,
+    GridAreaEnd, GridContainerStyle, GridPlacement, GridTemplateArea, Line, NonNamedGridPlacement, RepetitionCount,
 };
 use core::{borrow::Borrow, cmp::Ordering, fmt::Debug};
 
@@ -105,38 +105,52 @@ impl<S: CheapCloneStr> NamedLineResolver<S> {
         // ---
 
         let mut current_line = 0;
-        if let Some(mut column_tracks) = style.grid_template_columns() {
-            if let Some(column_line_names_iter) = style.grid_template_column_names() {
-                for line_names in column_line_names_iter {
-                    current_line += 1;
-                    for line_name in line_names.into_iter() {
-                        column_lines
-                            .entry(StrHasher(line_name.clone()))
-                            .and_modify(|lines: &mut Vec<u16>| lines.push(current_line))
-                            .or_insert_with(|| single_value_vec(current_line));
-                    }
+        match style.grid_template_columns() {
+            GenericGridTemplate::Tracks(mut column_tracks) => {
+                if let Some(column_line_names_iter) = style.grid_template_column_names() {
+                    for line_names in column_line_names_iter {
+                        current_line += 1;
+                        for line_name in line_names.into_iter() {
+                            column_lines
+                                .entry(StrHasher(line_name.clone()))
+                                .and_modify(|lines: &mut Vec<u16>| lines.push(current_line))
+                                .or_insert_with(|| single_value_vec(current_line));
+                        }
 
-                    if let Some(GenericGridTemplateComponent::Repeat(repeat)) = column_tracks.next() {
-                        let repeat_count = match repeat.count() {
-                            RepetitionCount::Count(count) => count,
-                            RepetitionCount::AutoFill | RepetitionCount::AutoFit => column_auto_repetitions,
-                        };
+                        if let Some(GenericGridTemplateComponent::Repeat(repeat)) = column_tracks.next() {
+                            let repeat_count = match repeat.count() {
+                                RepetitionCount::Count(count) => count,
+                                RepetitionCount::AutoFill | RepetitionCount::AutoFit => column_auto_repetitions,
+                            };
 
-                        for _ in 0..repeat_count {
-                            for line_name_set in repeat.lines_names() {
-                                for line_name in line_name_set {
-                                    upsert_line_name_map(&mut column_lines, line_name.clone(), current_line);
+                            for _ in 0..repeat_count {
+                                for line_name_set in repeat.lines_names() {
+                                    for line_name in line_name_set {
+                                        upsert_line_name_map(&mut column_lines, line_name.clone(), current_line);
+                                    }
+                                    current_line += 1;
                                 }
-                                current_line += 1;
+                                // Last line name set collapses with following line name set
+                                current_line -= 1;
                             }
                             // Last line name set collapses with following line name set
                             current_line -= 1;
                         }
-                        // Last line name set collapses with following line name set
-                        current_line -= 1;
                     }
                 }
             }
+            // A subgridded axis takes its line names from its own `<line-name-list>`.
+            // TODO: also inherit the line names of the spanned tracks from the parent grid
+            // TODO: support `repeat()` within a subgrid `<line-name-list>`
+            GenericGridTemplate::Subgrid(line_names_iter) => {
+                for line_names in line_names_iter {
+                    current_line += 1;
+                    for line_name in line_names.into_iter() {
+                        upsert_line_name_map(&mut column_lines, line_name.clone(), current_line);
+                    }
+                }
+            }
+            GenericGridTemplate::None => {}
         }
         // Sort and dedup lines for each column name
         for lines in column_lines.values_mut() {
@@ -145,38 +159,52 @@ impl<S: CheapCloneStr> NamedLineResolver<S> {
         }
 
         let mut current_line = 0;
-        if let Some(mut row_tracks) = style.grid_template_rows() {
-            if let Some(row_line_names_iter) = style.grid_template_row_names() {
-                for line_names in row_line_names_iter {
-                    current_line += 1;
-                    for line_name in line_names.into_iter() {
-                        row_lines
-                            .entry(StrHasher(line_name.clone()))
-                            .and_modify(|lines: &mut Vec<u16>| lines.push(current_line))
-                            .or_insert_with(|| single_value_vec(current_line));
-                    }
+        match style.grid_template_rows() {
+            GenericGridTemplate::Tracks(mut row_tracks) => {
+                if let Some(row_line_names_iter) = style.grid_template_row_names() {
+                    for line_names in row_line_names_iter {
+                        current_line += 1;
+                        for line_name in line_names.into_iter() {
+                            row_lines
+                                .entry(StrHasher(line_name.clone()))
+                                .and_modify(|lines: &mut Vec<u16>| lines.push(current_line))
+                                .or_insert_with(|| single_value_vec(current_line));
+                        }
 
-                    if let Some(GenericGridTemplateComponent::Repeat(repeat)) = row_tracks.next() {
-                        let repeat_count = match repeat.count() {
-                            RepetitionCount::Count(count) => count,
-                            RepetitionCount::AutoFill | RepetitionCount::AutoFit => row_auto_repetitions,
-                        };
+                        if let Some(GenericGridTemplateComponent::Repeat(repeat)) = row_tracks.next() {
+                            let repeat_count = match repeat.count() {
+                                RepetitionCount::Count(count) => count,
+                                RepetitionCount::AutoFill | RepetitionCount::AutoFit => row_auto_repetitions,
+                            };
 
-                        for _ in 0..repeat_count {
-                            for line_name_set in repeat.lines_names() {
-                                for line_name in line_name_set {
-                                    upsert_line_name_map(&mut row_lines, line_name.clone(), current_line);
+                            for _ in 0..repeat_count {
+                                for line_name_set in repeat.lines_names() {
+                                    for line_name in line_name_set {
+                                        upsert_line_name_map(&mut row_lines, line_name.clone(), current_line);
+                                    }
+                                    current_line += 1;
                                 }
-                                current_line += 1;
+                                // Last line name set collapses with following line name set
+                                current_line -= 1;
                             }
                             // Last line name set collapses with following line name set
                             current_line -= 1;
                         }
-                        // Last line name set collapses with following line name set
-                        current_line -= 1;
                     }
                 }
             }
+            // A subgridded axis takes its line names from its own `<line-name-list>`.
+            // TODO: also inherit the line names of the spanned tracks from the parent grid
+            // TODO: support `repeat()` within a subgrid `<line-name-list>`
+            GenericGridTemplate::Subgrid(line_names_iter) => {
+                for line_names in line_names_iter {
+                    current_line += 1;
+                    for line_name in line_names.into_iter() {
+                        upsert_line_name_map(&mut row_lines, line_name.clone(), current_line);
+                    }
+                }
+            }
+            GenericGridTemplate::None => {}
         }
         // Sort and dedup lines for each row name
         for lines in row_lines.values_mut() {

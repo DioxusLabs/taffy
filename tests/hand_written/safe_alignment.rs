@@ -26,8 +26,8 @@ fn grid_safe_align_self_falls_back_to_start_on_overflow() {
             Style {
                 display: Display::Grid,
                 size: Size { width: length(100.0), height: length(100.0) },
-                grid_template_rows: vec![length(100.0)],
-                grid_template_columns: vec![length(100.0)],
+                grid_template_rows: vec![length(100.0)].into(),
+                grid_template_columns: vec![length(100.0)].into(),
                 ..Default::default()
             },
             &[child],
@@ -56,8 +56,8 @@ fn grid_safe_align_self_behaves_as_end_when_no_overflow() {
             Style {
                 display: Display::Grid,
                 size: Size { width: length(100.0), height: length(100.0) },
-                grid_template_rows: vec![length(100.0)],
-                grid_template_columns: vec![length(100.0)],
+                grid_template_rows: vec![length(100.0)].into(),
+                grid_template_columns: vec![length(100.0)].into(),
                 ..Default::default()
             },
             &[child],
@@ -86,8 +86,8 @@ fn grid_unsafe_align_self_keeps_overflowing_position() {
             Style {
                 display: Display::Grid,
                 size: Size { width: length(100.0), height: length(100.0) },
-                grid_template_rows: vec![length(100.0)],
-                grid_template_columns: vec![length(100.0)],
+                grid_template_rows: vec![length(100.0)].into(),
+                grid_template_columns: vec![length(100.0)].into(),
                 ..Default::default()
             },
             &[child],
@@ -116,8 +116,8 @@ fn grid_safe_justify_self_falls_back_to_start_on_overflow() {
             Style {
                 display: Display::Grid,
                 size: Size { width: length(100.0), height: length(100.0) },
-                grid_template_rows: vec![length(100.0)],
-                grid_template_columns: vec![length(100.0)],
+                grid_template_rows: vec![length(100.0)].into(),
+                grid_template_columns: vec![length(100.0)].into(),
                 ..Default::default()
             },
             &[child],
@@ -146,8 +146,8 @@ fn grid_safe_justify_self_rtl_falls_back_to_rtl_start_edge() {
                 display: Display::Grid,
                 direction: Direction::Rtl,
                 size: Size { width: length(100.0), height: length(100.0) },
-                grid_template_rows: vec![length(100.0)],
-                grid_template_columns: vec![length(100.0)],
+                grid_template_rows: vec![length(100.0)].into(),
+                grid_template_columns: vec![length(100.0)].into(),
                 ..Default::default()
             },
             &[child],
@@ -176,8 +176,8 @@ fn grid_safe_align_content_overflow_falls_back_to_start() {
             Style {
                 display: Display::Grid,
                 size: Size { width: length(100.0), height: length(100.0) },
-                grid_template_rows: vec![length(80.0), length(80.0)],
-                grid_template_columns: vec![length(40.0)],
+                grid_template_rows: vec![length(80.0), length(80.0)].into(),
+                grid_template_columns: vec![length(40.0)].into(),
                 align_content: Some(AlignContent::SAFE_END),
                 ..Default::default()
             },

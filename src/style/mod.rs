@@ -30,9 +30,10 @@ pub use self::flex::{FlexDirection, FlexWrap, FlexboxContainerStyle, FlexboxItem
 pub use self::float::{Clear, Float, FloatDirection};
 #[cfg(feature = "grid")]
 pub use self::grid::{
-    GenericGridPlacement, GenericGridTemplateComponent, GenericRepetition, GridAutoFlow, GridAutoTracks,
-    GridContainerStyle, GridItemStyle, GridPlacement, GridTemplateComponent, GridTemplateRepetition,
-    GridTemplateTracks, MaxTrackSizingFunction, MinTrackSizingFunction, RepetitionCount, TrackSizingFunction,
+    GenericGridPlacement, GenericGridTemplate, GenericGridTemplateComponent, GenericRepetition, GridAutoFlow,
+    GridAutoTracks, GridContainerStyle, GridItemStyle, GridPlacement, GridTemplate, GridTemplateComponent,
+    GridTemplateRepetition, GridTemplateTracks, MaxTrackSizingFunction, MinTrackSizingFunction, RepetitionCount,
+    TrackSizingFunction,
 };
 #[cfg(feature = "grid")]
 pub(crate) use self::grid::{GridAreaAxis, GridAreaEnd};
@@ -91,6 +92,14 @@ pub trait CoreStyle {
     /// Is block layout?
     #[inline(always)]
     fn is_block(&self) -> bool {
+        false
+    }
+    /// Is this node a grid container (`display: grid`)?
+    ///
+    /// This is used to detect subgrids: a child of a grid container which is itself a grid
+    /// container and has `grid_template_rows`/`grid_template_columns` set to `subgrid`.
+    #[inline(always)]
+    fn is_grid_container(&self) -> bool {
         false
     }
     /// Is it a compressible replaced element?
@@ -550,10 +559,10 @@ pub struct Style<S: CheapCloneStr = DefaultCheapStr> {
     // Grid container properies
     /// Defines the track sizing functions (heights) of the grid rows
     #[cfg(feature = "grid")]
-    pub grid_template_rows: GridTrackVec<GridTemplateComponent<S>>,
+    pub grid_template_rows: GridTemplate<S>,
     /// Defines the track sizing functions (widths) of the grid columns
     #[cfg(feature = "grid")]
-    pub grid_template_columns: GridTrackVec<GridTemplateComponent<S>>,
+    pub grid_template_columns: GridTemplate<S>,
     /// Defines the size of implicitly created rows
     #[cfg(feature = "grid")]
     pub grid_auto_rows: GridTrackVec<TrackSizingFunction>,
@@ -639,9 +648,9 @@ impl<S: CheapCloneStr> Style<S> {
         flex_basis: Dimension::AUTO,
         // Grid
         #[cfg(feature = "grid")]
-        grid_template_rows: GridTrackVec::new(),
+        grid_template_rows: GridTemplate::NONE,
         #[cfg(feature = "grid")]
-        grid_template_columns: GridTrackVec::new(),
+        grid_template_columns: GridTemplate::NONE,
         #[cfg(feature = "grid")]
         grid_template_areas: GridTrackVec::new(),
         #[cfg(feature = "grid")]
@@ -681,6 +690,11 @@ impl<S: CheapCloneStr> CoreStyle for Style<S> {
     #[cfg(feature = "block_layout")]
     fn is_block(&self) -> bool {
         matches!(self.display, Display::Block)
+    }
+    #[inline(always)]
+    #[cfg(feature = "grid")]
+    fn is_grid_container(&self) -> bool {
+        matches!(self.display, Display::Grid)
     }
     #[inline(always)]
     fn is_compressible_replaced(&self) -> bool {
@@ -750,6 +764,10 @@ impl<T: CoreStyle> CoreStyle for &'_ T {
     #[inline(always)]
     fn is_block(&self) -> bool {
         (*self).is_block()
+    }
+    #[inline(always)]
+    fn is_grid_container(&self) -> bool {
+        (*self).is_grid_container()
     }
     #[inline(always)]
     fn is_compressible_replaced(&self) -> bool {
@@ -1003,12 +1021,18 @@ impl<S: CheapCloneStr> GridContainerStyle for Style<S> {
         Self: 'a;
 
     #[inline(always)]
-    fn grid_template_rows(&self) -> Option<Self::TemplateTrackList<'_>> {
-        Some(self.grid_template_rows.iter().map(|c| c.as_component_ref()))
+    fn grid_template_rows(&self) -> GenericGridTemplate<Self::TemplateTrackList<'_>, Self::TemplateLineNames<'_>> {
+        match &self.grid_template_rows {
+            GridTemplate::Tracks(tracks) => GenericGridTemplate::Tracks(tracks.iter().map(|c| c.as_component_ref())),
+            GridTemplate::Subgrid(names) => GenericGridTemplate::Subgrid(names.iter().map(|names| names.iter())),
+        }
     }
     #[inline(always)]
-    fn grid_template_columns(&self) -> Option<Self::TemplateTrackList<'_>> {
-        Some(self.grid_template_columns.iter().map(|c| c.as_component_ref()))
+    fn grid_template_columns(&self) -> GenericGridTemplate<Self::TemplateTrackList<'_>, Self::TemplateLineNames<'_>> {
+        match &self.grid_template_columns {
+            GridTemplate::Tracks(tracks) => GenericGridTemplate::Tracks(tracks.iter().map(|c| c.as_component_ref())),
+            GridTemplate::Subgrid(names) => GenericGridTemplate::Subgrid(names.iter().map(|names| names.iter())),
+        }
     }
     #[inline(always)]
     fn grid_auto_rows(&self) -> Self::AutoTrackList<'_> {
@@ -1092,11 +1116,11 @@ impl<T: GridContainerStyle> GridContainerStyle for &'_ T {
         Self: 'a;
 
     #[inline(always)]
-    fn grid_template_rows(&self) -> Option<Self::TemplateTrackList<'_>> {
+    fn grid_template_rows(&self) -> GenericGridTemplate<Self::TemplateTrackList<'_>, Self::TemplateLineNames<'_>> {
         (*self).grid_template_rows()
     }
     #[inline(always)]
-    fn grid_template_columns(&self) -> Option<Self::TemplateTrackList<'_>> {
+    fn grid_template_columns(&self) -> GenericGridTemplate<Self::TemplateTrackList<'_>, Self::TemplateLineNames<'_>> {
         (*self).grid_template_columns()
     }
     #[inline(always)]
@@ -1344,14 +1368,16 @@ mod tests {
 
         // String-type dependent (String)
         assert_type_size::<GridTemplateComponent<String>>(56);
+        assert_type_size::<GridTemplate<String>>(32);
         assert_type_size::<GridPlacement<String>>(32);
         assert_type_size::<Line<GridPlacement<String>>>(64);
-        assert_type_size::<Style<String>>(544);
+        assert_type_size::<Style<String>>(560);
 
         // String-type dependent (Arc<str>)
         assert_type_size::<GridTemplateComponent<Arc<str>>>(56);
+        assert_type_size::<GridTemplate<Arc<str>>>(32);
         assert_type_size::<GridPlacement<Arc<str>>>(24);
         assert_type_size::<Line<GridPlacement<Arc<str>>>>(48);
-        assert_type_size::<Style<Arc<str>>>(512);
+        assert_type_size::<Style<Arc<str>>>(528);
     }
 }
