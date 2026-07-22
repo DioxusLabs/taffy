@@ -5,7 +5,7 @@ pub use crate::{
     style::{
         AlignContent, AlignContentKeyword, AlignItems, AlignItemsKeyword, AlignSelf, AlignmentSafety, AvailableSpace,
         BoxSizing, CompactLength, Dimension, Display, JustifyContent, JustifyItems, JustifySelf, LengthPercentage,
-        LengthPercentageAuto, Position, Style,
+        LengthPercentageAuto, Overflow, Position, Style,
     },
     style_helpers::{
         auto, fit_content, length, max_content, min_content, percent, zero, FromFr, FromLength, FromPercent, TaffyAuto,
