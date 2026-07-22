@@ -119,6 +119,166 @@ fn subgrid_with_padding_and_clamped_placement() {
 }
 
 #[test]
+fn subgrid_content_sizes_parent_auto_tracks() {
+    let mut tree: TaffyTree<()> = TaffyTree::new();
+
+    // Two fixed-size grandchildren: their sizes should size the PARENT's auto tracks
+    let a = tree
+        .new_leaf(Style { size: Size { width: length(30.0), height: length(20.0) }, ..Default::default() })
+        .unwrap();
+    let b = tree
+        .new_leaf(Style { size: Size { width: length(80.0), height: length(40.0) }, ..Default::default() })
+        .unwrap();
+
+    let subgrid = tree
+        .new_with_children(
+            Style {
+                display: Display::Grid,
+                grid_template_rows: GridTemplate::Subgrid(vec![]),
+                grid_template_columns: GridTemplate::Subgrid(vec![]),
+                grid_row: Line { start: line(1), end: line(2) },
+                grid_column: Line { start: line(1), end: line(3) },
+                ..Default::default()
+            },
+            &[a, b],
+        )
+        .unwrap();
+
+    // Parent has auto-sized tracks and no explicit size: it should be sized by the
+    // subgrid's items (hoisted into the parent's track sizing)
+    let root = tree
+        .new_with_children(
+            Style {
+                display: Display::Grid,
+                grid_template_columns: vec![auto(), auto()].into(),
+                grid_template_rows: vec![auto()].into(),
+                ..Default::default()
+            },
+            &[subgrid],
+        )
+        .unwrap();
+
+    tree.compute_layout(root, Size::MAX_CONTENT).unwrap();
+    tree.print_tree(root);
+
+    // Parent tracks should be sized by the subgrid's items: 30px and 80px columns, 40px row
+    let root_layout = tree.layout(root).unwrap();
+    assert_eq!(root_layout.size.width, 110.0);
+    assert_eq!(root_layout.size.height, 40.0);
+
+    let la = tree.layout(a).unwrap();
+    let lb = tree.layout(b).unwrap();
+    assert_eq!((la.location.x, la.size.width), (0.0, 30.0));
+    assert_eq!((lb.location.x, lb.size.width), (30.0, 80.0));
+}
+
+#[test]
+fn nested_subgrid_content_sizes_outer_auto_tracks() {
+    let mut tree: TaffyTree<()> = TaffyTree::new();
+
+    let a = tree
+        .new_leaf(Style { size: Size { width: length(40.0), height: length(10.0) }, ..Default::default() })
+        .unwrap();
+    let b = tree
+        .new_leaf(Style { size: Size { width: length(60.0), height: length(10.0) }, ..Default::default() })
+        .unwrap();
+
+    // Nested subgrid (columns) inside a subgrid (columns), inside the outer grid
+    let inner_subgrid = tree
+        .new_with_children(
+            Style {
+                display: Display::Grid,
+                grid_template_columns: GridTemplate::Subgrid(vec![]),
+                grid_column: Line { start: line(1), end: line(3) },
+                ..Default::default()
+            },
+            &[a, b],
+        )
+        .unwrap();
+    let outer_subgrid = tree
+        .new_with_children(
+            Style {
+                display: Display::Grid,
+                grid_template_columns: GridTemplate::Subgrid(vec![]),
+                grid_column: Line { start: line(1), end: line(3) },
+                ..Default::default()
+            },
+            &[inner_subgrid],
+        )
+        .unwrap();
+
+    let root = tree
+        .new_with_children(
+            Style {
+                display: Display::Grid,
+                grid_template_columns: vec![auto(), auto()].into(),
+                grid_template_rows: vec![auto()].into(),
+                ..Default::default()
+            },
+            &[outer_subgrid],
+        )
+        .unwrap();
+
+    tree.compute_layout(root, Size::MAX_CONTENT).unwrap();
+    tree.print_tree(root);
+
+    // The innermost items should size the outer grid's auto tracks through both subgrid layers
+    let root_layout = tree.layout(root).unwrap();
+    assert_eq!(root_layout.size.width, 100.0);
+
+    let la = tree.layout(a).unwrap();
+    let lb = tree.layout(b).unwrap();
+    assert_eq!((la.location.x, la.size.width), (0.0, 40.0));
+    assert_eq!((lb.location.x, lb.size.width), (40.0, 60.0));
+}
+
+#[test]
+fn subgrid_mbp_contributes_to_parent_auto_tracks() {
+    let mut tree: TaffyTree<()> = TaffyTree::new();
+
+    let a = tree
+        .new_leaf(Style { size: Size { width: length(50.0), height: length(20.0) }, ..Default::default() })
+        .unwrap();
+
+    // Subgrid with 10px padding: the padding should be added to its item's contribution
+    // to the parent's auto track
+    let subgrid = tree
+        .new_with_children(
+            Style {
+                display: Display::Grid,
+                grid_template_columns: GridTemplate::Subgrid(vec![]),
+                grid_column: Line { start: line(1), end: line(2) },
+                padding: Rect { left: length(10.0), right: length(10.0), top: length(0.0), bottom: length(0.0) },
+                ..Default::default()
+            },
+            &[a],
+        )
+        .unwrap();
+
+    let root = tree
+        .new_with_children(
+            Style {
+                display: Display::Grid,
+                grid_template_columns: vec![auto()].into(),
+                grid_template_rows: vec![auto()].into(),
+                ..Default::default()
+            },
+            &[subgrid],
+        )
+        .unwrap();
+
+    tree.compute_layout(root, Size::MAX_CONTENT).unwrap();
+    tree.print_tree(root);
+
+    // Parent's auto column should be 50 (item) + 10 + 10 (subgrid padding) = 70
+    let root_layout = tree.layout(root).unwrap();
+    assert_eq!(root_layout.size.width, 70.0);
+
+    let la = tree.layout(a).unwrap();
+    assert_eq!((la.location.x, la.size.width), (10.0, 50.0));
+}
+
+#[test]
 fn subgrid_columns_only_with_gap() {
     let mut tree: TaffyTree<()> = TaffyTree::new();
 

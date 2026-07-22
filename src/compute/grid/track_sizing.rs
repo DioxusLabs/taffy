@@ -542,7 +542,17 @@ fn resolve_intrinsic_track_sizes<Tree: LayoutGridContainer>(
     // The track sizing algorithm requires us to iterate through the items in ascending order of the number of
     // tracks they span (first items that span 1 track, then items that span 2 tracks, etc).
     // To avoid having to do multiple iterations of the items, we pre-sort them into this order.
-    items.sort_by(cmp_by_cross_flex_then_span_then_start(axis));
+    // Items which do not participate in sizing in this axis (subgrids in their subgridded axes and
+    // hoisted subgrid items in axes which are not subgridded) are sorted to the end and excluded.
+    let mut inner_cmp = cmp_by_cross_flex_then_span_then_start(axis);
+    items.sort_by(|item_a, item_b| {
+        item_b
+            .participates_in_sizing(axis)
+            .cmp(&item_a.participates_in_sizing(axis))
+            .then_with(|| inner_cmp(item_a, item_b))
+    });
+    let participating_item_count = items.iter().take_while(|item| item.participates_in_sizing(axis)).count();
+    let items = &mut items[..participating_item_count];
 
     // Step 2, Step 3 and Step 4
     // 2 & 3. Iterate over items that don't cross a flex track. Items should have already been sorted in ascending order
@@ -1226,7 +1236,7 @@ fn expand_flexible_tracks(
                 // that the item crosses and a space to fill of the item’s max-content contribution.
                 items
                     .iter_mut()
-                    .filter(|item| item.crosses_flexible_track(axis))
+                    .filter(|item| item.crosses_flexible_track(axis) && item.participates_in_sizing(axis))
                     .map(|item| {
                         let tracks = &axis_tracks[item.track_range_excluding_lines(axis)];
                         // TODO: plumb estimate of other axis size (known_dimensions) in here rather than just passing Size::NONE?

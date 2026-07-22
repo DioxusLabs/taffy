@@ -85,6 +85,22 @@ pub(in super::super) struct GridItem {
     /// `None` unless the item is subgridded in at least one axis. Refreshed whenever the parent's
     /// track sizes change.
     pub subgrid_ctx: Option<SubgridContext>,
+    /// Whether the item is an item of a subgridded descendant grid which has been hoisted into
+    /// this grid so that it can participate in this grid's track sizing (in the subgridded axes).
+    /// Hoisted items only participate in track sizing: they are not positioned by this grid
+    /// (they are positioned by their actual parent when it is laid out).
+    /// See <https://www.w3.org/TR/css-grid-2/#subgrid-sizing>
+    pub is_hoisted: bool,
+    /// Whether the item participates in track sizing in each axis. This is true for regular
+    /// items in both axes. Subgrid items do not participate in their subgridded axes (their
+    /// hoisted descendant items participate in their stead) and hoisted items only participate
+    /// in the axes which are subgridded all the way down to their actual parent.
+    pub sizing_participation: InBothAbsAxis<bool>,
+    /// Extra margin to add to the item's size contributions. This is used to account for the
+    /// margin/border/padding of the subgrid(s) an item has been hoisted out of, which is applied
+    /// to items in the first/last adopted track of the subgrid.
+    /// See <https://www.w3.org/TR/css-grid-2/#subgrid-item-contribution>
+    pub extra_margin: Rect<f32>,
 
     // Caches for intrinsic size computation. These caches are only valid for a single run of the track-sizing algorithm.
     /// Cache for the known_dimensions input to intrinsic sizing computation
@@ -140,6 +156,9 @@ impl GridItem {
             crosses_intrinsic_column: false,        // Properly initialised later
             subgridded_axes: InBothAbsAxis { horizontal: false, vertical: false }, // Properly initialised later
             subgrid_ctx: None,
+            is_hoisted: false,
+            sizing_participation: InBothAbsAxis { horizontal: true, vertical: true },
+            extra_margin: Rect::ZERO,
             grid_area_size_cache: None,
             min_content_contribution_cache: Size::NONE,
             max_content_contribution_cache: Size::NONE,
@@ -153,6 +172,12 @@ impl GridItem {
     #[inline(always)]
     pub fn is_subgrid(&self) -> bool {
         self.subgridded_axes.horizontal || self.subgridded_axes.vertical
+    }
+
+    /// Whether the item participates in track sizing in the given axis
+    #[inline(always)]
+    pub fn participates_in_sizing(&self, axis: AbstractAxis) -> bool {
+        self.sizing_participation.get(axis.as_abs_naive())
     }
 
     /// Measure the child's size in the given axis. Equivalent to `tree.measure_child_size` except
@@ -468,11 +493,15 @@ impl GridItem {
         tree: &impl LayoutPartialTree,
     ) -> Size<f32> {
         Rect {
-            left: self.margin.left.resolve_or_zero(Some(0.0), |val, basis| tree.calc(val, basis)),
-            right: self.margin.right.resolve_or_zero(Some(0.0), |val, basis| tree.calc(val, basis)),
+            left: self.margin.left.resolve_or_zero(Some(0.0), |val, basis| tree.calc(val, basis))
+                + self.extra_margin.left,
+            right: self.margin.right.resolve_or_zero(Some(0.0), |val, basis| tree.calc(val, basis))
+                + self.extra_margin.right,
             top: self.margin.top.resolve_or_zero(inner_node_width, |val, basis| tree.calc(val, basis))
-                + self.baseline_shim,
-            bottom: self.margin.bottom.resolve_or_zero(inner_node_width, |val, basis| tree.calc(val, basis)),
+                + self.baseline_shim
+                + self.extra_margin.top,
+            bottom: self.margin.bottom.resolve_or_zero(inner_node_width, |val, basis| tree.calc(val, basis))
+                + self.extra_margin.bottom,
         }
         .sum_axes()
     }
