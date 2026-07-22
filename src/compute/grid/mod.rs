@@ -19,7 +19,7 @@ use alignment::{align_and_position_item, align_tracks};
 use explicit_grid::{compute_explicit_grid_size_in_axis, initialize_grid_tracks, AutoRepeatStrategy};
 use implicit_grid::compute_grid_size_estimate;
 use placement::place_grid_items;
-use subgrid::initialize_subgridded_tracks;
+use subgrid::{hoist_subgrid_items, initialize_subgridded_tracks};
 use track_sizing::{
     determine_if_item_crosses_flexible_or_intrinsic_tracks, resolve_item_track_indexes, track_sizing_algorithm,
 };
@@ -352,7 +352,9 @@ pub fn compute_grid_layout_with_subgrid_context<Tree: LayoutGridContainer>(
         ),
     }
     match adopted_rows {
-        Some(adopted) => initialize_subgridded_tracks(&mut rows, adopted, content_box_inset.top, content_box_inset.bottom),
+        Some(adopted) => {
+            initialize_subgridded_tracks(&mut rows, adopted, content_box_inset.top, content_box_inset.bottom)
+        }
         None => initialize_grid_tracks(
             &mut rows,
             final_row_counts,
@@ -389,19 +391,29 @@ pub fn compute_grid_layout_with_subgrid_context<Tree: LayoutGridContainer>(
         // In a subgridded axis, size styles do not apply to the subgrid and it is always
         // stretched to cover its grid area. Override the relevant item properties so that
         // both the measurement and final positioning code paths behave accordingly.
+        // A subgrid also does not participate in track sizing in its subgridded axes:
+        // its items are hoisted into this grid and participate in its stead.
         if item.subgridded_axes.horizontal {
             item.size.width = Dimension::AUTO;
             item.min_size.width = LengthPercentageAuto::AUTO;
             item.max_size.width = LengthPercentageAuto::AUTO;
             item.justify_self = AlignSelf::STRETCH;
+            item.sizing_participation.horizontal = false;
         }
         if item.subgridded_axes.vertical {
             item.size.height = Dimension::AUTO;
             item.min_size.height = LengthPercentageAuto::AUTO;
             item.max_size.height = LengthPercentageAuto::AUTO;
             item.align_self = AlignSelf::STRETCH;
+            item.sizing_participation.vertical = false;
         }
     }
+
+    // Hoist the items of subgridded children (and of any nested subgrids) into this grid's item
+    // list so that they participate in this grid's track sizing in the subgridded axes.
+    // Hoisted items are removed again after track sizing (they are positioned by their actual
+    // parent grid, not by this grid).
+    hoist_subgrid_items(tree, &mut items, inner_node_size);
 
     /// Refresh the subgrid contexts (adopted tracks) of any subgridded items from the current
     /// track sizes. This must be re-run whenever the track sizes change.
@@ -541,8 +553,10 @@ pub fn compute_grid_layout_with_subgrid_context<Tree: LayoutGridContainer>(
 
     if !rerun_column_sizing {
         // Note: every item must be visited (no short-circuiting) as the closure updates each item's caches
-        intrinsic_column_contribution_changed =
-            items.iter_mut().filter(|item| item.crosses_intrinsic_column).fold(false, |any_changed, item| {
+        intrinsic_column_contribution_changed = items
+            .iter_mut()
+            .filter(|item| item.crosses_intrinsic_column && item.participates_in_sizing(AbstractAxis::Inline))
+            .fold(false, |any_changed, item| {
                 let grid_area_size = item.grid_area_size(
                     AbstractAxis::Inline,
                     &columns,
@@ -616,8 +630,10 @@ pub fn compute_grid_layout_with_subgrid_context<Tree: LayoutGridContainer>(
         // (unless row sizing is being re-run anyway, in which case the caches have already been cleared).
         if !rerun_row_sizing {
             // Note: every item must be visited (no short-circuiting) as the closure updates each item's caches
-            intrinsic_row_contribution_changed =
-                items.iter_mut().filter(|item| item.crosses_intrinsic_row).fold(false, |any_changed, item| {
+            intrinsic_row_contribution_changed = items
+                .iter_mut()
+                .filter(|item| item.crosses_intrinsic_row && item.participates_in_sizing(AbstractAxis::Block))
+                .fold(false, |any_changed, item| {
                     let grid_area_size = item.grid_area_size(
                         AbstractAxis::Block,
                         &rows,
@@ -693,6 +709,10 @@ pub fn compute_grid_layout_with_subgrid_context<Tree: LayoutGridContainer>(
     if run_mode == RunMode::ComputeSize {
         return LayoutOutput::from_outer_size(container_border_box);
     }
+
+    // Remove hoisted subgrid items now that track sizing is complete. Such items are positioned
+    // by their actual parent grid (when it is laid out with the adopted tracks), not by this grid.
+    items.retain(|item| !item.is_hoisted);
 
     // 8. Track Alignment
 

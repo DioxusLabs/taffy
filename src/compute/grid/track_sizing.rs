@@ -559,9 +559,14 @@ fn resolve_intrinsic_track_sizes<Tree: LayoutGridContainer>(
     // Items that cross a flexible track are all processed together in a single batch (regardless of their span), so
     // they only need to be moved to the end of the list. And the order in which items within a batch are processed
     // does not affect the result, so the remaining items only need to be sorted if any of them span more than one track.
-    let mut partitioned_items: FrontBackVecBuilder<&mut GridItem> = FrontBackVecBuilder::with_capacity(items.len());
+    //
+    // Items which do not participate in sizing in this axis (subgrids in their subgridded axes and
+    // hoisted subgrid items in axes which are not subgridded) are excluded.
+    let participating_item_count = items.iter().filter(|item| item.participates_in_sizing(axis)).count();
+    let mut partitioned_items: FrontBackVecBuilder<&mut GridItem> =
+        FrontBackVecBuilder::with_capacity(participating_item_count);
     let mut needs_sort = false;
-    for item in items.iter_mut() {
+    for item in items.iter_mut().filter(|item| item.participates_in_sizing(axis)) {
         if item.crosses_flexible_track(axis) {
             partitioned_items.push_back(item);
         } else {
@@ -1337,7 +1342,7 @@ fn expand_flexible_tracks<Tree: LayoutGridContainer>(
                 // that the item crosses and a space to fill of the item’s max-content contribution.
                 items
                     .iter_mut()
-                    .filter(|item| item.crosses_flexible_track(axis))
+                    .filter(|item| item.crosses_flexible_track(axis) && item.participates_in_sizing(axis))
                     .map(|item| {
                         let max_content_contribution = item_sizer.max_content_contribution(item, axis_tracks);
                         let tracks = &axis_tracks[item.track_range_excluding_lines(axis)];

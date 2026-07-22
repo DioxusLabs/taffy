@@ -9,10 +9,10 @@ use crate::style::{
     AlignContent, AlignItems, AlignItemsKeyword, AlignSelf, AvailableSpace, CoreStyle, GridItemStyle, Overflow,
     Position,
 };
+use crate::style_helpers::TaffyAuto;
 use crate::tree::{
     Layout, LayoutInput, LayoutPartialTreeExt, NodeId, OofCandidates, RequestedAxis, RunMode, SizingMode,
 };
-use crate::style_helpers::TaffyAuto;
 use crate::util::sys::f32_max;
 use crate::util::{MaybeMath, MaybeResolve, ResolveOrZero};
 
