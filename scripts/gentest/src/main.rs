@@ -486,6 +486,8 @@ fn serialize_track_definition(track_definition: &serde_json::Value) -> Option<Co
 
     match kind {
         "scalar" => serialize_dimension(track_definition),
+        // TODO: serialize the subgrid's <line-name-list>
+        "subgrid" => Some(Cow::from("subgrid")),
         "function" => match (name(), arguments()) {
             ("fit-content", Value::Array(arguments)) => {
                 if arguments.len() != 1 {

@@ -1,0 +1,27 @@
+<test name="grid_subgrid_gap_inheritance__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" direction="rtl" width="330px" height="220px" row-gap="20px" column-gap="15px" grid-template-rows="100px 100px" grid-template-columns="100px 100px 100px">
+      <div display="grid" direction="rtl" row-gap="5px" column-gap="5px" grid-template-rows="subgrid" grid-template-columns="subgrid" grid-row-start="1" grid-row-end="3" grid-column-start="1" grid-column-end="4">
+        <div direction="rtl"/>
+        <div direction="rtl"/>
+        <div direction="rtl"/>
+        <div direction="rtl"/>
+        <div direction="rtl"/>
+        <div direction="rtl"/>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="330" height="220">
+      <node x="0" y="0" width="330" height="220">
+        <node x="225" y="0" width="105" height="108"/>
+        <node x="110" y="0" width="110" height="108"/>
+        <node x="0" y="0" width="105" height="108"/>
+        <node x="225" y="113" width="105" height="107"/>
+        <node x="110" y="113" width="110" height="107"/>
+        <node x="0" y="113" width="105" height="107"/>
+      </node>
+    </node>
+  </expectations>
+</test>

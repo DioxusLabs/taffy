@@ -1,0 +1,15 @@
+<test name="grid_subgrid_not_grid_item_fallback__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" box-sizing="content-box" direction="ltr" width="200px" height="100px" grid-template-rows="subgrid" grid-template-columns="subgrid">
+      <div box-sizing="content-box" direction="ltr" width="50px" height="40px"/>
+      <div box-sizing="content-box" direction="ltr" width="60px" height="30px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="200" height="100">
+      <node x="0" y="0" width="50" height="40"/>
+      <node x="0" y="55" width="60" height="30"/>
+    </node>
+  </expectations>
+</test>

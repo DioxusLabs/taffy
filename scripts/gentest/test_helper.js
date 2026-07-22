@@ -177,6 +177,8 @@ function parseGaps(style) {
 
 function parseGridTrackDefinitions(input) {
   if (input === '') return undefined;
+  // TODO: parse the subgrid's <line-name-list> (e.g. "subgrid [a] [b]")
+  if (/^subgrid/.test(input)) return [{ kind: 'subgrid' }];
   return new TrackSizingParser(input).parseList();
 }
 
