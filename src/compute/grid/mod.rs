@@ -2,7 +2,7 @@
 //! <https://www.w3.org/TR/css-grid-1>
 use crate::geometry::{AbsoluteAxis, AbstractAxis, InBothAbsAxis};
 use crate::geometry::{Line, Point, Rect, Size};
-use crate::style::{AlignItems, AvailableSpace, Overflow};
+use crate::style::{AlignItems, AvailableSpace, Dimension, LengthPercentageAuto, Overflow};
 use crate::tree::{
     AxisStaticAlign, AxisStaticEdge, AxisStaticPosition, Baselines, Layout, LayoutInput, LayoutOutput,
     LayoutPartialTreeExt, NodeId, OofCandidate, OofCandidates, OofPositioningArea, RunMode, SizingMode,
@@ -19,6 +19,7 @@ use alignment::{align_and_position_item, align_tracks};
 use explicit_grid::{compute_explicit_grid_size_in_axis, initialize_grid_tracks, AutoRepeatStrategy};
 use implicit_grid::compute_grid_size_estimate;
 use placement::place_grid_items;
+use subgrid::initialize_subgridded_tracks;
 use track_sizing::{
     determine_if_item_crosses_flexible_or_intrinsic_tracks, resolve_item_track_indexes, track_sizing_algorithm,
 };
@@ -30,12 +31,14 @@ use types::{GridItem, GridTrackKind, TrackCounts};
 
 pub(crate) use types::{GridCoordinate, GridLine, OriginZeroLine, MAX_GRID_TRACKS, MAX_OZ_LINE, MIN_OZ_LINE};
 
+pub use subgrid::{AdoptedTracks, SubgridContext};
 pub use types::{GridLineNames, GridLineNamesIter};
 
 mod alignment;
 mod explicit_grid;
 mod implicit_grid;
 mod placement;
+mod subgrid;
 mod track_sizing;
 mod types;
 mod util;
@@ -51,12 +54,35 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     node: NodeId,
     inputs: LayoutInput,
 ) -> LayoutOutput {
+    compute_grid_layout_with_subgrid_context(tree, node, inputs, None)
+}
+
+/// Grid layout algorithm (see [`compute_grid_layout`]) with support for subgrids.
+///
+/// If the node has `grid_template_rows`/`grid_template_columns` set to `subgrid` and the passed
+/// [`SubgridContext`] provides adopted tracks for the corresponding axis, then the node's tracks
+/// in that axis are taken from the context (as passed down by the parent grid) instead of being
+/// resolved and sized from the node's own style.
+pub fn compute_grid_layout_with_subgrid_context<Tree: LayoutGridContainer>(
+    tree: &mut Tree,
+    node: NodeId,
+    inputs: LayoutInput,
+    subgrid_ctx: Option<&SubgridContext>,
+) -> LayoutOutput {
     let LayoutInput { known_dimensions, parent_size, available_space, run_mode, .. } = inputs;
 
     let style = tree.get_grid_container_style(node);
     let direction = style.direction();
     let contain = style.contain();
     let containing_block_claims = style.is_containing_block();
+
+    // Extract the adopted tracks for each axis in which this node is subgridded (if any).
+    // Note: a node which is subgridded in an axis but for which no adopted tracks were passed
+    // down behaves as if the template in that axis were `none`.
+    let adopted_columns: Option<&AdoptedTracks> =
+        subgrid_ctx.and_then(|ctx| ctx.columns.as_ref()).filter(|_| style.is_subgridded(AbsoluteAxis::Horizontal));
+    let adopted_rows: Option<&AdoptedTracks> =
+        subgrid_ctx.and_then(|ctx| ctx.rows.as_ref()).filter(|_| style.is_subgridded(AbsoluteAxis::Vertical));
 
     // 1. Compute "available grid space"
     // https://www.w3.org/TR/css-grid-1/#available-grid-space
@@ -68,17 +94,17 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     let box_sizing_adjustment =
         if style.box_sizing() == BoxSizing::ContentBox { padding_border_size } else { Size::ZERO };
 
-    let min_size = style
+    let mut min_size = style
         .min_size()
         .maybe_resolve(parent_size, |val, basis| tree.calc(val, basis))
         .maybe_apply_aspect_ratio(aspect_ratio)
         .maybe_add(box_sizing_adjustment);
-    let max_size = style
+    let mut max_size = style
         .max_size()
         .maybe_resolve(parent_size, |val, basis| tree.calc(val, basis))
         .maybe_apply_aspect_ratio(aspect_ratio)
         .maybe_add(box_sizing_adjustment);
-    let preferred_size = if inputs.sizing_mode == SizingMode::InherentSize {
+    let mut preferred_size = if inputs.sizing_mode == SizingMode::InherentSize {
         style
             .size()
             .maybe_resolve(parent_size, |val, basis| tree.calc(val, basis))
@@ -87,6 +113,19 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     } else {
         Size::NONE
     };
+
+    // In a subgridded axis the size of the grid is determined by its adopted tracks: size styles
+    // do not apply. See <https://www.w3.org/TR/css-grid-2/#subgrid-box-alignment>
+    if adopted_columns.is_some() {
+        min_size.width = None;
+        max_size.width = None;
+        preferred_size.width = None;
+    }
+    if adopted_rows.is_some() {
+        min_size.height = None;
+        max_size.height = None;
+        preferred_size.height = None;
+    }
 
     // Scrollbar gutters are reserved when the `overflow` property is set to `Overflow::Scroll`.
     // However, the axis are switched (transposed) because a node that scrolls vertically needs
@@ -200,28 +239,45 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
 
     // Compute the number of rows and columns in the explicit grid *template*
     // (explicit tracks from grid_areas are computed separately below)
-    let (col_auto_repetition_count, grid_template_col_count) = compute_explicit_grid_size_in_axis(
-        &style,
-        auto_fit_container_size.width,
-        auto_repeat_fit_strategy.width,
-        |val, basis| tree.calc(val, basis),
-        AbsoluteAxis::Horizontal,
-    );
-    let (row_auto_repetition_count, grid_template_row_count) = compute_explicit_grid_size_in_axis(
-        &style,
-        auto_fit_container_size.height,
-        auto_repeat_fit_strategy.height,
-        |val, basis| tree.calc(val, basis),
-        AbsoluteAxis::Vertical,
-    );
+    // In a subgridded axis the explicit grid is the set of tracks adopted from the parent grid.
+    let (col_auto_repetition_count, grid_template_col_count) = match adopted_columns {
+        Some(adopted) => (0, adopted.track_count() as u16),
+        None => compute_explicit_grid_size_in_axis(
+            &style,
+            auto_fit_container_size.width,
+            auto_repeat_fit_strategy.width,
+            |val, basis| tree.calc(val, basis),
+            AbsoluteAxis::Horizontal,
+        ),
+    };
+    let (row_auto_repetition_count, grid_template_row_count) = match adopted_rows {
+        Some(adopted) => (0, adopted.track_count() as u16),
+        None => compute_explicit_grid_size_in_axis(
+            &style,
+            auto_fit_container_size.height,
+            auto_repeat_fit_strategy.height,
+            |val, basis| tree.calc(val, basis),
+            AbsoluteAxis::Vertical,
+        ),
+    };
 
     // type CustomIdent<'a> = <<Tree as LayoutPartialTree>::CoreContainerStyle<'_> as CoreStyle>::CustomIdent;
     let mut name_resolver = NamedLineResolver::new(&style, col_auto_repetition_count, row_auto_repetition_count);
 
     // Clamp the explicit grid to MAX_GRID_TRACKS tracks in each axis
     // https://www.w3.org/TR/css-grid-1/#overlarge-grids
-    let explicit_col_count = grid_template_col_count.max(name_resolver.area_column_count()).min(MAX_GRID_TRACKS);
-    let explicit_row_count = grid_template_row_count.max(name_resolver.area_row_count()).min(MAX_GRID_TRACKS);
+    // Note: grid areas cannot create tracks in a subgridded axis (a subgrid has no implicit tracks
+    // in that axis and its explicit track count is fixed by the tracks it adopts)
+    let explicit_col_count = match adopted_columns {
+        Some(_) => grid_template_col_count,
+        None => grid_template_col_count.max(name_resolver.area_column_count()),
+    }
+    .min(MAX_GRID_TRACKS);
+    let explicit_row_count = match adopted_rows {
+        Some(_) => grid_template_row_count,
+        None => grid_template_row_count.max(name_resolver.area_row_count()),
+    }
+    .min(MAX_GRID_TRACKS);
 
     name_resolver.set_explicit_column_count(explicit_col_count);
     name_resolver.set_explicit_row_count(explicit_row_count);
@@ -233,8 +289,17 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     // 3. Implicit Grid: Estimate Track Counts
     // Estimate the number of rows and columns in the implicit grid (= the entire grid)
     // This is necessary as part of placement. Doing it early here is a perf optimisation to reduce allocations.
-    let (est_col_counts, est_row_counts) =
+    let (mut est_col_counts, mut est_row_counts) =
         compute_grid_size_estimate(explicit_col_count, explicit_row_count, child_styles_iter);
+
+    // A subgridded axis has no implicit tracks: item placements are clamped to the explicit grid
+    // See: <https://www.w3.org/TR/css-grid-2/#subgrid-of-subgrid>
+    if adopted_columns.is_some() {
+        est_col_counts = TrackCounts::from_raw(0, explicit_col_count, 0);
+    }
+    if adopted_rows.is_some() {
+        est_row_counts = TrackCounts::from_raw(0, explicit_row_count, 0);
+    }
 
     // 4. Grid Item Placement
     // Match items (children) to a definite grid position (row start/end and column start/end position)
@@ -257,6 +322,10 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
         align_items.unwrap_or(AlignItems::STRETCH),
         justify_items.unwrap_or(AlignItems::STRETCH),
         &name_resolver,
+        InBothAbsAxis {
+            horizontal: adopted_columns.map(|_| explicit_col_count),
+            vertical: adopted_rows.map(|_| explicit_row_count),
+        },
     );
 
     // Extract track counts from previous step (auto-placement can expand the number of tracks)
@@ -266,30 +335,90 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     // 5. Initialize Tracks
     // Initialize (explicit and implicit) grid tracks (and gutters)
     // This resolves the min and max track sizing functions for all tracks and gutters
+    // In a subgridded axis, the tracks are instead adopted (with fixed sizes) from the parent grid
     let mut columns = GridTrackVec::new();
     let mut rows = GridTrackVec::new();
-    initialize_grid_tracks(
-        &mut columns,
-        final_col_counts,
-        &style,
-        AbsoluteAxis::Horizontal,
-        col_auto_repetition_count,
-        |column_index| cell_occupancy_matrix.column_is_occupied(column_index),
-    );
-    initialize_grid_tracks(
-        &mut rows,
-        final_row_counts,
-        &style,
-        AbsoluteAxis::Vertical,
-        row_auto_repetition_count,
-        |row_index| cell_occupancy_matrix.row_is_occupied(row_index),
-    );
+    match adopted_columns {
+        Some(adopted) => {
+            initialize_subgridded_tracks(&mut columns, adopted, content_box_inset.left, content_box_inset.right)
+        }
+        None => initialize_grid_tracks(
+            &mut columns,
+            final_col_counts,
+            &style,
+            AbsoluteAxis::Horizontal,
+            col_auto_repetition_count,
+            |column_index| cell_occupancy_matrix.column_is_occupied(column_index),
+        ),
+    }
+    match adopted_rows {
+        Some(adopted) => initialize_subgridded_tracks(&mut rows, adopted, content_box_inset.top, content_box_inset.bottom),
+        None => initialize_grid_tracks(
+            &mut rows,
+            final_row_counts,
+            &style,
+            AbsoluteAxis::Vertical,
+            row_auto_repetition_count,
+            |row_index| cell_occupancy_matrix.row_is_occupied(row_index),
+        ),
+    }
 
     drop(grid_template_rows);
     drop(grid_template_columns);
     drop(grid_auto_rows);
     drop(grid_auto_columns);
     drop(style);
+
+    // Detect children which are themselves subgrids. Such children:
+    //   - Adopt this grid's tracks in their subgridded axis/axes (passed down via a `SubgridContext`)
+    //   - Are always stretched in their subgridded axis/axes (their size styles do not apply)
+    // See: <https://www.w3.org/TR/css-grid-2/#subgrids>
+    for item in items.iter_mut() {
+        let child_style = tree.get_grid_child_style(item.node);
+        if !child_style.is_grid_container() {
+            continue;
+        }
+        drop(child_style);
+        let child_container_style = tree.get_grid_container_style(item.node);
+        item.subgridded_axes = InBothAbsAxis {
+            horizontal: child_container_style.is_subgridded(AbsoluteAxis::Horizontal),
+            vertical: child_container_style.is_subgridded(AbsoluteAxis::Vertical),
+        };
+        drop(child_container_style);
+
+        // In a subgridded axis, size styles do not apply to the subgrid and it is always
+        // stretched to cover its grid area. Override the relevant item properties so that
+        // both the measurement and final positioning code paths behave accordingly.
+        if item.subgridded_axes.horizontal {
+            item.size.width = Dimension::AUTO;
+            item.min_size.width = LengthPercentageAuto::AUTO;
+            item.max_size.width = LengthPercentageAuto::AUTO;
+            item.justify_self = AlignSelf::STRETCH;
+        }
+        if item.subgridded_axes.vertical {
+            item.size.height = Dimension::AUTO;
+            item.min_size.height = LengthPercentageAuto::AUTO;
+            item.max_size.height = LengthPercentageAuto::AUTO;
+            item.align_self = AlignSelf::STRETCH;
+        }
+    }
+
+    /// Refresh the subgrid contexts (adopted tracks) of any subgridded items from the current
+    /// track sizes. This must be re-run whenever the track sizes change.
+    fn update_subgrid_contexts(
+        tree: &impl LayoutPartialTreeExt,
+        items: &mut [GridItem],
+        columns: &[GridTrack],
+        rows: &[GridTrack],
+        inner_node_width: Option<f32>,
+    ) {
+        for item in items.iter_mut() {
+            if item.is_subgrid() {
+                let margins = item.resolved_margins(inner_node_width, tree);
+                item.subgrid_ctx = SubgridContext::for_item(item, columns, rows, margins);
+            }
+        }
+    }
 
     // 6. Track Sizing
 
@@ -301,27 +430,32 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     // Record this as a boolean (per-axis) on each item for later use in the track-sizing algorithm
     determine_if_item_crosses_flexible_or_intrinsic_tracks(&mut items, &columns, &rows);
 
+    update_subgrid_contexts(tree, &mut items, &columns, &rows, inner_node_size.width);
+
     // Determine if the grid has any baseline aligned items
     let has_baseline_aligned_item = items.iter().any(|item| item.participates_in_baseline_alignment());
 
     // Run track sizing algorithm for Inline axis
-    track_sizing_algorithm(
-        tree,
-        AbstractAxis::Inline,
-        inner_min_size.get(AbstractAxis::Inline),
-        inner_max_size.get(AbstractAxis::Inline),
-        justify_content,
-        align_content,
-        available_grid_space,
-        inner_node_size,
-        &mut columns,
-        &mut rows,
-        &mut items,
-        |track: &GridTrack, parent_size: Option<f32>, tree: &Tree| {
-            track.max_track_sizing_function.definite_value(parent_size, |val, basis| tree.calc(val, basis))
-        },
-        has_baseline_aligned_item,
-    );
+    // (skipped if this axis is subgridded: adopted tracks have fixed sizes)
+    if adopted_columns.is_none() {
+        track_sizing_algorithm(
+            tree,
+            AbstractAxis::Inline,
+            inner_min_size.get(AbstractAxis::Inline),
+            inner_max_size.get(AbstractAxis::Inline),
+            justify_content,
+            align_content,
+            available_grid_space,
+            inner_node_size,
+            &mut columns,
+            &mut rows,
+            &mut items,
+            |track: &GridTrack, parent_size: Option<f32>, tree: &Tree| {
+                track.max_track_sizing_function.definite_value(parent_size, |val, basis| tree.calc(val, basis))
+            },
+            has_baseline_aligned_item,
+        );
+    }
     let initial_column_sum = columns.iter().map(|track| track.base_size).sum::<f32>();
     inner_node_size.width = inner_node_size.width.or_else(|| initial_column_sum.into());
 
@@ -336,24 +470,29 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     }
 
     items.iter_mut().for_each(|item| item.grid_area_size_cache = None);
+    update_subgrid_contexts(tree, &mut items, &columns, &rows, inner_node_size.width);
 
     // Run track sizing algorithm for Block axis
-    track_sizing_algorithm(
-        tree,
-        AbstractAxis::Block,
-        inner_min_size.get(AbstractAxis::Block),
-        inner_max_size.get(AbstractAxis::Block),
-        align_content,
-        justify_content,
-        available_grid_space,
-        inner_node_size,
-        &mut rows,
-        &mut columns,
-        &mut items,
-        |track: &GridTrack, _, _| Some(track.base_size),
-        false, // TODO: Support baseline alignment in the vertical axis
-    );
+    // (skipped if this axis is subgridded: adopted tracks have fixed sizes)
+    if adopted_rows.is_none() {
+        track_sizing_algorithm(
+            tree,
+            AbstractAxis::Block,
+            inner_min_size.get(AbstractAxis::Block),
+            inner_max_size.get(AbstractAxis::Block),
+            align_content,
+            justify_content,
+            available_grid_space,
+            inner_node_size,
+            &mut rows,
+            &mut columns,
+            &mut items,
+            |track: &GridTrack, _, _| Some(track.base_size),
+            false, // TODO: Support baseline alignment in the vertical axis
+        );
+    }
     let initial_row_sum = rows.iter().map(|track| track.base_size).sum::<f32>();
+    update_subgrid_contexts(tree, &mut items, &columns, &rows, inner_node_size.width);
 
     debug_log!("initial_column_sum", dbg:initial_column_sum);
     debug_log!(dbg: columns.iter().map(|track| track.base_size).collect::<Vec<_>>());
@@ -398,7 +537,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     let has_percentage_column = columns.iter().any(|track| track.uses_percentage());
     let has_percentage_row = rows.iter().any(|track| track.uses_percentage());
     let parent_width_indefinite = outer_node_size.width.is_none();
-    rerun_column_sizing = parent_width_indefinite && has_percentage_column;
+    rerun_column_sizing = adopted_columns.is_none() && parent_width_indefinite && has_percentage_column;
 
     if !rerun_column_sizing {
         // Note: every item must be visited (no short-circuiting) as the closure updates each item's caches
@@ -425,7 +564,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
 
                 any_changed | has_changed
             });
-        rerun_column_sizing = intrinsic_column_contribution_changed;
+        rerun_column_sizing = adopted_columns.is_none() && intrinsic_column_contribution_changed;
     } else {
         // Clear intrinsic width caches
         items.iter_mut().for_each(|item| {
@@ -441,7 +580,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     //   - Column sizing was re-run and any grid item crossing an intrinsically sized track's min content contribution height has changed
     // TODO: Only rerun sizing for tracks that actually require it rather than for all tracks if any need it.
     let parent_height_indefinite = outer_node_size.height.is_none();
-    let mut rerun_row_sizing = parent_height_indefinite && has_percentage_row;
+    let mut rerun_row_sizing = adopted_rows.is_none() && parent_height_indefinite && has_percentage_row;
     let mut intrinsic_row_contribution_changed = false;
 
     if rerun_row_sizing {
@@ -471,6 +610,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
             |track: &GridTrack, _, _| Some(track.base_size),
             has_baseline_aligned_item,
         );
+        update_subgrid_contexts(tree, &mut items, &columns, &rows, inner_node_size.width);
 
         // The column widths may have changed, so the items' intrinsic height contributions need to be recomputed
         // (unless row sizing is being re-run anyway, in which case the caches have already been cleared).
@@ -499,7 +639,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
 
                     any_changed | has_changed
                 });
-            rerun_row_sizing = intrinsic_row_contribution_changed;
+            rerun_row_sizing = adopted_rows.is_none() && intrinsic_row_contribution_changed;
         }
     }
 
@@ -590,6 +730,9 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     // by the out-of-flow positioning pass (`compute_oof_layout`), which runs after this algorithm.
     let mut oof_candidates = OofCandidates::new();
 
+    // Refresh the adopted tracks passed down to subgridded children from the final track sizes
+    update_subgrid_contexts(tree, &mut items, &columns, &rows, inner_node_size.width);
+
     let container_alignment_styles = InBothAbsAxis { horizontal: justify_items, vertical: align_items };
 
     // Position in-flow children (stored in items vector)
@@ -625,6 +768,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
             #[cfg(feature = "content_size")]
             is_scroll_container,
             &mut item.oof_candidates,
+            item.subgrid_ctx.as_ref(),
         );
         item.y_position = y_position;
         item.height = height;
