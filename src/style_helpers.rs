@@ -35,7 +35,6 @@ where
 
 #[cfg(feature = "grid")]
 /// Returns a grid template containing `count` evenly sized tracks
-#[inline(always)]
 pub fn evenly_sized_tracks<S: CheapCloneStr>(count: u16) -> Vec<GridTemplateComponent<S>> {
     use crate::util::sys::new_vec_with_capacity;
     let mut repeated_tracks = new_vec_with_capacity(1);
