@@ -118,11 +118,21 @@ impl SubgridContext {
 /// `start_reduction`/`end_reduction` are subtracted from the first/last track respectively
 /// and should be set to the subgrid's own border+padding (+scrollbar gutter) so that track
 /// boundaries remain fixed relative to the subgrid's grid area in the parent.
+///
+/// If the subgrid specifies its own gap (`own_gap`) then it overrides the gutters inherited
+/// from the parent: the difference is applied half to each of the adjacent tracks, so that
+/// the track boundaries (but not the gutters) remain fixed relative to the parent grid.
+/// See <https://www.w3.org/TR/css-grid-2/#subgrids> (point 6)
+///
+/// Note: Taffy's `gap` style cannot represent the CSS initial value `normal`, so a gap of
+/// zero (Taffy's default) is treated as "not specified" (i.e. the parent's gutters are
+/// inherited unchanged).
 pub(super) fn initialize_subgridded_tracks(
     tracks: &mut Vec<GridTrack>,
     adopted: &AdoptedTracks,
     start_reduction: f32,
     end_reduction: f32,
+    own_gap: Option<f32>,
 ) {
     let track_count = adopted.track_count();
 
@@ -139,14 +149,31 @@ pub(super) fn initialize_subgridded_tracks(
             size = f32_max(size - end_reduction, 0.0);
         }
 
+        let parent_gutter_before =
+            if index > 0 { adopted.gutter_sizes.get(index - 1).copied().unwrap_or(0.0) } else { 0.0 };
+        let parent_gutter_after =
+            if index < track_count - 1 { adopted.gutter_sizes.get(index).copied().unwrap_or(0.0) } else { 0.0 };
+
+        // If the subgrid specifies its own gap, then adjacent tracks absorb half of the
+        // difference between the parent's gutter and the subgrid's gutter on each side
+        let mut gutter_size = parent_gutter_after;
+        if let Some(own_gap) = own_gap {
+            if index > 0 {
+                size += (parent_gutter_before - own_gap) / 2.0;
+            }
+            if index < track_count - 1 {
+                size += (parent_gutter_after - own_gap) / 2.0;
+                gutter_size = own_gap;
+            }
+        }
+
         let mut track =
             GridTrack::new(MinTrackSizingFunction::from_length(size), MaxTrackSizingFunction::from_length(size));
         track.base_size = size;
         track.growth_limit = size;
         tracks.push(track);
 
-        let gutter_size =
-            if index < track_count - 1 { adopted.gutter_sizes.get(index).copied().unwrap_or(0.0) } else { 0.0 };
+        let gutter_size = if index < track_count - 1 { gutter_size } else { 0.0 };
         let mut gutter = GridTrack::gutter(LengthPercentage::from_length(gutter_size));
         gutter.base_size = gutter_size;
         gutter.growth_limit = gutter_size;

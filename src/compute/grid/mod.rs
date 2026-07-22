@@ -338,10 +338,21 @@ pub fn compute_grid_layout_with_subgrid_context<Tree: LayoutGridContainer>(
     // In a subgridded axis, the tracks are instead adopted (with fixed sizes) from the parent grid
     let mut columns = GridTrackVec::new();
     let mut rows = GridTrackVec::new();
+    // If the subgrid specifies its own gap in a subgridded axis then it overrides the gutters
+    // inherited from the parent (a gap of zero is treated as "not specified" as Taffy's gap
+    // style cannot represent the CSS `normal` value)
+    let own_gap = Size {
+        width: style.gap().width.resolve_or_zero(inner_node_size.width, |val, basis| tree.calc(val, basis)),
+        height: style.gap().height.resolve_or_zero(inner_node_size.height, |val, basis| tree.calc(val, basis)),
+    };
     match adopted_columns {
-        Some(adopted) => {
-            initialize_subgridded_tracks(&mut columns, adopted, content_box_inset.left, content_box_inset.right)
-        }
+        Some(adopted) => initialize_subgridded_tracks(
+            &mut columns,
+            adopted,
+            content_box_inset.left,
+            content_box_inset.right,
+            (own_gap.width != 0.0).then_some(own_gap.width),
+        ),
         None => initialize_grid_tracks(
             &mut columns,
             final_col_counts,
@@ -352,9 +363,13 @@ pub fn compute_grid_layout_with_subgrid_context<Tree: LayoutGridContainer>(
         ),
     }
     match adopted_rows {
-        Some(adopted) => {
-            initialize_subgridded_tracks(&mut rows, adopted, content_box_inset.top, content_box_inset.bottom)
-        }
+        Some(adopted) => initialize_subgridded_tracks(
+            &mut rows,
+            adopted,
+            content_box_inset.top,
+            content_box_inset.bottom,
+            (own_gap.height != 0.0).then_some(own_gap.height),
+        ),
         None => initialize_grid_tracks(
             &mut rows,
             final_row_counts,
