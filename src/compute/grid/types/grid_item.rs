@@ -21,6 +21,10 @@ pub(in super::super) struct GridItem {
     /// for final positioning
     pub source_order: u16,
 
+    /// The visual order of the item, reflecting CSS `order`-modified document order.
+    /// Used for `Layout.order` to inform painting/z-order.
+    pub order: u32,
+
     /// The item's definite row-start and row-end, as resolved by the placement algorithm
     /// (in origin-zero coordinates)
     pub row: Line<OriginZeroLine>,
@@ -105,6 +109,7 @@ impl GridItem {
         GridItem {
             node,
             source_order,
+            order: 0, // Assigned after placement, before final positioning
             row: row_span,
             column: col_span,
             is_compressible_replaced: style.is_compressible_replaced(),
