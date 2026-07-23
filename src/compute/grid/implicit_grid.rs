@@ -6,7 +6,7 @@ use crate::{CheapCloneStr, Direction, GridItemStyle};
 use core::cmp::{max, min};
 
 use super::types::TrackCounts;
-use super::OriginZeroLine;
+use super::{max_oz_line, OriginZeroLine, MIN_OZ_LINE};
 
 /// Estimate the number of rows and columns in the grid
 /// This is used as a performance optimisation to pre-size vectors and reduce allocations. It also forms a necessary step
@@ -178,7 +178,13 @@ fn child_min_line_max_line_span<S: CheapCloneStr>(
         _ => 1,
     };
 
-    (min, max, span)
+    // Clamp the min and max lines into the limited grid so that the estimated implicit track counts
+    // stay within the maximum track limit (https://www.w3.org/TR/css-grid-1/#overlarge-grids).
+    // This matches the clamping of the actual item placements performed during placement.
+    let clamped_min = OriginZeroLine(min.0.max(MIN_OZ_LINE));
+    let clamped_max = OriginZeroLine(max.0.min(max_oz_line(explicit_track_count)));
+
+    (clamped_min, clamped_max, span)
 }
 
 #[allow(clippy::bool_assert_comparison)]

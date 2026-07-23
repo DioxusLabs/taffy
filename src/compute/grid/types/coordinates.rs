@@ -4,6 +4,25 @@ use crate::geometry::Line;
 use core::cmp::{max, Ordering};
 use core::ops::{Add, AddAssign, Sub};
 
+/// The maximum number of explicit tracks, the maximum number of implicit tracks on each side of the
+/// explicit grid, and the maximum span of a single grid item. Grids larger than this limit are clamped.
+///
+/// See: <https://www.w3.org/TR/css-grid-1/#overlarge-grids>
+pub(crate) const MAX_GRID_TRACKS: u16 = 10_000;
+
+/// The lowest valid grid line in OriginZero coordinates (grids are clamped to `MAX_GRID_TRACKS`
+/// implicit tracks before the start of the explicit grid)
+pub(crate) const MIN_OZ_LINE: i16 = -(MAX_GRID_TRACKS as i16);
+
+/// The highest valid grid line in OriginZero coordinates given the explicit track count of the grid
+/// (grids are clamped to `MAX_GRID_TRACKS` implicit tracks after the end of the explicit grid)
+///
+/// The `explicit_track_count` passed must already be clamped to `MAX_GRID_TRACKS`.
+pub(crate) fn max_oz_line(explicit_track_count: u16) -> i16 {
+    debug_assert!(explicit_track_count <= MAX_GRID_TRACKS);
+    (explicit_track_count + MAX_GRID_TRACKS) as i16
+}
+
 /// Represents a grid line position in "CSS Grid Line" coordinates
 ///
 /// "CSS Grid Line" coordinates are those used in grid-row/grid-column in the CSS grid spec:
@@ -29,7 +48,9 @@ impl GridLine {
         self.0
     }
 
-    /// Convert into OriginZero coordinates using the specified explicit track count
+    /// Convert into OriginZero coordinates using the specified explicit track count.
+    ///
+    /// The result is clamped into the limited grid `[-MAX_GRID_TRACKS, explicit_track_count + MAX_GRID_TRACKS]`
     pub(crate) fn into_origin_zero_line(self, explicit_track_count: u16) -> OriginZeroLine {
         let explicit_line_count = explicit_track_count + 1;
         let oz_line = match self.0.cmp(&0) {
@@ -37,7 +58,7 @@ impl GridLine {
             Ordering::Less => self.0 + explicit_line_count as i16,
             Ordering::Equal => panic!("Grid line of zero is invalid"),
         };
-        OriginZeroLine(oz_line)
+        OriginZeroLine(oz_line.clamp(MIN_OZ_LINE, max_oz_line(explicit_track_count)))
     }
 }
 
