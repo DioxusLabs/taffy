@@ -19,6 +19,7 @@ use core::fmt::Debug;
 
 /// Returns an auto-repeated track definition
 #[cfg(feature = "grid")]
+#[inline(always)]
 pub fn repeat<Input, S>(repetition_kind: Input, tracks: Vec<TrackSizingFunction>) -> GridTemplateComponent<S>
 where
     Input: TryInto<RepetitionCount>,
@@ -47,6 +48,7 @@ pub fn evenly_sized_tracks<S: CheapCloneStr>(count: u16) -> Vec<GridTemplateComp
 ///  - Positive indices count upwards from the start (top or left) of the explicit grid
 ///  - Negative indices count downwards from the end (bottom or right) of the explicit grid
 ///  - ZERO IS INVALID index, and will be treated as a GridPlacement::Auto.
+#[inline(always)]
 pub fn line<T: TaffyGridLine>(index: i16) -> T {
     T::from_line_index(index)
 }
@@ -57,6 +59,7 @@ pub trait TaffyGridLine {
 }
 
 /// Returns a GridPlacement::Span
+#[inline(always)]
 pub fn span<T: TaffyGridSpan>(span: u16) -> T {
     T::from_span(span)
 }
@@ -68,6 +71,7 @@ pub trait TaffyGridSpan {
 
 /// Returns a MinMax with min value of min and max value of max
 #[cfg(feature = "grid")]
+#[inline(always)]
 pub fn minmax<Output>(min: MinTrackSizingFunction, max: MaxTrackSizingFunction) -> Output
 where
     Output: From<MinMax<MinTrackSizingFunction, MaxTrackSizingFunction>>,
@@ -77,15 +81,17 @@ where
 
 /// Shorthand for minmax(0, Nfr). Probably what you want if you want exactly evenly sized tracks.
 #[cfg(feature = "grid")]
+#[inline(always)]
 pub fn flex<Input, Output>(flex_fraction: Input) -> Output
 where
-    Input: Into<f32> + Copy,
+    Input: Into<f64> + Copy,
     Output: From<MinMax<MinTrackSizingFunction, MaxTrackSizingFunction>>,
 {
-    MinMax { min: zero(), max: fr(flex_fraction.into()) }.into()
+    MinMax { min: zero(), max: fr(flex_fraction) }.into()
 }
 
 /// Returns the zero value for that type
+#[inline(always)]
 pub const fn zero<T: TaffyZero>() -> T {
     T::ZERO
 }
@@ -107,6 +113,7 @@ impl<T: TaffyZero> TaffyZero for Point<T> {
 impl<T: TaffyZero> Point<T> {
     /// Returns a Point where both the x and y values are the zero value of the contained type
     /// (e.g. 0.0, Some(0.0), or Dimension::Length(0.0))
+    #[inline(always)]
     pub const fn zero() -> Self {
         zero::<Self>()
     }
@@ -117,6 +124,7 @@ impl<T: TaffyZero> TaffyZero for Line<T> {
 impl<T: TaffyZero> Line<T> {
     /// Returns a Line where both the start and end values are the zero value of the contained type
     /// (e.g. 0.0, Some(0.0), or Dimension::Length(0.0))
+    #[inline(always)]
     pub const fn zero() -> Self {
         zero::<Self>()
     }
@@ -127,6 +135,7 @@ impl<T: TaffyZero> TaffyZero for Size<T> {
 impl<T: TaffyZero> Size<T> {
     /// Returns a Size where both the width and height values are the zero value of the contained type
     /// (e.g. 0.0, Some(0.0), or Dimension::Length(0.0))
+    #[inline(always)]
     pub const fn zero() -> Self {
         zero::<Self>()
     }
@@ -137,12 +146,14 @@ impl<T: TaffyZero> TaffyZero for Rect<T> {
 impl<T: TaffyZero> Rect<T> {
     /// Returns a Rect where the left, right, top, and bottom values are all the zero value of the contained type
     /// (e.g. 0.0, Some(0.0), or Dimension::Length(0.0))
+    #[inline(always)]
     pub const fn zero() -> Self {
         zero::<Self>()
     }
 }
 
 /// Returns the auto value for that type
+#[inline(always)]
 pub const fn auto<T: TaffyAuto>() -> T {
     T::AUTO
 }
@@ -161,6 +172,7 @@ impl<T: TaffyAuto> TaffyAuto for Point<T> {
 impl<T: TaffyAuto> Point<T> {
     /// Returns a Point where both the x and y values are the auto value of the contained type
     /// (e.g. Dimension::Auto or LengthPercentageAuto::Auto)
+    #[inline(always)]
     pub const fn auto() -> Self {
         auto::<Self>()
     }
@@ -171,6 +183,7 @@ impl<T: TaffyAuto> TaffyAuto for Line<T> {
 impl<T: TaffyAuto> Line<T> {
     /// Returns a Line where both the start and end values are the auto value of the contained type
     /// (e.g. Dimension::Auto or LengthPercentageAuto::Auto)
+    #[inline(always)]
     pub const fn auto() -> Self {
         auto::<Self>()
     }
@@ -181,6 +194,7 @@ impl<T: TaffyAuto> TaffyAuto for Size<T> {
 impl<T: TaffyAuto> Size<T> {
     /// Returns a Size where both the width and height values are the auto value of the contained type
     /// (e.g. Dimension::Auto or LengthPercentageAuto::Auto)
+    #[inline(always)]
     pub const fn auto() -> Self {
         auto::<Self>()
     }
@@ -191,12 +205,14 @@ impl<T: TaffyAuto> TaffyAuto for Rect<T> {
 impl<T: TaffyAuto> Rect<T> {
     /// Returns a Rect where the left, right, top, and bottom values are all the auto value of the contained type
     /// (e.g. Dimension::Auto or LengthPercentageAuto::Auto)
+    #[inline(always)]
     pub const fn auto() -> Self {
         auto::<Self>()
     }
 }
 
 /// Returns the auto value for that type
+#[inline(always)]
 pub const fn min_content<T: TaffyMinContent>() -> T {
     T::MIN_CONTENT
 }
@@ -215,6 +231,7 @@ impl<T: TaffyMinContent> TaffyMinContent for Point<T> {
 impl<T: TaffyMinContent> Point<T> {
     /// Returns a Point where both the x and y values are the min_content value of the contained type
     /// (e.g. Dimension::Auto or LengthPercentageAuto::Auto)
+    #[inline(always)]
     pub const fn min_content() -> Self {
         min_content::<Self>()
     }
@@ -225,6 +242,7 @@ impl<T: TaffyMinContent> TaffyMinContent for Line<T> {
 impl<T: TaffyMinContent> Line<T> {
     /// Returns a Line where both the start and end values are the min_content value of the contained type
     /// (e.g. Dimension::Auto or LengthPercentageAuto::Auto)
+    #[inline(always)]
     pub const fn min_content() -> Self {
         min_content::<Self>()
     }
@@ -235,6 +253,7 @@ impl<T: TaffyMinContent> TaffyMinContent for Size<T> {
 impl<T: TaffyMinContent> Size<T> {
     /// Returns a Size where both the width and height values are the min_content value of the contained type
     /// (e.g. Dimension::Auto or LengthPercentageAuto::Auto)
+    #[inline(always)]
     pub const fn min_content() -> Self {
         min_content::<Self>()
     }
@@ -246,12 +265,14 @@ impl<T: TaffyMinContent> TaffyMinContent for Rect<T> {
 impl<T: TaffyMinContent> Rect<T> {
     /// Returns a Rect where the left, right, top, and bottom values are all the min_content value of the contained type
     /// (e.g. Dimension::Auto or LengthPercentageAuto::Auto)
+    #[inline(always)]
     pub const fn min_content() -> Self {
         min_content::<Self>()
     }
 }
 
 /// Returns the auto value for that type
+#[inline(always)]
 pub const fn max_content<T: TaffyMaxContent>() -> T {
     T::MAX_CONTENT
 }
@@ -270,6 +291,7 @@ impl<T: TaffyMaxContent> TaffyMaxContent for Point<T> {
 impl<T: TaffyMaxContent> Point<T> {
     /// Returns a Point where both the x and y values are the max_content value of the contained type
     /// (e.g. Dimension::Auto or LengthPercentageAuto::Auto)
+    #[inline(always)]
     pub const fn max_content() -> Self {
         max_content::<Self>()
     }
@@ -280,6 +302,7 @@ impl<T: TaffyMaxContent> TaffyMaxContent for Line<T> {
 impl<T: TaffyMaxContent> Line<T> {
     /// Returns a Line where both the start and end values are the max_content value of the contained type
     /// (e.g. Dimension::Auto or LengthPercentageAuto::Auto)
+    #[inline(always)]
     pub const fn max_content() -> Self {
         max_content::<Self>()
     }
@@ -290,6 +313,7 @@ impl<T: TaffyMaxContent> TaffyMaxContent for Size<T> {
 impl<T: TaffyMaxContent> Size<T> {
     /// Returns a Size where both the width and height values are the max_content value of the contained type
     /// (e.g. Dimension::Auto or LengthPercentageAuto::Auto)
+    #[inline(always)]
     pub const fn max_content() -> Self {
         max_content::<Self>()
     }
@@ -301,6 +325,7 @@ impl<T: TaffyMaxContent> TaffyMaxContent for Rect<T> {
 impl<T: TaffyMaxContent> Rect<T> {
     /// Returns a Rect where the left, right, top, and bottom values are all the max_content value of the contained type
     /// (e.g. Dimension::Auto or LengthPercentageAuto::Auto)
+    #[inline(always)]
     pub const fn max_content() -> Self {
         max_content::<Self>()
     }
@@ -308,6 +333,7 @@ impl<T: TaffyMaxContent> Rect<T> {
 
 /// Returns a value of the inferred type which represent a `fit-content(…)` value
 /// with the given argument.
+#[inline(always)]
 pub fn fit_content<T: TaffyFitContent>(argument: LengthPercentage) -> T {
     T::fit_content(argument)
 }
@@ -318,6 +344,7 @@ pub trait TaffyFitContent {
     fn fit_content(argument: LengthPercentage) -> Self;
 }
 impl<T: TaffyFitContent> TaffyFitContent for Point<T> {
+    #[inline(always)]
     fn fit_content(argument: LengthPercentage) -> Self {
         Point { x: T::fit_content(argument), y: T::fit_content(argument) }
     }
@@ -325,11 +352,13 @@ impl<T: TaffyFitContent> TaffyFitContent for Point<T> {
 impl<T: TaffyFitContent> Point<T> {
     /// Returns a Point with x and y set to the same `fit-content(…)` value
     /// with the given argument.
+    #[inline(always)]
     pub fn fit_content(argument: LengthPercentage) -> Self {
         fit_content(argument)
     }
 }
 impl<T: TaffyFitContent> TaffyFitContent for Line<T> {
+    #[inline(always)]
     fn fit_content(argument: LengthPercentage) -> Self {
         Line { start: T::fit_content(argument), end: T::fit_content(argument) }
     }
@@ -337,11 +366,13 @@ impl<T: TaffyFitContent> TaffyFitContent for Line<T> {
 impl<T: TaffyFitContent> Line<T> {
     /// Returns a Line with start and end set to the same `fit-content(…)` value
     /// with the given argument.
+    #[inline(always)]
     pub fn fit_content(argument: LengthPercentage) -> Self {
         fit_content(argument)
     }
 }
 impl<T: TaffyFitContent> TaffyFitContent for Size<T> {
+    #[inline(always)]
     fn fit_content(argument: LengthPercentage) -> Self {
         Size { width: T::fit_content(argument), height: T::fit_content(argument) }
     }
@@ -349,11 +380,13 @@ impl<T: TaffyFitContent> TaffyFitContent for Size<T> {
 impl<T: TaffyFitContent> Size<T> {
     /// Returns a Size where with width and height set to the same `fit-content(…)` value
     /// with the given argument.
+    #[inline(always)]
     pub fn fit_content(argument: LengthPercentage) -> Self {
         fit_content(argument)
     }
 }
 impl<T: TaffyFitContent> TaffyFitContent for Rect<T> {
+    #[inline(always)]
     fn fit_content(argument: LengthPercentage) -> Self {
         Rect {
             left: T::fit_content(argument),
@@ -366,165 +399,189 @@ impl<T: TaffyFitContent> TaffyFitContent for Rect<T> {
 impl<T: TaffyFitContent> Rect<T> {
     /// Returns a Rect where the left, right, top and bottom values are all constant fit_content value of the contained type
     /// (e.g. 2.1, Some(2.1), or Dimension::Length(2.1))
+    #[inline(always)]
     pub fn fit_content(argument: LengthPercentage) -> Self {
         fit_content(argument)
     }
 }
 
 /// Returns a value of the inferred type which represent an absolute length
-pub fn length<Input: Into<f32> + Copy, T: FromLength>(value: Input) -> T {
+#[inline(always)]
+pub fn length<Input: Into<f64> + Copy, T: FromLength>(value: Input) -> T {
     T::from_length(value)
 }
 
 /// Trait to create absolute length values from plain numbers
 pub trait FromLength {
-    /// Converts into an `Into<f32>` into Self
-    fn from_length<Input: Into<f32> + Copy>(value: Input) -> Self;
+    /// Converts into an `Into<f64>` into Self
+    fn from_length<Input: Into<f64> + Copy>(value: Input) -> Self;
 }
 impl FromLength for f32 {
-    fn from_length<Input: Into<f32> + Copy>(value: Input) -> Self {
-        value.into()
+    #[inline(always)]
+    fn from_length<Input: Into<f64> + Copy>(value: Input) -> Self {
+        value.into() as f32
     }
 }
 impl FromLength for Option<f32> {
-    fn from_length<Input: Into<f32> + Copy>(value: Input) -> Self {
-        Some(value.into())
+    #[inline(always)]
+    fn from_length<Input: Into<f64> + Copy>(value: Input) -> Self {
+        Some(value.into() as f32)
     }
 }
 impl<T: FromLength> FromLength for Point<T> {
-    fn from_length<Input: Into<f32> + Copy>(value: Input) -> Self {
-        Point { x: T::from_length(value.into()), y: T::from_length(value.into()) }
+    #[inline(always)]
+    fn from_length<Input: Into<f64> + Copy>(value: Input) -> Self {
+        Point { x: T::from_length(value), y: T::from_length(value) }
     }
 }
 impl<T: FromLength> Point<T> {
     /// Returns a Point where x and y values are the same given absolute length
-    pub fn length<Input: Into<f32> + Copy>(value: Input) -> Self {
+    #[inline(always)]
+    pub fn length<Input: Into<f64> + Copy>(value: Input) -> Self {
         length::<Input, Self>(value)
     }
 }
 impl<T: FromLength> FromLength for Line<T> {
-    fn from_length<Input: Into<f32> + Copy>(value: Input) -> Self {
-        Line { start: T::from_length(value.into()), end: T::from_length(value.into()) }
+    #[inline(always)]
+    fn from_length<Input: Into<f64> + Copy>(value: Input) -> Self {
+        Line { start: T::from_length(value), end: T::from_length(value) }
     }
 }
 impl<T: FromLength> Line<T> {
     /// Returns a Line where both the start and end values are the same given absolute length
-    pub fn length<Input: Into<f32> + Copy>(value: Input) -> Self {
+    #[inline(always)]
+    pub fn length<Input: Into<f64> + Copy>(value: Input) -> Self {
         length::<Input, Self>(value)
     }
 }
 impl<T: FromLength> FromLength for Size<T> {
-    fn from_length<Input: Into<f32> + Copy>(value: Input) -> Self {
-        Size { width: T::from_length(value.into()), height: T::from_length(value.into()) }
+    #[inline(always)]
+    fn from_length<Input: Into<f64> + Copy>(value: Input) -> Self {
+        Size { width: T::from_length(value), height: T::from_length(value) }
     }
 }
 impl<T: FromLength> Size<T> {
     /// Returns a Size where both the width and height values the same given absolute length
-    pub fn length<Input: Into<f32> + Copy>(value: Input) -> Self {
+    #[inline(always)]
+    pub fn length<Input: Into<f64> + Copy>(value: Input) -> Self {
         length::<Input, Self>(value)
     }
 }
 impl<T: FromLength> FromLength for Rect<T> {
-    fn from_length<Input: Into<f32> + Copy>(value: Input) -> Self {
+    #[inline(always)]
+    fn from_length<Input: Into<f64> + Copy>(value: Input) -> Self {
         Rect {
-            left: T::from_length(value.into()),
-            right: T::from_length(value.into()),
-            top: T::from_length(value.into()),
-            bottom: T::from_length(value.into()),
+            left: T::from_length(value),
+            right: T::from_length(value),
+            top: T::from_length(value),
+            bottom: T::from_length(value),
         }
     }
 }
 impl<T: FromLength> Rect<T> {
     /// Returns a Rect where the left, right, top and bottom values are all the same given absolute length
-    pub fn length<Input: Into<f32> + Copy>(value: Input) -> Self {
+    #[inline(always)]
+    pub fn length<Input: Into<f64> + Copy>(value: Input) -> Self {
         length::<Input, Self>(value)
     }
 }
 
 /// Returns a value of the inferred type which represent a percentage
-pub fn percent<Input: Into<f32> + Copy, T: FromPercent>(percent: Input) -> T {
+#[inline(always)]
+pub fn percent<Input: Into<f64> + Copy, T: FromPercent>(percent: Input) -> T {
     T::from_percent(percent)
 }
 
 /// Trait to create constant percent values from plain numbers
 pub trait FromPercent {
-    /// Converts into an `Into<f32>` into Self
-    fn from_percent<Input: Into<f32> + Copy>(percent: Input) -> Self;
+    /// Converts into an `Into<f64>` into Self
+    fn from_percent<Input: Into<f64> + Copy>(percent: Input) -> Self;
 }
 impl FromPercent for f32 {
-    fn from_percent<Input: Into<f32> + Copy>(percent: Input) -> Self {
-        percent.into()
+    #[inline(always)]
+    fn from_percent<Input: Into<f64> + Copy>(percent: Input) -> Self {
+        percent.into() as f32
     }
 }
 impl FromPercent for Option<f32> {
-    fn from_percent<Input: Into<f32> + Copy>(percent: Input) -> Self {
-        Some(percent.into())
+    #[inline(always)]
+    fn from_percent<Input: Into<f64> + Copy>(percent: Input) -> Self {
+        Some(percent.into() as f32)
     }
 }
 impl<T: FromPercent> FromPercent for Point<T> {
-    fn from_percent<Input: Into<f32> + Copy>(percent: Input) -> Self {
-        Point { x: T::from_percent(percent.into()), y: T::from_percent(percent.into()) }
+    #[inline(always)]
+    fn from_percent<Input: Into<f64> + Copy>(percent: Input) -> Self {
+        Point { x: T::from_percent(percent), y: T::from_percent(percent) }
     }
 }
 impl<T: FromPercent> Point<T> {
     /// Returns a Point where both the x and y values are the constant percent value of the contained type
     /// (e.g. 2.1, Some(2.1), or Dimension::Length(2.1))
-    pub fn percent<Input: Into<f32> + Copy>(percent_value: Input) -> Self {
+    #[inline(always)]
+    pub fn percent<Input: Into<f64> + Copy>(percent_value: Input) -> Self {
         percent::<Input, Self>(percent_value)
     }
 }
 impl<T: FromPercent> FromPercent for Line<T> {
-    fn from_percent<Input: Into<f32> + Copy>(percent: Input) -> Self {
-        Line { start: T::from_percent(percent.into()), end: T::from_percent(percent.into()) }
+    #[inline(always)]
+    fn from_percent<Input: Into<f64> + Copy>(percent: Input) -> Self {
+        Line { start: T::from_percent(percent), end: T::from_percent(percent) }
     }
 }
 impl<T: FromPercent> Line<T> {
     /// Returns a Line where both the start and end values are the constant percent value of the contained type
     /// (e.g. 2.1, Some(2.1), or Dimension::Length(2.1))
-    pub fn percent<Input: Into<f32> + Copy>(percent_value: Input) -> Self {
+    #[inline(always)]
+    pub fn percent<Input: Into<f64> + Copy>(percent_value: Input) -> Self {
         percent::<Input, Self>(percent_value)
     }
 }
 impl<T: FromPercent> FromPercent for Size<T> {
-    fn from_percent<Input: Into<f32> + Copy>(percent: Input) -> Self {
-        Size { width: T::from_percent(percent.into()), height: T::from_percent(percent.into()) }
+    #[inline(always)]
+    fn from_percent<Input: Into<f64> + Copy>(percent: Input) -> Self {
+        Size { width: T::from_percent(percent), height: T::from_percent(percent) }
     }
 }
 impl<T: FromPercent> Size<T> {
     /// Returns a Size where both the width and height values are the constant percent value of the contained type
     /// (e.g. 2.1, Some(2.1), or Dimension::Length(2.1))
-    pub fn percent<Input: Into<f32> + Copy>(percent_value: Input) -> Self {
+    #[inline(always)]
+    pub fn percent<Input: Into<f64> + Copy>(percent_value: Input) -> Self {
         percent::<Input, Self>(percent_value)
     }
 }
 impl<T: FromPercent> FromPercent for Rect<T> {
-    fn from_percent<Input: Into<f32> + Copy>(percent: Input) -> Self {
+    #[inline(always)]
+    fn from_percent<Input: Into<f64> + Copy>(percent: Input) -> Self {
         Rect {
-            left: T::from_percent(percent.into()),
-            right: T::from_percent(percent.into()),
-            top: T::from_percent(percent.into()),
-            bottom: T::from_percent(percent.into()),
+            left: T::from_percent(percent),
+            right: T::from_percent(percent),
+            top: T::from_percent(percent),
+            bottom: T::from_percent(percent),
         }
     }
 }
 impl<T: FromPercent> Rect<T> {
     /// Returns a Rect where the left, right, top and bottom values are all constant percent value of the contained type
     /// (e.g. 2.1, Some(2.1), or Dimension::Length(2.1))
-    pub fn percent<Input: Into<f32> + Copy>(percent_value: Input) -> Self {
+    #[inline(always)]
+    pub fn percent<Input: Into<f64> + Copy>(percent_value: Input) -> Self {
         percent::<Input, Self>(percent_value)
     }
 }
 
 /// Create a `Fraction` track sizing function (`fr` in CSS)
 #[cfg(feature = "grid")]
-pub fn fr<Input: Into<f32> + Copy, T: FromFr>(flex: Input) -> T {
+#[inline(always)]
+pub fn fr<Input: Into<f64> + Copy, T: FromFr>(flex: Input) -> T {
     T::from_fr(flex)
 }
 
 /// Trait to create constant percent values from plain numbers
 pub trait FromFr {
-    /// Converts into an `Into<f32>` into Self
-    fn from_fr<Input: Into<f32> + Copy>(flex: Input) -> Self;
+    /// Converts into an `Into<f64>` into Self
+    fn from_fr<Input: Into<f64> + Copy>(flex: Input) -> Self;
 }
 
 #[cfg(feature = "grid")]

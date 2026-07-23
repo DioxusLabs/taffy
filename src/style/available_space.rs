@@ -30,8 +30,8 @@ impl TaffyMinContent for AvailableSpace {
     const MIN_CONTENT: Self = Self::MinContent;
 }
 impl FromLength for AvailableSpace {
-    fn from_length<Input: Into<f32> + Copy>(value: Input) -> Self {
-        Self::Definite(value.into())
+    fn from_length<Input: Into<f64> + Copy>(value: Input) -> Self {
+        Self::Definite(value.into() as f32)
     }
 }
 
