@@ -1,0 +1,15 @@
+<test name="grid_overlarge_extreme_line_numbers__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" direction="rtl">
+      <div direction="rtl" width="20px" height="20px" grid-row-start="-32768" grid-column-start="32767"/>
+      <div direction="rtl" width="20px" height="20px" grid-row-start="32767" grid-row-end="span 10000" grid-column-start="span 10000" grid-column-end="-32768"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="40" height="40">
+      <node x="0" y="0" width="20" height="20"/>
+      <node x="20" y="20" width="20" height="20"/>
+    </node>
+  </expectations>
+</test>

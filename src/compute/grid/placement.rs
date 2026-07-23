@@ -1,7 +1,7 @@
 //! Implements placing items in the grid and resolving the implicit grid.
 //! <https://www.w3.org/TR/css-grid-1/#placement>
 use super::types::{CellOccupancyMatrix, CellOccupancyState, GridItem};
-use super::{NamedLineResolver, OriginZeroLine};
+use super::{NamedLineResolver, OriginZeroLine, MAX_OZ_LINE, MIN_OZ_LINE};
 use crate::geometry::Line;
 use crate::geometry::{AbsoluteAxis, InBothAbsAxis};
 use crate::style::{AlignItems, GridAutoFlow, OriginZeroGridPlacement};
@@ -454,6 +454,16 @@ fn place_indefinitely_positioned_item(
     }
 }
 
+/// Clamp a placement into the limited grid `[-MAX_GRID_TRACKS, MAX_GRID_TRACKS]`,
+/// preserving a span of at least 1 track. Items placed outside of the limited grid are clamped into it.
+///
+/// See: <https://www.w3.org/TR/css-grid-1/#overlarge-grids>
+fn clamp_span_to_limited_grid(span: Line<OriginZeroLine>) -> Line<OriginZeroLine> {
+    let start = span.start.0.clamp(MIN_OZ_LINE, MAX_OZ_LINE - 1);
+    let end = span.end.0.clamp(start + 1, MAX_OZ_LINE);
+    Line { start: OriginZeroLine(start), end: OriginZeroLine(end) }
+}
+
 /// Record the grid item in both CellOccupancyMatric and the GridItems list
 /// once a definite placement has been determined
 #[allow(clippy::too_many_arguments)]
@@ -474,6 +484,11 @@ fn record_grid_placement<S: GridItemStyle>(
     println!("BEFORE placement:");
     #[cfg(test)]
     println!("{cell_occupancy_matrix:?}");
+
+    // Clamp placements into the limited grid to prevent arithmetic overflow when growing the
+    // implicit grid (https://www.w3.org/TR/css-grid-1/#overlarge-grids)
+    let primary_span = clamp_span_to_limited_grid(primary_span);
+    let secondary_span = clamp_span_to_limited_grid(secondary_span);
 
     // Mark area of grid as occupied
     cell_occupancy_matrix.mark_area_as(primary_axis, primary_span, secondary_span, placement_type);

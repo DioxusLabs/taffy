@@ -4,6 +4,20 @@ use crate::geometry::Line;
 use core::cmp::{max, Ordering};
 use core::ops::{Add, AddAssign, Sub};
 
+/// The maximum number of tracks in each direction from the start of the explicit grid (line 0 in
+/// OriginZero coordinates), and the maximum span of a single grid item. This limits the grid to
+/// `2 * MAX_GRID_TRACKS` total tracks in each axis (including explicit tracks, which count against
+/// the positive limit). Grids larger than this limit are clamped.
+///
+/// See: <https://www.w3.org/TR/css-grid-1/#overlarge-grids>
+pub(crate) const MAX_GRID_TRACKS: u16 = 10_000;
+
+/// The lowest valid grid line in OriginZero coordinates
+pub(crate) const MIN_OZ_LINE: i16 = -(MAX_GRID_TRACKS as i16);
+
+/// The highest valid grid line in OriginZero coordinates
+pub(crate) const MAX_OZ_LINE: i16 = MAX_GRID_TRACKS as i16;
+
 /// Represents a grid line position in "CSS Grid Line" coordinates
 ///
 /// "CSS Grid Line" coordinates are those used in grid-row/grid-column in the CSS grid spec:
@@ -29,7 +43,9 @@ impl GridLine {
         self.0
     }
 
-    /// Convert into OriginZero coordinates using the specified explicit track count
+    /// Convert into OriginZero coordinates using the specified explicit track count.
+    ///
+    /// The result is clamped into the limited grid `[-MAX_GRID_TRACKS, MAX_GRID_TRACKS]`
     pub(crate) fn into_origin_zero_line(self, explicit_track_count: u16) -> OriginZeroLine {
         let explicit_line_count = explicit_track_count + 1;
         let oz_line = match self.0.cmp(&0) {
@@ -37,7 +53,7 @@ impl GridLine {
             Ordering::Less => self.0 + explicit_line_count as i16,
             Ordering::Equal => panic!("Grid line of zero is invalid"),
         };
-        OriginZeroLine(oz_line)
+        OriginZeroLine(oz_line.clamp(MIN_OZ_LINE, MAX_OZ_LINE))
     }
 }
 
