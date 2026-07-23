@@ -699,6 +699,20 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
         }
     });
 
+    #[cfg(feature = "content_size")]
+    let final_content_size = Size {
+        width: crate::util::sys::f32_max(
+            item_content_size_contribution.width,
+            columns.iter().map(|t| t.base_size).sum::<f32>() + padding_border_size.width,
+        ),
+        height: crate::util::sys::f32_max(
+            item_content_size_contribution.height,
+            rows.iter().map(|t| t.base_size).sum::<f32>() + padding_border_size.height,
+        ),
+    };
+    #[cfg(not(feature = "content_size"))]
+    let final_content_size = Size::ZERO;
+
     // Set detailed grid information
     #[cfg(feature = "detailed_layout_info")]
     tree.set_detailed_grid_info(
@@ -740,7 +754,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
 
     LayoutOutput::from_sizes_and_baselines(
         container_border_box,
-        item_content_size_contribution,
+        final_content_size,
         Point { x: None, y: Some(grid_container_baseline) },
     )
 }
