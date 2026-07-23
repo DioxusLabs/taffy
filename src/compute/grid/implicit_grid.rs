@@ -6,7 +6,7 @@ use crate::{CheapCloneStr, Direction, GridItemStyle};
 use core::cmp::{max, min};
 
 use super::types::TrackCounts;
-use super::{max_oz_line, OriginZeroLine, MIN_OZ_LINE};
+use super::{OriginZeroLine, MAX_OZ_LINE, MIN_OZ_LINE};
 
 /// Estimate the number of rows and columns in the grid
 /// This is used as a performance optimisation to pre-size vectors and reduce allocations. It also forms a necessary step
@@ -182,7 +182,7 @@ fn child_min_line_max_line_span<S: CheapCloneStr>(
     // stay within the maximum track limit (https://www.w3.org/TR/css-grid-1/#overlarge-grids).
     // This matches the clamping of the actual item placements performed during placement.
     let clamped_min = OriginZeroLine(min.0.max(MIN_OZ_LINE));
-    let clamped_max = OriginZeroLine(max.0.min(max_oz_line(explicit_track_count)));
+    let clamped_max = OriginZeroLine(max.0.min(MAX_OZ_LINE));
 
     (clamped_min, clamped_max, span)
 }

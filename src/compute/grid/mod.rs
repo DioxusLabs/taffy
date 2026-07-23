@@ -24,7 +24,7 @@ use types::{CellOccupancyMatrix, GridTrack, NamedLineResolver, TrackCounts};
 #[cfg(feature = "detailed_layout_info")]
 use types::{GridItem, GridTrackKind};
 
-pub(crate) use types::{max_oz_line, GridCoordinate, GridLine, OriginZeroLine, MAX_GRID_TRACKS, MIN_OZ_LINE};
+pub(crate) use types::{GridCoordinate, GridLine, OriginZeroLine, MAX_GRID_TRACKS, MAX_OZ_LINE, MIN_OZ_LINE};
 
 mod alignment;
 mod explicit_grid;

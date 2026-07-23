@@ -1,7 +1,7 @@
 //! Implements placing items in the grid and resolving the implicit grid.
 //! <https://www.w3.org/TR/css-grid-1/#placement>
 use super::types::{CellOccupancyMatrix, CellOccupancyState, GridItem};
-use super::{max_oz_line, NamedLineResolver, OriginZeroLine, MIN_OZ_LINE};
+use super::{NamedLineResolver, OriginZeroLine, MAX_OZ_LINE, MIN_OZ_LINE};
 use crate::geometry::Line;
 use crate::geometry::{AbsoluteAxis, InBothAbsAxis};
 use crate::style::{AlignItems, GridAutoFlow, OriginZeroGridPlacement};
@@ -454,14 +454,13 @@ fn place_indefinitely_positioned_item(
     }
 }
 
-/// Clamp a placement into the limited grid `[-MAX_GRID_TRACKS, explicit_track_count + MAX_GRID_TRACKS]`,
+/// Clamp a placement into the limited grid `[-MAX_GRID_TRACKS, MAX_GRID_TRACKS]`,
 /// preserving a span of at least 1 track. Items placed outside of the limited grid are clamped into it.
 ///
 /// See: <https://www.w3.org/TR/css-grid-1/#overlarge-grids>
-fn clamp_span_to_limited_grid(span: Line<OriginZeroLine>, explicit_track_count: u16) -> Line<OriginZeroLine> {
-    let max_line = max_oz_line(explicit_track_count);
-    let start = span.start.0.clamp(MIN_OZ_LINE, max_line - 1);
-    let end = span.end.0.clamp(start + 1, max_line);
+fn clamp_span_to_limited_grid(span: Line<OriginZeroLine>) -> Line<OriginZeroLine> {
+    let start = span.start.0.clamp(MIN_OZ_LINE, MAX_OZ_LINE - 1);
+    let end = span.end.0.clamp(start + 1, MAX_OZ_LINE);
     Line { start: OriginZeroLine(start), end: OriginZeroLine(end) }
 }
 
@@ -488,10 +487,8 @@ fn record_grid_placement<S: GridItemStyle>(
 
     // Clamp placements into the limited grid to prevent arithmetic overflow when growing the
     // implicit grid (https://www.w3.org/TR/css-grid-1/#overlarge-grids)
-    let primary_explicit_count = cell_occupancy_matrix.track_counts(primary_axis).explicit;
-    let secondary_explicit_count = cell_occupancy_matrix.track_counts(primary_axis.other_axis()).explicit;
-    let primary_span = clamp_span_to_limited_grid(primary_span, primary_explicit_count);
-    let secondary_span = clamp_span_to_limited_grid(secondary_span, secondary_explicit_count);
+    let primary_span = clamp_span_to_limited_grid(primary_span);
+    let secondary_span = clamp_span_to_limited_grid(secondary_span);
 
     // Mark area of grid as occupied
     cell_occupancy_matrix.mark_area_as(primary_axis, primary_span, secondary_span, placement_type);
