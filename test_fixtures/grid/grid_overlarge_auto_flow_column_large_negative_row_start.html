@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    grid-auto-flow: column with a large negative grid-row-start (https://github.com/servo/servo/issues/45939)
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="display: grid; grid-auto-flow: column;">
+  <div style="background: #59c4f6; width: 20px; height: 20px; grid-column-start: 7;"></div>
+  <div style="background: #63c466; width: 20px; height: 20px; grid-column-start: 7;"></div>
+  <div style="background: #feb43f; width: 20px; height: 20px; grid-column-start: 7;"></div>
+  <div style="background: #d55d81; width: 20px; height: 20px; grid-row-start: -19553;"></div>
+</div>
+
+</body>
+</html>

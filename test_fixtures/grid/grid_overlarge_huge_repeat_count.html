@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    An explicit track count greater than i16::MAX (https://github.com/servo/servo/issues/45949)
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="display: grid; grid-template-rows: 90px; grid-template-columns: repeat(32768, fit-content(512px)) fit-content(100%);">
+  <div style="background: #59c4f6; width: 20px; height: 20px;"></div>
+</div>
+
+</body>
+</html>
