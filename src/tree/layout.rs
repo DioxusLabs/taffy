@@ -107,12 +107,10 @@ impl TryFrom<RequestedAxis> for AbsoluteAxis {
 
 /// A struct containing the inputs constraints/hints for laying out a node, which are passed in by the parent
 ///
-/// `LayoutInput` is `#[non_exhaustive]` so new fields can be added without a semver-breaking
-/// change. External callers should construct instances via [`LayoutPartialTree`]'s
+/// External callers should generally construct instances via [`LayoutPartialTree`]'s
 /// helper methods (e.g. `perform_child_layout`) rather than via struct literal syntax.
 #[derive(Debug, Copy, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize))]
-#[non_exhaustive]
 pub struct LayoutInput {
     /// Whether we only need to know the Node's size, or whether we need to perform a full layout
     pub run_mode: RunMode,

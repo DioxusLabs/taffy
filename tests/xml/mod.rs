@@ -10622,6 +10622,26 @@ mod flex {
     }
 
     #[test]
+    fn flex_percent_child_of_grown_item_in_definite_container_resolves__border_box_ltr() {
+        crate::run_xml_test("flex", "flex_percent_child_of_grown_item_in_definite_container_resolves__border_box_ltr");
+    }
+
+    #[test]
+    fn flex_percent_child_of_grown_item_in_definite_container_resolves__content_box_ltr() {
+        crate::run_xml_test("flex", "flex_percent_child_of_grown_item_in_definite_container_resolves__content_box_ltr");
+    }
+
+    #[test]
+    fn flex_percent_child_of_grown_item_in_definite_container_resolves__border_box_rtl() {
+        crate::run_xml_test("flex", "flex_percent_child_of_grown_item_in_definite_container_resolves__border_box_rtl");
+    }
+
+    #[test]
+    fn flex_percent_child_of_grown_item_in_definite_container_resolves__content_box_rtl() {
+        crate::run_xml_test("flex", "flex_percent_child_of_grown_item_in_definite_container_resolves__content_box_rtl");
+    }
+
+    #[test]
     fn flex_percent_child_of_indefinite_basis_item_is_auto__border_box_ltr() {
         crate::run_xml_test("flex", "flex_percent_child_of_indefinite_basis_item_is_auto__border_box_ltr");
     }

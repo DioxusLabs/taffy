@@ -781,11 +781,24 @@ fn determine_flex_base_size(
             // So B will just work here by using main_size without special handling for aspect_ratio
             let main_size = child.size.main(dir);
             // Record whether the used main size will be a definite CSS length.
+            //
             // A style-provided main size or resolvable flex-basis makes the used
-            // main size definite; otherwise (case E below), any final size the
-            // item acquires comes from stretching an indefinite basis and must
-            // not act as a definite basis for descendant percentage lengths.
-            child.main_size_is_definite = flex_basis.is_some() || main_size.is_some();
+            // main size definite.
+            //
+            // In addition, a growing item (`flex-grow > 0`) whose flex container
+            // has a *definite* inner main size flexes to fill definite free
+            // space, so its post-flexing main size is likewise definite even
+            // when its flex basis is content-based. This is what makes a
+            // `height: 100%` descendant resolve inside a `flex-grow` item that
+            // sits in a fixed-height column container.
+            //
+            // Otherwise (case E below with an indefinite container main size)
+            // any final size the item acquires comes from stretching an
+            // indefinite basis and must not act as a definite basis for
+            // descendant percentage lengths.
+            let container_main_is_definite = constants.node_inner_size_percentage_basis.main(dir).is_some();
+            child.main_size_is_definite =
+                flex_basis.is_some() || main_size.is_some() || (container_main_is_definite && child.flex_grow > 0.0);
             if let Some(flex_basis) = flex_basis.or(main_size) {
                 break 'flex_basis flex_basis;
             };
