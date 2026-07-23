@@ -1,0 +1,13 @@
+<test name="grid_overlarge_repeat_track_count_product_overflow__border_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" direction="ltr" width="200px" height="100px" grid-template-columns="repeat(40000, 10px 10px)">
+      <div direction="ltr"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="200" height="100">
+      <node x="0" y="0" width="10" height="100"/>
+    </node>
+  </expectations>
+</test>

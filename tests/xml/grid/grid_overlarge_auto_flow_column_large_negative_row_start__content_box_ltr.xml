@@ -1,0 +1,19 @@
+<test name="grid_overlarge_auto_flow_column_large_negative_row_start__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" box-sizing="content-box" direction="ltr" grid-auto-flow="column">
+      <div box-sizing="content-box" direction="ltr" width="20px" height="20px" grid-column-start="7"/>
+      <div box-sizing="content-box" direction="ltr" width="20px" height="20px" grid-column-start="7"/>
+      <div box-sizing="content-box" direction="ltr" width="20px" height="20px" grid-column-start="7"/>
+      <div box-sizing="content-box" direction="ltr" width="20px" height="20px" grid-row-start="-19553"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="40" height="60">
+      <node x="20" y="0" width="20" height="20"/>
+      <node x="20" y="20" width="20" height="20"/>
+      <node x="20" y="40" width="20" height="20"/>
+      <node x="0" y="0" width="20" height="20"/>
+    </node>
+  </expectations>
+</test>

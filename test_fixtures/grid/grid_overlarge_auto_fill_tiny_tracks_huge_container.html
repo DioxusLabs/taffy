@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    Tiny auto-fill tracks in a huge container producing more repetitions than the 10000 track limit
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="display: grid; width: 100000px; grid-template-columns: repeat(auto-fill, 1px);">
+  <div style="background: #59c4f6; height: 20px;"></div>
+</div>
+
+</body>
+</html>
