@@ -1,0 +1,13 @@
+<test name="grid_overlarge_auto_fill_tiny_tracks_huge_container__content_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" box-sizing="content-box" direction="rtl" width="100000px" grid-template-columns="repeat(auto-fill, 1px)">
+      <div box-sizing="content-box" direction="rtl" height="20px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="100000" height="20">
+      <node x="99999" y="0" width="1" height="20"/>
+    </node>
+  </expectations>
+</test>

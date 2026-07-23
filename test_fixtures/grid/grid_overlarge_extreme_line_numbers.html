@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    Definitely placed items with extreme positive and negative line numbers
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="display: grid;">
+  <div style="background: #59c4f6; width: 20px; height: 20px; grid-column-start: 32767; grid-row-start: -32768;"></div>
+  <div style="background: #63c466; width: 20px; height: 20px; grid-column: span 10000 / -32768; grid-row: 32767 / span 10000;"></div>
+</div>
+
+</body>
+</html>

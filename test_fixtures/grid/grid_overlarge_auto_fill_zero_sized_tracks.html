@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    Zero-sized auto-fill tracks resulting in an infinite repetition count (https://github.com/servo/servo/issues/46081)
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="display: grid; width: 200px; grid-template-columns: repeat(auto-fill, 0px);">
+  <div style="background: #59c4f6; height: 20px;"></div>
+</div>
+
+</body>
+</html>
