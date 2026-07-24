@@ -1,5 +1,6 @@
 mod hand_written {
     mod adversarial_styles;
+    mod bfc_beside_floats;
     mod block_replaced;
     mod border_and_padding;
     mod caching;
