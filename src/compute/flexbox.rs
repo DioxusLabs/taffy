@@ -33,6 +33,8 @@ struct FlexItem {
     min_size: Size<Option<f32>>,
     /// The maximum allowable size of this item
     max_size: Size<Option<f32>>,
+    /// The aspect ratio of this item
+    aspect_ratio: Option<f32>,
     /// The cross-alignment of this item
     align_self: AlignSelf,
 
@@ -548,13 +550,12 @@ fn generate_anonymous_flex_items(
                 min_size: child_style
                     .min_size()
                     .maybe_resolve(constants.node_inner_size, |val, basis| tree.calc(val, basis))
-                    .maybe_apply_aspect_ratio(aspect_ratio)
                     .maybe_add(box_sizing_adjustment),
                 max_size: child_style
                     .max_size()
                     .maybe_resolve(constants.node_inner_size, |val, basis| tree.calc(val, basis))
-                    .maybe_apply_aspect_ratio(aspect_ratio)
                     .maybe_add(box_sizing_adjustment),
+                aspect_ratio,
 
                 inset: child_style
                     .inset()
@@ -676,9 +677,13 @@ fn determine_flex_base_size(
         let child_parent_size = Size::from_cross(dir, cross_axis_parent_size);
 
         // Available space for child sizing
+        // Min/max sizes transferred through the aspect ratio are taken into account here
+        // https://github.com/w3c/csswg-drafts/issues/10997
         let cross_axis_margin_sum = constants.margin.cross_axis_sum(dir);
-        let child_min_cross = child.min_size.cross(dir).maybe_add(cross_axis_margin_sum);
-        let child_max_cross = child.max_size.cross(dir).maybe_add(cross_axis_margin_sum);
+        let transferred_min_size = child.min_size.maybe_apply_aspect_ratio(child.aspect_ratio);
+        let transferred_max_size = child.max_size.maybe_apply_aspect_ratio(child.aspect_ratio);
+        let child_min_cross = transferred_min_size.cross(dir).maybe_add(cross_axis_margin_sum);
+        let child_max_cross = transferred_max_size.cross(dir).maybe_add(cross_axis_margin_sum);
 
         // Clamp available space by min- and max- size
         let cross_axis_available_space: AvailableSpace = match available_space.cross(dir) {
@@ -698,6 +703,13 @@ fn determine_flex_base_size(
         // Known dimensions for child sizing
         let child_known_dimensions = {
             let mut ckd = child.size.with_main(dir, None);
+            // Clamp the definite cross size by the cross min/max sizes so that sizes
+            // transferred through an intrinsic aspect ratio (e.g. for replaced elements)
+            // are based on the used cross size.
+            ckd.set_cross(
+                dir,
+                ckd.cross(dir).maybe_clamp(transferred_min_size.cross(dir), transferred_max_size.cross(dir)),
+            );
             if child.align_self == AlignSelf::STRETCH
                 && !child.margin_is_auto.cross_start(constants.dir)
                 && !child.margin_is_auto.cross_end(constants.dir)
@@ -836,14 +848,19 @@ fn determine_flex_base_size(
             // 4.5. Automatic Minimum Size of Flex Items
             // https://www.w3.org/TR/css-flexbox-1/#min-size-auto
             let clamped_min_content_size =
-                min_content_main_size.maybe_min(child.size.main(dir)).maybe_min(child.max_size.main(dir));
+                min_content_main_size.maybe_min(child.size.main(dir)).maybe_min(transferred_max_size.main(dir));
             clamped_min_content_size.maybe_max(padding_border_axes_sums.main(dir))
         });
 
-        let hypothetical_inner_min_main =
-            child.resolved_minimum_main_size.maybe_max(padding_border_axes_sums.main(constants.dir));
+        // Sizes transferred through the aspect ratio clamp the hypothetical main size,
+        // but do not participate in resolving flexible lengths or clamping the final size.
+        // https://github.com/w3c/csswg-drafts/issues/10997
+        let hypothetical_inner_min_main = child
+            .resolved_minimum_main_size
+            .maybe_max(transferred_min_size.main(constants.dir))
+            .maybe_max(padding_border_axes_sums.main(constants.dir));
         let hypothetical_inner_size =
-            child.flex_basis.maybe_clamp(Some(hypothetical_inner_min_main), child.max_size.main(constants.dir));
+            child.flex_basis.maybe_clamp(Some(hypothetical_inner_min_main), transferred_max_size.main(constants.dir));
         let hypothetical_outer_size = hypothetical_inner_size + child.margin.main_axis_sum(constants.dir);
 
         child.hypothetical_inner_size.set_main(constants.dir, hypothetical_inner_size);
@@ -1394,15 +1411,20 @@ fn determine_hypothetical_cross_size(
 
         let child_known_main = constants.container_size.main(constants.dir).into();
 
+        // Sizes transferred through the aspect ratio clamp the hypothetical cross size
+        // https://github.com/w3c/csswg-drafts/issues/10997
+        let transferred_min_cross = child.min_size.maybe_apply_aspect_ratio(child.aspect_ratio).cross(constants.dir);
+        let transferred_max_cross = child.max_size.maybe_apply_aspect_ratio(child.aspect_ratio).cross(constants.dir);
+
         let child_cross = child
             .size
             .cross(constants.dir)
-            .maybe_clamp(child.min_size.cross(constants.dir), child.max_size.cross(constants.dir))
+            .maybe_clamp(transferred_min_cross, transferred_max_cross)
             .maybe_max(padding_border_sum);
 
         let child_available_cross = available_space
             .cross(constants.dir)
-            .maybe_clamp(child.min_size.cross(constants.dir), child.max_size.cross(constants.dir))
+            .maybe_clamp(transferred_min_cross, transferred_max_cross)
             .maybe_max(padding_border_sum);
 
         let child_inner_cross = child_cross.unwrap_or_else(|| {
@@ -1421,7 +1443,7 @@ fn determine_hypothetical_cross_size(
                 constants.dir.cross_axis(),
                 Line::FALSE,
             )
-            .maybe_clamp(child.min_size.cross(constants.dir), child.max_size.cross(constants.dir))
+            .maybe_clamp(transferred_min_cross, transferred_max_cross)
             .max(padding_border_sum)
         });
         let child_outer_cross = child_inner_cross + child.margin.cross_axis_sum(constants.dir);
