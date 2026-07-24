@@ -2,8 +2,19 @@
 
 ## Unreleased
 
+### Changed
+
+- Block/float: `BlockContext::place_floated_box` takes an additional `adjoins_unresolved_strut: bool` parameter indicating whether the float is being placed while the position of the current margin-collapse strut is still unresolved
+
 ### Fixed
 
+- Block: clearance is now computed per CSS2.2 §9.5.2 from the hypothetical position of the cleared element (including its collapsed top margin), supporting negative clearance and suppressing clearance when a large top margin already places the element past the float
+- Block: `clear` on an element no longer has any effect when no float has been placed on the relevant side(s)
+- Block: clearance prevents the cleared element's top margin from collapsing with preceding margins and with the parent's top margin
+- Block: the top and bottom margins of a self-collapsing element with clearance collapse with each other and are applied inside the parent (they no longer collapse with the parent's bottom margin)
+- Block: floats placed while the position of the enclosing margin-collapse strut is unresolved force clearance on subsequent cleared elements whose margins adjoin the same strut
+- Block: an element containing only floated children can now be collapsed through
+- Block: a block establishing a new formatting context that does not fit beside a float is pushed below it and its top margin no longer collapses with preceding margins
 - Numeric style helpers (`length`, `percent`, `fr`, `flex`) now accept `Input: Into<f64>` instead of `Input: Into<f32>`. This allows bare float literals such as `length(800.0)` to be used without triggering the `float_literal_f32_fallback` future-compatibility lint, while widening the set of accepted numeric input types (#974)
 
 ## 0.12.2

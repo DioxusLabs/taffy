@@ -451,22 +451,22 @@ impl FloatContext {
     }
 
     /// Get the end segment of the last float on side(s) specified by the clear parameter (if any)
+    ///
+    /// Returns `None` if no float has been placed on the relevant side(s)
     fn cleared_segment(&self, clear: Clear) -> Option<usize> {
+        let left_end = self.last_placed_floats[0].end;
+        let right_end = self.last_placed_floats[1].end;
         match clear {
-            Clear::Left => Some(self.last_placed_floats[0].end),
-            Clear::Right => Some(self.last_placed_floats[1].end),
-            Clear::Both => {
-                let left_end = self.last_placed_floats[0].end;
-                let right_end = self.last_placed_floats[1].end;
-                Some(left_end.max(right_end))
-            }
-            Clear::None => None,
+            Clear::Left if left_end > 0 => Some(left_end),
+            Clear::Right if right_end > 0 => Some(right_end),
+            Clear::Both if left_end > 0 || right_end > 0 => Some(left_end.max(right_end)),
+            _ => None,
         }
     }
 
     /// Get the bottom of lowest relevant float for the specific clear property
     pub fn cleared_threshold(&self, clear: Clear) -> Option<f32> {
-        self.cleared_segment(clear).and_then(|idx| self.segments.get(idx.max(1) - 1)).map(|seg| seg.y.end)
+        self.cleared_segment(clear).and_then(|idx| self.segments.get(idx - 1)).map(|seg| seg.y.end)
     }
 
     /// Search for a space suitable for laying out non-floated content into
@@ -509,13 +509,19 @@ impl FloatContext {
                     height: f32::INFINITY,
                 }
             }
-            None => ContentSlot {
-                segment_id: None,
-                x: containing_block_insets[0],
-                y: min_y,
-                width: self.available_width - containing_block_insets[0] - containing_block_insets[1],
-                height: f32::INFINITY,
-            },
+            None => {
+                // There are no float-affected segments at or below `min_y` past `hwm`: the slot
+                // starts below the last skipped segment (or at `min_y` if that is lower down)
+                let below_segments_y =
+                    if hwm > 0 { self.segments.get(hwm - 1).map(|s| s.y.end).unwrap_or(min_y) } else { min_y };
+                ContentSlot {
+                    segment_id: None,
+                    x: containing_block_insets[0],
+                    y: min_y.max(below_segments_y),
+                    width: self.available_width - containing_block_insets[0] - containing_block_insets[1],
+                    height: f32::INFINITY,
+                }
+            }
         }
     }
 }

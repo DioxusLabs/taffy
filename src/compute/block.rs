@@ -50,6 +50,10 @@ impl BlockFormattingContext {
             content_box_insets: [0.0, 0.0],
             float_content_contribution: 0.0,
             is_root: true,
+            #[cfg(feature = "float_layout")]
+            adjoining_floats: [false, false],
+            #[cfg(feature = "float_layout")]
+            top_adjoining_floats: None,
         }
     }
 }
@@ -71,6 +75,17 @@ pub struct BlockContext<'bfc> {
     float_content_contribution: f32,
     /// Whether the node is the root of the Block Formatting Context is belongs to.
     is_root: bool,
+    /// Whether a float has been placed (on each side) whose position adjoins the current
+    /// margin-collapse strut of this block (i.e. whose final position can still be moved by
+    /// margins that collapse into that strut). Such floats force clearance on cleared elements
+    /// whose margins adjoin the same strut.
+    #[cfg(feature = "float_layout")]
+    adjoining_floats: [bool; 2],
+    /// The value of `adjoining_floats` frozen at the first point at which in-flow content was
+    /// committed within this block (resolving the position of the block's top margin strut).
+    /// `None` if no in-flow content has been committed yet.
+    #[cfg(feature = "float_layout")]
+    top_adjoining_floats: Option<[bool; 2]>,
 }
 
 impl BlockContext<'_> {
@@ -84,6 +99,12 @@ impl BlockContext<'_> {
             content_box_insets: insets,
             float_content_contribution: 0.0,
             is_root: false,
+            // Floats adjoining the parent's current strut also adjoin this block's top strut
+            // (if this block's top margin collapses with its first child's, which is checked separately)
+            #[cfg(feature = "float_layout")]
+            adjoining_floats: self.adjoining_floats,
+            #[cfg(feature = "float_layout")]
+            top_adjoining_floats: None,
         }
     }
 
@@ -130,7 +151,11 @@ impl BlockContext<'_> {
         min_y: f32,
         direction: FloatDirection,
         clear: Clear,
+        adjoins_unresolved_strut: bool,
     ) -> Point<f32> {
+        if adjoins_unresolved_strut {
+            self.adjoining_floats[direction as usize] = true;
+        }
         let mut pos = self.bfc.float_context.place_floated_box(
             floated_box,
             min_y + self.y_offset,
@@ -158,6 +183,39 @@ impl BlockContext<'_> {
     /// Get the bottom of lowest relevant float for the specific clear property
     pub fn cleared_threshold(&self, clear: Clear) -> Option<f32> {
         self.bfc.float_context.cleared_threshold(clear).map(|threshold| threshold - self.y_offset)
+    }
+
+    /// Whether a float that is adjoining the current margin-collapse strut has been placed
+    /// on the side(s) relevant to the passed clear property
+    pub fn has_adjoining_float(&self, clear: Clear) -> bool {
+        match clear {
+            Clear::Left => self.adjoining_floats[0],
+            Clear::Right => self.adjoining_floats[1],
+            Clear::Both => self.adjoining_floats[0] || self.adjoining_floats[1],
+            Clear::None => false,
+        }
+    }
+
+    /// Merge adjoining float flags propagated from a child block into this block's flags
+    fn merge_adjoining_floats(&mut self, flags: [bool; 2]) {
+        self.adjoining_floats[0] |= flags[0];
+        self.adjoining_floats[1] |= flags[1];
+    }
+
+    /// Record that in-flow content has been committed within this block, resolving the position of
+    /// the current margin-collapse strut. Floats placed before this point no longer adjoin the
+    /// current strut. The flags for the block's top strut are frozen at the first commit.
+    fn commit_strut(&mut self) {
+        if self.top_adjoining_floats.is_none() {
+            self.top_adjoining_floats = Some(self.adjoining_floats);
+        }
+        self.adjoining_floats = [false, false];
+    }
+
+    /// The adjoining float flags for this block's top margin strut: floats placed while the
+    /// position of the block's top strut was still unresolved
+    fn top_adjoining_floats(&self) -> [bool; 2] {
+        self.top_adjoining_floats.unwrap_or(self.adjoining_floats)
     }
 
     /// Update the height that descendent floats with the height that floats consume
@@ -535,8 +593,13 @@ fn compute_inner(
     }
 
     // Determine whether this node can be collapsed through
-    let all_in_flow_children_can_be_collapsed_through =
-        items.iter().all(|item| item.position == Position::Absolute || item.can_be_collapsed_through);
+    let all_in_flow_children_can_be_collapsed_through = items.iter().all(|item| {
+        #[cfg(feature = "float_layout")]
+        if item.float.is_floated() {
+            return true;
+        }
+        item.position == Position::Absolute || item.can_be_collapsed_through
+    });
     let can_be_collapsed_through =
         !has_styles_preventing_being_collapsed_through && all_in_flow_children_can_be_collapsed_through;
 
@@ -783,6 +846,14 @@ fn perform_final_layout_on_in_flow_children(
         block_ctx.apply_content_box_inset([resolved_content_box_inset.left, resolved_content_box_inset.right]);
     }
 
+    // If this block's top margin does not collapse with its children's then the position of its
+    // top margin strut is resolved relative to it, and floats adjoining ancestor struts do not
+    // adjoin this block's strut.
+    #[cfg(feature = "float_layout")]
+    if !own_margins_collapse_with_children.start {
+        block_ctx.commit_strut();
+    }
+
     #[cfg_attr(not(feature = "content_size"), allow(unused_mut))]
     let mut inflow_content_size = Size::ZERO;
     let mut committed_y_offset = resolved_content_box_inset.top;
@@ -790,13 +861,10 @@ fn perform_final_layout_on_in_flow_children(
     let mut first_child_top_margin_set = CollapsibleMarginSet::ZERO;
     let mut active_collapsible_margin_set = CollapsibleMarginSet::ZERO;
     let mut is_collapsing_with_first_margin_set = true;
-
-    #[cfg(feature = "float_layout")]
-    let mut has_active_floats = block_ctx.has_active_floats(committed_y_offset);
-    #[cfg(not(feature = "float_layout"))]
-    let has_active_floats = false;
-    #[cfg(feature = "float_layout")]
-    let mut y_offset_for_float = resolved_content_box_inset.top;
+    // Whether the active margin set contains the margins of a self-collapsing element with
+    // clearance. Such margins collapse with the margins of following siblings but the resulting
+    // margin does not collapse with the bottom margin of the parent block.
+    let mut active_margin_set_has_clearance = false;
 
     for item in items.iter_mut() {
         if item.position == Position::Absolute {
@@ -820,8 +888,6 @@ fn perform_final_layout_on_in_flow_children(
             // Handle floated boxes
             #[cfg(feature = "float_layout")]
             if let Some(float_direction) = item.float.float_direction() {
-                has_active_floats = true;
-
                 let item_layout = tree.perform_child_layout(
                     item.node_id,
                     Size::NONE,
@@ -833,8 +899,29 @@ fn perform_final_layout_on_in_flow_children(
                 );
                 let margin_box = item_layout.size + item_non_auto_margin.sum_axes();
 
-                let mut location =
-                    block_ctx.place_floated_box(margin_box, y_offset_for_float, float_direction, item.clear);
+                // Floats that occur between collapsing margins are positioned as if they had an otherwise
+                // empty anonymous block parent taking part in the flow, so the pending collapsible margins
+                // contribute to the float's minimum y position (unless those margins collapse with the
+                // container's own top margin, in which case they are applied outside the container).
+                //
+                // In the latter case the position of the float is not fully resolved: margins contributed
+                // by later siblings can still collapse into the strut and move the container (and float).
+                // Such floats force clearance on cleared elements whose margins adjoin the same strut.
+                let adjoins_unresolved_strut =
+                    is_collapsing_with_first_margin_set && own_margins_collapse_with_children.start;
+                let y_offset_for_float = if adjoins_unresolved_strut {
+                    committed_y_offset
+                } else {
+                    committed_y_offset + active_collapsible_margin_set.resolve()
+                };
+
+                let mut location = block_ctx.place_floated_box(
+                    margin_box,
+                    y_offset_for_float,
+                    float_direction,
+                    item.clear,
+                    adjoins_unresolved_strut,
+                );
 
                 // Ensure that content that appears after a float does not get positioned before/above the float
                 //
@@ -842,7 +929,6 @@ fn perform_final_layout_on_in_flow_children(
                 // shouldn't cause content to push down to it's level
                 // committed_y_offset = committed_y_offset.max(location.y);
                 // y_offset_for_absolute = y_offset_for_absolute.max(location.y);
-                // y_offset_for_float = y_offset_for_float.max(location.y);
 
                 // Convert the margin-box location returned by float placement into a border-box location
                 // for the output Layout
@@ -885,6 +971,8 @@ fn perform_final_layout_on_in_flow_children(
             // Handle non-floated boxes
 
             let mut y_margin_offset: f32 = 0.0;
+            #[cfg(feature = "float_layout")]
+            let mut bfc_margin_separated = false;
 
             let (stretch_width, float_avoiding_position, float_avoiding_width) = if item.is_in_same_bfc {
                 let stretch_width = container_inner_width - item_non_auto_x_margin_sum;
@@ -895,30 +983,67 @@ fn perform_final_layout_on_in_flow_children(
             } else {
                 'block: {
                     // Set y_margin_offset (different bfc child)
-                    if !is_collapsing_with_first_margin_set || !own_margins_collapse_with_children.start {
+                    let margins_escape =
+                        is_collapsing_with_first_margin_set && own_margins_collapse_with_children.start;
+                    if !margins_escape {
                         y_margin_offset =
                             active_collapsible_margin_set.collapse_with_margin(item_non_auto_margin.top).resolve();
                     };
                     let min_y = committed_y_offset + y_margin_offset;
 
                     #[cfg(feature = "float_layout")]
-                    if has_active_floats {
-                        let slot = block_ctx.find_content_slot(min_y, item.clear, None);
-                        has_active_floats = slot.segment_id.is_some();
+                    if block_ctx.has_active_floats(committed_y_offset.min(min_y)) {
+                        let mut slot = block_ctx.find_content_slot(min_y, item.clear, None);
+
+                        // A new formatting context whose border box does not fit beside the floats at its
+                        // hypothetical position (with margins collapsed) must be pushed below the floats,
+                        // separating its margin from them (similar to clearance): the margin no longer
+                        // collapses with preceding margins and does not move the floats.
+                        if margins_escape {
+                            if let Some(item_width) = item.size.width {
+                                // Only the item's border box must not overlap the floats:
+                                // its margins may overflow the available space
+                                let outer_width = item_width;
+                                // If a float adjoins the strut that this item's margin would collapse into,
+                                // the collapsed margin would move the float together with the item, so the
+                                // fit check is made at the strut's unresolved position (where the float is).
+                                let hypothetical_min_y = if block_ctx.has_adjoining_float(Clear::Both) {
+                                    committed_y_offset
+                                } else {
+                                    committed_y_offset
+                                        + active_collapsible_margin_set
+                                            .collapse_with_margin(item_non_auto_margin.top)
+                                            .resolve()
+                                };
+                                let mut candidate = block_ctx.find_content_slot(hypothetical_min_y, item.clear, None);
+                                if candidate.segment_id.is_some() && outer_width > candidate.width {
+                                    while candidate.segment_id.is_some() && outer_width > candidate.width {
+                                        candidate = block_ctx.find_content_slot(
+                                            hypothetical_min_y,
+                                            item.clear,
+                                            candidate.segment_id,
+                                        );
+                                    }
+                                    bfc_margin_separated = true;
+                                    // The preceding margins (excluding this item's, which is now separated)
+                                    // still escape and move the container; compensate so that the item's
+                                    // absolute position stays at the found slot.
+                                    slot = candidate;
+                                    slot.y -= active_collapsible_margin_set.resolve();
+                                }
+                            }
+                        }
+
                         let stretch_width = slot.width - item_non_auto_x_margin_sum;
                         break 'block (stretch_width, Point { x: slot.x, y: slot.y }, slot.width);
                     }
 
-                    if !has_active_floats {
-                        let stretch_width = container_inner_width - item_non_auto_x_margin_sum;
-                        break 'block (
-                            stretch_width,
-                            Point { x: resolved_content_box_inset.left, y: min_y },
-                            container_inner_width,
-                        );
-                    }
-
-                    unreachable!("One of the above cases will always be hit");
+                    let stretch_width = container_inner_width - item_non_auto_x_margin_sum;
+                    break 'block (
+                        stretch_width,
+                        Point { x: resolved_content_box_inset.left, y: min_y },
+                        container_inner_width,
+                    );
                 }
             };
 
@@ -947,7 +1072,9 @@ fn perform_final_layout_on_in_flow_children(
             };
 
             #[cfg(feature = "float_layout")]
-            let clear_pos = block_ctx.cleared_threshold(item.clear).unwrap_or(0.0);
+            let clear_threshold = block_ctx.cleared_threshold(item.clear);
+            #[cfg(feature = "float_layout")]
+            let clear_pos = clear_threshold.unwrap_or(0.0);
             #[cfg(not(feature = "float_layout"))]
             let clear_pos = 0.0;
 
@@ -970,7 +1097,11 @@ fn perform_final_layout_on_in_flow_children(
                 #[cfg(feature = "float_layout")]
                 {
                     let child_contribution = child_block_ctx.floated_content_height_contribution();
+                    let child_top_adjoining_floats = child_block_ctx.top_adjoining_floats();
                     block_ctx.add_child_floated_content_height_contribution(y_offset_for_absolute + child_contribution);
+                    // Floats placed while the position of the child's top margin strut was unresolved
+                    // also adjoin this block's current strut
+                    block_ctx.merge_adjoining_floats(child_top_adjoining_floats);
                 }
 
                 output
@@ -1018,16 +1149,56 @@ fn perform_final_layout_on_in_flow_children(
             if item.is_in_same_bfc
                 && (!is_collapsing_with_first_margin_set || !own_margins_collapse_with_children.start)
             {
-                y_margin_offset = active_collapsible_margin_set.collapse_with_margin(resolved_margin.top).resolve()
+                y_margin_offset = active_collapsible_margin_set.collapse_with_set(top_margin_set).resolve()
             };
 
+            // Compute clearance (CSS2.2 9.5.2). Clearance is introduced if the hypothetical position of the
+            // item's top border edge (the position it would have with normal margin collapsing) is not past
+            // the bottom of the relevant floats. When clearance is introduced the item's top margin no longer
+            // collapses with preceding margins, and the item's border edge is placed at
+            // `max(float bottom, hypothetical position)`.
             #[cfg(feature = "float_layout")]
-            let float_or_not_clear = item.float.is_floated() || item.clear == Clear::None;
+            let mut has_clearance = false;
             #[cfg(not(feature = "float_layout"))]
-            let float_or_not_clear = true;
+            let has_clearance = false;
+            #[cfg(feature = "float_layout")]
+            if item.is_in_same_bfc {
+                if let Some(threshold) = clear_threshold {
+                    // The hypothetical position always includes the item's collapsed top margin set, even
+                    // when those margins collapse with the container's own top margin (and are thus applied
+                    // outside the container): in that case they still move the container (and hence the item)
+                    // relative to the floats.
+                    let hypothetical_y =
+                        committed_y_offset + active_collapsible_margin_set.collapse_with_set(top_margin_set).resolve();
+                    // Clearance is forced (regardless of the hypothetical position) if a relevant float is
+                    // adjoining the margin-collapse strut that the item's top margin would collapse into:
+                    // if the margins were allowed to collapse they would pull the float down with the item,
+                    // so clearance is inserted to separate the two, placing the item just below the float.
+                    let forced_clearance = block_ctx.has_adjoining_float(item.clear);
+                    if forced_clearance || hypothetical_y < threshold {
+                        has_clearance = true;
+                        // Clearance stops the item's top margin collapsing with preceding margins. If those
+                        // preceding margins collapse with the container's own top margin they are applied
+                        // outside the container (moving it down), so the item's cleared position within the
+                        // container must be reduced by that amount to keep its absolute position correct.
+                        let escaped_margin =
+                            if is_collapsing_with_first_margin_set && own_margins_collapse_with_children.start {
+                                active_collapsible_margin_set.resolve()
+                            } else {
+                                0.0
+                            };
+                        y_margin_offset = threshold - committed_y_offset - escaped_margin;
+                    }
+                }
+            }
+            #[cfg(feature = "float_layout")]
+            {
+                // A new-formatting-context item pushed below floats separates its margin like clearance does
+                has_clearance |= bfc_margin_separated;
+            }
 
             item.computed_size = item_layout.size;
-            item.can_be_collapsed_through = item_layout.margins_can_collapse_through && float_or_not_clear;
+            item.can_be_collapsed_through = item_layout.margins_can_collapse_through && !has_clearance;
             item.static_position = if item.is_in_same_bfc {
                 let uncleared_y = committed_y_offset + active_collapsible_margin_set.resolve();
                 Point {
@@ -1059,7 +1230,7 @@ fn perform_final_layout_on_in_flow_children(
                                 + inset_offset.x
                         }
                     },
-                    y: committed_y_offset.max(clear_pos) + y_margin_offset + inset_offset.y,
+                    y: committed_y_offset + y_margin_offset + inset_offset.y,
                 }
             } else {
                 // TODO: handle inset and margins
@@ -1121,7 +1292,12 @@ fn perform_final_layout_on_in_flow_children(
             }
 
             // Update first_child_top_margin_set
-            if is_collapsing_with_first_margin_set {
+            //
+            // The top margin of an item with clearance does not collapse with the container's top margin,
+            // so clearance terminates collapsing without contributing the item's own margins.
+            if is_collapsing_with_first_margin_set && has_clearance {
+                is_collapsing_with_first_margin_set = false;
+            } else if is_collapsing_with_first_margin_set {
                 if item.can_be_collapsed_through {
                     first_child_top_margin_set = first_child_top_margin_set
                         .collapse_with_set(top_margin_set)
@@ -1138,25 +1314,42 @@ fn perform_final_layout_on_in_flow_children(
                     .collapse_with_set(top_margin_set)
                     .collapse_with_set(bottom_margin_set);
                 y_offset_for_absolute = committed_y_offset + item_layout.size.height + y_margin_offset;
-                #[cfg(feature = "float_layout")]
-                {
-                    y_offset_for_float = committed_y_offset + item_layout.size.height + y_margin_offset;
-                }
             } else {
                 committed_y_offset = location.y - inset_offset.y + item_layout.size.height;
-                active_collapsible_margin_set = bottom_margin_set;
-                y_offset_for_absolute = committed_y_offset + active_collapsible_margin_set.resolve();
-                #[cfg(feature = "float_layout")]
-                {
-                    y_offset_for_float = committed_y_offset;
+                // A self-collapsing item with clearance is not collapsed through (its margins do not collapse
+                // with margins of preceding siblings), but its top and bottom margins still collapse with each
+                // other and with the margins of following siblings.
+                if has_clearance && item_layout.margins_can_collapse_through {
+                    // The element's border edge stays at the cleared position, but its collapsed margin
+                    // extends below it: the border edge sits `top margin` inside the collapsed margin, so
+                    // following content is offset by `collapsed margin - top margin` from the border edge.
+                    committed_y_offset -= top_margin_set.resolve();
+                    active_collapsible_margin_set = top_margin_set.collapse_with_set(bottom_margin_set);
+                    active_margin_set_has_clearance = true;
+                } else {
+                    active_collapsible_margin_set = bottom_margin_set;
+                    active_margin_set_has_clearance = false;
                 }
+                y_offset_for_absolute = committed_y_offset + active_collapsible_margin_set.resolve();
+                // Committing in-flow content resolves the position of the current margin-collapse strut,
+                // so floats placed before this point no longer force clearance
+                #[cfg(feature = "float_layout")]
+                block_ctx.commit_strut();
             }
         }
     }
 
-    let last_child_bottom_margin_set = active_collapsible_margin_set;
-    let bottom_y_margin_offset =
-        if own_margins_collapse_with_children.end { 0.0 } else { last_child_bottom_margin_set.resolve() };
+    // The margins of a self-collapsing element with clearance do not collapse with the bottom
+    // margin of the parent block: they extend the parent's content height instead of escaping it
+    let last_child_bottom_margin_set =
+        if active_margin_set_has_clearance { CollapsibleMarginSet::ZERO } else { active_collapsible_margin_set };
+    let bottom_y_margin_offset = if active_margin_set_has_clearance {
+        active_collapsible_margin_set.resolve()
+    } else if own_margins_collapse_with_children.end {
+        0.0
+    } else {
+        last_child_bottom_margin_set.resolve()
+    };
 
     committed_y_offset += resolved_content_box_inset.bottom + bottom_y_margin_offset;
     let content_height = f32_max(0.0, committed_y_offset);
