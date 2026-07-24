@@ -404,7 +404,17 @@ fn compute_inner(
         let derived = known_dimensions.maybe_apply_aspect_ratio(aspect_ratio).maybe_clamp(min_size, max_size);
         Size { width: known_dimensions.width.or(derived.width), height: known_dimensions.height.or(derived.height) }
     };
-    let container_content_box_size = known_dimensions.maybe_sub(content_box_inset.sum_axes());
+    // The subset of `known_dimensions` that may act as a definite basis for
+    // descendant percentage lengths. Only the *block* axis is gated by the
+    // parent's definiteness flag: the inline axis is always considered
+    // definite for percent width resolution in normal flow (CSS 2.1 §10.2 /
+    // CSS Sizing 3), so width% resolves against the block's inner width even
+    // when the block itself was sized from an indefinite outer axis.
+    let percentage_basis_dimensions = Size {
+        width: known_dimensions.width,
+        height: known_dimensions.height.filter(|_| inputs.known_dimensions_are_definite.height),
+    };
+    let container_content_box_size = percentage_basis_dimensions.maybe_sub(content_box_inset.sum_axes());
 
     let overflow = style.overflow();
     let is_scroll_container = overflow.x.is_scroll_container() || overflow.y.is_scroll_container();
@@ -459,8 +469,11 @@ fn compute_inner(
         return LayoutOutput::from_outer_size(Size { width: container_outer_width, height: 0.0 });
     }
 
+    // A parent-provided outer height counts as a definite basis only when the
+    // parent said so via `known_dimensions_are_definite`; style-provided sizes
+    // (`height` / `min-height`) are always definite when present.
     let container_percentage_resolution_height =
-        known_dimensions.height.or(size.height.maybe_max(min_size.height)).or(min_size.height);
+        percentage_basis_dimensions.height.or(size.height.maybe_max(min_size.height)).or(min_size.height);
 
     // 3. Perform final item layout and return content height
     let resolved_padding = raw_padding.resolve_or_zero(Some(container_outer_width), |val, basis| tree.calc(val, basis));
@@ -941,6 +954,7 @@ fn perform_final_layout_on_in_flow_children(
                 sizing_mode: SizingMode::InherentSize,
                 axis: RequestedAxis::Both,
                 known_dimensions,
+                known_dimensions_are_definite: Size { width: true, height: true },
                 parent_size,
                 available_space: available_space.map_width(|_| AvailableSpace::Definite(stretch_width)),
                 vertical_margins_are_collapsible: if item.is_in_same_bfc { Line::TRUE } else { Line::FALSE },

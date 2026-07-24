@@ -106,6 +106,9 @@ impl TryFrom<RequestedAxis> for AbsoluteAxis {
 }
 
 /// A struct containing the inputs constraints/hints for laying out a node, which are passed in by the parent
+///
+/// External callers should generally construct instances via [`LayoutPartialTree`]'s
+/// helper methods (e.g. `perform_child_layout`) rather than via struct literal syntax.
 #[derive(Debug, Copy, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize))]
 pub struct LayoutInput {
@@ -126,6 +129,18 @@ pub struct LayoutInput {
     ///   "The exact size of this node is WIDTHxHEIGHT. Please lay out your children"
     ///
     pub known_dimensions: Size<Option<f32>>,
+    /// For each axis, whether the corresponding value in `known_dimensions` (if `Some`)
+    /// is a *definite* size in the CSS sense — i.e. whether descendants may resolve
+    /// percentage lengths against it.
+    ///
+    /// This defaults to all-`true`: an axis carrying a `Some` known dimension is
+    /// normally definite. A parent may set an axis to `false` when it has computed
+    /// a size that is known for layout purposes but is not a definite basis for
+    /// descendant percentage resolution — most notably, a flex item whose main
+    /// size comes solely from `flex-grow` stretching an indefinite `flex-basis`.
+    ///
+    /// See <https://www.w3.org/TR/css-flexbox-1/#definite-sizes>.
+    pub known_dimensions_are_definite: Size<bool>,
     /// Parent size dimensions are intended to be used for percentage resolution.
     pub parent_size: Size<Option<f32>>,
     /// Available space represents an amount of space to layout into, and is used as a soft constraint
@@ -142,6 +157,7 @@ impl LayoutInput {
         run_mode: RunMode::PerformHiddenLayout,
         // The rest will be ignored
         known_dimensions: Size::NONE,
+        known_dimensions_are_definite: Size { width: true, height: true },
         parent_size: Size::NONE,
         available_space: Size::MAX_CONTENT,
         sizing_mode: SizingMode::InherentSize,
