@@ -808,7 +808,7 @@ fn perform_final_layout_on_in_flow_children(
         } else {
             let item_margin = item
                 .margin
-                .map(|margin| margin.resolve_to_option(container_outer_width, |val, basis| tree.calc(val, basis)));
+                .map(|margin| margin.resolve_to_option(container_inner_width, |val, basis| tree.calc(val, basis)));
             let item_non_auto_margin = item_margin.map(|m| m.unwrap_or(0.0));
             let item_non_auto_x_margin_sum = item_non_auto_margin.horizontal_axis_sum();
 
@@ -947,9 +947,9 @@ fn perform_final_layout_on_in_flow_children(
             };
 
             #[cfg(feature = "float_layout")]
-            let clear_pos = block_ctx.cleared_threshold(item.clear).unwrap_or(0.0);
+            let clear_pos = block_ctx.cleared_threshold(item.clear).unwrap_or(f32::NEG_INFINITY);
             #[cfg(not(feature = "float_layout"))]
-            let clear_pos = 0.0;
+            let clear_pos = f32::NEG_INFINITY;
 
             let item_layout = if item.is_in_same_bfc {
                 let width = known_dimensions
@@ -1059,7 +1059,7 @@ fn perform_final_layout_on_in_flow_children(
                                 + inset_offset.x
                         }
                     },
-                    y: committed_y_offset.max(clear_pos) + y_margin_offset + inset_offset.y,
+                    y: (committed_y_offset + y_margin_offset).max(clear_pos) + inset_offset.y,
                 }
             } else {
                 // TODO: handle inset and margins
@@ -1148,7 +1148,7 @@ fn perform_final_layout_on_in_flow_children(
                 y_offset_for_absolute = committed_y_offset + active_collapsible_margin_set.resolve();
                 #[cfg(feature = "float_layout")]
                 {
-                    y_offset_for_float = committed_y_offset;
+                    y_offset_for_float = committed_y_offset + active_collapsible_margin_set.resolve();
                 }
             }
         }
