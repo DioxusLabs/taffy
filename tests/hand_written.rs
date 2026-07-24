@@ -1,4 +1,5 @@
 mod hand_written {
+    mod bfc_beside_floats;
     mod border_and_padding;
     mod caching;
     mod floats;

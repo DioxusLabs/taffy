@@ -4,6 +4,8 @@
 
 ### Fixed
 
+- Block: boxes that establish an independent formatting context (e.g. `overflow: hidden`) no longer overlap floats (CSS2 §9.5): they narrow to fit beside the float, or move down below it if they don't fit, and their margins interact with float edges in the same way as in Chrome. Adds a new `FloatContext::find_bfc_slot` method and `BfcSlot` struct.
+
 - Numeric style helpers (`length`, `percent`, `fr`, `flex`) now accept `Input: Into<f64>` instead of `Input: Into<f32>`. This allows bare float literals such as `length(800.0)` to be used without triggering the `float_literal_f32_fallback` future-compatibility lint, while widening the set of accepted numeric input types (#974)
 
 ## 0.12.2

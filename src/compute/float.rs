@@ -28,7 +28,7 @@
 
 use core::ops::Range;
 
-use crate::{debug::debug_log, sys::Vec, AvailableSpace, Clear, FloatDirection, Point, Size};
+use crate::{debug::debug_log, sys::Vec, AvailableSpace, Clear, Direction, FloatDirection, Point, Size};
 
 /// An empty "slot" that avoids floats that is suitable for non-floated content
 /// to be laid out into
@@ -44,6 +44,29 @@ pub struct ContentSlot {
     pub width: f32,
     /// The height of the slot
     pub height: f32,
+}
+
+/// An empty "slot" that avoids floats that is suitable for a box that establishes
+/// an independent formatting context (and therefore must not overlap floats) to be
+/// laid out into. Unlike [`ContentSlot`], this accounts for the box's own margins,
+/// which are resolved against the containing block's edges (not float edges) and
+/// may therefore overlap floats.
+#[derive(Debug, Clone, Copy, Default)]
+pub struct BfcSlot {
+    /// The id of the segment that the slot starts in
+    pub segment_id: Option<usize>,
+    /// The x position of the start of the slot (border box edge)
+    pub x: f32,
+    /// The y position of the start of the slot
+    pub y: f32,
+    /// The space available for the box's border box: the space between float edges
+    /// and the margin-inset containing block edges. The box fits in the slot if its
+    /// border box width does not exceed this.
+    pub border_width: f32,
+    /// The width that an auto width resolves to (before applying min/max constraints and
+    /// the negative-margin lower bound). This differs from `border_width` in that the
+    /// trailing margin is subtracted (except for any part of it that overlaps a float).
+    pub stretch_width: f32,
 }
 
 /// A floated box
@@ -526,6 +549,84 @@ impl FloatContext {
                 y: min_y,
                 width: self.available_width - containing_block_insets[0] - containing_block_insets[1],
                 height: f32::INFINITY,
+            },
+        }
+    }
+
+    /// Search for a space suitable for laying out a box that establishes an independent
+    /// formatting context (whose border box must not overlap floats).
+    ///
+    /// The box's margins are resolved against the containing block's content edges. When there
+    /// are floats beside the box:
+    ///
+    ///   - The leading margin (in flow direction) positions the border box's leading edge, but
+    ///     may be partially or fully "absorbed" by a float on the leading side (the border edge
+    ///     is the further-in of the float edge and the margin-inset containing block edge), and
+    ///     a negative leading margin does not move the border edge past the float edge or the
+    ///     containing block edge.
+    ///   - The trailing margin is subtracted from the width an auto width resolves to (except
+    ///     for any part of it that overlaps a float on the trailing side), but does not affect
+    ///     whether a box of a given width fits in the slot: the trailing margin may overflow
+    ///     the containing block edge.
+    ///
+    /// When there are no floats beside the box, its (possibly negative) margins apply as usual.
+    pub fn find_bfc_slot(
+        &self,
+        min_y: f32,
+        containing_block_insets: [f32; 2],
+        margins: [f32; 2],
+        direction: Direction,
+        clear: Clear,
+        after: Option<usize>,
+    ) -> BfcSlot {
+        let margin_insets = [containing_block_insets[0] + margins[0], containing_block_insets[1] + margins[1]];
+        let no_float_width = self.available_width - margin_insets[0] - margin_insets[1];
+        let no_float_slot = BfcSlot {
+            segment_id: None,
+            x: margin_insets[0],
+            y: min_y,
+            border_width: no_float_width,
+            stretch_width: no_float_width,
+        };
+
+        if !self.has_active_floats(min_y) {
+            return no_float_slot;
+        }
+
+        // The min starting segment index
+        let at_least = after.map(|idx| idx + 1).unwrap_or(0);
+        let hwm = at_least.max(self.cleared_segment(clear).map(|idx| idx + 1).unwrap_or(0));
+
+        let start_idx = self
+            .segments
+            .get(hwm..)
+            .and_then(|segments| segments.iter().position(|segment| segment.y.end > min_y).map(|idx| idx + hwm));
+        let start_idx = start_idx.unwrap_or(self.segments.len());
+        match self.segments.get(start_idx) {
+            Some(segment) => {
+                let lead = match direction {
+                    Direction::Ltr => 0,
+                    Direction::Rtl => 1,
+                };
+                let trail = 1 - lead;
+                let mut fit_insets = [0.0; 2];
+                let mut stretch_insets = [0.0; 2];
+                fit_insets[lead] = segment.insets[lead].max(containing_block_insets[lead]).max(margin_insets[lead]);
+                stretch_insets[lead] = fit_insets[lead];
+                fit_insets[trail] = segment.insets[trail].max(containing_block_insets[trail]);
+                stretch_insets[trail] = fit_insets[trail].max(containing_block_insets[trail] + margins[trail].max(0.0));
+                BfcSlot {
+                    segment_id: Some(start_idx),
+                    x: fit_insets[0],
+                    y: segment.y.start.max(min_y),
+                    border_width: self.available_width - fit_insets[0] - fit_insets[1],
+                    stretch_width: self.available_width - stretch_insets[0] - stretch_insets[1],
+                }
+            }
+            // Below all floats
+            None => BfcSlot {
+                y: self.segments.last().map(|segment| segment.y.end).unwrap_or(min_y).max(min_y),
+                ..no_float_slot
             },
         }
     }
