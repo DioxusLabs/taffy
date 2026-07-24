@@ -467,20 +467,25 @@ fn compute_inner(
     let resolved_border = raw_border.resolve_or_zero(Some(container_outer_width), |val, basis| tree.calc(val, basis));
     let resolved_content_box_inset = resolved_padding + resolved_border + scrollbar_gutter;
     #[cfg_attr(not(feature = "content_size"), allow(unused_mut))]
-    let (mut inflow_content_size, mut intrinsic_outer_height, first_child_top_margin_set, last_child_bottom_margin_set) =
-        perform_final_layout_on_in_flow_children(
-            tree,
-            run_mode,
-            &mut items,
-            container_outer_width,
-            container_percentage_resolution_height,
-            content_box_inset,
-            resolved_content_box_inset,
-            text_align,
-            direction,
-            own_margins_collapse_with_children,
-            block_ctx,
-        );
+    let (
+        mut inflow_content_size,
+        mut intrinsic_outer_height,
+        first_child_top_margin_set,
+        last_child_bottom_margin_set,
+        mut first_baseline,
+    ) = perform_final_layout_on_in_flow_children(
+        tree,
+        run_mode,
+        &mut items,
+        container_outer_width,
+        container_percentage_resolution_height,
+        content_box_inset,
+        resolved_content_box_inset,
+        text_align,
+        direction,
+        own_margins_collapse_with_children,
+        block_ctx,
+    );
 
     // Root BFCs contain floats
     #[cfg(feature = "float_layout")]
@@ -510,6 +515,7 @@ fn compute_inner(
         if any_in_flow {
             let keyword = apply_alignment_fallback(free_space, 1, align_content);
             let group_offset = compute_alignment_offset(free_space, 1, 0.0, keyword, false, true);
+            first_baseline = first_baseline.map(|baseline| baseline + group_offset);
             for item in items.iter_mut() {
                 if let Some(layout) = item.final_layout.as_mut() {
                     layout.location.y += group_offset;
@@ -544,7 +550,7 @@ fn compute_inner(
         size: final_outer_size,
         #[cfg(feature = "content_size")]
         content_size: Size::ZERO,
-        first_baselines: Point::NONE,
+        first_baselines: Point { x: None, y: first_baseline },
         top_margin: if own_margins_collapse_with_children.start {
             first_child_top_margin_set
         } else {
@@ -760,7 +766,7 @@ fn perform_final_layout_on_in_flow_children(
     direction: Direction,
     own_margins_collapse_with_children: Line<bool>,
     block_ctx: &mut BlockContext<'_>,
-) -> (Size<f32>, f32, CollapsibleMarginSet, CollapsibleMarginSet) {
+) -> (Size<f32>, f32, CollapsibleMarginSet, CollapsibleMarginSet, Option<f32>) {
     // Resolve container_inner_width for sizing child nodes using initial content_box_inset
     let container_inner_width = container_outer_width - resolved_content_box_inset.horizontal_axis_sum();
     let container_percentage_resolution_height =
@@ -790,6 +796,7 @@ fn perform_final_layout_on_in_flow_children(
     let mut first_child_top_margin_set = CollapsibleMarginSet::ZERO;
     let mut active_collapsible_margin_set = CollapsibleMarginSet::ZERO;
     let mut is_collapsing_with_first_margin_set = true;
+    let mut first_baseline: Option<f32> = None;
 
     #[cfg(feature = "float_layout")]
     let mut has_active_floats = block_ctx.has_active_floats(committed_y_offset);
@@ -1096,6 +1103,12 @@ fn perform_final_layout_on_in_flow_children(
                 }
             }
 
+            // A block container's first baseline is the first baseline of its first in-flow child
+            // that has one.
+            if first_baseline.is_none() {
+                first_baseline = item_layout.first_baselines.y.map(|baseline| location.y + baseline);
+            }
+
             // Defer `set_unrounded_layout` to the post-loop pass in `compute_inner` so that
             // `align-content` can shift `location.y` before the layout is committed to the tree.
             item.final_layout = Some(Layout {
@@ -1160,7 +1173,7 @@ fn perform_final_layout_on_in_flow_children(
 
     committed_y_offset += resolved_content_box_inset.bottom + bottom_y_margin_offset;
     let content_height = f32_max(0.0, committed_y_offset);
-    (inflow_content_size, content_height, first_child_top_margin_set, last_child_bottom_margin_set)
+    (inflow_content_size, content_height, first_child_top_margin_set, last_child_bottom_margin_set, first_baseline)
 }
 
 /// Perform absolute layout on all absolutely positioned children.
