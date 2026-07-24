@@ -822,12 +822,14 @@ fn perform_final_layout_on_in_flow_children(
             if let Some(float_direction) = item.float.float_direction() {
                 has_active_floats = true;
 
+                // A float with `width: auto` is shrink-to-fit (fit-content) sized: the available
+                // space clamped between its min-content and max-content sizes.
+                let available_width = container_inner_width - item_non_auto_x_margin_sum;
                 let item_layout = tree.perform_child_layout(
                     item.node_id,
                     Size::NONE,
                     parent_size,
-                    // available_space,
-                    Size::MAX_CONTENT,
+                    Size { width: AvailableSpace::Definite(available_width), height: AvailableSpace::MaxContent },
                     SizingMode::InherentSize,
                     Line::TRUE,
                 );
