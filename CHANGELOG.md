@@ -6,6 +6,8 @@
 
 - Grid: `Style::grid_template_areas` is now `Option<GridTemplateAreas<S>>`, where the new `GridTemplateAreas` struct bundles the named areas (`areas`) with the overall size of the area template (`row_count`/`column_count`). This allows templates containing unnamed (`.`) cells beyond the extents of the named areas (e.g. `grid-template-areas: "a ."`) to be represented, as such cells still contribute to the size of the explicit grid. `GridContainerStyle` gains `grid_template_area_row_count`/`grid_template_area_column_count` methods (with default implementations that derive the counts from the extents of the named areas), which are now used to determine the size of the explicit grid
 
+- Block/float: `BlockContext::place_floated_box` takes an additional `adjoins_unresolved_strut: bool` parameter indicating whether the float is being placed while the position of the current margin-collapse strut is still unresolved
+
 ### Fixed
 
 - Grid: when distributing a spanning item's max-content contribution to its spanned tracks' base sizes "beyond limits", tracks are now eligible only if their *max* track sizing function is `max-content` (or `fit-content()`), per [CSS Grid §12.5.1](https://www.w3.org/TR/css-grid-1/#extra-space). Previously tracks whose *min* track sizing function was `max-content` were also eligible, so a track such as `minmax(max-content, 20px)` could grow beyond its fixed `20px` limit, stealing space from `max-content` tracks ([WPT: grid-content-sized-columns-resolution](https://wpt.live/css/css-grid/parsing/grid-content-sized-columns-resolution.html))
@@ -24,6 +26,13 @@
 
 - Flexbox: min/max sizes transferred through the aspect ratio now clamp the flex base size, the automatic minimum size, and the hypothetical main/cross sizes of flex items, instead of being baked into the item's used min/max sizes. This matches browser behaviour for replaced elements and items with `aspect-ratio` combined with min/max constraints in the opposite axis ([w3c/csswg-drafts#10997](https://github.com/w3c/csswg-drafts/issues/10997))
 
+- Block: clearance is now computed per CSS2.2 §9.5.2 from the hypothetical position of the cleared element (including its collapsed top margin), supporting negative clearance and suppressing clearance when a large top margin already places the element past the float
+- Block: `clear` on an element no longer has any effect when no float has been placed on the relevant side(s)
+- Block: clearance prevents the cleared element's top margin from collapsing with preceding margins and with the parent's top margin
+- Block: the top and bottom margins of a self-collapsing element with clearance collapse with each other and are applied inside the parent (they no longer collapse with the parent's bottom margin)
+- Block: floats placed while the position of the enclosing margin-collapse strut is unresolved force clearance on subsequent cleared elements whose margins adjoin the same strut
+- Block: an element containing only floated children can now be collapsed through
+- Block: a block establishing a new formatting context that does not fit beside a float is pushed below it and its top margin no longer collapses with preceding margins
 - Numeric style helpers (`length`, `percent`, `fr`, `flex`) now accept `Input: Into<f64>` instead of `Input: Into<f32>`. This allows bare float literals such as `length(800.0)` to be used without triggering the `float_literal_f32_fallback` future-compatibility lint, while widening the set of accepted numeric input types (#974)
 
 ## 0.12.2
