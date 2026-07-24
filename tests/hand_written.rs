@@ -4,6 +4,7 @@ mod hand_written {
     mod border_and_padding;
     mod caching;
     mod floats;
+    mod flow_root;
     mod measure;
     mod min_max_overrides;
     mod relayout;

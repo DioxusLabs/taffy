@@ -154,6 +154,7 @@ fn convert_display(input: taffy::style::Display) -> taffy_03::style::Display {
         taffy::style::Display::Flex => taffy_03::style::Display::Flex,
         taffy::style::Display::Grid => taffy_03::style::Display::Grid,
         taffy::style::Display::Block => panic!("Block layout not implemented in taffy 0.3"),
+        taffy::style::Display::FlowRoot => panic!("Block layout not implemented in taffy 0.3"),
     }
 }
 

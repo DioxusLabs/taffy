@@ -236,6 +236,8 @@ impl<NodeContext> PrintTree for TaffyTree<NodeContext> {
             (0, _) => "LEAF",
             #[cfg(feature = "block_layout")]
             (_, Display::Block) => "BLOCK",
+            #[cfg(feature = "block_layout")]
+            (_, Display::FlowRoot) => "FLOW-ROOT",
             #[cfg(feature = "flexbox")]
             (_, Display::Flex) => {
                 use crate::FlexDirection;
@@ -311,6 +313,8 @@ where
                 (Display::None, _) => compute_hidden_layout(tree, node_id),
                 #[cfg(feature = "block_layout")]
                 (Display::Block, true) => compute_block_layout(tree, node_id, inputs, block_ctx),
+                #[cfg(feature = "block_layout")]
+                (Display::FlowRoot, true) => compute_block_layout(tree, node_id, inputs, None),
                 #[cfg(feature = "flexbox")]
                 (Display::Flex, true) => compute_flexbox_layout(tree, node_id, inputs),
                 #[cfg(feature = "grid")]
