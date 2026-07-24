@@ -1495,7 +1495,16 @@ fn calculate_children_base_lines(
             let baseline = measured_size_and_baselines.first_baselines.y;
             let height = measured_size_and_baselines.size.height;
 
-            child.baseline = baseline.unwrap_or(height) + child.margin.top;
+            // Scroll containers' baselines are determined from their content as if scrolled to the
+            // initial position, but are additionally clamped to their border box.
+            // See https://github.com/w3c/csswg-drafts/issues/7660
+            let baseline = if child.overflow.y.is_scroll_container() {
+                baseline.unwrap_or(height).min(height).max(0.0)
+            } else {
+                baseline.unwrap_or(height)
+            };
+
+            child.baseline = baseline + child.margin.top;
         }
     }
 }
@@ -1977,7 +1986,17 @@ fn calculate_flex_item(
     if direction.is_row() {
         let baseline_offset_cross =
             total_offset_cross + item.offset_cross + effective_line_offset_cross + item.margin.cross_start(direction);
-        let inner_baseline = layout_output.first_baselines.y.unwrap_or(size.height);
+        // Scroll containers' baselines are determined from their content as if scrolled to the initial
+        // position, but are additionally clamped to their border box.
+        // See https://github.com/w3c/csswg-drafts/issues/7660
+        let inner_baseline = {
+            let baseline = layout_output.first_baselines.y.unwrap_or(size.height);
+            if item.overflow.y.is_scroll_container() {
+                baseline.min(size.height).max(0.0)
+            } else {
+                baseline
+            }
+        };
         item.baseline = baseline_offset_cross + inner_baseline;
     } else {
         let baseline_offset_main = *total_offset_main + item.offset_main + item.margin.main_start(direction);
