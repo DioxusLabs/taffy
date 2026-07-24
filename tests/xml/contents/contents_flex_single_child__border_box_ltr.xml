@@ -1,0 +1,19 @@
+<test name="contents_flex_single_child__border_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="flex" direction="ltr" width="200px" height="100px" align-items="stretch">
+      <div display="contents">
+        <div direction="ltr" width="50px"/>
+      </div>
+      <div direction="ltr" width="50px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="200" height="100">
+      <node x="0" y="0" width="0" height="0">
+        <node x="0" y="0" width="50" height="100"/>
+      </node>
+      <node x="50" y="0" width="50" height="100"/>
+    </node>
+  </expectations>
+</test>

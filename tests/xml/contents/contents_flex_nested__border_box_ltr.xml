@@ -1,0 +1,31 @@
+<test name="contents_flex_nested__border_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="flex" direction="ltr" width="400px" height="300px" justify-content="space-between">
+      <div direction="ltr" width="30px"/>
+      <div direction="ltr" width="30px"/>
+      <div direction="ltr" width="30px"/>
+      <div display="contents">
+        <div display="contents">
+          <div direction="ltr" width="30px"/>
+          <div direction="ltr" width="30px"/>
+        </div>
+        <div direction="ltr" width="30px"/>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="400" height="300">
+      <node x="0" y="0" width="30" height="300"/>
+      <node x="74" y="0" width="30" height="300"/>
+      <node x="148" y="0" width="30" height="300"/>
+      <node x="0" y="0" width="0" height="0">
+        <node x="0" y="0" width="0" height="0">
+          <node x="222" y="0" width="30" height="300"/>
+          <node x="296" y="0" width="30" height="300"/>
+        </node>
+        <node x="370" y="0" width="30" height="300"/>
+      </node>
+    </node>
+  </expectations>
+</test>

@@ -161,6 +161,18 @@ pub struct TaffyTree<NodeContext = ()> {
     /// The indexes in the outer vector correspond to the position of the child [`NodeData`]
     parents: SlotMap<DefaultKey, Option<NodeId>>,
 
+    /// Resolved (flattened) children for nodes that have `Display::Contents`
+    /// children. Contents nodes are replaced by their own children (recursively).
+    /// Only populated for nodes that actually need resolution.
+    ///
+    /// Recomputed before each layout pass via `resolve_contents_children()`.
+    resolved_children: SecondaryMap<DefaultKey, ChildrenVec<NodeId>>,
+
+    /// Set when a mutation could affect contents resolution. Cleared after resolve.
+    /// If the resolve walk finds no contents nodes, it clears this flag so future
+    /// layouts skip the walk entirely.
+    contents_dirty: bool,
+
     /// Layout mode configuration
     config: TaffyConfig,
 }
@@ -183,6 +195,12 @@ impl Iterator for TaffyTreeChildIter<'_> {
 }
 
 // TraversePartialTree impl for TaffyTree
+//
+// `child_ids`, `child_count`, and `get_child_id` all resolve through
+// `Display::Contents` nodes: if a direct child has `Display::Contents`,
+// it is replaced by its own children (recursively). This implements CSS
+// `display: contents` semantics where the node generates no box and its
+// children are promoted to the parent's child list.
 impl<NodeContext> TraversePartialTree for TaffyTree<NodeContext> {
     type ChildIter<'a>
         = TaffyTreeChildIter<'a>
@@ -191,17 +209,29 @@ impl<NodeContext> TraversePartialTree for TaffyTree<NodeContext> {
 
     #[inline(always)]
     fn child_ids(&self, parent_node_id: NodeId) -> Self::ChildIter<'_> {
-        TaffyTreeChildIter(self.children[parent_node_id.into()].iter())
+        let key: DefaultKey = parent_node_id.into();
+        match self.resolved_children.get(key) {
+            Some(resolved) => TaffyTreeChildIter(resolved.iter()),
+            None => TaffyTreeChildIter(self.children[key].iter()),
+        }
     }
 
     #[inline(always)]
     fn child_count(&self, parent_node_id: NodeId) -> usize {
-        self.children[parent_node_id.into()].len()
+        let key: DefaultKey = parent_node_id.into();
+        match self.resolved_children.get(key) {
+            Some(resolved) => resolved.len(),
+            None => self.children[key].len(),
+        }
     }
 
     #[inline(always)]
     fn get_child_id(&self, parent_node_id: NodeId, id: usize) -> NodeId {
-        self.children[parent_node_id.into()][id]
+        let key: DefaultKey = parent_node_id.into();
+        match self.resolved_children.get(key) {
+            Some(resolved) => resolved[id],
+            None => self.children[key][id],
+        }
     }
 }
 
@@ -233,6 +263,7 @@ impl<NodeContext> PrintTree for TaffyTree<NodeContext> {
 
         match (num_children, display) {
             (_, Display::None) => "NONE",
+            (_, Display::Contents) => "CONTENTS",
             (0, _) => "LEAF",
             #[cfg(feature = "block_layout")]
             (_, Display::Block) => "BLOCK",
@@ -273,6 +304,7 @@ where
     pub(crate) measure_function: MeasureFunction,
 }
 
+
 impl<NodeContext, MeasureFunction> TaffyView<'_, NodeContext, MeasureFunction>
 where
     MeasureFunction:
@@ -309,6 +341,13 @@ where
             // Dispatch to a layout algorithm based on the node's display style and whether the node has children or not.
             match (display_mode, has_children) {
                 (Display::None, _) => compute_hidden_layout(tree, node_id),
+                // Contents nodes generate no box. Zero layout, but children are NOT hidden —
+                // they are promoted to this node's parent by TraversePartialTree::child_ids.
+                (Display::Contents, _) => {
+                    tree.set_unrounded_layout(node_id, &Layout::with_order(0));
+                    tree.cache_clear(node_id);
+                    LayoutOutput::HIDDEN
+                }
                 #[cfg(feature = "block_layout")]
                 (Display::Block, true) => compute_block_layout(tree, node_id, inputs, block_ctx),
                 #[cfg(feature = "flexbox")]
@@ -552,6 +591,8 @@ impl<NodeContext> TaffyTree<NodeContext> {
             children: SlotMap::with_capacity(capacity),
             parents: SlotMap::with_capacity(capacity),
             node_context_data: SecondaryMap::with_capacity(capacity),
+            resolved_children: SecondaryMap::new(),
+            contents_dirty: false,
             config: TaffyConfig::default(),
         }
     }
@@ -568,6 +609,7 @@ impl<NodeContext> TaffyTree<NodeContext> {
 
     /// Creates and adds a new unattached leaf node to the tree, and returns the node of the new node
     pub fn new_leaf(&mut self, layout: Style) -> TaffyResult<NodeId> {
+        if layout.display == Display::Contents { self.contents_dirty = true; }
         let id = self.nodes.insert(NodeData::new(layout));
         let _ = self.children.insert(new_vec_with_capacity(0));
         let _ = self.parents.insert(None);
@@ -579,6 +621,7 @@ impl<NodeContext> TaffyTree<NodeContext> {
     ///
     /// Creates and adds a new leaf node with a supplied context
     pub fn new_leaf_with_context(&mut self, layout: Style, context: NodeContext) -> TaffyResult<NodeId> {
+        if layout.display == Display::Contents { self.contents_dirty = true; }
         let mut data = NodeData::new(layout);
         data.has_context = true;
 
@@ -593,6 +636,7 @@ impl<NodeContext> TaffyTree<NodeContext> {
 
     /// Creates and adds a new node, which may have any number of `children`
     pub fn new_with_children(&mut self, layout: Style, children: &[NodeId]) -> TaffyResult<NodeId> {
+        if layout.display == Display::Contents { self.contents_dirty = true; }
         let id = NodeId::from(self.nodes.insert(NodeData::new(layout)));
 
         for child in children {
@@ -610,6 +654,8 @@ impl<NodeContext> TaffyTree<NodeContext> {
         self.nodes.clear();
         self.children.clear();
         self.parents.clear();
+        self.resolved_children.clear();
+        self.contents_dirty = false;
     }
 
     /// Remove a specific node from the tree and drop it
@@ -617,6 +663,7 @@ impl<NodeContext> TaffyTree<NodeContext> {
     /// Returns the id of the node removed.
     pub fn remove(&mut self, node: NodeId) -> TaffyResult<NodeId> {
         let key = node.into();
+        if self.nodes[key].style.display == Display::Contents { self.contents_dirty = true; }
         if let Some(parent) = self.parents[key] {
             if let Some(children) = self.children.get_mut(parent.into()) {
                 children.retain(|f| *f != node);
@@ -832,7 +879,13 @@ impl<NodeContext> TaffyTree<NodeContext> {
     /// Sets the [`Style`] of the provided `node`
     #[inline]
     pub fn set_style(&mut self, node: NodeId, style: Style) -> TaffyResult<()> {
-        self.nodes[node.into()].style = style;
+        let key = node.into();
+        let old_display = self.nodes[key].style.display;
+        let new_display = style.display;
+        if old_display == Display::Contents || new_display == Display::Contents {
+            self.contents_dirty = true;
+        }
+        self.nodes[key].style = style;
         self.mark_dirty(node)?;
         Ok(())
     }
@@ -901,6 +954,69 @@ impl<NodeContext> TaffyTree<NodeContext> {
         Ok(self.nodes[node.into()].cache.is_empty())
     }
 
+    /// Resolve `Display::Contents` children for the entire tree rooted at `root`.
+    ///
+    /// For each node whose direct children include any `Display::Contents` node,
+    /// pre-computes a flattened child list where contents nodes are replaced by
+    /// their children (recursively). Stored in `resolved_children` so that
+    /// `child_ids()` returns the flattened list with zero allocation.
+    fn resolve_contents_children(&mut self, root: NodeId) {
+        self.resolved_children.clear();
+
+        // Fast path: no contents-related mutations since last resolve.
+        if !self.contents_dirty {
+            return;
+        }
+
+        // Walk all nodes reachable from root. We collect into a Vec first to
+        // avoid borrowing conflicts (iterating nodes while reading children).
+        let all_nodes: Vec<NodeId> = {
+            let mut stack = vec![root];
+            let mut result = Vec::new();
+            while let Some(id) = stack.pop() {
+                result.push(id);
+                for &child in self.children[id.into()].iter() {
+                    stack.push(child);
+                }
+            }
+            result
+        };
+
+        let mut found_any = false;
+        for node_id in all_nodes {
+            let key: DefaultKey = node_id.into();
+            let children = &self.children[key];
+
+            let has_contents_child = children.iter().any(|child| {
+                self.nodes[(*child).into()].style.display == Display::Contents
+            });
+
+            if has_contents_child {
+                found_any = true;
+                let mut resolved = ChildrenVec::new();
+                self.collect_resolved_children(node_id, &mut resolved);
+                self.resolved_children.insert(key, resolved);
+            }
+        }
+
+        // If no contents nodes were found, clear the flag so future layouts
+        // skip the walk entirely (e.g. after all contents nodes are removed).
+        self.contents_dirty = found_any;
+    }
+
+    /// Recursively collect the resolved children for a node, flattening through
+    /// `Display::Contents` nodes.
+    fn collect_resolved_children(&self, node_id: NodeId, out: &mut ChildrenVec<NodeId>) {
+        for &child in self.children[node_id.into()].iter() {
+            if self.nodes[child.into()].style.display == Display::Contents {
+                // Recurse: replace contents node with its children
+                self.collect_resolved_children(child, out);
+            } else {
+                out.push(child);
+            }
+        }
+    }
+
     /// Updates the stored layout of the provided `node` and its children
     pub fn compute_layout_with_measure<MeasureFunction>(
         &mut self,
@@ -912,6 +1028,10 @@ impl<NodeContext> TaffyTree<NodeContext> {
         MeasureFunction:
             FnMut(Size<Option<f32>>, Size<AvailableSpace>, NodeId, Option<&mut NodeContext>, &Style) -> Size<f32>,
     {
+        // Resolve Display::Contents children before layout so child_ids()
+        // returns flattened lists during the entire layout pass.
+        self.resolve_contents_children(node_id);
+
         let use_rounding = self.config.use_rounding;
         let mut taffy_view = TaffyView { taffy: self, measure_function };
         compute_root_layout(&mut taffy_view, node_id, available_space);
