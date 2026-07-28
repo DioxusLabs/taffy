@@ -368,4 +368,49 @@ mod measure {
         assert_eq!(taffy.layout(child).unwrap().size.width, 100.0);
         assert_eq!(taffy.layout(child).unwrap().size.height, 100.0);
     }
+
+    /// Test for https://github.com/DioxusLabs/taffy/issues/1000
+    /// Grid `auto` tracks must not grow past their growth limits (max-content contributions)
+    /// during the "maximise tracks" step, even when the tracks have asymmetric growth limits.
+    #[test]
+    fn grid_auto_tracks_no_grow_past_max_content() {
+        use taffy::{AvailableSpace, TaffyTree};
+
+        const MIN_CONTENT: f32 = 60.0;
+        const CONTAINER: f32 = 928.0;
+        let max_contents = [400.0f32, 674.0];
+
+        let mut tree: TaffyTree<f32> = TaffyTree::new();
+        let cells: Vec<NodeId> =
+            max_contents.iter().map(|mc| tree.new_leaf_with_context(Style::default(), *mc).unwrap()).collect();
+        let grid = tree
+            .new_with_children(
+                Style {
+                    display: Display::Grid,
+                    grid_template_columns: vec![auto(); max_contents.len()],
+                    size: Size { width: Dimension::from_length(CONTAINER), height: auto() },
+                    ..Default::default()
+                },
+                &cells,
+            )
+            .unwrap();
+        tree.compute_layout_with_measure(
+            grid,
+            Size { width: AvailableSpace::Definite(CONTAINER), height: AvailableSpace::MaxContent },
+            |known, available, _node, ctx, _style| {
+                let Some(&mut max_content) = ctx else { return Size::ZERO };
+                let width = known.width.unwrap_or(match available.width {
+                    AvailableSpace::Definite(w) => w.clamp(MIN_CONTENT, max_content),
+                    AvailableSpace::MaxContent => max_content,
+                    AvailableSpace::MinContent => MIN_CONTENT,
+                });
+                Size { width, height: 19.0 }
+            },
+        )
+        .unwrap();
+
+        // Track 0 freezes at its growth limit (400); the remainder goes to track 1.
+        assert_eq!(tree.layout(cells[0]).unwrap().size.width, 400.0);
+        assert_eq!(tree.layout(cells[1]).unwrap().size.width, 528.0);
+    }
 }
