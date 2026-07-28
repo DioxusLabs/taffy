@@ -175,7 +175,20 @@ async fn test_root_element(client: Client, name: String, fixture_path: impl AsRe
     let url = format!("file://{}", fixture_path.display());
 
     client.goto(&url).await.unwrap();
-    let description = client.execute("return getTestData()", vec![]).await.unwrap();
+
+    // Navigation can occasionally return before the document is fully loaded, so retry a few times
+    let mut attempts = 0;
+    let description = loop {
+        match client.execute("return getTestData()", vec![]).await {
+            Ok(description) => break description,
+            Err(err) if attempts < 3 => {
+                attempts += 1;
+                warn!("getTestData() failed for {name} (attempt {attempts}): {err}");
+                tokio::time::sleep(std::time::Duration::from_millis(200)).await;
+            }
+            Err(err) => panic!("getTestData() failed for {}: {}", name, err),
+        }
+    };
     let description_string = description.as_str().unwrap();
     let description = serde_json::from_str(description_string).unwrap();
     (name.to_string(), fixture_path.to_path_buf(), description)

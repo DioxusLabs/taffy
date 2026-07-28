@@ -18835,6 +18835,60 @@ mod grid {
 
     #[cfg(feature = "grid")]
     #[test]
+    fn grid_definite_size_auto_tracks_asymmetric_max_content__border_box_ltr() {
+        crate::run_xml_test("grid", "grid_definite_size_auto_tracks_asymmetric_max_content__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_definite_size_auto_tracks_asymmetric_max_content__content_box_ltr() {
+        crate::run_xml_test("grid", "grid_definite_size_auto_tracks_asymmetric_max_content__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_definite_size_auto_tracks_asymmetric_max_content__border_box_rtl() {
+        crate::run_xml_test("grid", "grid_definite_size_auto_tracks_asymmetric_max_content__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_definite_size_auto_tracks_asymmetric_max_content__content_box_rtl() {
+        crate::run_xml_test("grid", "grid_definite_size_auto_tracks_asymmetric_max_content__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_definite_size_auto_tracks_asymmetric_max_content_issue_1000__border_box_ltr() {
+        crate::run_xml_test("grid", "grid_definite_size_auto_tracks_asymmetric_max_content_issue_1000__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_definite_size_auto_tracks_asymmetric_max_content_issue_1000__content_box_ltr() {
+        crate::run_xml_test(
+            "grid",
+            "grid_definite_size_auto_tracks_asymmetric_max_content_issue_1000__content_box_ltr",
+        );
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_definite_size_auto_tracks_asymmetric_max_content_issue_1000__border_box_rtl() {
+        crate::run_xml_test("grid", "grid_definite_size_auto_tracks_asymmetric_max_content_issue_1000__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_definite_size_auto_tracks_asymmetric_max_content_issue_1000__content_box_rtl() {
+        crate::run_xml_test(
+            "grid",
+            "grid_definite_size_auto_tracks_asymmetric_max_content_issue_1000__content_box_rtl",
+        );
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
     fn grid_display_none_fixed_size__border_box_ltr() {
         crate::run_xml_test("grid", "grid_display_none_fixed_size__border_box_ltr");
     }
