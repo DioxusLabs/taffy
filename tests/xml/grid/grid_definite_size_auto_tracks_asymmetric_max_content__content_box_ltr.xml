@@ -1,0 +1,19 @@
+<test name="grid_definite_size_auto_tracks_asymmetric_max_content__content_box_ltr" use-rounding="true">
+  <viewport width="100px" height="max-content"/>
+  <input>
+    <div display="grid" box-sizing="content-box" direction="ltr" width="100px" grid-template-columns="auto auto">
+      <text box-sizing="content-box" direction="ltr">
+        XX​XX
+      </text>
+      <text box-sizing="content-box" direction="ltr">
+        XX​XX​XX​XX
+      </text>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="100" height="20">
+      <node x="0" y="0" width="40" height="20"/>
+      <node x="40" y="0" width="60" height="20"/>
+    </node>
+  </expectations>
+</test>
