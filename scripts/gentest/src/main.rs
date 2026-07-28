@@ -181,7 +181,7 @@ async fn test_root_element(client: Client, name: String, fixture_path: impl AsRe
     let description = loop {
         match client.execute("return getTestData()", vec![]).await {
             Ok(description) => break description,
-            Err(err) if attempts < 5 => {
+            Err(err) if attempts < 3 => {
                 attempts += 1;
                 warn!("getTestData() failed for {name} (attempt {attempts}): {err}");
                 tokio::time::sleep(std::time::Duration::from_millis(200)).await;
