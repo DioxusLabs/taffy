@@ -324,22 +324,24 @@ impl Layout {
 
 #[cfg(feature = "content_size")]
 impl Layout {
-    /// Return the scroll width of the node.
-    /// The scroll width is the difference between the width and the content width, floored at zero
+    /// Return the maximum horizontal scroll offset of the node.
+    /// This is the content width less the width of the padding box, floored at zero.
     pub fn scroll_width(&self) -> f32 {
         f32_max(
             0.0,
             self.content_size.width + f32_min(self.scrollbar_size.width, self.size.width) - self.size.width
+                + self.border.left
                 + self.border.right,
         )
     }
 
-    /// Return the scroll height of the node.
-    /// The scroll height is the difference between the height and the content height, floored at zero
+    /// Return the maximum vertical scroll offset of the node.
+    /// This is the content height less the height of the padding box, floored at zero.
     pub fn scroll_height(&self) -> f32 {
         f32_max(
             0.0,
             self.content_size.height + f32_min(self.scrollbar_size.height, self.size.height) - self.size.height
+                + self.border.top
                 + self.border.bottom,
         )
     }

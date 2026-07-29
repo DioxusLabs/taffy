@@ -1959,6 +1959,7 @@ fn calculate_flex_item(
     total_offset_cross: f32,
     line_offset_cross: f32,
     #[cfg(feature = "content_size")] total_content_size: &mut Size<f32>,
+    #[cfg(feature = "content_size")] border: Rect<f32>,
     container_size: Size<f32>,
     node_inner_size: Size<Option<f32>>,
     direction: FlexDirection,
@@ -2060,9 +2061,9 @@ fn calculate_flex_item(
     #[cfg(feature = "content_size")]
     {
         let contribution_location = if layout_direction.is_rtl() {
-            Point { x: container_size.width - (location.x + size.width), y: location.y }
+            Point { x: container_size.width - (location.x + size.width) - border.right, y: location.y - border.top }
         } else {
-            location
+            Point { x: location.x - border.left, y: location.y - border.top }
         };
         *total_content_size = total_content_size.f32_max(compute_content_size_contribution(
             contribution_location,
@@ -2080,6 +2081,7 @@ fn calculate_layout_line(
     line: &mut FlexLine,
     total_offset_cross: &mut f32,
     #[cfg(feature = "content_size")] content_size: &mut Size<f32>,
+    #[cfg(feature = "content_size")] border: Rect<f32>,
     container_size: Size<f32>,
     node_inner_size: Size<Option<f32>>,
     padding_border: Rect<f32>,
@@ -2108,6 +2110,8 @@ fn calculate_layout_line(
                 line_offset_cross,
                 #[cfg(feature = "content_size")]
                 content_size,
+                #[cfg(feature = "content_size")]
+                border,
                 container_size,
                 node_inner_size,
                 direction,
@@ -2124,6 +2128,8 @@ fn calculate_layout_line(
                 line_offset_cross,
                 #[cfg(feature = "content_size")]
                 content_size,
+                #[cfg(feature = "content_size")]
+                border,
                 container_size,
                 node_inner_size,
                 direction,
@@ -2161,6 +2167,8 @@ fn final_layout_pass(
                 &mut total_offset_cross,
                 #[cfg(feature = "content_size")]
                 &mut content_size,
+                #[cfg(feature = "content_size")]
+                constants.border,
                 constants.container_size,
                 constants.node_inner_size,
                 constants.content_box_inset,
@@ -2176,6 +2184,8 @@ fn final_layout_pass(
                 &mut total_offset_cross,
                 #[cfg(feature = "content_size")]
                 &mut content_size,
+                #[cfg(feature = "content_size")]
+                constants.border,
                 constants.container_size,
                 constants.node_inner_size,
                 constants.content_box_inset,
