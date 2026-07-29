@@ -16038,6 +16038,46 @@ mod flex {
     }
 
     #[test]
+    fn wrap_column_definite_main_size_percent_basis__border_box_ltr() {
+        crate::run_xml_test("flex", "wrap_column_definite_main_size_percent_basis__border_box_ltr");
+    }
+
+    #[test]
+    fn wrap_column_definite_main_size_percent_basis__content_box_ltr() {
+        crate::run_xml_test("flex", "wrap_column_definite_main_size_percent_basis__content_box_ltr");
+    }
+
+    #[test]
+    fn wrap_column_definite_main_size_percent_basis__border_box_rtl() {
+        crate::run_xml_test("flex", "wrap_column_definite_main_size_percent_basis__border_box_rtl");
+    }
+
+    #[test]
+    fn wrap_column_definite_main_size_percent_basis__content_box_rtl() {
+        crate::run_xml_test("flex", "wrap_column_definite_main_size_percent_basis__content_box_rtl");
+    }
+
+    #[test]
+    fn wrap_column_indefinite_main_size_percent_basis__border_box_ltr() {
+        crate::run_xml_test("flex", "wrap_column_indefinite_main_size_percent_basis__border_box_ltr");
+    }
+
+    #[test]
+    fn wrap_column_indefinite_main_size_percent_basis__content_box_ltr() {
+        crate::run_xml_test("flex", "wrap_column_indefinite_main_size_percent_basis__content_box_ltr");
+    }
+
+    #[test]
+    fn wrap_column_indefinite_main_size_percent_basis__border_box_rtl() {
+        crate::run_xml_test("flex", "wrap_column_indefinite_main_size_percent_basis__border_box_rtl");
+    }
+
+    #[test]
+    fn wrap_column_indefinite_main_size_percent_basis__content_box_rtl() {
+        crate::run_xml_test("flex", "wrap_column_indefinite_main_size_percent_basis__content_box_rtl");
+    }
+
+    #[test]
     fn wrap_grandchild__border_box_ltr() {
         crate::run_xml_test("flex", "wrap_grandchild__border_box_ltr");
     }

@@ -336,6 +336,7 @@ pub(crate) trait LayoutPartialTreeExt: LayoutPartialTree {
             node_id,
             LayoutInput {
                 known_dimensions,
+                known_dimensions_are_definite: Size { width: true, height: true },
                 parent_size,
                 available_space,
                 sizing_mode,
@@ -364,6 +365,7 @@ pub(crate) trait LayoutPartialTreeExt: LayoutPartialTree {
             node_id,
             LayoutInput {
                 known_dimensions,
+                known_dimensions_are_definite: Size { width: true, height: true },
                 parent_size,
                 available_space,
                 sizing_mode,
@@ -390,6 +392,7 @@ pub(crate) trait LayoutPartialTreeExt: LayoutPartialTree {
             node_id,
             LayoutInput {
                 known_dimensions,
+                known_dimensions_are_definite: Size { width: true, height: true },
                 parent_size,
                 available_space,
                 sizing_mode,
