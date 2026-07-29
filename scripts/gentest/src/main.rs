@@ -35,18 +35,23 @@ async fn main() {
         .collect();
     fixtures.sort_unstable_by_key(|f| f.1.clone());
 
+    info!("obtaining chrome-for-testing");
+    let chrome = getchrome::download_default().expect("failed to download chrome-for-testing");
+    info!("using chrome-for-testing {}", chrome.version);
+
     info!("starting webdriver instance");
     let webdriver_url = "http://localhost:4444";
-    let mut webdriver_handle = Command::new("chromedriver")
-        .arg("--port=4444")
-        .spawn()
-        .expect("ChromeDriver not found: Make sure you have it installed and added to your PATH.");
+    let mut webdriver_handle =
+        Command::new(&chrome.chromedriver).arg("--port=4444").spawn().expect("failed to start ChromeDriver");
 
     // this is silly, but it works
     std::thread::sleep(std::time::Duration::from_secs(1));
 
     let mut caps = serde_json::map::Map::new();
-    let chrome_opts = serde_json::json!({ "args": ["--headless", "--disable-gpu"] });
+    let chrome_opts = serde_json::json!({
+        "binary": chrome.chrome,
+        "args": ["--headless", "--disable-gpu"],
+    });
     caps.insert("goog:chromeOptions".to_string(), chrome_opts.clone());
 
     info!("spawning webdriver client and collecting test descriptions");
