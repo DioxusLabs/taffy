@@ -4,6 +4,8 @@
 
 ### Fixed
 
+- Flexbox: the definiteness of known dimensions is now tracked through nested layouts via a new `known_dimensions_are_definite` field on `LayoutInput`. A flex item's post-flexing main size is only treated as definite (for resolving percentage sizes of its children and for collecting its children into flex lines) when the container's main size is definite or the item's used flex basis is definite. Previously a wrapping flex container nested in a container with an indefinite main size could incorrectly wrap its items into multiple lines based on its own content-derived size (#999)
+
 - Grid: tracks no longer grow past their growth limits when distributing free space to multiple tracks with asymmetric limits (in the "maximise tracks" step and when distributing item contributions to base sizes). Previously a track could be assigned space beyond its limit in later distribution iterations, causing `auto` tracks to overflow a definite container (#1000)
 
 - Flexbox: min/max sizes transferred through the aspect ratio now clamp the flex base size, the automatic minimum size, and the hypothetical main/cross sizes of flex items, instead of being baked into the item's used min/max sizes. This matches browser behaviour for replaced elements and items with `aspect-ratio` combined with min/max constraints in the opposite axis ([w3c/csswg-drafts#10997](https://github.com/w3c/csswg-drafts/issues/10997))
