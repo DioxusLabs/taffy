@@ -22,6 +22,18 @@ use xmlwriter::{Indent, Options, XmlWriter};
 /// the browser. All of these normally take well under a second.
 const TIMEOUT: Duration = Duration::from_secs(10);
 
+/// How many fixtures to collect test data for in a single script call
+///
+/// Fixtures are loaded into an iframe and measured by a script running inside the browser, which
+/// is much faster than a WebDriver navigation per fixture. Collecting in batches (rather than all
+/// at once) bounds how much work is lost to a hung browser and allows progress to be reported.
+const BATCH_SIZE: usize = 100;
+
+/// How long to wait for a single batch of fixtures before giving up
+///
+/// A fixture normally takes a few milliseconds, so this is very generous.
+const BATCH_TIMEOUT: Duration = Duration::from_secs(60);
+
 #[tokio::main]
 async fn main() {
     env_logger::init();
@@ -55,7 +67,8 @@ async fn main() {
     // afterwards regardless of whether doing so succeeded.
     let result = match webdriver.new_session(&chrome.chrome).await {
         Ok(client) => {
-            let result = collect_test_descs(&client, &fixtures).await;
+            let harness_path = root_dir.join("batch_runner.html");
+            let result = collect_test_descs(&client, &harness_path, &fixtures).await;
             webdriver.close_session(client).await;
             result
         }
@@ -232,7 +245,14 @@ impl WebDriver {
         let mut caps = serde_json::map::Map::new();
         let chrome_opts = serde_json::json!({
             "binary": chrome_path,
-            "args": ["--headless", "--disable-gpu", format!("--user-data-dir={}", self.profile_dir.display())],
+            // --allow-file-access-from-files lets the file:// batch runner page read the
+            // file:// fixture documents that it loads into its iframe
+            "args": [
+                "--headless",
+                "--disable-gpu",
+                "--allow-file-access-from-files",
+                format!("--user-data-dir={}", self.profile_dir.display()),
+            ],
         });
         caps.insert("goog:chromeOptions".to_string(), chrome_opts);
 
@@ -253,7 +273,7 @@ impl WebDriver {
 
         // Bound how long the browser itself will spend on a single navigation or script, so that a
         // problematic test fixture results in an error rather than a hang.
-        let timeouts = TimeoutConfiguration::new(Some(TIMEOUT), Some(TIMEOUT), Some(Duration::ZERO));
+        let timeouts = TimeoutConfiguration::new(Some(BATCH_TIMEOUT), Some(TIMEOUT), Some(Duration::ZERO));
         client.update_timeouts(timeouts).await.map_err(|err| format!("could not set WebDriver timeouts: {err}"))?;
 
         Ok(client)
@@ -344,21 +364,88 @@ fn free_port() -> std::io::Result<u16> {
 }
 
 /// Collect the layout of every test fixture from the browser
+///
+/// The fixtures are loaded into an iframe of the batch runner page at `harness_path` in batches
+/// of [`BATCH_SIZE`], so that collecting the test data requires one WebDriver script call per
+/// batch rather than a navigation and a script call per fixture.
 async fn collect_test_descs(
     client: &Client,
+    harness_path: &Path,
     fixtures: &[(String, PathBuf)],
 ) -> Result<Vec<(String, PathBuf, Value)>, String> {
     asserts_non_zero_width_scrollbars(client).await?;
 
+    let harness_url = format!("file://{}", harness_path.display());
+    timeout(TIMEOUT, client.goto(&harness_url))
+        .await
+        .map_err(|_| format!("timed out loading the batch runner page ({harness_url})"))?
+        .map_err(|err| format!("could not load the batch runner page ({harness_url}): {err}"))?;
+
     info!("collecting test descriptions");
     let progress = Progress::new(fixtures.len());
     let mut test_descs = Vec::with_capacity(fixtures.len());
-    for (index, (name, fixture_path)) in fixtures.iter().enumerate() {
-        progress.step(index, name);
-        test_descs.push(test_root_element(client, name, fixture_path).await?);
+    for batch in fixtures.chunks(BATCH_SIZE) {
+        let (first, last) = (&batch[0].0, &batch[batch.len() - 1].0);
+        progress.step(test_descs.len() + batch.len() - 1, &format!("{first} .. {last}"));
+        test_descs.extend(collect_batch(client, batch).await?);
     }
     progress.finish(&format!("collected {} test descriptions", test_descs.len()));
     Ok(test_descs)
+}
+
+/// Glue script that runs the batch runner page's `collectTestData()` for a batch of fixture URLs
+///
+/// An async WebDriver script reports completion by calling the callback that is appended to its
+/// arguments, and an exception thrown by the promise would not propagate to that callback, so
+/// success and failure are reported explicitly as `{ok: ...}` / `{error: ...}`.
+const COLLECT_BATCH_SCRIPT: &str = "
+    const [urls, done] = arguments;
+    collectTestData(urls).then(
+        (results) => done({ ok: results }),
+        (err) => done({ error: String(err) }),
+    );
+";
+
+/// Collect the layout of a batch of test fixtures from the browser
+async fn collect_batch(client: &Client, batch: &[(String, PathBuf)]) -> Result<Vec<(String, PathBuf, Value)>, String> {
+    let first = &batch[0].0;
+    let urls: Vec<Value> = batch.iter().map(|(_, path)| Value::String(format!("file://{}", path.display()))).collect();
+
+    // The browser occasionally stops responding to a command entirely, so time each command out
+    // rather than waiting forever. The browser's own script timeout ([`BATCH_TIMEOUT`]) normally
+    // triggers first, turning a problematic fixture into an error naming the batch.
+    let grace_period = Duration::from_secs(5);
+    let result = timeout(BATCH_TIMEOUT + grace_period, client.execute_async(COLLECT_BATCH_SCRIPT, vec![urls.into()]))
+        .await
+        .map_err(|_| format!("timed out collecting test data for the batch starting with {first}"))?
+        .map_err(|err| format!("could not collect test data for the batch starting with {first}: {err}"))?;
+
+    if let Some(error) = result.get("error").and_then(Value::as_str) {
+        return Err(format!("could not collect test data: {error}"));
+    }
+    let results = result
+        .get("ok")
+        .and_then(Value::as_array)
+        .ok_or_else(|| format!("unexpected test data for the batch starting with {first}: {result}"))?;
+    if results.len() != batch.len() {
+        return Err(format!(
+            "expected test data for {} fixtures in the batch starting with {first}, but got {}",
+            batch.len(),
+            results.len()
+        ));
+    }
+
+    batch
+        .iter()
+        .zip(results)
+        .map(|((name, fixture_path), description)| {
+            let description_string =
+                description.as_str().ok_or_else(|| format!("unexpected test data for {name}: {description}"))?;
+            let description = serde_json::from_str(description_string)
+                .map_err(|err| format!("invalid test data for {name}: {err}"))?;
+            Ok((name.clone(), fixture_path.clone(), description))
+        })
+        .collect()
 }
 
 /// The width of the terminal in characters, defaulting to 80 if it cannot be determined
@@ -432,43 +519,6 @@ async fn asserts_non_zero_width_scrollbars(client: &Client) -> Result<(), String
     }
 
     Ok(())
-}
-
-async fn test_root_element(
-    client: &Client,
-    name: &str,
-    fixture_path: &Path,
-) -> Result<(String, PathBuf, Value), String> {
-    let url = format!("file://{}", fixture_path.display());
-
-    // The browser occasionally stops responding to a command entirely, so time each command out
-    // rather than waiting forever. A fixture normally takes a few milliseconds.
-    timeout(TIMEOUT, client.goto(&url))
-        .await
-        .map_err(|_| format!("timed out loading the test fixture {name} ({})", fixture_path.display()))?
-        .map_err(|err| format!("could not load the test fixture {name}: {err}"))?;
-
-    // Navigation can occasionally return before the document is fully loaded, so retry a few times
-    let mut attempts = 0;
-    let description = loop {
-        let result = timeout(TIMEOUT, client.execute("return getTestData()", vec![]))
-            .await
-            .map_err(|_| format!("timed out running getTestData() for {name}"))?;
-        match result {
-            Ok(description) => break description,
-            Err(err) if attempts < 3 => {
-                attempts += 1;
-                warn!("getTestData() failed for {name} (attempt {attempts}): {err}");
-                tokio::time::sleep(Duration::from_millis(200)).await;
-            }
-            Err(err) => return Err(format!("getTestData() failed for {name}: {err}")),
-        }
-    };
-    let description_string =
-        description.as_str().ok_or_else(|| format!("unexpected test data for {name}: {description}"))?;
-    let description =
-        serde_json::from_str(description_string).map_err(|err| format!("invalid test data for {name}: {err}"))?;
-    Ok((name.to_string(), fixture_path.to_path_buf(), description))
 }
 
 fn generate_test(name: impl AsRef<str>, description: &Value) -> String {

@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Taffy test fixture batch runner</title>
+  <style>
+    html, body { margin: 0; padding: 0; overflow: hidden; }
+    iframe { display: block; width: 100vw; height: 100vh; border: none; }
+  </style>
+  <script>
+    // Load each fixture URL into the iframe in turn and collect the output of the
+    // fixture's own getTestData() function (defined by test_helper.js).
+    //
+    // The iframe fills the entire viewport so that fixtures lay out exactly as they
+    // would when loaded as the top-level document.
+    async function collectTestData(urls) {
+      const iframe = document.getElementById('runner');
+      const results = [];
+      for (const url of urls) {
+        const loaded = new Promise((resolve, reject) => {
+          iframe.onload = resolve;
+          iframe.onerror = () => reject(new Error(`failed to load ${url}`));
+        });
+        iframe.src = url;
+        await loaded;
+        const win = iframe.contentWindow;
+        if (!win || typeof win.getTestData !== 'function') {
+          throw new Error(`getTestData() is not defined in ${url}`);
+        }
+        try {
+          results.push(win.getTestData());
+        } catch (err) {
+          throw new Error(`getTestData() failed for ${url}: ${err}`);
+        }
+      }
+      return results;
+    }
+  </script>
+</head>
+<body>
+  <iframe id="runner"></iframe>
+</body>
+</html>
