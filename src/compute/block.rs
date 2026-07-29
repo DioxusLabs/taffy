@@ -938,12 +938,11 @@ fn perform_final_layout_on_in_flow_children(
                 }
             };
 
-            let known_dimensions = if item.is_table {
+            // Tables and replaced elements are not stretch-sized: they resolve their own
+            // size (for replaced elements an auto width resolves to the intrinsic size
+            // <https://www.w3.org/TR/CSS22/visudet.html#block-replaced-width>)
+            let known_dimensions = if item.is_table || item.is_replaced {
                 Size::NONE
-            } else if item.is_replaced {
-                // Replaced elements are not stretch-sized: an auto width resolves to the
-                // intrinsic size <https://www.w3.org/TR/CSS22/visudet.html#block-replaced-width>
-                item.size.maybe_clamp(item.min_size, item.max_size)
             } else {
                 item.size
                     .map_width(|width| {
