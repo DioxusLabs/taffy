@@ -5,8 +5,9 @@
 //! install directory then nothing is downloaded.
 
 use std::fs::{self, File};
-use std::io;
+use std::io::{self, IsTerminal, Write as _};
 use std::path::{Path, PathBuf};
+use std::time::{Duration, Instant};
 
 use log::*;
 
@@ -16,6 +17,17 @@ const VERSIONS_URL: &str =
 
 /// The release channel that we download builds from
 const CHANNEL: &str = "Stable";
+
+/// How long to wait for a server to respond before giving up
+const TIMEOUT: Duration = Duration::from_secs(10);
+
+/// An HTTP agent that gives up rather than hanging indefinitely if a server stops responding
+///
+/// No timeout is applied to reading the response body, as the browser archives are large enough
+/// that any limit which is safe on a slow connection would be too long to be useful.
+fn agent() -> ureq::Agent {
+    ureq::Agent::config_builder().timeout_connect(Some(TIMEOUT)).timeout_recv_response(Some(TIMEOUT)).build().into()
+}
 
 /// Paths to the binaries of a downloaded Chrome for Testing build
 #[derive(Debug, Clone)]
@@ -123,7 +135,7 @@ fn download_url(downloads: &serde_json::Value, platform: &str) -> Option<String>
 }
 
 fn get_json(url: &str) -> io::Result<serde_json::Value> {
-    let body = ureq::get(url).call().map_err(http_error)?.into_body();
+    let body = agent().get(url).call().map_err(http_error)?.into_body();
     serde_json::from_reader(body.into_reader()).map_err(Into::into)
 }
 
@@ -133,21 +145,89 @@ fn get_json(url: &str) -> io::Result<serde_json::Value> {
 /// `dest_dir` containing one directory per extracted archive.
 fn download_and_unzip(url: String, dest_dir: &Path) -> io::Result<()> {
     debug!("downloading {url}");
-    let mut body = ureq::get(&url).call().map_err(http_error)?.into_body();
+    let response = agent().get(&url).call().map_err(http_error)?;
+    let total_bytes = response
+        .headers()
+        .get("content-length")
+        .and_then(|value| value.to_str().ok())
+        .and_then(|value| value.parse::<u64>().ok());
+    let mut body = response.into_body();
+
+    let name = url.rsplit('/').next().unwrap_or(&url).to_string();
 
     // Stream the archive to a temporary file rather than buffering it in memory (the browser
     // archives are hundreds of megabytes) as reading a zip archive requires random access.
     let zip_path = dest_dir.join(".download.zip");
     let mut zip_file = File::create(&zip_path)?;
-    io::copy(&mut body.as_reader(), &mut zip_file)?;
+    copy_with_progress(&mut body.as_reader(), &mut zip_file, &name, total_bytes)?;
     drop(zip_file);
 
-    debug!("extracting {url}");
+    progress(&format!("extracting {name}"));
     let mut archive = zip::ZipArchive::new(File::open(&zip_path)?)?;
     archive.extract(dest_dir)?;
     fs::remove_file(&zip_path)?;
+    clear_progress();
 
     Ok(())
+}
+
+/// Copy `reader` to `writer`, reporting how much has been copied as it goes
+fn copy_with_progress(
+    reader: &mut impl io::Read,
+    writer: &mut impl io::Write,
+    name: &str,
+    total_bytes: Option<u64>,
+) -> io::Result<()> {
+    const MIB: f64 = (1024 * 1024) as f64;
+
+    let mut buffer = vec![0; 128 * 1024];
+    let mut copied: u64 = 0;
+    let mut last_report = Instant::now();
+    loop {
+        let count = reader.read(&mut buffer)?;
+        if count == 0 {
+            break;
+        }
+        writer.write_all(&buffer[..count])?;
+        copied += count as u64;
+
+        // Rate limit the reporting so that it does not dominate the time spent downloading
+        if last_report.elapsed() >= Duration::from_millis(100) {
+            last_report = Instant::now();
+            match total_bytes {
+                Some(total) => progress(&format!(
+                    "downloading {name} ({:.0}%, {:.0}MiB of {:.0}MiB)",
+                    (copied as f64 / total as f64) * 100.0,
+                    copied as f64 / MIB,
+                    total as f64 / MIB
+                )),
+                None => progress(&format!("downloading {name} ({:.0}MiB)", copied as f64 / MIB)),
+            }
+        }
+    }
+    Ok(())
+}
+
+/// Report progress on a single line of the terminal, replacing whatever was reported before it
+///
+/// Nothing is printed when stderr is not a terminal (the messages are logged instead), as the
+/// in place updates would just fill up a log file.
+fn progress(message: &str) {
+    if std::io::stderr().is_terminal() {
+        // `\r` moves back to the start of the line and `\x1b[K` clears the rest of it
+        eprint!("\r\x1b[K{message}");
+        let _ = std::io::stderr().flush();
+    } else {
+        debug!("{message}");
+    }
+}
+
+/// Remove the line last written by [`progress`]
+fn clear_progress() {
+    if std::io::stderr().is_terminal() {
+        eprint!("\r\x1b[K");
+        let _ = std::io::stderr().flush();
+    }
 }
 
 fn http_error(error: ureq::Error) -> io::Error {
