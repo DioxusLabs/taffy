@@ -12,6 +12,13 @@
     font-style: normal;
 }
 
+/* Force Chrome to use space-taking scrollbars.
+   The exact width (15px) must match the width assumed in the test runner */
+::-webkit-scrollbar {
+  width: 15px;
+  height: 15px;
+}
+
 body {
   padding: 0;
   margin: 0;

@@ -150,7 +150,7 @@ async fn main() {
 
 async fn asserts_non_zero_width_scrollbars(client: Client) {
     // Load minimal test page defined in the string
-    const TEST_PAGE: &str = r#"data:text/html;charset=utf-8,<html><body><div style="overflow:scroll" /></body></html>"#;
+    const TEST_PAGE: &str = r#"data:text/html;charset=utf-8,<html><style>::-webkit-scrollbar{ width: 15px; height: 15px; }</style><body><div style="overflow:scroll" /></body></html>"#;
     client.goto(TEST_PAGE).await.unwrap();
 
     // Determine the width of the scrollbar
