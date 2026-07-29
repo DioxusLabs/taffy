@@ -8,5 +8,6 @@ mod hand_written {
     mod root_constraints;
     mod rounding;
     mod safe_alignment;
+    mod scroll_size;
     mod serde;
 }
