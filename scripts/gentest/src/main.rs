@@ -235,7 +235,7 @@ impl WebDriver {
         let mut caps = serde_json::map::Map::new();
         let chrome_opts = serde_json::json!({
             "binary": chrome_path,
-            "args": ["--headless", "--disable-gpu", format!("--user-data-dir={}", self.profile_dir.display())],
+            "args": ["--headless", "--disable-gpu", "--no-sandbox", format!("--user-data-dir={}", self.profile_dir.display())],
         });
         caps.insert("goog:chromeOptions".to_string(), chrome_opts);
 
