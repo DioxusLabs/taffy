@@ -35,13 +35,17 @@ async fn main() {
         .collect();
     fixtures.sort_unstable_by_key(|f| f.1.clone());
 
+    info!("obtaining chrome-for-testing");
+    let chrome = getchrome::download_default().expect("failed to download chrome-for-testing");
+    info!("using chrome-for-testing {}", chrome.version);
+
     info!("starting webdriver instance");
     let webdriver_url = "http://localhost:4444";
     // Pipe chromedriver's output and forward it manually rather than letting it inherit
     // gentest's stdout/stderr. Chrome processes spawned by chromedriver would otherwise
     // inherit those file descriptors, and any that outlive gentest would keep a pipeline
     // reading gentest's output (e.g. `just gentest | tail`) blocked waiting for EOF.
-    let mut webdriver_handle = Command::new("chromedriver")
+    let mut webdriver_handle = Command::new(&chrome.chromedriver)
         .arg("--port=4444")
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
@@ -54,7 +58,10 @@ async fn main() {
     std::thread::sleep(std::time::Duration::from_secs(1));
 
     let mut caps = serde_json::map::Map::new();
-    let chrome_opts = serde_json::json!({ "args": ["--headless", "--disable-gpu"] });
+    let chrome_opts = serde_json::json!({
+        "binary": chrome.chrome,
+        "args": ["--headless", "--disable-gpu"],
+    });
     caps.insert("goog:chromeOptions".to_string(), chrome_opts.clone());
 
     info!("spawning webdriver client and collecting test descriptions");

@@ -26,18 +26,9 @@ If you do you not want to install `just` then you can peak into the `justfile` i
 Flexbox layouts are tested by validating that layouts written in this crate perform the same as in Chrome.
 This is done by rendering an equivalent layout in HTML and then generating a Rust test case which asserts that the resulting layout is the same when run through our layout engine.
 
-You can run these tests without setting up a webdriver environment but if you are looking to add any test case you will need to install [chromedriver](http://chromedriver.chromium.org) and [Chrome](https://www.google.com/chrome/).
-If you are developing on macOS this is easy to do through brew.
+You can run these tests without setting up a webdriver environment. And if you are looking to add a test case then no manual setup is required either: the test generation script downloads a matching pair of [Chrome for Testing](https://developer.chrome.com/blog/chrome-for-testing) and ChromeDriver builds into the `.chrome-for-testing` directory in the root of the repo (using the `scripts/getchrome` crate) and uses those. The download only happens once per version: subsequent runs reuse the already downloaded build. You can also trigger the download on its own by running `just getchrome`.
 
-```bash
-brew install chromedriver
-```
-
-If you are Ubuntu, you will have to install `openssl` first,
-and then can follow [these instructions](https://tecadmin.net/setup-selenium-chromedriver-on-ubuntu/).
-Be sure that your Chrome version matches the downloaded `chromedriver` version!
-
-Once you have chromedriver installed and available in `PATH` you can re-generate all tests by running `just gentest`. You should not manually update the tests in `tests/generated`. Instead, fix the script in `scripts/gentest/` and re-generate them. This can happen after a refactor. It can be helpful to commit the updated tests in a dedicated commit so that they can be easier to ignore during review.
+You can re-generate all tests by running `just gentest`. You should not manually update the tests in `tests/generated`. Instead, fix the script in `scripts/gentest/` and re-generate them. This can happen after a refactor. It can be helpful to commit the updated tests in a dedicated commit so that they can be easier to ignore during review.
 
 To add a new test case add another HTML file to `/test_fixtures` following the current tests as a template for new tests.
 
