@@ -8,7 +8,7 @@ use slotmap::{DefaultKey, SlotMap};
 #[cfg(feature = "block_layout")]
 use crate::block::BlockContext;
 use crate::geometry::{Point, Size};
-use crate::style::{AvailableSpace, Display, Position, Style};
+use crate::style::{AvailableSpace, Direction, Display, Position, Style};
 use crate::sys::DefaultCheapStr;
 use crate::tree::{
     Cache, ClearState, Layout, LayoutInput, LayoutOutput, LayoutPartialTree, NodeId, PrintTree, RoundTree, RunMode,
@@ -97,6 +97,8 @@ struct DeferredPosition {
     order: u32,
     /// The static position of the node, relative to its parent's border box
     static_position: Point<f32>,
+    /// The direction the static position was recorded in (RTL means `x` is the right edge)
+    static_position_direction: Direction,
 }
 
 /// Layout information for a given [`Node`](crate::node::Node)
@@ -420,8 +422,15 @@ where
     }
 
     #[inline(always)]
-    fn defer_absolute_child(&mut self, child_id: NodeId, order: u32, static_position: Point<f32>) {
-        self.taffy.nodes[child_id.into()].deferred_position = Some(DeferredPosition { order, static_position });
+    fn defer_absolute_child(
+        &mut self,
+        child_id: NodeId,
+        order: u32,
+        static_position: Point<f32>,
+        static_position_direction: Direction,
+    ) {
+        self.taffy.nodes[child_id.into()].deferred_position =
+            Some(DeferredPosition { order, static_position, static_position_direction });
     }
 }
 
@@ -1036,7 +1045,7 @@ fn position_deferred_children<NodeContext, MeasureFunction>(
                 || (child_position == Position::Absolute && node_position == Position::Static);
 
             if is_deferred {
-                if let Some(DeferredPosition { order, static_position }) = deferred {
+                if let Some(DeferredPosition { order, static_position, static_position_direction }) = deferred {
                     // Fixed children are positioned against the root; absolute children against
                     // the nearest positioned ancestor (`abs_cb`)
                     let (cb, parent_offset) = if child_position == Position::Fixed {
@@ -1055,6 +1064,7 @@ fn position_deferred_children<NodeContext, MeasureFunction>(
                         cb.area_size,
                         cb.area_offset,
                         static_position_in_cb,
+                        static_position_direction,
                         direction,
                     );
                     // `compute_absolute_child_layout` writes a location relative to the containing

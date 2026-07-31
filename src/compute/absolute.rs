@@ -31,11 +31,13 @@ pub struct AbsoluteChildLayout {
 /// - `area_offset` is the offset of the positioning area from the containing block's border box
 ///   origin (i.e. border + scrollbar gutter on the start sides).
 /// - `static_position` is the child's static position, relative to the containing block's
-///   border box origin.
+///   border box origin. If `static_position_direction` is [`Direction::Rtl`] then its `x`
+///   coordinate is the static position of the child's *right* edge, otherwise its left edge.
 /// - `direction` is the `direction` style (LTR/RTL) of the containing block.
 ///
 /// The child's unrounded layout is written to the tree with a location relative to the
 /// containing block's border box, and also returned.
+#[allow(clippy::too_many_arguments)]
 pub fn compute_absolute_child_layout(
     tree: &mut impl LayoutPartialTree,
     child_id: NodeId,
@@ -43,6 +45,7 @@ pub fn compute_absolute_child_layout(
     area_size: Size<f32>,
     area_offset: Point<f32>,
     static_position: Point<f32>,
+    static_position_direction: Direction,
     direction: Direction,
 ) -> AbsoluteChildLayout {
     let area_width = area_size.width;
@@ -207,7 +210,7 @@ pub fn compute_absolute_child_layout(
         (Some(left), None) => left + resolved_margin.left,
         (None, Some(right)) => area_size.width - final_size.width - right - resolved_margin.right,
         (None, None) => {
-            if direction.is_rtl() {
+            if static_position_direction.is_rtl() {
                 static_position.x - final_size.width - resolved_margin.right - area_offset.x
             } else {
                 static_position.x + resolved_margin.left - area_offset.x

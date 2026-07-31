@@ -2237,21 +2237,12 @@ fn perform_absolute_layout_on_absolute_children(
             continue;
         }
 
-        // If this container is not the child's containing block then hand the child back to the
-        // tree implementation to be laid out against its actual containing block.
-        if should_defer_absolute_child(child_position, container_position) {
-            drop(child_style);
-            let static_position = Point {
-                x: if constants.layout_direction.is_rtl() {
-                    constants.container_size.width - constants.content_box_inset.right
-                } else {
-                    constants.content_box_inset.left
-                },
-                y: constants.content_box_inset.top,
-            };
-            tree.defer_absolute_child(child, order as u32, static_position);
-            continue;
-        }
+        // If this container is not the child's containing block then the child is handed back
+        // to the tree implementation (at the bottom of this loop) to be laid out against its
+        // actual containing block. Its static position is still determined by this container
+        // (justify-content/align-items etc.), but with insets treated as auto since insets
+        // resolve against the actual containing block instead.
+        let defer_child = should_defer_absolute_child(child_position, container_position);
 
         let overflow = child_style.overflow();
         let scrollbar_width = child_style.scrollbar_width();
@@ -2277,6 +2268,8 @@ fn perform_absolute_layout_on_absolute_children(
         let top = child_style.inset().top.maybe_resolve(inset_relative_size.height, |val, basis| tree.calc(val, basis));
         let bottom =
             child_style.inset().bottom.maybe_resolve(inset_relative_size.height, |val, basis| tree.calc(val, basis));
+        let (left, right, top, bottom) =
+            if defer_child { (None, None, None, None) } else { (left, right, top, bottom) };
 
         // Compute known dimensions from min/max/inherent size styles
         let style_size = child_style
@@ -2554,6 +2547,17 @@ fn perform_absolute_layout_on_absolute_children(
             true => Point { x: offset_main, y: offset_cross },
             false => Point { x: offset_cross, y: offset_main },
         };
+
+        if defer_child {
+            // The static position excludes the margins, since `compute_absolute_child_layout`
+            // applies margins relative to the static position.
+            let static_position = Point { x: location.x - resolved_margin.left, y: location.y - resolved_margin.top };
+            // The static position is a fully-resolved top-left position, so it is always
+            // recorded with LTR semantics.
+            tree.defer_absolute_child(child, order as u32, static_position, Direction::Ltr);
+            continue;
+        }
+
         let scrollbar_size = Size {
             width: if overflow.y == Overflow::Scroll { scrollbar_width } else { 0.0 },
             height: if overflow.x == Overflow::Scroll { scrollbar_width } else { 0.0 },

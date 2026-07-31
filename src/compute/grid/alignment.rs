@@ -67,6 +67,7 @@ pub(super) fn align_tracks(
 }
 
 /// Align and size a grid item into it's final position
+#[allow(clippy::too_many_arguments)]
 pub(super) fn align_and_position_item(
     tree: &mut impl LayoutGridContainer,
     node: NodeId,
@@ -75,7 +76,8 @@ pub(super) fn align_and_position_item(
     container_alignment_styles: InBothAbsAxis<Option<AlignItems>>,
     baseline_shim: f32,
     direction: Direction,
-) -> (Size<f32>, f32, f32) {
+    ignore_insets: bool,
+) -> (Size<f32>, Point<f32>, f32) {
     let grid_area_size = Size { width: grid_area.right - grid_area.left, height: grid_area.bottom - grid_area.top };
 
     let style = tree.get_grid_child_style(node);
@@ -87,14 +89,22 @@ pub(super) fn align_and_position_item(
     let align_self = style.align_self();
 
     let position = style.position();
-    let inset_horizontal = style
-        .inset()
-        .horizontal_components()
-        .map(|size| size.resolve_to_option(grid_area_size.width, |val, basis| tree.calc(val, basis)));
-    let inset_vertical = style
-        .inset()
-        .vertical_components()
-        .map(|size| size.resolve_to_option(grid_area_size.height, |val, basis| tree.calc(val, basis)));
+    let inset_horizontal = if ignore_insets {
+        Line { start: None, end: None }
+    } else {
+        style
+            .inset()
+            .horizontal_components()
+            .map(|size| size.resolve_to_option(grid_area_size.width, |val, basis| tree.calc(val, basis)))
+    };
+    let inset_vertical = if ignore_insets {
+        Line { start: None, end: None }
+    } else {
+        style
+            .inset()
+            .vertical_components()
+            .map(|size| size.resolve_to_option(grid_area_size.height, |val, basis| tree.calc(val, basis)))
+    };
     let padding =
         style.padding().map(|p| p.resolve_or_zero(Some(grid_area_size.width), |val, basis| tree.calc(val, basis)));
     let border =
@@ -291,7 +301,11 @@ pub(super) fn align_and_position_item(
     #[cfg(not(feature = "content_size"))]
     let contribution = Size::ZERO;
 
-    (contribution, y, height)
+    // In static-position mode (`ignore_insets`) the returned position excludes the margins,
+    // since `compute_absolute_child_layout` applies margins relative to the static position.
+    let returned_location =
+        if ignore_insets { Point { x: x - resolved_margin.left, y: y - resolved_margin.top } } else { Point { x, y } };
+    (contribution, returned_location, height)
 }
 
 /// Align and size a grid item along a single axis

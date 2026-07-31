@@ -1207,7 +1207,7 @@ fn perform_absolute_layout_on_absolute_children(
         // If this container is not the child's containing block then hand the child back to the
         // tree implementation to be laid out against its actual containing block.
         if should_defer_absolute_child(child_position, container_position) {
-            tree.defer_absolute_child(item.node_id, item.order, item.static_position);
+            tree.defer_absolute_child(item.node_id, item.order, item.static_position, direction);
             continue;
         }
 
@@ -1218,6 +1218,7 @@ fn perform_absolute_layout_on_absolute_children(
             area_size,
             area_offset,
             item.static_position,
+            direction,
             direction,
         );
 

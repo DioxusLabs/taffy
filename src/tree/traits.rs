@@ -130,7 +130,7 @@ use super::{Layout, LayoutInput, LayoutOutput, NodeId, RequestedAxis, RunMode, S
 #[cfg(feature = "detailed_layout_info")]
 use crate::debug::debug_log;
 use crate::geometry::{AbsoluteAxis, Line, Point, Size};
-use crate::style::{AvailableSpace, CoreStyle};
+use crate::style::{AvailableSpace, CoreStyle, Direction};
 #[cfg(feature = "flexbox")]
 use crate::style::{FlexboxContainerStyle, FlexboxItemStyle};
 #[cfg(feature = "grid")]
@@ -221,10 +221,17 @@ pub trait LayoutPartialTree: TraversePartialTree {
     /// `Static` containers (and all `Fixed` children) are simply not laid out unless the tree
     /// implementation overrides this method.
     #[inline(always)]
-    fn defer_absolute_child(&mut self, child_id: NodeId, order: u32, static_position: Point<f32>) {
+    fn defer_absolute_child(
+        &mut self,
+        child_id: NodeId,
+        order: u32,
+        static_position: Point<f32>,
+        static_position_direction: Direction,
+    ) {
         let _ = child_id;
         let _ = order;
         let _ = static_position;
+        let _ = static_position_direction;
     }
 }
 

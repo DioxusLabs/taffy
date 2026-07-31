@@ -591,7 +591,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
             right: columns[item.column_indexes.end as usize].offset,
         };
         #[cfg_attr(not(feature = "content_size"), allow(unused_variables))]
-        let (content_size_contribution, y_position, height) = align_and_position_item(
+        let (content_size_contribution, location, height) = align_and_position_item(
             tree,
             item.node,
             index as u32,
@@ -599,8 +599,9 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
             container_alignment_styles,
             item.baseline_shim,
             direction,
+            false,
         );
-        item.y_position = y_position;
+        item.y_position = location.y;
         item.height = height;
 
         #[cfg(feature = "content_size")]
@@ -635,20 +636,40 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
         let child_position = child_style.position();
         if child_position.is_absolutely_positioned() {
             // If this container is not the child's containing block then hand the child back to
-            // the tree implementation to be laid out against its actual containing block. The
-            // static position of an absolutely positioned child of a grid container is the
-            // content edge of the grid container.
+            // the tree implementation to be laid out against its actual containing block.
+            //
+            // The child's static position is determined as if it were the sole grid item in a
+            // grid area whose edges coincide with the content edges of the grid container
+            // (honoring the container's/item's alignment properties, with insets treated as
+            // auto since they resolve against the actual containing block instead).
             if should_defer_absolute_child(child_position, container_position) {
                 drop(child_style);
-                let static_position = Point {
-                    x: if direction.is_rtl() {
-                        container_border_box.width - border.right - padding.right - scrollbar_gutter.x
+                let content_box_grid_area = Rect {
+                    top: border.top + padding.top,
+                    bottom: container_border_box.height - border.bottom - padding.bottom - scrollbar_gutter.y,
+                    left: if direction.is_rtl() {
+                        border.left + padding.left + scrollbar_gutter.x
                     } else {
                         border.left + padding.left
                     },
-                    y: border.top + padding.top,
+                    right: container_border_box.width
+                        - border.right
+                        - padding.right
+                        - if direction.is_rtl() { 0.0 } else { scrollbar_gutter.x },
                 };
-                tree.defer_absolute_child(child, order, static_position);
+                let (_, static_position, _) = align_and_position_item(
+                    tree,
+                    child,
+                    order,
+                    content_box_grid_area,
+                    container_alignment_styles,
+                    0.0,
+                    direction,
+                    true,
+                );
+                // The static position is a fully-resolved top-left position, so it is always
+                // recorded with LTR semantics.
+                tree.defer_absolute_child(child, order, static_position, Direction::Ltr);
                 order += 1;
                 return;
             }
@@ -710,8 +731,16 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
 
             // TODO: Baseline alignment support for absolutely positioned items (should check if is actually specified)
             #[cfg_attr(not(feature = "content_size"), allow(unused_variables))]
-            let (content_size_contribution, _, _) =
-                align_and_position_item(tree, child, order, grid_area, container_alignment_styles, 0.0, direction);
+            let (content_size_contribution, _, _) = align_and_position_item(
+                tree,
+                child,
+                order,
+                grid_area,
+                container_alignment_styles,
+                0.0,
+                direction,
+                false,
+            );
             #[cfg(feature = "content_size")]
             {
                 item_content_size_contribution = item_content_size_contribution.f32_max(content_size_contribution);
