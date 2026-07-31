@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+### Added
+
+- `Position::Static` and `Position::Fixed` variants. `Static` behaves like `Relative` in-flow but ignores inset properties and does not act as a containing block for absolutely positioned descendants. `Fixed` behaves like `Absolute` but is always deferred to the tree implementation to be positioned against its fixed containing block (normally the viewport). `Relative` remains the default, so existing users are unaffected.
+- `LayoutPartialTree::defer_absolute_child`: a new optional trait method (default: no-op) which layout algorithms call for absolutely positioned children whose containing block is not the container being laid out (i.e. `Fixed` children and `Absolute` children of `Static` containers), passing the child's static position. `TaffyTree` implements this and positions deferred children against their actual containing block in a post-layout pass.
+- `compute_absolute_child_layout`: the absolutely-positioned-child layout algorithm (previously private to the block algorithm) is now public so tree implementations can lay out deferred children against arbitrary containing blocks.
+- `Direction::is_rtl` is now public.
+
 ### Fixed
 
 - Grid: tracks no longer grow past their growth limits when distributing free space to multiple tracks with asymmetric limits (in the "maximise tracks" step and when distributing item contributions to base sizes). Previously a track could be assigned space beyond its limit in later distribution iterations, causing `auto` tracks to overflow a definite container (#1000)
