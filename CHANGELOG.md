@@ -4,6 +4,8 @@
 
 ### Fixed
 
+- Block: replaced elements (`item_is_replaced: true`) are no longer stretch-sized to the container width. An auto width now resolves to the intrinsic size, per [CSS 2 §10.3.4](https://www.w3.org/TR/CSS22/visudet.html#block-replaced-width)
+
 - Grid: tracks no longer grow past their growth limits when distributing free space to multiple tracks with asymmetric limits (in the "maximise tracks" step and when distributing item contributions to base sizes). Previously a track could be assigned space beyond its limit in later distribution iterations, causing `auto` tracks to overflow a definite container (#1000)
 
 - Flexbox: min/max sizes transferred through the aspect ratio now clamp the flex base size, the automatic minimum size, and the hypothetical main/cross sizes of flex items, instead of being baked into the item's used min/max sizes. This matches browser behaviour for replaced elements and items with `aspect-ratio` combined with min/max constraints in the opposite axis ([w3c/csswg-drafts#10997](https://github.com/w3c/csswg-drafts/issues/10997))

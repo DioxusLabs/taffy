@@ -1,4 +1,5 @@
 mod hand_written {
+    mod block_replaced;
     mod border_and_padding;
     mod caching;
     mod floats;
