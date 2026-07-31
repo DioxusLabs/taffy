@@ -107,6 +107,19 @@ impl CacheKey {
     fn x_axis_parent_size(&self) -> u64 {
         self.parent_size & (X_AXIS_VALUE_MASK & NON_SIGN_BITS_MASK)
     }
+
+    /// Return the bits that encode the requested axis
+    fn requested_axis_bits(&self) -> u64 {
+        self.parent_size & BOTH_SIGN_BITS_MASK
+    }
+
+    /// Whether a cached entry with this key contains a valid size for the axis requested by `other`.
+    /// Sizes computed for a single axis may contain garbage values in the other axis, so an entry
+    /// is only usable if it was computed for the same axis (or for both axes).
+    fn size_is_valid_for(&self, other: &CacheKey) -> bool {
+        let entry_axis = self.requested_axis_bits();
+        entry_axis == BOTH_SIGN_BITS_MASK || entry_axis == other.requested_axis_bits()
+    }
 }
 
 impl From<&LayoutInput> for CacheKey {
@@ -237,6 +250,7 @@ impl Cache {
                     if entry.key.kd_available_space == key.kd_available_space
                         && entry.key.known_dimensions_are_definite == key.known_dimensions_are_definite
                         && (entry.key.x_axis_parent_size() == key.x_axis_parent_size())
+                        && entry.key.size_is_valid_for(&key)
                     {
                         return Some(LayoutOutput::from_outer_size(entry.content));
                     }
