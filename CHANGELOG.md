@@ -4,6 +4,8 @@
 
 ### Fixed
 
+- Cache: measure results computed for a single axis are no longer returned for queries in the other axis. Algorithms may return a garbage size in the non-requested axis (e.g. the block algorithm short-circuits width-only measures with a height of `0.0`), which could cause grid items in intrinsically-sized rows to collapse to zero height and overlap when an intrinsic column-sizing pass measured the items' widths before the row-sizing pass
+
 - Grid: tracks no longer grow past their growth limits when distributing free space to multiple tracks with asymmetric limits (in the "maximise tracks" step and when distributing item contributions to base sizes). Previously a track could be assigned space beyond its limit in later distribution iterations, causing `auto` tracks to overflow a definite container (#1000)
 
 - Flexbox: min/max sizes transferred through the aspect ratio now clamp the flex base size, the automatic minimum size, and the hypothetical main/cross sizes of flex items, instead of being baked into the item's used min/max sizes. This matches browser behaviour for replaced elements and items with `aspect-ratio` combined with min/max constraints in the opposite axis ([w3c/csswg-drafts#10997](https://github.com/w3c/csswg-drafts/issues/10997))
