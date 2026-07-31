@@ -198,6 +198,11 @@ struct BlockItem {
     /// Items that are tables don't have stretch sizing applied to them
     is_table: bool,
 
+    /// Items that are replaced elements don't have stretch sizing applied to them
+    /// (CSS 2.1 §10.3.4: a block-level replaced element with `width: auto` uses its
+    /// intrinsic width)
+    is_replaced: bool,
+
     /// Whether the child is a non-independent block or inline node
     is_in_same_bfc: bool,
 
@@ -656,6 +661,7 @@ fn generate_item_list(
 
             let is_block = child_style.is_block();
             let is_table = child_style.is_table();
+            let is_replaced = child_style.is_compressible_replaced();
             let is_scroll_container = overflow.x.is_scroll_container() || overflow.y.is_scroll_container();
 
             let is_in_same_bfc: bool =
@@ -665,6 +671,7 @@ fn generate_item_list(
                 node_id: child_node_id,
                 order: order as u32,
                 is_table,
+                is_replaced,
                 is_in_same_bfc,
                 #[cfg(feature = "float_layout")]
                 float,
@@ -936,6 +943,10 @@ fn perform_final_layout_on_in_flow_children(
 
             let known_dimensions = if item.is_table {
                 Size::NONE
+            } else if item.is_replaced {
+                // Block-level replaced elements with `width: auto` use their intrinsic
+                // width rather than being stretched to fill the container
+                item.size.maybe_clamp(item.min_size, item.max_size)
             } else {
                 item.size
                     .map_width(|width| {
@@ -964,9 +975,20 @@ fn perform_final_layout_on_in_flow_children(
             let clear_pos = f32::NEG_INFINITY;
 
             let item_layout = if item.is_in_same_bfc {
-                let width = known_dimensions
+                let width = known_dimensions.width.unwrap_or_else(|| {
+                    // Replaced elements with `width: auto` size to their intrinsic width
+                    // rather than being stretched: measure to determine it
+                    tree.compute_child_layout(
+                        item.node_id,
+                        LayoutInput {
+                            run_mode: RunMode::ComputeSize,
+                            axis: RequestedAxis::Horizontal,
+                            ..inputs
+                        },
+                    )
+                    .size
                     .width
-                    .expect("Same-bfc child will always have defined width due to stretch sizing");
+                });
 
                 // TODO: account for auto margins
                 let inset_left = item_non_auto_margin.left + content_box_inset.left;
