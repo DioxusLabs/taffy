@@ -1,0 +1,15 @@
+<test name="block_static_ignores_inset__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="block" direction="rtl" width="110px" height="100px">
+      <div display="block" direction="rtl" position="static" width="60px" height="40px" top="20px" left="30px"/>
+      <div display="block" direction="rtl" width="60px" height="40px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="110" height="100">
+      <node x="50" y="0" width="60" height="40"/>
+      <node x="50" y="40" width="60" height="40"/>
+    </node>
+  </expectations>
+</test>

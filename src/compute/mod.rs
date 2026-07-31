@@ -21,6 +21,7 @@
 //! | [`round_layout`]                  | [`RoundTree`]                                                                                                                                                                                      | Round a tree of float-valued layouts to integer pixels               |
 //! | [`print_tree`](crate::print_tree) | [`PrintTree`](crate::PrintTree)                                                                                                                                                                    | Print a debug representation of a node tree and it's computed layout |
 //!
+pub(crate) mod absolute;
 pub(crate) mod common;
 pub(crate) mod leaf;
 
@@ -36,6 +37,7 @@ pub(crate) mod flexbox;
 #[cfg(feature = "grid")]
 pub(crate) mod grid;
 
+pub use absolute::{compute_absolute_child_layout, AbsoluteChildLayout};
 pub use leaf::compute_leaf_layout;
 
 #[cfg(feature = "block_layout")]

@@ -67,6 +67,7 @@ pub(super) fn align_tracks(
 }
 
 /// Align and size a grid item into it's final position
+#[allow(clippy::too_many_arguments)]
 pub(super) fn align_and_position_item(
     tree: &mut impl LayoutGridContainer,
     node: NodeId,
@@ -75,7 +76,8 @@ pub(super) fn align_and_position_item(
     container_alignment_styles: InBothAbsAxis<Option<AlignItems>>,
     baseline_shim: f32,
     direction: Direction,
-) -> (Size<f32>, f32, f32) {
+    ignore_insets: bool,
+) -> (Size<f32>, Point<f32>, f32) {
     let grid_area_size = Size { width: grid_area.right - grid_area.left, height: grid_area.bottom - grid_area.top };
 
     let style = tree.get_grid_child_style(node);
@@ -87,14 +89,22 @@ pub(super) fn align_and_position_item(
     let align_self = style.align_self();
 
     let position = style.position();
-    let inset_horizontal = style
-        .inset()
-        .horizontal_components()
-        .map(|size| size.resolve_to_option(grid_area_size.width, |val, basis| tree.calc(val, basis)));
-    let inset_vertical = style
-        .inset()
-        .vertical_components()
-        .map(|size| size.resolve_to_option(grid_area_size.height, |val, basis| tree.calc(val, basis)));
+    let inset_horizontal = if ignore_insets {
+        Line { start: None, end: None }
+    } else {
+        style
+            .inset()
+            .horizontal_components()
+            .map(|size| size.resolve_to_option(grid_area_size.width, |val, basis| tree.calc(val, basis)))
+    };
+    let inset_vertical = if ignore_insets {
+        Line { start: None, end: None }
+    } else {
+        style
+            .inset()
+            .vertical_components()
+            .map(|size| size.resolve_to_option(grid_area_size.height, |val, basis| tree.calc(val, basis)))
+    };
     let padding =
         style.padding().map(|p| p.resolve_or_zero(Some(grid_area_size.width), |val, basis| tree.calc(val, basis)));
     let border =
@@ -158,7 +168,7 @@ pub(super) fn align_and_position_item(
     let width = inherent_size.width.or_else(|| {
         // Apply width derived from both the left and right properties of an absolutely
         // positioned element being set
-        if position == Position::Absolute {
+        if position.is_absolutely_positioned() {
             if let (Some(left), Some(right)) = (inset_horizontal.start, inset_horizontal.end) {
                 return Some(f32_max(grid_area_minus_item_margins_size.width - left - right, 0.0));
             }
@@ -171,7 +181,7 @@ pub(super) fn align_and_position_item(
         if margin.left.is_some()
             && margin.right.is_some()
             && alignment_styles.horizontal == AlignSelf::STRETCH
-            && position != Position::Absolute
+            && !position.is_absolutely_positioned()
         {
             return Some(grid_area_minus_item_margins_size.width);
         }
@@ -183,7 +193,7 @@ pub(super) fn align_and_position_item(
     let Size { width, height } = Size { width, height: inherent_size.height }.maybe_apply_aspect_ratio(aspect_ratio);
 
     let height = height.or_else(|| {
-        if position == Position::Absolute {
+        if position.is_absolutely_positioned() {
             if let (Some(top), Some(bottom)) = (inset_vertical.start, inset_vertical.end) {
                 return Some(f32_max(grid_area_minus_item_margins_size.height - top - bottom, 0.0));
             }
@@ -196,7 +206,7 @@ pub(super) fn align_and_position_item(
         if margin.top.is_some()
             && margin.bottom.is_some()
             && alignment_styles.vertical == AlignSelf::STRETCH
-            && position != Position::Absolute
+            && !position.is_absolutely_positioned()
         {
             return Some(grid_area_minus_item_margins_size.height);
         }
@@ -212,7 +222,7 @@ pub(super) fn align_and_position_item(
     // Layout node
     drop(style);
 
-    let size = if position == Position::Absolute && (width.is_none() || height.is_none()) {
+    let size = if position.is_absolutely_positioned() && (width.is_none() || height.is_none()) {
         tree.measure_child_size_both(
             node,
             Size { width, height },
@@ -291,7 +301,11 @@ pub(super) fn align_and_position_item(
     #[cfg(not(feature = "content_size"))]
     let contribution = Size::ZERO;
 
-    (contribution, y, height)
+    // In static-position mode (`ignore_insets`) the returned position excludes the margins,
+    // since `compute_absolute_child_layout` applies margins relative to the static position.
+    let returned_location =
+        if ignore_insets { Point { x: x - resolved_margin.left, y: y - resolved_margin.top } } else { Point { x, y } };
+    (contribution, returned_location, height)
 }
 
 /// Align and size a grid item along a single axis
@@ -347,7 +361,7 @@ pub(super) fn align_item_within_area(
         }
     };
 
-    let offset_within_area = if position == Position::Absolute {
+    let offset_within_area = if position.is_absolutely_positioned() {
         match (inset.start, inset.end) {
             (Some(start), Some(end)) => {
                 if direction.is_rtl() {

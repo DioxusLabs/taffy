@@ -1,0 +1,17 @@
+<test name="block_fixed_child_of_relative_parent__content_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="block" box-sizing="content-box" direction="rtl" width="200px" height="200px">
+      <div display="block" box-sizing="content-box" direction="rtl" width="150px" height="150px" margin-top="40px" margin-left="40px">
+        <div display="block" box-sizing="content-box" direction="rtl" position="fixed" width="60px" height="40px" top="25px" left="35px"/>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="200" height="200">
+      <node x="50" y="40" width="150" height="150">
+        <node x="-15" y="-15" width="60" height="40"/>
+      </node>
+    </node>
+  </expectations>
+</test>
