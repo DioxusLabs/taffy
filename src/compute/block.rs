@@ -980,11 +980,7 @@ fn perform_final_layout_on_in_flow_children(
                     // rather than being stretched: measure to determine it
                     tree.compute_child_layout(
                         item.node_id,
-                        LayoutInput {
-                            run_mode: RunMode::ComputeSize,
-                            axis: RequestedAxis::Horizontal,
-                            ..inputs
-                        },
+                        LayoutInput { run_mode: RunMode::ComputeSize, axis: RequestedAxis::Horizontal, ..inputs },
                     )
                     .size
                     .width
