@@ -15,6 +15,7 @@ use crate::util::MaybeMath;
 use crate::util::{MaybeResolve, ResolveOrZero};
 use crate::{BoxGenerationMode, BoxSizing, Direction, RequestedAxis};
 
+use super::absolute::should_defer_absolute_child;
 use super::common::alignment::apply_alignment_fallback;
 #[cfg(feature = "content_size")]
 use super::common::content_size::compute_content_size_contribution;
@@ -526,7 +527,7 @@ fn generate_anonymous_flex_items(
     tree.child_ids(node)
         .enumerate()
         .map(|(index, child)| (index, child, tree.get_flexbox_child_style(child)))
-        .filter(|(_, _, style)| style.position() != Position::Absolute)
+        .filter(|(_, _, style)| style.position().is_inflow())
         .filter(|(_, _, style)| style.box_generation_mode() != BoxGenerationMode::None)
         .map(|(index, child, child_style)| {
             let aspect_ratio = child_style.aspect_ratio();
@@ -557,9 +558,13 @@ fn generate_anonymous_flex_items(
                     .maybe_add(box_sizing_adjustment),
                 aspect_ratio,
 
-                inset: child_style
-                    .inset()
-                    .zip_size(constants.node_inner_size, |p, s| p.maybe_resolve(s, |val, basis| tree.calc(val, basis))),
+                inset: if child_style.position() == Position::Static {
+                    Rect { left: None, right: None, top: None, bottom: None }
+                } else {
+                    child_style.inset().zip_size(constants.node_inner_size, |p, s| {
+                        p.maybe_resolve(s, |val, basis| tree.calc(val, basis))
+                    })
+                },
                 margin: child_style
                     .margin()
                     .resolve_or_zero(constants.node_inner_size.width, |val, basis| tree.calc(val, basis)),
@@ -2217,6 +2222,8 @@ fn perform_absolute_layout_on_absolute_children(
     let inset_relative_size =
         constants.container_size - constants.border.sum_axes() - constants.scrollbar_gutter.into();
 
+    let container_position = tree.get_flexbox_container_style(node).position();
+
     #[cfg_attr(not(feature = "content_size"), allow(unused_mut))]
     let mut content_size = Size::ZERO;
 
@@ -2224,9 +2231,25 @@ fn perform_absolute_layout_on_absolute_children(
         let child = tree.get_child_id(node, order);
         let child_style = tree.get_flexbox_child_style(child);
 
-        // Skip items that are display:none or are not position:absolute
-        if child_style.box_generation_mode() == BoxGenerationMode::None || child_style.position() != Position::Absolute
-        {
+        // Skip items that are display:none or are not absolutely positioned
+        let child_position = child_style.position();
+        if child_style.box_generation_mode() == BoxGenerationMode::None || !child_position.is_absolutely_positioned() {
+            continue;
+        }
+
+        // If this container is not the child's containing block then hand the child back to the
+        // tree implementation to be laid out against its actual containing block.
+        if should_defer_absolute_child(child_position, container_position) {
+            drop(child_style);
+            let static_position = Point {
+                x: if constants.layout_direction.is_rtl() {
+                    constants.container_size.width - constants.content_box_inset.right
+                } else {
+                    constants.content_box_inset.left
+                },
+                y: constants.content_box_inset.top,
+            };
+            tree.defer_absolute_child(child, order as u32, static_position);
             continue;
         }
 

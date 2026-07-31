@@ -7,8 +7,8 @@ use slotmap::{DefaultKey, SlotMap};
 
 #[cfg(feature = "block_layout")]
 use crate::block::BlockContext;
-use crate::geometry::Size;
-use crate::style::{AvailableSpace, Display, Style};
+use crate::geometry::{Point, Size};
+use crate::style::{AvailableSpace, Display, Position, Style};
 use crate::sys::DefaultCheapStr;
 use crate::tree::{
     Cache, ClearState, Layout, LayoutInput, LayoutOutput, LayoutPartialTree, NodeId, PrintTree, RoundTree, RunMode,
@@ -18,7 +18,8 @@ use crate::util::debug::{debug_log, debug_log_node};
 use crate::util::sys::{new_vec_with_capacity, ChildrenVec, Vec};
 
 use crate::compute::{
-    compute_cached_layout, compute_hidden_layout, compute_leaf_layout, compute_root_layout, round_layout,
+    compute_absolute_child_layout, compute_cached_layout, compute_hidden_layout, compute_leaf_layout,
+    compute_root_layout, round_layout,
 };
 use crate::CacheTree;
 
@@ -88,6 +89,16 @@ impl Default for TaffyConfig {
     }
 }
 
+/// The static position of a node which was deferred by its parent during layout because the
+/// parent was not its containing block
+#[derive(Debug, Clone, Copy, PartialEq)]
+struct DeferredPosition {
+    /// The source order of the node within its parent
+    order: u32,
+    /// The static position of the node, relative to its parent's border box
+    static_position: Point<f32>,
+}
+
 /// Layout information for a given [`Node`](crate::node::Node)
 ///
 /// Stored in a [`TaffyTree`].
@@ -107,6 +118,11 @@ struct NodeData {
     /// Whether the node has context data associated with it or not
     pub(crate) has_context: bool,
 
+    /// The static position recorded when this node was deferred by its parent during layout
+    /// (because the parent was not its containing block). See
+    /// [`LayoutPartialTree::defer_absolute_child`].
+    pub(crate) deferred_position: Option<DeferredPosition>,
+
     /// The cached results of the layout computation
     pub(crate) cache: Cache,
 
@@ -125,6 +141,7 @@ impl NodeData {
             unrounded_layout: Layout::new(),
             final_layout: Layout::new(),
             has_context: false,
+            deferred_position: None,
             #[cfg(feature = "detailed_layout_info")]
             detailed_layout_info: DetailedLayoutInfo::None,
         }
@@ -400,6 +417,11 @@ where
             #[cfg(feature = "block_layout")]
             None,
         )
+    }
+
+    #[inline(always)]
+    fn defer_absolute_child(&mut self, child_id: NodeId, order: u32, static_position: Point<f32>) {
+        self.taffy.nodes[child_id.into()].deferred_position = Some(DeferredPosition { order, static_position });
     }
 }
 
@@ -915,6 +937,7 @@ impl<NodeContext> TaffyTree<NodeContext> {
         let use_rounding = self.config.use_rounding;
         let mut taffy_view = TaffyView { taffy: self, measure_function };
         compute_root_layout(&mut taffy_view, node_id, available_space);
+        position_deferred_children(&mut taffy_view, node_id);
         if use_rounding {
             round_layout(&mut taffy_view, node_id);
         }
@@ -936,6 +959,134 @@ impl<NodeContext> TaffyTree<NodeContext> {
     #[cfg(test)]
     pub(crate) fn as_layout_tree(&mut self) -> impl LayoutPartialTree + CacheTree + '_ {
         TaffyView { taffy: self, measure_function: |_, _, _, _, _| Size::ZERO }
+    }
+}
+
+/// The containing block established by a positioned node, described relative to that node's
+/// border box
+#[derive(Copy, Clone)]
+struct ContainingBlock {
+    /// The node establishing the containing block
+    node: NodeId,
+    /// The size of the positioning area (border box minus borders and scrollbar gutters)
+    area_size: Size<f32>,
+    /// The offset of the positioning area from the node's border box origin
+    area_offset: Point<f32>,
+}
+
+impl ContainingBlock {
+    /// Compute the containing block established by a node from its unrounded layout
+    fn from_layout(node: NodeId, layout: &Layout, is_rtl: bool) -> Self {
+        let area_size = Size {
+            width: layout.size.width - layout.border.horizontal_axis_sum() - layout.scrollbar_size.width,
+            height: layout.size.height - layout.border.vertical_axis_sum() - layout.scrollbar_size.height,
+        };
+        let area_offset = Point {
+            x: if is_rtl { layout.border.left + layout.scrollbar_size.width } else { layout.border.left },
+            y: layout.border.top,
+        };
+        Self { node, area_size, area_offset }
+    }
+}
+
+/// Lay out children which were deferred during the main layout pass (via
+/// [`LayoutPartialTree::defer_absolute_child`]) against their actual containing block.
+///
+/// - `Position::Absolute` children of `Position::Static` containers are positioned against their
+///   nearest positioned (non-`Static`) ancestor, falling back to the root node.
+/// - `Position::Fixed` children are positioned against the root node.
+fn position_deferred_children<NodeContext, MeasureFunction>(
+    view: &mut TaffyView<'_, NodeContext, MeasureFunction>,
+    root: NodeId,
+) where
+    MeasureFunction:
+        FnMut(Size<Option<f32>>, Size<AvailableSpace>, NodeId, Option<&mut NodeContext>, &Style) -> Size<f32>,
+{
+    let root_is_rtl = view.taffy.nodes[root.into()].style.direction.is_rtl();
+    let root_layout = view.taffy.nodes[root.into()].unrounded_layout;
+    let root_cb = ContainingBlock::from_layout(root, &root_layout, root_is_rtl);
+    recurse(view, root, root_cb, root_cb, Point::ZERO, Point::ZERO);
+
+    /// Recursively walk the tree positioning deferred children.
+    ///
+    /// - `root_cb` is the containing block for `Position::Fixed` descendants (the root node)
+    /// - `abs_cb` is the containing block for `Position::Absolute` descendants
+    /// - `node_offset_from_cb` is the offset of `node`'s border box from `abs_cb`'s border box
+    /// - `node_offset_from_root` is the offset of `node`'s border box from the root's border box
+    fn recurse<NodeContext, MeasureFunction>(
+        view: &mut TaffyView<'_, NodeContext, MeasureFunction>,
+        node: NodeId,
+        root_cb: ContainingBlock,
+        abs_cb: ContainingBlock,
+        node_offset_from_cb: Point<f32>,
+        node_offset_from_root: Point<f32>,
+    ) where
+        MeasureFunction:
+            FnMut(Size<Option<f32>>, Size<AvailableSpace>, NodeId, Option<&mut NodeContext>, &Style) -> Size<f32>,
+    {
+        let node_position = view.taffy.nodes[node.into()].style.position;
+        let child_count = view.taffy.children[node.into()].len();
+        for index in 0..child_count {
+            let child = view.taffy.children[node.into()][index];
+            let child_data = &view.taffy.nodes[child.into()];
+            let child_position = child_data.style.position;
+            let deferred = child_data.deferred_position;
+
+            let is_deferred = child_position == Position::Fixed
+                || (child_position == Position::Absolute && node_position == Position::Static);
+
+            if is_deferred {
+                if let Some(DeferredPosition { order, static_position }) = deferred {
+                    // Fixed children are positioned against the root; absolute children against
+                    // the nearest positioned ancestor (`abs_cb`)
+                    let (cb, parent_offset) = if child_position == Position::Fixed {
+                        (root_cb, node_offset_from_root)
+                    } else {
+                        (abs_cb, node_offset_from_cb)
+                    };
+
+                    let direction = view.taffy.nodes[cb.node.into()].style.direction;
+                    let static_position_in_cb =
+                        Point { x: static_position.x + parent_offset.x, y: static_position.y + parent_offset.y };
+                    let result = compute_absolute_child_layout(
+                        view,
+                        child,
+                        order,
+                        cb.area_size,
+                        cb.area_offset,
+                        static_position_in_cb,
+                        direction,
+                    );
+                    // `compute_absolute_child_layout` writes a location relative to the containing
+                    // block's border box. Convert it to be relative to the parent's border box
+                    // (which is the coordinate space the rest of Taffy expects).
+                    let mut layout = result.layout;
+                    layout.location =
+                        Point { x: layout.location.x - parent_offset.x, y: layout.location.y - parent_offset.y };
+                    view.taffy.nodes[child.into()].unrounded_layout = layout;
+                }
+            }
+
+            // Recurse into the child's subtree
+            let child_layout = view.taffy.nodes[child.into()].unrounded_layout;
+            let child_offset_from_root = Point {
+                x: node_offset_from_root.x + child_layout.location.x,
+                y: node_offset_from_root.y + child_layout.location.y,
+            };
+            let (child_abs_cb, child_offset_from_cb) = if child_position == Position::Static {
+                (
+                    abs_cb,
+                    Point {
+                        x: node_offset_from_cb.x + child_layout.location.x,
+                        y: node_offset_from_cb.y + child_layout.location.y,
+                    },
+                )
+            } else {
+                let is_rtl = view.taffy.nodes[child.into()].style.direction.is_rtl();
+                (ContainingBlock::from_layout(child, &child_layout, is_rtl), Point::ZERO)
+            };
+            recurse(view, child, root_cb, child_abs_cb, child_offset_from_cb, child_offset_from_root);
+        }
     }
 }
 

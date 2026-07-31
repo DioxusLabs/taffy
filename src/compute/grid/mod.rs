@@ -1,8 +1,9 @@
 //! This module is a partial implementation of the CSS Grid Level 1 specification
 //! <https://www.w3.org/TR/css-grid-1>
+use crate::compute::absolute::should_defer_absolute_child;
 use crate::geometry::{AbsoluteAxis, AbstractAxis, InBothAbsAxis};
 use crate::geometry::{Line, Point, Rect, Size};
-use crate::style::{AlignItems, AlignSelf, AvailableSpace, Overflow, Position};
+use crate::style::{AlignItems, AlignSelf, AvailableSpace, Overflow};
 use crate::tree::{Layout, LayoutInput, LayoutOutput, LayoutPartialTreeExt, NodeId, RunMode, SizingMode};
 use crate::util::debug::debug_log;
 use crate::util::sys::{f32_max, f32_min, GridTrackVec, Vec};
@@ -49,6 +50,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
 
     let style = tree.get_grid_container_style(node);
     let direction = style.direction();
+    let container_position = style.position();
 
     // 1. Compute "available grid space"
     // https://www.w3.org/TR/css-grid-1/#available-grid-space
@@ -216,7 +218,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
             .enumerate()
             .map(|(index, child_node)| (index, child_node, tree.get_grid_child_style(child_node)))
             .filter(|(_, _, style)| {
-                style.box_generation_mode() != BoxGenerationMode::None && style.position() != Position::Absolute
+                style.box_generation_mode() != BoxGenerationMode::None && style.position().is_inflow()
             })
     };
     place_grid_items(
@@ -630,7 +632,27 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
         }
 
         // Position absolutely positioned child
-        if child_style.position() == Position::Absolute {
+        let child_position = child_style.position();
+        if child_position.is_absolutely_positioned() {
+            // If this container is not the child's containing block then hand the child back to
+            // the tree implementation to be laid out against its actual containing block. The
+            // static position of an absolutely positioned child of a grid container is the
+            // content edge of the grid container.
+            if should_defer_absolute_child(child_position, container_position) {
+                drop(child_style);
+                let static_position = Point {
+                    x: if direction.is_rtl() {
+                        container_border_box.width - border.right - padding.right - scrollbar_gutter.x
+                    } else {
+                        border.left + padding.left
+                    },
+                    y: border.top + padding.top,
+                };
+                tree.defer_absolute_child(child, order, static_position);
+                order += 1;
+                return;
+            }
+
             // Convert grid-col-{start/end} into Option's of indexes into the columns vector
             // The Option is None if the style property is Auto and an unresolvable Span
             let maybe_col_indexes = name_resolver

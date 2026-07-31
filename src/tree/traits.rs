@@ -129,7 +129,7 @@
 use super::{Layout, LayoutInput, LayoutOutput, NodeId, RequestedAxis, RunMode, SizingMode};
 #[cfg(feature = "detailed_layout_info")]
 use crate::debug::debug_log;
-use crate::geometry::{AbsoluteAxis, Line, Size};
+use crate::geometry::{AbsoluteAxis, Line, Point, Size};
 use crate::style::{AvailableSpace, CoreStyle};
 #[cfg(feature = "flexbox")]
 use crate::style::{FlexboxContainerStyle, FlexboxItemStyle};
@@ -198,6 +198,34 @@ pub trait LayoutPartialTree: TraversePartialTree {
 
     /// Compute the specified node's size or full layout given the specified constraints
     fn compute_child_layout(&mut self, node_id: NodeId, inputs: LayoutInput) -> LayoutOutput;
+
+    /// Called (during a `PerformLayout` pass) for each absolutely positioned child which the
+    /// container being laid out does not establish the containing block for. This is the case for:
+    ///
+    ///   - [`Position::Absolute`](crate::Position::Absolute) children of a
+    ///     [`Position::Static`](crate::Position::Static) container
+    ///   - [`Position::Fixed`](crate::Position::Fixed) children of any container
+    ///
+    /// The container does *not* lay such children out. Instead it computes their static position
+    /// (the position the child would occupy if its insets were all `auto`, relative to the
+    /// container's border box) and passes it to this method. The tree implementation is expected
+    /// to record this information and lay out the child against its actual containing block
+    /// after the main layout pass has completed (e.g. using
+    /// [`compute_absolute_child_layout`](crate::compute_absolute_child_layout)).
+    ///
+    /// Note that this method is only called when the container actually performs layout. If a
+    /// cached layout result is reused then it will not be re-called, so recorded static positions
+    /// should be stored durably (they only change when the container re-performs layout).
+    ///
+    /// The default implementation is a no-op, which means absolutely positioned children of
+    /// `Static` containers (and all `Fixed` children) are simply not laid out unless the tree
+    /// implementation overrides this method.
+    #[inline(always)]
+    fn defer_absolute_child(&mut self, child_id: NodeId, order: u32, static_position: Point<f32>) {
+        let _ = child_id;
+        let _ = order;
+        let _ = static_position;
+    }
 }
 
 /// Trait used by the `compute_cached_layout` method which allows cached layout results to be stored and retrieved.

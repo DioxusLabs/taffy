@@ -282,18 +282,48 @@ pub enum Position {
     /// Offsets do not affect the position of any other items; they are effectively a correction factor applied at the end.
     #[default]
     Relative,
+    /// The item participates in normal flow exactly like [`Position::Relative`], except that
+    /// [`Style::inset`] is ignored and the item does *not* act as the containing block for
+    /// absolutely positioned descendants. Absolutely positioned children of a `Static`
+    /// container are handed back to the tree implementation via
+    /// [`LayoutPartialTree::defer_absolute_child`](crate::LayoutPartialTree::defer_absolute_child)
+    /// to be positioned against an ancestor containing block.
+    Static,
     /// The offset is computed relative to this item's closest positioned ancestor, if any.
     /// Otherwise, it is placed relative to the origin.
     /// No space is created for the item in the page layout, and its size will not be altered.
     ///
     /// WARNING: to opt-out of layouting entirely, you must use [`Display::None`] instead on your [`Style`] object.
     Absolute,
+    /// Behaves like [`Position::Absolute`], except that the item is *always* handed back to the
+    /// tree implementation via
+    /// [`LayoutPartialTree::defer_absolute_child`](crate::LayoutPartialTree::defer_absolute_child),
+    /// allowing it to be positioned against the tree's fixed-position containing block
+    /// (typically the viewport or root node).
+    Fixed,
+}
+
+impl Position {
+    /// Whether the item participates in the normal flow of its parent's layout algorithm
+    /// (i.e. is not absolutely positioned)
+    #[inline(always)]
+    pub fn is_inflow(self) -> bool {
+        matches!(self, Position::Relative | Position::Static)
+    }
+
+    /// Whether the item is absolutely positioned (taken out of normal flow)
+    #[inline(always)]
+    pub fn is_absolutely_positioned(self) -> bool {
+        matches!(self, Position::Absolute | Position::Fixed)
+    }
 }
 
 #[cfg(feature = "parse")]
 crate::util::parse::impl_parse_for_keyword_enum!(Position,
     "relative" => Relative,
+    "static" => Static,
     "absolute" => Absolute,
+    "fixed" => Fixed,
 );
 
 /// Specifies whether size styles for this node are assigned to the node's "content box" or "border box"

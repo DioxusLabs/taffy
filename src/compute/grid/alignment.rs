@@ -158,7 +158,7 @@ pub(super) fn align_and_position_item(
     let width = inherent_size.width.or_else(|| {
         // Apply width derived from both the left and right properties of an absolutely
         // positioned element being set
-        if position == Position::Absolute {
+        if position.is_absolutely_positioned() {
             if let (Some(left), Some(right)) = (inset_horizontal.start, inset_horizontal.end) {
                 return Some(f32_max(grid_area_minus_item_margins_size.width - left - right, 0.0));
             }
@@ -171,7 +171,7 @@ pub(super) fn align_and_position_item(
         if margin.left.is_some()
             && margin.right.is_some()
             && alignment_styles.horizontal == AlignSelf::STRETCH
-            && position != Position::Absolute
+            && !position.is_absolutely_positioned()
         {
             return Some(grid_area_minus_item_margins_size.width);
         }
@@ -183,7 +183,7 @@ pub(super) fn align_and_position_item(
     let Size { width, height } = Size { width, height: inherent_size.height }.maybe_apply_aspect_ratio(aspect_ratio);
 
     let height = height.or_else(|| {
-        if position == Position::Absolute {
+        if position.is_absolutely_positioned() {
             if let (Some(top), Some(bottom)) = (inset_vertical.start, inset_vertical.end) {
                 return Some(f32_max(grid_area_minus_item_margins_size.height - top - bottom, 0.0));
             }
@@ -196,7 +196,7 @@ pub(super) fn align_and_position_item(
         if margin.top.is_some()
             && margin.bottom.is_some()
             && alignment_styles.vertical == AlignSelf::STRETCH
-            && position != Position::Absolute
+            && !position.is_absolutely_positioned()
         {
             return Some(grid_area_minus_item_margins_size.height);
         }
@@ -212,7 +212,7 @@ pub(super) fn align_and_position_item(
     // Layout node
     drop(style);
 
-    let size = if position == Position::Absolute && (width.is_none() || height.is_none()) {
+    let size = if position.is_absolutely_positioned() && (width.is_none() || height.is_none()) {
         tree.measure_child_size_both(
             node,
             Size { width, height },
@@ -347,7 +347,7 @@ pub(super) fn align_item_within_area(
         }
     };
 
-    let offset_within_area = if position == Position::Absolute {
+    let offset_within_area = if position.is_absolutely_positioned() {
         match (inset.start, inset.end) {
             (Some(start), Some(end)) => {
                 if direction.is_rtl() {

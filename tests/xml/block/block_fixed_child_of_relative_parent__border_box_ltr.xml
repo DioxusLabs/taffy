@@ -1,0 +1,17 @@
+<test name="block_fixed_child_of_relative_parent__border_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="block" direction="ltr" width="200px" height="200px">
+      <div display="block" direction="ltr" width="150px" height="150px" margin-top="40px" margin-left="40px">
+        <div display="block" direction="ltr" position="fixed" width="60px" height="40px" top="25px" left="35px"/>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="200" height="200">
+      <node x="40" y="40" width="150" height="150">
+        <node x="-5" y="-15" width="60" height="40"/>
+      </node>
+    </node>
+  </expectations>
+</test>
