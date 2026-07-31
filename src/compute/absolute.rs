@@ -157,38 +157,55 @@ pub fn compute_absolute_child_layout(
             height: absolute_auto_margin_space.y - final_size.height - non_auto_margin.vertical_axis_sum(),
         };
 
-        let auto_margin_size = Size {
-            width: {
-                let auto_margin_count = margin.left.is_none() as u8 + margin.right.is_none() as u8;
-                if auto_margin_count == 2
-                    && (style_size.width.is_none() || style_size.width.unwrap() >= free_space.width)
-                {
-                    0.0
-                } else if auto_margin_count > 0 {
-                    free_space.width / auto_margin_count as f32
+        // https://www.w3.org/TR/CSS22/visudet.html#abs-non-replaced-width
+        // If both margin-left and margin-right are auto, solve the equation under the extra
+        // constraint that the two margins get equal values, unless this would make them negative,
+        // in which case when direction of the containing block is ltr (rtl), set margin-left
+        // (margin-right) to zero and solve for margin-right (margin-left).
+        // Auto margins in an axis only resolve to non-zero values when both insets in that
+        // axis are set; otherwise they resolve to zero.
+        let (auto_margin_left, auto_margin_right) = {
+            let auto_margin_count = if left.is_some() && right.is_some() {
+                margin.left.is_none() as u8 + margin.right.is_none() as u8
+            } else {
+                0
+            };
+            if auto_margin_count == 2 && free_space.width < 0.0 {
+                if direction.is_rtl() {
+                    (free_space.width, 0.0)
                 } else {
-                    0.0
+                    (0.0, free_space.width)
                 }
-            },
-            height: {
-                let auto_margin_count = margin.top.is_none() as u8 + margin.bottom.is_none() as u8;
-                if auto_margin_count == 2
-                    && (style_size.height.is_none() || style_size.height.unwrap() >= free_space.height)
-                {
-                    0.0
-                } else if auto_margin_count > 0 {
-                    free_space.height / auto_margin_count as f32
-                } else {
-                    0.0
-                }
-            },
+            } else if auto_margin_count > 0 {
+                let share = free_space.width / auto_margin_count as f32;
+                (share, share)
+            } else {
+                (0.0, 0.0)
+            }
+        };
+
+        // https://www.w3.org/TR/CSS22/visudet.html#abs-non-replaced-height
+        // If both margin-top and margin-bottom are auto, solve the equation under the extra
+        // constraint that the two margins get equal values (no non-negativity constraint
+        // applies in the vertical axis).
+        let auto_margin_height = {
+            let auto_margin_count = if top.is_some() && bottom.is_some() {
+                margin.top.is_none() as u8 + margin.bottom.is_none() as u8
+            } else {
+                0
+            };
+            if auto_margin_count > 0 {
+                free_space.height / auto_margin_count as f32
+            } else {
+                0.0
+            }
         };
 
         Rect {
-            left: margin.left.map(|_| 0.0).unwrap_or(auto_margin_size.width),
-            right: margin.right.map(|_| 0.0).unwrap_or(auto_margin_size.width),
-            top: margin.top.map(|_| 0.0).unwrap_or(auto_margin_size.height),
-            bottom: margin.bottom.map(|_| 0.0).unwrap_or(auto_margin_size.height),
+            left: margin.left.map(|_| 0.0).unwrap_or(auto_margin_left),
+            right: margin.right.map(|_| 0.0).unwrap_or(auto_margin_right),
+            top: margin.top.map(|_| 0.0).unwrap_or(auto_margin_height),
+            bottom: margin.bottom.map(|_| 0.0).unwrap_or(auto_margin_height),
         }
     };
 
