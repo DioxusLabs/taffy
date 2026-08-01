@@ -27,7 +27,7 @@ use crate::{compute::compute_block_layout, LayoutBlockContainer};
 #[cfg(feature = "flexbox")]
 use crate::{compute::compute_flexbox_layout, LayoutFlexboxContainer};
 #[cfg(feature = "grid")]
-use crate::{compute::compute_grid_layout, LayoutGridContainer};
+use crate::{compute::compute_grid_layout_with_subgrid_context, compute::grid::SubgridContext, LayoutGridContainer};
 
 #[cfg(all(feature = "detailed_layout_info", feature = "grid"))]
 use crate::compute::grid::DetailedGridInfo;
@@ -279,13 +279,15 @@ where
         FnMut(Size<Option<f32>>, Size<AvailableSpace>, NodeId, Option<&mut NodeContext>, &Style) -> Size<f32>,
 {
     #[inline(always)]
-    /// Unified implementation that both `LayoutPartialTree::compute_child_layout`
-    /// and `LayoutBlockContainer::compute_block_child_layout` delegate to.
+    /// Unified implementation that `LayoutPartialTree::compute_child_layout`,
+    /// `LayoutBlockContainer::compute_block_child_layout` and
+    /// `LayoutGridContainer::compute_grid_child_layout` delegate to.
     fn compute_child_layout(
         &mut self,
         node_id: NodeId,
         inputs: LayoutInput,
         #[cfg(feature = "block_layout")] block_ctx: Option<&mut BlockContext<'_>>,
+        #[cfg(feature = "grid")] subgrid_ctx: Option<&SubgridContext>,
     ) -> LayoutOutput {
         // If RunMode is PerformHiddenLayout then this indicates that an ancestor node is `Display::None`
         // and thus that we should lay out this node using hidden layout regardless of it's own display style.
@@ -294,12 +296,7 @@ where
             return compute_hidden_layout(self, node_id);
         }
 
-        // We run the following wrapped in "compute_cached_layout", which will check the cache for an entry matching the node and inputs and:
-        //   - Return that entry if exists
-        //   - Else call the passed closure (below) to compute the result
-        //
-        // If there was no cache match and a new result needs to be computed then that result will be added to the cache
-        compute_cached_layout(self, node_id, inputs, |tree, node_id, inputs| {
+        let compute_uncached = |tree: &mut Self, node_id: NodeId, inputs: LayoutInput| {
             let display_mode = tree.taffy.nodes[node_id.into()].style.display;
             let has_children = tree.child_count(node_id) > 0;
 
@@ -314,7 +311,7 @@ where
                 #[cfg(feature = "flexbox")]
                 (Display::Flex, true) => compute_flexbox_layout(tree, node_id, inputs),
                 #[cfg(feature = "grid")]
-                (Display::Grid, true) => compute_grid_layout(tree, node_id, inputs),
+                (Display::Grid, true) => compute_grid_layout_with_subgrid_context(tree, node_id, inputs, subgrid_ctx),
                 (_, false) => {
                     let node_key = node_id.into();
                     let style = &tree.taffy.nodes[node_key].style;
@@ -326,7 +323,22 @@ where
                     compute_leaf_layout(inputs, style, |_, _| 0.0, measure_function)
                 }
             }
-        })
+        };
+
+        // A layout computed with a `SubgridContext` depends on the adopted track sizes, which are
+        // not part of the cache key. Such layouts must bypass the cache entirely (both read and
+        // write) to avoid returning stale or incorrect results.
+        #[cfg(feature = "grid")]
+        if subgrid_ctx.is_some() {
+            return compute_uncached(self, node_id, inputs);
+        }
+
+        // We run the following wrapped in "compute_cached_layout", which will check the cache for an entry matching the node and inputs and:
+        //   - Return that entry if exists
+        //   - Else call the passed closure (below) to compute the result
+        //
+        // If there was no cache match and a new result needs to be computed then that result will be added to the cache
+        compute_cached_layout(self, node_id, inputs, compute_uncached)
     }
 }
 
@@ -399,6 +411,8 @@ where
             inputs,
             #[cfg(feature = "block_layout")]
             None,
+            #[cfg(feature = "grid")]
+            None,
         )
     }
 }
@@ -453,7 +467,13 @@ where
         inputs: LayoutInput,
         block_ctx: Option<&mut BlockContext<'_>>,
     ) -> LayoutOutput {
-        self.compute_child_layout(node_id, inputs, block_ctx)
+        self.compute_child_layout(
+            node_id,
+            inputs,
+            block_ctx,
+            #[cfg(feature = "grid")]
+            None,
+        )
     }
 }
 
@@ -506,6 +526,22 @@ where
     #[inline(always)]
     fn get_grid_child_style(&self, child_node_id: NodeId) -> Self::GridItemStyle<'_> {
         &self.taffy.nodes[child_node_id.into()].style
+    }
+
+    #[inline(always)]
+    fn compute_grid_child_layout(
+        &mut self,
+        node_id: NodeId,
+        inputs: LayoutInput,
+        subgrid_ctx: Option<&SubgridContext>,
+    ) -> LayoutOutput {
+        self.compute_child_layout(
+            node_id,
+            inputs,
+            #[cfg(feature = "block_layout")]
+            None,
+            subgrid_ctx,
+        )
     }
 
     #[inline(always)]

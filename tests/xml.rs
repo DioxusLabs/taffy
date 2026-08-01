@@ -1,8 +1,9 @@
 use roxmltree::Document;
 use std::{fmt::Debug, io::Write, path::PathBuf, str::FromStr};
 use taffy::{
-    prelude::TaffyZero as _, AvailableSpace, CheapCloneStr, Dimension, GridAutoTracks, GridTemplateComponent,
-    GridTemplateTracks, LengthPercentage, LengthPercentageAuto, Line, NodeId, Point, PrintTree, Rect, Size, TaffyTree,
+    prelude::TaffyZero as _, AvailableSpace, CheapCloneStr, Dimension, GridAutoTracks, GridTemplate,
+    GridTemplateComponent, GridTemplateTracks, LengthPercentage, LengthPercentageAuto, Line, NodeId, Point, PrintTree,
+    Rect, Size, TaffyTree,
 };
 use taffy_test_helpers::{test_measure_function, TestNodeContext};
 
@@ -216,10 +217,18 @@ fn build_expectations(xnode: roxmltree::Node, node_id: NodeId) -> OutputNode {
 }
 
 fn build_style<S: CheapCloneStr>(xnode: roxmltree::Node) -> taffy::Style<S> {
-    let grid_template_rows: GridTemplateTracks<S, GridTemplateComponent<S>> =
-        parse_or_default(xnode.attribute("grid-template-rows"));
-    let grid_template_columns: GridTemplateTracks<S, GridTemplateComponent<S>> =
-        parse_or_default(xnode.attribute("grid-template-columns"));
+    fn parse_grid_template<S: CheapCloneStr>(attr: Option<&str>) -> (GridTemplate<S>, Vec<Vec<S>>) {
+        let parsed: GridTemplateTracks<S, GridTemplateComponent<S>> = parse_or_default(attr);
+        if parsed.is_subgrid {
+            (GridTemplate::Subgrid(parsed.line_names), Vec::new())
+        } else {
+            (GridTemplate::Tracks(parsed.tracks), parsed.line_names)
+        }
+    }
+
+    let (grid_template_rows, grid_template_row_names) = parse_grid_template(xnode.attribute("grid-template-rows"));
+    let (grid_template_columns, grid_template_column_names) =
+        parse_grid_template(xnode.attribute("grid-template-columns"));
 
     taffy::Style {
         dummy: std::marker::PhantomData,
@@ -295,11 +304,11 @@ fn build_style<S: CheapCloneStr>(xnode: roxmltree::Node) -> taffy::Style<S> {
 
         grid_auto_flow: parse_or_default(xnode.attribute("grid-auto-flow")),
 
-        grid_template_rows: grid_template_rows.tracks,
-        grid_template_row_names: grid_template_rows.line_names,
+        grid_template_rows,
+        grid_template_row_names,
 
-        grid_template_columns: grid_template_columns.tracks,
-        grid_template_column_names: grid_template_columns.line_names,
+        grid_template_columns,
+        grid_template_column_names,
 
         // TODO
         grid_auto_rows: parse_or_default::<GridAutoTracks>(xnode.attribute("grid-auto-rows")).0,

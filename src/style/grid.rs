@@ -118,6 +118,99 @@ where
     Repeat(Repetition),
 }
 
+/// A generic representation of the value of the `grid-template-rows`/`grid-template-columns`
+/// properties, where the types representing the track list and the subgrid line-name list
+/// are generic.
+///
+/// This is the type returned by [`GridContainerStyle::grid_template_rows`] and
+/// [`GridContainerStyle::grid_template_columns`].
+#[derive(Clone)]
+pub enum GenericGridTemplate<TrackList, LineNameList> {
+    /// `grid-template-*: none`. The axis has no explicit tracks.
+    None,
+    /// `grid-template-*: <track-list>`. The axis has an explicit track listing.
+    Tracks(TrackList),
+    /// `grid-template-*: subgrid <line-name-list>?`
+    ///
+    /// The grid container is a subgrid in this axis: it adopts the tracks of its parent grid
+    /// that it spans (see <https://www.w3.org/TR/css-grid-2/#subgrids>). The contained value
+    /// is the subgrid's own `<line-name-list>`.
+    Subgrid(LineNameList),
+}
+
+impl<TrackList, LineNameList> GenericGridTemplate<TrackList, LineNameList> {
+    /// Whether the template is `subgrid`
+    #[inline(always)]
+    pub fn is_subgrid(&self) -> bool {
+        matches!(self, Self::Subgrid(_))
+    }
+
+    /// Returns the track list if the template is a track listing, else `None`
+    #[inline(always)]
+    pub fn into_track_list(self) -> Option<TrackList> {
+        match self {
+            Self::Tracks(tracks) => Some(tracks),
+            _ => None,
+        }
+    }
+}
+
+/// The value of the `grid-template-rows`/`grid-template-columns` properties as stored in
+/// [`Style`](crate::Style): either an explicit track listing or `subgrid`.
+///
+/// Note: for the `Tracks` variant, the line names of the track listing are stored separately
+/// in the `grid_template_row_names`/`grid_template_column_names` style properties. For the
+/// `Subgrid` variant, the `<line-name-list>` is stored inline as part of this value.
+#[derive(Clone, PartialEq, Debug)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub enum GridTemplate<S: CheapCloneStr = DefaultCheapStr> {
+    /// `grid-template-*: <track-list>`. An empty list represents `none`.
+    Tracks(Vec<GridTemplateComponent<S>>),
+    /// `grid-template-*: subgrid <line-name-list>?`. The contained value is the subgrid's
+    /// own `<line-name-list>` (which may be empty).
+    ///
+    /// TODO: `repeat()` within a subgrid `<line-name-list>` is not yet supported.
+    Subgrid(Vec<Vec<S>>),
+}
+
+impl<S: CheapCloneStr> GridTemplate<S> {
+    /// A template with no explicit tracks (equivalent to `none`)
+    pub const NONE: Self = Self::Tracks(Vec::new());
+
+    /// Whether the template is `subgrid`
+    #[inline(always)]
+    pub fn is_subgrid(&self) -> bool {
+        matches!(self, Self::Subgrid(_))
+    }
+
+    /// Returns the track list if the template is a track listing, else `None`
+    #[inline(always)]
+    pub fn as_track_list(&self) -> Option<&[GridTemplateComponent<S>]> {
+        match self {
+            Self::Tracks(tracks) => Some(tracks),
+            Self::Subgrid(_) => None,
+        }
+    }
+}
+
+impl<S: CheapCloneStr> Default for GridTemplate<S> {
+    fn default() -> Self {
+        Self::NONE
+    }
+}
+
+impl<S: CheapCloneStr> From<Vec<GridTemplateComponent<S>>> for GridTemplate<S> {
+    fn from(tracks: Vec<GridTemplateComponent<S>>) -> Self {
+        Self::Tracks(tracks)
+    }
+}
+
+impl<S: CheapCloneStr> FromIterator<GridTemplateComponent<S>> for GridTemplate<S> {
+    fn from_iter<T: IntoIterator<Item = GridTemplateComponent<S>>>(iter: T) -> Self {
+        Self::Tracks(iter.into_iter().collect())
+    }
+}
+
 impl<S, Repetition> GenericGridTemplateComponent<S, Repetition>
 where
     S: CheapCloneStr,
@@ -166,9 +259,9 @@ pub trait GridContainerStyle: CoreStyle {
     // associated_type_defaults feature (https://github.com/rust-lang/rust/issues/29661) is stabilised.
 
     /// Defines the track sizing functions (heights) of the grid rows
-    fn grid_template_rows(&self) -> Option<Self::TemplateTrackList<'_>>;
+    fn grid_template_rows(&self) -> GenericGridTemplate<Self::TemplateTrackList<'_>, Self::TemplateLineNames<'_>>;
     /// Defines the track sizing functions (widths) of the grid columns
-    fn grid_template_columns(&self) -> Option<Self::TemplateTrackList<'_>>;
+    fn grid_template_columns(&self) -> GenericGridTemplate<Self::TemplateTrackList<'_>, Self::TemplateLineNames<'_>>;
     /// Defines the size of implicitly created rows
     fn grid_auto_rows(&self) -> Self::AutoTrackList<'_>;
     /// Defined the size of implicitly created columns
@@ -216,13 +309,22 @@ pub trait GridContainerStyle: CoreStyle {
         Style::<Self::CustomIdent>::DEFAULT.justify_items
     }
 
-    /// Get a grid item's row or column placement depending on the axis passed
+    /// Get a grid container's row or column template depending on the axis passed
     #[inline(always)]
-    fn grid_template_tracks(&self, axis: AbsoluteAxis) -> Option<Self::TemplateTrackList<'_>> {
+    fn grid_template_tracks(
+        &self,
+        axis: AbsoluteAxis,
+    ) -> GenericGridTemplate<Self::TemplateTrackList<'_>, Self::TemplateLineNames<'_>> {
         match axis {
             AbsoluteAxis::Horizontal => self.grid_template_columns(),
             AbsoluteAxis::Vertical => self.grid_template_rows(),
         }
+    }
+
+    /// Whether the grid container is a subgrid in the given axis
+    #[inline(always)]
+    fn is_subgridded(&self, axis: AbsoluteAxis) -> bool {
+        self.grid_template_tracks(axis).is_subgrid()
     }
 
     /// Get a grid container's align-content or justify-content alignment depending on the axis passed
@@ -1531,6 +1633,9 @@ impl<S: CheapCloneStr> core::str::FromStr for GridTemplateComponent<S> {
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[doc(hidden)]
 pub struct GridTemplateTracks<S: CheapCloneStr, Track> {
+    /// Whether the template is `subgrid`. If it is, then `tracks` will be empty and
+    /// `line_names` contains the subgrid's `<line-name-list>`.
+    pub is_subgrid: bool,
     /// The tracks to repeat
     pub tracks: Vec<Track>,
     /// The line names for the repeated tracks
@@ -1539,7 +1644,7 @@ pub struct GridTemplateTracks<S: CheapCloneStr, Track> {
 
 impl<S: CheapCloneStr, Track> Default for GridTemplateTracks<S, Track> {
     fn default() -> Self {
-        Self { tracks: Vec::new(), line_names: Vec::new() }
+        Self { is_subgrid: false, tracks: Vec::new(), line_names: Vec::new() }
     }
 }
 
@@ -1560,6 +1665,17 @@ impl<S: CheapCloneStr, Track: FromCss + Debug> FromCss for GridTemplateTracks<S,
         }
 
         let mut tracks = Self::default();
+
+        // Try to parse `subgrid <line-name-list>?`
+        // TODO: support `repeat()` within a subgrid `<line-name-list>`
+        if parser.try_parse(|parser| parser.expect_ident_matching("subgrid")).is_ok() {
+            tracks.is_subgrid = true;
+            while !parser.is_exhausted() {
+                tracks.line_names.push(try_parse_line_names(parser)?);
+            }
+            return Ok(tracks);
+        }
+
         if let Ok(line_names) = try_parse_line_names(parser) {
             tracks.line_names.push(line_names);
         }

@@ -1,4 +1,5 @@
 //! Alignment of tracks and final positioning of items
+use super::subgrid::SubgridContext;
 use super::types::GridTrack;
 use crate::compute::common::alignment::{
     apply_alignment_fallback, compute_alignment_offset, resolve_self_alignment_safety,
@@ -8,7 +9,7 @@ use crate::style::{
     AlignContent, AlignItems, AlignItemsKeyword, AlignSelf, AvailableSpace, CoreStyle, GridItemStyle, Overflow,
     Position,
 };
-use crate::tree::{Layout, LayoutPartialTreeExt, NodeId, SizingMode};
+use crate::tree::{Layout, LayoutInput, LayoutPartialTreeExt, NodeId, RequestedAxis, RunMode, SizingMode};
 use crate::util::sys::f32_max;
 use crate::util::{MaybeMath, MaybeResolve, ResolveOrZero};
 
@@ -67,6 +68,7 @@ pub(super) fn align_tracks(
 }
 
 /// Align and size a grid item into it's final position
+#[allow(clippy::too_many_arguments)]
 pub(super) fn align_and_position_item(
     tree: &mut impl LayoutGridContainer,
     node: NodeId,
@@ -75,16 +77,23 @@ pub(super) fn align_and_position_item(
     container_alignment_styles: InBothAbsAxis<Option<AlignItems>>,
     baseline_shim: f32,
     direction: Direction,
+    subgrid_ctx: Option<&SubgridContext>,
 ) -> (Size<f32>, f32, f32) {
     let grid_area_size = Size { width: grid_area.right - grid_area.left, height: grid_area.bottom - grid_area.top };
+
+    // Whether the item is itself a grid container which is subgridded in each axis. In a
+    // subgridded axis the item's size styles do not apply and it is always stretched to
+    // cover its grid area. See <https://www.w3.org/TR/css-grid-2/#subgrid-box-alignment>
+    let subgridded_width = subgrid_ctx.is_some_and(|ctx| ctx.columns.is_some());
+    let subgridded_height = subgrid_ctx.is_some_and(|ctx| ctx.rows.is_some());
 
     let style = tree.get_grid_child_style(node);
 
     let overflow = style.overflow();
     let scrollbar_width = style.scrollbar_width();
     let aspect_ratio = style.aspect_ratio();
-    let justify_self = style.justify_self();
-    let align_self = style.align_self();
+    let justify_self = if subgridded_width { Some(AlignSelf::STRETCH) } else { style.justify_self() };
+    let align_self = if subgridded_height { Some(AlignSelf::STRETCH) } else { style.align_self() };
 
     let position = style.position();
     let inset_horizontal = style
@@ -104,23 +113,35 @@ pub(super) fn align_and_position_item(
     let box_sizing_adjustment =
         if style.box_sizing() == BoxSizing::ContentBox { padding_border_size } else { Size::ZERO };
 
-    let inherent_size = style
+    let mut inherent_size = style
         .size()
         .maybe_resolve(grid_area_size, |val, basis| tree.calc(val, basis))
         .maybe_apply_aspect_ratio(aspect_ratio)
         .maybe_add(box_sizing_adjustment);
-    let min_size = style
+    let mut min_size = style
         .min_size()
         .maybe_resolve(grid_area_size, |val, basis| tree.calc(val, basis))
         .maybe_add(box_sizing_adjustment)
         .or(padding_border_size.map(Some))
         .maybe_max(padding_border_size)
         .maybe_apply_aspect_ratio(aspect_ratio);
-    let max_size = style
+    let mut max_size = style
         .max_size()
         .maybe_resolve(grid_area_size, |val, basis| tree.calc(val, basis))
         .maybe_apply_aspect_ratio(aspect_ratio)
         .maybe_add(box_sizing_adjustment);
+
+    // Size styles do not apply to a subgrid in its subgridded axis/axes
+    if subgridded_width {
+        inherent_size.width = None;
+        min_size.width = None;
+        max_size.width = None;
+    }
+    if subgridded_height {
+        inherent_size.height = None;
+        min_size.height = None;
+        max_size.height = None;
+    }
 
     // Resolve default alignment styles if they are set on neither the parent or the node itself
     // Note: if the child has a preferred aspect ratio but neither width or height are set, then the width is stretched
@@ -226,14 +247,31 @@ pub(super) fn align_and_position_item(
         Size { width, height }
     };
 
-    let layout_output = tree.perform_child_layout(
-        node,
-        size,
-        grid_area_size.map(Option::Some),
-        grid_area_minus_item_margins_size.map(AvailableSpace::Definite),
-        SizingMode::InherentSize,
-        Line::FALSE,
-    );
+    let layout_output = if subgrid_ctx.is_some() {
+        // If the item is a subgrid then pass through the subgrid context (adopted tracks)
+        tree.compute_grid_child_layout(
+            node,
+            LayoutInput {
+                known_dimensions: size,
+                parent_size: grid_area_size.map(Option::Some),
+                available_space: grid_area_minus_item_margins_size.map(AvailableSpace::Definite),
+                sizing_mode: SizingMode::InherentSize,
+                axis: RequestedAxis::Both,
+                run_mode: RunMode::PerformLayout,
+                vertical_margins_are_collapsible: Line::FALSE,
+            },
+            subgrid_ctx,
+        )
+    } else {
+        tree.perform_child_layout(
+            node,
+            size,
+            grid_area_size.map(Option::Some),
+            grid_area_minus_item_margins_size.map(AvailableSpace::Definite),
+            SizingMode::InherentSize,
+            Line::FALSE,
+        )
+    };
 
     // Resolve final size
     let Size { width, height } = size.unwrap_or(layout_output.size).maybe_clamp(min_size, max_size);

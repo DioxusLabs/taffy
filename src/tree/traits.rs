@@ -141,6 +141,8 @@ use crate::{BlockContainerStyle, BlockContext, BlockItemStyle};
 
 #[cfg(all(feature = "grid", feature = "detailed_layout_info"))]
 use crate::compute::grid::DetailedGridInfo;
+#[cfg(feature = "grid")]
+use crate::compute::grid::SubgridContext;
 
 /// Taffy's abstraction for downward tree traversal.
 ///
@@ -272,6 +274,31 @@ pub trait LayoutGridContainer: LayoutPartialTree {
 
     /// Get the child's styles
     fn get_grid_child_style(&self, child_node_id: NodeId) -> Self::GridItemStyle<'_>;
+
+    /// Compute the specified node's size or full layout given the specified constraints,
+    /// passing through subgrid track-adoption information (see [`SubgridContext`]).
+    ///
+    /// This is called (with `subgrid_ctx` set to `Some`) instead of
+    /// [`compute_child_layout`](LayoutPartialTree::compute_child_layout) when a grid container
+    /// lays out a child which is a subgrid, so that the child can adopt the parent's tracks.
+    ///
+    /// The default implementation ignores the context (which causes subgridded axes of the child
+    /// to behave as if their template were `none`). Implementations should override this method
+    /// and pass the context through to [`compute_grid_layout_with_subgrid_context`](crate::compute_grid_layout_with_subgrid_context)
+    /// when dispatching layout for grid nodes.
+    ///
+    /// Note: layout results computed with a `SubgridContext` should NOT be stored in or retrieved
+    /// from a layout cache keyed only on [`LayoutInput`], as the adopted track sizes (which affect
+    /// the layout result) are not part of the cache key.
+    fn compute_grid_child_layout(
+        &mut self,
+        node_id: NodeId,
+        inputs: LayoutInput,
+        subgrid_ctx: Option<&SubgridContext>,
+    ) -> LayoutOutput {
+        let _ = subgrid_ctx;
+        self.compute_child_layout(node_id, inputs)
+    }
 
     /// Set the node's detailed grid information
     ///

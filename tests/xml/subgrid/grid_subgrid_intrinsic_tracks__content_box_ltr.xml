@@ -1,0 +1,19 @@
+<test name="grid_subgrid_intrinsic_tracks__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" box-sizing="content-box" direction="ltr" grid-template-rows="auto" grid-template-columns="auto auto">
+      <div display="grid" box-sizing="content-box" direction="ltr" grid-template-rows="subgrid" grid-template-columns="subgrid" grid-row-start="1" grid-row-end="2" grid-column-start="1" grid-column-end="3">
+        <div box-sizing="content-box" direction="ltr" width="30px" height="20px"/>
+        <div box-sizing="content-box" direction="ltr" width="80px" height="40px"/>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="110" height="40">
+      <node x="0" y="0" width="110" height="40">
+        <node x="0" y="0" width="30" height="20"/>
+        <node x="30" y="0" width="80" height="40"/>
+      </node>
+    </node>
+  </expectations>
+</test>

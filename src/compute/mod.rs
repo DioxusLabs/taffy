@@ -45,7 +45,7 @@ pub use self::block::{compute_block_layout, BlockContext, BlockFormattingContext
 pub use self::flexbox::compute_flexbox_layout;
 
 #[cfg(feature = "grid")]
-pub use self::grid::compute_grid_layout;
+pub use self::grid::{compute_grid_layout, compute_grid_layout_with_subgrid_context};
 
 #[cfg(feature = "float_layout")]
 pub use self::float::{ContentSlot, FloatContext, FloatIntrinsicWidthCalculator};
