@@ -27201,6 +27201,54 @@ mod grid {
 
     #[cfg(feature = "grid")]
     #[test]
+    fn grid_overlarge_auto_repeat_fixed_plus_large_track_list__border_box_ltr() {
+        crate::run_xml_test("grid", "grid_overlarge_auto_repeat_fixed_plus_large_track_list__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_overlarge_auto_repeat_fixed_plus_large_track_list__content_box_ltr() {
+        crate::run_xml_test("grid", "grid_overlarge_auto_repeat_fixed_plus_large_track_list__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_overlarge_auto_repeat_fixed_plus_large_track_list__border_box_rtl() {
+        crate::run_xml_test("grid", "grid_overlarge_auto_repeat_fixed_plus_large_track_list__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_overlarge_auto_repeat_fixed_plus_large_track_list__content_box_rtl() {
+        crate::run_xml_test("grid", "grid_overlarge_auto_repeat_fixed_plus_large_track_list__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_overlarge_auto_repeat_track_list_over_u16__border_box_ltr() {
+        crate::run_xml_test("grid", "grid_overlarge_auto_repeat_track_list_over_u16__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_overlarge_auto_repeat_track_list_over_u16__content_box_ltr() {
+        crate::run_xml_test("grid", "grid_overlarge_auto_repeat_track_list_over_u16__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_overlarge_auto_repeat_track_list_over_u16__border_box_rtl() {
+        crate::run_xml_test("grid", "grid_overlarge_auto_repeat_track_list_over_u16__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_overlarge_auto_repeat_track_list_over_u16__content_box_rtl() {
+        crate::run_xml_test("grid", "grid_overlarge_auto_repeat_track_list_over_u16__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
     fn grid_overlarge_explicit_tracks_at_limit__border_box_ltr() {
         crate::run_xml_test("grid", "grid_overlarge_explicit_tracks_at_limit__border_box_ltr");
     }

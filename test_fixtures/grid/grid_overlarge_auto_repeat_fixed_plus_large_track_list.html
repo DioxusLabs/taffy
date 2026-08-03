@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    Fixed tracks plus a large auto-repeat track list whose combined count overflows u16
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="display: grid; width: 100px; height: 100px;">
+  <div style="background: #59c4f6;"></div>
+</div>
+<script>
+  const tracks = "1px ".repeat(21000).trim();
+  document.getElementById("test-root").style.gridTemplateColumns = `repeat(10000, 0px) repeat(auto-fill, ${tracks})`;
+</script>
+
+</body>
+</html>

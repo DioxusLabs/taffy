@@ -113,7 +113,7 @@ pub(crate) fn compute_explicit_grid_size_in_axis(
         })
         .unwrap();
     let repetition_definition_iter = repetition_definition.tracks();
-    let repetition_track_count = repetition_definition_iter.len() as u16;
+    let repetition_track_count = repetition_definition_iter.len().min(u16::MAX as usize) as u16;
 
     // Determine the number of repetitions
     let num_repetitions: u32 = match auto_fit_container_size {
@@ -164,7 +164,8 @@ pub(crate) fn compute_explicit_grid_size_in_axis(
             // depends on the number of non-repeating tracks in the template
             let first_repetition_and_non_repeating_tracks_used_space = non_repeating_track_used_space
                 + per_repetition_track_used_space
-                + ((non_auto_repeating_track_count + repetition_track_count).saturating_sub(1) as f32 * gap_size);
+                + ((non_auto_repeating_track_count as u32 + repetition_track_count as u32).saturating_sub(1) as f32
+                    * gap_size);
 
             // If a single repetition already overflows the container then we return 1 as the repetition count
             // (the number of repetitions is floored at 1)
