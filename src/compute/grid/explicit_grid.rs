@@ -59,14 +59,16 @@ pub(crate) fn compute_explicit_grid_size_in_axis(
     // (clamping to the maximum track limit to prevent arithmetic overflow)
     let non_auto_repeating_track_count = template
         .clone()
-        .map(|track_def| match track_def {
-            GenericGridTemplateComponent::Single(_) => 1u32,
-            GenericGridTemplateComponent::Repeat(repeat) => match repeat.count() {
-                RepetitionCount::Count(count) => count as u32 * repeat.track_count() as u32,
-                RepetitionCount::AutoFit | RepetitionCount::AutoFill => 0,
-            },
+        .fold(0u32, |track_count, track_def| {
+            let additional_tracks = match track_def {
+                GenericGridTemplateComponent::Single(_) => 1u32,
+                GenericGridTemplateComponent::Repeat(repeat) => match repeat.count() {
+                    RepetitionCount::Count(count) => count as u32 * repeat.track_count() as u32,
+                    RepetitionCount::AutoFit | RepetitionCount::AutoFill => 0,
+                },
+            };
+            track_count.saturating_add(additional_tracks)
         })
-        .sum::<u32>()
         .min(MAX_GRID_TRACKS as u32) as u16;
 
     let auto_repetition_count: u16 = template.clone().filter(|track_def| track_def.is_auto_repetition()).count() as u16;
@@ -97,12 +99,13 @@ pub(crate) fn compute_explicit_grid_size_in_axis(
         .clone()
         .find_map(|def| match def {
             GenericGridTemplateComponent::Single(_) => {
-                auto_repeat_insertion_point += 1;
+                auto_repeat_insertion_point = auto_repeat_insertion_point.saturating_add(1);
                 None
             }
             GenericGridTemplateComponent::Repeat(repeat) => match repeat.count() {
                 RepetitionCount::Count(count) => {
-                    auto_repeat_insertion_point += count as u32 * repeat.track_count() as u32;
+                    auto_repeat_insertion_point =
+                        auto_repeat_insertion_point.saturating_add(count as u32 * repeat.track_count() as u32);
                     None
                 }
                 RepetitionCount::AutoFit | RepetitionCount::AutoFill => Some(repeat),
@@ -737,6 +740,30 @@ mod test {
             AbsoluteAxis::Horizontal,
         );
         assert_eq!((repetitions, track_count), (0, 10_000));
+    }
+
+    #[test]
+    fn explicit_track_count_accumulation_saturates() {
+        use RepetitionCount::{AutoFill, Count};
+
+        let repeated_tracks = vec![length(1.0); 32_769];
+        let grid_style: Style<DefaultCheapStr> = Style {
+            display: Display::Grid,
+            grid_template_columns: vec![
+                repeat(Count(u16::MAX), repeated_tracks.clone()),
+                repeat(Count(u16::MAX), repeated_tracks),
+                repeat(AutoFill, vec![length(1.0)]),
+            ],
+            ..Default::default()
+        };
+        let result = compute_explicit_grid_size_in_axis(
+            &grid_style,
+            None,
+            AutoRepeatStrategy::MaxRepetitionsThatDoNotOverflow,
+            |_, _| 42.42,
+            AbsoluteAxis::Horizontal,
+        );
+        assert_eq!(result, (0, 10_000));
     }
 
     #[test]
