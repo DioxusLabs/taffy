@@ -27129,6 +27129,30 @@ mod grid {
 
     #[cfg(feature = "grid")]
     #[test]
+    fn grid_overlarge_auto_flow_column_huge_row_span__border_box_ltr() {
+        crate::run_xml_test("grid", "grid_overlarge_auto_flow_column_huge_row_span__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_overlarge_auto_flow_column_huge_row_span__content_box_ltr() {
+        crate::run_xml_test("grid", "grid_overlarge_auto_flow_column_huge_row_span__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_overlarge_auto_flow_column_huge_row_span__border_box_rtl() {
+        crate::run_xml_test("grid", "grid_overlarge_auto_flow_column_huge_row_span__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_overlarge_auto_flow_column_huge_row_span__content_box_rtl() {
+        crate::run_xml_test("grid", "grid_overlarge_auto_flow_column_huge_row_span__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
     fn grid_overlarge_auto_flow_column_large_negative_row_start__border_box_ltr() {
         crate::run_xml_test("grid", "grid_overlarge_auto_flow_column_large_negative_row_start__border_box_ltr");
     }
@@ -27149,6 +27173,30 @@ mod grid {
     #[test]
     fn grid_overlarge_auto_flow_column_large_negative_row_start__content_box_rtl() {
         crate::run_xml_test("grid", "grid_overlarge_auto_flow_column_large_negative_row_start__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_overlarge_auto_placed_huge_span__border_box_ltr() {
+        crate::run_xml_test("grid", "grid_overlarge_auto_placed_huge_span__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_overlarge_auto_placed_huge_span__content_box_ltr() {
+        crate::run_xml_test("grid", "grid_overlarge_auto_placed_huge_span__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_overlarge_auto_placed_huge_span__border_box_rtl() {
+        crate::run_xml_test("grid", "grid_overlarge_auto_placed_huge_span__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_overlarge_auto_placed_huge_span__content_box_rtl() {
+        crate::run_xml_test("grid", "grid_overlarge_auto_placed_huge_span__content_box_rtl");
     }
 
     #[cfg(feature = "grid")]
@@ -27321,6 +27369,30 @@ mod grid {
 
     #[cfg(feature = "grid")]
     #[test]
+    fn grid_overlarge_negative_start_huge_span__border_box_ltr() {
+        crate::run_xml_test("grid", "grid_overlarge_negative_start_huge_span__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_overlarge_negative_start_huge_span__content_box_ltr() {
+        crate::run_xml_test("grid", "grid_overlarge_negative_start_huge_span__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_overlarge_negative_start_huge_span__border_box_rtl() {
+        crate::run_xml_test("grid", "grid_overlarge_negative_start_huge_span__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_overlarge_negative_start_huge_span__content_box_rtl() {
+        crate::run_xml_test("grid", "grid_overlarge_negative_start_huge_span__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
     fn grid_overlarge_placement_at_negative_limit__border_box_ltr() {
         crate::run_xml_test("grid", "grid_overlarge_placement_at_negative_limit__border_box_ltr");
     }
@@ -27393,6 +27465,30 @@ mod grid {
 
     #[cfg(feature = "grid")]
     #[test]
+    fn grid_overlarge_row_span_overflows_positive_limit__border_box_ltr() {
+        crate::run_xml_test("grid", "grid_overlarge_row_span_overflows_positive_limit__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_overlarge_row_span_overflows_positive_limit__content_box_ltr() {
+        crate::run_xml_test("grid", "grid_overlarge_row_span_overflows_positive_limit__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_overlarge_row_span_overflows_positive_limit__border_box_rtl() {
+        crate::run_xml_test("grid", "grid_overlarge_row_span_overflows_positive_limit__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_overlarge_row_span_overflows_positive_limit__content_box_rtl() {
+        crate::run_xml_test("grid", "grid_overlarge_row_span_overflows_positive_limit__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
     fn grid_overlarge_span_crossing_max_line__border_box_ltr() {
         crate::run_xml_test("grid", "grid_overlarge_span_crossing_max_line__border_box_ltr");
     }
@@ -27437,6 +27533,78 @@ mod grid {
     #[test]
     fn grid_overlarge_span_over_limit__content_box_rtl() {
         crate::run_xml_test("grid", "grid_overlarge_span_over_limit__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_overlarge_span_overflow_secondary_axis__border_box_ltr() {
+        crate::run_xml_test("grid", "grid_overlarge_span_overflow_secondary_axis__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_overlarge_span_overflow_secondary_axis__content_box_ltr() {
+        crate::run_xml_test("grid", "grid_overlarge_span_overflow_secondary_axis__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_overlarge_span_overflow_secondary_axis__border_box_rtl() {
+        crate::run_xml_test("grid", "grid_overlarge_span_overflow_secondary_axis__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_overlarge_span_overflow_secondary_axis__content_box_rtl() {
+        crate::run_xml_test("grid", "grid_overlarge_span_overflow_secondary_axis__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_overlarge_span_overflows_negative_limit__border_box_ltr() {
+        crate::run_xml_test("grid", "grid_overlarge_span_overflows_negative_limit__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_overlarge_span_overflows_negative_limit__content_box_ltr() {
+        crate::run_xml_test("grid", "grid_overlarge_span_overflows_negative_limit__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_overlarge_span_overflows_negative_limit__border_box_rtl() {
+        crate::run_xml_test("grid", "grid_overlarge_span_overflows_negative_limit__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_overlarge_span_overflows_negative_limit__content_box_rtl() {
+        crate::run_xml_test("grid", "grid_overlarge_span_overflows_negative_limit__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_overlarge_span_overflows_positive_limit__border_box_ltr() {
+        crate::run_xml_test("grid", "grid_overlarge_span_overflows_positive_limit__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_overlarge_span_overflows_positive_limit__content_box_ltr() {
+        crate::run_xml_test("grid", "grid_overlarge_span_overflows_positive_limit__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_overlarge_span_overflows_positive_limit__border_box_rtl() {
+        crate::run_xml_test("grid", "grid_overlarge_span_overflows_positive_limit__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_overlarge_span_overflows_positive_limit__content_box_rtl() {
+        crate::run_xml_test("grid", "grid_overlarge_span_overflows_positive_limit__content_box_rtl");
     }
 
     #[cfg(feature = "grid")]
