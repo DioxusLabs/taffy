@@ -45,6 +45,10 @@ impl Debug for CellOccupancyMatrix {
             "Cols: neg_implicit={} explicit={} pos_implicit={}",
             self.columns.negative_implicit, self.columns.explicit, self.columns.positive_implicit
         )?;
+        if self.inner.rows() > 100 || self.inner.cols() > 100 {
+            writeln!(f, "State: (not printed: more than 100 tracks)")?;
+            return Ok(());
+        }
         writeln!(f, "State:")?;
 
         for row_idx in 0..self.inner.rows() {
