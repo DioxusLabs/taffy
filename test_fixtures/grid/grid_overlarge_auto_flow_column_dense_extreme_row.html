@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    Dense column auto-flow with an item on an extreme negative row
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="display: grid; grid-auto-flow: column dense; grid-auto-rows: 0px; grid-auto-columns: 0px;">
+  <div style="background: #59c4f6; width: 20px; height: 20px; grid-row-start: -30000;"></div>
+  <div style="background: #63c466; width: 20px; height: 20px; grid-column-start: 5;"></div>
+  <div style="background: #feb43f; width: 20px; height: 20px;"></div>
+</div>
+
+</body>
+</html>
