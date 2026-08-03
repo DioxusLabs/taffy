@@ -47,10 +47,10 @@ impl<T: CheapCloneStr> Borrow<str> for StrHasher<T> {
 pub(crate) struct NamedLineResolver<S: CheapCloneStr> {
     /// Map of row line names to line numbers. Each line name may correspond to multiple lines
     /// so we store a `Vec`
-    row_lines: Map<StrHasher<S>, Vec<u16>>,
+    row_lines: Map<StrHasher<S>, Vec<u32>>,
     /// Map of column line names to line numbers. Each line name may correspond to multiple lines
     /// so we store a `Vec`
-    column_lines: Map<StrHasher<S>, Vec<u16>>,
+    column_lines: Map<StrHasher<S>, Vec<u32>>,
     /// Map of area names to area definitions (start and end lines numbers in each axis)
     areas: Map<StrHasher<S>, GridTemplateArea<S>>,
     /// Number of columns implied by grid area definitions
@@ -66,7 +66,7 @@ pub(crate) struct NamedLineResolver<S: CheapCloneStr> {
 }
 
 /// Utility function to create or update an entry in a line name map
-fn upsert_line_name_map<S: CheapCloneStr>(map: &mut Map<StrHasher<S>, Vec<u16>>, key: S, value: u16) {
+fn upsert_line_name_map<S: CheapCloneStr>(map: &mut Map<StrHasher<S>, Vec<u32>>, key: S, value: u32) {
     map.entry(StrHasher(key)).and_modify(|lines| lines.push(value)).or_insert_with(|| single_value_vec(value));
 }
 
@@ -78,8 +78,8 @@ impl<S: CheapCloneStr> NamedLineResolver<S> {
         row_auto_repetitions: u16,
     ) -> Self {
         let mut areas: Map<StrHasher<S>, GridTemplateArea<_>> = Map::new();
-        let mut column_lines: Map<StrHasher<S>, Vec<u16>> = Map::new();
-        let mut row_lines: Map<StrHasher<S>, Vec<u16>> = Map::new();
+        let mut column_lines: Map<StrHasher<S>, Vec<u32>> = Map::new();
+        let mut row_lines: Map<StrHasher<S>, Vec<u32>> = Map::new();
 
         let mut area_column_count = 0;
         let mut area_row_count = 0;
@@ -92,13 +92,13 @@ impl<S: CheapCloneStr> NamedLineResolver<S> {
                 area_row_count = area_row_count.max(area.row_end.max(1) - 1);
 
                 let col_start_name = S::from(format!("{}-start", area.name.as_ref()));
-                upsert_line_name_map(&mut column_lines, col_start_name, area.column_start);
+                upsert_line_name_map(&mut column_lines, col_start_name, area.column_start as u32);
                 let col_end_name = S::from(format!("{}-end", area.name.as_ref()));
-                upsert_line_name_map(&mut column_lines, col_end_name, area.column_end);
+                upsert_line_name_map(&mut column_lines, col_end_name, area.column_end as u32);
                 let row_start_name = S::from(format!("{}-start", area.name.as_ref()));
-                upsert_line_name_map(&mut row_lines, row_start_name, area.row_start);
+                upsert_line_name_map(&mut row_lines, row_start_name, area.row_start as u32);
                 let row_end_name = S::from(format!("{}-end", area.name.as_ref()));
-                upsert_line_name_map(&mut row_lines, row_end_name, area.row_end);
+                upsert_line_name_map(&mut row_lines, row_end_name, area.row_end as u32);
             }
         }
 
@@ -112,7 +112,7 @@ impl<S: CheapCloneStr> NamedLineResolver<S> {
                     for line_name in line_names.into_iter() {
                         column_lines
                             .entry(StrHasher(line_name.clone()))
-                            .and_modify(|lines: &mut Vec<u16>| lines.push(current_line))
+                            .and_modify(|lines: &mut Vec<u32>| lines.push(current_line))
                             .or_insert_with(|| single_value_vec(current_line));
                     }
 
@@ -152,7 +152,7 @@ impl<S: CheapCloneStr> NamedLineResolver<S> {
                     for line_name in line_names.into_iter() {
                         row_lines
                             .entry(StrHasher(line_name.clone()))
-                            .and_modify(|lines: &mut Vec<u16>| lines.push(current_line))
+                            .and_modify(|lines: &mut Vec<u32>| lines.push(current_line))
                             .or_insert_with(|| single_value_vec(current_line));
                     }
 
@@ -217,7 +217,7 @@ impl<S: CheapCloneStr> NamedLineResolver<S> {
         let start_holder;
         let start_line_resolved = if let GridPlacement::NamedLine(name, idx) = &line.start {
             start_holder =
-                GridPlacement::Line(self.find_line_index(name, *idx, axis, GridAreaEnd::Start, &|lines| lines));
+                GridPlacement::Line(self.find_line_index(name, *idx as i32, axis, GridAreaEnd::Start, &|lines| lines));
             &start_holder
         } else {
             &line.start
@@ -225,7 +225,8 @@ impl<S: CheapCloneStr> NamedLineResolver<S> {
 
         let end_holder;
         let end_line_resolved = if let GridPlacement::NamedLine(name, idx) = &line.end {
-            end_holder = GridPlacement::Line(self.find_line_index(name, *idx, axis, GridAreaEnd::End, &|lines| lines));
+            end_holder =
+                GridPlacement::Line(self.find_line_index(name, *idx as i32, axis, GridAreaEnd::End, &|lines| lines));
             &end_holder
         } else {
             &line.end
@@ -241,15 +242,15 @@ impl<S: CheapCloneStr> NamedLineResolver<S> {
         match (&start_line_resolved, &end_line_resolved) {
             (GridPlacement::Line(start_line), GridPlacement::NamedSpan(name, idx)) => {
                 let explicit_track_count = match axis {
-                    GridAreaAxis::Row => self.explicit_row_count as i16,
-                    GridAreaAxis::Column => self.explicit_column_count as i16,
+                    GridAreaAxis::Row => self.explicit_row_count as i32,
+                    GridAreaAxis::Column => self.explicit_column_count as i32,
                 };
                 let normalized_start_line = if start_line.as_i16() > 0 {
-                    start_line.as_i16() as u16
+                    start_line.as_i16() as u32
                 } else {
-                    (explicit_track_count + 1 + start_line.as_i16()).max(0) as u16
+                    (explicit_track_count + 1 + start_line.as_i16() as i32).max(0) as u32
                 };
-                let end_line = self.find_line_index(name, *idx as i16, axis, GridAreaEnd::End, &|lines| {
+                let end_line = self.find_line_index(name, *idx as i32, axis, GridAreaEnd::End, &|lines| {
                     let point = lines.partition_point(|line| *line <= normalized_start_line);
                     &lines[point..]
                 });
@@ -257,15 +258,15 @@ impl<S: CheapCloneStr> NamedLineResolver<S> {
             }
             (GridPlacement::NamedSpan(name, idx), GridPlacement::Line(end_line)) => {
                 let explicit_track_count = match axis {
-                    GridAreaAxis::Row => self.explicit_row_count as i16,
-                    GridAreaAxis::Column => self.explicit_column_count as i16,
+                    GridAreaAxis::Row => self.explicit_row_count as i32,
+                    GridAreaAxis::Column => self.explicit_column_count as i32,
                 };
                 let normalized_end_line = if end_line.as_i16() > 0 {
-                    end_line.as_i16() as u16
+                    end_line.as_i16() as u32
                 } else {
-                    (explicit_track_count + 1 + end_line.as_i16()).max(0) as u16
+                    (explicit_track_count + 1 + end_line.as_i16() as i32).max(0) as u32
                 };
-                let start_line = self.find_line_index(name, *idx as i16, axis, GridAreaEnd::Start, &|lines| {
+                let start_line = self.find_line_index(name, *idx as i32, axis, GridAreaEnd::Start, &|lines| {
                     let point = lines.partition_point(|line| *line < normalized_end_line);
                     &lines[..point]
                 });
@@ -294,16 +295,16 @@ impl<S: CheapCloneStr> NamedLineResolver<S> {
     fn find_line_index(
         &self,
         name: &S,
-        idx: i16,
+        idx: i32,
         axis: GridAreaAxis,
         end: GridAreaEnd,
-        filter_lines: &dyn Fn(&[u16]) -> &[u16],
+        filter_lines: &dyn Fn(&[u32]) -> &[u32],
     ) -> GridLine {
         let name = name.as_ref();
         let mut idx = idx;
         let explicit_track_count = match axis {
-            GridAreaAxis::Row => self.explicit_row_count as i16,
-            GridAreaAxis::Column => self.explicit_column_count as i16,
+            GridAreaAxis::Row => self.explicit_row_count as i32,
+            GridAreaAxis::Column => self.explicit_column_count as i32,
         };
 
         // An index of 0 is used to represent "no index specified".
@@ -311,23 +312,23 @@ impl<S: CheapCloneStr> NamedLineResolver<S> {
             idx = 1;
         }
 
-        fn get_line(lines: &[u16], explicit_track_count: i16, idx: i16) -> i16 {
-            let abs_idx = idx.abs();
-            let enough_lines = abs_idx <= lines.len() as i16;
-            if enough_lines {
+        fn get_line(lines: &[u32], explicit_track_count: i32, idx: i32) -> i16 {
+            let abs_idx = idx.unsigned_abs() as usize;
+            let line = if abs_idx <= lines.len() {
                 if idx > 0 {
-                    lines[(abs_idx - 1) as usize] as i16
+                    lines[abs_idx - 1] as i64
                 } else {
-                    lines[lines.len() - (abs_idx) as usize] as i16
+                    lines[lines.len() - abs_idx] as i64
                 }
             } else {
-                let remaining_lines = (abs_idx - lines.len() as i16) * idx.signum();
+                let remaining_lines = (abs_idx - lines.len()) as i64 * idx.signum() as i64;
                 if idx > 0 {
-                    (explicit_track_count + 1) + remaining_lines
+                    explicit_track_count as i64 + 1 + remaining_lines
                 } else {
-                    -((explicit_track_count + 1) + remaining_lines)
+                    -(explicit_track_count as i64 + 1 + remaining_lines)
                 }
-            }
+            };
+            line.clamp(i16::MIN as i64, i16::MAX as i64) as i16
         }
 
         // Lookup lines
@@ -364,9 +365,13 @@ impl<S: CheapCloneStr> NamedLineResolver<S> {
         // grid line than it has tracks. And the fallback line is the line *after* that.
         //
         // See: <https://github.com/w3c/csswg-drafts/issues/966#issuecomment-277042153>
-        let line = if idx > 0 { (explicit_track_count + 1) + idx } else { -((explicit_track_count + 1) + idx) };
+        let line = if idx > 0 {
+            explicit_track_count as i64 + 1 + idx as i64
+        } else {
+            -(explicit_track_count as i64 + 1 + idx as i64)
+        };
 
-        GridLine::from(line)
+        GridLine::from(line.clamp(i16::MIN as i64, i16::MAX as i64) as i16)
     }
 
     /// Get the number of columns defined by the grid areas
@@ -424,5 +429,75 @@ impl<S: CheapCloneStr> Debug for NamedLineResolver<S> {
         }
 
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::style::GenericGridPlacement;
+    use crate::sys::DefaultCheapStr;
+    use crate::Style;
+
+    fn resolver(explicit_track_count: u16) -> NamedLineResolver<DefaultCheapStr> {
+        let mut resolver = NamedLineResolver::new(&Style::DEFAULT, 0, 0);
+        resolver.set_explicit_column_count(explicit_track_count);
+        resolver
+    }
+
+    fn resolved_start_line(
+        resolver: &NamedLineResolver<DefaultCheapStr>,
+        placement: GridPlacement<DefaultCheapStr>,
+    ) -> i16 {
+        let resolved = resolver.resolve_column_names(&Line { start: placement, end: GridPlacement::Auto });
+        match resolved.start {
+            GenericGridPlacement::Line(line) => line.as_i16(),
+            _ => panic!("expected a resolved line"),
+        }
+    }
+
+    #[test]
+    fn extreme_missing_named_line_indices_do_not_overflow() {
+        let resolver = resolver(10_000);
+        assert_eq!(
+            resolved_start_line(&resolver, GridPlacement::NamedLine(DefaultCheapStr::from("missing"), i16::MAX)),
+            i16::MAX
+        );
+        assert_eq!(
+            resolved_start_line(&resolver, GridPlacement::NamedLine(DefaultCheapStr::from("missing"), i16::MIN)),
+            22_767
+        );
+    }
+
+    #[test]
+    fn large_named_span_does_not_wrap_negative() {
+        let resolver = resolver(10_000);
+        let resolved = resolver.resolve_column_names(&Line {
+            start: GridPlacement::Line(GridLine::from(1)),
+            end: GridPlacement::NamedSpan(DefaultCheapStr::from("missing"), u16::MAX),
+        });
+        match resolved.end {
+            GenericGridPlacement::Line(line) => assert_eq!(line.as_i16(), i16::MAX),
+            _ => panic!("expected a resolved line"),
+        }
+    }
+
+    #[test]
+    fn area_lines_saturate_when_converted_to_grid_lines() {
+        let style = Style {
+            grid_template_areas: vec![GridTemplateArea {
+                name: DefaultCheapStr::from("area"),
+                row_start: 1,
+                row_end: 2,
+                column_start: u16::MAX,
+                column_end: u16::MAX,
+            }],
+            ..Style::DEFAULT
+        };
+        let resolver = NamedLineResolver::new(&style, 0, 0);
+        assert_eq!(
+            resolved_start_line(&resolver, GridPlacement::NamedLine(DefaultCheapStr::from("area-start"), 1)),
+            i16::MAX
+        );
     }
 }
