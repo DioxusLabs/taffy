@@ -328,16 +328,16 @@ fn place_definite_secondary_axis_item(
         let primary_axis_placement =
             resolve_indefinite_grid_span(position, primary_axis_span, primary_axis_is_reversed);
 
-        let does_fit = cell_occupancy_matrix.line_area_is_unoccupied(
+        let collision = cell_occupancy_matrix.line_area_collision_jump(
             primary_axis,
             primary_axis_placement,
             secondary_axis_placement,
+            primary_axis_is_reversed,
         );
 
-        if does_fit {
-            return (primary_axis_placement, secondary_axis_placement);
-        } else {
-            position = advance_position(position, primary_axis_is_reversed);
+        match collision {
+            None => return (primary_axis_placement, secondary_axis_placement),
+            Some(next_position) => position = next_position,
         }
     }
 }
@@ -370,10 +370,6 @@ fn place_indefinitely_positioned_item(
         search_start_line(primary_axis_grid_start_line, primary_axis_grid_end_line, primary_axis_is_reversed);
     let secondary_start_position =
         search_start_line(secondary_axis_grid_start_line, secondary_axis_grid_end_line, secondary_axis_is_reversed);
-
-    let line_area_is_occupied = |primary_span, secondary_span| {
-        !cell_occupancy_matrix.line_area_is_unoccupied(primary_axis, primary_span, secondary_span)
-    };
 
     let (mut primary_idx, mut secondary_idx) = grid_position;
 
@@ -409,9 +405,15 @@ fn place_indefinitely_positioned_item(
             let secondary_span =
                 resolve_indefinite_grid_span(secondary_idx, secondary_span, secondary_axis_is_reversed);
 
-            // If area is occupied, increment the index and try again
-            if line_area_is_occupied(primary_span, secondary_span) {
-                secondary_idx = advance_position(secondary_idx, secondary_axis_is_reversed);
+            // If area is occupied, jump the index past the collision and try again
+            let collision = cell_occupancy_matrix.line_area_collision_jump(
+                secondary_axis,
+                secondary_span,
+                primary_span,
+                secondary_axis_is_reversed,
+            );
+            if let Some(next_position) = collision {
+                secondary_idx = next_position;
                 continue;
             }
 
@@ -420,6 +422,10 @@ fn place_indefinitely_positioned_item(
         }
     } else {
         let primary_span = primary_placement_style.indefinite_span();
+
+        // Whether the item spans every track in the primary axis. Such an item can only be
+        // placed at the primary axis grid start, in a stripe of entirely unoccupied tracks.
+        let spans_all_primary_tracks = primary_span as usize >= cell_occupancy_matrix.track_counts(primary_axis).len();
 
         // Item does not have any fixed axis, so we search along the primary axis until we hit the end of the already
         // existent tracks, and then we reset the primary axis back to zero and increment the secondary axis index.
@@ -442,9 +448,33 @@ fn place_indefinitely_positioned_item(
                 continue;
             }
 
-            // If area is occupied, increment the primary index and try again
-            if line_area_is_occupied(primary_span, secondary_span) {
-                primary_idx = advance_position(primary_idx, primary_axis_is_reversed);
+            // If the item spans every primary axis track, it fits if and only if all of the
+            // secondary axis tracks it spans are entirely unoccupied. Jump the secondary index
+            // past any non-empty tracks in the spanned stripe.
+            if spans_all_primary_tracks {
+                match cell_occupancy_matrix.occupied_track_jump(
+                    secondary_axis,
+                    secondary_span,
+                    secondary_axis_is_reversed,
+                ) {
+                    Some(next_position) => {
+                        secondary_idx = next_position;
+                        primary_idx = primary_start_position;
+                        continue;
+                    }
+                    None => return (primary_span, secondary_span),
+                }
+            }
+
+            // If area is occupied, jump the primary index past the collision and try again
+            let collision = cell_occupancy_matrix.line_area_collision_jump(
+                primary_axis,
+                primary_span,
+                secondary_span,
+                primary_axis_is_reversed,
+            );
+            if let Some(next_position) = collision {
+                primary_idx = next_position;
                 continue;
             }
 
