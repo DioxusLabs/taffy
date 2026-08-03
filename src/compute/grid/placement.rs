@@ -19,9 +19,9 @@ fn axis_is_reversed(direction: Direction, axis: AbsoluteAxis) -> bool {
 /// Advances the cursor by one track in the active search direction.
 fn advance_position(position: OriginZeroLine, axis_is_reversed: bool) -> OriginZeroLine {
     if axis_is_reversed {
-        OriginZeroLine(position.0 - 1)
+        OriginZeroLine(position.0.saturating_sub(1))
     } else {
-        OriginZeroLine(position.0 + 1)
+        OriginZeroLine(position.0.saturating_add(1))
     }
 }
 
@@ -42,10 +42,13 @@ fn search_start_line(
 #[inline]
 /// Resolves an indefinite span at `position`, respecting the active axis direction.
 fn resolve_indefinite_grid_span(position: OriginZeroLine, span: u16, axis_is_reversed: bool) -> Line<OriginZeroLine> {
+    let position = position.0 as i32;
+    let span = span as i32;
+    let line = |value: i32| OriginZeroLine(value.clamp(i16::MIN as i32, i16::MAX as i32) as i16);
     if axis_is_reversed {
-        Line { start: (position - span) + 1, end: position + 1 }
+        Line { start: line(position - span + 1), end: line(position + 1) }
     } else {
-        Line { start: position, end: position + span }
+        Line { start: line(position), end: line(position + span) }
     }
 }
 
@@ -520,6 +523,7 @@ fn record_grid_placement<S: GridItemStyle>(
 
 #[cfg(test)]
 mod tests {
+    use super::*;
 
     mod test_placement_algorithm {
         use crate::compute::grid::implicit_grid::compute_grid_size_estimate;
@@ -777,5 +781,23 @@ mod tests {
             let expected_rows = TrackCounts { negative_implicit: 0, explicit: 2, positive_implicit: 0 };
             placement_test_runner(explicit_col_count, explicit_row_count, children, expected_cols, expected_rows, flow);
         }
+    }
+
+    #[test]
+    fn auto_placement_cursor_saturates_at_integer_bounds() {
+        assert_eq!(advance_position(OriginZeroLine(i16::MAX), false), OriginZeroLine(i16::MAX));
+        assert_eq!(advance_position(OriginZeroLine(i16::MIN), true), OriginZeroLine(i16::MIN));
+    }
+
+    #[test]
+    fn indefinite_spans_saturate_at_integer_bounds() {
+        assert_eq!(
+            resolve_indefinite_grid_span(OriginZeroLine(i16::MAX), 1, false),
+            Line { start: OriginZeroLine(i16::MAX), end: OriginZeroLine(i16::MAX) }
+        );
+        assert_eq!(
+            resolve_indefinite_grid_span(OriginZeroLine(i16::MIN), 1, true),
+            Line { start: OriginZeroLine(i16::MIN), end: OriginZeroLine(i16::MIN + 1) }
+        );
     }
 }
