@@ -425,11 +425,13 @@ impl<S: CheapCloneStr> TaffyGridSpan for Line<GridPlacement<S>> {
 }
 
 #[cfg(feature = "parse")]
+/// Saturates an `i32` to the range representable by `i16`.
 fn saturating_i16(value: i32) -> i16 {
     value.clamp(i16::MIN as i32, i16::MAX as i32) as i16
 }
 
 #[cfg(feature = "parse")]
+/// Saturates an `i32` to the range representable by `u16`.
 fn saturating_u16(value: i32) -> u16 {
     value.clamp(u16::MIN as i32, u16::MAX as i32) as u16
 }

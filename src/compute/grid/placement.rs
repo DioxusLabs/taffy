@@ -475,6 +475,7 @@ fn clamp_span_to_limited_grid(span: Line<OriginZeroLine>, min_line: i16, max_lin
     Line { start: OriginZeroLine(start), end: OriginZeroLine(end) }
 }
 
+/// Clamps a span using bounds transformed into the axis's placement coordinates.
 fn clamp_span_for_axis(
     span: Line<OriginZeroLine>,
     axis: AbsoluteAxis,
