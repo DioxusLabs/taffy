@@ -256,6 +256,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
         column_track_counts_for_init,
         &style,
         AbsoluteAxis::Horizontal,
+        col_auto_repetition_count,
         |column_index| {
             let occupancy_index = if direction.is_rtl() {
                 rtl_column_occupancy_index_for_initialization(column_index, final_col_counts)
@@ -265,9 +266,14 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
             cell_occupancy_matrix.column_is_occupied(occupancy_index)
         },
     );
-    initialize_grid_tracks(&mut rows, final_row_counts, &style, AbsoluteAxis::Vertical, |row_index| {
-        cell_occupancy_matrix.row_is_occupied(row_index)
-    });
+    initialize_grid_tracks(
+        &mut rows,
+        final_row_counts,
+        &style,
+        AbsoluteAxis::Vertical,
+        row_auto_repetition_count,
+        |row_index| cell_occupancy_matrix.row_is_occupied(row_index),
+    );
     if direction.is_rtl() {
         reverse_non_gutter_tracks(&mut columns, final_col_counts);
     }

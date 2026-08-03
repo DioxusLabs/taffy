@@ -92,12 +92,19 @@ pub(crate) fn compute_explicit_grid_size_in_axis(
         return (0, non_auto_repeating_track_count);
     }
 
+    let mut auto_repeat_insertion_point = 0u32;
     let repetition_definition = template
         .clone()
         .find_map(|def| match def {
-            GenericGridTemplateComponent::Single(_) => None,
+            GenericGridTemplateComponent::Single(_) => {
+                auto_repeat_insertion_point += 1;
+                None
+            }
             GenericGridTemplateComponent::Repeat(repeat) => match repeat.count() {
-                RepetitionCount::Count(_) => None,
+                RepetitionCount::Count(count) => {
+                    auto_repeat_insertion_point += count as u32 * repeat.track_count() as u32;
+                    None
+                }
                 RepetitionCount::AutoFit | RepetitionCount::AutoFill => Some(repeat),
             },
         })
@@ -187,12 +194,16 @@ pub(crate) fn compute_explicit_grid_size_in_axis(
         }
     };
 
-    // Clamp the number of repetitions (flooring at 1) such that the total number of tracks in the
-    // template does not exceed the maximum track limit
+    // Clamp the number of repetitions based on the auto-repeat's insertion point so that tracks
+    // before it are preserved and tracks after it are truncated in source order.
     // https://www.w3.org/TR/css-grid-1/#overlarge-grids
-    let max_repetitions =
-        (((MAX_GRID_TRACKS - non_auto_repeating_track_count) as u32) / (repetition_track_count as u32)).max(1);
-    let num_repetitions = num_repetitions.clamp(1, max_repetitions) as u16;
+    let remaining_tracks = (MAX_GRID_TRACKS as u32).saturating_sub(auto_repeat_insertion_point);
+    let num_repetitions = if remaining_tracks == 0 {
+        0
+    } else {
+        let max_repetitions = (remaining_tracks + repetition_track_count as u32 - 1) / repetition_track_count as u32;
+        num_repetitions.clamp(1, max_repetitions) as u16
+    };
 
     let grid_template_track_count = min(
         non_auto_repeating_track_count as u32 + (repetition_track_count as u32 * num_repetitions as u32),
@@ -208,6 +219,7 @@ pub(super) fn initialize_grid_tracks(
     counts: TrackCounts,
     style: &impl GridContainerStyle,
     axis: AbsoluteAxis,
+    auto_repetition_count: u16,
     track_has_items: impl Fn(usize) -> bool,
 ) {
     // Extract styles
@@ -234,21 +246,6 @@ pub(super) fn initialize_grid_tracks(
     tracks.push(GridTrack::gutter(gap));
 
     let auto_track_count = auto_tracks.len();
-    let non_auto_repeating_track_count = track_template
-        .clone()
-        .map(|track_template| {
-            track_template
-                .map(|track_def| match track_def {
-                    GenericGridTemplateComponent::Single(_) => 1u32,
-                    GenericGridTemplateComponent::Repeat(repeat) => match repeat.count() {
-                        RepetitionCount::Count(count) => count as u32 * repeat.track_count() as u32,
-                        RepetitionCount::AutoFit | RepetitionCount::AutoFill => 0,
-                    },
-                })
-                .sum::<u32>()
-                .min(MAX_GRID_TRACKS as u32) as u16
-        })
-        .unwrap_or(0);
 
     // Create negative implicit tracks
     if counts.negative_implicit > 0 {
@@ -301,9 +298,9 @@ pub(super) fn initialize_grid_tracks(
                             });
                         }
                         RepetitionCount::AutoFit | RepetitionCount::AutoFill => {
-                            let auto_repeated_track_count =
-                                (counts.explicit.saturating_sub(non_auto_repeating_track_count) as usize)
-                                    .min(explicit_track_limit - current_track_index);
+                            let auto_repeated_track_count = (repeat.track_count() as usize
+                                * auto_repetition_count as usize)
+                                .min(explicit_track_limit - current_track_index);
                             let iter = repeat.tracks().cycle();
                             for track_def in iter.take(auto_repeated_track_count) {
                                 let mut track =
@@ -699,6 +696,50 @@ mod test {
     }
 
     #[test]
+    fn auto_repeat_clamping_preserves_template_source_order() {
+        use RepetitionCount::{AutoFill, Count};
+
+        let auto_repeat_first: Style<DefaultCheapStr> = Style {
+            display: Display::Grid,
+            grid_template_columns: vec![repeat(AutoFill, vec![length(2.0)]), repeat(Count(10_000), vec![length(37.0)])],
+            ..Default::default()
+        };
+        let (repetitions, track_count) = compute_explicit_grid_size_in_axis(
+            &auto_repeat_first,
+            None,
+            AutoRepeatStrategy::MaxRepetitionsThatDoNotOverflow,
+            |_, _| 42.42,
+            AbsoluteAxis::Horizontal,
+        );
+        assert_eq!((repetitions, track_count), (1, 10_000));
+        let mut tracks = Vec::new();
+        initialize_grid_tracks(
+            &mut tracks,
+            TrackCounts::from_raw(0, track_count, 0),
+            &auto_repeat_first,
+            AbsoluteAxis::Horizontal,
+            repetitions,
+            |_| false,
+        );
+        assert_eq!(tracks[1].min_track_sizing_function, MinTrackSizingFunction::from_length(2.0));
+        assert_eq!(tracks[3].min_track_sizing_function, MinTrackSizingFunction::from_length(37.0));
+
+        let auto_repeat_last: Style<DefaultCheapStr> = Style {
+            display: Display::Grid,
+            grid_template_columns: vec![repeat(Count(10_000), vec![length(37.0)]), repeat(AutoFill, vec![length(2.0)])],
+            ..Default::default()
+        };
+        let (repetitions, track_count) = compute_explicit_grid_size_in_axis(
+            &auto_repeat_last,
+            None,
+            AutoRepeatStrategy::MaxRepetitionsThatDoNotOverflow,
+            |_, _| 42.42,
+            AbsoluteAxis::Horizontal,
+        );
+        assert_eq!((repetitions, track_count), (0, 10_000));
+    }
+
+    #[test]
     fn test_initialize_grid_tracks() {
         let minpx0 = MinTrackSizingFunction::from_length(0.0);
         let minpx20 = MinTrackSizingFunction::from_length(20.0);
@@ -724,7 +765,7 @@ mod test {
 
         // Call function
         let mut tracks = Vec::new();
-        initialize_grid_tracks(&mut tracks, track_counts, &grid_style, AbsoluteAxis::Horizontal, |_| false);
+        initialize_grid_tracks(&mut tracks, track_counts, &grid_style, AbsoluteAxis::Horizontal, 0, |_| false);
 
         // Assertions
         let expected = vec![

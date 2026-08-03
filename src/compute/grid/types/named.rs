@@ -133,7 +133,9 @@ impl<S: CheapCloneStr> NamedLineResolver<S> {
                             current_line -= 1;
                         }
                         // Last line name set collapses with following line name set
-                        current_line -= 1;
+                        if repeat_count > 0 {
+                            current_line -= 1;
+                        }
                     }
                 }
             }
@@ -173,7 +175,9 @@ impl<S: CheapCloneStr> NamedLineResolver<S> {
                             current_line -= 1;
                         }
                         // Last line name set collapses with following line name set
-                        current_line -= 1;
+                        if repeat_count > 0 {
+                            current_line -= 1;
+                        }
                     }
                 }
             }
