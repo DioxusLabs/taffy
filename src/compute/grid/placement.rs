@@ -68,7 +68,9 @@ fn maybe_mirror_span(
     explicit_col_count: u16,
 ) -> Line<OriginZeroLine> {
     if axis == AbsoluteAxis::Horizontal && direction.is_rtl() {
-        mirror_horizontal_span(span, explicit_col_count)
+        // Clamp into the limited grid before mirroring so that placements outside of the limited
+        // grid mirror to the same tracks as their clamped equivalents
+        mirror_horizontal_span(clamp_span_to_limited_grid(span), explicit_col_count)
     } else {
         span
     }
