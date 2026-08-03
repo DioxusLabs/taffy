@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    Definite column placement whose row span crosses the limit in the secondary axis
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="display: grid; grid-auto-rows: 0px; grid-auto-columns: 0px;">
+  <div style="background: #59c4f6; width: 20px; height: 20px; grid-column: 2; grid-row: 9995 / span 20;"></div>
+  <div style="background: #63c466; width: 20px; height: 20px;"></div>
+</div>
+
+</body>
+</html>
