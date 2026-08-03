@@ -69,6 +69,24 @@ impl TrackIntervals {
             return;
         }
 
+        // Fast path: the painted range lies entirely after all existing intervals
+        // (the common case, as placement queries and inserts mostly advance forwards)
+        match self.intervals.last_mut() {
+            None => {
+                self.intervals.push(OccupiedInterval { range, state });
+                return;
+            }
+            Some(last) if last.range.end <= range.start => {
+                if last.state == state && last.range.end == range.start {
+                    last.range.end = range.end;
+                } else {
+                    self.intervals.push(OccupiedInterval { range, state });
+                }
+                return;
+            }
+            _ => {}
+        }
+
         let mut result: SmallVec<[OccupiedInterval; 2]> = SmallVec::new();
 
         // Intervals (or partial intervals) entirely before the painted range
@@ -141,10 +159,10 @@ pub(crate) struct CellOccupancyMatrix {
     columns: TrackCounts,
     /// The counts of implicit and explicit rows
     rows: TrackCounts,
-    /// For each row track: the occupied intervals within that row (in column coordinates)
-    row_intervals: Vec<TrackIntervals>,
-    /// For each column track: the occupied intervals within that column (in row coordinates)
-    column_intervals: Vec<TrackIntervals>,
+    /// Per-track interval lists for every track: rows first (each row track's occupied intervals
+    /// in column coordinates), followed by columns (each column track's occupied intervals in
+    /// row coordinates). Stored in a single Vec to minimise allocations.
+    tracks: Vec<TrackIntervals>,
 }
 
 /// Debug impl that represents the matrix in a compact 2d text format
@@ -166,7 +184,7 @@ impl Debug for CellOccupancyMatrix {
         }
         writeln!(f, "State:")?;
 
-        for row in &self.row_intervals {
+        for row in self.track_lists(AbsoluteAxis::Vertical) {
             for column_index in 0..self.columns.len() {
                 let coordinate = self.columns.track_to_prev_oz_line(column_index as u16);
                 let letter = match row.state_at(coordinate.0) {
@@ -187,19 +205,17 @@ impl CellOccupancyMatrix {
     /// Create a CellOccupancyMatrix given a set of provisional track counts. The grid can expand as needed to fit more tracks,
     /// the provisional track counts represent a best effort attempt to avoid the extra allocations this requires.
     pub fn with_track_counts(columns: TrackCounts, rows: TrackCounts) -> Self {
-        let mut row_intervals = new_vec_with_capacity(rows.len());
-        row_intervals.resize(rows.len(), TrackIntervals::default());
-        let mut column_intervals = new_vec_with_capacity(columns.len());
-        column_intervals.resize(columns.len(), TrackIntervals::default());
-        Self { rows, columns, row_intervals, column_intervals }
+        let mut tracks = new_vec_with_capacity(rows.len() + columns.len());
+        tracks.resize(rows.len() + columns.len(), TrackIntervals::default());
+        Self { rows, columns, tracks }
     }
 
     /// The per-track interval lists for tracks in the specified axis. Each row track's intervals
     /// are in column coordinates and vice versa.
     fn track_lists(&self, track_axis: AbsoluteAxis) -> &[TrackIntervals] {
         match track_axis {
-            AbsoluteAxis::Horizontal => &self.column_intervals,
-            AbsoluteAxis::Vertical => &self.row_intervals,
+            AbsoluteAxis::Horizontal => &self.tracks[self.rows.len()..],
+            AbsoluteAxis::Vertical => &self.tracks[..self.rows.len()],
         }
     }
 
@@ -212,23 +228,21 @@ impl CellOccupancyMatrix {
         let req_negative_cols = max(-(self.columns.negative_implicit as i16) - col_span.start.0, 0);
         let req_positive_cols = max(col_span.end.0 - self.columns.implicit_end_line().0, 0);
 
-        // Add empty tracks to the front and/or back of the per-track interval lists.
+        // Add empty tracks around the existing per-track interval lists.
         // Interval contents are stored in OriginZero coordinates, so they do not need to shift.
-        if req_negative_rows > 0 {
-            self.row_intervals
-                .splice(0..0, core::iter::repeat_with(TrackIntervals::default).take(req_negative_rows as usize));
-        }
-        if req_positive_rows > 0 {
-            let new_len = self.row_intervals.len() + req_positive_rows as usize;
-            self.row_intervals.resize(new_len, TrackIntervals::default());
-        }
-        if req_negative_cols > 0 {
-            self.column_intervals
-                .splice(0..0, core::iter::repeat_with(TrackIntervals::default).take(req_negative_cols as usize));
-        }
-        if req_positive_cols > 0 {
-            let new_len = self.column_intervals.len() + req_positive_cols as usize;
-            self.column_intervals.resize(new_len, TrackIntervals::default());
+        if req_negative_rows > 0 || req_positive_rows > 0 || req_negative_cols > 0 || req_positive_cols > 0 {
+            let old_row_count = self.rows.len();
+            let old_col_count = self.columns.len();
+            let new_row_count = old_row_count + (req_negative_rows + req_positive_rows) as usize;
+            let new_col_count = old_col_count + (req_negative_cols + req_positive_cols) as usize;
+
+            let mut tracks = new_vec_with_capacity(new_row_count + new_col_count);
+            tracks.resize(req_negative_rows as usize, TrackIntervals::default());
+            tracks.extend(self.tracks.drain(..old_row_count));
+            tracks.resize(new_row_count + req_negative_cols as usize, TrackIntervals::default());
+            tracks.append(&mut self.tracks);
+            tracks.resize(new_row_count + new_col_count, TrackIntervals::default());
+            self.tracks = tracks;
         }
 
         self.rows.negative_implicit += req_negative_rows as u16;
@@ -252,13 +266,14 @@ impl CellOccupancyMatrix {
 
         self.expand_to_fit_range(row_span, column_span);
 
+        let row_count = self.rows.len();
         let row_range = self.rows.oz_line_range_to_track_range(row_span);
         let col_range = self.columns.oz_line_range_to_track_range(column_span);
         for row_index in row_range {
-            self.row_intervals[row_index as usize].paint(column_span.start.0..column_span.end.0, value);
+            self.tracks[row_index as usize].paint(column_span.start.0..column_span.end.0, value);
         }
         for column_index in col_range {
-            self.column_intervals[column_index as usize].paint(row_span.start.0..row_span.end.0, value);
+            self.tracks[row_count + column_index as usize].paint(row_span.start.0..row_span.end.0, value);
         }
     }
 
@@ -350,12 +365,12 @@ impl CellOccupancyMatrix {
 
     /// Determines whether the specified row contains any items
     pub fn row_is_occupied(&self, row_index: usize) -> bool {
-        self.row_intervals.get(row_index).is_some_and(|track| !track.is_empty())
+        self.track_lists(AbsoluteAxis::Vertical).get(row_index).is_some_and(|track| !track.is_empty())
     }
 
     /// Determines whether the specified column contains any items
     pub fn column_is_occupied(&self, column_index: usize) -> bool {
-        self.column_intervals.get(column_index).is_some_and(|track| !track.is_empty())
+        self.track_lists(AbsoluteAxis::Horizontal).get(column_index).is_some_and(|track| !track.is_empty())
     }
 
     /// Returns the track counts of this CellOccunpancyMatrix in the relevant axis
