@@ -27297,6 +27297,60 @@ mod grid {
 
     #[cfg(feature = "grid")]
     #[test]
+    fn grid_overlarge_fixed_tracks_plus_auto_fill_repetition_over_limit__border_box_ltr() {
+        crate::run_xml_test("grid", "grid_overlarge_fixed_tracks_plus_auto_fill_repetition_over_limit__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_overlarge_fixed_tracks_plus_auto_fill_repetition_over_limit__content_box_ltr() {
+        crate::run_xml_test(
+            "grid",
+            "grid_overlarge_fixed_tracks_plus_auto_fill_repetition_over_limit__content_box_ltr",
+        );
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_overlarge_fixed_tracks_plus_auto_fill_repetition_over_limit__border_box_rtl() {
+        crate::run_xml_test("grid", "grid_overlarge_fixed_tracks_plus_auto_fill_repetition_over_limit__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_overlarge_fixed_tracks_plus_auto_fill_repetition_over_limit__content_box_rtl() {
+        crate::run_xml_test(
+            "grid",
+            "grid_overlarge_fixed_tracks_plus_auto_fill_repetition_over_limit__content_box_rtl",
+        );
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_overlarge_fixed_tracks_plus_auto_fit_repetition_over_limit__border_box_ltr() {
+        crate::run_xml_test("grid", "grid_overlarge_fixed_tracks_plus_auto_fit_repetition_over_limit__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_overlarge_fixed_tracks_plus_auto_fit_repetition_over_limit__content_box_ltr() {
+        crate::run_xml_test("grid", "grid_overlarge_fixed_tracks_plus_auto_fit_repetition_over_limit__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_overlarge_fixed_tracks_plus_auto_fit_repetition_over_limit__border_box_rtl() {
+        crate::run_xml_test("grid", "grid_overlarge_fixed_tracks_plus_auto_fit_repetition_over_limit__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_overlarge_fixed_tracks_plus_auto_fit_repetition_over_limit__content_box_rtl() {
+        crate::run_xml_test("grid", "grid_overlarge_fixed_tracks_plus_auto_fit_repetition_over_limit__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
     fn grid_overlarge_huge_repeat_count__border_box_ltr() {
         crate::run_xml_test("grid", "grid_overlarge_huge_repeat_count__border_box_ltr");
     }

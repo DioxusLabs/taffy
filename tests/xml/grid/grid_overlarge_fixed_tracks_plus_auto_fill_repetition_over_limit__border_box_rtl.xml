@@ -1,0 +1,15 @@
+<test name="grid_overlarge_fixed_tracks_plus_auto_fill_repetition_over_limit__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" direction="rtl" width="200px" grid-template-columns="repeat(9990, 0px) repeat(auto-fill, 0px 0px 0px 0px 0px 0px 0px 0px 0px 0px 0px 0px 0px 0px 0px 0px 0px 0px 0px 0px)">
+      <div direction="rtl" width="20px" height="20px"/>
+      <div direction="rtl" width="20px" height="20px" grid-column-start="10010" grid-column-end="10011"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="200" height="20">
+      <node x="180" y="0" width="20" height="20"/>
+      <node x="180" y="0" width="20" height="20"/>
+    </node>
+  </expectations>
+</test>

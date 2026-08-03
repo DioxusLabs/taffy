@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    9995 fixed tracks plus an auto-fit repetition of 10 tracks: a single repetition crosses the 10000 track limit,
+    with an item spanning the boundary between the fixed tracks and the repetition
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="display: grid; width: 200px; grid-template-columns: repeat(9995, 0px) repeat(auto-fit, 0px 0px 0px 0px 0px 0px 0px 0px 0px 0px);">
+  <div style="background: #59c4f6; width: 20px; height: 20px; grid-column: 9990 / span 10;"></div>
+  <div style="background: #a3d16e; width: 20px; height: 20px;"></div>
+</div>
+
+</body>
+</html>
