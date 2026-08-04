@@ -322,6 +322,111 @@ fn toggle_grid_container_display_none() {
     assert_eq!(layout.size.height, 0.0);
 }
 
+/// Port of the 3rd test case of the WPT test
+/// css/css-grid/placement/grid-container-change-grid-tracks-recompute-child-positions-001.html
+///
+/// Checks that changing grid-template-{rows,columns,areas} on an already-laid-out grid container
+/// recomputes the positions of automatically placed grid items.
+///
+/// ```css
+/// .grid {
+///     grid-auto-flow: row dense;
+///     grid-auto-rows: 5px;
+///     grid-auto-columns: 5px;
+/// }
+/// #firstGridItem { grid-row: auto; grid-column: 1; }
+/// #secondGridItem { grid-row: 1; grid-column: auto; }
+/// #thirdGridItem { grid-row: auto; grid-column: auto; }
+/// ```
+///
+/// The 3rd case sets `grid-template-rows: 10px; grid-template-columns: 10px;
+/// grid-template-areas: "a ."` (the previous case had `grid-template-areas: "a"`).
+#[test]
+fn grid_track_changes_recompute_auto_placed_item_positions() {
+    use taffy::{GridTemplateArea, GridTemplateComponent};
+
+    fn container_style(
+        template_rows: Vec<GridTemplateComponent<String>>,
+        template_columns: Vec<GridTemplateComponent<String>>,
+        template_areas: Vec<GridTemplateArea<String>>,
+    ) -> Style {
+        Style {
+            display: Display::Grid,
+            grid_auto_flow: GridAutoFlow::RowDense,
+            grid_auto_rows: vec![length(5.0)],
+            grid_auto_columns: vec![length(5.0)],
+            grid_template_rows: template_rows,
+            grid_template_columns: template_columns,
+            grid_template_areas: template_areas,
+            ..Default::default()
+        }
+    }
+
+    let mut taffy = new_test_tree();
+
+    // #firstGridItem: grid-row: auto; grid-column: 1;
+    let first =
+        taffy.new_leaf(Style { grid_column: Line { start: line(1), end: auto() }, ..Default::default() }).unwrap();
+    // #secondGridItem: grid-row: 1; grid-column: auto;
+    let second =
+        taffy.new_leaf(Style { grid_row: Line { start: line(1), end: auto() }, ..Default::default() }).unwrap();
+    // #thirdGridItem: grid-row: auto; grid-column: auto;
+    let third = taffy.new_leaf(Style::default()).unwrap();
+
+    // 2nd case: grid-template-rows: 10px; grid-template-columns: 10px; grid-template-areas: "a";
+    let container = taffy
+        .new_with_children(
+            container_style(
+                vec![length(10.0)],
+                vec![length(10.0)],
+                vec![GridTemplateArea { name: "a".into(), row_start: 1, row_end: 2, column_start: 1, column_end: 2 }],
+            ),
+            &[first, second, third],
+        )
+        .unwrap();
+    taffy.compute_layout(container, Size::MAX_CONTENT).unwrap();
+
+    // 3rd case: grid-template-rows: 10px; grid-template-columns: 10px; grid-template-areas: "a .";
+    // The "." cell implies a second explicit column (sized by grid-auto-columns: 5px).
+    //
+    // NOTE: Taffy's `GridTemplateArea` only records named areas, so the unnamed "." cell cannot be
+    // represented directly and the implied explicit grid size is derived from the extents of the
+    // named areas. As no grid item references area "a", we encode the 2-column-wide template by
+    // extending area "a" to `column_end: 3` (with `column_end: 2` — as a stylo-based conversion
+    // would produce — Taffy only infers 1 explicit column and places the third item in row 3).
+    taffy
+        .set_style(
+            container,
+            container_style(
+                vec![length(10.0)],
+                vec![length(10.0)],
+                vec![GridTemplateArea { name: "a".into(), row_start: 1, row_end: 2, column_start: 1, column_end: 3 }],
+            ),
+        )
+        .unwrap();
+    taffy.compute_layout(container, Size::MAX_CONTENT).unwrap();
+
+    // Expected: first { w: 10, h: 5, x: 0, y: 10 }, second { w: 10, h: 10, x: 0, y: 0 },
+    // third { w: 5, h: 10, x: 10, y: 0 }
+    let layout = taffy.layout(first).unwrap();
+    assert_eq!(layout.location.x, 0.0);
+    assert_eq!(layout.location.y, 10.0);
+    assert_eq!(layout.size.width, 10.0);
+    assert_eq!(layout.size.height, 5.0);
+
+    let layout = taffy.layout(second).unwrap();
+    assert_eq!(layout.location.x, 0.0);
+    assert_eq!(layout.location.y, 0.0);
+    assert_eq!(layout.size.width, 10.0);
+    assert_eq!(layout.size.height, 10.0);
+
+    let layout = taffy.layout(third).unwrap();
+    assert_eq!(layout.location.x, 10.0);
+    assert_eq!(layout.location.y, 0.0);
+    assert_eq!(layout.size.width, 5.0);
+    assert_eq!(layout.size.height, 10.0);
+}
+
 #[test]
 fn relayout_is_stable_with_rounding() {
     let mut taffy = new_test_tree();
