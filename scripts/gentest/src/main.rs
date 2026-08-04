@@ -4,7 +4,7 @@ use std::fmt::Display;
 use std::fs::{self, OpenOptions};
 use std::io::Write as _;
 use std::path::{Component, Path, PathBuf};
-use std::process::{Command, Stdio};
+use std::process::Command;
 
 use fantoccini::{Client, ClientBuilder};
 use log::*;
@@ -39,8 +39,6 @@ async fn main() {
     let webdriver_url = "http://localhost:4444";
     let mut webdriver_handle = Command::new("chromedriver")
         .arg("--port=4444")
-        .stdout(Stdio::null())
-        .stderr(Stdio::null())
         .spawn()
         .expect("ChromeDriver not found: Make sure you have it installed and added to your PATH.");
 
