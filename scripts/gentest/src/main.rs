@@ -59,6 +59,9 @@ async fn main() {
         test_descs.push(test_root_element(client.clone(), name.clone(), fixture_path).await);
     }
 
+    info!("closing webdriver session...");
+    client.close().await.unwrap();
+
     info!("killing webdriver instance...");
     webdriver_handle.kill().unwrap();
     webdriver_handle.wait().unwrap();
