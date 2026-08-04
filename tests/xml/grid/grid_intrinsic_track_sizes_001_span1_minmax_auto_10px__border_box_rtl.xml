@@ -1,0 +1,17 @@
+<test name="grid_intrinsic_track_sizes_001_span1_minmax_auto_10px__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" direction="rtl" width="120px" height="120px" border-top="3px" border-left="3px" border-bottom="3px" border-right="3px" grid-template-rows="minmax(auto,10px)" grid-template-columns="minmax(auto,10px)">
+      <text direction="rtl" min-width="12px" min-height="12px" grid-row-start="1" grid-row-end="span 1" grid-column-start="1" grid-column-end="span 1">
+        XXX​XX​X
+      </text>
+      <div direction="rtl" grid-row-start="1" grid-column-start="1"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="120" height="120">
+      <node x="105" y="3" width="12" height="12"/>
+      <node x="105" y="3" width="12" height="12"/>
+    </node>
+  </expectations>
+</test>

@@ -4,6 +4,10 @@
 
 ### Fixed
 
+- Grid: an explicitly specified preferred or minimum size is no longer clamped by the spanned tracks' fixed max track sizing functions when computing an item's minimum contribution. That clamp only applies to the content-based (automatic) minimum size, per [CSS Grid §6.6](https://www.w3.org/TR/css-grid-1/#min-size-auto). Fixes e.g. an item with `min-width: 12px` in a `minmax(auto, 10px)` track sizing the track to `12px` rather than `10px`
+
+- Grid: when distributing a spanning item's intrinsic size contribution to its spanned tracks, space distributed "beyond limits" now ignores the tracks' growth limits (still capping growth at any `fit-content()` argument), per [CSS Grid §12.5.1](https://www.w3.org/TR/css-grid-1/#extra-space). Previously the growth limits were still enforced, so tracks such as `minmax(min-content, 10px)` could not expand beyond `10px` to accommodate an item's contribution
+
 - Grid: the container's min/max size is now converted to a content-box size (by subtracting padding, border and scrollbar gutters) before being used in the track sizing algorithm ("stretch auto tracks" and "expand flexible tracks" steps and the percentage basis fallback). Previously the border-box min/max size was used directly, causing tracks in a grid with padding/border and a `min-width`/`min-height` (but no definite size) to be sized too large by the padding+border amount ([WPT: grid-box-sizing-001](https://wpt.live/css/css-grid/grid-model/grid-box-sizing-001.html))
 
 - Grid: when distributing a spanning item's intrinsic size contribution to flexible tracks, the flex factor sum used to decide between flex-factor-proportional and equal distribution is now computed over only the spanned tracks eligible to receive the space (rather than all tracks in the axis), matching Chrome. Fixes track sizing when an item spans `0fr` tracks or a mix of intrinsic and non-intrinsic flexible tracks (e.g. `0fr minmax(0, 1fr)`)
