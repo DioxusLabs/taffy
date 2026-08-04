@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    Test description
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="display: grid; grid-template-rows: 20px 40px 30px; grid-template-columns: 50px 70px; grid-template-areas: 'header header' 'nav main' 'footer .';">
+  <div style="grid-row-start: header-start; grid-row-end: header-end; grid-column-start: header-start; grid-column-end: header-end;"></div>
+  <div style="grid-row-start: nav; grid-column-start: nav;"></div>
+  <div style="grid-row-start: main; grid-column-start: main;"></div>
+  <div style="grid-row-start: footer; grid-column-start: footer;"></div>
+</div>
+
+</body>
+</html>

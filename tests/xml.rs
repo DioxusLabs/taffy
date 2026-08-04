@@ -301,10 +301,9 @@ fn build_style<S: CheapCloneStr>(xnode: roxmltree::Node) -> taffy::Style<S> {
         grid_template_columns: grid_template_columns.tracks,
         grid_template_column_names: grid_template_columns.line_names,
 
-        // TODO
         grid_auto_rows: parse_or_default::<GridAutoTracks>(xnode.attribute("grid-auto-rows")).0,
         grid_auto_columns: parse_or_default::<GridAutoTracks>(xnode.attribute("grid-auto-columns")).0,
-        grid_template_areas: Default::default(),
+        grid_template_areas: xnode.attribute("grid-template-areas").map(|input| input.parse().unwrap()),
 
         grid_row: Line {
             start: parse_or_default(xnode.attribute("grid-row-start")),
