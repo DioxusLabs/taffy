@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Changed
+
+- Grid: `Style::grid_template_areas` is now `Option<GridTemplateAreas<S>>`, where the new `GridTemplateAreas` struct bundles the named areas (`areas`) with the overall size of the area template (`row_count`/`column_count`). This allows templates containing unnamed (`.`) cells beyond the extents of the named areas (e.g. `grid-template-areas: "a ."`) to be represented, as such cells still contribute to the size of the explicit grid. `GridContainerStyle` gains `grid_template_area_row_count`/`grid_template_area_column_count` methods (with default implementations that derive the counts from the extents of the named areas), which are now used to determine the size of the explicit grid
+
 ### Fixed
 
 - Grid: an explicitly specified preferred or minimum size is no longer clamped by the spanned tracks' fixed max track sizing functions when computing an item's minimum contribution. That clamp only applies to the content-based (automatic) minimum size, per [CSS Grid §6.6](https://www.w3.org/TR/css-grid-1/#min-size-auto). Fixes e.g. an item with `min-width: 12px` in a `minmax(auto, 10px)` track sizing the track to `12px` rather than `10px`
