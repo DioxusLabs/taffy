@@ -523,8 +523,7 @@ impl GridItem {
         let padding_border_size = (padding + border).sum_axes();
         let box_sizing_adjustment =
             if self.box_sizing == BoxSizing::ContentBox { padding_border_size } else { Size::ZERO };
-        let size = self
-            .size
+        self.size
             .maybe_resolve(grid_area_size, |val, basis| tree.calc(val, basis))
             .maybe_apply_aspect_ratio(self.aspect_ratio)
             .maybe_add(box_sizing_adjustment)
@@ -575,19 +574,19 @@ impl GridItem {
                         minimum_contribution = minimum_contribution.maybe_min(size).maybe_min(max_size);
                     }
 
-                    minimum_contribution
+                    // The content-based minimum size is additionally clamped by the sum of any fixed max track sizing
+                    // functions of the tracks the item spans. Note that this clamp does not apply to explicitly specified
+                    // preferred or minimum sizes, and that the argument to fit-content() does not clamp the content-based
+                    // minimum size in the same way as a fixed max track sizing function.
+                    let limit =
+                        self.spanned_fixed_track_limit(axis, axis_tracks, inner_node_size.get(axis), &|val, basis| {
+                            tree.resolve_calc_value(val, basis)
+                        });
+                    minimum_contribution.maybe_min(limit)
                 } else {
                     0.0
                 }
-            });
-
-        // In all cases, the size suggestion is additionally clamped by the maximum size in the affected axis, if it’s definite.
-        // Note: The argument to fit-content() does not clamp the content-based minimum size in the same way as a fixed max track
-        // sizing function.
-        let limit = self.spanned_fixed_track_limit(axis, axis_tracks, inner_node_size.get(axis), &|val, basis| {
-            tree.resolve_calc_value(val, basis)
-        });
-        size.maybe_min(limit)
+            })
     }
 
     /// Retrieve the item's minimum contribution from the cache or compute it using the provided parameters
