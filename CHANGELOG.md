@@ -4,6 +4,8 @@
 
 ### Fixed
 
+- Grid: the container's min/max size is now converted to a content-box size (by subtracting padding, border and scrollbar gutters) before being used in the track sizing algorithm ("stretch auto tracks" and "expand flexible tracks" steps and the percentage basis fallback). Previously the border-box min/max size was used directly, causing tracks in a grid with padding/border and a `min-width`/`min-height` (but no definite size) to be sized too large by the padding+border amount ([WPT: grid-box-sizing-001](https://wpt.live/css/css-grid/grid-model/grid-box-sizing-001.html))
+
 - Grid: when distributing a spanning item's intrinsic size contribution to flexible tracks, the flex factor sum used to decide between flex-factor-proportional and equal distribution is now computed over only the spanned tracks eligible to receive the space (rather than all tracks in the axis), matching Chrome. Fixes track sizing when an item spans `0fr` tracks or a mix of intrinsic and non-intrinsic flexible tracks (e.g. `0fr minmax(0, 1fr)`)
 
 - Block: replaced elements (`item_is_replaced: true`) are no longer stretch-sized to the container width. An auto width now resolves to the intrinsic size, per [CSS 2 §10.3.4](https://www.w3.org/TR/CSS22/visudet.html#block-replaced-width)

@@ -1,0 +1,13 @@
+<test name="grid_min_height_with_padding_border__content_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" box-sizing="content-box" direction="rtl" min-height="100px" padding-top="17px" padding-left="3px" padding-bottom="7px" padding-right="13px" border-top="5px" border-left="20px" border-bottom="15px" border-right="10px">
+      <div box-sizing="content-box" direction="rtl"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="46" height="144">
+      <node x="23" y="22" width="0" height="100"/>
+    </node>
+  </expectations>
+</test>
