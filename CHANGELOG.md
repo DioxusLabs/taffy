@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Added
+
+- Grid: `GridTemplateAreas` can now be parsed from a CSS string (`FromStr`/`FromCss`, behind the `parse` feature), e.g. `"\"header header\" \"nav main\"".parse::<GridTemplateAreas<String>>()`. The parser follows the [CSS Grid specification](https://drafts.csswg.org/css-grid/#grid-template-areas-property), including longest-match tokenization of `.` runs and validation that rows have equal widths and named areas form rectangles
+
 ### Changed
 
 - Grid: `Style::grid_template_areas` is now `Option<GridTemplateAreas<S>>`, where the new `GridTemplateAreas` struct bundles the named areas (`areas`) with the overall size of the area template (`row_count`/`column_count`). This allows templates containing unnamed (`.`) cells beyond the extents of the named areas (e.g. `grid-template-areas: "a ."`) to be represented, as such cells still contribute to the size of the explicit grid. `GridContainerStyle` gains `grid_template_area_row_count`/`grid_template_area_column_count` methods (with default implementations that derive the counts from the extents of the named areas), which are now used to determine the size of the explicit grid

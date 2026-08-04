@@ -31,6 +31,136 @@ pub struct GridTemplateAreas<CustomIdent: CheapCloneStr> {
     pub column_count: u16,
 }
 
+/// Whether a character is a "name code point" as defined by
+/// <https://drafts.csswg.org/css-grid/#valdef-grid-template-areas-string>
+#[cfg(feature = "parse")]
+fn is_name_code_point(c: char) -> bool {
+    c.is_ascii_alphanumeric() || c >= '\u{80}' || c == '_' || c == '-'
+}
+
+#[cfg(feature = "parse")]
+impl<S: CheapCloneStr> GridTemplateAreas<S> {
+    /// Parse a single row (one `<string>`) of a `grid-template-areas` template, appending to /
+    /// extending the named areas parsed from previous rows. Cells are tokenized with
+    /// longest-match semantics: a run of `.`s is a single null cell and a run of name code
+    /// points is a named cell.
+    fn parse_row(&mut self, string: &str) -> Result<(), &'static str> {
+        /// Whitespace characters that may separate cells within a row string
+        const WHITESPACE: [char; 5] = [' ', '\t', '\n', '\r', '\x0C'];
+        /// Error message returned when a named area does not form a rectangle
+        const NOT_RECTANGULAR: &str = "grid-template-areas: named areas must form rectangles";
+
+        self.row_count += 1;
+        let row = self.row_count;
+        let mut current_area_index: Option<usize> = None;
+        let mut column: u16 = 0;
+        let mut rest = string;
+        loop {
+            rest = rest.trim_start_matches(WHITESPACE);
+            if rest.is_empty() {
+                break;
+            }
+            column += 1;
+
+            // Null cell token (a sequence of one or more `.`s)
+            if rest.starts_with('.') {
+                rest = &rest[rest.find(|c| c != '.').unwrap_or(rest.len())..];
+                if let Some(index) = current_area_index.take() {
+                    if self.areas[index].column_end != column {
+                        return Err(NOT_RECTANGULAR);
+                    }
+                }
+                continue;
+            }
+
+            // Named cell token (a sequence of one or more name code points)
+            if !rest.starts_with(is_name_code_point) {
+                return Err("grid-template-areas: invalid character in row string");
+            }
+            let token_len = rest.find(|c| !is_name_code_point(c)).unwrap_or(rest.len());
+            let name = &rest[..token_len];
+            rest = &rest[token_len..];
+
+            if let Some(index) = current_area_index {
+                if self.areas[index].name.as_ref() == name {
+                    // Horizontal continuation of the current area (only widens it in its first row)
+                    if self.areas[index].row_start == row {
+                        self.areas[index].column_end += 1;
+                    }
+                    continue;
+                }
+                if self.areas[index].column_end != column {
+                    return Err(NOT_RECTANGULAR);
+                }
+            }
+
+            match self.areas.iter().position(|area| area.name.as_ref() == name) {
+                Some(index) => {
+                    // Vertical continuation of an area from the previous row
+                    if self.areas[index].column_start != column || self.areas[index].row_end != row {
+                        return Err(NOT_RECTANGULAR);
+                    }
+                    self.areas[index].row_end += 1;
+                    current_area_index = Some(index);
+                }
+                None => {
+                    self.areas.push(GridTemplateArea {
+                        name: S::from(name),
+                        row_start: row,
+                        row_end: row + 1,
+                        column_start: column,
+                        column_end: column + 1,
+                    });
+                    current_area_index = Some(self.areas.len() - 1);
+                }
+            }
+        }
+
+        if column == 0 {
+            // Each string must produce at least one cell
+            // https://github.com/w3c/csswg-drafts/issues/5110
+            return Err("grid-template-areas: row string must contain at least one cell");
+        }
+        if let Some(index) = current_area_index {
+            if self.areas[index].column_end != column + 1 {
+                return Err(NOT_RECTANGULAR);
+            }
+        }
+        if row == 1 {
+            self.column_count = column;
+        } else if self.column_count != column {
+            return Err("grid-template-areas: all rows must have the same number of columns");
+        }
+
+        Ok(())
+    }
+}
+
+#[cfg(feature = "parse")]
+impl<S: CheapCloneStr> FromCss for GridTemplateAreas<S> {
+    fn from_css<'i>(parser: &mut Parser<'i, '_>) -> CssParseResult<'i, Self> {
+        let mut template = Self { areas: crate::util::sys::GridTrackVec::new(), row_count: 0, column_count: 0 };
+        while let Ok(string) = parser.try_parse(|parser| parser.expect_string_cloned()) {
+            if let Err(message) = template.parse_row(&string) {
+                return Err(parser.new_custom_error(message));
+            }
+        }
+        if template.row_count == 0 {
+            let token = parser.next().cloned()?;
+            return Err(parser.new_unexpected_token_error(token));
+        }
+        Ok(template)
+    }
+}
+
+#[cfg(feature = "parse")]
+impl<S: CheapCloneStr> core::str::FromStr for GridTemplateAreas<S> {
+    type Err = ParseError;
+    fn from_str(input: &str) -> Result<Self, Self::Err> {
+        parse_css_str_entirely(input)
+    }
+}
+
 /// Defines a grid area
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
@@ -1697,5 +1827,80 @@ mod tests {
             line_names: Vec::new(),
         };
         assert_eq!((&repetition).track_count(), u16::MAX);
+    }
+
+    mod parse_grid_template_areas {
+        use crate::{GridTemplateArea, GridTemplateAreas};
+
+        type Areas = GridTemplateAreas<String>;
+
+        fn area(name: &str, rows: (u16, u16), columns: (u16, u16)) -> GridTemplateArea<String> {
+            GridTemplateArea {
+                name: name.into(),
+                row_start: rows.0,
+                row_end: rows.1,
+                column_start: columns.0,
+                column_end: columns.1,
+            }
+        }
+
+        #[test]
+        fn parses_single_area() {
+            let parsed: Areas = "\"a\"".parse().unwrap();
+            assert_eq!(parsed, Areas { areas: vec![area("a", (1, 2), (1, 2))], row_count: 1, column_count: 1 });
+        }
+
+        #[test]
+        fn parses_trailing_null_cells() {
+            let parsed: Areas = "\"a .\"".parse().unwrap();
+            assert_eq!(parsed, Areas { areas: vec![area("a", (1, 2), (1, 2))], row_count: 1, column_count: 2 });
+        }
+
+        #[test]
+        fn parses_multiple_rows_and_spans() {
+            // The classic layout example
+            let parsed: Areas = r#""header header" "nav    main" "footer ...""#.parse().unwrap();
+            assert_eq!(
+                parsed,
+                Areas {
+                    areas: vec![
+                        area("header", (1, 2), (1, 3)),
+                        area("nav", (2, 3), (1, 2)),
+                        area("main", (2, 3), (2, 3)),
+                        area("footer", (3, 4), (1, 2)),
+                    ],
+                    row_count: 3,
+                    column_count: 2,
+                }
+            );
+        }
+
+        #[test]
+        fn parses_null_cell_runs_without_spaces() {
+            let parsed: Areas = "\"...a...\"".parse().unwrap();
+            assert_eq!(parsed, Areas { areas: vec![area("a", (1, 2), (2, 3))], row_count: 1, column_count: 3 });
+        }
+
+        #[test]
+        fn rejects_mismatched_row_widths() {
+            assert!("\"a a\" \"b\"".parse::<Areas>().is_err());
+        }
+
+        #[test]
+        fn rejects_non_rectangular_areas() {
+            assert!("\"a a\" \"a .\"".parse::<Areas>().is_err());
+            assert!("\"a . a\"".parse::<Areas>().is_err());
+            assert!("\"a b\" \"a a\"".parse::<Areas>().is_err());
+            assert!("\"a\" \".\" \"a\"".parse::<Areas>().is_err());
+        }
+
+        #[test]
+        fn rejects_empty_and_invalid_input() {
+            assert!("".parse::<Areas>().is_err());
+            assert!("none".parse::<Areas>().is_err());
+            assert!("\"\"".parse::<Areas>().is_err());
+            assert!("\" \"".parse::<Areas>().is_err());
+            assert!("\"a!\"".parse::<Areas>().is_err());
+        }
     }
 }
