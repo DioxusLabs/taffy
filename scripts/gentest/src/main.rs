@@ -4,7 +4,7 @@ use std::fmt::Display;
 use std::fs::{self, OpenOptions};
 use std::io::Write as _;
 use std::path::{Component, Path, PathBuf};
-use std::process::Command;
+use std::process::{Command, Stdio};
 
 use fantoccini::{Client, ClientBuilder};
 use log::*;
@@ -37,10 +37,18 @@ async fn main() {
 
     info!("starting webdriver instance");
     let webdriver_url = "http://localhost:4444";
+    // Pipe chromedriver's output and forward it manually rather than letting it inherit
+    // gentest's stdout/stderr. Chrome processes spawned by chromedriver would otherwise
+    // inherit those file descriptors, and any that outlive gentest would keep a pipeline
+    // reading gentest's output (e.g. `just gentest | tail`) blocked waiting for EOF.
     let mut webdriver_handle = Command::new("chromedriver")
         .arg("--port=4444")
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
         .spawn()
         .expect("ChromeDriver not found: Make sure you have it installed and added to your PATH.");
+    forward_output(webdriver_handle.stdout.take().unwrap(), std::io::stdout());
+    forward_output(webdriver_handle.stderr.take().unwrap(), std::io::stderr());
 
     // this is silly, but it works
     std::thread::sleep(std::time::Duration::from_secs(1));
@@ -149,6 +157,16 @@ async fn main() {
 
     info!("formatting the source directory");
     Command::new("cargo").arg("fmt").current_dir(repo_root).status().unwrap();
+}
+
+/// Copies a child process output stream to the given writer on a background thread.
+/// The child gets a pipe rather than gentest's own stdout/stderr handles, so processes
+/// that outlive gentest cannot hold gentest's output open; the thread simply stops
+/// (and is torn down when the process exits) once the stream ends.
+fn forward_output(mut reader: impl std::io::Read + Send + 'static, mut writer: impl std::io::Write + Send + 'static) {
+    std::thread::spawn(move || {
+        let _ = std::io::copy(&mut reader, &mut writer);
+    });
 }
 
 async fn asserts_non_zero_width_scrollbars(client: Client) {
