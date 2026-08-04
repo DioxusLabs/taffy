@@ -1,0 +1,23 @@
+<test name="grid_flex_track_intrinsic_sizes_002_minmax_0_1fr_auto_auto_auto__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" direction="rtl" width="50px" height="50px" border-top="3px" border-left="3px" border-bottom="3px" border-right="3px" grid-template-rows="minmax(0px,1fr) auto auto auto" grid-template-columns="minmax(0px,1fr) auto auto auto">
+      <div direction="rtl" width="60px" height="60px" grid-row-start="1" grid-row-end="3" grid-column-start="1" grid-column-end="3"/>
+      <div direction="rtl" width="150px" height="150px" grid-row-start="2" grid-row-end="5" grid-column-start="2" grid-column-end="5"/>
+      <div direction="rtl" grid-row-start="1" grid-column-start="1"/>
+      <div direction="rtl" grid-row-start="2" grid-column-start="2"/>
+      <div direction="rtl" grid-row-start="3" grid-column-start="3"/>
+      <div direction="rtl" grid-row-start="4" grid-column-start="4"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="50" height="50">
+      <node x="-13" y="3" width="60" height="60"/>
+      <node x="-103" y="3" width="150" height="150"/>
+      <node x="47" y="3" width="0" height="0"/>
+      <node x="-3" y="3" width="50" height="50"/>
+      <node x="-53" y="53" width="50" height="50"/>
+      <node x="-103" y="103" width="50" height="50"/>
+    </node>
+  </expectations>
+</test>
