@@ -1,17 +1,17 @@
-<test name="grid_template_areas_unnamed_cells__content_box_ltr" use-rounding="true">
+<test name="grid_template_areas_single_named_cell__content_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="grid" box-sizing="content-box" direction="ltr" grid-auto-flow="row dense" grid-template-rows="10px" grid-template-columns="10px" grid-auto-rows="5px" grid-auto-columns="5px" grid-template-areas="&quot;a .&quot;">
+    <div display="grid" box-sizing="content-box" direction="ltr" grid-auto-flow="row dense" grid-template-rows="10px" grid-template-columns="10px" grid-auto-rows="5px" grid-auto-columns="5px" grid-template-areas="&quot;a&quot;">
       <div box-sizing="content-box" direction="ltr" grid-column-start="1"/>
       <div box-sizing="content-box" direction="ltr" grid-row-start="1"/>
       <div box-sizing="content-box" direction="ltr"/>
     </div>
   </input>
   <expectations>
-    <node x="0" y="0" width="15" height="15">
+    <node x="0" y="0" width="10" height="20">
       <node x="0" y="10" width="10" height="5"/>
       <node x="0" y="0" width="10" height="10"/>
-      <node x="10" y="0" width="5" height="10"/>
+      <node x="0" y="15" width="10" height="5"/>
     </node>
   </expectations>
 </test>

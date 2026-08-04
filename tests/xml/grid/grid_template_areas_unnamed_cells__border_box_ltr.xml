@@ -2,16 +2,16 @@
   <viewport width="max-content" height="max-content"/>
   <input>
     <div display="grid" direction="ltr" grid-auto-flow="row dense" grid-template-rows="10px" grid-template-columns="10px" grid-auto-rows="5px" grid-auto-columns="5px" grid-template-areas="&quot;a .&quot;">
-      <div direction="ltr"/>
-      <div direction="ltr"/>
+      <div direction="ltr" grid-column-start="1"/>
+      <div direction="ltr" grid-row-start="1"/>
       <div direction="ltr"/>
     </div>
   </input>
   <expectations>
     <node x="0" y="0" width="15" height="15">
+      <node x="0" y="10" width="10" height="5"/>
       <node x="0" y="0" width="10" height="10"/>
       <node x="10" y="0" width="5" height="10"/>
-      <node x="0" y="10" width="10" height="5"/>
     </node>
   </expectations>
 </test>
