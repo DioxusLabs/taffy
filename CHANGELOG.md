@@ -4,6 +4,8 @@
 
 ### Fixed
 
+- Grid: when distributing a spanning item's intrinsic size contribution to flexible tracks, the flex factor sum used to decide between flex-factor-proportional and equal distribution is now computed over only the spanned tracks eligible to receive the space (rather than all tracks in the axis), matching Chrome. Fixes track sizing when an item spans `0fr` tracks or a mix of intrinsic and non-intrinsic flexible tracks (e.g. `0fr minmax(0, 1fr)`)
+
 - Block: replaced elements (`item_is_replaced: true`) are no longer stretch-sized to the container width. An auto width now resolves to the intrinsic size, per [CSS 2 §10.3.4](https://www.w3.org/TR/CSS22/visudet.html#block-replaced-width)
 
 - Grid: tracks no longer grow past their growth limits when distributing free space to multiple tracks with asymmetric limits (in the "maximise tracks" step and when distributing item contributions to base sizes). Previously a track could be assigned space beyond its limit in later distribution iterations, causing `auto` tracks to overflow a definite container (#1000)

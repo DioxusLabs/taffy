@@ -1,0 +1,23 @@
+<test name="grid_flex_track_intrinsic_sizes_003_automin_span2_0fr_0fr_1fr__border_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" direction="ltr" width="60px" height="60px" border-top="3px" border-left="3px" border-bottom="3px" border-right="3px" grid-template-rows="0fr 0fr 1fr" grid-template-columns="0fr 0fr 1fr">
+      <div direction="ltr" grid-row-start="1" grid-row-end="span 2" grid-column-start="1" grid-column-end="span 2">
+        <div direction="ltr" width="100px" height="100px"/>
+      </div>
+      <div direction="ltr" grid-row-start="1" grid-column-start="1"/>
+      <div direction="ltr" grid-row-start="2" grid-column-start="2"/>
+      <div direction="ltr" grid-row-start="3" grid-column-start="3"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="60" height="60">
+      <node x="3" y="3" width="0" height="0">
+        <node x="0" y="0" width="0" height="100"/>
+      </node>
+      <node x="3" y="3" width="0" height="0"/>
+      <node x="3" y="3" width="0" height="0"/>
+      <node x="3" y="3" width="54" height="54"/>
+    </node>
+  </expectations>
+</test>
