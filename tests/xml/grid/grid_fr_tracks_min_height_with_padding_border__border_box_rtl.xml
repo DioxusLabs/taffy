@@ -1,0 +1,13 @@
+<test name="grid_fr_tracks_min_height_with_padding_border__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" direction="rtl" min-height="100px" padding-top="17px" padding-left="3px" padding-bottom="7px" padding-right="13px" border-top="5px" border-left="20px" border-bottom="15px" border-right="10px" grid-template-rows="1fr">
+      <div direction="rtl"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="46" height="100">
+      <node x="23" y="22" width="0" height="56"/>
+    </node>
+  </expectations>
+</test>
