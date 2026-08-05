@@ -2,7 +2,7 @@
 
 use crate::{
     CheapCloneStr, GenericGridTemplateComponent, GenericRepetition as _, GridAreaAxis, GridAreaEnd, GridContainerStyle,
-    GridPlacement, GridTemplateArea, GridTemplateAreas, Line, NonNamedGridPlacement, RepetitionCount,
+    GridPlacement, GridTemplateArea, Line, NonNamedGridPlacement, RepetitionCount,
 };
 use core::{borrow::Borrow, cmp::Ordering, fmt::Debug};
 
@@ -441,6 +441,7 @@ mod tests {
     use super::*;
     use crate::style::GenericGridPlacement;
     use crate::sys::DefaultCheapStr;
+    use crate::GridTemplateAreas;
     use crate::Style;
 
     fn resolver(explicit_track_count: u16) -> NamedLineResolver<DefaultCheapStr> {
