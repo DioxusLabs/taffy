@@ -299,6 +299,8 @@ jobs:
           else
             git status --short -- tests/xml
             echo -e "\nGenerated tests are not up-to-date. Please run 'just gentest'"
+            echo "\n"
+            git diff
             exit 1
           fi
 
