@@ -12,6 +12,8 @@
 
 - Grid: the track sizing algorithm no longer loops forever when styles contain non-finite values (e.g. `NaN` flex factors or non-finite lengths). The "find the size of an fr" and "distribute space up to limits" loops are now bounded by the track count
 
+- Grid: fixed an infinite loop in auto-placement when an item's placement resolved to a span larger than the implicit grid size estimate (e.g. a zero span — an invalid value which is now normalized to 1 — combined with an unresolvable named span). The auto-placement search now bails out (and clamps the placement into the limited grid) when a span cannot fit even at the start of the grid
+
 - Grid: when distributing a spanning item's max-content contribution to its spanned tracks' base sizes "beyond limits", tracks are now eligible only if their *max* track sizing function is `max-content` (or `fit-content()`), per [CSS Grid §12.5.1](https://www.w3.org/TR/css-grid-1/#extra-space). Previously tracks whose *min* track sizing function was `max-content` were also eligible, so a track such as `minmax(max-content, 20px)` could grow beyond its fixed `20px` limit, stealing space from `max-content` tracks ([WPT: grid-content-sized-columns-resolution](https://wpt.live/css/css-grid/parsing/grid-content-sized-columns-resolution.html))
 
 - Grid: an explicitly specified preferred or minimum size is no longer clamped by the spanned tracks' fixed max track sizing functions when computing an item's minimum contribution. That clamp only applies to the content-based (automatic) minimum size, per [CSS Grid §6.6](https://www.w3.org/TR/css-grid-1/#min-size-auto). Fixes e.g. an item with `min-width: 12px` in a `minmax(auto, 10px)` track sizing the track to `12px` rather than `10px`
