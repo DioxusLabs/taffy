@@ -45,3 +45,46 @@ fn clear_on_float_with_and_without_preceding_float() {
     assert_layout(t, f1, 404.0, 0.0, 96.0, 96.0);
     assert_layout(t, f2, 404.0, 96.0, 96.0, 96.0);
 }
+
+/// Reduced from WPT css/CSS2/floats-clear/clear-clearance-calculation-004.xht
+///
+/// When the hypothetical position of a cleared block (with its top margin) is already
+/// past the bottom of the float, negative clearance keeps it at the float's bottom edge.
+#[test]
+fn negative_clearance_from_large_top_margin() {
+    let t = &mut TaffyTree::new();
+    let first = block(
+        t,
+        Style {
+            size: Size { width: auto(), height: length(25.0) },
+            margin: Rect { bottom: length(25.0), ..Rect::zero() },
+            ..Default::default()
+        },
+        &[],
+    );
+    let float = block(
+        t,
+        Style { float: Float::Left, size: Size { width: length(50.0), height: length(50.0) }, ..Default::default() },
+        &[],
+    );
+    let last = block(
+        t,
+        Style {
+            clear: Clear::Left,
+            margin: Rect { top: length(75.0), ..Rect::zero() },
+            size: Size { width: auto(), height: length(50.0) },
+            ..Default::default()
+        },
+        &[],
+    );
+    let container = block(
+        t,
+        Style { size: Size { width: length(300.0), height: auto() }, ..Default::default() },
+        &[first, float, last],
+    );
+    t.compute_layout(container, Size::MAX_CONTENT).unwrap();
+
+    assert_layout(t, float, 0.0, 50.0, 50.0, 50.0);
+    assert_layout(t, last, 0.0, 100.0, 300.0, 50.0);
+    assert_layout(t, container, 0.0, 0.0, 300.0, 150.0);
+}

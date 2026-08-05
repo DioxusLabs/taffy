@@ -969,7 +969,9 @@ fn perform_final_layout_on_in_flow_children(
             };
 
             #[cfg(feature = "float_layout")]
-            let clear_pos = block_ctx.cleared_threshold(item.clear).unwrap_or(f32::NEG_INFINITY);
+            let clear_threshold = block_ctx.cleared_threshold(item.clear);
+            #[cfg(feature = "float_layout")]
+            let clear_pos = clear_threshold.unwrap_or(f32::NEG_INFINITY);
             #[cfg(not(feature = "float_layout"))]
             let clear_pos = f32::NEG_INFINITY;
 
@@ -1040,16 +1042,45 @@ fn perform_final_layout_on_in_flow_children(
             if item.is_in_same_bfc
                 && (!is_collapsing_with_first_margin_set || !own_margins_collapse_with_children.start)
             {
-                y_margin_offset = active_collapsible_margin_set.collapse_with_margin(resolved_margin.top).resolve()
+                y_margin_offset = active_collapsible_margin_set.collapse_with_set(top_margin_set).resolve()
             };
 
+            // Compute clearance (CSS2.2 9.5.2). Clearance is introduced if the hypothetical position of the
+            // item's top border edge (the position it would have with normal margin collapsing) is not past
+            // the bottom of the relevant floats. When clearance is introduced the item's border edge is
+            // placed at `max(float bottom, hypothetical position)`.
             #[cfg(feature = "float_layout")]
-            let float_or_not_clear = item.float.is_floated() || item.clear == Clear::None;
+            let mut has_clearance = false;
             #[cfg(not(feature = "float_layout"))]
-            let float_or_not_clear = true;
+            let has_clearance = false;
+            #[cfg(feature = "float_layout")]
+            if item.is_in_same_bfc {
+                if let Some(threshold) = clear_threshold {
+                    // The hypothetical position always includes the item's collapsed top margin set, even
+                    // when those margins collapse with the container's own top margin (and are thus applied
+                    // outside the container): in that case they still move the container (and hence the item)
+                    // relative to the floats.
+                    let hypothetical_y =
+                        committed_y_offset + active_collapsible_margin_set.collapse_with_set(top_margin_set).resolve();
+                    if hypothetical_y < threshold {
+                        has_clearance = true;
+                        // Clearance stops the item's top margin collapsing with preceding margins. If those
+                        // preceding margins collapse with the container's own top margin they are applied
+                        // outside the container (moving it down), so the item's cleared position within the
+                        // container must be reduced by that amount to keep its absolute position correct.
+                        let escaped_margin =
+                            if is_collapsing_with_first_margin_set && own_margins_collapse_with_children.start {
+                                active_collapsible_margin_set.resolve()
+                            } else {
+                                0.0
+                            };
+                        y_margin_offset = threshold - committed_y_offset - escaped_margin;
+                    }
+                }
+            }
 
             item.computed_size = item_layout.size;
-            item.can_be_collapsed_through = item_layout.margins_can_collapse_through && float_or_not_clear;
+            item.can_be_collapsed_through = item_layout.margins_can_collapse_through && !has_clearance;
             item.static_position = if item.is_in_same_bfc {
                 let uncleared_y = committed_y_offset + active_collapsible_margin_set.resolve();
                 Point {
@@ -1081,7 +1112,7 @@ fn perform_final_layout_on_in_flow_children(
                                 + inset_offset.x
                         }
                     },
-                    y: (committed_y_offset + y_margin_offset).max(clear_pos) + inset_offset.y,
+                    y: committed_y_offset + y_margin_offset + inset_offset.y,
                 }
             } else {
                 // TODO: handle inset and margins
