@@ -129,12 +129,10 @@ impl<S: CheapCloneStr> NamedLineResolver<S> {
                         let lines_per_repetition = max(line_name_set_count, repeat.track_count() as u32 + 1) - 1;
 
                         for _ in 0..repeat_count {
-                            let mut line = current_line;
-                            for line_name_set in repeat.lines_names() {
+                            for (line, line_name_set) in (current_line..).zip(repeat.lines_names()) {
                                 for line_name in line_name_set {
                                     upsert_line_name_map(&mut column_lines, line_name.clone(), line);
                                 }
-                                line += 1;
                             }
                             current_line += lines_per_repetition;
 
@@ -183,12 +181,10 @@ impl<S: CheapCloneStr> NamedLineResolver<S> {
                         let lines_per_repetition = max(line_name_set_count, repeat.track_count() as u32 + 1) - 1;
 
                         for _ in 0..repeat_count {
-                            let mut line = current_line;
-                            for line_name_set in repeat.lines_names() {
+                            for (line, line_name_set) in (current_line..).zip(repeat.lines_names()) {
                                 for line_name in line_name_set {
                                     upsert_line_name_map(&mut row_lines, line_name.clone(), line);
                                 }
-                                line += 1;
                             }
                             current_line += lines_per_repetition;
 
