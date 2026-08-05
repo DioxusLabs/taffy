@@ -1,7 +1,7 @@
 //! Implements placing items in the grid and resolving the implicit grid.
 //! <https://www.w3.org/TR/css-grid-1/#placement>
 use super::types::{CellOccupancyMatrix, CellOccupancyState, GridItem};
-use super::{NamedLineResolver, OriginZeroLine};
+use super::{NamedLineResolver, OriginZeroLine, MAX_OZ_LINE, MIN_OZ_LINE};
 use crate::geometry::Line;
 use crate::geometry::{AbsoluteAxis, InBothAbsAxis};
 use crate::style::{AlignItems, GridAutoFlow, OriginZeroGridPlacement};
@@ -19,9 +19,9 @@ fn axis_is_reversed(direction: Direction, axis: AbsoluteAxis) -> bool {
 /// Advances the cursor by one track in the active search direction.
 fn advance_position(position: OriginZeroLine, axis_is_reversed: bool) -> OriginZeroLine {
     if axis_is_reversed {
-        OriginZeroLine(position.0 - 1)
+        OriginZeroLine(position.0.saturating_sub(1))
     } else {
-        OriginZeroLine(position.0 + 1)
+        OriginZeroLine(position.0.saturating_add(1))
     }
 }
 
@@ -42,10 +42,13 @@ fn search_start_line(
 #[inline]
 /// Resolves an indefinite span at `position`, respecting the active axis direction.
 fn resolve_indefinite_grid_span(position: OriginZeroLine, span: u16, axis_is_reversed: bool) -> Line<OriginZeroLine> {
+    let position = position.0 as i32;
+    let span = span as i32;
+    let line = |value: i32| OriginZeroLine(value.clamp(i16::MIN as i32, i16::MAX as i32) as i16);
     if axis_is_reversed {
-        Line { start: (position - span) + 1, end: position + 1 }
+        Line { start: line(position - span + 1), end: line(position + 1) }
     } else {
-        Line { start: position, end: position + span }
+        Line { start: line(position), end: line(position + span) }
     }
 }
 
@@ -68,7 +71,9 @@ fn maybe_mirror_span(
     explicit_col_count: u16,
 ) -> Line<OriginZeroLine> {
     if axis == AbsoluteAxis::Horizontal && direction.is_rtl() {
-        mirror_horizontal_span(span, explicit_col_count)
+        // Clamp into the limited grid before mirroring so that placements outside of the limited
+        // grid mirror to the same tracks as their clamped equivalents
+        mirror_horizontal_span(clamp_span_to_limited_grid(span, MIN_OZ_LINE, MAX_OZ_LINE), explicit_col_count)
     } else {
         span
     }
@@ -132,6 +137,8 @@ pub(super) fn place_grid_items<'a, S, ChildIter>(
                 align_items,
                 justify_items,
                 primary_axis,
+                direction,
+                explicit_col_count,
                 row_span,
                 col_span,
                 CellOccupancyState::DefinitelyPlaced,
@@ -167,6 +174,8 @@ pub(super) fn place_grid_items<'a, S, ChildIter>(
                 align_items,
                 justify_items,
                 primary_axis,
+                direction,
+                explicit_col_count,
                 primary_span,
                 secondary_span,
                 CellOccupancyState::AutoPlaced,
@@ -237,6 +246,8 @@ pub(super) fn place_grid_items<'a, S, ChildIter>(
                 align_items,
                 justify_items,
                 primary_axis,
+                direction,
+                explicit_col_count,
                 primary_span,
                 secondary_span,
                 CellOccupancyState::AutoPlaced,
@@ -454,6 +465,32 @@ fn place_indefinitely_positioned_item(
     }
 }
 
+/// Clamp a placement into the limited grid, preserving a span of at least 1 track.
+/// Items placed outside of the limited grid are clamped into it.
+///
+/// See: <https://www.w3.org/TR/css-grid-1/#overlarge-grids>
+fn clamp_span_to_limited_grid(span: Line<OriginZeroLine>, min_line: i16, max_line: i16) -> Line<OriginZeroLine> {
+    let start = span.start.0.clamp(min_line, max_line - 1);
+    let end = span.end.0.clamp(start + 1, max_line);
+    Line { start: OriginZeroLine(start), end: OriginZeroLine(end) }
+}
+
+/// Clamps a span using bounds transformed into the axis's placement coordinates.
+fn clamp_span_for_axis(
+    span: Line<OriginZeroLine>,
+    axis: AbsoluteAxis,
+    direction: Direction,
+    explicit_col_count: u16,
+) -> Line<OriginZeroLine> {
+    let (min_line, max_line) = if axis == AbsoluteAxis::Horizontal && direction.is_rtl() {
+        let explicit_end = explicit_col_count as i16;
+        (explicit_end - MAX_OZ_LINE, explicit_end - MIN_OZ_LINE)
+    } else {
+        (MIN_OZ_LINE, MAX_OZ_LINE)
+    };
+    clamp_span_to_limited_grid(span, min_line, max_line)
+}
+
 /// Record the grid item in both CellOccupancyMatric and the GridItems list
 /// once a definite placement has been determined
 #[allow(clippy::too_many_arguments)]
@@ -466,6 +503,8 @@ fn record_grid_placement<S: GridItemStyle>(
     parent_align_items: AlignItems,
     parent_justify_items: AlignItems,
     primary_axis: AbsoluteAxis,
+    direction: Direction,
+    explicit_col_count: u16,
     primary_span: Line<OriginZeroLine>,
     secondary_span: Line<OriginZeroLine>,
     placement_type: CellOccupancyState,
@@ -474,6 +513,11 @@ fn record_grid_placement<S: GridItemStyle>(
     println!("BEFORE placement:");
     #[cfg(test)]
     println!("{cell_occupancy_matrix:?}");
+
+    // Clamp placements into the limited grid to prevent arithmetic overflow when growing the
+    // implicit grid (https://www.w3.org/TR/css-grid-1/#overlarge-grids)
+    let primary_span = clamp_span_for_axis(primary_span, primary_axis, direction, explicit_col_count);
+    let secondary_span = clamp_span_for_axis(secondary_span, primary_axis.other_axis(), direction, explicit_col_count);
 
     // Mark area of grid as occupied
     cell_occupancy_matrix.mark_area_as(primary_axis, primary_span, secondary_span, placement_type);
@@ -503,6 +547,7 @@ fn record_grid_placement<S: GridItemStyle>(
 
 #[cfg(test)]
 mod tests {
+    use super::*;
 
     mod test_placement_algorithm {
         use crate::compute::grid::implicit_grid::compute_grid_size_estimate;
@@ -510,6 +555,7 @@ mod tests {
         use crate::compute::grid::util::*;
         use crate::compute::grid::CellOccupancyMatrix;
         use crate::compute::grid::NamedLineResolver;
+        use crate::compute::grid::OriginZeroLine;
         use crate::prelude::*;
         use crate::style::GridAutoFlow;
         use crate::Direction;
@@ -760,5 +806,62 @@ mod tests {
             let expected_rows = TrackCounts { negative_implicit: 0, explicit: 2, positive_implicit: 0 };
             placement_test_runner(explicit_col_count, explicit_row_count, children, expected_cols, expected_rows, flow);
         }
+
+        #[test]
+        fn test_rtl_overlarge_placement_uses_mirrored_limits() {
+            let explicit_col_count = 9_000;
+            let explicit_row_count = 0;
+            let style = (line(-19_005), auto(), auto(), auto()).into_grid_child();
+            let children = [(0, style)];
+            let estimated_sizes = compute_grid_size_estimate(
+                explicit_col_count,
+                explicit_row_count,
+                Direction::Rtl,
+                children.iter().map(|(_, style)| style),
+            );
+            let mut items = Vec::new();
+            let mut cell_occupancy_matrix =
+                CellOccupancyMatrix::with_track_counts(estimated_sizes.0, estimated_sizes.1);
+            let mut name_resolver = NamedLineResolver::new(&Style::DEFAULT, 0, 0);
+            name_resolver.set_explicit_column_count(explicit_col_count);
+            name_resolver.set_explicit_row_count(explicit_row_count);
+            place_grid_items(
+                &mut cell_occupancy_matrix,
+                &mut items,
+                || children.iter().map(|(index, style)| (*index, NodeId::from(*index), style)),
+                Direction::Rtl,
+                GridAutoFlow::Row,
+                AlignSelf::START,
+                AlignSelf::START,
+                &name_resolver,
+            );
+            assert_eq!(items[0].column, Line { start: OriginZeroLine(18_999), end: OriginZeroLine(19_000) });
+        }
+    }
+
+    #[test]
+    fn auto_placement_cursor_saturates_at_integer_bounds() {
+        assert_eq!(advance_position(OriginZeroLine(i16::MAX), false), OriginZeroLine(i16::MAX));
+        assert_eq!(advance_position(OriginZeroLine(i16::MIN), true), OriginZeroLine(i16::MIN));
+    }
+
+    #[test]
+    fn indefinite_spans_saturate_at_integer_bounds() {
+        assert_eq!(
+            resolve_indefinite_grid_span(OriginZeroLine(i16::MAX), 1, false),
+            Line { start: OriginZeroLine(i16::MAX), end: OriginZeroLine(i16::MAX) }
+        );
+        assert_eq!(
+            resolve_indefinite_grid_span(OriginZeroLine(i16::MIN), 1, true),
+            Line { start: OriginZeroLine(i16::MIN), end: OriginZeroLine(i16::MIN + 1) }
+        );
+    }
+
+    #[test]
+    fn rtl_spans_are_clamped_in_mirrored_coordinates() {
+        let logical_span = Line { start: OriginZeroLine(-10_000), end: OriginZeroLine(-9_999) };
+        let mirrored_span = maybe_mirror_span(logical_span, AbsoluteAxis::Horizontal, Direction::Rtl, 9_000);
+        assert_eq!(mirrored_span, Line { start: OriginZeroLine(18_999), end: OriginZeroLine(19_000) });
+        assert_eq!(clamp_span_for_axis(mirrored_span, AbsoluteAxis::Horizontal, Direction::Rtl, 9_000), mirrored_span);
     }
 }

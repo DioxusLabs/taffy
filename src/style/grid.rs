@@ -3,7 +3,7 @@ use super::{
     AlignContent, AlignItems, AlignSelf, CheapCloneStr, CompactLength, CoreStyle, Dimension, JustifyContent,
     LengthPercentage, LengthPercentageAuto, Style,
 };
-use crate::compute::grid::{GridCoordinate, GridLine, OriginZeroLine};
+use crate::compute::grid::{GridCoordinate, GridLine, OriginZeroLine, MAX_GRID_TRACKS};
 use crate::geometry::{AbsoluteAxis, AbstractAxis, Line, MinMax, Size};
 use crate::style_helpers::*;
 use crate::sys::{DefaultCheapStr, Vec};
@@ -80,7 +80,7 @@ pub trait GenericRepetition {
     fn tracks(&self) -> Self::RepetitionTrackList<'_>;
     /// Returns the number of repeated tracks
     fn track_count(&self) -> u16 {
-        self.tracks().len() as u16
+        self.tracks().len().min(u16::MAX as usize) as u16
     }
     /// Returns an iterator over the lines names
     fn lines_names(&self) -> Self::TemplateLineNames<'_>;
@@ -425,6 +425,18 @@ impl<S: CheapCloneStr> TaffyGridSpan for Line<GridPlacement<S>> {
 }
 
 #[cfg(feature = "parse")]
+/// Saturates an `i32` to the range representable by `i16`.
+fn saturating_i16(value: i32) -> i16 {
+    value.clamp(i16::MIN as i32, i16::MAX as i32) as i16
+}
+
+#[cfg(feature = "parse")]
+/// Saturates an `i32` to the range representable by `u16`.
+fn saturating_u16(value: i32) -> u16 {
+    value.clamp(u16::MIN as i32, u16::MAX as i32) as u16
+}
+
+#[cfg(feature = "parse")]
 impl<S: CheapCloneStr> FromCss for GridPlacement<S> {
     fn from_css<'i>(parser: &mut Parser<'i, '_>) -> CssParseResult<'i, Self> {
         let mut span = false;
@@ -467,11 +479,11 @@ impl<S: CheapCloneStr> FromCss for GridPlacement<S> {
 
         match (span, number, ident) {
             (true, None, None) => Ok(Self::Span(0)),
-            (true, Some(number), None) => Ok(Self::Span(number as u16)),
+            (true, Some(number), None) => Ok(Self::Span(saturating_u16(number))),
             (true, None, Some(ident)) => Ok(Self::NamedSpan(ident, 0)),
-            (true, Some(number), Some(ident)) => Ok(Self::NamedSpan(ident, number as u16)),
-            (false, Some(number), None) => Ok(Self::Line(GridLine::from(number as i16))),
-            (false, Some(number), Some(ident)) => Ok(Self::NamedLine(ident, number as i16)),
+            (true, Some(number), Some(ident)) => Ok(Self::NamedSpan(ident, saturating_u16(number))),
+            (false, Some(number), None) => Ok(Self::Line(GridLine::from(saturating_i16(number)))),
+            (false, Some(number), Some(ident)) => Ok(Self::NamedLine(ident, saturating_i16(number))),
             (false, None, Some(ident)) => Ok(Self::NamedLine(ident, 0)),
             (false, None, None) => Err(parser.new_error(cssparser::BasicParseErrorKind::EndOfInput)),
         }
@@ -491,7 +503,9 @@ impl<S: CheapCloneStr> GridPlacement<S> {
     pub fn into_origin_zero_placement_ignoring_named(&self, explicit_track_count: u16) -> OriginZeroGridPlacement {
         match self {
             Self::Auto => OriginZeroGridPlacement::Auto,
-            Self::Span(span) => OriginZeroGridPlacement::Span(*span),
+            // Spans are clamped to the maximum track limit
+            // https://www.w3.org/TR/css-grid-1/#overlarge-grids
+            Self::Span(span) => OriginZeroGridPlacement::Span(min(*span, MAX_GRID_TRACKS)),
             // Grid line zero is an invalid index, so it gets treated as Auto
             // See: https://developer.mozilla.org/en-US/docs/Web/CSS/grid-row-start#values
             Self::Line(line) => match line.as_i16() {
@@ -523,7 +537,9 @@ impl NonNamedGridPlacement {
     ) -> OriginZeroGridPlacement {
         match self {
             Self::Auto => OriginZeroGridPlacement::Auto,
-            Self::Span(span) => OriginZeroGridPlacement::Span(*span),
+            // Spans are clamped to the maximum track limit
+            // https://www.w3.org/TR/css-grid-1/#overlarge-grids
+            Self::Span(span) => OriginZeroGridPlacement::Span(min(*span, MAX_GRID_TRACKS)),
             // Grid line zero is an invalid index, so it gets treated as Auto
             // See: https://developer.mozilla.org/en-US/docs/Web/CSS/grid-row-start#values
             Self::Line(line) => match line.as_i16() {
@@ -1381,7 +1397,9 @@ impl TryFrom<&str> for RepetitionCount {
 impl FromCss for RepetitionCount {
     fn from_css<'i>(parser: &mut Parser<'i, '_>) -> CssParseResult<'i, Self> {
         match parser.next()?.clone() {
-            Token::Number { int_value: Some(value), .. } if value.is_positive() => Ok(Self::Count(value as _)),
+            Token::Number { int_value: Some(value), .. } if value.is_positive() => {
+                Ok(Self::Count(saturating_u16(value)))
+            }
             Token::Ident(ident) if ident == "auto-fit" => Ok(Self::AutoFit),
             Token::Ident(ident) if ident == "auto-fill" => Ok(Self::AutoFill),
             token => Err(parser.new_unexpected_token_error(token))?,
@@ -1414,7 +1432,7 @@ impl<S: CheapCloneStr> GenericRepetition for &'_ GridTemplateRepetition<S> {
     }
     #[inline(always)]
     fn track_count(&self) -> u16 {
-        self.tracks.len() as u16
+        self.tracks.len().min(u16::MAX as usize) as u16
     }
     #[inline(always)]
     fn tracks(&self) -> Self::RepetitionTrackList<'_> {
@@ -1605,3 +1623,49 @@ impl FromCss for GridAutoTracks {
 }
 #[cfg(feature = "parse")]
 from_str_from_css!(GridAutoTracks);
+
+#[cfg(all(test, feature = "parse"))]
+mod tests {
+    use super::*;
+    use crate::sys::DefaultCheapStr;
+
+    #[test]
+    fn grid_placement_parser_saturates_numeric_values() {
+        assert_eq!(
+            "32768".parse::<GridPlacement<DefaultCheapStr>>().unwrap(),
+            GridPlacement::Line(GridLine::from(i16::MAX))
+        );
+        assert_eq!(
+            "-32769".parse::<GridPlacement<DefaultCheapStr>>().unwrap(),
+            GridPlacement::Line(GridLine::from(i16::MIN))
+        );
+        assert_eq!("span 65536".parse::<GridPlacement<DefaultCheapStr>>().unwrap(), GridPlacement::Span(u16::MAX));
+
+        let named_line = "32768 line".parse::<GridPlacement<DefaultCheapStr>>().unwrap();
+        assert!(matches!(named_line, GridPlacement::NamedLine(_, i16::MAX)));
+
+        let named_span = "span 65536 line".parse::<GridPlacement<DefaultCheapStr>>().unwrap();
+        assert!(matches!(named_span, GridPlacement::NamedSpan(_, u16::MAX)));
+    }
+
+    #[test]
+    fn repetition_parser_saturates_numeric_values() {
+        assert_eq!("65536".parse::<RepetitionCount>().unwrap(), RepetitionCount::Count(u16::MAX));
+
+        let component = "repeat(65536, 1px)".parse::<GridTemplateComponent<DefaultCheapStr>>().unwrap();
+        assert!(matches!(
+            component,
+            GridTemplateComponent::Repeat(GridTemplateRepetition { count: RepetitionCount::Count(u16::MAX), .. })
+        ));
+    }
+
+    #[test]
+    fn repetition_track_count_saturates() {
+        let repetition = GridTemplateRepetition::<DefaultCheapStr> {
+            count: RepetitionCount::Count(1),
+            tracks: vec![TrackSizingFunction::AUTO; u16::MAX as usize + 1],
+            line_names: Vec::new(),
+        };
+        assert_eq!((&repetition).track_count(), u16::MAX);
+    }
+}

@@ -1,0 +1,17 @@
+<test name="grid_overlarge_auto_flow_column_dense_extreme_row__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" direction="rtl" grid-auto-flow="column dense" grid-auto-rows="0px" grid-auto-columns="0px">
+      <div direction="rtl" width="20px" height="20px" grid-row-start="-30000"/>
+      <div direction="rtl" width="20px" height="20px" grid-column-start="5"/>
+      <div direction="rtl" width="20px" height="20px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="0" height="0">
+      <node x="-20" y="0" width="20" height="20"/>
+      <node x="-20" y="0" width="20" height="20"/>
+      <node x="-20" y="0" width="20" height="20"/>
+    </node>
+  </expectations>
+</test>

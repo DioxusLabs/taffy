@@ -1,0 +1,15 @@
+<test name="grid_overlarge_span_overflow_secondary_axis__content_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" box-sizing="content-box" direction="rtl" grid-auto-rows="0px" grid-auto-columns="0px">
+      <div box-sizing="content-box" direction="rtl" width="20px" height="20px" grid-row-start="9995" grid-row-end="span 20" grid-column-start="2"/>
+      <div box-sizing="content-box" direction="rtl" width="20px" height="20px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="0" height="0">
+      <node x="-20" y="0" width="20" height="20"/>
+      <node x="-20" y="0" width="20" height="20"/>
+    </node>
+  </expectations>
+</test>

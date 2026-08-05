@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    A repeat count and track count whose product overflows u16
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="display: grid; width: 200px; height: 100px; grid-template-columns: repeat(40000, 10px 10px);">
+  <div style="background: #59c4f6;"></div>
+</div>
+
+</body>
+</html>
