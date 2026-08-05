@@ -1,0 +1,12 @@
+[package]
+name = "getchrome"
+version = "0.1.0"
+authors = ["Nico Burns"]
+edition = "2021"
+
+[dependencies]
+ureq = { version = "3.3.0", default-features = false, features = ["rustls"] }
+zip = { version = "8.6.0", default-features = false, features = ["deflate"] }
+env_logger = "0.11.10"
+log = "0.4"
+serde_json = "1"

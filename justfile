@@ -1,6 +1,9 @@
 gentest:
   cargo run --release --package gentest --
 
+getchrome:
+  cargo run --release --package getchrome --
+
 import-yoga-tests:
   cargo run --package import-yoga-tests --
 

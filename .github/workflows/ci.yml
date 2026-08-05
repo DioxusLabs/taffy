@@ -282,6 +282,26 @@ jobs:
             exit 1
           fi
 
+  gentest:
+    name: Generated Test Freshness
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Generate tests
+        run: cargo run -p gentest
+        env:
+          RUST_LOG: debug
+      - name: Ensure generated tests are up-to-date
+        run: |
+          if [ -z "$(git status --porcelain -- tests/xml)" ]; then
+            echo "Generated tests are up-to-date"
+          else
+            git status --short -- tests/xml
+            echo -e "\nGenerated tests are not up-to-date. Please run 'just gentest'"
+            exit 1
+          fi
+
   # benches is excluded from the workspace as it depends on cosmic-text which breaks compilation
   # of all crates in the workspace with our MSRV compiler
   benchmarks:

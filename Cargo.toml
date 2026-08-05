@@ -112,6 +112,7 @@ doc-scrape-examples = true
 [workspace]
 members = [
     "scripts/gentest",
+    "scripts/getchrome",
     "scripts/format-fixtures",
     "scripts/import-yoga-tests",
     "tests/common",

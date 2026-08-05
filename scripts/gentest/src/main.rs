@@ -2,15 +2,28 @@ use std::borrow::Cow;
 use std::ffi::{OsStr, OsString};
 use std::fmt::Display;
 use std::fs::{self, OpenOptions};
-use std::io::Write as _;
+use std::io::{IsTerminal, Write as _};
+use std::net::{Ipv4Addr, SocketAddr, TcpListener, TcpStream};
 use std::path::{Component, Path, PathBuf};
-use std::process::{Command, Stdio};
+use std::process::{Child, Command, Stdio};
+use std::time::{Duration, Instant};
 
+use fantoccini::wd::TimeoutConfiguration;
 use fantoccini::{Client, ClientBuilder};
 use log::*;
 use serde_json::Value;
+use tokio::time::timeout;
 use walkdir::WalkDir;
 use xmlwriter::{Indent, Options, XmlWriter};
+
+/// How long to wait for any single step of test generation before giving up
+///
+/// This bounds starting ChromeDriver, starting and quitting the browser, and each command sent to
+/// the browser. All of these normally take well under a second.
+const TIMEOUT: Duration = Duration::from_secs(10);
+
+/// How long to wait for the browser to exit on its own before killing it
+const BROWSER_EXIT_GRACE_PERIOD: Duration = Duration::from_secs(2);
 
 #[tokio::main]
 async fn main() {
@@ -35,44 +48,24 @@ async fn main() {
         .collect();
     fixtures.sort_unstable_by_key(|f| f.1.clone());
 
-    info!("starting webdriver instance");
-    let webdriver_url = "http://localhost:4444";
-    // Pipe chromedriver's output and forward it manually rather than letting it inherit
-    // gentest's stdout/stderr. Chrome processes spawned by chromedriver would otherwise
-    // inherit those file descriptors, and any that outlive gentest would keep a pipeline
-    // reading gentest's output (e.g. `just gentest | tail`) blocked waiting for EOF.
-    let mut webdriver_handle = Command::new("chromedriver")
-        .arg("--port=4444")
-        .stdout(Stdio::piped())
-        .stderr(Stdio::piped())
-        .spawn()
-        .expect("ChromeDriver not found: Make sure you have it installed and added to your PATH.");
-    forward_output(webdriver_handle.stdout.take().unwrap(), std::io::stdout());
-    forward_output(webdriver_handle.stderr.take().unwrap(), std::io::stderr());
+    info!("obtaining chrome-for-testing");
+    let chrome = getchrome::download_default().unwrap_or_else(|err| fatal(&err.to_string()));
+    info!("using chrome-for-testing {}", chrome.version);
 
-    // this is silly, but it works
-    std::thread::sleep(std::time::Duration::from_secs(1));
+    let mut webdriver = WebDriver::start(&chrome.chromedriver).unwrap_or_else(|err| fatal(&err));
 
-    let mut caps = serde_json::map::Map::new();
-    let chrome_opts = serde_json::json!({ "args": ["--headless", "--disable-gpu"] });
-    caps.insert("goog:chromeOptions".to_string(), chrome_opts.clone());
-
-    info!("spawning webdriver client and collecting test descriptions");
-    let client = ClientBuilder::native().capabilities(caps.clone()).connect(webdriver_url).await.unwrap();
-
-    asserts_non_zero_width_scrollbars(client.clone()).await;
-
-    let mut test_descs = vec![];
-    for (name, fixture_path) in fixtures.iter() {
-        test_descs.push(test_root_element(client.clone(), name.clone(), fixture_path).await);
-    }
-
-    info!("closing webdriver session...");
-    client.close().await.unwrap();
-
-    info!("killing webdriver instance...");
-    webdriver_handle.kill().unwrap();
-    webdriver_handle.wait().unwrap();
+    // Collect the test descriptions, making sure that the browser and webdriver are shut down
+    // afterwards regardless of whether doing so succeeded.
+    let result = match webdriver.new_session(&chrome.chrome).await {
+        Ok(client) => {
+            let result = collect_test_descs(&client, &fixtures).await;
+            webdriver.close_session(client).await;
+            result
+        }
+        Err(err) => Err(err),
+    };
+    webdriver.shutdown();
+    let test_descs = result.unwrap_or_else(|err| fatal(&err));
 
     info!("generating test sources and concatenating...");
 
@@ -156,7 +149,12 @@ async fn main() {
     }
 
     info!("formatting the source directory");
-    Command::new("cargo").arg("fmt").current_dir(repo_root).status().unwrap();
+    // The tests have already been written at this point, so a formatting failure is not fatal
+    match Command::new("cargo").arg("fmt").current_dir(repo_root).status() {
+        Ok(status) if !status.success() => warn!("`cargo fmt` failed ({status})"),
+        Err(err) => warn!("could not run `cargo fmt`: {err}"),
+        Ok(_) => {}
+    }
 }
 
 /// Copies a child process output stream to the given writer on a background thread.
@@ -169,50 +167,375 @@ fn forward_output(mut reader: impl std::io::Read + Send + 'static, mut writer: i
     });
 }
 
-async fn asserts_non_zero_width_scrollbars(client: Client) {
+/// Report a fatal error and exit without generating any tests
+///
+/// Aborting rather than continuing means that an incomplete run cannot delete existing tests
+/// (test generation removes and re-creates the whole generated tests directory).
+fn fatal(message: &str) -> ! {
+    error!("{message}");
+    eprintln!("\nError: {message}\n\nNo tests have been generated.");
+    std::process::exit(1);
+}
+
+/// A running ChromeDriver process, along with the URL that it is listening on
+struct WebDriver {
+    process: Child,
+    url: String,
+    /// The profile directory that the browser is told to use
+    ///
+    /// Passing our own directory (rather than letting ChromeDriver pick a temporary one) makes it
+    /// possible to identify the browser processes belonging to this run, so that they can be
+    /// cleaned up even when ChromeDriver fails to do so.
+    profile_dir: PathBuf,
+}
+
+impl WebDriver {
+    /// Start ChromeDriver on a free port and wait for it to start accepting connections
+    fn start(chromedriver_path: &Path) -> Result<Self, String> {
+        // Rather than a fixed port, use a free port chosen by the OS. This prevents us from
+        // interfering with (or being confused by) any other WebDriver server on the machine,
+        // including a ChromeDriver left behind by a previous run of this script.
+        let port = free_port().map_err(|err| format!("could not find a free port for ChromeDriver: {err}"))?;
+
+        info!("starting webdriver instance on port {port}");
+        // Pipe chromedriver's output and forward it manually rather than letting it inherit
+        // gentest's stdout/stderr. Chrome processes spawned by chromedriver would otherwise
+        // inherit those file descriptors, and any that outlive gentest would keep a pipeline
+        // reading gentest's output (e.g. `just gentest | tail`) blocked waiting for EOF.
+        let mut process = Command::new(chromedriver_path)
+            .arg(format!("--port={port}"))
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped())
+            .spawn()
+            .map_err(|err| format!("could not start ChromeDriver ({}): {err}", chromedriver_path.display()))?;
+        forward_output(process.stdout.take().unwrap(), std::io::stdout());
+        forward_output(process.stderr.take().unwrap(), std::io::stderr());
+
+        let profile_dir = std::env::temp_dir().join(format!("taffy-gentest-{}", std::process::id()));
+        let mut webdriver = WebDriver { process, url: format!("http://127.0.0.1:{port}"), profile_dir };
+        webdriver.wait_until_listening(port)?;
+        Ok(webdriver)
+    }
+
+    /// Wait for ChromeDriver to start accepting connections on `port`
+    ///
+    /// ChromeDriver only binds its port once it is ready to serve requests, so this avoids sending
+    /// requests to a server that is not up yet (and avoids waiting for a fixed amount of time).
+    fn wait_until_listening(&mut self, port: u16) -> Result<(), String> {
+        let addr = SocketAddr::from(([127, 0, 0, 1], port));
+        let start = Instant::now();
+        loop {
+            // Detect ChromeDriver failing to start (e.g. because the port is already in use)
+            // rather than waiting for it to accept a connection that will never come.
+            match self.process.try_wait() {
+                Ok(Some(status)) => return Err(format!("ChromeDriver exited during startup ({status})")),
+                Err(err) => return Err(format!("could not determine whether ChromeDriver is running: {err}")),
+                Ok(None) => {}
+            }
+
+            if TcpStream::connect_timeout(&addr, Duration::from_secs(1)).is_ok() {
+                return Ok(());
+            }
+
+            if start.elapsed() > TIMEOUT {
+                return Err(format!(
+                    "ChromeDriver did not start listening on port {port} within {} seconds",
+                    TIMEOUT.as_secs()
+                ));
+            }
+
+            std::thread::sleep(Duration::from_millis(50));
+        }
+    }
+
+    /// Create a WebDriver session that runs the browser at `chrome_path`
+    async fn new_session(&self, chrome_path: &Path) -> Result<Client, String> {
+        let mut caps = serde_json::map::Map::new();
+        let chrome_opts = serde_json::json!({
+            "binary": chrome_path,
+            "args": ["--headless", "--no-sandbox", "--disable-gpu", format!("--user-data-dir={}", self.profile_dir.display())],
+        });
+        caps.insert("goog:chromeOptions".to_string(), chrome_opts);
+
+        info!("spawning webdriver client");
+        // Creating the session launches the browser, which can hang indefinitely (for example if
+        // the browser cannot start), so give up rather than hanging forever.
+        let mut builder = ClientBuilder::native();
+        builder.capabilities(caps);
+        let client = timeout(TIMEOUT, builder.connect(&self.url))
+            .await
+            .map_err(|_| {
+                format!(
+                    "the browser did not start within {} seconds. Check the ChromeDriver output above for details.",
+                    TIMEOUT.as_secs()
+                )
+            })?
+            .map_err(|err| format!("could not create a WebDriver session: {err}"))?;
+
+        // Bound how long the browser itself will spend on a single navigation or script, so that a
+        // problematic test fixture results in an error rather than a hang.
+        let timeouts = TimeoutConfiguration::new(Some(TIMEOUT), Some(TIMEOUT), Some(Duration::ZERO));
+        client.update_timeouts(timeouts).await.map_err(|err| format!("could not set WebDriver timeouts: {err}"))?;
+
+        Ok(client)
+    }
+
+    /// Close the WebDriver session, which quits the browser that it launched
+    async fn close_session(&self, client: Client) {
+        info!("closing webdriver session...");
+        // If the session is not closed then the browser is left running as an orphan process when
+        // ChromeDriver is killed, so log loudly if this fails.
+        match timeout(TIMEOUT, client.close()).await {
+            Ok(Ok(())) => {}
+            Ok(Err(err)) => warn!("could not close the webdriver session (the browser may still be running): {err}"),
+            Err(_) => warn!("closing the webdriver session timed out (the browser may still be running)"),
+        }
+    }
+
+    /// Shut the ChromeDriver process down and clean up after the browser it launched
+    fn shutdown(&mut self) {
+        self.stop_process();
+        self.shutdown_browser();
+        self.remove_profile_dir();
+    }
+
+    /// Wait for the browser to exit, killing it if it does not
+    ///
+    /// The browser is identified by its profile directory. Waiting for it matters because a browser
+    /// writes to its profile until it exits, which would otherwise repopulate the profile directory
+    /// after it has been removed.
+    #[cfg(unix)]
+    fn shutdown_browser(&self) {
+        if !self.profile_dir.exists() {
+            return;
+        }
+        // Only processes launched with our profile directory match this pattern
+        let pattern = format!("--user-data-dir={}", self.profile_dir.display());
+
+        // A browser whose session was closed is already on its way out
+        if wait_for_exit(&pattern, BROWSER_EXIT_GRACE_PERIOD) {
+            return;
+        }
+
+        // A browser that has stopped responding is not shut down by ChromeDriver, and would
+        // otherwise be left behind as an orphan process holding on to a lot of memory.
+        // The `--` is required because the pattern itself starts with dashes.
+        let killed = Command::new("pkill").args(["-9", "-f", "--"]).arg(&pattern).status();
+        if matches!(killed, Ok(status) if status.success()) {
+            warn!("killed browser processes that did not shut down cleanly");
+        }
+        wait_for_exit(&pattern, TIMEOUT);
+    }
+
+    #[cfg(not(unix))]
+    fn shutdown_browser(&self) {}
+
+    /// Remove the profile directory of the browser
+    ///
+    /// This is retried for a short while because a browser that has just been killed may still be
+    /// writing to its profile, which makes removing the directory fail.
+    fn remove_profile_dir(&self) {
+        let start = Instant::now();
+        loop {
+            match fs::remove_dir_all(&self.profile_dir) {
+                Ok(()) => return,
+                Err(err) if err.kind() == std::io::ErrorKind::NotFound => return,
+                Err(err) if start.elapsed() > TIMEOUT => {
+                    warn!("could not remove {}: {err}", self.profile_dir.display());
+                    return;
+                }
+                Err(_) => std::thread::sleep(Duration::from_millis(100)),
+            }
+        }
+    }
+
+    /// Stop the ChromeDriver process
+    fn stop_process(&mut self) {
+        if matches!(self.process.try_wait(), Ok(Some(_))) {
+            return;
+        }
+
+        info!("stopping webdriver instance...");
+
+        // Ask ChromeDriver to shut down gracefully so that it gets the chance to quit any browser
+        // that it is still responsible for. `Child::kill` sends SIGKILL, which would leave such a
+        // browser running as an orphan process.
+        #[cfg(unix)]
+        {
+            let _ = Command::new("kill").arg(self.process.id().to_string()).status();
+            let start = Instant::now();
+            while start.elapsed() < TIMEOUT {
+                if matches!(self.process.try_wait(), Ok(Some(_))) {
+                    return;
+                }
+                std::thread::sleep(Duration::from_millis(50));
+            }
+            warn!("ChromeDriver did not shut down gracefully. Killing it.");
+        }
+
+        let _ = self.process.kill();
+        let _ = self.process.wait();
+    }
+}
+
+impl Drop for WebDriver {
+    fn drop(&mut self) {
+        // Backstop for exit paths that do not shut the webdriver down explicitly (such as a panic)
+        self.shutdown();
+    }
+}
+
+/// Wait for all of the processes matching `pattern` to exit, returning whether they all did
+#[cfg(unix)]
+fn wait_for_exit(pattern: &str, patience: Duration) -> bool {
+    let start = Instant::now();
+    loop {
+        // The `--` is required because the patterns used here start with dashes
+        let running = Command::new("pgrep").args(["-f", "--"]).arg(pattern).stdout(Stdio::null()).status();
+        if !matches!(running, Ok(status) if status.success()) {
+            return true;
+        }
+        if start.elapsed() > patience {
+            return false;
+        }
+        std::thread::sleep(Duration::from_millis(50));
+    }
+}
+
+/// Ask the OS for a free TCP port
+fn free_port() -> std::io::Result<u16> {
+    // The port is free when the listener is dropped at the end of this function. This is racy in
+    // theory, but in practice the port is bound again immediately, and ChromeDriver failing to
+    // bind it is detected and reported.
+    Ok(TcpListener::bind((Ipv4Addr::LOCALHOST, 0))?.local_addr()?.port())
+}
+
+/// Collect the layout of every test fixture from the browser
+async fn collect_test_descs(
+    client: &Client,
+    fixtures: &[(String, PathBuf)],
+) -> Result<Vec<(String, PathBuf, Value)>, String> {
+    asserts_non_zero_width_scrollbars(client).await?;
+
+    info!("collecting test descriptions");
+    let progress = Progress::new(fixtures.len());
+    let mut test_descs = Vec::with_capacity(fixtures.len());
+    for (index, (name, fixture_path)) in fixtures.iter().enumerate() {
+        progress.step(index, name);
+        test_descs.push(test_root_element(client, name, fixture_path).await?);
+    }
+    progress.finish(&format!("collected {} test descriptions", test_descs.len()));
+    Ok(test_descs)
+}
+
+/// The width of the terminal in characters, defaulting to 80 if it cannot be determined
+fn terminal_width() -> usize {
+    let from_tput = || {
+        let output = Command::new("tput").arg("cols").stderr(Stdio::null()).output().ok()?;
+        String::from_utf8_lossy(&output.stdout).trim().parse().ok()
+    };
+    std::env::var("COLUMNS").ok().and_then(|columns| columns.parse().ok()).or_else(from_tput).unwrap_or(80)
+}
+
+/// Reports the progress of a long running sequence of steps
+///
+/// When stderr is a terminal a single line is updated in place. Otherwise (when the output is being
+/// piped to a file or a CI log) one line is logged per step.
+struct Progress {
+    total: usize,
+    in_place: bool,
+    /// The width of the terminal, which progress lines are truncated to so that they do not wrap
+    terminal_width: usize,
+}
+
+impl Progress {
+    fn new(total: usize) -> Self {
+        Progress { total, in_place: std::io::stderr().is_terminal(), terminal_width: terminal_width() }
+    }
+
+    /// Report that the (zero-based) step `index`, described by `label`, is about to start
+    fn step(&self, index: usize, label: &str) {
+        let (count, total) = (index + 1, self.total);
+        if self.in_place {
+            // A line that is exactly as wide as the terminal already wraps, hence the -1
+            let width = self.terminal_width.saturating_sub(1);
+            let line: String = format!("[{count}/{total}] {label}").chars().take(width).collect();
+            // `\r` moves back to the start of the line and `\x1b[K` clears the rest of it
+            eprint!("\r\x1b[K{line}");
+            let _ = std::io::stderr().flush();
+        } else {
+            info!("[{count}/{total}] {label}");
+        }
+    }
+
+    /// Replace the progress line with a final message
+    fn finish(&self, label: &str) {
+        if self.in_place {
+            eprintln!("\r\x1b[K{label}");
+        } else {
+            info!("{label}");
+        }
+    }
+}
+
+async fn asserts_non_zero_width_scrollbars(client: &Client) -> Result<(), String> {
     // Load minimal test page defined in the string
     const TEST_PAGE: &str = r#"data:text/html;charset=utf-8,<html><style>::-webkit-scrollbar{ width: 15px; height: 15px; }</style><body><div style="overflow:scroll" /></body></html>"#;
-    client.goto(TEST_PAGE).await.unwrap();
+    client.goto(TEST_PAGE).await.map_err(|err| format!("could not load the scrollbar test page: {err}"))?;
 
     // Determine the width of the scrollbar
     let scrollbar_width = client
         .execute("return document.body.firstChild.clientWidth - document.body.firstChild.offsetWidth;", vec![])
         .await
-        .unwrap();
-    let Value::Number(scrollbar_width) = scrollbar_width else { panic!("Error retrieving scrollbar_width") };
-    let scrollbar_width = scrollbar_width.as_f64().unwrap();
+        .map_err(|err| format!("could not determine the width of scrollbars: {err}"))?;
+    let scrollbar_width =
+        scrollbar_width.as_f64().ok_or_else(|| format!("unexpected scrollbar width: {scrollbar_width}"))?;
 
     if scrollbar_width == 0.0 {
-        panic!(concat!(
-            "\n\n    Error: Scrollbar width of zero detected. This test generation script must be run with scrollbars set to take up space.\n",
-            "    On macOS this can be done by setting Show Scrollbars to 'always' in the Appearance section of the System Settings app.\n\n"
-        ))
+        return Err(concat!(
+            "Scrollbar width of zero detected. This test generation script must be run with scrollbars set to take up space.\n",
+            "    On macOS this can be done by setting Show Scrollbars to 'always' in the Appearance section of the System Settings app."
+        ).to_string());
     }
+
+    Ok(())
 }
 
-async fn test_root_element(client: Client, name: String, fixture_path: impl AsRef<Path>) -> (String, PathBuf, Value) {
-    let fixture_path = fixture_path.as_ref();
-
+async fn test_root_element(
+    client: &Client,
+    name: &str,
+    fixture_path: &Path,
+) -> Result<(String, PathBuf, Value), String> {
     let url = format!("file://{}", fixture_path.display());
 
-    client.goto(&url).await.unwrap();
+    // The browser occasionally stops responding to a command entirely, so time each command out
+    // rather than waiting forever. A fixture normally takes a few milliseconds.
+    timeout(TIMEOUT, client.goto(&url))
+        .await
+        .map_err(|_| format!("timed out loading the test fixture {name} ({})", fixture_path.display()))?
+        .map_err(|err| format!("could not load the test fixture {name}: {err}"))?;
 
     // Navigation can occasionally return before the document is fully loaded, so retry a few times
     let mut attempts = 0;
     let description = loop {
-        match client.execute("return getTestData()", vec![]).await {
+        let result = timeout(TIMEOUT, client.execute("return getTestData()", vec![]))
+            .await
+            .map_err(|_| format!("timed out running getTestData() for {name}"))?;
+        match result {
             Ok(description) => break description,
             Err(err) if attempts < 3 => {
                 attempts += 1;
                 warn!("getTestData() failed for {name} (attempt {attempts}): {err}");
-                tokio::time::sleep(std::time::Duration::from_millis(200)).await;
+                tokio::time::sleep(Duration::from_millis(200)).await;
             }
-            Err(err) => panic!("getTestData() failed for {}: {}", name, err),
+            Err(err) => return Err(format!("getTestData() failed for {name}: {err}")),
         }
     };
-    let description_string = description.as_str().unwrap();
-    let description = serde_json::from_str(description_string).unwrap();
-    (name.to_string(), fixture_path.to_path_buf(), description)
+    let description_string =
+        description.as_str().ok_or_else(|| format!("unexpected test data for {name}: {description}"))?;
+    let description =
+        serde_json::from_str(description_string).map_err(|err| format!("invalid test data for {name}: {err}"))?;
+    Ok((name.to_string(), fixture_path.to_path_buf(), description))
 }
 
 fn generate_test(name: impl AsRef<str>, description: &Value) -> String {
