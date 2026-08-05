@@ -15,6 +15,22 @@ use crate::util::parse::{
     from_str_from_css, parse_css_str_entirely, CssParseResult, FromCss, ParseError, Parser, Token,
 };
 
+/// Defines the value of the `grid-template-areas` property: the named areas plus the overall
+/// size (in tracks) of the area template.
+///
+/// The template may be larger than the extents of the named areas due to unnamed (`.`) cells,
+/// so the size is stored explicitly.
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub struct GridTemplateAreas<CustomIdent: CheapCloneStr> {
+    /// The named grid areas
+    pub areas: crate::util::sys::GridTrackVec<GridTemplateArea<CustomIdent>>,
+    /// The number of rows in the area template
+    pub row_count: u16,
+    /// The number of columns in the area template
+    pub column_count: u16,
+}
+
 /// Defines a grid area
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
@@ -176,6 +192,20 @@ pub trait GridContainerStyle: CoreStyle {
 
     /// Named grid areas
     fn grid_template_areas(&self) -> Option<Self::GridTemplateAreas<'_>>;
+    /// The number of rows in the `grid-template-areas` template (0 if there is no template).
+    /// May be greater than the extent of the named areas due to unnamed (`.`) cells.
+    fn grid_template_area_row_count(&self) -> u16 {
+        self.grid_template_areas()
+            .map(|areas| areas.into_iter().map(|area| area.row_end.max(1) - 1).max().unwrap_or(0))
+            .unwrap_or(0)
+    }
+    /// The number of columns in the `grid-template-areas` template (0 if there is no template).
+    /// May be greater than the extent of the named areas due to unnamed (`.`) cells.
+    fn grid_template_area_column_count(&self) -> u16 {
+        self.grid_template_areas()
+            .map(|areas| areas.into_iter().map(|area| area.column_end.max(1) - 1).max().unwrap_or(0))
+            .unwrap_or(0)
+    }
     /// Defines the line names for row lines
     fn grid_template_column_names(&self) -> Option<Self::TemplateLineNames<'_>>;
     /// Defines the size of implicitly created rows

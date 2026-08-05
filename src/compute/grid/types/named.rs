@@ -81,15 +81,15 @@ impl<S: CheapCloneStr> NamedLineResolver<S> {
         let mut column_lines: Map<StrHasher<S>, Vec<u32>> = Map::new();
         let mut row_lines: Map<StrHasher<S>, Vec<u32>> = Map::new();
 
-        let mut area_column_count = 0;
-        let mut area_row_count = 0;
+        // The size of the area template may be larger than the extents of the named areas
+        // due to unnamed (`.`) cells, so it is taken from the style rather than being derived
+        // from the areas themselves.
+        let area_column_count = style.grid_template_area_column_count();
+        let area_row_count = style.grid_template_area_row_count();
         if let Some(area_iter) = style.grid_template_areas() {
             for area in area_iter.into_iter() {
                 // TODO: Investigate eliminating clones
                 areas.insert(StrHasher(area.name.clone()), area.clone());
-
-                area_column_count = area_column_count.max(area.column_end.max(1) - 1);
-                area_row_count = area_row_count.max(area.row_end.max(1) - 1);
 
                 let col_start_name = S::from(format!("{}-start", area.name.as_ref()));
                 upsert_line_name_map(&mut column_lines, col_start_name, area.column_start as u32);
@@ -441,6 +441,7 @@ mod tests {
     use super::*;
     use crate::style::GenericGridPlacement;
     use crate::sys::DefaultCheapStr;
+    use crate::GridTemplateAreas;
     use crate::Style;
 
     fn resolver(explicit_track_count: u16) -> NamedLineResolver<DefaultCheapStr> {
@@ -489,13 +490,17 @@ mod tests {
     #[test]
     fn area_lines_saturate_when_converted_to_grid_lines() {
         let style = Style {
-            grid_template_areas: vec![GridTemplateArea {
-                name: DefaultCheapStr::from("area"),
-                row_start: 1,
-                row_end: 2,
-                column_start: u16::MAX,
-                column_end: u16::MAX,
-            }],
+            grid_template_areas: Some(GridTemplateAreas {
+                areas: vec![GridTemplateArea {
+                    name: DefaultCheapStr::from("area"),
+                    row_start: 1,
+                    row_end: 2,
+                    column_start: u16::MAX,
+                    column_end: u16::MAX,
+                }],
+                row_count: 1,
+                column_count: u16::MAX,
+            }),
             ..Style::DEFAULT
         };
         let resolver = NamedLineResolver::new(&style, 0, 0);
