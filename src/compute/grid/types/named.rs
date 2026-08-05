@@ -2,7 +2,7 @@
 
 use crate::{
     CheapCloneStr, GenericGridTemplateComponent, GenericRepetition as _, GridAreaAxis, GridAreaEnd, GridContainerStyle,
-    GridPlacement, GridTemplateArea, Line, NonNamedGridPlacement, RepetitionCount,
+    GridPlacement, GridTemplateArea, GridTemplateAreas, Line, NonNamedGridPlacement, RepetitionCount,
 };
 use core::{borrow::Borrow, cmp::Ordering, fmt::Debug};
 
@@ -489,13 +489,17 @@ mod tests {
     #[test]
     fn area_lines_saturate_when_converted_to_grid_lines() {
         let style = Style {
-            grid_template_areas: vec![GridTemplateArea {
-                name: DefaultCheapStr::from("area"),
-                row_start: 1,
-                row_end: 2,
-                column_start: u16::MAX,
-                column_end: u16::MAX,
-            }],
+            grid_template_areas: Some(GridTemplateAreas {
+                areas: vec![GridTemplateArea {
+                    name: DefaultCheapStr::from("area"),
+                    row_start: 1,
+                    row_end: 2,
+                    column_start: u16::MAX,
+                    column_end: u16::MAX,
+                }],
+                row_count: 1,
+                column_count: u16::MAX,
+            }),
             ..Style::DEFAULT
         };
         let resolver = NamedLineResolver::new(&style, 0, 0);
