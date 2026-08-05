@@ -18915,6 +18915,42 @@ mod grid {
 
     #[cfg(feature = "grid")]
     #[test]
+    fn grid_content_sized_columns_max_content_and_max_content_fixed_and_max_content__border_box_ltr() {
+        crate::run_xml_test(
+            "grid",
+            "grid_content_sized_columns_max_content_and_max_content_fixed_and_max_content__border_box_ltr",
+        );
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_content_sized_columns_max_content_and_max_content_fixed_and_max_content__content_box_ltr() {
+        crate::run_xml_test(
+            "grid",
+            "grid_content_sized_columns_max_content_and_max_content_fixed_and_max_content__content_box_ltr",
+        );
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_content_sized_columns_max_content_and_max_content_fixed_and_max_content__border_box_rtl() {
+        crate::run_xml_test(
+            "grid",
+            "grid_content_sized_columns_max_content_and_max_content_fixed_and_max_content__border_box_rtl",
+        );
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_content_sized_columns_max_content_and_max_content_fixed_and_max_content__content_box_rtl() {
+        crate::run_xml_test(
+            "grid",
+            "grid_content_sized_columns_max_content_and_max_content_fixed_and_max_content__content_box_rtl",
+        );
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
     fn grid_definite_size_auto_tracks_asymmetric_max_content__border_box_ltr() {
         crate::run_xml_test("grid", "grid_definite_size_auto_tracks_asymmetric_max_content__border_box_ltr");
     }
