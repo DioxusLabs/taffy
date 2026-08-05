@@ -12,6 +12,8 @@
 
 - Block: clearance is now computed per [CSS2.2 §9.5.2](https://www.w3.org/TR/CSS22/visuren.html#flow-control) from the hypothetical position of the cleared element (including its collapsed top margin), supporting *negative clearance* and suppressing clearance when a large top margin already places the element past the relevant float(s). Previously the cleared element's position was simply clamped to the bottom of the floats, ignoring its top margin
 
+- Block: clearance prevents the cleared element's top margin from collapsing with preceding margins and with the parent's top margin, per [CSS2.2 §8.3.1](https://www.w3.org/TR/CSS22/box.html#collapsing-margins)
+
 - Block/float: `clear` on an element no longer has any effect when no float has been placed on the relevant side(s). Previously `FloatContext::cleared_threshold` treated an empty float context as a float ending at `y=0`, which could spuriously clamp the position of cleared elements
 
 - Block: an element containing only floated children can now be collapsed through (its own margins collapse with each other), per [CSS2.2 §8.3.1](https://www.w3.org/TR/CSS22/box.html#collapsing-margins) — floated children are out-of-flow and do not prevent collapse-through

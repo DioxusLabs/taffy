@@ -1180,7 +1180,12 @@ fn perform_final_layout_on_in_flow_children(
             }
 
             // Update first_child_top_margin_set
-            if is_collapsing_with_first_margin_set {
+            //
+            // The top margin of an item with clearance does not collapse with the container's top margin,
+            // so clearance terminates collapsing without contributing the item's own margins.
+            if is_collapsing_with_first_margin_set && has_clearance {
+                is_collapsing_with_first_margin_set = false;
+            } else if is_collapsing_with_first_margin_set {
                 if item.can_be_collapsed_through {
                     first_child_top_margin_set = first_child_top_margin_set
                         .collapse_with_set(top_margin_set)
