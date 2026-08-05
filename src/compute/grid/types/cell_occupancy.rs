@@ -4,7 +4,7 @@ use crate::compute::grid::OriginZeroLine;
 use crate::geometry::AbsoluteAxis;
 use crate::geometry::Line;
 use crate::util::sys::Vec;
-use core::cmp::max;
+use core::cmp::{max, min};
 use core::fmt::Debug;
 use core::ops::Range;
 use grid::Grid;
@@ -30,6 +30,24 @@ pub(crate) struct CellOccupancyMatrix {
     columns: TrackCounts,
     /// The counts of implicit and explicit rows
     rows: TrackCounts,
+    /// The range of rows (as indexes into `inner`) which contain occupied cells
+    occupied_rows: Range<usize>,
+    /// The range of columns (as indexes into `inner`) which contain occupied cells
+    occupied_columns: Range<usize>,
+}
+
+/// Extend a range of track indexes such that it also contains another range
+fn union_range(range: &Range<usize>, other: Range<usize>) -> Range<usize> {
+    if range.is_empty() {
+        return other;
+    }
+    min(range.start, other.start)..max(range.end, other.end)
+}
+
+/// Intersect a range of track indexes with the range of tracks which may contain occupied cells
+fn intersect_occupied(range: Range<i16>, occupied: &Range<usize>) -> Range<i16> {
+    let clamp = |value: usize| value.min(i16::MAX as usize) as i16;
+    max(range.start, clamp(occupied.start))..min(range.end, clamp(occupied.end))
 }
 
 /// Debug impl that represents the matrix in a compact 2d text format
@@ -71,7 +89,7 @@ impl CellOccupancyMatrix {
     /// Create a CellOccupancyMatrix given a set of provisional track counts. The grid can expand as needed to fit more tracks,
     /// the provisional track counts represent a best effort attempt to avoid the extra allocations this requires.
     pub fn with_track_counts(columns: TrackCounts, rows: TrackCounts) -> Self {
-        Self { inner: Grid::new(rows.len(), columns.len()), rows, columns }
+        Self { inner: Grid::new(rows.len(), columns.len()), rows, columns, occupied_rows: 0..0, occupied_columns: 0..0 }
     }
 
     /// Determines whether the specified area fits within the tracks currently represented by the matrix
@@ -138,6 +156,16 @@ impl CellOccupancyMatrix {
         self.rows.positive_implicit += req_positive_rows as u16;
         self.columns.negative_implicit += req_negative_cols as u16;
         self.columns.positive_implicit += req_positive_cols as u16;
+
+        // Existing cells have been shifted by the newly created negative tracks
+        if !self.occupied_rows.is_empty() {
+            let offset = req_negative_rows as usize;
+            self.occupied_rows = (self.occupied_rows.start + offset)..(self.occupied_rows.end + offset);
+        }
+        if !self.occupied_columns.is_empty() {
+            let offset = req_negative_cols as usize;
+            self.occupied_columns = (self.occupied_columns.start + offset)..(self.occupied_columns.end + offset);
+        }
     }
 
     /// Mark an area of the matrix as occupied, expanding the allocated space as necessary to accommodate the passed area.
@@ -163,6 +191,12 @@ impl CellOccupancyMatrix {
             self.expand_to_fit_range(row_range.clone(), col_range.clone());
             col_range = self.columns.oz_line_range_to_track_range(column_span);
             row_range = self.rows.oz_line_range_to_track_range(row_span);
+        }
+
+        if value != CellOccupancyState::Unoccupied && !row_range.is_empty() && !col_range.is_empty() {
+            self.occupied_rows = union_range(&self.occupied_rows, row_range.start as usize..row_range.end as usize);
+            self.occupied_columns =
+                union_range(&self.occupied_columns, col_range.start as usize..col_range.end as usize);
         }
 
         for x in row_range {
@@ -198,7 +232,15 @@ impl CellOccupancyMatrix {
             AbsoluteAxis::Vertical => (primary_range, secondary_range),
         };
 
-        // Search for occupied cells in the specified area. Out of bounds cells are considered unoccupied.
+        // Out of bounds cells are considered unoccupied, and occupied cells only exist within the
+        // bounding box of the areas which have been marked as occupied. So we only need to search the
+        // intersection of the requested area with that bounding box. The requested area may be far larger
+        // than the matrix (items may span up to `MAX_GRID_TRACKS` tracks), so restricting the search is
+        // important to prevent the placement algorithm from doing an excessive amount of work.
+        let row_range = intersect_occupied(row_range, &self.occupied_rows);
+        let col_range = intersect_occupied(col_range, &self.occupied_columns);
+
+        // Search for occupied cells in the specified area.
         for x in row_range {
             for y in col_range.clone() {
                 match self.inner.get(x as usize, y as usize) {

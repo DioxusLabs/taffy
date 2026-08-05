@@ -1302,7 +1302,12 @@ fn find_size_of_fr(tracks: &[GridTrack], space_to_fill: f32) -> f32 {
     // condition can never be true for the first iteration.
     let mut hypothetical_fr_size = f32::INFINITY;
     let mut previous_iter_hypothetical_fr_size;
-    loop {
+    // Every restart of the algorithm treats at least one more flexible track as inflexible, so a valid
+    // hypothetical fr size is always found within `tracks.len() + 1` iterations. Non-finite values (which
+    // can arise from non-finite style inputs) break that invariant as comparisons against `NaN` are always
+    // false, so we bound the iteration count to guarantee termination.
+    let max_iterations = tracks.len() + 1;
+    for _ in 0..max_iterations {
         // Let leftover space be the space to fill minus the base sizes of the non-flexible grid tracks.
         // Let flex factor sum be the sum of the flex factors of the flexible tracks. If this value is less than 1, set it to 1 instead.
         // We compute both of these in a single loop to avoid iterating over the data twice
@@ -1393,8 +1398,16 @@ fn distribute_space_up_to_limits(
     /// extra space when it gets to exactly zero, we will stop when it falls below this amount
     const THRESHOLD: f32 = 0.01;
 
+    // Each iteration freezes at least one track at its limit, so the loop always completes within
+    // `tracks.len() + 1` iterations. Non-finite values (which can arise from non-finite style inputs) can
+    // prevent any space from being distributed, so we bound the iteration count to guarantee termination.
+    let max_iterations = tracks.len() + 1;
+
     let mut space_to_distribute = space_to_distribute;
-    while space_to_distribute > THRESHOLD {
+    for _ in 0..max_iterations {
+        if space_to_distribute <= THRESHOLD {
+            break;
+        }
         let track_distribution_proportion_sum: f32 = tracks
             .iter()
             .filter(|track| track_affected_property(track) + track.item_incurred_increase < track_limit(track))
