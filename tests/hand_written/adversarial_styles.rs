@@ -5,7 +5,9 @@
 #[cfg(test)]
 mod adversarial_styles {
     use taffy::prelude::*;
-    use taffy::style::{GridTemplateComponent, MaxTrackSizingFunction, MinTrackSizingFunction, TrackSizingFunction};
+    use taffy::style::{
+        Direction, GridTemplateComponent, MaxTrackSizingFunction, MinTrackSizingFunction, TrackSizingFunction,
+    };
     use taffy_test_helpers::new_test_tree;
 
     fn definite(size: f32) -> Size<AvailableSpace> {
@@ -95,6 +97,31 @@ mod adversarial_styles {
 
         // "c" is the 4th line of the grid: the line after the three 10px columns
         assert_eq!(tree.layout(child).unwrap().location.x, 30.0);
+    }
+
+    /// A zero span (an invalid value which gets normalized to 1) combined with an unresolvable
+    /// named span used to size the implicit grid estimate to zero tracks, while auto-placement
+    /// resolved the same placement to a span of 1. The auto-placement search then looped forever
+    /// looking for a position that could never fit.
+    #[test]
+    fn zero_span_and_named_span_terminates() {
+        for direction in [Direction::Ltr, Direction::Rtl] {
+            let mut tree = new_test_tree();
+            let child = tree
+                .new_leaf(Style {
+                    grid_column: Line {
+                        start: GridPlacement::NamedSpan("does-not-exist".into(), 1),
+                        end: GridPlacement::from_span(0),
+                    },
+                    ..Default::default()
+                })
+                .unwrap();
+            let root = tree
+                .new_with_children(Style { display: Display::Grid, direction, ..Default::default() }, &[child])
+                .unwrap();
+
+            tree.compute_layout(root, definite(100.0)).unwrap();
+        }
     }
 
     /// Items may span thousands of tracks and be placed thousands of tracks outside of the explicit
