@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Changed
+
+- Grid: `Style::grid_template_areas` is now `Option<GridTemplateAreas<S>>`, where the new `GridTemplateAreas` struct bundles the named areas (`areas`) with the overall size of the area template (`row_count`/`column_count`). This allows templates containing unnamed (`.`) cells beyond the extents of the named areas (e.g. `grid-template-areas: "a ."`) to be represented, as such cells still contribute to the size of the explicit grid. `GridContainerStyle` gains `grid_template_area_row_count`/`grid_template_area_column_count` methods (with default implementations that derive the counts from the extents of the named areas), which are now used to determine the size of the explicit grid
+
 ### Fixed
 
 - Grid: fixed a subtract-with-overflow panic (in debug builds) when resolving named lines for a template containing a repetition with fewer line name sets than tracks. Any template combining line names with a repetition created by the `repeat()` style helper (or parsed from CSS such as `[a] repeat(2, 10px) [c] 10px`) could trigger this. In release builds the same bug silently mis-numbered the lines following the repetition
@@ -9,6 +13,8 @@
 - Grid: the track sizing algorithm no longer loops forever when styles contain non-finite values (e.g. `NaN` flex factors or non-finite lengths). The "find the size of an fr" and "distribute space up to limits" loops are now bounded by the track count
 
 - Grid: auto-placement no longer scans up to the full 10000x10000 cell limit per candidate position when placing items with very large spans. The occupancy matrix now tracks the bounding box of occupied cells and only searches within it
+
+- Grid: when distributing a spanning item's max-content contribution to its spanned tracks' base sizes "beyond limits", tracks are now eligible only if their *max* track sizing function is `max-content` (or `fit-content()`), per [CSS Grid §12.5.1](https://www.w3.org/TR/css-grid-1/#extra-space). Previously tracks whose *min* track sizing function was `max-content` were also eligible, so a track such as `minmax(max-content, 20px)` could grow beyond its fixed `20px` limit, stealing space from `max-content` tracks ([WPT: grid-content-sized-columns-resolution](https://wpt.live/css/css-grid/parsing/grid-content-sized-columns-resolution.html))
 
 - Grid: an explicitly specified preferred or minimum size is no longer clamped by the spanned tracks' fixed max track sizing functions when computing an item's minimum contribution. That clamp only applies to the content-based (automatic) minimum size, per [CSS Grid §6.6](https://www.w3.org/TR/css-grid-1/#min-size-auto). Fixes e.g. an item with `min-width: 12px` in a `minmax(auto, 10px)` track sizing the track to `12px` rather than `10px`
 

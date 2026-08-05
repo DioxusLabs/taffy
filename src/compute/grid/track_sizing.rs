@@ -1050,10 +1050,8 @@ fn distribute_item_space_to_base_size(
                     (|track: &GridTrack| track.max_track_sizing_function.is_intrinsic()) as fn(&GridTrack) -> bool
                 }
                 IntrinsicContributionType::Maximum => {
-                    (|track: &GridTrack| {
-                        track.min_track_sizing_function.is_max_content()
-                            || track.max_track_sizing_function.is_max_or_fit_content()
-                    }) as fn(&GridTrack) -> bool
+                    (|track: &GridTrack| track.max_track_sizing_function.is_max_or_fit_content())
+                        as fn(&GridTrack) -> bool
                 }
             };
 
