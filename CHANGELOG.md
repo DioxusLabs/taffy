@@ -10,6 +10,8 @@
 
 - Grid: when the auto-placement search collides with an occupied area, the search cursor now jumps past the entire colliding occupied interval rather than just the part of it within the queried area. Previously a small item searching a grid occupied by large items advanced one track at a time, scanning up to 10000x10000 candidate positions
 
+- Block/float: `clear` on an element no longer has any effect when no float has been placed on the relevant side(s). Previously `FloatContext::cleared_threshold` treated an empty float context as a float ending at `y=0`, which could spuriously clamp the position of cleared elements
+
 - Block: an element containing only floated children can now be collapsed through (its own margins collapse with each other), per [CSS2.2 §8.3.1](https://www.w3.org/TR/CSS22/box.html#collapsing-margins) — floated children are out-of-flow and do not prevent collapse-through
 
 - Grid: when distributing a spanning item's max-content contribution to its spanned tracks' base sizes "beyond limits", tracks are now eligible only if their *max* track sizing function is `max-content` (or `fit-content()`), per [CSS Grid §12.5.1](https://www.w3.org/TR/css-grid-1/#extra-space). Previously tracks whose *min* track sizing function was `max-content` were also eligible, so a track such as `minmax(max-content, 20px)` could grow beyond its fixed `20px` limit, stealing space from `max-content` tracks ([WPT: grid-content-sized-columns-resolution](https://wpt.live/css/css-grid/parsing/grid-content-sized-columns-resolution.html))

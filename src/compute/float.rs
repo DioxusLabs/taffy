@@ -462,22 +462,22 @@ impl FloatContext {
     }
 
     /// Get the end segment of the last float on side(s) specified by the clear parameter (if any)
+    ///
+    /// Returns `None` if no float has been placed on the relevant side(s)
     fn cleared_segment(&self, clear: Clear) -> Option<usize> {
+        let left_end = self.last_placed_floats[0].end;
+        let right_end = self.last_placed_floats[1].end;
         match clear {
-            Clear::Left => Some(self.last_placed_floats[0].end),
-            Clear::Right => Some(self.last_placed_floats[1].end),
-            Clear::Both => {
-                let left_end = self.last_placed_floats[0].end;
-                let right_end = self.last_placed_floats[1].end;
-                Some(left_end.max(right_end))
-            }
-            Clear::None => None,
+            Clear::Left if left_end > 0 => Some(left_end),
+            Clear::Right if right_end > 0 => Some(right_end),
+            Clear::Both if left_end > 0 || right_end > 0 => Some(left_end.max(right_end)),
+            _ => None,
         }
     }
 
     /// Get the bottom of lowest relevant float for the specific clear property
     pub fn cleared_threshold(&self, clear: Clear) -> Option<f32> {
-        self.cleared_segment(clear).and_then(|idx| self.segments.get(idx.max(1) - 1)).map(|seg| seg.y.end)
+        self.cleared_segment(clear).and_then(|idx| self.segments.get(idx - 1)).map(|seg| seg.y.end)
     }
 
     /// Search for a space suitable for laying out non-floated content into
