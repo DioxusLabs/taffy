@@ -124,6 +124,41 @@ mod adversarial_styles {
         }
     }
 
+    /// When auto-placement collides with an occupied area, the search cursor must jump past the
+    /// whole occupied interval. Jumping only within the queried area used to make the search
+    /// advance one track at a time through large occupied areas, so a small item searching a grid
+    /// occupied by a maximum-size item scanned (10000 tracks)^2 candidate positions.
+    #[test]
+    fn small_item_in_max_size_occupied_grid_terminates() {
+        let mut tree = new_test_tree();
+        let big = tree
+            .new_leaf(Style {
+                grid_row: Line { start: GridPlacement::from_span(10000), end: GridPlacement::Auto },
+                grid_column: Line { start: GridPlacement::from_span(10000), end: GridPlacement::Auto },
+                ..Default::default()
+            })
+            .unwrap();
+        let small = tree
+            .new_leaf(Style {
+                grid_row: Line { start: GridPlacement::from_span(10000), end: GridPlacement::Auto },
+                grid_column: Line { start: GridPlacement::from_span(1), end: GridPlacement::Auto },
+                ..Default::default()
+            })
+            .unwrap();
+        let root = tree
+            .new_with_children(
+                Style {
+                    display: Display::Grid,
+                    size: Size { width: Dimension::from_length(100.0), height: Dimension::from_length(100.0) },
+                    ..Default::default()
+                },
+                &[big, small],
+            )
+            .unwrap();
+
+        tree.compute_layout(root, definite(100.0)).unwrap();
+    }
+
     /// Items may span thousands of tracks and be placed thousands of tracks outside of the explicit
     /// grid. Auto-placing such items must not take an excessive amount of time.
     #[test]
