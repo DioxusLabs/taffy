@@ -20,6 +20,8 @@
 
 - Block: clearance prevents the cleared element's top margin from collapsing with preceding margins and with the parent's top margin, per [CSS2.2 §8.3.1](https://www.w3.org/TR/CSS22/box.html#collapsing-margins)
 
+- Block: the top and bottom margins of a self-collapsing element with clearance collapse with each other (and with the margins of following siblings) and are applied inside the parent, extending its content height; they no longer collapse with the bottom margin of the parent block, per [CSS2.2 §8.3.1](https://www.w3.org/TR/CSS22/box.html#collapsing-margins)
+
 - Block/float: `clear` on an element no longer has any effect when no float has been placed on the relevant side(s). Previously `FloatContext::cleared_threshold` treated an empty float context as a float ending at `y=0`, which could spuriously clamp the position of cleared elements
 
 - Block: an element containing only floated children can now be collapsed through (its own margins collapse with each other), per [CSS2.2 §8.3.1](https://www.w3.org/TR/CSS22/box.html#collapsing-margins) — floated children are out-of-flow and do not prevent collapse-through
