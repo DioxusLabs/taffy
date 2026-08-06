@@ -949,8 +949,11 @@ fn perform_final_layout_on_in_flow_children(
                     };
                     let min_y = committed_y_offset + y_margin_offset;
 
+                    // In addition to the running flag, check the float context directly:
+                    // floats placed by the subtree of a preceding in-flow sibling (in the same
+                    // BFC) are not reflected in the flag
                     #[cfg(feature = "float_layout")]
-                    if has_active_floats {
+                    if has_active_floats || block_ctx.has_active_floats(min_y) {
                         let x_margins = [item_non_auto_margin.left, item_non_auto_margin.right];
                         // An auto width resolves to at least the negation of the margin sum
                         // (so that the margin box width is non-negative, per CSS2 §10.3.3)
