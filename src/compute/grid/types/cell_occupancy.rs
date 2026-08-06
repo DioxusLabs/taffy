@@ -124,17 +124,19 @@ impl TrackIntervals {
         self.intervals = result;
     }
 
-    /// Find the cell within `range` which an auto-placement search along the track would collide
-    /// with last: the maximum occupied cell in the range when searching forwards, or the minimum
-    /// when searching backwards (`reversed == true`). Returns the cell's start line, or `None` if
-    /// the range is entirely unoccupied.
+    /// Find the extent of the occupied interval which an auto-placement search along the track
+    /// would collide with last: the end of the last overlapping interval when searching forwards,
+    /// or the start of the first overlapping interval when searching backwards (`reversed ==
+    /// true`). Returns the extremal occupied cell of that interval (which may lie outside
+    /// `range`: every search position before the returned extent also collides with the
+    /// interval), or `None` if the range is entirely unoccupied.
     fn collision_extent(&self, range: &Range<i16>, reversed: bool) -> Option<i16> {
         if reversed {
             let interval = self.intervals.iter().find(|interval| interval.overlaps(range))?;
-            Some(max(interval.range.start, range.start))
+            Some(interval.range.start)
         } else {
             let interval = self.intervals.iter().rev().find(|interval| interval.overlaps(range))?;
-            Some(min(interval.range.end, range.end) - 1)
+            Some(interval.range.end - 1)
         }
     }
 
@@ -485,14 +487,14 @@ mod tests {
             let mut track = TrackIntervals::default();
             track.paint(2..4, AutoPlaced);
             track.paint(6..8, DefinitelyPlaced);
-            // Forward search: the maximum occupied cell within the range
+            // Forward search: the last cell of the last overlapping interval
             assert_eq!(track.collision_extent(&(0..10), false), Some(7));
-            assert_eq!(track.collision_extent(&(0..7), false), Some(6));
+            assert_eq!(track.collision_extent(&(0..7), false), Some(7));
             assert_eq!(track.collision_extent(&(0..6), false), Some(3));
             assert_eq!(track.collision_extent(&(4..6), false), None);
-            // Reverse search: the minimum occupied cell within the range
+            // Reverse search: the first cell of the first overlapping interval
             assert_eq!(track.collision_extent(&(0..10), true), Some(2));
-            assert_eq!(track.collision_extent(&(3..10), true), Some(3));
+            assert_eq!(track.collision_extent(&(3..10), true), Some(2));
             assert_eq!(track.collision_extent(&(4..10), true), Some(6));
         }
 
@@ -558,19 +560,19 @@ mod tests {
                 CellOccupancyMatrix::with_track_counts(TrackCounts::from_raw(0, 4, 0), TrackCounts::from_raw(0, 4, 0));
             matrix.mark_area_as(Horizontal, line(1, 3), line(0, 1), AutoPlaced);
 
-            // Forwards: jump past the last occupied cell within the queried area
+            // Forwards: jump past the end of the last colliding interval
             assert_eq!(
                 matrix.line_area_collision_jump(Horizontal, line(0, 2), line(0, 1), false),
-                Some(OriginZeroLine(2))
+                Some(OriginZeroLine(3))
             );
             assert_eq!(
                 matrix.line_area_collision_jump(Horizontal, line(0, 4), line(0, 1), false),
                 Some(OriginZeroLine(3))
             );
-            // Backwards: jump past the first occupied cell within the queried area
+            // Backwards: jump past the start of the first colliding interval
             assert_eq!(
                 matrix.line_area_collision_jump(Horizontal, line(2, 4), line(0, 1), true),
-                Some(OriginZeroLine(1))
+                Some(OriginZeroLine(0))
             );
             assert_eq!(
                 matrix.line_area_collision_jump(Horizontal, line(0, 4), line(0, 1), true),
