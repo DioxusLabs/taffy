@@ -16500,6 +16500,46 @@ mod flex {
 
 mod float {
     #[test]
+    fn float_clear_negative_clearance__border_box_ltr() {
+        crate::run_xml_test("float", "float_clear_negative_clearance__border_box_ltr");
+    }
+
+    #[test]
+    fn float_clear_negative_clearance__content_box_ltr() {
+        crate::run_xml_test("float", "float_clear_negative_clearance__content_box_ltr");
+    }
+
+    #[test]
+    fn float_clear_negative_clearance__border_box_rtl() {
+        crate::run_xml_test("float", "float_clear_negative_clearance__border_box_rtl");
+    }
+
+    #[test]
+    fn float_clear_negative_clearance__content_box_rtl() {
+        crate::run_xml_test("float", "float_clear_negative_clearance__content_box_rtl");
+    }
+
+    #[test]
+    fn float_clear_no_preceding_float__border_box_ltr() {
+        crate::run_xml_test("float", "float_clear_no_preceding_float__border_box_ltr");
+    }
+
+    #[test]
+    fn float_clear_no_preceding_float__content_box_ltr() {
+        crate::run_xml_test("float", "float_clear_no_preceding_float__content_box_ltr");
+    }
+
+    #[test]
+    fn float_clear_no_preceding_float__border_box_rtl() {
+        crate::run_xml_test("float", "float_clear_no_preceding_float__border_box_rtl");
+    }
+
+    #[test]
+    fn float_clear_no_preceding_float__content_box_rtl() {
+        crate::run_xml_test("float", "float_clear_no_preceding_float__content_box_rtl");
+    }
+
+    #[test]
     fn float_simple__border_box_ltr() {
         crate::run_xml_test("float", "float_simple__border_box_ltr");
     }
