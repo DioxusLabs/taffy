@@ -454,6 +454,12 @@ fn place_indefinitely_positioned_item(
                 primary_span.end > primary_axis_grid_end_line
             };
             if primary_out_of_bounds {
+                // If the span is out of bounds even at the search start position then it can never fit,
+                // as searching only ever moves the span further away from the start of the grid. Bail out
+                // and let `record_grid_placement` clamp the placement into the limited grid
+                if primary_idx == primary_start_position {
+                    return (primary_span, secondary_span);
+                }
                 secondary_idx = advance_position(secondary_idx, secondary_axis_is_reversed);
                 primary_idx = primary_start_position;
                 continue;

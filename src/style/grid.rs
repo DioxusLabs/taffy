@@ -533,9 +533,9 @@ impl<S: CheapCloneStr> GridPlacement<S> {
     pub fn into_origin_zero_placement_ignoring_named(&self, explicit_track_count: u16) -> OriginZeroGridPlacement {
         match self {
             Self::Auto => OriginZeroGridPlacement::Auto,
-            // Spans are clamped to the maximum track limit
-            // https://www.w3.org/TR/css-grid-1/#overlarge-grids
-            Self::Span(span) => OriginZeroGridPlacement::Span(min(*span, MAX_GRID_TRACKS)),
+            // Spans are clamped between 1 (a zero span is an invalid value which is treated as 1)
+            // and the maximum track limit (https://www.w3.org/TR/css-grid-1/#overlarge-grids)
+            Self::Span(span) => OriginZeroGridPlacement::Span((*span).clamp(1, MAX_GRID_TRACKS)),
             // Grid line zero is an invalid index, so it gets treated as Auto
             // See: https://developer.mozilla.org/en-US/docs/Web/CSS/grid-row-start#values
             Self::Line(line) => match line.as_i16() {
@@ -567,9 +567,9 @@ impl NonNamedGridPlacement {
     ) -> OriginZeroGridPlacement {
         match self {
             Self::Auto => OriginZeroGridPlacement::Auto,
-            // Spans are clamped to the maximum track limit
-            // https://www.w3.org/TR/css-grid-1/#overlarge-grids
-            Self::Span(span) => OriginZeroGridPlacement::Span(min(*span, MAX_GRID_TRACKS)),
+            // Spans are clamped between 1 (a zero span is an invalid value which is treated as 1)
+            // and the maximum track limit (https://www.w3.org/TR/css-grid-1/#overlarge-grids)
+            Self::Span(span) => OriginZeroGridPlacement::Span((*span).clamp(1, MAX_GRID_TRACKS)),
             // Grid line zero is an invalid index, so it gets treated as Auto
             // See: https://developer.mozilla.org/en-US/docs/Web/CSS/grid-row-start#values
             Self::Line(line) => match line.as_i16() {
