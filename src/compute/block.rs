@@ -975,14 +975,13 @@ fn perform_final_layout_on_in_flow_children(
                             }
                         };
 
-                        let mut slot = find_fitting_slot(block_ctx, min_y);
+                        let slot = find_fitting_slot(block_ctx, min_y);
 
                         // If the item had to move down to avoid floats then it "separates from the
                         // float": similarly to clearance, its top margin no longer collapses with
-                        // the parent's margins and does not push the item below the float's edge.
+                        // the parent's margins.
                         if slot.y > min_y {
                             item_pushed_below_float = true;
-                            slot = find_fitting_slot(block_ctx, committed_y_offset);
                         }
 
                         has_active_floats = slot.segment_id.is_some();

@@ -89,6 +89,27 @@ fn bfc_separates_from_adjoining_float() {
     assert_eq!(taffy.layout(root).unwrap().size.height, 201.0);
 }
 
+/// A BFC root that moves down to avoid a float is never placed higher than the position its
+/// top margin reserved: it does not slot in beside an earlier float above that position
+#[test]
+fn bfc_pushed_below_float_does_not_move_above_margin_position() {
+    let mut taffy: TaffyTree<()> = TaffyTree::new();
+    // Segment 0..50 leaves 50px beside the float; segment 50..150 leaves only 10px
+    let f1 = float_left(&mut taffy, 50.0, 50.0);
+    let f2 = float_left(&mut taffy, 90.0, 100.0);
+    // The margin position (y=60) is within the second segment, where the box does not fit
+    let bfc = taffy
+        .new_leaf(Style {
+            size: Size { width: length(40.0), height: length(10.0) },
+            margin: Rect { top: length(60.0), left: zero(), right: zero(), bottom: zero() },
+            ..bfc_root()
+        })
+        .unwrap();
+    let root = container(&mut taffy, 100.0, Direction::Ltr, &[f1, f2, bfc]);
+    compute(&mut taffy, root);
+    assert_rect(&taffy, bfc, 0.0, 150.0, 40.0);
+}
+
 /// A small negative margin on the float side does not pull an auto-width BFC root under the
 /// float: the border edge does not move past the float edge
 #[test]
