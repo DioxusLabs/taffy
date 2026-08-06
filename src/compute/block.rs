@@ -546,8 +546,13 @@ fn compute_inner(
     }
 
     // Determine whether this node can be collapsed through
-    let all_in_flow_children_can_be_collapsed_through =
-        items.iter().all(|item| item.position == Position::Absolute || item.can_be_collapsed_through);
+    let all_in_flow_children_can_be_collapsed_through = items.iter().all(|item| {
+        #[cfg(feature = "float_layout")]
+        if item.float.is_floated() {
+            return true;
+        }
+        item.position == Position::Absolute || item.can_be_collapsed_through
+    });
     let can_be_collapsed_through =
         !has_styles_preventing_being_collapsed_through && all_in_flow_children_can_be_collapsed_through;
 
