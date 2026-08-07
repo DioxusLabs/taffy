@@ -1,7 +1,7 @@
 #![cfg(feature = "float_layout")]
 use taffy::geometry::Point;
 use taffy::prelude::*;
-use taffy::style::Float;
+use taffy::style::{Float, Overflow};
 use taffy_test_helpers::new_test_tree;
 
 /// Regression test for <https://wpt.live/css/CSS2/floats-clear/floats-146.xht>
@@ -50,4 +50,45 @@ fn float_no_higher_than_earlier_floats() {
     assert_eq!(layout_b.location, Point { x: 0.0, y: 85.0 });
     // C must not be placed higher than B (it fits next to B on the right)
     assert_eq!(layout_c.location, Point { x: 302.0, y: 85.0 });
+}
+
+/// A box that establishes an independent formatting context must avoid floats placed by the
+/// subtree of a preceding in-flow sibling, not just floats among its direct siblings
+#[test]
+fn independent_context_avoids_floats_from_sibling_subtree() {
+    let mut taffy = new_test_tree();
+
+    let float = taffy
+        .new_leaf(Style {
+            display: Display::Block,
+            float: Float::Left,
+            size: Size { width: length(50.0), height: length(100.0) },
+            ..Default::default()
+        })
+        .unwrap();
+    let wrapper = taffy.new_with_children(Style { display: Display::Block, ..Default::default() }, &[float]).unwrap();
+    let bfc = taffy
+        .new_leaf(Style {
+            display: Display::Block,
+            overflow: taffy::geometry::Point { x: Overflow::Hidden, y: Overflow::Hidden },
+            size: Size { width: auto(), height: length(50.0) },
+            ..Default::default()
+        })
+        .unwrap();
+    let root = taffy
+        .new_with_children(
+            Style {
+                display: Display::Block,
+                size: Size { width: length(100.0), height: auto() },
+                ..Default::default()
+            },
+            &[wrapper, bfc],
+        )
+        .unwrap();
+
+    taffy.compute_layout(root, Size::MAX_CONTENT).unwrap();
+
+    let layout = taffy.layout(bfc).unwrap();
+    assert_eq!(layout.location, Point { x: 50.0, y: 0.0 });
+    assert_eq!(layout.size.width, 50.0);
 }

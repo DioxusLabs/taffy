@@ -10,6 +10,8 @@
 
 - Grid: when the auto-placement search collides with an occupied area, the search cursor now jumps past the entire colliding occupied interval rather than just the part of it within the queried area. Previously a small item searching a grid occupied by large items advanced one track at a time, scanning up to 10000x10000 candidate positions
 
+- Block/float: a box that establishes an independent formatting context now avoids floats placed by the subtree of a preceding in-flow sibling, not just floats among its direct siblings. Previously the presence of active floats was only tracked for direct float children, so such a box could overlap a float placed by a nested descendant of an earlier sibling
+
 - Block: clearance is now computed per [CSS2.2 §9.5.2](https://www.w3.org/TR/CSS22/visuren.html#flow-control) from the hypothetical position of the cleared element (including its collapsed top margin), supporting *negative clearance* and suppressing clearance when a large top margin already places the element past the relevant float(s). Previously the cleared element's position was simply clamped to the bottom of the floats, ignoring its top margin
 
 - Block: clearance prevents the cleared element's top margin from collapsing with preceding margins and with the parent's top margin, per [CSS2.2 §8.3.1](https://www.w3.org/TR/CSS22/box.html#collapsing-margins)
