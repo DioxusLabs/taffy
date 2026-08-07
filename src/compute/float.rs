@@ -173,6 +173,12 @@ pub struct FloatContext {
     /// A closed-open range indicating which segment the last placed float
     /// was placed(on each side).
     last_placed_floats: [Range<usize>; 2],
+    /// The bottom (y + height) of the lowest float placed on each side, including
+    /// zero-sized floats (which occupy no segment). Left in slot 0, right in slot 1.
+    clear_bottoms: [Option<f32>; 2],
+    /// The topmost y position allowed for a new float (CSS2 float rule 5), including
+    /// the tops of zero-sized floats (which occupy no segment)
+    float_ceiling: Option<f32>,
     // Left hwm in slot 0. Right hwm in slot 1.
     // high_water_marks: [usize; 2],
     // left_float_high_water_mark: usize,
@@ -188,6 +194,8 @@ impl Default for FloatContext {
             right_floats: Vec::new(),
             segments: Vec::new(),
             last_placed_floats: [0..0, 0..0], // high_water_marks: [0, 0],
+            clear_bottoms: [None, None],
+            float_ceiling: None,
         }
     }
 }
@@ -261,6 +269,12 @@ impl FloatContext {
         let placed_floated_box =
             self.place_floated_box_inner(floated_box, min_y, containing_block_insets, direction, clear);
 
+        let slot = direction as usize;
+        let bottom = placed_floated_box.y + placed_floated_box.height;
+        self.clear_bottoms[slot] = Some(self.clear_bottoms[slot].map_or(bottom, |b| b.max(bottom)));
+        let y = placed_floated_box.y;
+        self.float_ceiling = Some(self.float_ceiling.map_or(y, |ceiling| ceiling.max(y)));
+
         let x_inset = placed_floated_box.x_inset;
         let y = placed_floated_box.y;
         match direction {
@@ -285,6 +299,14 @@ impl FloatContext {
         clear: Clear,
     ) -> PlacedFloatedBox {
         let slot = direction as usize;
+
+        // Floats (including zero-sized floats) that occupy no segment still constrain the
+        // position of later boxes: rule 5 (a float may not be higher than the top of any
+        // earlier float) and `clear` (which clears past the bottom of floats on the
+        // relevant side, regardless of their width)
+        let min_y = min_y
+            .max(self.float_ceiling.unwrap_or(f32::NEG_INFINITY))
+            .max(self.cleared_threshold(clear).unwrap_or(f32::NEG_INFINITY));
 
         // Ensure that float:
         //    - Starts at or after the last placed float in either direction (CSS2 float rule 5:
@@ -500,7 +522,15 @@ impl FloatContext {
 
     /// Get the bottom of lowest relevant float for the specific clear property
     pub fn cleared_threshold(&self, clear: Clear) -> Option<f32> {
-        self.cleared_segment(clear).and_then(|idx| self.segments.get(idx - 1)).map(|seg| seg.y.end)
+        match clear {
+            Clear::Left => self.clear_bottoms[0],
+            Clear::Right => self.clear_bottoms[1],
+            Clear::Both => match self.clear_bottoms {
+                [Some(l), Some(r)] => Some(l.max(r)),
+                [l, r] => l.or(r),
+            },
+            Clear::None => None,
+        }
     }
 
     /// Search for a space suitable for laying out non-floated content into
@@ -520,6 +550,10 @@ impl FloatContext {
                 height: f32::INFINITY,
             };
         }
+
+        // Clearance clears past the bottom of floats on the relevant side, including
+        // zero-sized floats which occupy no segment
+        let min_y = min_y.max(self.cleared_threshold(clear).unwrap_or(f32::NEG_INFINITY));
 
         // The min starting segment index
         let at_least = after.map(|idx| idx + 1).unwrap_or(0);
@@ -550,6 +584,45 @@ impl FloatContext {
                 width: self.available_width - containing_block_insets[0] - containing_block_insets[1],
                 height: f32::INFINITY,
             },
+        }
+    }
+
+    /// Compute a [`BfcSlot`] whose insets are the union of the insets of all segments
+    /// intersecting the given y range: the widest box placed at `y.start` that avoids all
+    /// floats down to `y.end`
+    pub fn find_bfc_slot_spanning(
+        &self,
+        y: Range<f32>,
+        containing_block_insets: [f32; 2],
+        margins: [f32; 2],
+        direction: Direction,
+    ) -> BfcSlot {
+        let mut seg_insets = [f32::NEG_INFINITY; 2];
+        for segment in &self.segments {
+            if segment.y.start < y.end - 0.001 && segment.y.end > y.start + 0.001 {
+                seg_insets[0] = seg_insets[0].max(segment.insets[0]);
+                seg_insets[1] = seg_insets[1].max(segment.insets[1]);
+            }
+        }
+
+        let margin_insets = [containing_block_insets[0] + margins[0], containing_block_insets[1] + margins[1]];
+        let lead = match direction {
+            Direction::Ltr => 0,
+            Direction::Rtl => 1,
+        };
+        let trail = 1 - lead;
+        let mut fit_insets = [0.0; 2];
+        let mut stretch_insets = [0.0; 2];
+        fit_insets[lead] = seg_insets[lead].max(containing_block_insets[lead]).max(margin_insets[lead]);
+        stretch_insets[lead] = fit_insets[lead];
+        fit_insets[trail] = seg_insets[trail].max(containing_block_insets[trail]);
+        stretch_insets[trail] = fit_insets[trail].max(containing_block_insets[trail] + margins[trail].max(0.0));
+        BfcSlot {
+            segment_id: None,
+            x: fit_insets[0],
+            y: y.start,
+            border_width: self.available_width - fit_insets[0] - fit_insets[1],
+            stretch_width: self.available_width - stretch_insets[0] - stretch_insets[1],
         }
     }
 
@@ -592,6 +665,10 @@ impl FloatContext {
         if !self.has_active_floats(min_y) {
             return no_float_slot;
         }
+
+        // Clearance clears past the bottom of floats on the relevant side, including
+        // zero-sized floats which occupy no segment
+        let min_y = min_y.max(self.cleared_threshold(clear).unwrap_or(f32::NEG_INFINITY));
 
         // The min starting segment index
         let at_least = after.map(|idx| idx + 1).unwrap_or(0);
