@@ -922,8 +922,11 @@ fn perform_final_layout_on_in_flow_children(
                     };
                     let min_y = committed_y_offset + y_margin_offset;
 
+                    // In addition to the running flag, check the float context directly:
+                    // floats placed by the subtree of a preceding in-flow sibling (in the same
+                    // BFC) are not reflected in the flag
                     #[cfg(feature = "float_layout")]
-                    if has_active_floats {
+                    if has_active_floats || block_ctx.has_active_floats(min_y) {
                         let slot = block_ctx.find_content_slot(min_y, item.clear, None);
                         has_active_floats = slot.segment_id.is_some();
                         let stretch_width = slot.width - item_non_auto_x_margin_sum;
