@@ -150,6 +150,37 @@ fn float_beside_existing_float_moves_down_instead_of_overflowing() {
     assert_eq!(taffy.layout(left2).unwrap().location, Point { x: 0.0, y: 100.0 });
 }
 
+/// Regression test for <https://wpt.live/css/CSS2/floats/floats-zero-height-wrap-002.xht>
+///
+/// A zero-height float takes up no space, but still affects the placement of content
+/// whose vertical extent crosses its position.
+#[test]
+fn zero_height_float_affects_crossing_content() {
+    let mut taffy = new_test_tree();
+
+    let f1 = taffy.new_leaf(float_block(10.0, 30.0, Float::Left)).unwrap();
+    let zero =
+        taffy.new_leaf(Style { clear: taffy::style::Clear::Left, ..float_block(100.0, 0.0, Float::Left) }).unwrap();
+    // A BFC box whose vertical extent would cross the zero-height float: it doesn't fit
+    // beside the float's 100px inset, so it must be placed below it
+    let bfc = taffy
+        .new_leaf(Style {
+            display: Display::Block,
+            overflow: Point { x: Overflow::Hidden, y: Overflow::Hidden },
+            size: Size { width: length(450.0), height: length(40.0) },
+            ..Default::default()
+        })
+        .unwrap();
+
+    let root = taffy.new_with_children(root_style(500.0), &[f1, zero, bfc]).unwrap();
+
+    taffy.compute_layout(root, Size::MAX_CONTENT).unwrap();
+
+    assert_eq!(taffy.layout(f1).unwrap().location, Point { x: 0.0, y: 0.0 });
+    assert_eq!(taffy.layout(zero).unwrap().location, Point { x: 0.0, y: 30.0 });
+    assert_eq!(taffy.layout(bfc).unwrap().location, Point { x: 0.0, y: 30.0 });
+}
+
 /// Regression test for <https://wpt.live/css/CSS2/floats/floats-wrap-top-below-bfc-001l.xht>
 ///
 /// A box establishing a new block formatting context must not overlap floats over its full
@@ -189,35 +220,4 @@ fn bfc_avoids_floats_over_full_height() {
     assert_eq!(taffy.layout(float_a).unwrap().location, Point { x: 0.0, y: 0.0 });
     // The BFC box starts below the float (y = 30 + 30 = 60), not beside the spacer
     assert_eq!(taffy.layout(bfc).unwrap().location, Point { x: 0.0, y: 60.0 });
-}
-
-/// Regression test for <https://wpt.live/css/CSS2/floats/floats-zero-height-wrap-002.xht>
-///
-/// A zero-height float takes up no space, but still affects the placement of content
-/// whose vertical extent crosses its position.
-#[test]
-fn zero_height_float_affects_crossing_content() {
-    let mut taffy = new_test_tree();
-
-    let f1 = taffy.new_leaf(float_block(10.0, 30.0, Float::Left)).unwrap();
-    let zero =
-        taffy.new_leaf(Style { clear: taffy::style::Clear::Left, ..float_block(100.0, 0.0, Float::Left) }).unwrap();
-    // A BFC box whose vertical extent would cross the zero-height float: it doesn't fit
-    // beside the float's 100px inset, so it must be placed below it
-    let bfc = taffy
-        .new_leaf(Style {
-            display: Display::Block,
-            overflow: Point { x: Overflow::Hidden, y: Overflow::Hidden },
-            size: Size { width: length(450.0), height: length(40.0) },
-            ..Default::default()
-        })
-        .unwrap();
-
-    let root = taffy.new_with_children(root_style(500.0), &[f1, zero, bfc]).unwrap();
-
-    taffy.compute_layout(root, Size::MAX_CONTENT).unwrap();
-
-    assert_eq!(taffy.layout(f1).unwrap().location, Point { x: 0.0, y: 0.0 });
-    assert_eq!(taffy.layout(zero).unwrap().location, Point { x: 0.0, y: 30.0 });
-    assert_eq!(taffy.layout(bfc).unwrap().location, Point { x: 0.0, y: 30.0 });
 }
