@@ -99,6 +99,12 @@ pub trait CoreStyle {
     fn is_compressible_replaced(&self) -> bool {
         false
     }
+    /// Does this box establish a new Block Formatting Context (like `display: flow-root`)
+    /// even when it would otherwise participate in its parent's?
+    #[inline(always)]
+    fn is_flow_root(&self) -> bool {
+        false
+    }
     /// Which box do size styles apply to
     #[inline(always)]
     fn box_sizing(&self) -> BoxSizing {
@@ -442,6 +448,9 @@ pub struct Style<S: CheapCloneStr = DefaultCheapStr> {
     /// Is it a replaced element like an image or form field?
     /// <https://drafts.csswg.org/css-sizing-3/#min-content-zero>
     pub item_is_replaced: bool,
+    /// Does this box establish a new Block Formatting Context (like `display: flow-root`)
+    /// even when it would otherwise participate in its parent's?
+    pub item_is_flow_root: bool,
     /// Should size styles apply to the content box or the border box of the node
     pub box_sizing: BoxSizing,
     /// Sets the direction of text, table and grid columns, and horizontal overflow.
@@ -591,6 +600,7 @@ impl<S: CheapCloneStr> Style<S> {
         display: Display::DEFAULT,
         item_is_table: false,
         item_is_replaced: false,
+        item_is_flow_root: false,
         box_sizing: BoxSizing::BorderBox,
         direction: Direction::Ltr,
         overflow: Point { x: Overflow::Visible, y: Overflow::Visible },
@@ -687,6 +697,10 @@ impl<S: CheapCloneStr> CoreStyle for Style<S> {
         self.item_is_replaced
     }
     #[inline(always)]
+    fn is_flow_root(&self) -> bool {
+        self.item_is_flow_root
+    }
+    #[inline(always)]
     fn box_sizing(&self) -> BoxSizing {
         self.box_sizing
     }
@@ -754,6 +768,10 @@ impl<T: CoreStyle> CoreStyle for &'_ T {
     #[inline(always)]
     fn is_compressible_replaced(&self) -> bool {
         (*self).is_compressible_replaced()
+    }
+    #[inline(always)]
+    fn is_flow_root(&self) -> bool {
+        (*self).is_flow_root()
     }
     #[inline(always)]
     fn box_sizing(&self) -> BoxSizing {
@@ -1226,6 +1244,7 @@ mod tests {
             display: Default::default(),
             item_is_table: false,
             item_is_replaced: false,
+            item_is_flow_root: false,
             box_sizing: Default::default(),
             #[cfg(feature = "float_layout")]
             float: Default::default(),
