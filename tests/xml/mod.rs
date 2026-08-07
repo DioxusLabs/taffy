@@ -1946,6 +1946,66 @@ mod block {
     }
 
     #[test]
+    fn block_flow_root_avoids_sibling_float__border_box_ltr() {
+        crate::run_xml_test("block", "block_flow_root_avoids_sibling_float__border_box_ltr");
+    }
+
+    #[test]
+    fn block_flow_root_avoids_sibling_float__content_box_ltr() {
+        crate::run_xml_test("block", "block_flow_root_avoids_sibling_float__content_box_ltr");
+    }
+
+    #[test]
+    fn block_flow_root_avoids_sibling_float__border_box_rtl() {
+        crate::run_xml_test("block", "block_flow_root_avoids_sibling_float__border_box_rtl");
+    }
+
+    #[test]
+    fn block_flow_root_avoids_sibling_float__content_box_rtl() {
+        crate::run_xml_test("block", "block_flow_root_avoids_sibling_float__content_box_rtl");
+    }
+
+    #[test]
+    fn block_flow_root_contains_float__border_box_ltr() {
+        crate::run_xml_test("block", "block_flow_root_contains_float__border_box_ltr");
+    }
+
+    #[test]
+    fn block_flow_root_contains_float__content_box_ltr() {
+        crate::run_xml_test("block", "block_flow_root_contains_float__content_box_ltr");
+    }
+
+    #[test]
+    fn block_flow_root_contains_float__border_box_rtl() {
+        crate::run_xml_test("block", "block_flow_root_contains_float__border_box_rtl");
+    }
+
+    #[test]
+    fn block_flow_root_contains_float__content_box_rtl() {
+        crate::run_xml_test("block", "block_flow_root_contains_float__content_box_rtl");
+    }
+
+    #[test]
+    fn block_flow_root_margin_non_collapse__border_box_ltr() {
+        crate::run_xml_test("block", "block_flow_root_margin_non_collapse__border_box_ltr");
+    }
+
+    #[test]
+    fn block_flow_root_margin_non_collapse__content_box_ltr() {
+        crate::run_xml_test("block", "block_flow_root_margin_non_collapse__content_box_ltr");
+    }
+
+    #[test]
+    fn block_flow_root_margin_non_collapse__border_box_rtl() {
+        crate::run_xml_test("block", "block_flow_root_margin_non_collapse__border_box_rtl");
+    }
+
+    #[test]
+    fn block_flow_root_margin_non_collapse__content_box_rtl() {
+        crate::run_xml_test("block", "block_flow_root_margin_non_collapse__content_box_rtl");
+    }
+
+    #[test]
     fn block_inset_direction_rtl__border_box_ltr() {
         crate::run_xml_test("block", "block_inset_direction_rtl__border_box_ltr");
     }
