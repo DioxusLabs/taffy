@@ -961,9 +961,9 @@ fn perform_final_layout_on_in_flow_children(
 
                         // Find the highest slot (at or below `min_y`) with enough horizontal space
                         // for the item's border box, which must not overlap any float
-                        let mut after = None;
+                        let mut slot_segment = None;
                         let slot = loop {
-                            let slot = block_ctx.find_bfc_slot(min_y, x_margins, direction, item.clear, after);
+                            let slot = block_ctx.find_bfc_slot(min_y, x_margins, direction, item.clear, slot_segment);
                             let Some(segment_id) = slot.segment_id else { break slot };
                             let width = item
                                 .size
@@ -973,7 +973,7 @@ fn perform_final_layout_on_in_flow_children(
                             if width <= slot.border_width + 0.001 {
                                 break slot;
                             }
-                            after = Some(segment_id);
+                            slot_segment = Some(segment_id);
                         };
 
                         // If the item had to move down to avoid floats then it "separates from the
