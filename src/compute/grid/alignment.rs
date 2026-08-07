@@ -41,8 +41,17 @@ pub(super) fn align_tracks(
     let track_alignment = apply_alignment_fallback(free_space, num_tracks, track_alignment_style);
     let track_alignment = if axis_is_reversed { track_alignment.reversed() } else { track_alignment };
 
+    // If every track is collapsed then no track receives the alignment offset below, but the
+    // grid's lines should still be aligned within the container (e.g. at the inline-start edge
+    // for RTL), so apply the offset to the origin instead.
+    let empty_grid_offset = if num_tracks == 0 {
+        compute_alignment_offset(free_space, num_tracks, gap, track_alignment, layout_is_reversed, true)
+    } else {
+        0.0
+    };
+
     // Compute offsets
-    let mut total_offset = origin;
+    let mut total_offset = origin + empty_grid_offset;
     let mut seen_non_collapsed_track = false;
     tracks.iter_mut().enumerate().for_each(|(i, track)| {
         // Odd tracks are gutters (but slices are zero-indexed, so odd tracks have even indices)
