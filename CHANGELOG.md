@@ -6,6 +6,8 @@
 
 - Grid: `Style::grid_template_areas` is now `Option<GridTemplateAreas<S>>`, where the new `GridTemplateAreas` struct bundles the named areas (`areas`) with the overall size of the area template (`row_count`/`column_count`). This allows templates containing unnamed (`.`) cells beyond the extents of the named areas (e.g. `grid-template-areas: "a ."`) to be represented, as such cells still contribute to the size of the explicit grid. `GridContainerStyle` gains `grid_template_area_row_count`/`grid_template_area_column_count` methods (with default implementations that derive the counts from the extents of the named areas), which are now used to determine the size of the explicit grid
 
+- Block/float: `BlockContext::place_floated_box` takes an additional `adjoins_unresolved_strut: bool` parameter indicating whether the float is being placed while the position of the current margin-collapse strut is still unresolved
+
 ### Fixed
 
 - Block/Grid: `Layout::content_size` now measures the scrollable overflow region from the container's padding-box origin (mirrored for RTL) and includes the container's own end-side padding, matching the existing Flexbox behaviour and browser `scrollWidth`/`scrollHeight` semantics. Previously Block and Grid measured relative to the content box and excluded the container's padding entirely, so `Layout::scroll_width()`/`scroll_height()` were too small by the padding sum (#1050)
@@ -15,6 +17,8 @@
 - Grid: when the auto-placement search collides with an occupied area, the search cursor now jumps past the entire colliding occupied interval rather than just the part of it within the queried area. Previously a small item searching a grid occupied by large items advanced one track at a time, scanning up to 10000x10000 candidate positions
 
 - Block/float: a box that establishes an independent formatting context now avoids floats placed by the subtree of a preceding in-flow sibling, not just floats among its direct siblings. Previously the presence of active floats was only tracked for direct float children, so such a box could overlap a float placed by a nested descendant of an earlier sibling
+
+- Block: floats placed while the position of the enclosing margin-collapse strut is unresolved now force clearance on subsequent cleared elements whose margins adjoin the same strut (matching browser behaviour): letting the margins collapse would move the float together with the cleared element. Floats occurring between collapsing margins are also now positioned including the pending collapsible margins, per [CSS2.2 §9.5](https://www.w3.org/TR/CSS22/visuren.html#floats)
 
 - Block: clearance is now computed per [CSS2.2 §9.5.2](https://www.w3.org/TR/CSS22/visuren.html#flow-control) from the hypothetical position of the cleared element (including its collapsed top margin), supporting *negative clearance* and suppressing clearance when a large top margin already places the element past the relevant float(s). Previously the cleared element's position was simply clamped to the bottom of the floats, ignoring its top margin
 

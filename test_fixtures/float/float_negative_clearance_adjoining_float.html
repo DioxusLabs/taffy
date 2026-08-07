@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    An adjoining float followed by a self-collapsing cleared child with a large top
+    margin: forced (negative) clearance separates the margin from the strut, so the
+    container's height ends at the float bottom and the margin does not move the float.
+    Reduced from WPT css/CSS2/floats-clear/negative-clearance-after-adjoining-float.html
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="display: block; width: 100px;">
+  <div style="display: block;">
+    <div style="display: block;">
+      <div style="display: block; float: left; width: 100px; height: 50px;"></div>
+      <div style="display: block; clear: left; margin-top: 200px;"></div>
+    </div>
+    <div style="display: block; height: 50px;"></div>
+  </div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,23 @@
+<test name="float_forced_clearance_adjoining_float__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="block" direction="rtl" width="100px">
+      <div display="block" direction="rtl">
+        <div display="block" direction="rtl">
+          <div display="block" direction="rtl" float="left" width="100px" height="50px"/>
+        </div>
+        <div display="block" direction="rtl" clear="left" height="50px" margin-top="400px"/>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="100" height="100">
+      <node x="0" y="0" width="100" height="100">
+        <node x="0" y="0" width="100" height="0">
+          <node x="0" y="0" width="100" height="50"/>
+        </node>
+        <node x="0" y="50" width="100" height="50"/>
+      </node>
+    </node>
+  </expectations>
+</test>
