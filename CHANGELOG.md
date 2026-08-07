@@ -36,10 +36,14 @@
 ### Changed
 
 - Grid: intrinsic track sizing no longer measures an item's min-/max-content contribution in a step where none of the item's spanned tracks can receive that contribution (e.g. items spanning only `minmax(0, 1fr)` or fixed tracks). This matches Blink and avoids redundant, sometimes very expensive, measurement of large subtrees under a min-content constraint.
+- Block/float: `FloatContext::find_bfc_slot` (and `BlockContext::find_bfc_slot`) now takes the box's top border edge `y` and its `height` (instead of `min_y`, `clear` and `after`), unioning the float insets over all float segments the box vertically intersects. A new `next_bfc_candidate_y` method returns the next float-segment boundary below a given position, for iterating candidate positions
 
 ### Fixed
 
 - The `serde` feature now compiles without the `std` feature
+- Block/float: a box that establishes an independent formatting context must not overlap floats over its *entire* height, not just at its top edge (CSS2 §9.5). The box is now measured at each candidate position and moved down past float-segment boundaries until its full border box fits, so e.g. a tall BFC root beside a short-but-wide lower float no longer overlaps it
+- Block/float: a BFC root pulled up by a negative top margin may sit (partially) above a float when it fits beside it, and moves below the float when it does not fit, matching browser behaviour
+- Block: the height of a BFC root containing floats now includes its bottom padding and border below the bottom margin edge of its floated descendants
 
 - `TaffyTree::remove` and `TaffyTree::clear` now drop the removed nodes' contexts. Both are documented as dropping nodes, but neither touched `node_context_data`, so a node's context outlived the node — for a `TaffyTree` whose context is a measure function, that kept a boxed closure and everything it captured alive indefinitely. It is worst for callers that rebuild their tree every frame.
 - Block: a block container's content width and the stretch width / available width handed to its in-flow and floated children are floored at zero when padding/border or the child's margins exceed the container width. Children (and measure functions) could previously receive negative widths.
