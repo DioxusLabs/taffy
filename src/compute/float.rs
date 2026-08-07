@@ -416,8 +416,10 @@ impl FloatContext {
             }
         };
 
-        // Short-circuit for zero-sized boxes
-        if floated_box.width == 0.0 || floated_box.height == 0.0 {
+        // Short-circuit for zero-height boxes. Zero-width boxes are still recorded in segments:
+        // their edge acts as an obstacle that boxes establishing an independent formatting
+        // context may not be placed to the outside of (e.g. via a negative margin).
+        if floated_box.height == 0.0 {
             // TODO: need to update last_placed_float?
 
             return PlacedFloatedBox {

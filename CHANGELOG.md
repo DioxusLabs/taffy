@@ -14,6 +14,8 @@
 
 ### Fixed
 
+- Block/float: zero-width floats are now recorded in the float context, so their edge acts as an obstacle that a box establishing an independent formatting context cannot be placed to the outside of (e.g. via a negative margin) ([WPT: zero-width-floats-positioning](https://wpt.live/css/CSS2/floats/zero-width-floats-positioning.tentative.html))
+
 - Block/float: a negative margin on a BFC root's float-free side now applies as usual (moving the border edge outside the containing block and widening an auto width) instead of being clamped to the containing block edge. Previously the containing block insets were treated as float insets on both sides, so e.g. a box with `margin-left: -50px` beside a right float could not extend past its containing block's left edge ([WPT: floats-wrap-bfc-with-margin-006/007](https://wpt.live/css/CSS2/floats/floats-wrap-bfc-with-margin-006.tentative.html))
 
 - Block/Grid: `Layout::content_size` now measures the scrollable overflow region from the container's padding-box origin (mirrored for RTL) and includes the container's own end-side padding, matching the existing Flexbox behaviour and browser `scrollWidth`/`scrollHeight` semantics. Previously Block and Grid measured relative to the content box and excluded the container's padding entirely, so `Layout::scroll_width()`/`scroll_height()` were too small by the padding sum (#1050)
