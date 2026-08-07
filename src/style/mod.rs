@@ -89,6 +89,10 @@ pub trait CoreStyle {
         BoxGenerationMode::DEFAULT
     }
     /// Is block layout?
+    ///
+    /// This should only return `true` for `display: block`, and NOT for `display: flow-root`.
+    /// Flow-root boxes establish a new block formatting context and must not be treated as
+    /// being part of their parent's block formatting context (which is what this method controls).
     #[inline(always)]
     fn is_block(&self) -> bool {
         false
