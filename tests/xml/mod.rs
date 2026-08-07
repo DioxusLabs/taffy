@@ -16500,6 +16500,26 @@ mod flex {
 
 mod float {
     #[test]
+    fn float_bfc_avoids_float_from_sibling_subtree__border_box_ltr() {
+        crate::run_xml_test("float", "float_bfc_avoids_float_from_sibling_subtree__border_box_ltr");
+    }
+
+    #[test]
+    fn float_bfc_avoids_float_from_sibling_subtree__content_box_ltr() {
+        crate::run_xml_test("float", "float_bfc_avoids_float_from_sibling_subtree__content_box_ltr");
+    }
+
+    #[test]
+    fn float_bfc_avoids_float_from_sibling_subtree__border_box_rtl() {
+        crate::run_xml_test("float", "float_bfc_avoids_float_from_sibling_subtree__border_box_rtl");
+    }
+
+    #[test]
+    fn float_bfc_avoids_float_from_sibling_subtree__content_box_rtl() {
+        crate::run_xml_test("float", "float_bfc_avoids_float_from_sibling_subtree__content_box_rtl");
+    }
+
+    #[test]
     fn float_clear_negative_clearance__border_box_ltr() {
         crate::run_xml_test("float", "float_clear_negative_clearance__border_box_ltr");
     }
