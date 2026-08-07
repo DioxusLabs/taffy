@@ -1,6 +1,8 @@
 # Changelog
 
-## Unreleased
+## 0.13.0
+
+The MSRV for this release is 1.71.
 
 ### Added
 
