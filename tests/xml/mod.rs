@@ -4138,6 +4138,26 @@ mod block {
     }
 
     #[test]
+    fn block_overflow_scroll_container_padding__border_box_ltr() {
+        crate::run_xml_test("block", "block_overflow_scroll_container_padding__border_box_ltr");
+    }
+
+    #[test]
+    fn block_overflow_scroll_container_padding__content_box_ltr() {
+        crate::run_xml_test("block", "block_overflow_scroll_container_padding__content_box_ltr");
+    }
+
+    #[test]
+    fn block_overflow_scroll_container_padding__border_box_rtl() {
+        crate::run_xml_test("block", "block_overflow_scroll_container_padding__border_box_rtl");
+    }
+
+    #[test]
+    fn block_overflow_scroll_container_padding__content_box_rtl() {
+        crate::run_xml_test("block", "block_overflow_scroll_container_padding__content_box_rtl");
+    }
+
+    #[test]
     fn block_overflow_scroll_direction_rtl__border_box_ltr() {
         crate::run_xml_test("block", "block_overflow_scroll_direction_rtl__border_box_ltr");
     }
@@ -10639,6 +10659,26 @@ mod flex {
     #[test]
     fn flex_nested_direction_rtl__content_box_rtl() {
         crate::run_xml_test("flex", "flex_nested_direction_rtl__content_box_rtl");
+    }
+
+    #[test]
+    fn flex_overflow_scroll_container_padding__border_box_ltr() {
+        crate::run_xml_test("flex", "flex_overflow_scroll_container_padding__border_box_ltr");
+    }
+
+    #[test]
+    fn flex_overflow_scroll_container_padding__content_box_ltr() {
+        crate::run_xml_test("flex", "flex_overflow_scroll_container_padding__content_box_ltr");
+    }
+
+    #[test]
+    fn flex_overflow_scroll_container_padding__border_box_rtl() {
+        crate::run_xml_test("flex", "flex_overflow_scroll_container_padding__border_box_rtl");
+    }
+
+    #[test]
+    fn flex_overflow_scroll_container_padding__content_box_rtl() {
+        crate::run_xml_test("flex", "flex_overflow_scroll_container_padding__content_box_rtl");
     }
 
     #[test]
@@ -27125,6 +27165,30 @@ mod grid {
     #[test]
     fn grid_overflow_rows__content_box_rtl() {
         crate::run_xml_test("grid", "grid_overflow_rows__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_overflow_scroll_container_padding__border_box_ltr() {
+        crate::run_xml_test("grid", "grid_overflow_scroll_container_padding__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_overflow_scroll_container_padding__content_box_ltr() {
+        crate::run_xml_test("grid", "grid_overflow_scroll_container_padding__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_overflow_scroll_container_padding__border_box_rtl() {
+        crate::run_xml_test("grid", "grid_overflow_scroll_container_padding__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_overflow_scroll_container_padding__content_box_rtl() {
+        crate::run_xml_test("grid", "grid_overflow_scroll_container_padding__content_box_rtl");
     }
 
     #[cfg(feature = "grid")]
