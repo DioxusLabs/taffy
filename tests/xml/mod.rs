@@ -16840,6 +16840,46 @@ mod flex {
 
 mod float {
     #[test]
+    fn float_after_sibling_bottom_margin__border_box_ltr() {
+        crate::run_xml_test("float", "float_after_sibling_bottom_margin__border_box_ltr");
+    }
+
+    #[test]
+    fn float_after_sibling_bottom_margin__content_box_ltr() {
+        crate::run_xml_test("float", "float_after_sibling_bottom_margin__content_box_ltr");
+    }
+
+    #[test]
+    fn float_after_sibling_bottom_margin__border_box_rtl() {
+        crate::run_xml_test("float", "float_after_sibling_bottom_margin__border_box_rtl");
+    }
+
+    #[test]
+    fn float_after_sibling_bottom_margin__content_box_rtl() {
+        crate::run_xml_test("float", "float_after_sibling_bottom_margin__content_box_rtl");
+    }
+
+    #[test]
+    fn float_between_collapsing_margins__border_box_ltr() {
+        crate::run_xml_test("float", "float_between_collapsing_margins__border_box_ltr");
+    }
+
+    #[test]
+    fn float_between_collapsing_margins__content_box_ltr() {
+        crate::run_xml_test("float", "float_between_collapsing_margins__content_box_ltr");
+    }
+
+    #[test]
+    fn float_between_collapsing_margins__border_box_rtl() {
+        crate::run_xml_test("float", "float_between_collapsing_margins__border_box_rtl");
+    }
+
+    #[test]
+    fn float_between_collapsing_margins__content_box_rtl() {
+        crate::run_xml_test("float", "float_between_collapsing_margins__content_box_rtl");
+    }
+
+    #[test]
     fn float_bfc_avoids_float_from_sibling_subtree__border_box_ltr() {
         crate::run_xml_test("float", "float_bfc_avoids_float_from_sibling_subtree__border_box_ltr");
     }
