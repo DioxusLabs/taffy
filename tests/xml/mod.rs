@@ -18133,28 +18133,6 @@ mod grid {
         crate::run_xml_test("grid", "grid_absolute_gaps_start_lines_rtl__content_box_rtl");
     }
 
-    fn grid_absolute_justify_self_self_start_child_rtl__border_box_ltr() {
-        crate::run_xml_test("grid", "grid_absolute_justify_self_self_start_child_rtl__border_box_ltr");
-    }
-
-    #[cfg(feature = "grid")]
-    #[test]
-    fn grid_absolute_justify_self_self_start_child_rtl__content_box_ltr() {
-        crate::run_xml_test("grid", "grid_absolute_justify_self_self_start_child_rtl__content_box_ltr");
-    }
-
-    #[cfg(feature = "grid")]
-    #[test]
-    fn grid_absolute_justify_self_self_start_child_rtl__border_box_rtl() {
-        crate::run_xml_test("grid", "grid_absolute_justify_self_self_start_child_rtl__border_box_rtl");
-    }
-
-    #[cfg(feature = "grid")]
-    #[test]
-    fn grid_absolute_justify_self_self_start_child_rtl__content_box_rtl() {
-        crate::run_xml_test("grid", "grid_absolute_justify_self_self_start_child_rtl__content_box_rtl");
-    }
-
     #[cfg(feature = "grid")]
     #[test]
     fn grid_absolute_justify_self_self_start_child_rtl__border_box_ltr() {
