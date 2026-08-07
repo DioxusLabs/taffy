@@ -92,6 +92,10 @@ struct Segment {
     y: Range<f32>,
     /// Left inset in slot 0. Right inset in slot 1.
     insets: [f32; 2],
+    /// Whether a float actually occupies the left (slot 0) / right (slot 1) inset.
+    /// The insets of a segment created for a float are seeded with the float's containing
+    /// block insets on both sides, so a non-zero inset alone does not imply a float.
+    has_float: [bool; 2],
 }
 
 impl Segment {
@@ -237,7 +241,8 @@ impl FloatContext {
     /// vertical start and end at exact segment boundaries
     fn subdivide_segment(&mut self, idx: usize, divide_at_y: f32) {
         let old_segment = &mut self.segments[idx];
-        let new_segment = Segment { insets: old_segment.insets, y: divide_at_y..old_segment.y.end };
+        let new_segment =
+            Segment { insets: old_segment.insets, has_float: old_segment.has_float, y: divide_at_y..old_segment.y.end };
         if !old_segment.y.contains(&divide_at_y) || old_segment.y.start == divide_at_y {
             debug_log!("old_segment", dbg:&mut *old_segment);
             debug_log!("divide_at_y", dbg:divide_at_y);
@@ -427,14 +432,16 @@ impl FloatContext {
         if start.is_none() {
             let last_y_end = self.segments.last().map(|seg| seg.y.end).unwrap_or(0.0);
             if start_y > last_y_end {
-                self.segments.push(Segment { y: last_y_end..start_y, insets: [0.0, 0.0] });
+                self.segments.push(Segment { y: last_y_end..start_y, insets: [0.0, 0.0], has_float: [false; 2] });
             }
 
             let start_y = last_y_end.max(start_y);
 
             let mut insets = containing_block_insets;
             insets[slot] += floated_box.width;
-            self.segments.push(Segment { y: start_y..(start_y + floated_box.height), insets });
+            let mut has_float = [false; 2];
+            has_float[slot] = true;
+            self.segments.push(Segment { y: start_y..(start_y + floated_box.height), insets, has_float });
 
             // Update last_placed_float
             let start_idx = self.segments.len() - 1;
@@ -467,7 +474,7 @@ impl FloatContext {
             None => {
                 let last_y_end = self.segments.last().map(|seg| seg.y.end).unwrap_or(0.0);
                 if min_y > last_y_end {
-                    self.segments.push(Segment { y: last_y_end..min_y, insets: [0.0, 0.0] });
+                    self.segments.push(Segment { y: last_y_end..min_y, insets: [0.0, 0.0], has_float: [false; 2] });
                 }
                 self.segments.len() - 1
             }
@@ -498,6 +505,7 @@ impl FloatContext {
         let placed_inset_plus_width = placed_inset + floated_box.width;
         for segment in &mut self.segments[start_idx..=end_idx] {
             segment.insets[slot] = placed_inset_plus_width;
+            segment.has_float[slot] = true;
         }
 
         // Update last_placed_float
@@ -596,12 +604,15 @@ impl FloatContext {
     ///   - The leading margin (in flow direction) positions the border box's leading edge, but
     ///     may be partially or fully "absorbed" by a float on the leading side (the border edge
     ///     is the further-in of the float edge and the margin-inset containing block edge), and
-    ///     a negative leading margin does not move the border edge past the float edge or the
-    ///     containing block edge.
+    ///     a negative leading margin does not move the border edge past the float edge. When no
+    ///     float intrudes on the leading side the margin applies as usual, and a negative margin
+    ///     may move the border edge outside the containing block.
     ///   - The trailing margin is subtracted from the width an auto width resolves to (except
-    ///     for any part of it that overlaps a float on the trailing side), but does not affect
-    ///     whether a box of a given width fits in the slot: the trailing margin may overflow
-    ///     the containing block edge.
+    ///     for any part of it that overlaps a float on the trailing side). When a float intrudes
+    ///     on the trailing side, the trailing margin does not affect whether a box of a given
+    ///     width fits in the slot: the trailing margin may overflow the containing block edge.
+    ///     When no float intrudes on the trailing side the margin applies as usual, and a
+    ///     negative margin lets the border box extend outside the containing block.
     ///
     /// When there are no floats beside the box, its (possibly negative) margins apply as usual.
     pub fn find_bfc_slot(
@@ -647,12 +658,25 @@ impl FloatContext {
                     Direction::Rtl => 1,
                 };
                 let trail = 1 - lead;
+                let has_lead_float = segment.has_float[lead];
+                let has_trail_float = segment.has_float[trail];
                 let mut fit_insets = [0.0; 2];
                 let mut stretch_insets = [0.0; 2];
-                fit_insets[lead] = segment.insets[lead].max(containing_block_insets[lead]).max(margin_insets[lead]);
+                fit_insets[lead] =
+                    if has_lead_float { segment.insets[lead].max(margin_insets[lead]) } else { margin_insets[lead] };
                 stretch_insets[lead] = fit_insets[lead];
-                fit_insets[trail] = segment.insets[trail].max(containing_block_insets[trail]);
-                stretch_insets[trail] = fit_insets[trail].max(containing_block_insets[trail] + margins[trail].max(0.0));
+                fit_insets[trail] = if has_trail_float {
+                    segment.insets[trail].max(containing_block_insets[trail])
+                } else {
+                    // A positive trailing margin may overflow the containing block edge (it does
+                    // not affect fit), but a negative one widens the space for the border box
+                    margin_insets[trail].min(containing_block_insets[trail])
+                };
+                stretch_insets[trail] = if has_trail_float {
+                    segment.insets[trail].max(margin_insets[trail])
+                } else {
+                    margin_insets[trail]
+                };
                 BfcSlot {
                     segment_id: Some(start_idx),
                     x: fit_insets[0],
