@@ -16820,6 +16820,26 @@ mod float {
     }
 
     #[test]
+    fn float_new_fc_separates__border_box_ltr() {
+        crate::run_xml_test("float", "float_new_fc_separates__border_box_ltr");
+    }
+
+    #[test]
+    fn float_new_fc_separates__content_box_ltr() {
+        crate::run_xml_test("float", "float_new_fc_separates__content_box_ltr");
+    }
+
+    #[test]
+    fn float_new_fc_separates__border_box_rtl() {
+        crate::run_xml_test("float", "float_new_fc_separates__border_box_rtl");
+    }
+
+    #[test]
+    fn float_new_fc_separates__content_box_rtl() {
+        crate::run_xml_test("float", "float_new_fc_separates__content_box_rtl");
+    }
+
+    #[test]
     fn float_simple__border_box_ltr() {
         crate::run_xml_test("float", "float_simple__border_box_ltr");
     }
