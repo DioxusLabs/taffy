@@ -587,6 +587,8 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
 
     #[cfg_attr(not(feature = "content_size"), allow(unused_mut))]
     let mut item_content_size_contribution = Size::ZERO;
+    #[cfg_attr(not(feature = "content_size"), allow(unused_mut, unused))]
+    let mut absolute_content_size = Size::ZERO;
 
     // Sort items back into original order to allow them to be matched up with styles
     items.sort_by_key(|item| item.source_order);
@@ -610,6 +612,8 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
             container_alignment_styles,
             item.baseline_shim,
             direction,
+            container_border_box.width,
+            border,
         );
         item.y_position = y_position;
         item.height = height;
@@ -701,11 +705,20 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
 
             // TODO: Baseline alignment support for absolutely positioned items (should check if is actually specified)
             #[cfg_attr(not(feature = "content_size"), allow(unused_variables))]
-            let (content_size_contribution, _, _) =
-                align_and_position_item(tree, child, order, grid_area, container_alignment_styles, 0.0, direction);
+            let (content_size_contribution, _, _) = align_and_position_item(
+                tree,
+                child,
+                order,
+                grid_area,
+                container_alignment_styles,
+                0.0,
+                direction,
+                container_border_box.width,
+                border,
+            );
             #[cfg(feature = "content_size")]
             {
-                item_content_size_contribution = item_content_size_contribution.f32_max(content_size_contribution);
+                absolute_content_size = absolute_content_size.f32_max(content_size_contribution);
             }
 
             order += 1;
@@ -751,9 +764,21 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
         item.y_position + item.baseline.unwrap_or(item.height)
     };
 
+    // The container's own padding at the end of the content is part of its scrollable
+    // overflow region, so it is included in the in-flow content size.
+    #[cfg(feature = "content_size")]
+    let content_size = {
+        let mut content_size = item_content_size_contribution;
+        content_size.width += if direction.is_rtl() { padding.left } else { padding.right };
+        content_size.height += padding.bottom;
+        content_size.f32_max(absolute_content_size)
+    };
+    #[cfg(not(feature = "content_size"))]
+    let content_size = item_content_size_contribution;
+
     LayoutOutput::from_sizes_and_baselines(
         container_border_box,
-        item_content_size_contribution,
+        content_size,
         Point { x: None, y: Some(grid_container_baseline) },
     )
 }

@@ -8,6 +8,10 @@
 
 ### Fixed
 
+- Block/Grid: `Layout::content_size` now measures the scrollable overflow region from the container's padding-box origin (mirrored for RTL) and includes the container's own end-side padding, matching the existing Flexbox behaviour and browser `scrollWidth`/`scrollHeight` semantics. Previously Block and Grid measured relative to the content box and excluded the container's padding entirely, so `Layout::scroll_width()`/`scroll_height()` were too small by the padding sum (#1050)
+
+- Grid: items in tracks that overflow the container now contribute their position within the container to `Layout::content_size`, not just their own size. Previously each item's contribution was measured relative to its own grid area, so e.g. two stacked 500px-tall rows overflowing a 200px-tall scroll container produced a `content_size.height` of 500 rather than 1000
+
 - Grid: when the auto-placement search collides with an occupied area, the search cursor now jumps past the entire colliding occupied interval rather than just the part of it within the queried area. Previously a small item searching a grid occupied by large items advanced one track at a time, scanning up to 10000x10000 candidate positions
 
 - Block/float: a box that establishes an independent formatting context now avoids floats placed by the subtree of a preceding in-flow sibling, not just floats among its direct siblings. Previously the presence of active floats was only tracked for direct float children, so such a box could overlap a float placed by a nested descendant of an earlier sibling

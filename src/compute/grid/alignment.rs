@@ -67,6 +67,7 @@ pub(super) fn align_tracks(
 }
 
 /// Align and size a grid item into it's final position
+#[allow(clippy::too_many_arguments)]
 pub(super) fn align_and_position_item(
     tree: &mut impl LayoutGridContainer,
     node: NodeId,
@@ -75,6 +76,8 @@ pub(super) fn align_and_position_item(
     container_alignment_styles: InBothAbsAxis<Option<AlignItems>>,
     baseline_shim: f32,
     direction: Direction,
+    container_border_box_width: f32,
+    container_border: Rect<f32>,
 ) -> (Size<f32>, f32, f32) {
     let grid_area_size = Size { width: grid_area.right - grid_area.left, height: grid_area.bottom - grid_area.top };
 
@@ -282,12 +285,21 @@ pub(super) fn align_and_position_item(
     );
 
     #[cfg(feature = "content_size")]
-    let contribution = compute_content_size_contribution(
-        Point { x: x - grid_area.left, y: y - grid_area.top },
-        Size { width, height },
-        layout_output.content_size,
-        overflow,
-    );
+    let contribution = {
+        // Contributions to the container's content size are measured from the container's
+        // padding-box origin (mirrored for RTL), matching the scrollable overflow region.
+        let contribution_location = if direction.is_rtl() {
+            Point { x: container_border_box_width - (x + width) - container_border.right, y: y - container_border.top }
+        } else {
+            Point { x: x - container_border.left, y: y - container_border.top }
+        };
+        compute_content_size_contribution(
+            contribution_location,
+            Size { width, height },
+            layout_output.content_size,
+            overflow,
+        )
+    };
     #[cfg(not(feature = "content_size"))]
     let contribution = Size::ZERO;
 
