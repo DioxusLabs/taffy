@@ -17743,6 +17743,54 @@ mod grid {
 
     #[cfg(feature = "grid")]
     #[test]
+    fn grid_absolute_gaps_out_of_range_lines__border_box_ltr() {
+        crate::run_xml_test("grid", "grid_absolute_gaps_out_of_range_lines__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_absolute_gaps_out_of_range_lines__content_box_ltr() {
+        crate::run_xml_test("grid", "grid_absolute_gaps_out_of_range_lines__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_absolute_gaps_out_of_range_lines__border_box_rtl() {
+        crate::run_xml_test("grid", "grid_absolute_gaps_out_of_range_lines__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_absolute_gaps_out_of_range_lines__content_box_rtl() {
+        crate::run_xml_test("grid", "grid_absolute_gaps_out_of_range_lines__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_absolute_gaps_out_of_range_lines_rtl__border_box_ltr() {
+        crate::run_xml_test("grid", "grid_absolute_gaps_out_of_range_lines_rtl__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_absolute_gaps_out_of_range_lines_rtl__content_box_ltr() {
+        crate::run_xml_test("grid", "grid_absolute_gaps_out_of_range_lines_rtl__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_absolute_gaps_out_of_range_lines_rtl__border_box_rtl() {
+        crate::run_xml_test("grid", "grid_absolute_gaps_out_of_range_lines_rtl__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_absolute_gaps_out_of_range_lines_rtl__content_box_rtl() {
+        crate::run_xml_test("grid", "grid_absolute_gaps_out_of_range_lines_rtl__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
     fn grid_absolute_gaps_spans__border_box_ltr() {
         crate::run_xml_test("grid", "grid_absolute_gaps_spans__border_box_ltr");
     }
