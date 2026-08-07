@@ -1846,9 +1846,7 @@ fn align_flex_items_along_cross_axis(
     };
 
     match align_keyword {
-        // SelfStart/SelfEnd are resolved to Start/End against the item's own direction when
-        // flex items are generated, so they can only reach here unresolved via a logic error.
-        AlignItemsKeyword::Start | AlignItemsKeyword::SelfStart => {
+        AlignItemsKeyword::Start => {
             if cross_axis_should_reverse {
                 free_space
             } else {
@@ -1862,7 +1860,7 @@ fn align_flex_items_along_cross_axis(
                 0.0
             }
         }
-        AlignItemsKeyword::End | AlignItemsKeyword::SelfEnd => {
+        AlignItemsKeyword::End => {
             if cross_axis_should_reverse {
                 0.0
             } else {
@@ -1905,6 +1903,9 @@ fn align_flex_items_along_cross_axis(
                 0.0
             }
         }
+        // SelfStart/SelfEnd are resolved to Start/End against the item's own direction when
+        // flex items are generated.
+        AlignItemsKeyword::SelfStart | AlignItemsKeyword::SelfEnd => unreachable!(),
     }
 }
 
@@ -2515,25 +2516,16 @@ fn perform_absolute_layout_on_absolute_children(
             // `start`/`end` (and `baseline`, whose static-position fallback is `start`) are
             // writing-mode relative: they flip for RTL but not for `wrap-reverse`.
             // `flex-start`/`flex-end` and the `stretch` fallback are flex-relative.
-            // SelfStart/SelfEnd are resolved to Start/End against the item's own direction
-            // where `align_self` is read above, so they can only reach here via a logic error.
             let start_position = match cross_keyword {
-                AlignItemsKeyword::Start | AlignItemsKeyword::SelfStart | AlignItemsKeyword::Baseline => !cross_is_rtl,
-                AlignItemsKeyword::End | AlignItemsKeyword::SelfEnd => cross_is_rtl,
+                AlignItemsKeyword::Start | AlignItemsKeyword::Baseline => !cross_is_rtl,
+                AlignItemsKeyword::End => cross_is_rtl,
                 _ => true,
             };
             match (cross_keyword, cross_axis_flex_start_reversed) {
                 // Stretch alignment does not apply to absolutely positioned items
                 // See "Example 3" at https://www.w3.org/TR/css-flexbox-1/#abspos-items
                 // Note: Stretch should be FlexStart not Start when we support both
-                (
-                    AlignItemsKeyword::Start
-                    | AlignItemsKeyword::End
-                    | AlignItemsKeyword::SelfStart
-                    | AlignItemsKeyword::SelfEnd
-                    | AlignItemsKeyword::Baseline,
-                    _,
-                ) => {
+                (AlignItemsKeyword::Start | AlignItemsKeyword::End | AlignItemsKeyword::Baseline, _) => {
                     if start_position {
                         constants.content_box_inset.cross_start(constants.dir)
                             + resolved_margin.cross_start(constants.dir)
@@ -2564,6 +2556,9 @@ fn perform_absolute_layout_on_absolute_children(
                         - resolved_margin.cross_end(constants.dir))
                         / 2.0
                 }
+                // SelfStart/SelfEnd are resolved to Start/End against the item's own direction
+                // where `align_self` is read above.
+                (AlignItemsKeyword::SelfStart | AlignItemsKeyword::SelfEnd, _) => unreachable!(),
             }
         };
 

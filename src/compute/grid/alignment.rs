@@ -358,10 +358,7 @@ pub(super) fn align_item_within_area(
     // Compute offset in the axis
     let alignment_based_offset = match alignment_keyword {
         // TODO: Add support for baseline alignment. For now we treat it as "start".
-        // SelfStart/SelfEnd are resolved to Start/End against the item's own direction in
-        // `align_and_position_item`, so they can only reach here unresolved via a logic error.
         AlignItemsKeyword::Start
-        | AlignItemsKeyword::SelfStart
         | AlignItemsKeyword::FlexStart
         | AlignItemsKeyword::Baseline
         | AlignItemsKeyword::Stretch => {
@@ -371,7 +368,7 @@ pub(super) fn align_item_within_area(
                 resolved_margin.start
             }
         }
-        AlignItemsKeyword::End | AlignItemsKeyword::SelfEnd | AlignItemsKeyword::FlexEnd => {
+        AlignItemsKeyword::End | AlignItemsKeyword::FlexEnd => {
             if direction.is_rtl() {
                 resolved_margin.start
             } else {
@@ -381,6 +378,9 @@ pub(super) fn align_item_within_area(
         AlignItemsKeyword::Center => {
             (grid_area_size - resolved_size + resolved_margin.start - resolved_margin.end) / 2.0
         }
+        // SelfStart/SelfEnd are resolved to Start/End against the item's own direction in
+        // `align_and_position_item`.
+        AlignItemsKeyword::SelfStart | AlignItemsKeyword::SelfEnd => unreachable!(),
     };
 
     let offset_within_area = if position == Position::Absolute {
