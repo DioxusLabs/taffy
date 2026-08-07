@@ -4,6 +4,8 @@
 
 ### Added
 
+- Support for the `self-start` and `self-end` alignment keywords (`AlignItems::SELF_START`/`SELF_END` and safe variants). These resolve against the `direction` of the item itself rather than that of its container, so they only differ from `start`/`end` when the item's direction differs from its container's. Supported for `align-self`/`align-items` and `justify-self`/`justify-items` on both in-flow and absolutely positioned Flexbox and Grid items (#1074)
+
 - Support for `display: flow-root`. The new `Display::FlowRoot` variant lays out children using the block layout algorithm but always establishes a new block formatting context (its margins do not collapse with those of its children, it contains its own floats, and it avoids external floats)
 
 ### Changed

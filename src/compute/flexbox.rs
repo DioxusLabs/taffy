@@ -567,7 +567,11 @@ fn generate_anonymous_flex_items(
                 border: child_style
                     .border()
                     .resolve_or_zero(constants.node_inner_size.width, |val, basis| tree.calc(val, basis)),
-                align_self: child_style.align_self().unwrap_or(constants.align_items),
+                align_self: child_style.align_self().unwrap_or(constants.align_items).resolve_self_relative(
+                    child_style.direction(),
+                    constants.layout_direction,
+                    constants.is_column,
+                ),
                 overflow: child_style.overflow(),
                 scrollbar_width: child_style.scrollbar_width(),
                 flex_grow: child_style.flex_grow(),
@@ -1899,6 +1903,9 @@ fn align_flex_items_along_cross_axis(
                 0.0
             }
         }
+        // SelfStart/SelfEnd are resolved to Start/End against the item's own direction when
+        // flex items are generated.
+        AlignItemsKeyword::SelfStart | AlignItemsKeyword::SelfEnd => unreachable!(),
     }
 }
 
@@ -2247,7 +2254,11 @@ fn perform_absolute_layout_on_absolute_children(
         let overflow = child_style.overflow();
         let scrollbar_width = child_style.scrollbar_width();
         let aspect_ratio = child_style.aspect_ratio();
-        let align_self = child_style.align_self().unwrap_or(constants.align_items);
+        let align_self = child_style.align_self().unwrap_or(constants.align_items).resolve_self_relative(
+            child_style.direction(),
+            constants.layout_direction,
+            constants.is_column,
+        );
         let margin = child_style
             .margin()
             .map(|margin| margin.resolve_to_option(inset_relative_size.width, |val, basis| tree.calc(val, basis)));
@@ -2545,6 +2556,9 @@ fn perform_absolute_layout_on_absolute_children(
                         - resolved_margin.cross_end(constants.dir))
                         / 2.0
                 }
+                // SelfStart/SelfEnd are resolved to Start/End against the item's own direction
+                // where `align_self` is read above.
+                (AlignItemsKeyword::SelfStart | AlignItemsKeyword::SelfEnd, _) => unreachable!(),
             }
         };
 
