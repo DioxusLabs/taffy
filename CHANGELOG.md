@@ -4,6 +4,8 @@
 
 ### Changed
 
+- Block/float: `FloatContext::find_bfc_slot` (and `BlockContext::find_bfc_slot`) now takes the box's top border edge `y` and its `height` (instead of `min_y`, `clear` and `after`), unioning the float insets over all float segments the box vertically intersects. A new `next_bfc_candidate_y` method returns the next float-segment boundary below a given position, for iterating candidate positions
+
 - `TaffyTree::compute_layout_with_measure`'s measure function now takes the full `LayoutInput` (plus `NodeId`, `Option<&mut NodeContext>` and `&Style`) and returns a `LayoutOutput` directly instead of a `Size<f32>`, allowing measure functions to set baselines (and other `LayoutOutput` fields) on leaf nodes. `compute_leaf_layout` is no longer called implicitly (#953)
 
   Migration: to retain the previous behaviour, wrap your existing measure logic in an explicit call to `compute_leaf_layout` within the new-style measure function:
@@ -23,6 +25,12 @@
   ```
 
 ### Fixed
+
+- Block/float: a box that establishes an independent formatting context must not overlap floats over its *entire* height, not just at its top edge (CSS2 §9.5). The box is now measured at each candidate position and moved down past float-segment boundaries until its full border box fits, so e.g. a tall BFC root beside a short-but-wide lower float no longer overlaps it
+
+- Block/float: a BFC root pulled up by a negative top margin may sit (partially) above a float when it fits beside it, and moves below the float when it does not fit, matching browser behaviour
+
+- Block: the height of a BFC root containing floats now includes its bottom padding and border below the bottom margin edge of its floated descendants
 
 - `TaffyTree::remove` now marks the removed node's former parent as dirty, like `remove_child`, `remove_child_at_index` and `remove_children_range` already did. Previously the parent and its ancestors kept their stale cached layout, so recomputing the layout of an ancestor did not account for the removed node (#998)
 
