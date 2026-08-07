@@ -680,20 +680,38 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
                     maybe_grid_line.and_then(|line: OriginZeroLine| line.try_into_track_vec_index(final_row_counts))
                 });
 
+            // Content alignment (align-content/justify-content) may distribute free space before, between,
+            // or after tracks. Grid lines used by absolutely positioned items resolve to the edges of the
+            // tracks adjacent to the line rather than to the raw gutter offset:
+            //   - As a start edge, a line resolves to the start of the track that follows it
+            //   - As an end edge, a line resolves to the end of the track that precedes it
+            /// Resolve a grid line (by track vector index) used as a start edge to a position
+            fn line_as_start_edge(tracks: &[GridTrack], index: usize) -> f32 {
+                tracks.get(index + 1).unwrap_or(&tracks[index]).offset
+            }
+            /// Resolve a grid line (by track vector index) used as an end edge to a position
+            fn line_as_end_edge(tracks: &[GridTrack], index: usize) -> f32 {
+                if index == 0 {
+                    tracks.get(1).unwrap_or(&tracks[0]).offset
+                } else {
+                    tracks[index].offset
+                }
+            }
+
             let grid_area = Rect {
-                top: maybe_row_indexes.start.map(|index| rows[index].offset).unwrap_or(border.top),
+                top: maybe_row_indexes.start.map(|index| line_as_start_edge(&rows, index)).unwrap_or(border.top),
                 bottom: maybe_row_indexes
                     .end
-                    .map(|index| rows[index].offset)
+                    .map(|index| line_as_end_edge(&rows, index))
                     .unwrap_or(container_border_box.height - border.bottom - scrollbar_gutter.y),
-                left: maybe_col_indexes.start.map(|index| columns[index].offset).unwrap_or_else(|| {
+                left: maybe_col_indexes.start.map(|index| line_as_start_edge(&columns, index)).unwrap_or_else(|| {
                     if direction.is_rtl() {
                         border.left + scrollbar_gutter.x
                     } else {
                         border.left
                     }
                 }),
-                right: maybe_col_indexes.end.map(|index| columns[index].offset).unwrap_or_else(|| {
+                right: maybe_col_indexes.end.map(|index| line_as_end_edge(&columns, index)).unwrap_or_else(|| {
                     if direction.is_rtl() {
                         container_border_box.width - border.right
                     } else {
