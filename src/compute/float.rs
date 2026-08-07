@@ -96,16 +96,45 @@ struct Segment {
 
 impl Segment {
     /// Whether the segment can fit the passed floated box (in the horizontal axis)
-    fn fits_float_width(&self, floated_box: Size<f32>, direction: FloatDirection, bfc_width: f32) -> bool {
-        let slot = direction as usize;
-        self.insets[slot] == 0.0 || (bfc_width - floated_box.width - self.inset_sum()) >= 0.0
+    ///
+    /// See [`float_fits_horizontally`] for the details of the fit rules.
+    fn fits_float_width(
+        &self,
+        floated_box: Size<f32>,
+        direction: FloatDirection,
+        bfc_width: f32,
+        cb_insets: [f32; 2],
+    ) -> bool {
+        float_fits_horizontally(floated_box.width, direction, bfc_width, self.insets, cb_insets)
     }
+}
 
-    /// The total space taken up by both insets
-    #[inline(always)]
-    fn inset_sum(&self) -> f32 {
-        self.insets[0] + self.insets[1]
-    }
+/// Whether a floated box of the given width fits horizontally given the float insets
+/// (`float_insets`) and containing block insets (`cb_insets`) that apply to it.
+///
+/// A float is normally placed at the further-in of the float edge and the containing block
+/// edge on the side it is floated towards (its "lead" side). From that position it must:
+///
+///   - not overlap any float on the opposite ("trail") side (CSS2 §9.5.1 rule 3), and
+///   - not extend past the containing block's trail edge if there is a float on its lead
+///     side (CSS2 §9.5.1 rule 7: a float may only stick out of its containing block if it
+///     is already as far towards its float direction as possible).
+///
+/// Note that a float which is not constrained by other floats *may* overflow its
+/// containing block's trail edge (rules 1 and 7).
+fn float_fits_horizontally(
+    width: f32,
+    direction: FloatDirection,
+    bfc_width: f32,
+    float_insets: [f32; 2],
+    cb_insets: [f32; 2],
+) -> bool {
+    let lead = direction as usize;
+    let trail = 1 - lead;
+    let x_inset = float_insets[lead].max(cb_insets[lead]);
+    let fits_opposite_floats = float_insets[trail] == 0.0 || x_inset + width <= bfc_width - float_insets[trail];
+    let fits_containing_block = float_insets[lead] == 0.0 || x_inset + width <= bfc_width - cb_insets[trail];
+    fits_opposite_floats && fits_containing_block
 }
 
 /// Helper type for placing a single floated box
@@ -118,28 +147,39 @@ struct FloatFitter {
     bfc_width: f32,
     /// The total height of the set of segments currently being considered
     slot_height: f64,
-    /// The union of the insets of the set of segments currently being considered
-    insets: [f32; 2],
+    /// The union of the float insets of the set of segments currently being considered
+    float_insets: [f32; 2],
+    /// The insets of the box's containing block from the edges of the Block Formatting Context
+    cb_insets: [f32; 2],
 }
 
 impl FloatFitter {
     /// Create a new `FloatFitter`
-    fn new(bfc_width: f32, slot_height: f32, insets: [f32; 2]) -> Self {
-        Self { bfc_width, slot_height: slot_height as f64, insets }
+    fn new(bfc_width: f32, slot_height: f32, cb_insets: [f32; 2]) -> Self {
+        Self { bfc_width, slot_height: slot_height as f64, float_insets: [0.0, 0.0], cb_insets }
     }
 
     // Horizontal fitting
 
     /// Union the insets of another segment. This is a "max" of the insets on each side.
     fn union_insets(&mut self, insets: [f32; 2]) {
-        self.insets[0] = self.insets[0].max(insets[0]);
-        self.insets[1] = self.insets[1].max(insets[1]);
+        self.float_insets[0] = self.float_insets[0].max(insets[0]);
+        self.float_insets[1] = self.float_insets[1].max(insets[1]);
+    }
+
+    /// The inset from the edge of the BFC (on the side the box is floated towards) that the
+    /// box would be placed at given the currently accounted for insets
+    fn placed_inset(&self, direction: FloatDirection) -> f32 {
+        let lead = direction as usize;
+        self.float_insets[lead].max(self.cb_insets[lead])
     }
 
     /// Given the currently accounted for insets, check whether there is an x position
-    /// such that the box fits horizontally
-    fn fits_horiontally(&self, width: f32) -> bool {
-        self.insets == [0.0, 0.0] || self.bfc_width - self.insets[0] - self.insets[1] - width >= 0.0
+    /// such that the box fits horizontally.
+    ///
+    /// See [`float_fits_horizontally`] for the details of the fit rules.
+    fn fits_horiontally(&self, width: f32, direction: FloatDirection) -> bool {
+        float_fits_horizontally(width, direction, self.bfc_width, self.float_insets, self.cb_insets)
     }
 
     // Vertical fitting
@@ -335,7 +375,7 @@ impl FloatContext {
 
             // Candidate start segment doesn't have (horizontal) space for the float:
             // => retry with the next segment
-            if !start_segment.fits_float_width(floated_box, direction, self.available_width) {
+            if !start_segment.fits_float_width(floated_box, direction, self.available_width, containing_block_insets) {
                 start_idx += 1;
                 end_idx = end_idx.max(start_idx);
                 continue;
@@ -357,7 +397,7 @@ impl FloatContext {
                 // This means no existing segment can accomodate the float so we must create a new
                 // segment below all existing segments
                 let Some(end_segment) = self.segments.get(end_idx) else {
-                    let inset = fitter.insets[slot];
+                    let inset = fitter.placed_inset(direction);
                     break 'outer (Some(start_idx), None, inset);
                 };
 
@@ -366,7 +406,7 @@ impl FloatContext {
                 // If it does not fit horizontally then it will never fit in this position, so
                 // continue the outer loop to find and check a new position
                 fitter.union_insets(end_segment.insets);
-                if !fitter.fits_horiontally(floated_box.width) {
+                if !fitter.fits_horiontally(floated_box.width, direction) {
                     start_idx += 1;
                     end_idx = end_idx.max(start_idx);
                     continue 'outer;
@@ -384,7 +424,7 @@ impl FloatContext {
                     continue;
                 }
 
-                let inset = fitter.insets[slot];
+                let inset = fitter.placed_inset(direction);
                 break 'outer (Some(start_idx), Some(end_idx), inset);
             }
         };
