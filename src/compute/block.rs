@@ -172,9 +172,14 @@ impl BlockContext<'_> {
     }
 
     /// Search a space suitable for laying out non-floated content into
-    pub fn find_content_slot(&self, min_y: f32, clear: Clear, after: Option<usize>) -> ContentSlot {
-        let mut slot =
-            self.bfc.float_context.find_content_slot(min_y + self.y_offset, self.content_box_insets, clear, after);
+    pub fn find_content_slot(&self, min_y: f32, height: f32, clear: Clear, after: Option<usize>) -> ContentSlot {
+        let mut slot = self.bfc.float_context.find_content_slot(
+            min_y + self.y_offset,
+            self.content_box_insets,
+            height,
+            clear,
+            after,
+        );
         slot.y -= self.y_offset;
         slot.x -= self.insets[0];
         slot
