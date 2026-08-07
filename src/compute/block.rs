@@ -199,27 +199,25 @@ impl BlockContext<'_> {
         slot
     }
 
-    /// Search for a space suitable for laying out a box that establishes an independent
-    /// formatting context (whose border box must not overlap floats)
-    pub fn find_bfc_slot(
-        &self,
-        min_y: f32,
-        margins: [f32; 2],
-        direction: Direction,
-        clear: Clear,
-        after: Option<usize>,
-    ) -> BfcSlot {
+    /// Compute a slot for a box that establishes an independent formatting context (whose
+    /// border box must not overlap floats), with its top border edge at `y`
+    pub fn find_bfc_slot(&self, y: f32, height: f32, margins: [f32; 2], direction: Direction) -> BfcSlot {
         let mut slot = self.bfc.float_context.find_bfc_slot(
-            min_y + self.y_offset,
+            y + self.y_offset,
+            height,
             self.content_box_insets,
             margins,
             direction,
-            clear,
-            after,
         );
         slot.y -= self.y_offset;
         slot.x -= self.insets[0];
         slot
+    }
+
+    /// The next candidate y position (below `y`) at which to try placing a box that must not
+    /// overlap floats: the next float-segment boundary strictly below `y`
+    pub fn next_bfc_candidate_y(&self, y: f32) -> Option<f32> {
+        self.bfc.float_context.next_bfc_candidate_y(y + self.y_offset).map(|candidate| candidate - self.y_offset)
     }
 
     /// Get the bottom of lowest relevant float for the specific clear property
@@ -650,10 +648,12 @@ fn compute_inner(
         block_ctx,
     );
 
-    // Root BFCs contain floats
+    // Root BFCs contain floats: the content height extends to include the bottom margin edge
+    // of any floated descendant, and the container's bottom padding/border sit below that
     #[cfg(feature = "float_layout")]
     if block_ctx.is_bfc_root() || establishes_new_bfc {
-        intrinsic_outer_height = intrinsic_outer_height.max(block_ctx.floated_content_height_contribution());
+        intrinsic_outer_height = intrinsic_outer_height
+            .max(block_ctx.floated_content_height_contribution() + resolved_content_box_inset.bottom);
     }
 
     let container_outer_height = known_dimensions
@@ -1039,6 +1039,78 @@ fn determine_content_based_container_width(
     max_child_width
 }
 
+/// The known dimensions to lay out an in-flow block item with, given the stretch width available to it.
+///
+/// `is_stretch` is whether the item's resolved `justify-self` is `stretch`, and `is_fit_content`
+/// whether it is neither `normal` nor `stretch` (an auto width is then `fit-content` rather than `stretch`).
+#[inline]
+#[allow(clippy::too_many_arguments)]
+fn block_item_known_dimensions(
+    tree: &mut impl LayoutBlockContainer,
+    item: &BlockItem,
+    stretch_width: f32,
+    container_inner_width: f32,
+    container_percentage_resolution_height: Option<f32>,
+    vertical_margin_sum: f32,
+    parent_size: Size<Option<f32>>,
+    is_stretch: bool,
+    is_fit_content: bool,
+) -> Size<Option<f32>> {
+    // Unless stretched, tables and compressible replaced elements resolve their own width
+    // <https://www.w3.org/TR/CSS22/visudet.html#block-replaced-width>
+    if (item.is_table || item.is_compressible_replaced) && !is_stretch {
+        Size::NONE
+    } else {
+        // The automatic width of a block-level box whose `justify-self` is neither `normal` nor `stretch`
+        // is equivalent to `fit-content` rather than `stretch`
+        let width_style = if is_fit_content && item.size_style.width.is_auto() {
+            Dimension::fit_content()
+        } else {
+            item.size_style.width
+        };
+
+        // Items with a sizing keyword width (min-content, max-content, fit-content,
+        // fit-content(...), stretch) resolve their width either directly or by measuring
+        // the item under the corresponding available space constraint
+        let keyword_width =
+            resolve_sizing_keyword(width_style, Some(stretch_width), Some(container_inner_width), |val, basis| {
+                tree.calc(val, basis)
+            })
+            .map(|resolution| match resolution {
+                SizingKeywordResolution::Exact(width) => width,
+                SizingKeywordResolution::Measure(item_available_width) => tree.measure_child_size(
+                    item.node_id,
+                    Size::NONE,
+                    parent_size,
+                    Size { width: item_available_width, height: AvailableSpace::MaxContent },
+                    SizingMode::InherentSize,
+                    crate::AbsoluteAxis::Horizontal,
+                    // Must match the value passed when laying the item out (see `Cache`)
+                    if item.is_in_same_bfc { Line::TRUE } else { Line::FALSE },
+                ),
+            });
+
+        let keyword_height = resolve_stretch_height(
+            item.size_style.height,
+            container_percentage_resolution_height,
+            vertical_margin_sum,
+            |val, basis| tree.calc(val, basis),
+        );
+
+        item.size
+            .map_width(|width| {
+                Some(
+                    width
+                        .or(keyword_width)
+                        .unwrap_or(stretch_width)
+                        .maybe_clamp(item.min_size.width, item.max_size.width),
+                )
+            })
+            .map_height(|height| height.or(keyword_height))
+            .maybe_clamp(item.min_size, item.max_size)
+    }
+}
+
 /// Compute each child's final size and position
 #[inline]
 #[allow(clippy::too_many_arguments)]
@@ -1242,6 +1314,20 @@ fn perform_final_layout_on_in_flow_children(
 
             // Handle non-floated boxes
 
+            // `justify-self` on an in-flow block-level box (css-align-3 §6.1.1). `None` takes the
+            // container's `justify-items`, and `normal` lays the box out according to the default
+            // block layout rules. `stretch` does too: the default rules already stretch an
+            // auto-width box, so it only differs from `normal` for tables and replaced boxes, which
+            // would otherwise resolve their own width.
+            let justify_self =
+                item.justify_self.unwrap_or(justify_items).resolve_self_relative(item.direction, direction, true);
+            let is_stretch = justify_self.keyword == AlignItemsKeyword::Stretch;
+            // The (resolved) `justify-self` if it is neither `normal` nor `stretch`
+            let non_stretch_justify_self = match justify_self.keyword {
+                AlignItemsKeyword::Normal | AlignItemsKeyword::Stretch => None,
+                _ => Some(justify_self),
+            };
+
             let mut y_margin_offset: f32 = 0.0;
             #[cfg(feature = "float_layout")]
             let mut item_avoids_floats = false;
@@ -1273,21 +1359,71 @@ fn perform_final_layout_on_in_flow_children(
                         // (so that the margin box width is non-negative, per CSS2 §10.3.3)
                         let min_auto_width = -item_non_auto_x_margin_sum;
 
-                        // Find the highest slot (at or below `min_y`) with enough horizontal space
-                        // for the item's border box, which must not overlap any float
-                        let mut slot_segment = None;
-                        let slot = loop {
-                            let slot = block_ctx.find_bfc_slot(min_y, x_margins, direction, item.clear, slot_segment);
-                            let Some(segment_id) = slot.segment_id else { break slot };
-                            let width = item
-                                .size
-                                .width
-                                .unwrap_or(slot.stretch_width.max(min_auto_width).max(0.0))
-                                .maybe_clamp(item.min_size.width, item.max_size.width);
-                            if width <= slot.border_width + FIT_TOLERANCE {
-                                break slot;
+                        // Find the highest position (at or below `min_y`) at which the item's
+                        // border box does not overlap any float over its entire height.
+                        //
+                        // Candidate positions are the item's natural position followed by
+                        // successive float-segment boundaries below it. At each candidate the
+                        // item is measured at the slot's width and the slot is recomputed with
+                        // the measured height (the item must not overlap floats over its entire
+                        // height, and its height depends on the width it is laid out at). Within
+                        // a candidate the float insets only grow with height, so this converges.
+                        let mut candidate_y = min_y;
+                        if let Some(threshold) = block_ctx.cleared_threshold(item.clear) {
+                            candidate_y = candidate_y.max(threshold);
+                        }
+                        let slot = 'candidate: loop {
+                            let mut slot = block_ctx.find_bfc_slot(candidate_y, 0.0, x_margins, direction);
+                            for _ in 0..8 {
+                                let stretch_width = slot.stretch_width.max(min_auto_width).max(0.0);
+
+                                let known_dimensions = block_item_known_dimensions(
+                                    tree,
+                                    item,
+                                    stretch_width,
+                                    container_inner_width,
+                                    container_percentage_resolution_height,
+                                    item_non_auto_margin.vertical_axis_sum(),
+                                    parent_size,
+                                    is_stretch,
+                                    non_stretch_justify_self.is_some(),
+                                );
+                                let measured_size = tree
+                                    .compute_child_layout(
+                                        item.node_id,
+                                        LayoutInput {
+                                            run_mode: RunMode::ComputeSize,
+                                            sizing_mode: SizingMode::InherentSize,
+                                            axis: RequestedAxis::Both,
+                                            known_dimensions,
+                                            known_dimensions_are_definite: Size { width: true, height: true },
+                                            parent_size,
+                                            available_space: available_space
+                                                .map_width(|_| AvailableSpace::Definite(stretch_width)),
+                                            vertical_margins_are_collapsible: Line::FALSE,
+                                        },
+                                    )
+                                    .size;
+
+                                // The item doesn't fit at this position: try the next one down
+                                if measured_size.width > slot.border_width + FIT_TOLERANCE {
+                                    break;
+                                }
+
+                                // Recompute the slot with the measured height. If the insets are
+                                // unchanged (the width is not narrower) then the slot is stable.
+                                let full_height_slot =
+                                    block_ctx.find_bfc_slot(candidate_y, measured_size.height, x_margins, direction);
+                                if full_height_slot.border_width >= slot.border_width - 0.001 {
+                                    break 'candidate full_height_slot;
+                                }
+                                slot = full_height_slot;
                             }
-                            slot_segment = Some(segment_id);
+                            match block_ctx.next_bfc_candidate_y(candidate_y) {
+                                Some(next_y) => candidate_y = next_y,
+                                // No float boundaries below: place below all floats
+                                None => break block_ctx.find_bfc_slot(candidate_y, 0.0, x_margins, direction),
+                            }
                         };
 
                         // If the item had to move down to avoid floats then it "separates from the
@@ -1316,75 +1452,17 @@ fn perform_final_layout_on_in_flow_children(
                 }
             };
 
-            // `justify-self` on an in-flow block-level box (css-align-3 §6.1.1). `None` takes the
-            // container's `justify-items`, and `normal` lays the box out according to the default
-            // block layout rules. `stretch` does too: the default rules already stretch an
-            // auto-width box, so it only differs from `normal` for tables and replaced boxes, which
-            // would otherwise resolve their own width.
-            let justify_self =
-                item.justify_self.unwrap_or(justify_items).resolve_self_relative(item.direction, direction, true);
-            let is_stretch = justify_self.keyword == AlignItemsKeyword::Stretch;
-            // The (resolved) `justify-self` if it is neither `normal` nor `stretch`
-            let non_stretch_justify_self = match justify_self.keyword {
-                AlignItemsKeyword::Normal | AlignItemsKeyword::Stretch => None,
-                _ => Some(justify_self),
-            };
-
-            // Unless stretched, tables and compressible replaced elements resolve their own width
-            // <https://www.w3.org/TR/CSS22/visudet.html#block-replaced-width>
-            let known_dimensions = if (item.is_table || item.is_compressible_replaced) && !is_stretch {
-                Size::NONE
-            } else {
-                // The automatic width of a block-level box whose `justify-self` is neither `normal` nor `stretch`
-                // is equivalent to `fit-content` rather than `stretch`
-                let width_style = if non_stretch_justify_self.is_some() && item.size_style.width.is_auto() {
-                    Dimension::fit_content()
-                } else {
-                    item.size_style.width
-                };
-
-                // Items with a sizing keyword width (min-content, max-content, fit-content,
-                // fit-content(...), stretch) resolve their width either directly or by measuring
-                // the item under the corresponding available space constraint
-                let keyword_width = resolve_sizing_keyword(
-                    width_style,
-                    Some(stretch_width),
-                    Some(container_inner_width),
-                    |val, basis| tree.calc(val, basis),
-                )
-                .map(|resolution| match resolution {
-                    SizingKeywordResolution::Exact(width) => width,
-                    SizingKeywordResolution::Measure(item_available_width) => tree.measure_child_size(
-                        item.node_id,
-                        Size::NONE,
-                        parent_size,
-                        Size { width: item_available_width, height: AvailableSpace::MaxContent },
-                        SizingMode::InherentSize,
-                        crate::AbsoluteAxis::Horizontal,
-                        // Must match the value passed when laying the item out (see `Cache`)
-                        if item.is_in_same_bfc { Line::TRUE } else { Line::FALSE },
-                    ),
-                });
-
-                let keyword_height = resolve_stretch_height(
-                    item.size_style.height,
-                    container_percentage_resolution_height,
-                    item_non_auto_margin.vertical_axis_sum(),
-                    |val, basis| tree.calc(val, basis),
-                );
-
-                item.size
-                    .map_width(|width| {
-                        Some(
-                            width
-                                .or(keyword_width)
-                                .unwrap_or(stretch_width)
-                                .maybe_clamp(item.min_size.width, item.max_size.width),
-                        )
-                    })
-                    .map_height(|height| height.or(keyword_height))
-                    .maybe_clamp(item.min_size, item.max_size)
-            };
+            let known_dimensions = block_item_known_dimensions(
+                tree,
+                item,
+                stretch_width,
+                container_inner_width,
+                container_percentage_resolution_height,
+                item_non_auto_margin.vertical_axis_sum(),
+                parent_size,
+                is_stretch,
+                non_stretch_justify_self.is_some(),
+            );
 
             //
 

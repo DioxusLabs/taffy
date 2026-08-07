@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    A BFC root in a parent wider than its BFC fits beside an adjoining float and pulls it down with its top margin
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="display: block; width: 200px; overflow: hidden;">
+  <div style="display: block; width: 300px; margin-top: 50px;">
+    <div style="display: block;">
+      <div style="float: left; width: 200px; height: 10px;"></div>
+    </div>
+    <div style="display: flow-root; width: 100px; height: 10px; margin-top: 190px;"></div>
+  </div>
+</div>
+
+</body>
+</html>
