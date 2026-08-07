@@ -98,3 +98,54 @@ fn clear_past_zero_width_float() {
     // container's height is 1 + 99 = 100.
     assert_eq!(taffy.layout(container).unwrap().size.height, 100.0);
 }
+
+fn float_block(width: f32, height: f32, float: Float) -> Style {
+    Style {
+        display: Display::Block,
+        float,
+        size: Size { width: length(width), height: length(height) },
+        ..Default::default()
+    }
+}
+
+fn root_style(width: f32) -> Style {
+    Style { display: Display::Block, size: Size { width: length(width), height: auto() }, ..Default::default() }
+}
+
+/// Regression test for <https://wpt.live/css/CSS2/floats/floats-rule3-outside-left-001.xht>
+///
+/// CSS2 float rule 7: a float that is wider than its containing block and has no other
+/// float beside it may overflow the containing block's edge rather than being pushed down.
+#[test]
+fn oversized_float_overflows_containing_block() {
+    let mut taffy = new_test_tree();
+
+    let float_a = taffy.new_leaf(float_block(150.0, 50.0, Float::Left)).unwrap();
+    let root = taffy.new_with_children(root_style(100.0), &[float_a]).unwrap();
+
+    taffy.compute_layout(root, Size::MAX_CONTENT).unwrap();
+
+    assert_eq!(taffy.layout(float_a).unwrap().location, Point { x: 0.0, y: 0.0 });
+}
+
+/// CSS2 float rules 3 & 7: a float with another float beside it must not overlap that float
+/// (rule 3) nor extend past the containing block's opposite edge (rule 7) - it must move down.
+#[test]
+fn float_beside_existing_float_moves_down_instead_of_overflowing() {
+    let mut taffy = new_test_tree();
+
+    // Rule 3: an opposite-direction float that doesn't fit must move down, not overlap
+    let left = taffy.new_leaf(float_block(60.0, 50.0, Float::Left)).unwrap();
+    let right = taffy.new_leaf(float_block(60.0, 50.0, Float::Right)).unwrap();
+    // Rule 7: a same-direction float that doesn't fit must move down, not overflow the
+    // containing block's trailing edge
+    let left2 = taffy.new_leaf(float_block(60.0, 50.0, Float::Left)).unwrap();
+
+    let root = taffy.new_with_children(root_style(100.0), &[left, right, left2]).unwrap();
+
+    taffy.compute_layout(root, Size::MAX_CONTENT).unwrap();
+
+    assert_eq!(taffy.layout(left).unwrap().location, Point { x: 0.0, y: 0.0 });
+    assert_eq!(taffy.layout(right).unwrap().location, Point { x: 40.0, y: 50.0 });
+    assert_eq!(taffy.layout(left2).unwrap().location, Point { x: 0.0, y: 100.0 });
+}
