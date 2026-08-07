@@ -334,7 +334,26 @@ function describeElement(e) {
   };
 }
 
+// Check that the test base stylesheet has loaded and is applied. This can be false when the
+// document is not fully loaded yet, in which case the styles that implement the body classes
+// set below would be missing and every variant would be measured as border-box/ltr.
+function assertStylesheetApplied() {
+  const previousClassName = document.body.className;
+  document.body.className = "content-box rtl";
+  const probe = document.createElement("div");
+  document.body.appendChild(probe);
+  const style = getComputedStyle(probe);
+  const applied = style.direction === "rtl" && style.boxSizing === "content-box";
+  probe.remove();
+  document.body.className = previousClassName;
+  if (!applied) {
+    throw new Error(`the test base stylesheet is not applied (document readyState: ${document.readyState})`);
+  }
+}
+
 function getTestData() {
+  assertStylesheetApplied();
+
   document.body.className = "border-box ltr";
   const borderBoxLtrData = describeElement(document.getElementById('test-root'));
   document.body.className = "content-box ltr";
