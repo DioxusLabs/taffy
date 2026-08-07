@@ -171,6 +171,19 @@ impl BlockContext<'_> {
         pos
     }
 
+    /// Snapshot the current float placement state. The snapshot can be passed to
+    /// [`restore_float_snapshot`](Self::restore_float_snapshot) to undo the placement of any
+    /// floats placed after the snapshot was taken (e.g. to speculatively place floats).
+    pub fn float_snapshot(&self) -> FloatContext {
+        self.bfc.float_context.clone()
+    }
+
+    /// Restore a float placement state snapshot taken with
+    /// [`float_snapshot`](Self::float_snapshot)
+    pub fn restore_float_snapshot(&mut self, snapshot: FloatContext) {
+        self.bfc.float_context = snapshot;
+    }
+
     /// Search a space suitable for laying out non-floated content into
     pub fn find_content_slot(&self, min_y: f32, height: f32, clear: Clear, after: Option<usize>) -> ContentSlot {
         let mut slot = self.bfc.float_context.find_content_slot(
