@@ -584,10 +584,18 @@ impl FloatContext {
     }
 
     /// Search for a space suitable for laying out non-floated content into
+    ///
+    /// If `height` is non-zero then the returned slot accounts for all floats that a box of that
+    /// height starting at the slot's y position would be adjacent to (a line box is shortened by
+    /// any float that its vertical extent intersects). The returned slot's `height` is the
+    /// vertical extent (from the slot's y position) over which the slot's width is valid: content
+    /// taller than this may be adjacent to further floats and should be re-placed with its actual
+    /// height.
     pub fn find_content_slot(
         &self,
         min_y: f32,
         containing_block_insets: [f32; 2],
+        height: f32,
         clear: Clear,
         after: Option<usize>,
     ) -> ContentSlot {
@@ -617,20 +625,39 @@ impl FloatContext {
         let segment = self.segments.get(start_idx);
         match segment {
             Some(segment) => {
-                let inset_left = segment.insets[0].max(containing_block_insets[0]);
-                let inset_right = segment.insets[1].max(containing_block_insets[1]);
+                let y = segment.y.start.max(min_y);
+                let end_y = y + height;
+
+                // Union the float insets of all segments that the box's vertical extent
+                // intersects, then extend the slot's height over any further segments whose
+                // insets do not exceed that union (the slot's width remains valid there).
+                let mut float_insets = segment.insets;
+                let mut slot_height = f32::INFINITY;
+                for seg in &self.segments[(start_idx + 1)..] {
+                    if seg.y.start < end_y {
+                        float_insets[0] = float_insets[0].max(seg.insets[0]);
+                        float_insets[1] = float_insets[1].max(seg.insets[1]);
+                    } else if seg.insets[0] > float_insets[0] || seg.insets[1] > float_insets[1] {
+                        slot_height = seg.y.start - y;
+                        break;
+                    }
+                }
+
+                let inset_left = float_insets[0].max(containing_block_insets[0]);
+                let inset_right = float_insets[1].max(containing_block_insets[1]);
                 ContentSlot {
                     segment_id: Some(start_idx),
                     x: inset_left,
-                    y: segment.y.start.max(min_y),
+                    y,
                     width: self.available_width - inset_left - inset_right,
-                    height: f32::INFINITY,
+                    height: slot_height,
                 }
             }
+            // Below all floats
             None => ContentSlot {
                 segment_id: None,
                 x: containing_block_insets[0],
-                y: min_y,
+                y: self.segments.last().map(|segment| segment.y.end).unwrap_or(min_y).max(min_y),
                 width: self.available_width - containing_block_insets[0] - containing_block_insets[1],
                 height: f32::INFINITY,
             },
@@ -657,11 +684,13 @@ impl FloatContext {
     ///     negative margin lets the border box extend outside the containing block.
     ///
     /// When there are no floats beside the box, its (possibly negative) margins apply as usual.
+    #[allow(clippy::too_many_arguments)]
     pub fn find_bfc_slot(
         &self,
         min_y: f32,
         containing_block_insets: [f32; 2],
         margins: [f32; 2],
+        height: f32,
         direction: Direction,
         clear: Clear,
         after: Option<usize>,
@@ -695,34 +724,50 @@ impl FloatContext {
         let start_idx = start_idx.unwrap_or(self.segments.len());
         match self.segments.get(start_idx) {
             Some(segment) => {
+                let y = segment.y.start.max(min_y);
+
+                // The box's border box must not overlap floats over its entire height, so union
+                // the float insets of all segments that the box's vertical extent intersects
+                let mut float_insets = segment.insets;
+                let mut has_float = segment.has_float;
+                if height > 0.0 {
+                    let end_y = y + height;
+                    for seg in &self.segments[(start_idx + 1)..] {
+                        if seg.y.start >= end_y {
+                            break;
+                        }
+                        float_insets[0] = float_insets[0].max(seg.insets[0]);
+                        float_insets[1] = float_insets[1].max(seg.insets[1]);
+                        has_float[0] |= seg.has_float[0];
+                        has_float[1] |= seg.has_float[1];
+                    }
+                }
+
                 let lead = match direction {
                     Direction::Ltr => 0,
                     Direction::Rtl => 1,
                 };
                 let trail = 1 - lead;
-                let has_lead_float = segment.has_float[lead];
-                let has_trail_float = segment.has_float[trail];
+                let has_lead_float = has_float[lead];
+                let has_trail_float = has_float[trail];
                 let mut fit_insets = [0.0; 2];
                 let mut stretch_insets = [0.0; 2];
                 fit_insets[lead] =
-                    if has_lead_float { segment.insets[lead].max(margin_insets[lead]) } else { margin_insets[lead] };
+                    if has_lead_float { float_insets[lead].max(margin_insets[lead]) } else { margin_insets[lead] };
                 stretch_insets[lead] = fit_insets[lead];
                 fit_insets[trail] = if has_trail_float {
-                    segment.insets[trail].max(containing_block_insets[trail])
+                    float_insets[trail].max(containing_block_insets[trail])
                 } else {
                     // A positive trailing margin may overflow the containing block edge (it does
                     // not affect fit), but a negative one widens the space for the border box
                     margin_insets[trail].min(containing_block_insets[trail])
                 };
-                stretch_insets[trail] = if has_trail_float {
-                    segment.insets[trail].max(margin_insets[trail])
-                } else {
-                    margin_insets[trail]
-                };
+                stretch_insets[trail] =
+                    if has_trail_float { float_insets[trail].max(margin_insets[trail]) } else { margin_insets[trail] };
                 BfcSlot {
                     segment_id: Some(start_idx),
                     x: fit_insets[0],
-                    y: segment.y.start.max(min_y),
+                    y,
                     border_width: self.available_width - fit_insets[0] - fit_insets[1],
                     stretch_width: self.available_width - stretch_insets[0] - stretch_insets[1],
                 }
