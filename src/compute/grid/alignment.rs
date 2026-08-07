@@ -95,8 +95,20 @@ pub(super) fn align_and_position_item(
     let overflow = style.overflow();
     let scrollbar_width = style.scrollbar_width();
     let aspect_ratio = style.aspect_ratio();
-    let justify_self = style.justify_self();
-    let align_self = style.align_self();
+    // Resolve writing-mode-relative self-start/self-end keywords against the item's own
+    // direction. The horizontal axis is the inline axis (Taffy only supports horizontal-tb);
+    // the vertical (block) axis resolves them to plain start/end.
+    let item_direction = style.direction();
+    let justify_self = style.justify_self().map(|align| align.resolve_self_relative(item_direction, direction, true));
+    let align_self = style.align_self().map(|align| align.resolve_self_relative(item_direction, direction, false));
+    let container_alignment_styles = InBothAbsAxis {
+        horizontal: container_alignment_styles
+            .horizontal
+            .map(|align| align.resolve_self_relative(item_direction, direction, true)),
+        vertical: container_alignment_styles
+            .vertical
+            .map(|align| align.resolve_self_relative(item_direction, direction, false)),
+    };
 
     let position = style.position();
     let inset_horizontal = style
@@ -346,7 +358,10 @@ pub(super) fn align_item_within_area(
     // Compute offset in the axis
     let alignment_based_offset = match alignment_keyword {
         // TODO: Add support for baseline alignment. For now we treat it as "start".
+        // SelfStart/SelfEnd are resolved to Start/End against the item's own direction in
+        // `align_and_position_item`, so they can only reach here unresolved via a logic error.
         AlignItemsKeyword::Start
+        | AlignItemsKeyword::SelfStart
         | AlignItemsKeyword::FlexStart
         | AlignItemsKeyword::Baseline
         | AlignItemsKeyword::Stretch => {
@@ -356,7 +371,7 @@ pub(super) fn align_item_within_area(
                 resolved_margin.start
             }
         }
-        AlignItemsKeyword::End | AlignItemsKeyword::FlexEnd => {
+        AlignItemsKeyword::End | AlignItemsKeyword::SelfEnd | AlignItemsKeyword::FlexEnd => {
             if direction.is_rtl() {
                 resolved_margin.start
             } else {

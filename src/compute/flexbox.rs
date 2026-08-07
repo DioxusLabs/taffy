@@ -567,7 +567,11 @@ fn generate_anonymous_flex_items(
                 border: child_style
                     .border()
                     .resolve_or_zero(constants.node_inner_size.width, |val, basis| tree.calc(val, basis)),
-                align_self: child_style.align_self().unwrap_or(constants.align_items),
+                align_self: child_style.align_self().unwrap_or(constants.align_items).resolve_self_relative(
+                    child_style.direction(),
+                    constants.layout_direction,
+                    constants.is_column,
+                ),
                 overflow: child_style.overflow(),
                 scrollbar_width: child_style.scrollbar_width(),
                 flex_grow: child_style.flex_grow(),
@@ -1842,7 +1846,9 @@ fn align_flex_items_along_cross_axis(
     };
 
     match align_keyword {
-        AlignItemsKeyword::Start => {
+        // SelfStart/SelfEnd are resolved to Start/End against the item's own direction when
+        // flex items are generated, so they can only reach here unresolved via a logic error.
+        AlignItemsKeyword::Start | AlignItemsKeyword::SelfStart => {
             if cross_axis_should_reverse {
                 free_space
             } else {
@@ -1856,7 +1862,7 @@ fn align_flex_items_along_cross_axis(
                 0.0
             }
         }
-        AlignItemsKeyword::End => {
+        AlignItemsKeyword::End | AlignItemsKeyword::SelfEnd => {
             if cross_axis_should_reverse {
                 0.0
             } else {
@@ -2247,7 +2253,11 @@ fn perform_absolute_layout_on_absolute_children(
         let overflow = child_style.overflow();
         let scrollbar_width = child_style.scrollbar_width();
         let aspect_ratio = child_style.aspect_ratio();
-        let align_self = child_style.align_self().unwrap_or(constants.align_items);
+        let align_self = child_style.align_self().unwrap_or(constants.align_items).resolve_self_relative(
+            child_style.direction(),
+            constants.layout_direction,
+            constants.is_column,
+        );
         let margin = child_style
             .margin()
             .map(|margin| margin.resolve_to_option(inset_relative_size.width, |val, basis| tree.calc(val, basis)));
@@ -2505,16 +2515,25 @@ fn perform_absolute_layout_on_absolute_children(
             // `start`/`end` (and `baseline`, whose static-position fallback is `start`) are
             // writing-mode relative: they flip for RTL but not for `wrap-reverse`.
             // `flex-start`/`flex-end` and the `stretch` fallback are flex-relative.
+            // SelfStart/SelfEnd are resolved to Start/End against the item's own direction
+            // where `align_self` is read above, so they can only reach here via a logic error.
             let start_position = match cross_keyword {
-                AlignItemsKeyword::Start | AlignItemsKeyword::Baseline => !cross_is_rtl,
-                AlignItemsKeyword::End => cross_is_rtl,
+                AlignItemsKeyword::Start | AlignItemsKeyword::SelfStart | AlignItemsKeyword::Baseline => !cross_is_rtl,
+                AlignItemsKeyword::End | AlignItemsKeyword::SelfEnd => cross_is_rtl,
                 _ => true,
             };
             match (cross_keyword, cross_axis_flex_start_reversed) {
                 // Stretch alignment does not apply to absolutely positioned items
                 // See "Example 3" at https://www.w3.org/TR/css-flexbox-1/#abspos-items
                 // Note: Stretch should be FlexStart not Start when we support both
-                (AlignItemsKeyword::Start | AlignItemsKeyword::End | AlignItemsKeyword::Baseline, _) => {
+                (
+                    AlignItemsKeyword::Start
+                    | AlignItemsKeyword::End
+                    | AlignItemsKeyword::SelfStart
+                    | AlignItemsKeyword::SelfEnd
+                    | AlignItemsKeyword::Baseline,
+                    _,
+                ) => {
                     if start_position {
                         constants.content_box_inset.cross_start(constants.dir)
                             + resolved_margin.cross_start(constants.dir)
