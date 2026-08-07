@@ -615,6 +615,7 @@ impl FloatContext {
         min_y: f32,
         containing_block_insets: [f32; 2],
         margins: [f32; 2],
+        height: f32,
         direction: Direction,
         clear: Clear,
         after: Option<usize>,
@@ -644,6 +645,22 @@ impl FloatContext {
         let start_idx = start_idx.unwrap_or(self.segments.len());
         match self.segments.get(start_idx) {
             Some(segment) => {
+                let y = segment.y.start.max(min_y);
+
+                // The box's border box must not overlap floats over its entire height, so union
+                // the float insets of all segments that the box's vertical extent intersects
+                let mut float_insets = segment.insets;
+                if height > 0.0 {
+                    let end_y = y + height;
+                    for seg in &self.segments[(start_idx + 1)..] {
+                        if seg.y.start >= end_y {
+                            break;
+                        }
+                        float_insets[0] = float_insets[0].max(seg.insets[0]);
+                        float_insets[1] = float_insets[1].max(seg.insets[1]);
+                    }
+                }
+
                 let lead = match direction {
                     Direction::Ltr => 0,
                     Direction::Rtl => 1,
@@ -651,14 +668,14 @@ impl FloatContext {
                 let trail = 1 - lead;
                 let mut fit_insets = [0.0; 2];
                 let mut stretch_insets = [0.0; 2];
-                fit_insets[lead] = segment.insets[lead].max(containing_block_insets[lead]).max(margin_insets[lead]);
+                fit_insets[lead] = float_insets[lead].max(containing_block_insets[lead]).max(margin_insets[lead]);
                 stretch_insets[lead] = fit_insets[lead];
-                fit_insets[trail] = segment.insets[trail].max(containing_block_insets[trail]);
+                fit_insets[trail] = float_insets[trail].max(containing_block_insets[trail]);
                 stretch_insets[trail] = fit_insets[trail].max(containing_block_insets[trail] + margins[trail].max(0.0));
                 BfcSlot {
                     segment_id: Some(start_idx),
                     x: fit_insets[0],
-                    y: segment.y.start.max(min_y),
+                    y,
                     border_width: self.available_width - fit_insets[0] - fit_insets[1],
                     stretch_width: self.available_width - stretch_insets[0] - stretch_insets[1],
                 }
