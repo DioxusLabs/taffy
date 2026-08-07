@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    A zero-width float still acts as an obstacle: a BFC root with a negative leading margin
+    may not be placed to the outside of its edge.
+    Reduced from WPT css/CSS2/floats/zero-width-floats-positioning.tentative.html
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="display: block; width: 125px;">
+  <div style="float: left; width: 0px; height: 50px;"></div>
+  <div style="float: right; clear: left; width: 25px; height: 50px;"></div>
+  <div style="display: block; overflow: hidden; margin-left: -50px; height: 100px;"></div>
+</div>
+
+</body>
+</html>

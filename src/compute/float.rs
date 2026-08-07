@@ -617,6 +617,11 @@ impl FloatContext {
     ///     negative margin lets the border box extend outside the containing block.
     ///
     /// When there are no floats beside the box, its (possibly negative) margins apply as usual.
+    ///
+    /// If `height` is provided, the insets of all segments that a box of that height starting
+    /// at the slot's y position would span are taken into account (the box must not overlap
+    /// floats across its entire height, not just at its top edge).
+    #[allow(clippy::too_many_arguments)]
     pub fn find_bfc_slot(
         &self,
         min_y: f32,
@@ -625,6 +630,7 @@ impl FloatContext {
         direction: Direction,
         clear: Clear,
         after: Option<usize>,
+        height: Option<f32>,
     ) -> BfcSlot {
         let margin_insets = [containing_block_insets[0] + margins[0], containing_block_insets[1] + margins[1]];
         let no_float_width = self.available_width - margin_insets[0] - margin_insets[1];
@@ -660,25 +666,41 @@ impl FloatContext {
                     Direction::Rtl => 1,
                 };
                 let trail = 1 - lead;
-                let has_lead_float = segment.has_float[lead];
-                let has_trail_float = segment.has_float[trail];
+                let slot_y = segment.y.start.max(min_y);
+
+                // Union the insets of all segments the box would span (only counting sides
+                // that a float actually occupies)
+                let mut seg_insets = [0.0f32; 2];
+                let mut seg_has_float = [false; 2];
+                let spanned_end_y = slot_y + height.unwrap_or(0.0);
+                for seg in &self.segments[start_idx..] {
+                    for side in 0..2 {
+                        if seg.has_float[side] {
+                            seg_insets[side] = seg_insets[side].max(seg.insets[side]);
+                            seg_has_float[side] = true;
+                        }
+                    }
+                    if seg.y.end >= spanned_end_y {
+                        break;
+                    }
+                }
+
+                let has_lead_float = seg_has_float[lead];
+                let has_trail_float = seg_has_float[trail];
                 let mut fit_insets = [0.0; 2];
                 let mut stretch_insets = [0.0; 2];
                 fit_insets[lead] =
-                    if has_lead_float { segment.insets[lead].max(margin_insets[lead]) } else { margin_insets[lead] };
+                    if has_lead_float { seg_insets[lead].max(margin_insets[lead]) } else { margin_insets[lead] };
                 stretch_insets[lead] = fit_insets[lead];
                 fit_insets[trail] = if has_trail_float {
-                    segment.insets[trail].max(containing_block_insets[trail])
+                    seg_insets[trail].max(containing_block_insets[trail])
                 } else {
                     // A positive trailing margin may overflow the containing block edge (it does
                     // not affect fit), but a negative one widens the space for the border box
                     margin_insets[trail].min(containing_block_insets[trail])
                 };
-                stretch_insets[trail] = if has_trail_float {
-                    segment.insets[trail].max(margin_insets[trail])
-                } else {
-                    margin_insets[trail]
-                };
+                stretch_insets[trail] =
+                    if has_trail_float { seg_insets[trail].max(margin_insets[trail]) } else { margin_insets[trail] };
                 BfcSlot {
                     segment_id: Some(start_idx),
                     x: fit_insets[0],
