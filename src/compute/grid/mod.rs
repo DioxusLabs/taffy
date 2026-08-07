@@ -154,8 +154,14 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
         }
     }
 
-    let get_child_styles_iter =
-        |node| tree.child_ids(node).map(|child_node: NodeId| tree.get_grid_child_style(child_node));
+    // Absolutely positioned children do not take up space in the grid and do not create
+    // implicit tracks, so they are excluded from the implicit grid size estimate.
+    // https://www.w3.org/TR/css-grid-1/#abspos-items
+    let get_child_styles_iter = |node| {
+        tree.child_ids(node).map(|child_node: NodeId| tree.get_grid_child_style(child_node)).filter(|style| {
+            style.box_generation_mode() != BoxGenerationMode::None && style.position() != Position::Absolute
+        })
+    };
     let child_styles_iter = get_child_styles_iter(node);
 
     // 2. Resolve the explicit grid
