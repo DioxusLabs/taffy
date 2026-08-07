@@ -429,8 +429,8 @@ impl FloatContext {
             }
         };
 
-        // Short-circuit for zero-sized boxes
-        if floated_box.width == 0.0 || floated_box.height == 0.0 {
+        // Short-circuit for zero-width boxes
+        if floated_box.width == 0.0 {
             // TODO: need to update last_placed_float?
 
             return PlacedFloatedBox {
@@ -439,6 +439,38 @@ impl FloatContext {
                 y: start_y,
                 x_inset: placed_inset,
             };
+        }
+
+        // A zero-height float takes up no space, but it still affects the placement of content
+        // and floats whose vertical extent crosses its position, so record it as a zero-height
+        // segment.
+        if floated_box.height == 0.0 {
+            let insert_idx = match start {
+                Some(mut idx) => {
+                    if start_y != self.segments[idx].y.start {
+                        self.subdivide_segment(idx, start_y);
+                        idx += 1;
+                    }
+                    idx
+                }
+                None => {
+                    let last_y_end = self.segments.last().map(|seg| seg.y.end).unwrap_or(0.0);
+                    if start_y > last_y_end {
+                        self.segments.push(Segment { y: last_y_end..start_y, insets: [0.0, 0.0] });
+                    }
+                    start_y = start_y.max(last_y_end);
+                    self.segments.len()
+                }
+            };
+
+            let mut insets =
+                self.segments.get(insert_idx).map(|segment| segment.insets).unwrap_or(containing_block_insets);
+            insets[slot] = insets[slot].max(placed_inset + floated_box.width);
+            self.segments.splice(insert_idx..insert_idx, core::iter::once(Segment { y: start_y..start_y, insets }));
+
+            self.update_last_placed_float(direction, insert_idx..(insert_idx + 1));
+
+            return PlacedFloatedBox { width: floated_box.width, height: 0.0, y: start_y, x_inset: placed_inset };
         }
 
         // Handle case where floated box is placed after all existing segments
@@ -544,10 +576,18 @@ impl FloatContext {
     }
 
     /// Search for a space suitable for laying out non-floated content into
+    ///
+    /// If `height` is non-zero then the returned slot accounts for all floats that a box of that
+    /// height starting at the slot's y position would be adjacent to (a line box is shortened by
+    /// any float that its vertical extent intersects). The returned slot's `height` is the
+    /// vertical extent (from the slot's y position) over which the slot's width is valid: content
+    /// taller than this may be adjacent to further floats and should be re-placed with its actual
+    /// height.
     pub fn find_content_slot(
         &self,
         min_y: f32,
         containing_block_insets: [f32; 2],
+        height: f32,
         clear: Clear,
         after: Option<usize>,
     ) -> ContentSlot {
@@ -573,20 +613,39 @@ impl FloatContext {
         let segment = self.segments.get(start_idx);
         match segment {
             Some(segment) => {
-                let inset_left = segment.insets[0].max(containing_block_insets[0]);
-                let inset_right = segment.insets[1].max(containing_block_insets[1]);
+                let y = segment.y.start.max(min_y);
+                let end_y = y + height;
+
+                // Union the float insets of all segments that the box's vertical extent
+                // intersects, then extend the slot's height over any further segments whose
+                // insets do not exceed that union (the slot's width remains valid there).
+                let mut float_insets = segment.insets;
+                let mut slot_height = f32::INFINITY;
+                for seg in &self.segments[(start_idx + 1)..] {
+                    if seg.y.start < end_y {
+                        float_insets[0] = float_insets[0].max(seg.insets[0]);
+                        float_insets[1] = float_insets[1].max(seg.insets[1]);
+                    } else if seg.insets[0] > float_insets[0] || seg.insets[1] > float_insets[1] {
+                        slot_height = seg.y.start - y;
+                        break;
+                    }
+                }
+
+                let inset_left = float_insets[0].max(containing_block_insets[0]);
+                let inset_right = float_insets[1].max(containing_block_insets[1]);
                 ContentSlot {
                     segment_id: Some(start_idx),
                     x: inset_left,
-                    y: segment.y.start.max(min_y),
+                    y,
                     width: self.available_width - inset_left - inset_right,
-                    height: f32::INFINITY,
+                    height: slot_height,
                 }
             }
+            // Below all floats
             None => ContentSlot {
                 segment_id: None,
                 x: containing_block_insets[0],
-                y: min_y,
+                y: self.segments.last().map(|segment| segment.y.end).unwrap_or(min_y).max(min_y),
                 width: self.available_width - containing_block_insets[0] - containing_block_insets[1],
                 height: f32::INFINITY,
             },
@@ -610,6 +669,7 @@ impl FloatContext {
     ///     the containing block edge.
     ///
     /// When there are no floats beside the box, its (possibly negative) margins apply as usual.
+    #[allow(clippy::too_many_arguments)]
     pub fn find_bfc_slot(
         &self,
         min_y: f32,

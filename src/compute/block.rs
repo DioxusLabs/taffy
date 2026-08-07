@@ -171,10 +171,28 @@ impl BlockContext<'_> {
         pos
     }
 
+    /// Snapshot the current float placement state. The snapshot can be passed to
+    /// [`restore_float_snapshot`](Self::restore_float_snapshot) to undo the placement of any
+    /// floats placed after the snapshot was taken (e.g. to speculatively place floats).
+    pub fn float_snapshot(&self) -> FloatContext {
+        self.bfc.float_context.clone()
+    }
+
+    /// Restore a float placement state snapshot taken with
+    /// [`float_snapshot`](Self::float_snapshot)
+    pub fn restore_float_snapshot(&mut self, snapshot: FloatContext) {
+        self.bfc.float_context = snapshot;
+    }
+
     /// Search a space suitable for laying out non-floated content into
-    pub fn find_content_slot(&self, min_y: f32, clear: Clear, after: Option<usize>) -> ContentSlot {
-        let mut slot =
-            self.bfc.float_context.find_content_slot(min_y + self.y_offset, self.content_box_insets, clear, after);
+    pub fn find_content_slot(&self, min_y: f32, height: f32, clear: Clear, after: Option<usize>) -> ContentSlot {
+        let mut slot = self.bfc.float_context.find_content_slot(
+            min_y + self.y_offset,
+            self.content_box_insets,
+            height,
+            clear,
+            after,
+        );
         slot.y -= self.y_offset;
         slot.x -= self.insets[0];
         slot
@@ -1088,8 +1106,14 @@ fn perform_final_layout_on_in_flow_children(
                         // for the item's border box, which must not overlap any float
                         let mut slot_segment = None;
                         let slot = loop {
-                            let slot = block_ctx
-                                .find_bfc_slot(min_y, x_margins, known_height, direction, item.clear, slot_segment);
+                            let slot = block_ctx.find_bfc_slot(
+                                min_y,
+                                x_margins,
+                                known_height,
+                                direction,
+                                item.clear,
+                                slot_segment,
+                            );
                             let Some(segment_id) = slot.segment_id else { break slot };
                             let width = item
                                 .size
