@@ -959,26 +959,22 @@ fn perform_final_layout_on_in_flow_children(
                         // (so that the margin box width is non-negative, per CSS2 §10.3.3)
                         let min_auto_width = -item_non_auto_x_margin_sum;
 
-                        // Find the highest slot (at or below `search_y`) with enough horizontal space
+                        // Find the highest slot (at or below `min_y`) with enough horizontal space
                         // for the item's border box, which must not overlap any float
-                        let find_fitting_slot = |block_ctx: &BlockContext, search_y: f32| {
-                            let mut after = None;
-                            loop {
-                                let slot = block_ctx.find_bfc_slot(search_y, x_margins, direction, item.clear, after);
-                                let Some(segment_id) = slot.segment_id else { break slot };
-                                let width = item
-                                    .size
-                                    .width
-                                    .unwrap_or(slot.stretch_width.max(min_auto_width))
-                                    .maybe_clamp(item.min_size.width, item.max_size.width);
-                                if width <= slot.border_width + 0.001 {
-                                    break slot;
-                                }
-                                after = Some(segment_id);
+                        let mut after = None;
+                        let slot = loop {
+                            let slot = block_ctx.find_bfc_slot(min_y, x_margins, direction, item.clear, after);
+                            let Some(segment_id) = slot.segment_id else { break slot };
+                            let width = item
+                                .size
+                                .width
+                                .unwrap_or(slot.stretch_width.max(min_auto_width))
+                                .maybe_clamp(item.min_size.width, item.max_size.width);
+                            if width <= slot.border_width + 0.001 {
+                                break slot;
                             }
+                            after = Some(segment_id);
                         };
-
-                        let slot = find_fitting_slot(block_ctx, min_y);
 
                         // If the item had to move down to avoid floats then it "separates from the
                         // float": similarly to clearance, its top margin no longer collapses with
