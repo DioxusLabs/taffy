@@ -14,16 +14,25 @@ struct OutputNode {
     node_id: NodeId,
     location: Point<f32>,
     size: Size<f32>,
+    scroll_size: Option<Size<f32>>,
     children: Vec<OutputNode>,
 }
 
 impl PartialEq for OutputNode {
     fn eq(&self, other: &Self) -> bool {
+        let scroll_size_matches = match (self.scroll_size, other.scroll_size) {
+            (Some(expected), Some(actual)) => {
+                (expected.width - actual.width).abs() < 0.1 && (expected.height - actual.height).abs() < 0.1
+            }
+            // Only assert scroll sizes when both the expectation and the computed value are available
+            _ => true,
+        };
         self.node_id == other.node_id
             && (self.location.x - other.location.x).abs() < 0.1
             && (self.location.y - other.location.y).abs() < 0.1
             && (self.size.width - other.size.width).abs() < 0.1
             && (self.size.height - other.size.height).abs() < 0.1
+            && scroll_size_matches
             && self.children == other.children
     }
 }
@@ -36,6 +45,9 @@ impl OutputNode {
             self.location.x, self.location.y, self.size.width, self.size.height
         )
         .unwrap();
+        if let Some(scroll_size) = self.scroll_size {
+            write!(w, " [scroll_w: {:<4} scroll_h: {:<4}]", scroll_size.width, scroll_size.height).unwrap();
+        }
     }
 
     /// Prints a debug representation of the computed layout for a tree of nodes
@@ -191,7 +203,12 @@ fn maybe_parse<T: FromStr>(input: Option<&str>) -> Option<T> {
 
 fn get_computed_expectations(tree: &TaffyTree<TestNodeContext>, node_id: NodeId) -> OutputNode {
     let layout = tree.get_final_layout(node_id);
-    let mut output = OutputNode { node_id, location: layout.location, size: layout.size, children: Vec::new() };
+    #[cfg(feature = "content_size")]
+    let scroll_size = Some(Size { width: layout.scroll_width(), height: layout.scroll_height() });
+    #[cfg(not(feature = "content_size"))]
+    let scroll_size = None;
+    let mut output =
+        OutputNode { node_id, location: layout.location, size: layout.size, scroll_size, children: Vec::new() };
 
     for child_id in tree.children(node_id).unwrap() {
         output.children.push(get_computed_expectations(tree, child_id));
@@ -201,6 +218,11 @@ fn get_computed_expectations(tree: &TaffyTree<TestNodeContext>, node_id: NodeId)
 }
 
 fn build_expectations(xnode: roxmltree::Node, node_id: NodeId) -> OutputNode {
+    let scroll_size =
+        match (maybe_parse(xnode.attribute("scroll_width")), maybe_parse(xnode.attribute("scroll_height"))) {
+            (Some(width), Some(height)) => Some(Size { width, height }),
+            _ => None,
+        };
     OutputNode {
         node_id,
         location: Point {
@@ -211,6 +233,7 @@ fn build_expectations(xnode: roxmltree::Node, node_id: NodeId) -> OutputNode {
             width: xnode.attribute("width").unwrap().parse().unwrap(),
             height: xnode.attribute("height").unwrap().parse().unwrap(),
         },
+        scroll_size,
         children: Vec::new(),
     }
 }
