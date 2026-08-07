@@ -17359,6 +17359,78 @@ mod grid {
 
     #[cfg(feature = "grid")]
     #[test]
+    fn grid_absolute_content_alignment_center__border_box_ltr() {
+        crate::run_xml_test("grid", "grid_absolute_content_alignment_center__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_absolute_content_alignment_center__content_box_ltr() {
+        crate::run_xml_test("grid", "grid_absolute_content_alignment_center__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_absolute_content_alignment_center__border_box_rtl() {
+        crate::run_xml_test("grid", "grid_absolute_content_alignment_center__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_absolute_content_alignment_center__content_box_rtl() {
+        crate::run_xml_test("grid", "grid_absolute_content_alignment_center__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_absolute_content_alignment_end_rtl__border_box_ltr() {
+        crate::run_xml_test("grid", "grid_absolute_content_alignment_end_rtl__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_absolute_content_alignment_end_rtl__content_box_ltr() {
+        crate::run_xml_test("grid", "grid_absolute_content_alignment_end_rtl__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_absolute_content_alignment_end_rtl__border_box_rtl() {
+        crate::run_xml_test("grid", "grid_absolute_content_alignment_end_rtl__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_absolute_content_alignment_end_rtl__content_box_rtl() {
+        crate::run_xml_test("grid", "grid_absolute_content_alignment_end_rtl__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_absolute_content_alignment_space_between__border_box_ltr() {
+        crate::run_xml_test("grid", "grid_absolute_content_alignment_space_between__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_absolute_content_alignment_space_between__content_box_ltr() {
+        crate::run_xml_test("grid", "grid_absolute_content_alignment_space_between__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_absolute_content_alignment_space_between__border_box_rtl() {
+        crate::run_xml_test("grid", "grid_absolute_content_alignment_space_between__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_absolute_content_alignment_space_between__content_box_rtl() {
+        crate::run_xml_test("grid", "grid_absolute_content_alignment_space_between__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
     fn grid_absolute_direction_rtl__border_box_ltr() {
         crate::run_xml_test("grid", "grid_absolute_direction_rtl__border_box_ltr");
     }
