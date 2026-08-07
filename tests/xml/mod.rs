@@ -16740,6 +16740,26 @@ mod float {
     }
 
     #[test]
+    fn float_clear_empty_block_then_margin__border_box_ltr() {
+        crate::run_xml_test("float", "float_clear_empty_block_then_margin__border_box_ltr");
+    }
+
+    #[test]
+    fn float_clear_empty_block_then_margin__content_box_ltr() {
+        crate::run_xml_test("float", "float_clear_empty_block_then_margin__content_box_ltr");
+    }
+
+    #[test]
+    fn float_clear_empty_block_then_margin__border_box_rtl() {
+        crate::run_xml_test("float", "float_clear_empty_block_then_margin__border_box_rtl");
+    }
+
+    #[test]
+    fn float_clear_empty_block_then_margin__content_box_rtl() {
+        crate::run_xml_test("float", "float_clear_empty_block_then_margin__content_box_rtl");
+    }
+
+    #[test]
     fn float_clear_negative_clearance__border_box_ltr() {
         crate::run_xml_test("float", "float_clear_negative_clearance__border_box_ltr");
     }
@@ -16777,6 +16797,26 @@ mod float {
     #[test]
     fn float_clear_no_preceding_float__content_box_rtl() {
         crate::run_xml_test("float", "float_clear_no_preceding_float__content_box_rtl");
+    }
+
+    #[test]
+    fn float_clear_self_collapsing_margins__border_box_ltr() {
+        crate::run_xml_test("float", "float_clear_self_collapsing_margins__border_box_ltr");
+    }
+
+    #[test]
+    fn float_clear_self_collapsing_margins__content_box_ltr() {
+        crate::run_xml_test("float", "float_clear_self_collapsing_margins__content_box_ltr");
+    }
+
+    #[test]
+    fn float_clear_self_collapsing_margins__border_box_rtl() {
+        crate::run_xml_test("float", "float_clear_self_collapsing_margins__border_box_rtl");
+    }
+
+    #[test]
+    fn float_clear_self_collapsing_margins__content_box_rtl() {
+        crate::run_xml_test("float", "float_clear_self_collapsing_margins__content_box_rtl");
     }
 
     #[test]

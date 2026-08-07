@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    The top and bottom margins of a self-collapsing block with clearance collapse with
+    each other and are applied inside the parent (they do not collapse with the parent's
+    bottom margin). Reduced from WPT css/CSS2/floats-clear/margin-collapse-clear-013.xht
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="display: block; width: 300px;">
+  <div style="display: block;">
+    <div style="display: block; float: left; width: 100px; height: 100px;"></div>
+    <div style="display: block; clear: left; margin-top: 40px; margin-bottom: 140px;"></div>
+  </div>
+  <div style="display: block; height: 100px;"></div>
+</div>
+
+</body>
+</html>

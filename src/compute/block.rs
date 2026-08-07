@@ -850,6 +850,10 @@ fn perform_final_layout_on_in_flow_children(
     let mut active_collapsible_margin_set = CollapsibleMarginSet::ZERO;
     let mut is_collapsing_with_first_margin_set = true;
     let mut first_baseline: Option<f32> = None;
+    // Whether the active margin set contains the margins of a self-collapsing element with
+    // clearance. Such margins collapse with the margins of following siblings but the resulting
+    // margin does not collapse with the bottom margin of the parent block.
+    let mut active_margin_set_has_clearance = false;
 
     #[cfg(feature = "float_layout")]
     let mut has_active_floats = block_ctx.has_active_floats(committed_y_offset);
@@ -1322,7 +1326,20 @@ fn perform_final_layout_on_in_flow_children(
                 }
             } else {
                 committed_y_offset = location.y - inset_offset.y + item_layout.size.height;
-                active_collapsible_margin_set = bottom_margin_set;
+                // A self-collapsing item with clearance is not collapsed through (its margins do not collapse
+                // with margins of preceding siblings), but its top and bottom margins still collapse with each
+                // other and with the margins of following siblings.
+                if has_clearance && item_layout.margins_can_collapse_through {
+                    // The element's border edge stays at the cleared position, but its collapsed margin
+                    // extends below it: the border edge sits `top margin` inside the collapsed margin, so
+                    // following content is offset by `collapsed margin - top margin` from the border edge.
+                    committed_y_offset -= top_margin_set.resolve();
+                    active_collapsible_margin_set = top_margin_set.collapse_with_set(bottom_margin_set);
+                    active_margin_set_has_clearance = true;
+                } else {
+                    active_collapsible_margin_set = bottom_margin_set;
+                    active_margin_set_has_clearance = false;
+                }
                 y_offset_for_absolute = committed_y_offset + active_collapsible_margin_set.resolve();
                 #[cfg(feature = "float_layout")]
                 {
@@ -1332,9 +1349,17 @@ fn perform_final_layout_on_in_flow_children(
         }
     }
 
-    let last_child_bottom_margin_set = active_collapsible_margin_set;
-    let bottom_y_margin_offset =
-        if own_margins_collapse_with_children.end { 0.0 } else { last_child_bottom_margin_set.resolve() };
+    // The margins of a self-collapsing element with clearance do not collapse with the bottom
+    // margin of the parent block: they extend the parent's content height instead of escaping it
+    let last_child_bottom_margin_set =
+        if active_margin_set_has_clearance { CollapsibleMarginSet::ZERO } else { active_collapsible_margin_set };
+    let bottom_y_margin_offset = if active_margin_set_has_clearance {
+        active_collapsible_margin_set.resolve()
+    } else if own_margins_collapse_with_children.end {
+        0.0
+    } else {
+        last_child_bottom_margin_set.resolve()
+    };
 
     committed_y_offset += resolved_content_box_inset.bottom + bottom_y_margin_offset;
     let content_height = f32_max(0.0, committed_y_offset);
