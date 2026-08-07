@@ -1,7 +1,7 @@
 #![cfg(feature = "float_layout")]
 use taffy::geometry::Point;
 use taffy::prelude::*;
-use taffy::style::{Clear, Float};
+use taffy::style::{Clear, Float, Overflow};
 use taffy_test_helpers::new_test_tree;
 
 /// Regression test for <https://wpt.live/css/CSS2/floats-clear/floats-146.xht>
@@ -148,4 +148,45 @@ fn float_beside_existing_float_moves_down_instead_of_overflowing() {
     assert_eq!(taffy.layout(left).unwrap().location, Point { x: 0.0, y: 0.0 });
     assert_eq!(taffy.layout(right).unwrap().location, Point { x: 40.0, y: 50.0 });
     assert_eq!(taffy.layout(left2).unwrap().location, Point { x: 0.0, y: 100.0 });
+}
+
+/// Regression test for <https://wpt.live/css/CSS2/floats/floats-wrap-top-below-bfc-001l.xht>
+///
+/// A box establishing a new block formatting context must not overlap floats over its full
+/// vertical extent: if it would intersect a float lower down, it moves below that float.
+#[test]
+fn bfc_avoids_floats_over_full_height() {
+    let mut taffy = new_test_tree();
+
+    let spacer = taffy.new_leaf(float_block(100.0, 30.0, Float::None)).unwrap();
+    // A float placed below the spacer
+    let float_a = taffy.new_leaf(float_block(80.0, 30.0, Float::Left)).unwrap();
+    // A BFC box: too wide to fit beside the float, so it must be placed below it even though
+    // there is float-free space beside the spacer above the float
+    let bfc = taffy
+        .new_leaf(Style {
+            display: Display::Block,
+            overflow: Point { x: Overflow::Hidden, y: Overflow::Hidden },
+            size: Size { width: length(40.0), height: length(60.0) },
+            ..Default::default()
+        })
+        .unwrap();
+
+    let inner = taffy
+        .new_with_children(
+            Style {
+                display: Display::Block,
+                size: Size { width: length(100.0), height: auto() },
+                ..Default::default()
+            },
+            &[float_a],
+        )
+        .unwrap();
+    let root = taffy.new_with_children(root_style(100.0), &[spacer, inner, bfc]).unwrap();
+
+    taffy.compute_layout(root, Size::MAX_CONTENT).unwrap();
+
+    assert_eq!(taffy.layout(float_a).unwrap().location, Point { x: 0.0, y: 0.0 });
+    // The BFC box starts below the float (y = 30 + 30 = 60), not beside the spacer
+    assert_eq!(taffy.layout(bfc).unwrap().location, Point { x: 0.0, y: 60.0 });
 }
