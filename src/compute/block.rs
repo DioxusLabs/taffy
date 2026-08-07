@@ -959,9 +959,7 @@ fn perform_final_layout_on_in_flow_children(
                     parent_size,
                     Size { width: AvailableSpace::Definite(available_width), height: AvailableSpace::MaxContent },
                     SizingMode::InherentSize,
-                    // A float establishes a new block formatting context: its margins do not
-                    // collapse with the margins of its children
-                    Line::FALSE,
+                    Line::TRUE,
                 );
                 let margin_box = item_layout.size + item_non_auto_margin.sum_axes();
 
