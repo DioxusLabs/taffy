@@ -10,8 +10,9 @@ use taffy_test_helpers::new_test_tree;
 const CONTENT: f32 = 1000.0;
 const CONTAINER: f32 = 200.0;
 const BORDER: f32 = 20.0;
+const PADDING: f32 = 20.0;
 
-fn scroller(display: Display, border: Rect<LengthPercentage>) -> Layout {
+fn scroller_with_padding(display: Display, border: Rect<LengthPercentage>, padding: Rect<LengthPercentage>) -> Layout {
     let mut tree = new_test_tree();
     let child = tree
         .new_leaf(Style { size: Size { width: length(100.0), height: length(CONTENT) }, ..Default::default() })
@@ -23,6 +24,7 @@ fn scroller(display: Display, border: Rect<LengthPercentage>) -> Layout {
                 box_sizing: BoxSizing::BorderBox,
                 size: Size { width: length(300.0), height: length(CONTAINER) },
                 border,
+                padding,
                 overflow: Point { x: Overflow::Scroll, y: Overflow::Scroll },
                 ..Default::default()
             },
@@ -32,6 +34,10 @@ fn scroller(display: Display, border: Rect<LengthPercentage>) -> Layout {
 
     tree.compute_layout(node, Size::MAX_CONTENT).unwrap();
     *tree.layout(node).unwrap()
+}
+
+fn scroller(display: Display, border: Rect<LengthPercentage>) -> Layout {
+    scroller_with_padding(display, border, edge(0.0, 0.0))
 }
 
 fn edge(top: f32, bottom: f32) -> Rect<LengthPercentage> {
@@ -79,5 +85,68 @@ fn content_size_excludes_the_containers_own_border() {
 
             assert_eq!(layout.content_size.height, CONTENT, "{display:?} with border {top}/{bottom}");
         }
+    }
+}
+
+#[test]
+fn content_size_includes_the_containers_own_padding() {
+    for display in [Display::Block, Display::Flex, Display::Grid] {
+        for (top, bottom) in [(PADDING, 0.0), (0.0, PADDING), (PADDING, PADDING), (0.0, 0.0)] {
+            let layout = scroller_with_padding(display, edge(0.0, 0.0), edge(top, bottom));
+
+            assert_eq!(layout.content_size.height, CONTENT + top + bottom, "{display:?} with padding {top}/{bottom}");
+        }
+    }
+}
+
+#[test]
+fn scroll_height_accounts_for_the_containers_own_padding() {
+    for display in [Display::Block, Display::Flex, Display::Grid] {
+        for (top, bottom) in [(PADDING, 0.0), (0.0, PADDING), (PADDING, PADDING), (0.0, 0.0)] {
+            let layout = scroller_with_padding(display, edge(0.0, 0.0), edge(top, bottom));
+
+            // The scrollable overflow region runs from the padding-box origin to the end of
+            // the content plus the container's end-side padding.
+            let expected = (top + CONTENT + bottom) - CONTAINER;
+            assert_eq!(layout.scroll_height(), expected, "{display:?} with padding {top}/{bottom}");
+        }
+    }
+}
+
+/// Items in overflowing rows must contribute their position within the container (not just
+/// their size) to the container's content size.
+#[test]
+fn grid_content_size_includes_item_positions_in_overflowing_tracks() {
+    let mut tree = new_test_tree();
+    let child = || Style { size: Size { width: length(100.0), height: length(500.0) }, ..Default::default() };
+    let c1 = tree.new_leaf(child()).unwrap();
+    let c2 = tree.new_leaf(child()).unwrap();
+    let node = tree
+        .new_with_children(
+            Style {
+                display: Display::Grid,
+                size: Size { width: length(300.0), height: length(CONTAINER) },
+                overflow: Point { x: Overflow::Scroll, y: Overflow::Scroll },
+                ..Default::default()
+            },
+            &[c1, c2],
+        )
+        .unwrap();
+
+    tree.compute_layout(node, Size::MAX_CONTENT).unwrap();
+    let layout = tree.layout(node).unwrap();
+
+    assert_eq!(layout.content_size.height, 1000.0);
+    assert_eq!(layout.scroll_height(), 1000.0 - CONTAINER);
+}
+
+#[test]
+fn scroll_height_agrees_with_borders_and_padding_combined() {
+    for display in [Display::Block, Display::Flex, Display::Grid] {
+        let layout = scroller_with_padding(display, edge(BORDER, BORDER), edge(PADDING, PADDING));
+
+        let padding_box = CONTAINER - BORDER - BORDER;
+        let expected = (PADDING + CONTENT + PADDING) - padding_box;
+        assert_eq!(layout.scroll_height(), expected, "{display:?}");
     }
 }
