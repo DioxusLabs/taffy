@@ -637,6 +637,45 @@ impl FloatContext {
         }
     }
 
+    /// Compute a [`BfcSlot`] whose insets are the union of the insets of all segments
+    /// intersecting the given y range: the widest box placed at `y.start` that avoids all
+    /// floats down to `y.end`
+    pub fn find_bfc_slot_spanning(
+        &self,
+        y: Range<f32>,
+        containing_block_insets: [f32; 2],
+        margins: [f32; 2],
+        direction: Direction,
+    ) -> BfcSlot {
+        let mut seg_insets = [f32::NEG_INFINITY; 2];
+        for segment in &self.segments {
+            if segment.y.start < y.end - 0.001 && segment.y.end > y.start + 0.001 {
+                seg_insets[0] = seg_insets[0].max(segment.insets[0]);
+                seg_insets[1] = seg_insets[1].max(segment.insets[1]);
+            }
+        }
+
+        let margin_insets = [containing_block_insets[0] + margins[0], containing_block_insets[1] + margins[1]];
+        let lead = match direction {
+            Direction::Ltr => 0,
+            Direction::Rtl => 1,
+        };
+        let trail = 1 - lead;
+        let mut fit_insets = [0.0; 2];
+        let mut stretch_insets = [0.0; 2];
+        fit_insets[lead] = seg_insets[lead].max(containing_block_insets[lead]).max(margin_insets[lead]);
+        stretch_insets[lead] = fit_insets[lead];
+        fit_insets[trail] = seg_insets[trail].max(containing_block_insets[trail]);
+        stretch_insets[trail] = fit_insets[trail].max(containing_block_insets[trail] + margins[trail].max(0.0));
+        BfcSlot {
+            segment_id: None,
+            x: fit_insets[0],
+            y: y.start,
+            border_width: self.available_width - fit_insets[0] - fit_insets[1],
+            stretch_width: self.available_width - stretch_insets[0] - stretch_insets[1],
+        }
+    }
+
     /// Search for a space suitable for laying out a box that establishes an independent
     /// formatting context (whose border box must not overlap floats).
     ///

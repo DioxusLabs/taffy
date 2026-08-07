@@ -208,6 +208,20 @@ impl BlockContext<'_> {
         self.bfc.float_context.cleared_threshold(clear).map(|threshold| threshold - self.y_offset)
     }
 
+    /// Compute a `BfcSlot` whose insets are the union of the insets of all segments
+    /// intersecting the given y range (in this block's coordinates)
+    pub fn find_bfc_slot_spanning(&self, y_start: f32, y_end: f32, margins: [f32; 2], direction: Direction) -> BfcSlot {
+        let mut slot = self.bfc.float_context.find_bfc_slot_spanning(
+            (y_start + self.y_offset)..(y_end + self.y_offset),
+            self.content_box_insets,
+            margins,
+            direction,
+        );
+        slot.y -= self.y_offset;
+        slot.x -= self.insets[0];
+        slot
+    }
+
     /// Whether a float that is adjoining the current margin-collapse strut has been placed
     /// on the side(s) relevant to the passed clear property
     pub fn has_adjoining_float(&self, clear: Clear) -> bool {
@@ -1073,6 +1087,7 @@ fn perform_final_layout_on_in_flow_children(
             let mut item_avoids_floats = false;
             #[cfg(feature = "float_layout")]
             let mut item_pushed_below_float = false;
+            let mut precomputed_layout: Option<LayoutOutput> = None;
 
             let (stretch_width, float_avoiding_position, float_avoiding_width) = if item.is_in_same_bfc {
                 let stretch_width = container_inner_width - item_non_auto_x_margin_sum;
@@ -1100,7 +1115,8 @@ fn perform_final_layout_on_in_flow_children(
                         let min_auto_width = -item_non_auto_x_margin_sum;
 
                         // Find the highest slot (at or below `min_y`) with enough horizontal space
-                        // for the item's border box, which must not overlap any float
+                        // for the item's border box, which must not overlap any float over its
+                        // entire height (not just at its top)
                         let mut slot_segment = None;
                         let slot = loop {
                             let slot = block_ctx.find_bfc_slot(min_y, x_margins, direction, item.clear, slot_segment);
@@ -1110,8 +1126,67 @@ fn perform_final_layout_on_in_flow_children(
                                 .width
                                 .unwrap_or(slot.stretch_width.max(min_auto_width))
                                 .maybe_clamp(item.min_size.width, item.max_size.width);
-                            if width <= slot.border_width + 0.001 {
-                                break slot;
+                            if width > slot.border_width + 0.001 {
+                                slot_segment = Some(segment_id);
+                                continue;
+                            }
+
+                            // The slot has horizontal space for the item's width at its top, but
+                            // the item may extend down beside lower (wider) floats. Iteratively
+                            // lay the item out at this position, narrowing it to the widest space
+                            // available over its entire height, and retry from the next segment
+                            // if its width does not fit that space.
+                            let mut stretch_width = slot.stretch_width.max(min_auto_width);
+                            let mut fitted = None;
+                            for _ in 0..5 {
+                                let known_dimensions = if item.is_table || item.is_replaced {
+                                    Size::NONE
+                                } else {
+                                    item.size
+                                        .map_width(|width| {
+                                            Some(
+                                                width
+                                                    .unwrap_or(stretch_width)
+                                                    .maybe_clamp(item.min_size.width, item.max_size.width),
+                                            )
+                                        })
+                                        .maybe_clamp(item.min_size, item.max_size)
+                                };
+                                let layout = tree.compute_child_layout(
+                                    item.node_id,
+                                    LayoutInput {
+                                        run_mode,
+                                        sizing_mode: SizingMode::InherentSize,
+                                        axis: RequestedAxis::Both,
+                                        known_dimensions,
+                                        parent_size,
+                                        available_space: available_space
+                                            .map_width(|_| AvailableSpace::Definite(stretch_width)),
+                                        vertical_margins_are_collapsible: Line::FALSE,
+                                    },
+                                );
+                                let spanning = block_ctx.find_bfc_slot_spanning(
+                                    slot.y,
+                                    slot.y + layout.size.height,
+                                    x_margins,
+                                    direction,
+                                );
+                                if layout.size.width > spanning.border_width + 0.001 {
+                                    // A fixed width can never fit at this position; an auto width
+                                    // may fit after re-resolving against the narrower space
+                                    let narrower_stretch = spanning.stretch_width.max(min_auto_width);
+                                    if item.size.width.is_some() || narrower_stretch >= stretch_width {
+                                        break;
+                                    }
+                                    stretch_width = narrower_stretch;
+                                    continue;
+                                }
+                                fitted = Some((spanning, layout));
+                                break;
+                            }
+                            if let Some((spanning, layout)) = fitted {
+                                precomputed_layout = Some(layout);
+                                break BfcSlot { segment_id: slot.segment_id, y: slot.y, ..spanning };
                             }
                             slot_segment = Some(segment_id);
                         };
@@ -1203,7 +1278,10 @@ fn perform_final_layout_on_in_flow_children(
 
                 output
             } else {
-                tree.compute_child_layout(item.node_id, inputs)
+                match precomputed_layout.take() {
+                    Some(layout) => layout,
+                    None => tree.compute_child_layout(item.node_id, inputs),
+                }
             };
             let final_size = item_layout.size;
 
