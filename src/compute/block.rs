@@ -189,6 +189,7 @@ impl BlockContext<'_> {
         direction: Direction,
         clear: Clear,
         after: Option<usize>,
+        height: Option<f32>,
     ) -> BfcSlot {
         let mut slot = self.bfc.float_context.find_bfc_slot(
             min_y + self.y_offset,
@@ -197,6 +198,7 @@ impl BlockContext<'_> {
             direction,
             clear,
             after,
+            height,
         );
         slot.y -= self.y_offset;
         slot.x -= self.insets[0];
@@ -1042,104 +1044,11 @@ fn perform_final_layout_on_in_flow_children(
 
             // Handle non-floated boxes
 
-            let mut y_margin_offset: f32 = 0.0;
+            let mut y_margin_offset: f32;
             #[cfg(feature = "float_layout")]
-            let mut item_avoids_floats = false;
+            let mut item_avoids_floats: bool;
             #[cfg(feature = "float_layout")]
-            let mut item_pushed_below_float = false;
-
-            let (stretch_width, float_avoiding_position, float_avoiding_width) = if item.is_in_same_bfc {
-                let stretch_width = container_inner_width - item_non_auto_x_margin_sum;
-                let position = Point { x: 0.0, y: 0.0 };
-                let width = 0.0;
-
-                (stretch_width, position, width)
-            } else {
-                'block: {
-                    // Set y_margin_offset (different bfc child)
-                    if !is_collapsing_with_first_margin_set || !own_margins_collapse_with_children.start {
-                        y_margin_offset =
-                            active_collapsible_margin_set.collapse_with_margin(item_non_auto_margin.top).resolve();
-                    };
-                    let min_y = committed_y_offset + y_margin_offset;
-
-                    // In addition to the running flag, check the float context directly:
-                    // floats placed by the subtree of a preceding in-flow sibling (in the same
-                    // BFC) are not reflected in the flag
-                    #[cfg(feature = "float_layout")]
-                    if has_active_floats || block_ctx.has_active_floats(min_y) {
-                        let x_margins = [item_non_auto_margin.left, item_non_auto_margin.right];
-                        // An auto width resolves to at least the negation of the margin sum
-                        // (so that the margin box width is non-negative, per CSS2 §10.3.3)
-                        let min_auto_width = -item_non_auto_x_margin_sum;
-
-                        // Find the highest slot (at or below `min_y`) with enough horizontal space
-                        // for the item's border box, which must not overlap any float
-                        let mut slot_segment = None;
-                        let slot = loop {
-                            let slot = block_ctx.find_bfc_slot(min_y, x_margins, direction, item.clear, slot_segment);
-                            let Some(segment_id) = slot.segment_id else { break slot };
-                            let width = item
-                                .size
-                                .width
-                                .unwrap_or(slot.stretch_width.max(min_auto_width))
-                                .maybe_clamp(item.min_size.width, item.max_size.width);
-                            if width <= slot.border_width + 0.001 {
-                                break slot;
-                            }
-                            slot_segment = Some(segment_id);
-                        };
-
-                        // If the item had to move down to avoid floats then it "separates from the
-                        // float": similarly to clearance, its top margin no longer collapses with
-                        // the parent's margins.
-                        if slot.y > min_y {
-                            item_pushed_below_float = true;
-                        }
-
-                        has_active_floats = slot.segment_id.is_some();
-                        item_avoids_floats = true;
-                        let stretch_width = slot.stretch_width.max(min_auto_width);
-                        break 'block (stretch_width, Point { x: slot.x, y: slot.y }, slot.border_width);
-                    }
-
-                    if !has_active_floats {
-                        let stretch_width = container_inner_width - item_non_auto_x_margin_sum;
-                        break 'block (
-                            stretch_width,
-                            Point { x: resolved_content_box_inset.left, y: min_y },
-                            container_inner_width,
-                        );
-                    }
-
-                    unreachable!("One of the above cases will always be hit");
-                }
-            };
-
-            // Tables and replaced elements are not stretch-sized: they resolve their own
-            // size (for replaced elements an auto width resolves to the intrinsic size
-            // <https://www.w3.org/TR/CSS22/visudet.html#block-replaced-width>)
-            let known_dimensions = if item.is_table || item.is_replaced {
-                Size::NONE
-            } else {
-                item.size
-                    .map_width(|width| {
-                        Some(width.unwrap_or(stretch_width).maybe_clamp(item.min_size.width, item.max_size.width))
-                    })
-                    .maybe_clamp(item.min_size, item.max_size)
-            };
-
-            //
-
-            let inputs = LayoutInput {
-                run_mode,
-                sizing_mode: SizingMode::InherentSize,
-                axis: RequestedAxis::Both,
-                known_dimensions,
-                parent_size,
-                available_space: available_space.map_width(|_| AvailableSpace::Definite(stretch_width)),
-                vertical_margins_are_collapsible: if item.is_in_same_bfc { Line::TRUE } else { Line::FALSE },
-            };
+            let mut item_pushed_below_float: bool;
 
             #[cfg(feature = "float_layout")]
             let clear_threshold = block_ctx.cleared_threshold(item.clear);
@@ -1148,35 +1057,166 @@ fn perform_final_layout_on_in_flow_children(
             #[cfg(not(feature = "float_layout"))]
             let clear_pos = f32::NEG_INFINITY;
 
-            let item_layout = if item.is_in_same_bfc {
-                // Replaced elements may not have a known width (they are sized by their
-                // measure function rather than stretch-sized)
-                let width = known_dimensions.width.unwrap_or(stretch_width);
+            // A box that establishes an independent formatting context must not overlap floats
+            // across its entire height, but its height is only known after it has been laid out.
+            // So the slot it is laid out into is found using the height from the previous layout
+            // attempt (initially none), retrying while the slot changes given the actual height.
+            #[cfg(feature = "float_layout")]
+            let mut item_height_hint: Option<f32> = None;
+            #[cfg(feature = "float_layout")]
+            let mut remaining_attempts: u8 = 4;
 
-                // TODO: account for auto margins
-                let inset_left = item_non_auto_margin.left + content_box_inset.left;
-                let inset_right = container_outer_width - width - inset_left;
-                let insets = [inset_left, inset_right];
-
-                // Compute child layout
-                let mut child_block_ctx =
-                    block_ctx.sub_context((y_offset_for_absolute + item_non_auto_margin.top).max(clear_pos), insets);
-                let output = tree.compute_block_child_layout(item.node_id, inputs, Some(&mut child_block_ctx));
-
-                // Extract float contribution from child block context
+            let (stretch_width, float_avoiding_position, float_avoiding_width, item_layout) = loop {
                 #[cfg(feature = "float_layout")]
                 {
-                    let child_contribution = child_block_ctx.floated_content_height_contribution();
-                    let child_top_adjoining_floats = child_block_ctx.top_adjoining_floats();
-                    block_ctx.add_child_floated_content_height_contribution(y_offset_for_absolute + child_contribution);
-                    // Floats placed while the position of the child's top margin strut was unresolved
-                    // also adjoin this block's current strut
-                    block_ctx.merge_adjoining_floats(child_top_adjoining_floats);
+                    item_avoids_floats = false;
+                    item_pushed_below_float = false;
+                }
+                y_margin_offset = 0.0;
+
+                let (stretch_width, float_avoiding_position, float_avoiding_width) = if item.is_in_same_bfc {
+                    let stretch_width = container_inner_width - item_non_auto_x_margin_sum;
+                    let position = Point { x: 0.0, y: 0.0 };
+                    let width = 0.0;
+
+                    (stretch_width, position, width)
+                } else {
+                    'block: {
+                        // Set y_margin_offset (different bfc child)
+                        if !is_collapsing_with_first_margin_set || !own_margins_collapse_with_children.start {
+                            y_margin_offset =
+                                active_collapsible_margin_set.collapse_with_margin(item_non_auto_margin.top).resolve();
+                        };
+                        let min_y = committed_y_offset + y_margin_offset;
+
+                        // In addition to the running flag, check the float context directly:
+                        // floats placed by the subtree of a preceding in-flow sibling (in the same
+                        // BFC) are not reflected in the flag
+                        #[cfg(feature = "float_layout")]
+                        if has_active_floats || block_ctx.has_active_floats(min_y) {
+                            let x_margins = [item_non_auto_margin.left, item_non_auto_margin.right];
+                            // An auto width resolves to at least the negation of the margin sum
+                            // (so that the margin box width is non-negative, per CSS2 §10.3.3)
+                            let min_auto_width = -item_non_auto_x_margin_sum;
+
+                            // Find the highest slot (at or below `min_y`) with enough horizontal space
+                            // for the item's border box, which must not overlap any float
+                            let mut slot_segment = None;
+                            let slot = loop {
+                                let slot = block_ctx.find_bfc_slot(
+                                    min_y,
+                                    x_margins,
+                                    direction,
+                                    item.clear,
+                                    slot_segment,
+                                    item_height_hint,
+                                );
+                                let Some(segment_id) = slot.segment_id else { break slot };
+                                let width = item
+                                    .size
+                                    .width
+                                    .unwrap_or(slot.stretch_width.max(min_auto_width))
+                                    .maybe_clamp(item.min_size.width, item.max_size.width);
+                                if width <= slot.border_width + 0.001 {
+                                    break slot;
+                                }
+                                slot_segment = Some(segment_id);
+                            };
+
+                            // If the item had to move down to avoid floats then it "separates from the
+                            // float": similarly to clearance, its top margin no longer collapses with
+                            // the parent's margins.
+                            if slot.y > min_y {
+                                item_pushed_below_float = true;
+                            }
+
+                            has_active_floats = slot.segment_id.is_some();
+                            item_avoids_floats = true;
+                            let stretch_width = slot.stretch_width.max(min_auto_width);
+                            break 'block (stretch_width, Point { x: slot.x, y: slot.y }, slot.border_width);
+                        }
+
+                        if !has_active_floats {
+                            let stretch_width = container_inner_width - item_non_auto_x_margin_sum;
+                            break 'block (
+                                stretch_width,
+                                Point { x: resolved_content_box_inset.left, y: min_y },
+                                container_inner_width,
+                            );
+                        }
+
+                        unreachable!("One of the above cases will always be hit");
+                    }
+                };
+
+                // Tables and replaced elements are not stretch-sized: they resolve their own
+                // size (for replaced elements an auto width resolves to the intrinsic size
+                // <https://www.w3.org/TR/CSS22/visudet.html#block-replaced-width>)
+                let known_dimensions = if item.is_table || item.is_replaced {
+                    Size::NONE
+                } else {
+                    item.size
+                        .map_width(|width| {
+                            Some(width.unwrap_or(stretch_width).maybe_clamp(item.min_size.width, item.max_size.width))
+                        })
+                        .maybe_clamp(item.min_size, item.max_size)
+                };
+
+                //
+
+                let inputs = LayoutInput {
+                    run_mode,
+                    sizing_mode: SizingMode::InherentSize,
+                    axis: RequestedAxis::Both,
+                    known_dimensions,
+                    parent_size,
+                    available_space: available_space.map_width(|_| AvailableSpace::Definite(stretch_width)),
+                    vertical_margins_are_collapsible: if item.is_in_same_bfc { Line::TRUE } else { Line::FALSE },
+                };
+
+                let item_layout = if item.is_in_same_bfc {
+                    // Replaced elements may not have a known width (they are sized by their
+                    // measure function rather than stretch-sized)
+                    let width = known_dimensions.width.unwrap_or(stretch_width);
+
+                    // TODO: account for auto margins
+                    let inset_left = item_non_auto_margin.left + content_box_inset.left;
+                    let inset_right = container_outer_width - width - inset_left;
+                    let insets = [inset_left, inset_right];
+
+                    // Compute child layout
+                    let mut child_block_ctx = block_ctx
+                        .sub_context((y_offset_for_absolute + item_non_auto_margin.top).max(clear_pos), insets);
+                    let output = tree.compute_block_child_layout(item.node_id, inputs, Some(&mut child_block_ctx));
+
+                    // Extract float contribution from child block context
+                    #[cfg(feature = "float_layout")]
+                    {
+                        let child_contribution = child_block_ctx.floated_content_height_contribution();
+                        let child_top_adjoining_floats = child_block_ctx.top_adjoining_floats();
+                        block_ctx
+                            .add_child_floated_content_height_contribution(y_offset_for_absolute + child_contribution);
+                        // Floats placed while the position of the child's top margin strut was unresolved
+                        // also adjoin this block's current strut
+                        block_ctx.merge_adjoining_floats(child_top_adjoining_floats);
+                    }
+
+                    output
+                } else {
+                    tree.compute_child_layout(item.node_id, inputs)
+                };
+
+                // If the item avoids floats and is taller than the segment it was placed in, then
+                // floats lower down may reduce the space available to it: retry with its actual
+                // height unless doing so does not change the slot
+                #[cfg(feature = "float_layout")]
+                if item_avoids_floats && remaining_attempts > 1 && item_height_hint != Some(item_layout.size.height) {
+                    item_height_hint = Some(item_layout.size.height);
+                    remaining_attempts -= 1;
+                    continue;
                 }
 
-                output
-            } else {
-                tree.compute_child_layout(item.node_id, inputs)
+                break (stretch_width, float_avoiding_position, float_avoiding_width, item_layout);
             };
             let final_size = item_layout.size;
 

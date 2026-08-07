@@ -1,0 +1,17 @@
+<test name="float_bfc_avoids_floats_across_entire_height__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="block" box-sizing="content-box" direction="ltr" width="125px">
+      <div box-sizing="content-box" direction="ltr" float="left" width="20px" height="50px"/>
+      <div box-sizing="content-box" direction="ltr" float="right" clear="left" width="25px" height="50px"/>
+      <div display="block" box-sizing="content-box" direction="ltr" overflow-x="hidden" overflow-y="hidden" scrollbar-width="15" height="100px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="125" height="100">
+      <node x="0" y="0" width="20" height="50"/>
+      <node x="100" y="50" width="25" height="50"/>
+      <node x="20" y="0" width="80" height="100" scroll_width="0" scroll_height="0"/>
+    </node>
+  </expectations>
+</test>
