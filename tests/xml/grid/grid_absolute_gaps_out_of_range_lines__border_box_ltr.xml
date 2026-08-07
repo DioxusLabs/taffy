@@ -1,0 +1,13 @@
+<test name="grid_absolute_gaps_out_of_range_lines__border_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" direction="ltr" width="440px" height="240px" row-gap="25px" column-gap="50px" padding-top="15px" padding-left="15px" padding-bottom="15px" padding-right="15px" border-top="5px" border-left="5px" border-bottom="5px" border-right="5px" grid-template-rows="40px 40px" grid-template-columns="40px 40px 40px 40px">
+      <div direction="ltr" position="absolute" grid-row-start="1" grid-row-end="5" grid-column-start="1" grid-column-end="6"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="440" height="240">
+      <node x="20" y="20" width="0" height="0"/>
+    </node>
+  </expectations>
+</test>
