@@ -244,12 +244,17 @@ fn build_style<S: CheapCloneStr>(xnode: roxmltree::Node) -> taffy::Style<S> {
     let grid_template_columns: GridTemplateTracks<S, GridTemplateComponent<S>> =
         parse_or_default(xnode.attribute("grid-template-columns"));
 
+    // `display: flow-root` maps to `Display::Block` with `item_is_flow_root: true`
+    let display_attr = xnode.attribute("display");
+    let item_is_flow_root = display_attr == Some("flow-root");
+
     taffy::Style {
         dummy: std::marker::PhantomData,
-        display: parse_or_default(xnode.attribute("display")),
+        display: if item_is_flow_root { taffy::Display::Block } else { parse_or_default(display_attr) },
         direction: parse_or_default(xnode.attribute("direction")),
         item_is_table: false,
         item_is_replaced: false,
+        item_is_flow_root,
         box_sizing: parse_or_default(xnode.attribute("box-sizing")),
         overflow: Point {
             x: parse_or_default(xnode.attribute("overflow-x")),

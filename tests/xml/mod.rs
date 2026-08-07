@@ -16560,6 +16560,46 @@ mod float {
     }
 
     #[test]
+    fn float_bfc_beside_adjoining_float_in_wide_parent__border_box_ltr() {
+        crate::run_xml_test("float", "float_bfc_beside_adjoining_float_in_wide_parent__border_box_ltr");
+    }
+
+    #[test]
+    fn float_bfc_beside_adjoining_float_in_wide_parent__content_box_ltr() {
+        crate::run_xml_test("float", "float_bfc_beside_adjoining_float_in_wide_parent__content_box_ltr");
+    }
+
+    #[test]
+    fn float_bfc_beside_adjoining_float_in_wide_parent__border_box_rtl() {
+        crate::run_xml_test("float", "float_bfc_beside_adjoining_float_in_wide_parent__border_box_rtl");
+    }
+
+    #[test]
+    fn float_bfc_beside_adjoining_float_in_wide_parent__content_box_rtl() {
+        crate::run_xml_test("float", "float_bfc_beside_adjoining_float_in_wide_parent__content_box_rtl");
+    }
+
+    #[test]
+    fn float_bfc_flow_root_moves_below_float__border_box_ltr() {
+        crate::run_xml_test("float", "float_bfc_flow_root_moves_below_float__border_box_ltr");
+    }
+
+    #[test]
+    fn float_bfc_flow_root_moves_below_float__content_box_ltr() {
+        crate::run_xml_test("float", "float_bfc_flow_root_moves_below_float__content_box_ltr");
+    }
+
+    #[test]
+    fn float_bfc_flow_root_moves_below_float__border_box_rtl() {
+        crate::run_xml_test("float", "float_bfc_flow_root_moves_below_float__border_box_rtl");
+    }
+
+    #[test]
+    fn float_bfc_flow_root_moves_below_float__content_box_rtl() {
+        crate::run_xml_test("float", "float_bfc_flow_root_moves_below_float__content_box_rtl");
+    }
+
+    #[test]
     fn float_bfc_large_negative_margin_moves_below_float__border_box_ltr() {
         crate::run_xml_test("float", "float_bfc_large_negative_margin_moves_below_float__border_box_ltr");
     }
@@ -16640,6 +16680,46 @@ mod float {
     }
 
     #[test]
+    fn float_bfc_negative_top_margin_beside_float__border_box_ltr() {
+        crate::run_xml_test("float", "float_bfc_negative_top_margin_beside_float__border_box_ltr");
+    }
+
+    #[test]
+    fn float_bfc_negative_top_margin_beside_float__content_box_ltr() {
+        crate::run_xml_test("float", "float_bfc_negative_top_margin_beside_float__content_box_ltr");
+    }
+
+    #[test]
+    fn float_bfc_negative_top_margin_beside_float__border_box_rtl() {
+        crate::run_xml_test("float", "float_bfc_negative_top_margin_beside_float__border_box_rtl");
+    }
+
+    #[test]
+    fn float_bfc_negative_top_margin_beside_float__content_box_rtl() {
+        crate::run_xml_test("float", "float_bfc_negative_top_margin_beside_float__content_box_rtl");
+    }
+
+    #[test]
+    fn float_bfc_negative_top_margin_moves_below_float__border_box_ltr() {
+        crate::run_xml_test("float", "float_bfc_negative_top_margin_moves_below_float__border_box_ltr");
+    }
+
+    #[test]
+    fn float_bfc_negative_top_margin_moves_below_float__content_box_ltr() {
+        crate::run_xml_test("float", "float_bfc_negative_top_margin_moves_below_float__content_box_ltr");
+    }
+
+    #[test]
+    fn float_bfc_negative_top_margin_moves_below_float__border_box_rtl() {
+        crate::run_xml_test("float", "float_bfc_negative_top_margin_moves_below_float__border_box_rtl");
+    }
+
+    #[test]
+    fn float_bfc_negative_top_margin_moves_below_float__content_box_rtl() {
+        crate::run_xml_test("float", "float_bfc_negative_top_margin_moves_below_float__content_box_rtl");
+    }
+
+    #[test]
     fn float_bfc_positive_margin_absorbed_by_float__border_box_ltr() {
         crate::run_xml_test("float", "float_bfc_positive_margin_absorbed_by_float__border_box_ltr");
     }
@@ -16697,6 +16777,26 @@ mod float {
     #[test]
     fn float_bfc_separates_from_adjoining_float__content_box_rtl() {
         crate::run_xml_test("float", "float_bfc_separates_from_adjoining_float__content_box_rtl");
+    }
+
+    #[test]
+    fn float_bfc_spans_multiple_float_bands__border_box_ltr() {
+        crate::run_xml_test("float", "float_bfc_spans_multiple_float_bands__border_box_ltr");
+    }
+
+    #[test]
+    fn float_bfc_spans_multiple_float_bands__content_box_ltr() {
+        crate::run_xml_test("float", "float_bfc_spans_multiple_float_bands__content_box_ltr");
+    }
+
+    #[test]
+    fn float_bfc_spans_multiple_float_bands__border_box_rtl() {
+        crate::run_xml_test("float", "float_bfc_spans_multiple_float_bands__border_box_rtl");
+    }
+
+    #[test]
+    fn float_bfc_spans_multiple_float_bands__content_box_rtl() {
+        crate::run_xml_test("float", "float_bfc_spans_multiple_float_bands__content_box_rtl");
     }
 
     #[test]

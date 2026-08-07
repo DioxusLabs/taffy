@@ -8,7 +8,19 @@
 
 - Block/float: `BlockContext::place_floated_box` takes an additional `adjoins_unresolved_strut: bool` parameter indicating whether the float is being placed while the position of the current margin-collapse strut is still unresolved
 
+- Style: new `Style::item_is_flow_root` field and `CoreStyle::is_flow_root` method (default `false`) indicating that a box establishes a new Block Formatting Context (like `display: flow-root`) even when it would otherwise participate in its parent's. Such boxes do not collapse margins with their children and avoid floats like other BFC roots
+
+- Block/float: `FloatContext::find_bfc_slot` (and `BlockContext::find_bfc_slot`) now takes the box's top border edge `y` and its `height` (instead of `min_y`, `clear` and `after`), unioning the float insets over all float segments the box vertically intersects. A new `next_bfc_candidate_y` method returns the next float-segment boundary below a given position, for iterating candidate positions
+
 ### Fixed
+
+- Block/float: a box that establishes an independent formatting context must not overlap floats over its *entire* height, not just at its top edge (CSS2 §9.5). The box is now measured at each candidate position and moved down past float-segment boundaries until its full border box fits, so e.g. a tall BFC root beside a short-but-wide lower float no longer overlaps it
+
+- Block/float: a BFC root pulled up by a negative top margin may sit (partially) above a float when it fits beside it, and moves below the float when it does not fit, matching browser behaviour
+
+- Block/float: fixed the fit-check for BFC roots inside a parent block that is wider than (or offset within) its formatting context: negative containing-block insets are no longer clamped to zero, which previously caused such boxes to be pushed below floats they fit beside
+
+- Block: the height of a BFC root containing floats now includes its bottom padding and border below the bottom margin edge of its floated descendants
 
 - Block/Grid: `Layout::content_size` now measures the scrollable overflow region from the container's padding-box origin (mirrored for RTL) and includes the container's own end-side padding, matching the existing Flexbox behaviour and browser `scrollWidth`/`scrollHeight` semantics. Previously Block and Grid measured relative to the content box and excluded the container's padding entirely, so `Layout::scroll_width()`/`scroll_height()` were too small by the padding sum (#1050)
 

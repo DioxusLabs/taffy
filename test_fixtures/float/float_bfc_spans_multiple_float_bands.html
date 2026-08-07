@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    A BFC root must not overlap floats over its entire height: it fits beside the first float band but not the wider second band, so it moves below both
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="display: block; width: 100px;">
+  <div style="float: left; width: 30px; height: 20px;"></div>
+  <div style="float: left; clear: left; width: 60px; height: 20px;"></div>
+  <div style="display: flow-root; width: 50px; height: 40px;"></div>
+</div>
+
+</body>
+</html>
