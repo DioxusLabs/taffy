@@ -22,7 +22,11 @@
   })?;
   ```
 
+- Block/float: `FloatContext::find_bfc_slot` and `BlockContext::find_bfc_slot` take an additional `height: Option<f32>` parameter. When provided, the returned slot accounts for the floats beside all segments that a box of that height would span, not just the segment at the box's top edge
+
 ### Fixed
+
+- Block/float: a box that establishes an independent formatting context now avoids floats across its entire height, not just at its top edge. The box is laid out, and if floats lower down intrude on the space it occupies, its position/width are re-resolved using its actual height (up to 4 attempts)
 
 - `TaffyTree::remove` now marks the removed node's former parent as dirty, like `remove_child`, `remove_child_at_index` and `remove_children_range` already did. Previously the parent and its ancestors kept their stale cached layout, so recomputing the layout of an ancestor did not account for the removed node (#998)
 
