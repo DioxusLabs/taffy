@@ -638,27 +638,36 @@ pub struct FloatIntrinsicWidthCalculator {
     available_width: AvailableSpace,
     /// The running total intrinsic width contribution
     contribution: f32,
+    /// The widest single float (the floats' min-content contribution)
+    widest: f32,
 }
 
 impl FloatIntrinsicWidthCalculator {
     /// Create a new `FloatIntrinsicWidthCalculator`
     pub fn new(available_width: AvailableSpace) -> Self {
-        Self { available_width, contribution: 0.0 }
+        Self { available_width, contribution: 0.0, widest: 0.0 }
     }
 
     /// Add a float to the computation
     pub fn add_float(&mut self, width: f32, _direction: FloatDirection, _clear: Clear) {
         match self.available_width {
-            AvailableSpace::Definite(_) => {
-                // We will never hit this code path with definite available space
-            }
+            // Definite available width means the container is being fit-content sized
+            // (e.g. it is itself a float being shrink-to-fit sized). The floats' max-content
+            // contribution (widths summed) is clamped by the available width in `result`.
+            AvailableSpace::Definite(_) | AvailableSpace::MaxContent => self.contribution += width,
             AvailableSpace::MinContent => self.contribution = self.contribution.max(width),
-            AvailableSpace::MaxContent => self.contribution += width,
         };
+        self.widest = self.widest.max(width);
     }
 
     /// Get the computed float contribution to intrinsic width
     pub fn result(&self) -> f32 {
-        self.contribution
+        match self.available_width {
+            // Fit-content sizing: clamp the max-content contribution between the available
+            // width and the min-content contribution (floats narrow by wrapping onto new
+            // bands, but never below the widest single float).
+            AvailableSpace::Definite(available_width) => self.contribution.min(available_width).max(self.widest),
+            _ => self.contribution,
+        }
     }
 }
