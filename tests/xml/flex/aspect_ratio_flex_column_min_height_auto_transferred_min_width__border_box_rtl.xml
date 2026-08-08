@@ -1,0 +1,13 @@
+<test name="aspect_ratio_flex_column_min_height_auto_transferred_min_width__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="flex" direction="rtl" flex-direction="column" align-items="start" height="1px" max-width="34px">
+      <div direction="rtl" height="100px" min-width="30px" aspect-ratio="1"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="34" height="1">
+      <node x="4" y="0" width="30" height="30"/>
+    </node>
+  </expectations>
+</test>
