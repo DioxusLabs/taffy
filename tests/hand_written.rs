@@ -12,4 +12,5 @@ mod hand_written {
     mod safe_alignment;
     mod scroll_size;
     mod serde;
+    mod zero_fr_track_collapse;
 }
