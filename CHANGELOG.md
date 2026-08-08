@@ -249,6 +249,8 @@ Taffy now supports `self-start` and `self-end` alignment for in-flow and absolut
 - Block/float: correct placement and margin behavior for zero-width, overflowing, and formatting-context-establishing floats (#988, #1056, #1062, #1064, #1065).
 - Block/float: use definite available widths when laying out floats (#994).
 - Block/float: include floats when calculating intrinsic width under definite available space (#1055).
+- Flexbox: clamp the cross-axis available space by the item's own cross-axis margins rather than the container's margins when sizing flex items; previously a container margin could inflate a stretched item's cross size beyond the container
+- Block/float: floated flex and grid containers with `width: auto` are now shrink-to-fit (fit-content) sized; previously they treated the definite available space as stretch-fit
 
 ## 0.12.2
 
