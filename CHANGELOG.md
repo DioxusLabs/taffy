@@ -16,6 +16,10 @@
 
 ### Fixed
 
+- Flexbox: the content size suggestion used for the automatic minimum size of a flex item with an aspect ratio is now clamped by min/max cross sizes transferred through the aspect ratio, per [css-sizing-3 §5.1](https://www.w3.org/TR/css-sizing-3/#min-content-zero). Previously only the transferred max size was applied ([WPT: flexbox-min-height-auto-002b](https://wpt.live/css/css-flexbox/flexbox-min-height-auto-002b.html))
+
+- Flexbox: the used cross size of a flex item whose cross size is transferred from its main size through its aspect ratio is now re-derived from the used (post-flexing) main size, instead of being transferred from the flex base size before flexing
+
 - Flexbox: the static position of absolutely positioned children now resolves `justify-content: start`/`end` and `align-self: start`/`end`/`self-start`/`self-end` as writing-mode relative (flipping for RTL but not for `*-reverse` flex directions or `wrap-reverse`), whereas previously they were treated as flex-relative ([WPT: flex-abspos-staticpos-*](https://wpt.live/css/css-flexbox/abspos/flex-abspos-staticpos-align-self-002.html))
 
 - Flexbox: the static position of absolutely positioned children with `justify-content: space-between` (and the default `normal`) now follows the flex-relative start (matching `flex-start`), so it resolves to the correct edge in `row-reverse`/`column-reverse` containers
