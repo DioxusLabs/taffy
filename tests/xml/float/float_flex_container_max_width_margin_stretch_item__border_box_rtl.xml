@@ -1,0 +1,17 @@
+<test name="float_flex_container_max_width_margin_stretch_item__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="block" direction="rtl" width="400px" height="200px">
+      <div display="flex" direction="rtl" float="left" flex-direction="column" align-items="stretch" height="1px" max-width="34px" margin-right="2px">
+        <div direction="rtl" height="5px" min-width="30px"/>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="400" height="200">
+      <node x="0" y="0" width="30" height="1">
+        <node x="0" y="0" width="30" height="1"/>
+      </node>
+    </node>
+  </expectations>
+</test>
