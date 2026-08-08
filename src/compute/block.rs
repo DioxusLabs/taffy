@@ -549,8 +549,16 @@ fn compute_inner(
         known_dimensions.height.or(size.height.maybe_max(min_size.height)).or(min_size.height);
 
     // 3. Perform final item layout and return content height
-    let resolved_padding = raw_padding.resolve_or_zero(Some(container_outer_width), |val, basis| tree.calc(val, basis));
-    let resolved_border = raw_border.resolve_or_zero(Some(container_outer_width), |val, basis| tree.calc(val, basis));
+    //
+    // Percentage padding and borders resolve against the *containing block's* width
+    // (`parent_size`), not the box's own width. These only differ when the box has a
+    // non-stretch width. Fall back to the box's own width when the parent size is
+    // unknown (e.g. at the root of the layout tree).
+    let percentage_resolution_width = parent_size.width.unwrap_or(container_outer_width);
+    let resolved_padding =
+        raw_padding.resolve_or_zero(Some(percentage_resolution_width), |val, basis| tree.calc(val, basis));
+    let resolved_border =
+        raw_border.resolve_or_zero(Some(percentage_resolution_width), |val, basis| tree.calc(val, basis));
     let resolved_content_box_inset = resolved_padding + resolved_border + scrollbar_gutter;
     #[cfg_attr(not(feature = "content_size"), allow(unused_mut))]
     let (
