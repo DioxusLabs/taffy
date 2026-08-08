@@ -317,8 +317,8 @@ function describeElement(e) {
     smartRoundedLayout: {
       width: Math.round(boundingRect.right) - Math.round(boundingRect.left),
       height: Math.round(boundingRect.bottom) - Math.round(boundingRect.top),
-      x: Math.round(boundingRect.x - parentBoundingRect.x),
-      y: Math.round(boundingRect.y - parentBoundingRect.y),
+      x: Math.round(boundingRect.x) - Math.round(parentBoundingRect.x),
+      y: Math.round(boundingRect.y) - Math.round(parentBoundingRect.y),
       scrollWidth: e.scrollWidth,
       scrollHeight: e.scrollHeight,
       clientWidth: e.clientWidth,

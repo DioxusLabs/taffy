@@ -27,8 +27,8 @@
         <node x="1" y="10" width="1" height="10"/>
       </node>
       <node x="4" y="0" width="1" height="20">
-        <node x="1" y="0" width="1" height="10"/>
-        <node x="1" y="10" width="1" height="10"/>
+        <node x="0" y="0" width="1" height="10"/>
+        <node x="0" y="10" width="1" height="10"/>
       </node>
       <node x="2" y="0" width="2" height="20">
         <node x="1" y="0" width="1" height="10"/>

@@ -15,8 +15,8 @@
   <expectations>
     <node x="0" y="0" width="7" height="20">
       <node x="4" y="0" width="3" height="20">
-        <node x="2" y="0" width="2" height="10"/>
-        <node x="2" y="10" width="2" height="10"/>
+        <node x="1" y="0" width="2" height="10"/>
+        <node x="1" y="10" width="2" height="10"/>
       </node>
       <node x="0" y="0" width="4" height="20">
         <node x="2" y="0" width="2" height="10"/>
