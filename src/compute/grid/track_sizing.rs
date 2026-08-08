@@ -703,7 +703,26 @@ fn resolve_intrinsic_track_sizes<Tree: LayoutPartialTree>(
                     let limit = item.spanned_track_limit(axis, axis_tracks, axis_inner_node_size, &|val, basis| {
                         item_sizer.calc(val, basis)
                     });
-                    axis_min_content_size.maybe_min(limit).max(axis_minimum_size)
+                    let limited_min_content = axis_min_content_size.maybe_min(limit).max(axis_minimum_size);
+
+                    // For items crossing flexible tracks, browsers hand the content-derived excess over the
+                    // item's own minimum contribution to the flexible tracks only in proportion to their flex
+                    // factors, clamped at one (CSS Grid 2, 12.5.2: "if the sum is less than one, distribute
+                    // that proportion of space"). The minimum contribution itself is always distributed: an
+                    // item's definite size still spreads over `0fr` tracks. This is what lets a `0fr` track
+                    // holding a `min-height: 0` item collapse to zero, which the `grid-template-rows: 0fr`
+                    // to `1fr` collapse animation pattern relies on.
+                    if is_flex {
+                        let crossed_flex_factor_sum: f32 = axis_tracks[item.track_range_excluding_lines(axis)]
+                            .iter()
+                            .filter(|track| track.is_flexible())
+                            .map(|track| track.flex_factor())
+                            .sum();
+                        let excess = f32_max(limited_min_content - axis_minimum_size, 0.0);
+                        axis_minimum_size + excess * f32_min(crossed_flex_factor_sum, 1.0)
+                    } else {
+                        limited_min_content
+                    }
                 }
                 _ => item_sizer.minimum_contribution(item, axis_tracks),
             };
@@ -812,7 +831,21 @@ fn resolve_intrinsic_track_sizes<Tree: LayoutPartialTree>(
                 let limit = item.spanned_track_limit(axis, axis_tracks, axis_inner_node_size, &|val, basis| {
                     item_sizer.calc(val, basis)
                 });
-                let space = axis_max_content_size.maybe_min(limit);
+                let mut space = axis_max_content_size.maybe_min(limit);
+
+                // As for the intrinsic minimums above: the content-derived excess over the item's minimum
+                // contribution reaches flexible tracks only in proportion to their flex factors, clamped
+                // at one.
+                if is_flex {
+                    let axis_minimum_size = item_sizer.minimum_contribution(item, axis_tracks);
+                    let crossed_flex_factor_sum: f32 = axis_tracks[item.track_range_excluding_lines(axis)]
+                        .iter()
+                        .filter(|track| track.is_flexible())
+                        .map(|track| track.flex_factor())
+                        .sum();
+                    let excess = f32_max(space - axis_minimum_size, 0.0);
+                    space = axis_minimum_size + excess * f32_min(crossed_flex_factor_sum, 1.0);
+                }
                 let tracks = &mut axis_tracks[item.track_range_excluding_lines(axis)];
                 if space > 0.0 {
                     // If any of the tracks spanned by the item have a MaxContent min track sizing function then
