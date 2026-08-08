@@ -191,7 +191,15 @@ function parseGridPosition(input) {
   if (input === 'auto') return { kind: 'auto' };
   if (/^span +\d+$/.test(input)) return { kind: 'span', value: parseInt(input.replace(/[^\d]/g, ''), 10) };
   if (/^-?\d+$/.test(input)) return { kind: 'line', value: parseInt(input, 10) };
+  // Named line/area placements (e.g. "a", "a 2", "span a", "span a 2") are passed through
+  // verbatim and parsed on the Rust side
+  if (/^(span +)?(-?\d+ +)?[a-zA-Z_][a-zA-Z0-9_-]*( +-?\d+)?$/.test(input)) return { kind: 'named', value: input };
   return undefined;
+}
+
+function parseGridTemplateAreas(input) {
+  if (input === '' || input === 'none') return undefined;
+  return input;
 }
 
 function describeElement(e) {
@@ -240,6 +248,7 @@ function describeElement(e) {
       gridAutoRows: parseGridTrackDefinitions(e.style.gridAutoRows),
       gridAutoColumns: parseGridTrackDefinitions(e.style.gridAutoColumns),
       gridAutoFlow: parseGridAutoFlow(e.style.gridAutoFlow),
+      gridTemplateAreas: parseGridTemplateAreas(e.style.gridTemplateAreas),
 
       gridRowStart: parseGridPosition(e.style.gridRowStart),
       gridRowEnd: parseGridPosition(e.style.gridRowEnd),

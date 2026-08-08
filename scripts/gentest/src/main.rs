@@ -713,6 +713,7 @@ fn generate_node(w: &mut XmlWriter, node: &Value) {
     );
     maybe_write(w, "grid-auto-rows", serialize_array(&style["gridAutoRows"], ' ', serialize_track_definition));
     maybe_write(w, "grid-auto-columns", serialize_array(&style["gridAutoColumns"], ' ', serialize_track_definition));
+    maybe_write(w, "grid-template-areas", get_str_attr(&style["gridTemplateAreas"], None));
 
     maybe_write(w, "grid-row-start", serialize_grid_position(&style["gridRowStart"]));
     maybe_write(w, "grid-row-end", serialize_grid_position(&style["gridRowEnd"]));
@@ -815,6 +816,7 @@ fn serialize_grid_position(grid_position: &serde_json::Value) -> Option<Cow<'sta
                 "auto" => None, //Some(Cow::from("auto")),
                 "span" => Some(Cow::from(format!("span {}", value()))),
                 "line" => Some(Cow::from((value() as i32).to_string())),
+                "named" => Some(Cow::from(grid_position.get("value").unwrap().as_str().unwrap().to_string())),
                 _ => unreachable!(),
             },
             _ => unreachable!(),
