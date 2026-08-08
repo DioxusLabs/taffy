@@ -685,7 +685,7 @@ fn determine_flex_base_size(
         // Available space for child sizing
         // Min/max sizes transferred through the aspect ratio are taken into account here
         // https://github.com/w3c/csswg-drafts/issues/10997
-        let cross_axis_margin_sum = constants.margin.cross_axis_sum(dir);
+        let cross_axis_margin_sum = child.margin.cross_axis_sum(dir);
         let transferred_min_size = child.min_size.maybe_apply_aspect_ratio(child.aspect_ratio);
         let transferred_max_size = child.max_size.maybe_apply_aspect_ratio(child.aspect_ratio);
         let child_min_cross = transferred_min_size.cross(dir).maybe_add(cross_axis_margin_sum);
@@ -1077,7 +1077,7 @@ fn determine_container_main_size(
                                 let cross_axis_parent_size = constants.node_inner_size.cross(dir);
 
                                 // Available space for child sizing
-                                let cross_axis_margin_sum = constants.margin.cross_axis_sum(dir);
+                                let cross_axis_margin_sum = item.margin.cross_axis_sum(dir);
                                 let child_min_cross = item.min_size.cross(dir).maybe_add(cross_axis_margin_sum);
                                 let child_max_cross = item.max_size.cross(dir).maybe_add(cross_axis_margin_sum);
                                 let cross_axis_available_space: AvailableSpace = available_space
