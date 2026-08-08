@@ -10,6 +10,10 @@ The MSRV for this release is 1.71.
 
 - Support for `display: flow-root`. The new `Display::FlowRoot` variant lays out children using the block layout algorithm but always establishes a new block formatting context (its margins do not collapse with those of its children, it contains its own floats, and it avoids external floats)
 
+### Added
+
+- Grid: `GridTemplateAreas` can now be parsed from a CSS string (`FromStr`/`FromCss`, behind the `parse` feature), e.g. `"\"header header\" \"nav main\"".parse::<GridTemplateAreas<String>>()`. The parser follows the [CSS Grid specification](https://drafts.csswg.org/css-grid/#grid-template-areas-property), including longest-match tokenization of `.` runs and validation that rows have equal widths and named areas form rectangles
+
 ### Changed
 
 - Numeric style helpers (`length`, `percent`, `fr`, `flex`) now accept `Input: Into<f64>` instead of `Input: Into<f32>`. This allows bare float literals such as `length(800.0)` to be used without triggering the `float_literal_f32_fallback` future-compatibility lint, while widening the set of accepted numeric input types (#974)
