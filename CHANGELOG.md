@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+
+- `TaffyTree::remove` now marks the removed node's former parent as dirty, like `remove_child`, `remove_child_at_index` and `remove_children_range` already did. Previously the parent and its ancestors kept their stale cached layout, so recomputing the layout of an ancestor did not account for the removed node (#998)
+
 ## 0.13.0
 
 The MSRV for this release is 1.71.

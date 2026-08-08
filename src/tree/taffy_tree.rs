@@ -625,6 +625,7 @@ impl<NodeContext> TaffyTree<NodeContext> {
             if let Some(children) = self.children.get_mut(parent.into()) {
                 children.retain(|f| *f != node);
             }
+            self.mark_dirty(parent)?;
         }
 
         // Remove "parent" references to a node when removing that node
@@ -1059,6 +1060,30 @@ mod tests {
 
         taffy.remove(child).unwrap();
         taffy.remove(parent).unwrap();
+    }
+
+    // Related to: https://github.com/DioxusLabs/taffy/issues/998
+    #[test]
+    fn remove_node_marks_parent_dirty() {
+        use crate::prelude::*;
+
+        let mut taffy: TaffyTree<()> = TaffyTree::new();
+
+        // The root's height comes entirely from its child's 1px bottom border
+        let child = taffy
+            .new_leaf(Style { border: Rect { bottom: length(1f32), ..Rect::zero() }, ..Default::default() })
+            .unwrap();
+        let root = taffy.new_with_children(Style::default(), &[child]).unwrap();
+
+        taffy.compute_layout(root, Size::MIN_CONTENT).unwrap();
+        assert_eq!(taffy.layout(root).unwrap().size.height, 1f32);
+
+        taffy.remove(child).unwrap();
+        assert_eq!(taffy.dirty(root), Ok(true));
+
+        // The root no longer has any children, so its height should shrink back to zero
+        taffy.compute_layout(root, Size::MIN_CONTENT).unwrap();
+        assert_eq!(taffy.layout(root).unwrap().size.height, 0f32);
     }
 
     #[test]
