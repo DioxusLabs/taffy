@@ -1,0 +1,19 @@
+<test name="float_flex_container_shrink_to_fit__border_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="block" direction="ltr" width="400px" height="200px">
+      <div display="flex" direction="ltr" float="left">
+        <div direction="ltr" width="50px" height="30px"/>
+        <div direction="ltr" width="40px" height="20px"/>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="400" height="200">
+      <node x="0" y="0" width="90" height="30">
+        <node x="0" y="0" width="50" height="30"/>
+        <node x="50" y="0" width="40" height="20"/>
+      </node>
+    </node>
+  </expectations>
+</test>
