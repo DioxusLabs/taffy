@@ -594,6 +594,15 @@ fn compute_inner(
         .maybe_max(Some(padding_border_size.height));
     let final_outer_size = Size { width: container_outer_width, height: container_outer_height };
 
+    // CSS2 §8.3.1: the bottom margin of a block with `height: auto` collapses with its last
+    // in-flow child's bottom margin only if the box's `min-height` is less than the box's
+    // used height. When `min-height` determines the used height, the last child's bottom
+    // margin no longer adjoins the box's bottom edge, so it stays inside the box instead of
+    // collapsing with the box's own bottom margin. (`max-height` has no such effect.)
+    let height_constrained_by_min_height = matches!(min_size.height, Some(h) if h > 0.0 && h >= container_outer_height);
+    let own_bottom_margin_collapses_with_children =
+        own_margins_collapse_with_children.end && !height_constrained_by_min_height;
+
     // Apply `align-content` to in-flow non-floated items if requested. The per-item layouts were
     // held back in `item.final_layout` so that this step can shift `location.y` before tree commit.
     //
@@ -669,7 +678,7 @@ fn compute_inner(
             let margin_top = raw_margin.top.resolve_or_zero(parent_size.width, |val, basis| tree.calc(val, basis));
             CollapsibleMarginSet::from_margin(margin_top)
         },
-        bottom_margin: if own_margins_collapse_with_children.end {
+        bottom_margin: if own_bottom_margin_collapses_with_children {
             last_child_bottom_margin_set
         } else {
             let margin_bottom =
