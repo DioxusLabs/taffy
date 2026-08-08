@@ -51,3 +51,8 @@ harness = false
 name = "mixed"
 path = "benches/mixed.rs"
 harness = false
+
+[[bench]]
+name = "display_contents"
+path = "benches/display_contents.rs"
+harness = false
