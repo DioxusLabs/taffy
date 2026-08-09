@@ -8,6 +8,8 @@ The MSRV for this release is 1.71.
 
 - Support for the `self-start` and `self-end` alignment keywords (`AlignItems::SELF_START`/`SELF_END` and safe variants). These resolve against the `direction` of the item itself rather than that of its container, so they only differ from `start`/`end` when the item's direction differs from its container's. Supported for `align-self`/`align-items` and `justify-self`/`justify-items` on both in-flow and absolutely positioned Flexbox and Grid items (#1074)
 
+- Block: support for `justify-self` on block-level boxes. A positional `justify-self` aligns the box's margin box within its containing block (or within the space beside floats for a box that avoids floats), fit-content sizes an `auto` inline size, and takes precedence over the legacy `text-align` alignment. It also applies to absolutely positioned children whose inline insets are both `auto`, which are aligned within their static-position rectangle. Requires the new `BlockItemStyle::justify_self` style accessor
+
 - Support for `display: flow-root`. The new `Display::FlowRoot` variant lays out children using the block layout algorithm but always establishes a new block formatting context (its margins do not collapse with those of its children, it contains its own floats, and it avoids external floats)
 
 ### Changed

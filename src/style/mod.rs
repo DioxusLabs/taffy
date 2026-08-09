@@ -853,6 +853,12 @@ impl<S: CheapCloneStr> BlockItemStyle for Style<S> {
         self.item_is_table
     }
 
+    #[cfg(feature = "grid")]
+    #[inline(always)]
+    fn justify_self(&self) -> Option<AlignSelf> {
+        self.justify_self
+    }
+
     #[cfg(feature = "float_layout")]
     #[inline(always)]
     fn float(&self) -> Float {
@@ -871,6 +877,11 @@ impl<T: BlockItemStyle> BlockItemStyle for &'_ T {
     #[inline(always)]
     fn is_table(&self) -> bool {
         (*self).is_table()
+    }
+
+    #[inline(always)]
+    fn justify_self(&self) -> Option<AlignSelf> {
+        (*self).justify_self()
     }
 
     #[cfg(feature = "float_layout")]

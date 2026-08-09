@@ -25,6 +25,15 @@ pub trait BlockItemStyle: CoreStyle {
         false
     }
 
+    /// How this item should be aligned within its containing block in the inline axis.
+    ///
+    /// `None` corresponds to the `normal` behaviour of stretch-sizing an auto inline size and
+    /// otherwise aligning the item at the inline-start edge.
+    #[inline(always)]
+    fn justify_self(&self) -> Option<super::AlignSelf> {
+        None
+    }
+
     /// Whether the item is a floated
     #[cfg(feature = "float_layout")]
     #[inline(always)]

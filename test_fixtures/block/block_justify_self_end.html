@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    justify-self: end on a block-level box
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="display: block; width: 200px;">
+  <div style="width: 100px; height: 20px; justify-self: end;"></div>
+  <div style="width: 100px; height: 20px; justify-self: center;"></div>
+  <div style="width: 100px; height: 20px; justify-self: start;"></div>
+  <div style="width: 100px; height: 20px; justify-self: flex-end;"></div>
+  <div style="width: 100px; height: 20px; justify-self: stretch;"></div>
+  <div style="width: 100px; height: 20px; justify-self: normal;"></div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    justify-self aligns absolutely positioned children with auto insets
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="display: block; width: 200px; height: 100px; position: relative;">
+  <div style="width: 100px; height: 20px; position: absolute; justify-self: end;"></div>
+  <div style="width: 100px; height: 20px; position: absolute; top: 20px; justify-self: center;"></div>
+  <div style="width: 100px; height: 20px; position: absolute; top: 40px; left: 0px; justify-self: end;"></div>
+  <div style="width: 100px; height: 20px; position: absolute; top: 60px; justify-self: normal;"></div>
+</div>
+
+</body>
+</html>

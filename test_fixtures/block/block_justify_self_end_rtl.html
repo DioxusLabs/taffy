@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    justify-self on block-level boxes in an rtl container
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="display: block; width: 200px; direction: rtl;">
+  <div style="width: 100px; height: 20px; justify-self: end;"></div>
+  <div style="width: 100px; height: 20px; justify-self: center;"></div>
+  <div style="width: 100px; height: 20px; justify-self: start;"></div>
+</div>
+
+</body>
+</html>

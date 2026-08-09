@@ -1,6 +1,8 @@
 //! Computes the CSS block layout algorithm in the case that the block container being laid out contains only block-level boxes
 use crate::geometry::{Line, Point, Rect, Size};
-use crate::style::{AvailableSpace, CoreStyle, LengthPercentageAuto, Overflow, Position};
+use crate::style::{
+    AlignItems, AlignItemsKeyword, AvailableSpace, CoreStyle, LengthPercentageAuto, Overflow, Position,
+};
 use crate::style_helpers::TaffyMaxContent;
 use crate::tree::{CollapsibleMarginSet, Layout, LayoutInput, LayoutOutput, RunMode, SizingMode};
 use crate::tree::{LayoutPartialTree, LayoutPartialTreeExt, NodeId};
@@ -262,7 +264,7 @@ impl BlockContext<'_> {
     }
 }
 
-use super::common::alignment::{apply_alignment_fallback, compute_alignment_offset};
+use super::common::alignment::{apply_alignment_fallback, compute_alignment_offset, resolve_self_alignment_safety};
 #[cfg(feature = "content_size")]
 use super::common::content_size::compute_content_size_contribution;
 
@@ -285,6 +287,11 @@ struct BlockItem {
 
     /// Whether the child is a non-independent block or inline node
     is_in_same_bfc: bool,
+
+    /// The `justify-self` style of the node (`None` meaning `normal`)
+    justify_self: Option<AlignItems>,
+    /// The `direction` style of the node, used to resolve `self-start`/`self-end`
+    own_direction: Direction,
 
     #[cfg(feature = "float_layout")]
     /// The `float` style of the node
@@ -790,6 +797,8 @@ fn generate_item_list(
                 is_table,
                 is_replaced,
                 is_in_same_bfc,
+                justify_self: child_style.justify_self(),
+                own_direction: child_style.direction(),
                 #[cfg(feature = "float_layout")]
                 float,
                 #[cfg(feature = "float_layout")]
@@ -1135,11 +1144,35 @@ fn perform_final_layout_on_in_flow_children(
                 }
             };
 
+            // Resolve `justify-self` for the item. `justify-self` does not apply to floated boxes
+            // (which are handled above). `Stretch` is treated as `normal` (the default block-level
+            // behaviour) so that it neither triggers fit-content sizing nor overrides `text-align`.
+            let justify_self = item
+                .justify_self
+                .map(|align| align.resolve_self_relative(item.own_direction, direction, true))
+                .filter(|align| align.keyword != AlignItemsKeyword::Stretch);
+
             // Tables and replaced elements are not stretch-sized: they resolve their own
             // size (for replaced elements an auto width resolves to the intrinsic size
             // <https://www.w3.org/TR/CSS22/visudet.html#block-replaced-width>)
             let known_dimensions = if item.is_table || item.is_replaced {
                 Size::NONE
+            } else if item.size.width.is_none() && justify_self.is_some() {
+                // A block-level box with a positional `justify-self` is not stretched to fill its
+                // containing block: an auto inline size is fit-content sized instead
+                // <https://www.w3.org/TR/css-align-3/#justify-block>
+                let fit_content_width = tree.measure_child_size(
+                    item.node_id,
+                    Size::NONE,
+                    parent_size,
+                    Size { width: AvailableSpace::Definite(stretch_width), height: available_space.height },
+                    SizingMode::InherentSize,
+                    crate::AbsoluteAxis::Horizontal,
+                    if item.is_in_same_bfc { Line::TRUE } else { Line::FALSE },
+                );
+                item.size
+                    .map_width(|_| Some(fit_content_width.maybe_clamp(item.min_size.width, item.max_size.width)))
+                    .maybe_clamp(item.min_size, item.max_size)
             } else {
                 item.size
                     .map_width(|width| {
@@ -1344,9 +1377,21 @@ fn perform_final_layout_on_in_flow_children(
                 }
             };
 
-            // Apply alignment
+            // Apply `justify-self` alignment. The alignment container is the item's containing
+            // block, except for items that avoid floats which are aligned within the space that
+            // remains beside the floats. Auto margins have already absorbed the free space, so
+            // there is nothing left to align when they are present.
+            // <https://www.w3.org/TR/css-align-3/#justify-block>
             let item_outer_width = item_layout.size.width + resolved_margin.horizontal_axis_sum();
-            if item_outer_width < container_inner_width {
+            if let Some(justify_self) = justify_self {
+                let alignment_container_width =
+                    if item.is_in_same_bfc { container_inner_width } else { float_avoiding_width };
+                let offset = justify_self_offset(justify_self, alignment_container_width - item_outer_width);
+                match direction {
+                    Direction::Ltr => location.x += offset,
+                    Direction::Rtl => location.x -= offset,
+                }
+            } else if item_outer_width < container_inner_width {
                 let free_x_space = container_inner_width - item_outer_width;
                 match (text_align, direction) {
                     (TextAlign::Auto, _) => {
@@ -1472,6 +1517,28 @@ fn perform_final_layout_on_in_flow_children(
     committed_y_offset += resolved_content_box_inset.bottom + bottom_y_margin_offset;
     let content_height = f32_max(0.0, committed_y_offset);
     (inflow_content_size, content_height, first_child_top_margin_set, last_child_bottom_margin_set, first_baseline)
+}
+
+/// Resolve a block-level box's `justify-self` alignment into an offset from the inline-start edge
+/// of its alignment container.
+///
+/// `justify_self` must already have had `self-start`/`self-end` resolved against the item's own
+/// direction. `Stretch` is treated as `normal` (start-edge alignment) by the callers.
+/// <https://www.w3.org/TR/css-align-3/#justify-block>
+#[inline]
+fn justify_self_offset(justify_self: AlignItems, free_space: f32) -> f32 {
+    match resolve_self_alignment_safety(justify_self, free_space < 0.0) {
+        AlignItemsKeyword::End | AlignItemsKeyword::FlexEnd => free_space,
+        AlignItemsKeyword::Center => free_space / 2.0,
+        // Start-edge aligned by default
+        AlignItemsKeyword::Start
+        | AlignItemsKeyword::FlexStart
+        | AlignItemsKeyword::Baseline
+        | AlignItemsKeyword::Stretch => 0.0,
+        AlignItemsKeyword::SelfStart | AlignItemsKeyword::SelfEnd => {
+            unreachable!("SelfStart/SelfEnd are resolved against the item's own direction by callers")
+        }
+    }
 }
 
 /// Perform absolute layout on all absolutely positioned children.
@@ -1662,10 +1729,30 @@ fn perform_absolute_layout_on_absolute_children(
             (Some(left), None) => left + resolved_margin.left,
             (None, Some(right)) => area_size.width - final_size.width - right - resolved_margin.right,
             (None, None) => {
-                if direction.is_rtl() {
-                    item.static_position.x - final_size.width - resolved_margin.right - area_offset.x
-                } else {
-                    item.static_position.x + resolved_margin.left - area_offset.x
+                // With both inline insets auto the box is aligned within its static-position
+                // rectangle, which spans the inline axis of the containing block.
+                // <https://www.w3.org/TR/css-align-3/#justify-abspos>
+                let justify_self = item
+                    .justify_self
+                    .map(|align| align.resolve_self_relative(item.own_direction, direction, true))
+                    .filter(|align| align.keyword != AlignItemsKeyword::Stretch);
+                match justify_self {
+                    Some(justify_self) => {
+                        let free_space = area_size.width - final_size.width - resolved_margin.horizontal_axis_sum();
+                        let offset = justify_self_offset(justify_self, free_space);
+                        if direction.is_rtl() {
+                            area_size.width - final_size.width - resolved_margin.right - offset
+                        } else {
+                            resolved_margin.left + offset
+                        }
+                    }
+                    None => {
+                        if direction.is_rtl() {
+                            item.static_position.x - final_size.width - resolved_margin.right - area_offset.x
+                        } else {
+                            item.static_position.x + resolved_margin.left - area_offset.x
+                        }
+                    }
                 }
             }
         };
