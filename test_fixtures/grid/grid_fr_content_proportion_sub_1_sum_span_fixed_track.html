@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    An item spanning a 50px and a 0.5fr row: only the 50px of content beyond the fixed row is halved, so the grid is 75px tall
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="display: flex; align-items: start; width: 20px; height: 150px;">
+  <div style="display: grid; grid-template-rows: 50px 0.5fr; grid-template-columns: 20px;">
+    <div style="grid-row: 1 / 3; min-height: 0;"><div style="width: 20px; height: 100px;"></div></div>
+  </div>
+</div>
+
+</body>
+</html>

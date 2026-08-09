@@ -1,0 +1,15 @@
+<test name="grid_fr_minimum_zero_sum_with_other_flex_track_definite__content_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" box-sizing="content-box" direction="rtl" height="500px" grid-template-rows="0fr 1fr" grid-template-columns="20px">
+      <div box-sizing="content-box" direction="rtl" height="100px" grid-row-start="1" grid-row-end="2"/>
+      <div box-sizing="content-box" direction="rtl" grid-row-start="2" grid-row-end="3"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="20" height="500">
+      <node x="0" y="0" width="20" height="100"/>
+      <node x="0" y="100" width="20" height="400"/>
+    </node>
+  </expectations>
+</test>
