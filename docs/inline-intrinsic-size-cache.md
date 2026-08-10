@@ -177,7 +177,37 @@ handles them by bypassing the dedicated cache (falling back to the existing slot
    itself inline-axis only and needs no special handling. Float *placement* depends on the block
    axis, but that only affects the container's height.
 
-## 5. Measured impact
+## 4a. Tracking block-axis dependence instead of bypassing
+
+Caveats 1–3 are all the same question: "does anything in this subtree let the block-axis constraint
+affect the inline size?". That is trackable, and doing so would let the dedicated cache serve
+requests with a known height and collapse over `available_space.height` unconditionally.
+
+The propagation fits the existing plumbing: add a `block_axis_affects_inline_size: bool` to
+`LayoutOutput`, computed bottom-up.
+
+- `compute_leaf_layout`: `style.aspect_ratio().is_some()` — plus `true` for nodes with a measure
+  function, unless `MeasureFunction` grows a way to declare that its inline result ignores the
+  block-axis constraint (a `const` on the measure trait, or a new `Size<AvailableSpace>` contract
+  note; conservatively `true` today).
+- containers: own style (`aspect_ratio`, and for flexbox `flex_direction.is_column() && is_wrap`)
+  OR'd with the flag from each child's `LayoutOutput`.
+- `compute_cached_layout` stores the flag next to the cache entry so cached returns carry it, and
+  `Cache::clear` drops it. Invalidation is already correct: mutating a node clears its cache and
+  every ancestor's, which is exactly the set of nodes whose flag could change.
+
+Cost is one bool in `LayoutOutput` (which is already padded) and one in `Cache`, plus an `|=` per
+child in each algorithm's child loop. No extra traversal.
+
+The one wrinkle is bootstrapping: the flag is only known after the subtree has been laid out at
+least once, so the first inline-intrinsic query for a node must still take the conservative path
+(measure, then record the flag). That is fine — it is exactly the query that populates the entry.
+The second and subsequent queries, which are the ones the cache exists for, can use it.
+
+This is worth doing as Stage 1b rather than Stage 1: it subsumes the `known_dimensions.height`
+bypass, removes the wrap-column hazard entirely, and the same flag is directly reusable for the
+future `width: min-content | max-content` keyword resolution (a node whose flag is false can have
+its keyword width resolved once and reused for every constraint).
 
 Prototype = Stage 1 as described above (bypass when `known_dimensions.height.is_some()`).
 
