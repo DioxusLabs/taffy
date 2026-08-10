@@ -4,7 +4,23 @@
 
 ### Changed
 
-- `TaffyTree::compute_layout_with_measure`'s measure function now takes the full `LayoutInput` (plus `NodeId`, `Option<&mut NodeContext>` and `&Style`) and returns a `LayoutOutput` directly instead of a `Size<f32>`, allowing measure functions to set baselines (and other `LayoutOutput` fields) on leaf nodes. `compute_leaf_layout` is no longer called implicitly: to retain the previous behaviour, wrap your existing measure logic in an explicit call to `compute_leaf_layout` (#953)
+- `TaffyTree::compute_layout_with_measure`'s measure function now takes the full `LayoutInput` (plus `NodeId`, `Option<&mut NodeContext>` and `&Style`) and returns a `LayoutOutput` directly instead of a `Size<f32>`, allowing measure functions to set baselines (and other `LayoutOutput` fields) on leaf nodes. `compute_leaf_layout` is no longer called implicitly (#953)
+
+  Migration: to retain the previous behaviour, wrap your existing measure logic in an explicit call to `compute_leaf_layout` within the new-style measure function:
+
+  ```rust
+  // Before
+  tree.compute_layout_with_measure(node, available_space, |known_dimensions, available_space, node_id, node_context, style| {
+      my_measure_logic(known_dimensions, available_space, node_id, node_context, style)
+  })?;
+
+  // After
+  tree.compute_layout_with_measure(node, available_space, |inputs, node_id, node_context, style| {
+      taffy::compute_leaf_layout(inputs, style, |_, _| 0.0, |known_dimensions, available_space| {
+          my_measure_logic(known_dimensions, available_space, node_id, node_context, style)
+      })
+  })?;
+  ```
 
 ## 0.13.0
 
