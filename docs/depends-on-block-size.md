@@ -64,15 +64,18 @@ intrinsic width).
 ### Measure functions
 
 A leaf with a measure function must report `true` unless the embedder says otherwise, because
-`MeasureFunction` receives `available_space.height` and may use it. Two options, both cheap:
+`MeasureFunction` receives `available_space.height` and may use it.
 
-1. document the contract and let the embedder opt out via node context — no API change, but
-   opt-out is per-tree rather than per-node;
-2. widen the measure-function return to a small struct with a `depends_on_block_size` field
-   (breaking, but the honest fix; text measurers would return `false` and immediately benefit).
+The natural fix is [#953](https://github.com/DioxusLabs/taffy/pull/953), which changes the measure
+closure to return a `LayoutOutput` instead of a `Size<f32>` (the embedder calls
+`compute_leaf_layout` itself). With that landed, the flag is just another `LayoutOutput` field the
+measurer can set — no further breaking change, and no taffy-side contract to police. A text
+measurer returns `false` and benefits immediately; anything that keeps using
+`compute_leaf_layout(.., |kd, avs| ..)` gets the conservative `true` from the default.
 
-Recommend (1) for the first cut with (2) noted in RELEASES.md as a candidate for the next breaking
-release.
+That makes #953 the preferred prerequisite. Until it lands, leaves with a measure function report
+`true`, which costs nothing structurally — the flag is still exact for all non-measured subtrees,
+and measured leaves are re-measured today anyway.
 
 ## Bootstrapping and invalidation
 
