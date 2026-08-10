@@ -58,6 +58,21 @@ impl BlockFormattingContext {
     }
 }
 
+/// A snapshot of the float placement state of a `BlockContext`, allowing float
+/// placements from a discarded speculative layout attempt to be undone.
+#[cfg(feature = "float_layout")]
+#[derive(Debug, Clone)]
+pub struct FloatStateSnapshot {
+    /// The state of the `FloatContext` at the time of the snapshot
+    float_context: FloatContext,
+    /// The value of `BlockContext::adjoining_floats` at the time of the snapshot
+    adjoining_floats: [bool; 2],
+    /// The value of `BlockContext::top_adjoining_floats` at the time of the snapshot
+    top_adjoining_floats: Option<[bool; 2]>,
+    /// The value of `BlockContext::float_content_contribution` at the time of the snapshot
+    float_content_contribution: f32,
+}
+
 /// Context for each individual Block within a Block Formatting Context
 ///
 /// Contains a mutable reference to the BlockFormattingContext + block-specific data
@@ -169,6 +184,27 @@ impl BlockContext<'_> {
         self.float_content_contribution = self.float_content_contribution.max(pos.y + floated_box.height);
 
         pos
+    }
+
+    /// Capture the current float placement state so that it can later be restored
+    /// with [`Self::restore_float_state`]. This allows callers performing speculative
+    /// layout (e.g. inline layout that may need to re-run line breaking) to undo
+    /// float placements made during a discarded layout attempt.
+    pub fn snapshot_float_state(&self) -> FloatStateSnapshot {
+        FloatStateSnapshot {
+            float_context: self.bfc.float_context.clone(),
+            adjoining_floats: self.adjoining_floats,
+            top_adjoining_floats: self.top_adjoining_floats,
+            float_content_contribution: self.float_content_contribution,
+        }
+    }
+
+    /// Restore float placement state previously captured with [`Self::snapshot_float_state`]
+    pub fn restore_float_state(&mut self, snapshot: &FloatStateSnapshot) {
+        self.bfc.float_context = snapshot.float_context.clone();
+        self.adjoining_floats = snapshot.adjoining_floats;
+        self.top_adjoining_floats = snapshot.top_adjoining_floats;
+        self.float_content_contribution = snapshot.float_content_contribution;
     }
 
     /// Search a space suitable for laying out non-floated content into
