@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+
+- `TaffyTree::compute_layout_with_measure`'s measure function now takes the full `LayoutInput` (plus `NodeId`, `Option<&mut NodeContext>` and `&Style`) and returns a `LayoutOutput` directly instead of a `Size<f32>`, allowing measure functions to set baselines (and other `LayoutOutput` fields) on leaf nodes. `compute_leaf_layout` is no longer called implicitly: to retain the previous behaviour, wrap your existing measure logic in an explicit call to `compute_leaf_layout` (#953)
+
 ## 0.13.0
 
 The MSRV for this release is 1.71.
