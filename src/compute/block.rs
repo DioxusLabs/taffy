@@ -344,6 +344,9 @@ pub fn compute_block_layout(
     // Pull these out earlier to avoid borrowing issues
     let overflow = style.overflow();
     let is_scroll_container = overflow.x.is_scroll_container() || overflow.y.is_scroll_container();
+    // css-align-3 §5.1.1: a non-`normal` `align-content` makes a block container establish an
+    // independent formatting context. <https://drafts.csswg.org/css-align-3/#distribution-block>
+    let establishes_new_bfc = is_scroll_container || style.align_content().is_some();
     let aspect_ratio = style.aspect_ratio();
     let padding = style.padding().resolve_or_zero(parent_size.width, |val, basis| tree.calc(val, basis));
     let border = style.border().resolve_or_zero(parent_size.width, |val, basis| tree.calc(val, basis));
@@ -401,7 +404,7 @@ pub fn compute_block_layout(
     // Unwrap the block formatting context if one was passed, or else create a new one
     debug_log!("BLOCK");
     match block_ctx {
-        Some(inherited_bfc) if !is_scroll_container => compute_inner(
+        Some(inherited_bfc) if !establishes_new_bfc => compute_inner(
             tree,
             node_id,
             LayoutInput { known_dimensions: styled_based_known_dimensions, ..inputs },
@@ -494,16 +497,17 @@ fn compute_inner(
 
     let overflow = style.overflow();
     let is_scroll_container = overflow.x.is_scroll_container() || overflow.y.is_scroll_container();
+    let establishes_new_bfc = is_scroll_container || style.align_content().is_some();
 
     // Determine margin collapsing behaviour
     let own_margins_collapse_with_children = Line {
         start: vertical_margins_are_collapsible.start
-            && !is_scroll_container
+            && !establishes_new_bfc
             && style.position() == Position::Relative
             && padding.top == 0.0
             && border.top == 0.0,
         end: vertical_margins_are_collapsible.end
-            && !is_scroll_container
+            && !establishes_new_bfc
             && style.position() == Position::Relative
             && padding.bottom == 0.0
             && border.bottom == 0.0
@@ -511,7 +515,7 @@ fn compute_inner(
     };
     let has_styles_preventing_being_collapsed_through = !style.is_block()
         || block_ctx.is_bfc_root()
-        || is_scroll_container
+        || establishes_new_bfc
         || style.position() == Position::Absolute
         || padding.top > 0.0
         || padding.bottom > 0.0
@@ -584,7 +588,7 @@ fn compute_inner(
 
     // Root BFCs contain floats
     #[cfg(feature = "float_layout")]
-    if block_ctx.is_bfc_root() || is_scroll_container {
+    if block_ctx.is_bfc_root() || establishes_new_bfc {
         intrinsic_outer_height = intrinsic_outer_height.max(block_ctx.floated_content_height_contribution());
     }
 
