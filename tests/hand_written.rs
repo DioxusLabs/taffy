@@ -4,6 +4,7 @@ mod hand_written {
     mod block_replaced;
     mod border_and_padding;
     mod caching;
+    mod depends_on_block_size;
     mod floats;
     mod measure;
     mod min_max_overrides;

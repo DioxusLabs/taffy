@@ -892,27 +892,33 @@ impl<NodeContext> TaffyTree<NodeContext> {
         Ok(self.nodes[node.into()].cache.is_empty())
     }
 
-    /// Updates the stored layout of the provided `node` and its children
+    /// Updates the stored layout of the provided `node` and its children, returning the root's
+    /// [`LayoutOutput`]
     pub fn compute_layout_with_measure<MeasureFunction>(
         &mut self,
         node_id: NodeId,
         available_space: Size<AvailableSpace>,
         measure_function: MeasureFunction,
-    ) -> Result<(), TaffyError>
+    ) -> Result<LayoutOutput, TaffyError>
     where
         MeasureFunction: FnMut(LayoutInput, NodeId, Option<&mut NodeContext>, &Style) -> LayoutOutput,
     {
         let use_rounding = self.config.use_rounding;
         let mut taffy_view = TaffyView { taffy: self, measure_function };
-        compute_root_layout(&mut taffy_view, node_id, available_space);
+        let output = compute_root_layout(&mut taffy_view, node_id, available_space);
         if use_rounding {
             round_layout(&mut taffy_view, node_id);
         }
-        Ok(())
+        Ok(output)
     }
 
-    /// Updates the stored layout of the provided `node` and its children
-    pub fn compute_layout(&mut self, node: NodeId, available_space: Size<AvailableSpace>) -> Result<(), TaffyError> {
+    /// Updates the stored layout of the provided `node` and its children, returning the root's
+    /// [`LayoutOutput`]
+    pub fn compute_layout(
+        &mut self,
+        node: NodeId,
+        available_space: Size<AvailableSpace>,
+    ) -> Result<LayoutOutput, TaffyError> {
         self.compute_layout_with_measure(node, available_space, |inputs, _, _, style| {
             // There is no measure function, so the leaf's width can only vary with the block-axis
             // constraint through its own aspect-ratio
@@ -925,18 +931,6 @@ impl<NodeContext> TaffyTree<NodeContext> {
     #[cfg(feature = "std")]
     pub fn print_tree(&mut self, root: NodeId) {
         crate::util::print_tree(self, root)
-    }
-
-    /// Returns an instance of LayoutTree representing the TaffyTree, using the provided measure function
-    #[cfg(test)]
-    pub(crate) fn as_layout_tree_with_measure<'a, MeasureFunction>(
-        &'a mut self,
-        measure_function: MeasureFunction,
-    ) -> impl LayoutPartialTree + CacheTree + 'a
-    where
-        MeasureFunction: FnMut(LayoutInput, NodeId, Option<&mut NodeContext>, &Style) -> LayoutOutput + 'a,
-    {
-        TaffyView { taffy: self, measure_function }
     }
 
     /// Returns an instance of LayoutTree representing the TaffyTree
