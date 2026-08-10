@@ -49,6 +49,7 @@ A large number of miscelaneous bug fixes are included in this release:
 - Block/float: honour CSS2 §9.5.1 rules 3 & 7 when placing floats: a float unconstrained by other floats may overflow its containing block, but one placed beside another float may not (#1064)
 - Block/float: apply CSS2 §9.5.1 rule 5 (float ceiling) and `clear` past zero-sized floats, which occupy no float segment and so were previously ignored when positioning later floats and cleared elements (#1056)
 - Block/float: sum float contributions when computing a float container's intrinsic width under definite available space (clamped between the widest single float and the available width), instead of dropping them entirely (#1055)
+- Block: a block container with a non-`normal` `align-content` establishes an independent formatting context (its margins do not collapse with its children's, it cannot be collapsed through, and it contains its own floats)
 
 ## 0.12.2
 
