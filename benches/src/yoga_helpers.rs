@@ -152,7 +152,10 @@ fn items_into_align(align: Option<tf::AlignSelf>) -> yg::Align {
         tf::AlignItemsKeyword::Center => yg::Align::Center,
         tf::AlignItemsKeyword::Baseline => yg::Align::Baseline,
         tf::AlignItemsKeyword::Stretch => yg::Align::Stretch,
-        tf::AlignItemsKeyword::Start | tf::AlignItemsKeyword::End => unimplemented!(),
+        tf::AlignItemsKeyword::Start
+        | tf::AlignItemsKeyword::End
+        | tf::AlignItemsKeyword::SelfStart
+        | tf::AlignItemsKeyword::SelfEnd => unimplemented!(),
     }
 }
 

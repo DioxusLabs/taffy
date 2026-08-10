@@ -41,8 +41,17 @@ pub(super) fn align_tracks(
     let track_alignment = apply_alignment_fallback(free_space, num_tracks, track_alignment_style);
     let track_alignment = if axis_is_reversed { track_alignment.reversed() } else { track_alignment };
 
+    // If every track is collapsed then no track receives the alignment offset below, but the
+    // grid's lines should still be aligned within the container (e.g. at the inline-start edge
+    // for RTL), so apply the offset to the origin instead.
+    let empty_grid_offset = if num_tracks == 0 {
+        compute_alignment_offset(free_space, num_tracks, gap, track_alignment, layout_is_reversed, true)
+    } else {
+        0.0
+    };
+
     // Compute offsets
-    let mut total_offset = origin;
+    let mut total_offset = origin + empty_grid_offset;
     let mut seen_non_collapsed_track = false;
     tracks.iter_mut().enumerate().for_each(|(i, track)| {
         // Odd tracks are gutters (but slices are zero-indexed, so odd tracks have even indices)
@@ -86,8 +95,20 @@ pub(super) fn align_and_position_item(
     let overflow = style.overflow();
     let scrollbar_width = style.scrollbar_width();
     let aspect_ratio = style.aspect_ratio();
-    let justify_self = style.justify_self();
-    let align_self = style.align_self();
+    // Resolve writing-mode-relative self-start/self-end keywords against the item's own
+    // direction. The horizontal axis is the inline axis (Taffy only supports horizontal-tb);
+    // the vertical (block) axis resolves them to plain start/end.
+    let item_direction = style.direction();
+    let justify_self = style.justify_self().map(|align| align.resolve_self_relative(item_direction, direction, true));
+    let align_self = style.align_self().map(|align| align.resolve_self_relative(item_direction, direction, false));
+    let container_alignment_styles = InBothAbsAxis {
+        horizontal: container_alignment_styles
+            .horizontal
+            .map(|align| align.resolve_self_relative(item_direction, direction, true)),
+        vertical: container_alignment_styles
+            .vertical
+            .map(|align| align.resolve_self_relative(item_direction, direction, false)),
+    };
 
     let position = style.position();
     let inset_horizontal = style
@@ -357,6 +378,9 @@ pub(super) fn align_item_within_area(
         AlignItemsKeyword::Center => {
             (grid_area_size - resolved_size + resolved_margin.start - resolved_margin.end) / 2.0
         }
+        // SelfStart/SelfEnd are resolved to Start/End against the item's own direction in
+        // `align_and_position_item`.
+        AlignItemsKeyword::SelfStart | AlignItemsKeyword::SelfEnd => unreachable!(),
     };
 
     let offset_within_area = if position == Position::Absolute {

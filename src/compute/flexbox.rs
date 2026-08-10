@@ -567,7 +567,11 @@ fn generate_anonymous_flex_items(
                 border: child_style
                     .border()
                     .resolve_or_zero(constants.node_inner_size.width, |val, basis| tree.calc(val, basis)),
-                align_self: child_style.align_self().unwrap_or(constants.align_items),
+                align_self: child_style.align_self().unwrap_or(constants.align_items).resolve_self_relative(
+                    child_style.direction(),
+                    constants.layout_direction,
+                    constants.is_column,
+                ),
                 overflow: child_style.overflow(),
                 scrollbar_width: child_style.scrollbar_width(),
                 flex_grow: child_style.flex_grow(),
@@ -1899,6 +1903,9 @@ fn align_flex_items_along_cross_axis(
                 0.0
             }
         }
+        // SelfStart/SelfEnd are resolved to Start/End against the item's own direction when
+        // flex items are generated.
+        AlignItemsKeyword::SelfStart | AlignItemsKeyword::SelfEnd => unreachable!(),
     }
 }
 
@@ -2247,7 +2254,11 @@ fn perform_absolute_layout_on_absolute_children(
         let overflow = child_style.overflow();
         let scrollbar_width = child_style.scrollbar_width();
         let aspect_ratio = child_style.aspect_ratio();
-        let align_self = child_style.align_self().unwrap_or(constants.align_items);
+        let align_self = child_style.align_self().unwrap_or(constants.align_items).resolve_self_relative(
+            child_style.direction(),
+            constants.layout_direction,
+            constants.is_column,
+        );
         let margin = child_style
             .margin()
             .map(|margin| margin.resolve_to_option(inset_relative_size.width, |val, basis| tree.calc(val, basis)));
@@ -2342,12 +2353,14 @@ fn perform_absolute_layout_on_absolute_children(
         }
         .f32_max(Size::ZERO);
 
-        // Expand auto margins to fill available space
+        // Expand auto margins to fill available space. Auto margins only absorb free space
+        // when the box is inset-constrained in that axis (both insets set); otherwise they
+        // resolve to zero and the box is statically positioned (CSS2 §10.3.7 / §10.6.4).
         let resolved_margin = {
             let auto_margin_size = Size {
                 width: {
                     let auto_margin_count = margin.left.is_none() as u8 + margin.right.is_none() as u8;
-                    if auto_margin_count > 0 {
+                    if auto_margin_count > 0 && left.is_some() && right.is_some() {
                         free_space.width / auto_margin_count as f32
                     } else {
                         0.0
@@ -2355,7 +2368,7 @@ fn perform_absolute_layout_on_absolute_children(
                 },
                 height: {
                     let auto_margin_count = margin.top.is_none() as u8 + margin.bottom.is_none() as u8;
-                    if auto_margin_count > 0 {
+                    if auto_margin_count > 0 && top.is_some() && bottom.is_some() {
                         free_space.height / auto_margin_count as f32
                     } else {
                         0.0
@@ -2420,35 +2433,39 @@ fn perform_absolute_layout_on_absolute_children(
             // fallback to `justify-content` on absolutely-positioned flex items (only the
             // cross-axis `align-self` does so). Matching the layout authority over a strict
             // spec read keeps gentest fixtures green; reconsider if Chromium changes behavior.
-            match (constants.justify_content.unwrap_or(JustifyContent::START).keyword(), main_axis_flex_start_reversed)
-            {
-                (AlignContentKeyword::SpaceBetween, _)
+            // `start`/`end` are writing-mode relative (they flip for RTL but not for
+            // reversed flex-directions), whereas `flex-start`/`flex-end` and the
+            // distributed keywords' fallbacks are flex-relative.
+            let start_position = match constants.justify_content.unwrap_or(JustifyContent::FLEX_START).keyword() {
+                AlignContentKeyword::Start => !main_is_rtl,
+                AlignContentKeyword::End => main_is_rtl,
+                _ => true,
+            };
+            match (
+                constants.justify_content.unwrap_or(JustifyContent::FLEX_START).keyword(),
+                main_axis_flex_start_reversed,
+            ) {
+                (AlignContentKeyword::SpaceBetween, false)
                 | (AlignContentKeyword::Stretch, false)
                 | (AlignContentKeyword::FlexStart, false)
                 | (AlignContentKeyword::FlexEnd, true) => {
                     constants.content_box_inset.main_start(constants.dir) + resolved_margin.main_start(constants.dir)
                 }
-                (AlignContentKeyword::Start, false) => {
-                    constants.content_box_inset.main_start(constants.dir) + resolved_margin.main_start(constants.dir)
-                }
-                (AlignContentKeyword::Start, true) => {
-                    constants.container_size.main(constants.dir)
-                        - constants.content_box_inset.main_end(constants.dir)
-                        - final_size.main(constants.dir)
-                        - resolved_margin.main_end(constants.dir)
-                }
-                (AlignContentKeyword::End, false) => {
-                    constants.container_size.main(constants.dir)
-                        - constants.content_box_inset.main_end(constants.dir)
-                        - final_size.main(constants.dir)
-                        - resolved_margin.main_end(constants.dir)
-                }
-                (AlignContentKeyword::End, true) => {
-                    constants.content_box_inset.main_start(constants.dir) + resolved_margin.main_start(constants.dir)
+                (AlignContentKeyword::Start | AlignContentKeyword::End, _) => {
+                    if start_position {
+                        constants.content_box_inset.main_start(constants.dir)
+                            + resolved_margin.main_start(constants.dir)
+                    } else {
+                        constants.container_size.main(constants.dir)
+                            - constants.content_box_inset.main_end(constants.dir)
+                            - final_size.main(constants.dir)
+                            - resolved_margin.main_end(constants.dir)
+                    }
                 }
                 (AlignContentKeyword::FlexEnd, false)
                 | (AlignContentKeyword::FlexStart, true)
-                | (AlignContentKeyword::Stretch, true) => {
+                | (AlignContentKeyword::Stretch, true)
+                | (AlignContentKeyword::SpaceBetween, true) => {
                     constants.container_size.main(constants.dir)
                         - constants.content_box_inset.main_end(constants.dir)
                         - final_size.main(constants.dir)
@@ -2496,33 +2513,34 @@ fn perform_absolute_layout_on_absolute_children(
                 > constants.container_size.cross(constants.dir)
                     - constants.content_box_inset.cross_axis_sum(constants.dir);
             let cross_keyword = resolve_self_alignment_safety(align_self, cross_overflows);
+            // `start`/`end` (and `baseline`, whose static-position fallback is `start`) are
+            // writing-mode relative: they flip for RTL but not for `wrap-reverse`.
+            // `flex-start`/`flex-end` and the `stretch` fallback are flex-relative.
+            let start_position = match cross_keyword {
+                AlignItemsKeyword::Start | AlignItemsKeyword::Baseline => !cross_is_rtl,
+                AlignItemsKeyword::End => cross_is_rtl,
+                _ => true,
+            };
             match (cross_keyword, cross_axis_flex_start_reversed) {
                 // Stretch alignment does not apply to absolutely positioned items
                 // See "Example 3" at https://www.w3.org/TR/css-flexbox-1/#abspos-items
                 // Note: Stretch should be FlexStart not Start when we support both
-                (AlignItemsKeyword::Start, false) => {
-                    constants.content_box_inset.cross_start(constants.dir) + resolved_margin.cross_start(constants.dir)
+                (AlignItemsKeyword::Start | AlignItemsKeyword::End | AlignItemsKeyword::Baseline, _) => {
+                    if start_position {
+                        constants.content_box_inset.cross_start(constants.dir)
+                            + resolved_margin.cross_start(constants.dir)
+                    } else {
+                        constants.container_size.cross(constants.dir)
+                            - constants.content_box_inset.cross_end(constants.dir)
+                            - final_size.cross(constants.dir)
+                            - resolved_margin.cross_end(constants.dir)
+                    }
                 }
-                (AlignItemsKeyword::Start, true) => {
-                    constants.container_size.cross(constants.dir)
-                        - constants.content_box_inset.cross_end(constants.dir)
-                        - final_size.cross(constants.dir)
-                        - resolved_margin.cross_end(constants.dir)
-                }
-                (AlignItemsKeyword::End, false) => {
-                    constants.container_size.cross(constants.dir)
-                        - constants.content_box_inset.cross_end(constants.dir)
-                        - final_size.cross(constants.dir)
-                        - resolved_margin.cross_end(constants.dir)
-                }
-                (AlignItemsKeyword::End, true) => {
-                    constants.content_box_inset.cross_start(constants.dir) + resolved_margin.cross_start(constants.dir)
-                }
-                (AlignItemsKeyword::Baseline | AlignItemsKeyword::Stretch | AlignItemsKeyword::FlexStart, false)
+                (AlignItemsKeyword::Stretch | AlignItemsKeyword::FlexStart, false)
                 | (AlignItemsKeyword::FlexEnd, true) => {
                     constants.content_box_inset.cross_start(constants.dir) + resolved_margin.cross_start(constants.dir)
                 }
-                (AlignItemsKeyword::Baseline | AlignItemsKeyword::Stretch | AlignItemsKeyword::FlexStart, true)
+                (AlignItemsKeyword::Stretch | AlignItemsKeyword::FlexStart, true)
                 | (AlignItemsKeyword::FlexEnd, false) => {
                     constants.container_size.cross(constants.dir)
                         - constants.content_box_inset.cross_end(constants.dir)
@@ -2538,6 +2556,9 @@ fn perform_absolute_layout_on_absolute_children(
                         - resolved_margin.cross_end(constants.dir))
                         / 2.0
                 }
+                // SelfStart/SelfEnd are resolved to Start/End against the item's own direction
+                // where `align_self` is read above.
+                (AlignItemsKeyword::SelfStart | AlignItemsKeyword::SelfEnd, _) => unreachable!(),
             }
         };
 

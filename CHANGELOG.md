@@ -2,61 +2,77 @@
 
 ## Unreleased
 
+### Changed
+
+- `TaffyTree::compute_layout_with_measure`'s measure function now takes the full `LayoutInput` (plus `NodeId`, `Option<&mut NodeContext>` and `&Style`) and returns a `LayoutOutput` directly instead of a `Size<f32>`, allowing measure functions to set baselines (and other `LayoutOutput` fields) on leaf nodes. `compute_leaf_layout` is no longer called implicitly (#953)
+
+  Migration: to retain the previous behaviour, wrap your existing measure logic in an explicit call to `compute_leaf_layout` within the new-style measure function:
+
+  ```rust
+  // Before
+  tree.compute_layout_with_measure(node, available_space, |known_dimensions, available_space, node_id, node_context, style| {
+      my_measure_logic(known_dimensions, available_space, node_id, node_context, style)
+  })?;
+
+  // After
+  tree.compute_layout_with_measure(node, available_space, |inputs, node_id, node_context, style| {
+      taffy::compute_leaf_layout(inputs, style, |_, _| 0.0, |known_dimensions, available_space| {
+          my_measure_logic(known_dimensions, available_space, node_id, node_context, style)
+      })
+  })?;
+  ```
+
+## 0.13.0
+
+The MSRV for this release is 1.71.
+
 ### Added
+
+- Support for the `self-start` and `self-end` alignment keywords (`AlignItems::SELF_START`/`SELF_END` and safe variants). These resolve against the `direction` of the item itself rather than that of its container, so they only differ from `start`/`end` when the item's direction differs from its container's. Supported for `align-self`/`align-items` and `justify-self`/`justify-items` on both in-flow and absolutely positioned Flexbox and Grid items (#1074)
 
 - Support for `display: flow-root`. The new `Display::FlowRoot` variant lays out children using the block layout algorithm but always establishes a new block formatting context (its margins do not collapse with those of its children, it contains its own floats, and it avoids external floats)
 
 ### Changed
 
-- Grid: `Style::grid_template_areas` is now `Option<GridTemplateAreas<S>>`, where the new `GridTemplateAreas` struct bundles the named areas (`areas`) with the overall size of the area template (`row_count`/`column_count`). This allows templates containing unnamed (`.`) cells beyond the extents of the named areas (e.g. `grid-template-areas: "a ."`) to be represented, as such cells still contribute to the size of the explicit grid. `GridContainerStyle` gains `grid_template_area_row_count`/`grid_template_area_column_count` methods (with default implementations that derive the counts from the extents of the named areas), which are now used to determine the size of the explicit grid
-
+- Numeric style helpers (`length`, `percent`, `fr`, `flex`) now accept `Input: Into<f64>` instead of `Input: Into<f32>`. This allows bare float literals such as `length(800.0)` to be used without triggering the `float_literal_f32_fallback` future-compatibility lint, while widening the set of accepted numeric input types (#974)
+- Grid: `grid_template_areas` is now `Option<GridTemplateAreas<S>>`, where the new `GridTemplateAreas` struct includes `row_count`/`column_count` fields. This allows templates containing unnamed (`.`) cells beyond the extents of the named areas (e.g. `grid-template-areas: "a ."`) to be represented.
 - Block/float: `BlockContext::place_floated_box` takes an additional `adjoins_unresolved_strut: bool` parameter indicating whether the float is being placed while the position of the current margin-collapse strut is still unresolved
 
 ### Fixed
 
-- Block/float: zero-width floats are now recorded in the float context, so their edge acts as an obstacle that a box establishing an independent formatting context cannot be placed to the outside of (e.g. via a negative margin) ([WPT: zero-width-floats-positioning](https://wpt.live/css/CSS2/floats/zero-width-floats-positioning.tentative.html))
+A large number of miscelaneous bug fixes are included in this release:
 
-- Block/float: a negative margin on a BFC root's float-free side now applies as usual (moving the border edge outside the containing block and widening an auto width) instead of being clamped to the containing block edge. Previously the containing block insets were treated as float insets on both sides, so e.g. a box with `margin-left: -50px` beside a right float could not extend past its containing block's left edge ([WPT: floats-wrap-bfc-with-margin-006/007](https://wpt.live/css/CSS2/floats/floats-wrap-bfc-with-margin-006.tentative.html))
-
-- Block/Grid: `Layout::content_size` now measures the scrollable overflow region from the container's padding-box origin (mirrored for RTL) and includes the container's own end-side padding, matching the existing Flexbox behaviour and browser `scrollWidth`/`scrollHeight` semantics. Previously Block and Grid measured relative to the content box and excluded the container's padding entirely, so `Layout::scroll_width()`/`scroll_height()` were too small by the padding sum (#1050)
-
-- Grid: items in tracks that overflow the container now contribute their position within the container to `Layout::content_size`, not just their own size. Previously each item's contribution was measured relative to its own grid area, so e.g. two stacked 500px-tall rows overflowing a 200px-tall scroll container produced a `content_size.height` of 500 rather than 1000
-
-- Grid: when the auto-placement search collides with an occupied area, the search cursor now jumps past the entire colliding occupied interval rather than just the part of it within the queried area. Previously a small item searching a grid occupied by large items advanced one track at a time, scanning up to 10000x10000 candidate positions
-
-- Block/float: a box that establishes an independent formatting context now avoids floats placed by the subtree of a preceding in-flow sibling, not just floats among its direct siblings. Previously the presence of active floats was only tracked for direct float children, so such a box could overlap a float placed by a nested descendant of an earlier sibling
-
-- Block: floats placed while the position of the enclosing margin-collapse strut is unresolved now force clearance on subsequent cleared elements whose margins adjoin the same strut (matching browser behaviour): letting the margins collapse would move the float together with the cleared element. Floats occurring between collapsing margins are also now positioned including the pending collapsible margins, per [CSS2.2 §9.5](https://www.w3.org/TR/CSS22/visuren.html#floats)
-
-- Block: clearance is now computed per [CSS2.2 §9.5.2](https://www.w3.org/TR/CSS22/visuren.html#flow-control) from the hypothetical position of the cleared element (including its collapsed top margin), supporting *negative clearance* and suppressing clearance when a large top margin already places the element past the relevant float(s). Previously the cleared element's position was simply clamped to the bottom of the floats, ignoring its top margin
-
-- Block: clearance prevents the cleared element's top margin from collapsing with preceding margins and with the parent's top margin, per [CSS2.2 §8.3.1](https://www.w3.org/TR/CSS22/box.html#collapsing-margins)
-
-- Block: the top and bottom margins of a self-collapsing element with clearance collapse with each other (and with the margins of following siblings) and are applied inside the parent, extending its content height; they no longer collapse with the bottom margin of the parent block, per [CSS2.2 §8.3.1](https://www.w3.org/TR/CSS22/box.html#collapsing-margins)
-
-- Block/float: `clear` on an element no longer has any effect when no float has been placed on the relevant side(s). Previously `FloatContext::cleared_threshold` treated an empty float context as a float ending at `y=0`, which could spuriously clamp the position of cleared elements
-
-- Block: an element containing only floated children can now be collapsed through (its own margins collapse with each other), per [CSS2.2 §8.3.1](https://www.w3.org/TR/CSS22/box.html#collapsing-margins) — floated children are out-of-flow and do not prevent collapse-through
-
-- Grid: when distributing a spanning item's max-content contribution to its spanned tracks' base sizes "beyond limits", tracks are now eligible only if their *max* track sizing function is `max-content` (or `fit-content()`), per [CSS Grid §12.5.1](https://www.w3.org/TR/css-grid-1/#extra-space). Previously tracks whose *min* track sizing function was `max-content` were also eligible, so a track such as `minmax(max-content, 20px)` could grow beyond its fixed `20px` limit, stealing space from `max-content` tracks ([WPT: grid-content-sized-columns-resolution](https://wpt.live/css/css-grid/parsing/grid-content-sized-columns-resolution.html))
-
-- Grid: an explicitly specified preferred or minimum size is no longer clamped by the spanned tracks' fixed max track sizing functions when computing an item's minimum contribution. That clamp only applies to the content-based (automatic) minimum size, per [CSS Grid §6.6](https://www.w3.org/TR/css-grid-1/#min-size-auto). Fixes e.g. an item with `min-width: 12px` in a `minmax(auto, 10px)` track sizing the track to `12px` rather than `10px`
-
-- Grid: when distributing a spanning item's intrinsic size contribution to its spanned tracks, space distributed "beyond limits" now ignores the tracks' growth limits (still capping growth at any `fit-content()` argument), per [CSS Grid §12.5.1](https://www.w3.org/TR/css-grid-1/#extra-space). Previously the growth limits were still enforced, so tracks such as `minmax(min-content, 10px)` could not expand beyond `10px` to accommodate an item's contribution
-
-- Grid: the container's min/max size is now converted to a content-box size (by subtracting padding, border and scrollbar gutters) before being used in the track sizing algorithm ("stretch auto tracks" and "expand flexible tracks" steps and the percentage basis fallback). Previously the border-box min/max size was used directly, causing tracks in a grid with padding/border and a `min-width`/`min-height` (but no definite size) to be sized too large by the padding+border amount ([WPT: grid-box-sizing-001](https://wpt.live/css/css-grid/grid-model/grid-box-sizing-001.html))
-
-- Grid: when distributing a spanning item's intrinsic size contribution to flexible tracks, the flex factor sum used to decide between flex-factor-proportional and equal distribution is now computed over only the spanned tracks eligible to receive the space (rather than all tracks in the axis), matching Chrome. Fixes track sizing when an item spans `0fr` tracks or a mix of intrinsic and non-intrinsic flexible tracks (e.g. `0fr minmax(0, 1fr)`)
-
-- Block: replaced elements (`item_is_replaced: true`) are no longer stretch-sized to the container width. An auto width now resolves to the intrinsic size, per [CSS 2 §10.3.4](https://www.w3.org/TR/CSS22/visudet.html#block-replaced-width)
-
-- Grid: tracks no longer grow past their growth limits when distributing free space to multiple tracks with asymmetric limits (in the "maximise tracks" step and when distributing item contributions to base sizes). Previously a track could be assigned space beyond its limit in later distribution iterations, causing `auto` tracks to overflow a definite container (#1000)
-
-- Flexbox: min/max sizes transferred through the aspect ratio now clamp the flex base size, the automatic minimum size, and the hypothetical main/cross sizes of flex items, instead of being baked into the item's used min/max sizes. This matches browser behaviour for replaced elements and items with `aspect-ratio` combined with min/max constraints in the opposite axis ([w3c/csswg-drafts#10997](https://github.com/w3c/csswg-drafts/issues/10997))
-
-- Block: boxes that establish an independent formatting context (e.g. `overflow: hidden`) no longer overlap floats (CSS2 §9.5): they narrow to fit beside the float, or move down below it if they don't fit, and their margins interact with float edges in the same way as in Chrome. Adds a new `FloatContext::find_bfc_slot` method and `BfcSlot` struct.
-
-- Numeric style helpers (`length`, `percent`, `fr`, `flex`) now accept `Input: Into<f64>` instead of `Input: Into<f32>`. This allows bare float literals such as `length(800.0)` to be used without triggering the `float_literal_f32_fallback` future-compatibility lint, while widening the set of accepted numeric input types (#974)
+- Flexbox: clamp the flex base size, automatic minimum size and hypothetical main/cross sizes with min/max sizes transferred through the aspect ratio, instead of baking them into the item's used min/max sizes (#989)
+- Flexbox: resolve `justify-content: start`/`end` and `align-self: start`/`end`/`self-start`/`self-end` as writing-mode relative (rather than flex-relative) in the static position of absolutely positioned children; use the flex-relative start for `justify-content: space-between`/`normal`, and a fallback of `start` for `align-self: baseline` (#1072)
+- Flexbox: only let `auto` margins on absolutely positioned children absorb free space when the box is inset-constrained in that axis; otherwise they resolve to zero per CSS2 §10.3.7/§10.6.4 (#1072)
+- Grid: jump the auto-placement search past entire colliding occupied intervals rather than advancing one track at a time (#1038)
+- Grid: resolve the grid lines used by absolutely positioned items to the edges of the adjacent tracks, so that free space distributed by `align-content`/`justify-content` is not included in the abspos grid area (#1071)
+- Grid: exclude absolutely positioned children from the implicit grid size estimate, as they do not take part in grid placement and must not create implicit tracks. Previously their out-of-range lines resolved to phantom implicit tracks instead of being treated as `auto` (#1075)
+- Grid: align an empty grid (one whose tracks have all collapsed) within its container, rather than always placing it at the start (#1078)
+- Grid: only distribute space "beyond limits" to tracks whose *max* track sizing function is `max-content` (or `fit-content()`) (#1033)
+- Grid: don't clamp an explicitly specified preferred or minimum size by the spanned tracks' fixed max track sizing functions when computing an item's minimum contribution (#1022)
+- Grid: ignore the tracks' growth limits when distributing an item's intrinsic size contribution "beyond limits" (#1022)
+- Grid: convert the container's min/max size to a content-box size before using it in the track sizing algorithm (#1023)
+- Grid: compute the flex factor sum over only the spanned tracks eligible to receive space when distributing intrinsic size contributions to flexible tracks (#1019)
+- Grid: don't grow tracks past their growth limits when distributing free space to multiple tracks with asymmetric limits (#1001)
+- Block/Grid: measure `Layout::content_size` from the container's padding-box origin and include the container's own end-side padding, matching Flexbox and browser `scrollWidth`/`scrollHeight` semantics. Grid items in tracks that overflow the container now also contribute their position within the container, not just their own size (#1051)
+- Block: don't stretch-size replaced elements; an auto width now resolves to the intrinsic size (#1002)
+- Block: don't let boxes that establish an independent formatting context overlap floats: they narrow to fit beside the float, or move down below it if they don't fit (#991)
+- Block: detect floats placed by the subtree of a preceding in-flow sibling, not just floats among direct siblings, when placing a box that establishes an independent formatting context (#1049)
+- Block: apply a negative margin as usual on a BFC root's float-free side, instead of clamping it to the containing block edge (#1061)
+- Block: compute clearance from the hypothetical position of the cleared element (including its collapsed top margin), supporting negative clearance (#1042)
+- Block: prevent the cleared element's top margin from collapsing with preceding margins and with the parent's top margin (#1043)
+- Block: force clearance for floats placed while the position of the enclosing margin-collapse strut is unresolved, and position such floats including the pending collapsible margins (#1046)
+- Block: collapse the top and bottom margins of a self-collapsing element with clearance with each other and apply them inside the parent, rather than collapsing them with the parent's bottom margin (#1044)
+- Block/float: treat `clear` as a no-op when no float has been placed on the relevant side(s) (#1041)
+- Block: allow elements containing only floated children to be collapsed through (#1040)
+- Block/float: record zero-width floats in the float context, so their edge acts as an obstacle for boxes establishing an independent formatting context (#1062)
+- Block/float: a float establishes a new block formatting context, so its margins no longer collapse with the margins of its children (#1065)
+- Block/float: honour CSS2 §9.5.1 rules 3 & 7 when placing floats: a float unconstrained by other floats may overflow its containing block, but one placed beside another float may not (#1064)
+- Block/float: apply CSS2 §9.5.1 rule 5 (float ceiling) and `clear` past zero-sized floats, which occupy no float segment and so were previously ignored when positioning later floats and cleared elements (#1056)
+- Block/float: sum float contributions when computing a float container's intrinsic width under definite available space (clamped between the widest single float and the available width), instead of dropping them entirely (#1055)
+- Block: a block container with a non-`normal` `align-content` establishes an independent formatting context (its margins do not collapse with its children's, it cannot be collapsed through, and it contains its own floats)
+- Block/float: `align-content` shifts a block container's floated children along with its in-flow content
 
 ## 0.12.2
 

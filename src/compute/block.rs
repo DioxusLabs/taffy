@@ -380,6 +380,9 @@ pub fn compute_block_layout(
     // Pull these out earlier to avoid borrowing issues
     let overflow = style.overflow();
     let is_scroll_container = overflow.x.is_scroll_container() || overflow.y.is_scroll_container();
+    // css-align-3 §5.1.1: a non-`normal` `align-content` makes a block container establish an
+    // independent formatting context. <https://drafts.csswg.org/css-align-3/#distribution-block>
+    let establishes_new_bfc = is_scroll_container || style.align_content().is_some();
     let aspect_ratio = style.aspect_ratio();
     let padding = style.padding().resolve_or_zero(parent_size.width, |val, basis| tree.calc(val, basis));
     let border = style.border().resolve_or_zero(parent_size.width, |val, basis| tree.calc(val, basis));
@@ -437,7 +440,7 @@ pub fn compute_block_layout(
     // Unwrap the block formatting context if one was passed, or else create a new one
     debug_log!("BLOCK");
     match block_ctx {
-        Some(inherited_bfc) if !is_scroll_container => compute_inner(
+        Some(inherited_bfc) if !establishes_new_bfc => compute_inner(
             tree,
             node_id,
             LayoutInput { known_dimensions: styled_based_known_dimensions, ..inputs },
@@ -530,16 +533,17 @@ fn compute_inner(
 
     let overflow = style.overflow();
     let is_scroll_container = overflow.x.is_scroll_container() || overflow.y.is_scroll_container();
+    let establishes_new_bfc = is_scroll_container || style.align_content().is_some();
 
     // Determine margin collapsing behaviour
     let own_margins_collapse_with_children = Line {
         start: vertical_margins_are_collapsible.start
-            && !is_scroll_container
+            && !establishes_new_bfc
             && style.position() == Position::Relative
             && padding.top == 0.0
             && border.top == 0.0,
         end: vertical_margins_are_collapsible.end
-            && !is_scroll_container
+            && !establishes_new_bfc
             && style.position() == Position::Relative
             && padding.bottom == 0.0
             && border.bottom == 0.0
@@ -547,7 +551,7 @@ fn compute_inner(
     };
     let has_styles_preventing_being_collapsed_through = !style.is_block()
         || block_ctx.is_bfc_root()
-        || is_scroll_container
+        || establishes_new_bfc
         || style.position() == Position::Absolute
         || padding.top > 0.0
         || padding.bottom > 0.0
@@ -585,8 +589,16 @@ fn compute_inner(
         known_dimensions.height.or(size.height.maybe_max(min_size.height)).or(min_size.height);
 
     // 3. Perform final item layout and return content height
-    let resolved_padding = raw_padding.resolve_or_zero(Some(container_outer_width), |val, basis| tree.calc(val, basis));
-    let resolved_border = raw_border.resolve_or_zero(Some(container_outer_width), |val, basis| tree.calc(val, basis));
+    //
+    // Percentage padding and borders resolve against the *containing block's* width
+    // (`parent_size`), not the box's own width. These only differ when the box has a
+    // non-stretch width. Fall back to the box's own width when the parent size is
+    // unknown (e.g. at the root of the layout tree).
+    let percentage_resolution_width = parent_size.width.unwrap_or(container_outer_width);
+    let resolved_padding =
+        raw_padding.resolve_or_zero(Some(percentage_resolution_width), |val, basis| tree.calc(val, basis));
+    let resolved_border =
+        raw_border.resolve_or_zero(Some(percentage_resolution_width), |val, basis| tree.calc(val, basis));
     let resolved_content_box_inset = resolved_padding + resolved_border + scrollbar_gutter;
     #[cfg_attr(not(feature = "content_size"), allow(unused_mut))]
     let (
@@ -612,7 +624,7 @@ fn compute_inner(
 
     // Root BFCs contain floats
     #[cfg(feature = "float_layout")]
-    if block_ctx.is_bfc_root() || is_scroll_container {
+    if block_ctx.is_bfc_root() || establishes_new_bfc {
         intrinsic_outer_height = intrinsic_outer_height.max(block_ctx.floated_content_height_contribution());
     }
 
@@ -621,6 +633,15 @@ fn compute_inner(
         .unwrap_or(intrinsic_outer_height.maybe_clamp(min_size.height, max_size.height))
         .maybe_max(Some(padding_border_size.height));
     let final_outer_size = Size { width: container_outer_width, height: container_outer_height };
+
+    // CSS2 §8.3.1: the bottom margin of a block with `height: auto` collapses with its last
+    // in-flow child's bottom margin only if the box's `min-height` is less than the box's
+    // used height. When `min-height` determines the used height, the last child's bottom
+    // margin no longer adjoins the box's bottom edge, so it stays inside the box instead of
+    // collapsing with the box's own bottom margin. (`max-height` has no such effect.)
+    let height_constrained_by_min_height = matches!(min_size.height, Some(h) if h > 0.0 && h >= container_outer_height);
+    let own_bottom_margin_collapses_with_children =
+        own_margins_collapse_with_children.end && !height_constrained_by_min_height;
 
     // Apply `align-content` to in-flow non-floated items if requested. The per-item layouts were
     // held back in `item.final_layout` so that this step can shift `location.y` before tree commit.
@@ -697,7 +718,7 @@ fn compute_inner(
             let margin_top = raw_margin.top.resolve_or_zero(parent_size.width, |val, basis| tree.calc(val, basis));
             CollapsibleMarginSet::from_margin(margin_top)
         },
-        bottom_margin: if own_margins_collapse_with_children.end {
+        bottom_margin: if own_bottom_margin_collapses_with_children {
             last_child_bottom_margin_set
         } else {
             let margin_bottom =
@@ -715,7 +736,7 @@ fn compute_inner(
         return output;
     }
 
-    // Commit deferred in-flow layouts to the tree. Floated items already wrote their own layouts.
+    // Commit deferred child layouts to the tree.
     for item in items.iter() {
         if let Some(layout) = item.final_layout.as_ref() {
             tree.set_unrounded_layout(item.node_id, layout);
@@ -1040,20 +1061,19 @@ fn perform_final_layout_on_in_flow_children(
                 // println!("BLOCK FLOATED BOX ({:?}) {:?}", item.node_id, float_direction);
                 // println!("w:{} h:{} x:{}, y:{}", margin_box.width, margin_box.height, location.x, location.y);
 
-                tree.set_unrounded_layout(
-                    item.node_id,
-                    &Layout {
-                        order: item.order,
-                        size: item_layout.size,
-                        #[cfg(feature = "content_size")]
-                        content_size: item_layout.content_size,
-                        scrollbar_size,
-                        location,
-                        padding: item.padding,
-                        border: item.border,
-                        margin: item_non_auto_margin,
-                    },
-                );
+                // Deferred to the post-loop pass in `compute_inner` (like in-flow items) so that
+                // `align-content` can shift `location.y` before the layout is committed.
+                item.final_layout = Some(Layout {
+                    order: item.order,
+                    size: item_layout.size,
+                    #[cfg(feature = "content_size")]
+                    content_size: item_layout.content_size,
+                    scrollbar_size,
+                    location,
+                    padding: item.padding,
+                    border: item.border,
+                    margin: item_non_auto_margin,
+                });
 
                 #[cfg(feature = "content_size")]
                 {
