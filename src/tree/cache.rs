@@ -132,6 +132,50 @@ pub(crate) struct CacheEntry<T> {
     content: T,
 }
 
+/// The number of dedicated inline-axis (width) intrinsic size cache entries
+/// (one for min-content, one for max-content)
+const INLINE_INTRINSIC_CACHE_SIZE: usize = 2;
+
+/// An entry in the dedicated inline-axis intrinsic size cache
+#[derive(Debug, Clone, Copy, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize))]
+struct InlineIntrinsicEntry {
+    /// Bit pattern of the `parent_size.width` the measurement was made against
+    /// (needed to resolve percentage padding/border/margin)
+    parent_width: u32,
+    /// The measured outer width
+    width: f32,
+}
+
+/// Is this layout request a "pure inline-axis intrinsic size" query? i.e. "what is the
+/// min-content/max-content width of this node?".
+///
+/// Per css-sizing-3 such a size is constraint-independent: it does not depend on the available
+/// space, and (aside from percentage resolution of the node's own box properties, which is keyed
+/// on `parent_size.width`) it does not depend on the parent size either. It can therefore be
+/// cached in a dedicated slot that is not shared with (and cannot be evicted by) other queries.
+///
+/// Returns `Some(0)` for min-content and `Some(1)` for max-content.
+#[inline(always)]
+fn inline_intrinsic_slot(input: &LayoutInput) -> Option<usize> {
+    if input.run_mode != RunMode::ComputeSize
+        || input.axis != RequestedAxis::Horizontal
+        || input.known_dimensions.width.is_some()
+    {
+        return None;
+    }
+    // A definite block size can transfer to the inline axis through `aspect-ratio` (in this node
+    // or in a descendant), so measurements made under one are not constraint-independent.
+    if input.known_dimensions.height.is_some() {
+        return None;
+    }
+    match input.available_space.width {
+        AvailableSpace::MinContent => Some(0),
+        AvailableSpace::MaxContent => Some(1),
+        AvailableSpace::Definite(_) => None,
+    }
+}
+
 /// A cache for caching the results of a sizing a Grid Item or Flexbox Item
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize))]
@@ -140,6 +184,8 @@ pub struct Cache {
     final_layout_entry: Option<CacheEntry<LayoutOutput>>,
     /// The cache entries for the node's preliminary size measurements
     measure_entries: [Option<CacheEntry<Size<f32>>>; CACHE_SIZE],
+    /// Dedicated cache for inline-axis (width) intrinsic sizes
+    inline_intrinsic_entries: [Option<InlineIntrinsicEntry>; INLINE_INTRINSIC_CACHE_SIZE],
     /// Tracks if all cache entries are empty
     is_empty: bool,
 }
@@ -153,7 +199,12 @@ impl Default for Cache {
 impl Cache {
     /// Create a new empty cache
     pub const fn new() -> Self {
-        Self { final_layout_entry: None, measure_entries: [None; CACHE_SIZE], is_empty: true }
+        Self {
+            final_layout_entry: None,
+            measure_entries: [None; CACHE_SIZE],
+            inline_intrinsic_entries: [None; INLINE_INTRINSIC_CACHE_SIZE],
+            is_empty: true,
+        }
     }
 
     /// Return the cache slot to cache the current computed result in
@@ -227,6 +278,14 @@ impl Cache {
         match input.run_mode {
             RunMode::PerformLayout => self.final_layout_entry.filter(|entry| entry.key == key).map(|e| e.content),
             RunMode::ComputeSize => {
+                if let Some(slot) = inline_intrinsic_slot(input) {
+                    if let Some(entry) = self.inline_intrinsic_entries[slot] {
+                        if entry.parent_width == option_cache_key(input.parent_size.width) {
+                            return Some(LayoutOutput::from_outer_size(Size { width: entry.width, height: 0.0 }));
+                        }
+                    }
+                }
+
                 for entry in self.measure_entries.iter().flatten() {
                     if entry.key.kd_available_space == key.kd_available_space
                         && (entry.key.x_axis_parent_size() == key.x_axis_parent_size())
@@ -251,6 +310,13 @@ impl Cache {
             }
             RunMode::ComputeSize => {
                 self.is_empty = false;
+                if let Some(slot) = inline_intrinsic_slot(input) {
+                    self.inline_intrinsic_entries[slot] = Some(InlineIntrinsicEntry {
+                        parent_width: option_cache_key(input.parent_size.width),
+                        width: layout_output.size.width,
+                    });
+                    return;
+                }
                 let cache_slot = Self::compute_cache_slot(input.known_dimensions, input.available_space);
                 self.measure_entries[cache_slot] = Some(CacheEntry { key, content: layout_output.size });
             }
@@ -266,12 +332,15 @@ impl Cache {
         self.is_empty = true;
         self.final_layout_entry = None;
         self.measure_entries = [None; CACHE_SIZE];
+        self.inline_intrinsic_entries = [None; INLINE_INTRINSIC_CACHE_SIZE];
         ClearState::Cleared
     }
 
     /// Returns true if all cache entries are None, else false
     pub fn is_empty(&self) -> bool {
-        self.final_layout_entry.is_none() && !self.measure_entries.iter().any(|entry| entry.is_some())
+        self.final_layout_entry.is_none()
+            && !self.measure_entries.iter().any(|entry| entry.is_some())
+            && !self.inline_intrinsic_entries.iter().any(|entry| entry.is_some())
     }
 }
 
