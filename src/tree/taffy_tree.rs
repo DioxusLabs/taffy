@@ -914,7 +914,10 @@ impl<NodeContext> TaffyTree<NodeContext> {
     /// Updates the stored layout of the provided `node` and its children
     pub fn compute_layout(&mut self, node: NodeId, available_space: Size<AvailableSpace>) -> Result<(), TaffyError> {
         self.compute_layout_with_measure(node, available_space, |inputs, _, _, style| {
+            // There is no measure function, so the leaf's width can only vary with the block-axis
+            // constraint through its own aspect-ratio
             compute_leaf_layout(inputs, style, |_, _| 0.0, |_, _| Size::ZERO)
+                .with_depends_on_block_size(style.aspect_ratio.is_some())
         })
     }
 
@@ -924,12 +927,27 @@ impl<NodeContext> TaffyTree<NodeContext> {
         crate::util::print_tree(self, root)
     }
 
+    /// Returns an instance of LayoutTree representing the TaffyTree, using the provided measure function
+    #[cfg(test)]
+    pub(crate) fn as_layout_tree_with_measure<'a, MeasureFunction>(
+        &'a mut self,
+        measure_function: MeasureFunction,
+    ) -> impl LayoutPartialTree + CacheTree + 'a
+    where
+        MeasureFunction: FnMut(LayoutInput, NodeId, Option<&mut NodeContext>, &Style) -> LayoutOutput + 'a,
+    {
+        TaffyView { taffy: self, measure_function }
+    }
+
     /// Returns an instance of LayoutTree representing the TaffyTree
     #[cfg(test)]
     pub(crate) fn as_layout_tree(&mut self) -> impl LayoutPartialTree + CacheTree + '_ {
         TaffyView {
             taffy: self,
-            measure_function: |inputs, _, _, style| compute_leaf_layout(inputs, style, |_, _| 0.0, |_, _| Size::ZERO),
+            measure_function: |inputs, _, _, style: &Style| {
+                compute_leaf_layout(inputs, style, |_, _| 0.0, |_, _| Size::ZERO)
+                    .with_depends_on_block_size(style.aspect_ratio.is_some())
+            },
         }
     }
 }

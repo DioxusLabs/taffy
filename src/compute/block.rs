@@ -325,6 +325,8 @@ struct BlockItem {
     static_position: Point<f32>,
     /// Whether margins can be collapsed through this item
     can_be_collapsed_through: bool,
+    /// Whether this item's inline size can be affected by the block-axis constraint imposed on it
+    depends_on_block_size: bool,
 
     /// Pending layout for in-flow non-floated items. Held back from `set_unrounded_layout` so the
     /// post-loop `align-content` pass in `compute_inner` can shift `location.y` before commit.
@@ -390,13 +392,15 @@ pub fn compute_block_layout(
     // is ComputeSize (and thus the container's size is all that we're interested in)
     if run_mode == RunMode::ComputeSize {
         if let Size { width: Some(width), height: Some(height) } = styled_based_known_dimensions {
-            return LayoutOutput::from_outer_size(Size { width, height });
+            return LayoutOutput::from_outer_size(Size { width, height })
+                .with_depends_on_block_size(aspect_ratio.is_some());
         }
 
         // We can also short-circuit if the width is known and only the width has been requested.
         if inputs.axis == RequestedAxis::Horizontal {
             if let Some(width) = styled_based_known_dimensions.width {
-                return LayoutOutput::from_outer_size(Size { width, height: 0.0 });
+                return LayoutOutput::from_outer_size(Size { width, height: 0.0 })
+                    .with_depends_on_block_size(aspect_ratio.is_some());
             }
         }
     }
@@ -534,19 +538,21 @@ fn compute_inner(
     // 2. Compute container width
     let container_outer_width = known_dimensions.width.unwrap_or_else(|| {
         let available_width = available_space.width.maybe_sub(content_box_inset.horizontal_axis_sum());
-        let intrinsic_width = determine_content_based_container_width(tree, &items, available_width)
+        let intrinsic_width = determine_content_based_container_width(tree, &mut items, available_width)
             + content_box_inset.horizontal_axis_sum();
         intrinsic_width.maybe_clamp(min_size.width, max_size.width).maybe_max(Some(padding_border_size.width))
     });
 
     // Short-circuit if computing size and both dimensions known
     if let (RunMode::ComputeSize, Some(container_outer_height)) = (run_mode, known_dimensions.height) {
-        return LayoutOutput::from_outer_size(Size { width: container_outer_width, height: container_outer_height });
+        return LayoutOutput::from_outer_size(Size { width: container_outer_width, height: container_outer_height })
+            .with_depends_on_block_size(container_depends_on_block_size(aspect_ratio, &items));
     }
 
     // We can also short-circuit if the width is known and only the width has been requested.
     if run_mode == RunMode::ComputeSize && inputs.axis == RequestedAxis::Horizontal {
-        return LayoutOutput::from_outer_size(Size { width: container_outer_width, height: 0.0 });
+        return LayoutOutput::from_outer_size(Size { width: container_outer_width, height: 0.0 })
+            .with_depends_on_block_size(container_depends_on_block_size(aspect_ratio, &items));
     }
 
     let container_percentage_resolution_height =
@@ -690,6 +696,7 @@ fn compute_inner(
             CollapsibleMarginSet::from_margin(margin_bottom)
         },
         margins_can_collapse_through: can_be_collapsed_through,
+        depends_on_block_size: container_depends_on_block_size(aspect_ratio, &items),
     };
 
     // Short-circuit if computing size.
@@ -826,17 +833,26 @@ fn generate_item_list(
                 computed_size: Size::zero(),
                 static_position: Point::zero(),
                 can_be_collapsed_through: false,
+                depends_on_block_size: true,
                 final_layout: None,
             }
         })
         .collect()
 }
 
+/// Whether the block-axis constraint imposed on the container can affect its inline size: either
+/// because a definite block size transfers through its own `aspect-ratio`, or because one of the
+/// children which contributes to its intrinsic width does. Absolutely positioned children do not
+/// contribute to the container's width and so are excluded.
+fn container_depends_on_block_size(aspect_ratio: Option<f32>, items: &[BlockItem]) -> bool {
+    aspect_ratio.is_some() || items.iter().any(|item| item.position != Position::Absolute && item.depends_on_block_size)
+}
+
 /// Compute the content-based width in the case that the width of the container is not known
 #[inline]
 fn determine_content_based_container_width(
     tree: &mut impl LayoutPartialTree,
-    items: &[BlockItem],
+    items: &mut [BlockItem],
     available_width: AvailableSpace,
 ) -> f32 {
     let available_space = Size { width: available_width, height: AvailableSpace::MinContent };
@@ -844,24 +860,29 @@ fn determine_content_based_container_width(
     let mut max_child_width = 0.0;
     #[cfg(feature = "float_layout")]
     let mut float_contribution = FloatIntrinsicWidthCalculator::new(available_width);
-    for item in items.iter().filter(|item| item.position != Position::Absolute) {
+    for item in items.iter_mut().filter(|item| item.position != Position::Absolute) {
         let known_dimensions = item.size.maybe_clamp(item.min_size, item.max_size);
 
         let item_x_margin_sum = item
             .margin
             .resolve_or_zero(available_space.width.into_option(), |val, basis| tree.calc(val, basis))
             .horizontal_axis_sum();
-        let width = known_dimensions.width.unwrap_or_else(|| {
-            tree.measure_child_size(
-                item.node_id,
-                known_dimensions,
-                Size::NONE,
-                available_space.map_width(|w| w.maybe_sub(item_x_margin_sum)),
-                SizingMode::InherentSize,
-                crate::AbsoluteAxis::Horizontal,
-                Line::TRUE,
-            )
-        });
+        let width = match known_dimensions.width {
+            Some(width) => width,
+            None => {
+                let output = tree.measure_child_layout(
+                    item.node_id,
+                    known_dimensions,
+                    Size::NONE,
+                    available_space.map_width(|w| w.maybe_sub(item_x_margin_sum)),
+                    SizingMode::InherentSize,
+                    crate::AbsoluteAxis::Horizontal,
+                    Line::TRUE,
+                );
+                item.depends_on_block_size = output.depends_on_block_size;
+                output.size.width
+            }
+        };
 
         let width = f32_max(width, item.padding_border_sum.width) + item_x_margin_sum;
 
@@ -1285,6 +1306,7 @@ fn perform_final_layout_on_in_flow_children(
 
             item.computed_size = item_layout.size;
             item.can_be_collapsed_through = item_layout.margins_can_collapse_through && !has_clearance;
+            item.depends_on_block_size = item_layout.depends_on_block_size;
             item.static_position = if item.is_in_same_bfc {
                 let uncleared_y = committed_y_offset + active_collapsible_margin_set.resolve();
                 Point {

@@ -19,10 +19,10 @@ use placement::place_grid_items;
 use track_sizing::{
     determine_if_item_crosses_flexible_or_intrinsic_tracks, resolve_item_track_indexes, track_sizing_algorithm,
 };
-use types::{CellOccupancyMatrix, GridTrack, NamedLineResolver, TrackCounts};
+use types::{CellOccupancyMatrix, GridItem, GridTrack, NamedLineResolver, TrackCounts};
 
 #[cfg(feature = "detailed_layout_info")]
-use types::{GridItem, GridTrackKind};
+use types::GridTrackKind;
 
 pub(crate) use types::{GridCoordinate, GridLine, OriginZeroLine, MAX_GRID_TRACKS, MAX_OZ_LINE, MIN_OZ_LINE};
 
@@ -143,13 +143,15 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     // is ComputeSize (and thus the container's size is all that we're interested in)
     if run_mode == RunMode::ComputeSize {
         if let Size { width: Some(width), height: Some(height) } = outer_node_size {
-            return LayoutOutput::from_outer_size(Size { width, height });
+            return LayoutOutput::from_outer_size(Size { width, height })
+                .with_depends_on_block_size(aspect_ratio.is_some());
         }
 
         // We can also short-circuit if the width is known and only the width has been requested.
         if inputs.axis == RequestedAxis::Horizontal {
             if let Some(width) = outer_node_size.width {
-                return LayoutOutput::from_outer_size(Size { width, height: 0.0 });
+                return LayoutOutput::from_outer_size(Size { width, height: 0.0 })
+                    .with_depends_on_block_size(aspect_ratio.is_some());
             }
         }
     }
@@ -370,7 +372,8 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
 
     // If only the container's size has been requested
     if run_mode == RunMode::ComputeSize {
-        return LayoutOutput::from_outer_size(container_border_box);
+        return LayoutOutput::from_outer_size(container_border_box)
+            .with_depends_on_block_size(container_depends_on_block_size(aspect_ratio, &items));
     }
 
     // 7. Resolve percentage track base sizes
@@ -559,7 +562,8 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
 
     // If only the container's size has been requested
     if run_mode == RunMode::ComputeSize {
-        return LayoutOutput::from_outer_size(container_border_box);
+        return LayoutOutput::from_outer_size(container_border_box)
+            .with_depends_on_block_size(container_depends_on_block_size(aspect_ratio, &items));
     }
 
     // 8. Track Alignment
@@ -761,7 +765,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
 
     // If there are not items then return just the container size (no baseline)
     if items.is_empty() {
-        return LayoutOutput::from_outer_size(container_border_box);
+        return LayoutOutput::from_outer_size(container_border_box).with_depends_on_block_size(aspect_ratio.is_some());
     }
 
     // Determine the grid container baseline(s) (currently we only compute the first baseline)
@@ -804,6 +808,14 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
         content_size,
         Point { x: None, y: Some(grid_container_baseline) },
     )
+    .with_depends_on_block_size(container_depends_on_block_size(aspect_ratio, &items))
+}
+
+/// Whether the block-axis constraint imposed on the grid container can affect its inline size:
+/// either because a definite block size transfers through its own `aspect-ratio`, or because one of
+/// its items does.
+fn container_depends_on_block_size(aspect_ratio: Option<f32>, items: &[GridItem]) -> bool {
+    aspect_ratio.is_some() || items.iter().any(|item| item.depends_on_block_size)
 }
 
 /// Reverses only non-gutter column tracks in-place while preserving line/gutter slots.

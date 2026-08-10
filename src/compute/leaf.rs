@@ -12,6 +12,13 @@ use crate::{BoxSizing, CoreStyle};
 use core::unreachable;
 
 /// Compute the size of a leaf node (node with no children)
+///
+/// The returned [`LayoutOutput::depends_on_block_size`] is `true`, because `measure_function` is
+/// opaque and may compute a width that varies with the block-axis available space. A caller which
+/// knows that its measure function's width is independent of the block-axis constraint (as is the
+/// case for text measurement, and trivially for nodes with no measure function at all) should
+/// override it with [`LayoutOutput::with_depends_on_block_size`], passing
+/// `style.aspect_ratio().is_some()`.
 pub fn compute_leaf_layout<MeasureFunction>(
     inputs: LayoutInput,
     style: &impl CoreStyle,
@@ -103,6 +110,7 @@ where
                 top_margin: CollapsibleMarginSet::ZERO,
                 bottom_margin: CollapsibleMarginSet::ZERO,
                 margins_can_collapse_through: false,
+                depends_on_block_size: style.aspect_ratio().is_some(),
             };
         };
     }
@@ -160,5 +168,6 @@ where
         margins_can_collapse_through: !has_styles_preventing_being_collapsed_through
             && size.height == 0.0
             && measured_size.height == 0.0,
+        depends_on_block_size: true,
     }
 }

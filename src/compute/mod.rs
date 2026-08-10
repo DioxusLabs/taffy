@@ -297,6 +297,9 @@ pub mod detailed_info {
 }
 
 #[cfg(test)]
+mod depends_on_block_size_tests;
+
+#[cfg(test)]
 mod tests {
     use super::compute_hidden_layout;
     use crate::geometry::{Point, Size};

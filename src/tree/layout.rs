@@ -175,6 +175,21 @@ pub struct LayoutOutput {
     /// Whether margins can be collapsed through this node. This is used for CSS block layout and can
     /// be set to `false` for other layout modes that don't support margin collapsing
     pub margins_can_collapse_through: bool,
+    /// Whether the block-axis (height) constraint imposed on this node can affect its inline-axis
+    /// (width) size.
+    ///
+    /// `false` is a promise that, for a fixed `parent_size.width`, this node's outer width is the
+    /// same regardless of `known_dimensions.height`, `available_space.height` and
+    /// `parent_size.height`. Per css-sizing-3 this is true of the vast majority of boxes: intrinsic
+    /// inline sizes are constraint-independent. It is *not* true when an `aspect-ratio` (in this
+    /// node or anywhere in its subtree) can transfer a definite block size to the inline axis, nor
+    /// for a measure function whose measured width varies with the block-axis available space.
+    ///
+    /// The flag is propagated up from descendants: a node depends on the block size if it does
+    /// itself or if any of its in-flow children do. It is conservative in one direction only:
+    /// reporting `true` when there is no dependence merely loses an optimisation, whereas reporting
+    /// `false` when there is one is incorrect. Return `true` if in doubt.
+    pub depends_on_block_size: bool,
 }
 
 impl LayoutOutput {
@@ -187,10 +202,11 @@ impl LayoutOutput {
         top_margin: CollapsibleMarginSet::ZERO,
         bottom_margin: CollapsibleMarginSet::ZERO,
         margins_can_collapse_through: false,
+        depends_on_block_size: false,
     };
 
     /// A blank layout output
-    pub const DEFAULT: Self = Self::HIDDEN;
+    pub const DEFAULT: Self = Self { depends_on_block_size: true, ..Self::HIDDEN };
 
     /// Constructor to create a `LayoutOutput` from just the size and baselines
     pub fn from_sizes_and_baselines(
@@ -206,6 +222,7 @@ impl LayoutOutput {
             top_margin: CollapsibleMarginSet::ZERO,
             bottom_margin: CollapsibleMarginSet::ZERO,
             margins_can_collapse_through: false,
+            depends_on_block_size: true,
         }
     }
 
@@ -217,6 +234,13 @@ impl LayoutOutput {
     /// Construct a `LayoutOutput` from just the container's size.
     pub fn from_outer_size(size: Size<f32>) -> Self {
         Self::from_sizes(size, Size::zero())
+    }
+
+    /// Set [`LayoutOutput::depends_on_block_size`], returning the modified output.
+    #[must_use]
+    pub const fn with_depends_on_block_size(mut self, depends_on_block_size: bool) -> Self {
+        self.depends_on_block_size = depends_on_block_size;
+        self
     }
 }
 

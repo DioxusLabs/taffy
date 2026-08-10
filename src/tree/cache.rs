@@ -132,6 +132,16 @@ pub(crate) struct CacheEntry<T> {
     content: T,
 }
 
+/// The cached result of a `ComputeSize` run
+#[derive(Debug, Clone, Copy, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize))]
+pub(crate) struct MeasureResult {
+    /// The measured size of the node
+    size: Size<f32>,
+    /// See [`LayoutOutput::depends_on_block_size`]
+    depends_on_block_size: bool,
+}
+
 /// A cache for caching the results of a sizing a Grid Item or Flexbox Item
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize))]
@@ -139,7 +149,7 @@ pub struct Cache {
     /// The cache entry for the node's final layout
     final_layout_entry: Option<CacheEntry<LayoutOutput>>,
     /// The cache entries for the node's preliminary size measurements
-    measure_entries: [Option<CacheEntry<Size<f32>>>; CACHE_SIZE],
+    measure_entries: [Option<CacheEntry<MeasureResult>>; CACHE_SIZE],
     /// Tracks if all cache entries are empty
     is_empty: bool,
 }
@@ -231,7 +241,10 @@ impl Cache {
                     if entry.key.kd_available_space == key.kd_available_space
                         && (entry.key.x_axis_parent_size() == key.x_axis_parent_size())
                     {
-                        return Some(LayoutOutput::from_outer_size(entry.content));
+                        return Some(
+                            LayoutOutput::from_outer_size(entry.content.size)
+                                .with_depends_on_block_size(entry.content.depends_on_block_size),
+                        );
                     }
                 }
 
@@ -252,7 +265,13 @@ impl Cache {
             RunMode::ComputeSize => {
                 self.is_empty = false;
                 let cache_slot = Self::compute_cache_slot(input.known_dimensions, input.available_space);
-                self.measure_entries[cache_slot] = Some(CacheEntry { key, content: layout_output.size });
+                self.measure_entries[cache_slot] = Some(CacheEntry {
+                    key,
+                    content: MeasureResult {
+                        size: layout_output.size,
+                        depends_on_block_size: layout_output.depends_on_block_size,
+                    },
+                });
             }
             RunMode::PerformHiddenLayout => {}
         }
