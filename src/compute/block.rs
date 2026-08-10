@@ -696,7 +696,7 @@ fn compute_inner(
         return output;
     }
 
-    // Commit deferred in-flow layouts to the tree. Floated items already wrote their own layouts.
+    // Commit deferred child layouts to the tree.
     for item in items.iter() {
         if let Some(layout) = item.final_layout.as_ref() {
             tree.set_unrounded_layout(item.node_id, layout);
@@ -1021,20 +1021,19 @@ fn perform_final_layout_on_in_flow_children(
                 // println!("BLOCK FLOATED BOX ({:?}) {:?}", item.node_id, float_direction);
                 // println!("w:{} h:{} x:{}, y:{}", margin_box.width, margin_box.height, location.x, location.y);
 
-                tree.set_unrounded_layout(
-                    item.node_id,
-                    &Layout {
-                        order: item.order,
-                        size: item_layout.size,
-                        #[cfg(feature = "content_size")]
-                        content_size: item_layout.content_size,
-                        scrollbar_size,
-                        location,
-                        padding: item.padding,
-                        border: item.border,
-                        margin: item_non_auto_margin,
-                    },
-                );
+                // Deferred to the post-loop pass in `compute_inner` (like in-flow items) so that
+                // `align-content` can shift `location.y` before the layout is committed.
+                item.final_layout = Some(Layout {
+                    order: item.order,
+                    size: item_layout.size,
+                    #[cfg(feature = "content_size")]
+                    content_size: item_layout.content_size,
+                    scrollbar_size,
+                    location,
+                    padding: item.padding,
+                    border: item.border,
+                    margin: item_non_auto_margin,
+                });
 
                 #[cfg(feature = "content_size")]
                 {
