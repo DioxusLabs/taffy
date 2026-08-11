@@ -310,6 +310,13 @@ fn build_style<S: CheapCloneStr>(xnode: roxmltree::Node) -> taffy::Style<S> {
         justify_content: maybe_parse(xnode.attribute("justify-content")),
 
         text_align: parse_or_default(xnode.attribute("text-align")),
+        table_layout: parse_or_default(xnode.attribute("table-layout")),
+        border_spacing: Size {
+            width: parse_or(xnode.attribute("border-spacing-x"), LengthPercentage::ZERO),
+            height: parse_or(xnode.attribute("border-spacing-y"), LengthPercentage::ZERO),
+        },
+        colspan: parse_or(xnode.attribute("colspan"), 1),
+        rowspan: parse_or(xnode.attribute("rowspan"), 1),
         flex_direction: parse_or_default(xnode.attribute("flex-direction")),
         flex_wrap: parse_or_default(xnode.attribute("flex-wrap")),
         #[cfg(feature = "flexbox_balance")]

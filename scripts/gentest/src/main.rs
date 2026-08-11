@@ -130,6 +130,9 @@ async fn main() {
         if name.starts_with("balance") {
             writeln!(&mut mod_file, r#"#[cfg(feature = "flexbox_balance")]"#).unwrap();
         }
+        if name.starts_with("table") {
+            writeln!(&mut mod_file, r#"#[cfg(feature = "table_layout")]"#).unwrap();
+        }
         writeln!(
             &mut mod_file,
             "#[test]
@@ -664,6 +667,11 @@ fn generate_node(w: &mut XmlWriter, node: &Value) {
     }
 
     maybe_write(w, "text-align", get_str_attr(&style["textAlign"], None));
+    maybe_write(w, "table-layout", get_str_attr(&style["tableLayout"], None));
+    maybe_write(w, "border-spacing-x", get_dim_attr(&style["borderSpacing"]["x"], None));
+    maybe_write(w, "border-spacing-y", get_dim_attr(&style["borderSpacing"]["y"], None));
+    maybe_write(w, "colspan", get_num_attr(&style["colspan"], None));
+    maybe_write(w, "rowspan", get_num_attr(&style["rowspan"], None));
     maybe_write(w, "align-items", get_str_attr(&style["alignItems"], None));
     maybe_write(w, "align-self", get_str_attr(&style["alignSelf"], None));
     maybe_write(w, "justify-items", get_str_attr(&style["justifyItems"], None));
