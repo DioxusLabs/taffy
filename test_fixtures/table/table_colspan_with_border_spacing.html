@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    colspan 2 with non-zero border-spacing
+  </title>
+</head>
+<body>
+
+<table id="test-root" style="border-collapse: separate; border-spacing: 0; box-sizing: border-box; border-spacing: 10px 10px;">
+  <tbody>
+    <tr>
+      <td colspan="2" style="padding: 0; box-sizing: border-box; height: 20px;"></td>
+    </tr>
+    <tr>
+      <td style="padding: 0; box-sizing: border-box; width: 40px; height: 20px;"></td>
+      <td style="padding: 0; box-sizing: border-box; width: 40px; height: 20px;"></td>
+    </tr>
+  </tbody>
+</table>
+
+</body>
+</html>

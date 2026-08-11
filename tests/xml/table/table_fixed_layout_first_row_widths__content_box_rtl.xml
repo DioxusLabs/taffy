@@ -1,0 +1,35 @@
+<test name="table_fixed_layout_first_row_widths__content_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="table" box-sizing="content-box" direction="rtl" table-layout="fixed" border-spacing-x="0px" border-spacing-y="0px" width="200px">
+      <div display="table-row-group" box-sizing="content-box" direction="rtl">
+        <div display="table-row" box-sizing="content-box" direction="rtl">
+          <div display="table-cell" box-sizing="content-box" direction="rtl" width="50px" height="20px"/>
+          <div display="table-cell" box-sizing="content-box" direction="rtl" width="100px" height="20px"/>
+        </div>
+        <div display="table-row" box-sizing="content-box" direction="rtl">
+          <text display="table-cell" box-sizing="content-box" direction="rtl" height="20px">
+            HHHHHHHH
+          </text>
+          <text display="table-cell" box-sizing="content-box" direction="rtl" height="20px">
+            HH
+          </text>
+        </div>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="200" height="40">
+      <node x="0" y="0" width="200" height="40">
+        <node x="0" y="0" width="200" height="20">
+          <node x="133" y="0" width="67" height="20"/>
+          <node x="0" y="0" width="133" height="20"/>
+        </node>
+        <node x="0" y="20" width="200" height="20">
+          <node x="133" y="0" width="67" height="20"/>
+          <node x="0" y="0" width="133" height="20"/>
+        </node>
+      </node>
+    </node>
+  </expectations>
+</test>
