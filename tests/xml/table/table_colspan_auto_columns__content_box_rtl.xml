@@ -1,0 +1,35 @@
+<test name="table_colspan_auto_columns__content_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="table" direction="rtl" border-spacing-x="0px" border-spacing-y="0px">
+      <div display="table-row-group" box-sizing="content-box" direction="rtl">
+        <div display="table-row" box-sizing="content-box" direction="rtl">
+          <text display="table-cell" direction="rtl" colspan="2" height="20px" padding-top="0px" padding-left="0px" padding-bottom="0px" padding-right="0px">
+            HHHHHH
+          </text>
+        </div>
+        <div display="table-row" box-sizing="content-box" direction="rtl">
+          <text display="table-cell" direction="rtl" height="20px" padding-top="0px" padding-left="0px" padding-bottom="0px" padding-right="0px">
+            HH
+          </text>
+          <text display="table-cell" direction="rtl" height="20px" padding-top="0px" padding-left="0px" padding-bottom="0px" padding-right="0px">
+            HH
+          </text>
+        </div>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="60" height="40">
+      <node x="0" y="0" width="60" height="40">
+        <node x="0" y="0" width="60" height="20">
+          <node x="0" y="0" width="60" height="20"/>
+        </node>
+        <node x="0" y="20" width="60" height="20">
+          <node x="30" y="0" width="30" height="20"/>
+          <node x="0" y="0" width="30" height="20"/>
+        </node>
+      </node>
+    </node>
+  </expectations>
+</test>

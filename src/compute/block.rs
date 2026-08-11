@@ -516,7 +516,13 @@ fn compute_inner(
     #[allow(unused_mut)] mut block_ctx: &mut BlockContext<'_>,
 ) -> LayoutOutput {
     let LayoutInput {
-        known_dimensions, parent_size, available_space, run_mode, vertical_margins_are_collapsible, ..
+        known_dimensions,
+        parent_size,
+        available_space,
+        run_mode,
+        vertical_margins_are_collapsible,
+        content_offset_y,
+        ..
     } = inputs;
 
     let style = tree.get_block_container_style(node_id);
@@ -690,6 +696,7 @@ fn compute_inner(
         children_margins_adjoin_own_edges,
         #[cfg(feature = "content_size")]
         is_scroll_container,
+        content_offset_y,
         block_ctx,
     );
 
@@ -1144,6 +1151,7 @@ fn perform_final_layout_on_in_flow_children(
     own_margins_collapse_with_children: Line<bool>,
     children_margins_adjoin_own_edges: Line<bool>,
     #[cfg(feature = "content_size")] is_scroll_container: bool,
+    content_offset_y: f32,
     block_ctx: &mut BlockContext<'_>,
 ) -> (Rect<f32>, f32, CollapsibleMarginSet, CollapsibleMarginSet, Option<f32>) {
     // Resolve container_inner_width for sizing child nodes using initial content_box_inset
@@ -1185,8 +1193,8 @@ fn perform_final_layout_on_in_flow_children(
 
     #[cfg_attr(not(feature = "content_size"), allow(unused_mut))]
     let mut inflow_overflow_rect = Rect::ZERO;
-    let mut committed_y_offset = resolved_content_box_inset.top;
-    let mut y_offset_for_absolute = resolved_content_box_inset.top;
+    let mut committed_y_offset = resolved_content_box_inset.top + content_offset_y;
+    let mut y_offset_for_absolute = resolved_content_box_inset.top + content_offset_y;
     let mut first_child_top_margin_set = CollapsibleMarginSet::ZERO;
     let mut active_collapsible_margin_set = CollapsibleMarginSet::ZERO;
     let mut is_collapsing_with_first_margin_set = true;
@@ -1498,6 +1506,7 @@ fn perform_final_layout_on_in_flow_children(
                 parent_size,
                 available_space: available_space.map_width(|_| AvailableSpace::Definite(stretch_width)),
                 vertical_margins_are_collapsible: if item.is_in_same_bfc { Line::TRUE } else { Line::FALSE },
+                content_offset_y: 0.0,
             };
 
             #[cfg(feature = "float_layout")]

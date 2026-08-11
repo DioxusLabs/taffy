@@ -1,0 +1,31 @@
+<test name="table_spacing_with_border__content_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="table" box-sizing="content-box" direction="rtl" border-spacing-x="10px" border-spacing-y="10px" border-top="5px" border-left="5px" border-bottom="5px" border-right="5px">
+      <div display="table-row-group" box-sizing="content-box" direction="rtl">
+        <div display="table-row" box-sizing="content-box" direction="rtl">
+          <div display="table-cell" box-sizing="content-box" direction="rtl" width="40px" height="20px"/>
+          <div display="table-cell" box-sizing="content-box" direction="rtl" width="40px" height="20px"/>
+        </div>
+        <div display="table-row" box-sizing="content-box" direction="rtl">
+          <div display="table-cell" box-sizing="content-box" direction="rtl" width="40px" height="20px"/>
+          <div display="table-cell" box-sizing="content-box" direction="rtl" width="40px" height="20px"/>
+        </div>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="120" height="80">
+      <node x="15" y="15" width="90" height="50">
+        <node x="0" y="0" width="90" height="20">
+          <node x="50" y="0" width="40" height="20"/>
+          <node x="0" y="0" width="40" height="20"/>
+        </node>
+        <node x="0" y="30" width="90" height="20">
+          <node x="50" y="0" width="40" height="20"/>
+          <node x="0" y="0" width="40" height="20"/>
+        </node>
+      </node>
+    </node>
+  </expectations>
+</test>
