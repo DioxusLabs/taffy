@@ -26,7 +26,7 @@
 //!
 //! | Trait                 | Requires                | Enables                                                                                                                                                                                                                                                                                                                                                                                                                   |
 //! | ---                   | ---                     | ---                                                                                                                                                                                                                                                                                                                                                                                                                       |
-//! | [`LayoutPartialTree`] | [`TraversePartialTree`] | [`compute_flexbox_layout`](crate::compute_flexbox_layout)<br />[`compute_grid_layout`](crate::compute_grid_layout)<br />[`compute_block_layout`](crate::compute_block_layout)<br />[`compute_root_layout`](crate::compute_root_layout)<br />[`compute_leaf_layout`](crate::compute_leaf_layout)<br />[`compute_hidden_layout`](crate::compute_hidden_layout)<br />[`compute_cached_layout`](crate::compute_cached_layout) |
+//! | [`LayoutPartialTree`] | [`TraversePartialTree`] | [`compute_flexbox_layout`](crate::compute_flexbox_layout)<br />[`compute_grid_layout`](crate::compute_grid_layout)<br />[`compute_block_layout`](crate::compute_block_layout)<br />[`compute_table_layout`](crate::compute_table_layout)<br />[`compute_root_layout`](crate::compute_root_layout)<br />[`compute_leaf_layout`](crate::compute_leaf_layout)<br />[`compute_hidden_layout`](crate::compute_hidden_layout)<br />[`compute_cached_layout`](crate::compute_cached_layout) |
 //! | [`RoundTree`]         | [`TraverseTree`]        | [`round_layout`](crate::round_layout)                                                                                                                                                                                                                                                                                                                                                                                     |
 //! | [`PrintTree`]         | [`TraverseTree`]        | [`print_tree`](crate::print_tree)                                                                                                                                                                                                                                                                                                                                                                                         |
 //!
@@ -66,7 +66,7 @@
 //! ### LayoutPartialTree
 //!
 //! **Requires:** `TraversePartialTree`<br />
-//! **Enables:** Flexbox, Grid, Block and Leaf layout algorithms from the [`crate::compute`] module
+//! **Enables:** Flexbox, Grid, Block, Table and Leaf layout algorithms from the [`crate::compute`] module
 //!
 //! Any type that implements [`LayoutPartialTree`] can be laid out using [Taffy's algorithms](crate::compute)
 //!
@@ -138,6 +138,8 @@ use crate::style::{GridContainerStyle, GridItemStyle};
 use crate::CheapCloneStr;
 #[cfg(feature = "block_layout")]
 use crate::{BlockContainerStyle, BlockContext, BlockItemStyle};
+#[cfg(feature = "table_layout")]
+use crate::{TableContainerStyle, TableItemStyle};
 
 #[cfg(all(feature = "grid", feature = "detailed_layout_info"))]
 use crate::compute::grid::DetailedGridInfo;
@@ -314,6 +316,25 @@ pub trait LayoutBlockContainer: LayoutPartialTree {
     }
 }
 
+#[cfg(feature = "table_layout")]
+/// Extends [`LayoutPartialTree`] with getters for the styles required for CSS Table layout
+pub trait LayoutTableContainer: LayoutPartialTree {
+    /// The style type representing the CSS Table container's styles
+    type TableContainerStyle<'a>: TableContainerStyle
+    where
+        Self: 'a;
+    /// The style type representing the styles of the table's descendants (row groups, rows, and cells)
+    type TableItemStyle<'a>: TableItemStyle
+    where
+        Self: 'a;
+
+    /// Get the container's styles
+    fn get_table_container_style(&self, node_id: NodeId) -> Self::TableContainerStyle<'_>;
+
+    /// Get the child's styles
+    fn get_table_child_style(&self, child_node_id: NodeId) -> Self::TableItemStyle<'_>;
+}
+
 // --- PRIVATE TRAITS
 
 /// A private trait which allows us to add extra convenience methods to types which implement
@@ -343,6 +364,7 @@ pub(crate) trait LayoutPartialTreeExt: LayoutPartialTree {
                 axis: axis.into(),
                 run_mode: RunMode::ComputeSize,
                 vertical_margins_are_collapsible,
+                content_offset_y: 0.0,
             },
         )
         .size
@@ -372,6 +394,7 @@ pub(crate) trait LayoutPartialTreeExt: LayoutPartialTree {
                 axis: RequestedAxis::Both,
                 run_mode: RunMode::ComputeSize,
                 vertical_margins_are_collapsible,
+                content_offset_y: 0.0,
             },
         )
         .size
@@ -399,6 +422,7 @@ pub(crate) trait LayoutPartialTreeExt: LayoutPartialTree {
                 axis: RequestedAxis::Both,
                 run_mode: RunMode::PerformLayout,
                 vertical_margins_are_collapsible,
+                content_offset_y: 0.0,
             },
         )
     }

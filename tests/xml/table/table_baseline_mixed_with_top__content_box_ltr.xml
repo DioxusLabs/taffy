@@ -1,0 +1,43 @@
+<test name="table_baseline_mixed_with_top__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="table" box-sizing="content-box" direction="ltr" border-spacing-x="0px" border-spacing-y="0px">
+      <div display="table-row-group" box-sizing="content-box" direction="ltr">
+        <div display="table-row" box-sizing="content-box" direction="ltr">
+          <div display="table-cell" box-sizing="content-box" direction="ltr" width="40px">
+            <text display="block" box-sizing="content-box" direction="ltr">
+              HH
+            </text>
+          </div>
+          <div display="table-cell" box-sizing="content-box" direction="ltr" align-content="start" width="40px">
+            <text display="block" box-sizing="content-box" direction="ltr">
+              HH
+            </text>
+          </div>
+          <div display="table-cell" box-sizing="content-box" direction="ltr" width="40px" padding-top="20px">
+            <text display="block" box-sizing="content-box" direction="ltr">
+              HH
+            </text>
+          </div>
+        </div>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="120" height="30">
+      <node x="0" y="0" width="120" height="30">
+        <node x="0" y="0" width="120" height="30">
+          <node x="0" y="0" width="40" height="30">
+            <node x="0" y="20" width="40" height="10"/>
+          </node>
+          <node x="40" y="0" width="40" height="30">
+            <node x="0" y="0" width="40" height="10"/>
+          </node>
+          <node x="80" y="0" width="40" height="30">
+            <node x="0" y="20" width="40" height="10"/>
+          </node>
+        </node>
+      </node>
+    </node>
+  </expectations>
+</test>
