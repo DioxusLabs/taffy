@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    align-content start in a row taller than its cells
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="display: table; border-collapse: separate;">
+  <div style="display: table-row-group;">
+    <div style="display: table-row; height: 60px;">
+      <div style="display: table-cell; width: 40px; align-content: start;"><div style="display: block; width: 20px; height: 20px;"></div></div>
+      <div style="display: table-cell; width: 40px; align-content: start;"><div style="display: block; width: 20px; height: 20px;"></div></div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

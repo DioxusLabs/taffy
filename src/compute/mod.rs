@@ -9,6 +9,7 @@
 //! | [`compute_flexbox_layout`]        | Layout a Flexbox container and it's direct children                                                                                                                                                |
 //! | [`compute_grid_layout`]           | Layout a CSS Grid container and it's direct children                                                                                                                                               |
 //! | [`compute_block_layout`]          | Layout a Block container and it's direct children                                                                                                                                                  |
+//! | [`compute_table_layout`]          | Layout a Table container and it's direct children                                                                                                                                                  |
 //! | [`compute_leaf_layout`]           | Applies common properties like padding/border/aspect-ratio to a node before deferring to a passed closure to determine it's size. Can be applied to nodes like text or image nodes.                |
 //! | [`compute_root_layout`]           | Layout the root node of a tree (regardless of it's layout mode). This function is typically called once to begin a layout run.                                                                     |                                                                      |
 //! | [`compute_hidden_layout`]         | Mark a node as hidden during layout (like `Display::None`)                                                                                                                                         |
@@ -37,6 +38,9 @@ pub(crate) mod flexbox;
 #[cfg(feature = "grid")]
 pub(crate) mod grid;
 
+#[cfg(feature = "table_layout")]
+pub(crate) mod table;
+
 pub use leaf::compute_leaf_layout;
 pub use oof::{compute_oof_layout, compute_oof_layout_for_area, resolve_static_offset, OofLayoutResult};
 
@@ -48,6 +52,9 @@ pub use self::flexbox::compute_flexbox_layout;
 
 #[cfg(feature = "grid")]
 pub use self::grid::compute_grid_layout;
+
+#[cfg(feature = "table_layout")]
+pub use self::table::compute_table_layout;
 
 #[cfg(feature = "float_layout")]
 pub use self::block::FloatMark;

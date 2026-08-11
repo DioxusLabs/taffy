@@ -1,0 +1,25 @@
+<test name="table_column_width_percent_and_auto_extra_space__content_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="table" box-sizing="content-box" direction="rtl" border-spacing-x="0px" border-spacing-y="0px" width="200px">
+      <div display="table-row-group" box-sizing="content-box" direction="rtl">
+        <div display="table-row" box-sizing="content-box" direction="rtl">
+          <div display="table-cell" box-sizing="content-box" direction="rtl" width="25%" height="20px"/>
+          <text display="table-cell" box-sizing="content-box" direction="rtl" height="20px">
+            HH
+          </text>
+        </div>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="200" height="20">
+      <node x="0" y="0" width="200" height="20">
+        <node x="0" y="0" width="200" height="20">
+          <node x="150" y="0" width="50" height="20"/>
+          <node x="0" y="0" width="150" height="20"/>
+        </node>
+      </node>
+    </node>
+  </expectations>
+</test>

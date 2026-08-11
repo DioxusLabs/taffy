@@ -1,0 +1,9 @@
+<test name="table_basic_empty__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="table" direction="rtl" border-spacing-x="0px" border-spacing-y="0px"/>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="0" height="0"/>
+  </expectations>
+</test>

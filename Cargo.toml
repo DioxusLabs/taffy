@@ -41,6 +41,7 @@ default = [
     "grid",
     "block_layout",
     "float_layout",
+    "table_layout",
     "calc",
     "content_size",
     "detailed_layout_info",
@@ -53,6 +54,8 @@ default = [
 block_layout = []
 ## Enables the Float layout algorithm. This is a sub-feature of block layout.
 float_layout = []
+## Enables the CSS Table layout algorithm. See [`compute_table_layout`](crate::compute_table_layout).
+table_layout = ["alloc", "block_layout"]
 ## Enables the Flexbox layout algorithm. See [`compute_flexbox_layout`](crate::compute_flexbox_layout).
 flexbox = []
 ## Enables support for `flex-wrap: balance` and `flex-line-count` from [CSS Flexbox Level 2](https://drafts.csswg.org/css-flexbox-2/)

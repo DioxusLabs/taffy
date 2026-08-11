@@ -1,0 +1,31 @@
+<test name="table_fixed_layout_with_border_spacing__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="table" box-sizing="content-box" direction="ltr" table-layout="fixed" border-spacing-x="10px" border-spacing-y="10px" width="200px">
+      <div display="table-row-group" box-sizing="content-box" direction="ltr">
+        <div display="table-row" box-sizing="content-box" direction="ltr">
+          <div display="table-cell" box-sizing="content-box" direction="ltr" width="50px" height="20px"/>
+          <div display="table-cell" box-sizing="content-box" direction="ltr" width="100px" height="20px"/>
+        </div>
+        <div display="table-row" box-sizing="content-box" direction="ltr">
+          <div display="table-cell" box-sizing="content-box" direction="ltr" height="20px"/>
+          <div display="table-cell" box-sizing="content-box" direction="ltr" height="20px"/>
+        </div>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="200" height="70">
+      <node x="10" y="10" width="180" height="50">
+        <node x="0" y="0" width="180" height="20">
+          <node x="0" y="0" width="57" height="20"/>
+          <node x="67" y="0" width="113" height="20"/>
+        </node>
+        <node x="0" y="30" width="180" height="20">
+          <node x="0" y="0" width="57" height="20"/>
+          <node x="67" y="0" width="113" height="20"/>
+        </node>
+      </node>
+    </node>
+  </expectations>
+</test>
