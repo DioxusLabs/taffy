@@ -1,0 +1,27 @@
+<test name="table_nested_table_in_grid_area__content_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" box-sizing="content-box" direction="rtl" width="200px" grid-template-columns="100px 100px">
+      <div display="table" box-sizing="content-box" direction="rtl" border-spacing-x="0px" border-spacing-y="0px">
+        <div display="table-row-group" box-sizing="content-box" direction="rtl">
+          <div display="table-row" box-sizing="content-box" direction="rtl">
+            <div display="table-cell" box-sizing="content-box" direction="rtl" width="40px" height="20px"/>
+            <div display="table-cell" box-sizing="content-box" direction="rtl" width="40px" height="20px"/>
+          </div>
+        </div>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="200" height="20" resolved-rows="20px" resolved-columns="100px 100px">
+      <node x="100" y="0" width="100" height="20">
+        <node x="0" y="0" width="100" height="20">
+          <node x="0" y="0" width="100" height="20">
+            <node x="50" y="0" width="50" height="20"/>
+            <node x="0" y="0" width="50" height="20"/>
+          </node>
+        </node>
+      </node>
+    </node>
+  </expectations>
+</test>
