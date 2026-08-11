@@ -270,6 +270,10 @@ pub struct LayoutInput {
     pub available_space: Size<AvailableSpace>,
     /// Specific to CSS Block layout. Used for correctly computing margin collapsing. You probably want to set this to `Line::FALSE`.
     pub vertical_margins_are_collapsible: Line<bool>,
+    /// Offset applied to the block-start edge of the node's content box, shifting its in-flow
+    /// content downwards. Used by table layout to implement cell baseline alignment. Only
+    /// meaningful when the node's height is known. You probably want to set this to `0.0`.
+    pub content_offset_y: f32,
 }
 
 impl LayoutInput {
@@ -285,6 +289,7 @@ impl LayoutInput {
         sizing_mode: SizingMode::InherentSize,
         axis: RequestedAxis::Both,
         vertical_margins_are_collapsible: Line::FALSE,
+        content_offset_y: 0.0,
     };
 
     /// Swap the horizontal and vertical axes of every per-axis input.

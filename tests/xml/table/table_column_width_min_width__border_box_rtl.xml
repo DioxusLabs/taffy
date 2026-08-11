@@ -1,0 +1,23 @@
+<test name="table_column_width_min_width__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="table" direction="rtl" border-spacing-x="0px" border-spacing-y="0px" min-width="300px">
+      <div display="table-row-group" direction="rtl">
+        <div display="table-row" direction="rtl">
+          <div display="table-cell" direction="rtl" width="40px" height="20px"/>
+          <div display="table-cell" direction="rtl" width="40px" height="20px"/>
+        </div>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="300" height="20">
+      <node x="0" y="0" width="300" height="20">
+        <node x="0" y="0" width="300" height="20">
+          <node x="150" y="0" width="150" height="20"/>
+          <node x="0" y="0" width="150" height="20"/>
+        </node>
+      </node>
+    </node>
+  </expectations>
+</test>
