@@ -594,6 +594,26 @@ mod block {
     }
 
     #[test]
+    fn block_absolute_margin_auto_left_and_right_max_width__border_box_ltr() {
+        crate::run_xml_test("block", "block_absolute_margin_auto_left_and_right_max_width__border_box_ltr");
+    }
+
+    #[test]
+    fn block_absolute_margin_auto_left_and_right_max_width__content_box_ltr() {
+        crate::run_xml_test("block", "block_absolute_margin_auto_left_and_right_max_width__content_box_ltr");
+    }
+
+    #[test]
+    fn block_absolute_margin_auto_left_and_right_max_width__border_box_rtl() {
+        crate::run_xml_test("block", "block_absolute_margin_auto_left_and_right_max_width__border_box_rtl");
+    }
+
+    #[test]
+    fn block_absolute_margin_auto_left_and_right_max_width__content_box_rtl() {
+        crate::run_xml_test("block", "block_absolute_margin_auto_left_and_right_max_width__content_box_rtl");
+    }
+
+    #[test]
     fn block_absolute_margin_auto_left_and_right_with_inset__border_box_ltr() {
         crate::run_xml_test("block", "block_absolute_margin_auto_left_and_right_with_inset__border_box_ltr");
     }
@@ -943,6 +963,26 @@ mod block {
     #[test]
     fn block_absolute_margin_auto_right_without_inset__content_box_rtl() {
         crate::run_xml_test("block", "block_absolute_margin_auto_right_without_inset__content_box_rtl");
+    }
+
+    #[test]
+    fn block_absolute_margin_auto_top_and_bottom_max_height__border_box_ltr() {
+        crate::run_xml_test("block", "block_absolute_margin_auto_top_and_bottom_max_height__border_box_ltr");
+    }
+
+    #[test]
+    fn block_absolute_margin_auto_top_and_bottom_max_height__content_box_ltr() {
+        crate::run_xml_test("block", "block_absolute_margin_auto_top_and_bottom_max_height__content_box_ltr");
+    }
+
+    #[test]
+    fn block_absolute_margin_auto_top_and_bottom_max_height__border_box_rtl() {
+        crate::run_xml_test("block", "block_absolute_margin_auto_top_and_bottom_max_height__border_box_rtl");
+    }
+
+    #[test]
+    fn block_absolute_margin_auto_top_and_bottom_max_height__content_box_rtl() {
+        crate::run_xml_test("block", "block_absolute_margin_auto_top_and_bottom_max_height__content_box_rtl");
     }
 
     #[test]
