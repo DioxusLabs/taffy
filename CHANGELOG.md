@@ -42,6 +42,10 @@ The MSRV for this release is 1.71.
 
 A large number of miscelaneous bug fixes are included in this release:
 
+- Flexbox: clamp the content size suggestion used for the automatic minimum size of an aspect-ratio item by min/max cross sizes transferred through the aspect ratio, per [css-sizing-3 §5.1](https://www.w3.org/TR/css-sizing-3/#min-content-zero); previously only the transferred max size was applied
+- Flexbox: re-derive the used cross size of an item whose cross size is transferred from its main size through its aspect ratio from the used (post-flexing) main size, instead of transferring it from the flex base size before flexing
+- Flexbox: clamp the cross-axis available space by the item's own cross-axis margins rather than the container's margins when sizing flex items; previously a container margin could inflate a stretched item's cross size beyond the container
+- Block/float: floated flex and grid containers with `width: auto` are now shrink-to-fit (fit-content) sized; previously they treated the definite available space as stretch-fit
 - Flexbox: clamp the flex base size, automatic minimum size and hypothetical main/cross sizes with min/max sizes transferred through the aspect ratio, instead of baking them into the item's used min/max sizes (#989)
 - Flexbox: resolve `justify-content: start`/`end` and `align-self: start`/`end`/`self-start`/`self-end` as writing-mode relative (rather than flex-relative) in the static position of absolutely positioned children; use the flex-relative start for `justify-content: space-between`/`normal`, and a fallback of `start` for `align-self: baseline` (#1072)
 - Flexbox: only let `auto` margins on absolutely positioned children absorb free space when the box is inset-constrained in that axis; otherwise they resolve to zero per CSS2 §10.3.7/§10.6.4 (#1072)

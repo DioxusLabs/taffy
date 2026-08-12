@@ -972,11 +972,37 @@ fn perform_final_layout_on_in_flow_children(
                 has_active_floats = true;
 
                 // A float with `width: auto` is shrink-to-fit (fit-content) sized: the available
-                // space clamped between its min-content and max-content sizes.
+                // space clamped between its min-content and max-content sizes. Block containers
+                // implement this internally when laid out with definite available space and no
+                // known width, but other layout modes (e.g. a floated flex or grid container)
+                // treat definite available space as stretch-fit, so compute the fit-content
+                // width up front and pass it as a known dimension.
                 let available_width = container_inner_width - item_non_auto_x_margin_sum;
+                let item_known_width = item.size.maybe_clamp(item.min_size, item.max_size).width.or_else(|| {
+                    let min_content_width = tree.measure_child_size(
+                        item.node_id,
+                        Size::NONE,
+                        parent_size,
+                        Size { width: AvailableSpace::MinContent, height: AvailableSpace::MaxContent },
+                        SizingMode::InherentSize,
+                        crate::AbsoluteAxis::Horizontal,
+                        Line::FALSE,
+                    );
+                    let max_content_width = tree.measure_child_size(
+                        item.node_id,
+                        Size::NONE,
+                        parent_size,
+                        Size { width: AvailableSpace::MaxContent, height: AvailableSpace::MaxContent },
+                        SizingMode::InherentSize,
+                        crate::AbsoluteAxis::Horizontal,
+                        Line::FALSE,
+                    );
+                    Some(available_width.min(max_content_width).max(min_content_width))
+                        .maybe_clamp(item.min_size.width, item.max_size.width)
+                });
                 let item_layout = tree.perform_child_layout(
                     item.node_id,
-                    Size::NONE,
+                    Size { width: item_known_width, height: None },
                     parent_size,
                     Size { width: AvailableSpace::Definite(available_width), height: AvailableSpace::MaxContent },
                     SizingMode::InherentSize,
