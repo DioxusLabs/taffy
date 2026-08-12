@@ -1,0 +1,29 @@
+<test name="table_baseline_fallback_end_padding__content_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="flex" box-sizing="content-box" direction="rtl" align-items="baseline">
+      <div display="block" box-sizing="content-box" direction="rtl" width="20px" height="10px"/>
+      <div display="table" direction="rtl" border-spacing-x="0px" border-spacing-y="0px">
+        <div display="table-row-group" box-sizing="content-box" direction="rtl">
+          <div display="table-row" box-sizing="content-box" direction="rtl">
+            <div display="table-cell" direction="rtl" width="40px" height="100px" padding-top="0px" padding-left="0px" padding-bottom="50px" padding-right="0px"/>
+            <div display="table-cell" direction="rtl" width="40px" height="75px" padding-top="0px" padding-left="0px" padding-bottom="0px" padding-right="0px"/>
+          </div>
+        </div>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="100" height="100">
+      <node x="80" y="90" width="20" height="10"/>
+      <node x="0" y="0" width="80" height="100">
+        <node x="0" y="0" width="80" height="100">
+          <node x="0" y="0" width="80" height="100">
+            <node x="40" y="0" width="40" height="100"/>
+            <node x="0" y="0" width="40" height="100"/>
+          </node>
+        </node>
+      </node>
+    </node>
+  </expectations>
+</test>

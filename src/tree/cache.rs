@@ -240,6 +240,7 @@ impl Cache {
                     if entry.key.kd_available_space == key.kd_available_space
                         && entry.key.known_dimensions_are_definite == key.known_dimensions_are_definite
                         && (entry.key.x_axis_parent_size() == key.x_axis_parent_size())
+                        && entry.key.content_offset_y == key.content_offset_y
                     {
                         return Some(LayoutOutput::from_outer_size(entry.content));
                     }
