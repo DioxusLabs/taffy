@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>Rowspan reaching past the end of its row group</title>
+</head>
+<body>
+
+<table id="test-root" style="border-spacing: 0; box-sizing: border-box;">
+  <tbody>
+    <tr>
+      <td style="padding: 0; box-sizing: border-box; width: 40px; height: 20px;"></td>
+      <td rowspan="2" style="padding: 0; box-sizing: border-box; width: 40px; height: 20px;"></td>
+    </tr>
+  </tbody>
+  <tbody>
+    <tr><td style="padding: 0; box-sizing: border-box; width: 40px; height: 20px;"></td></tr>
+  </tbody>
+</table>
+
+</body>
+</html>
