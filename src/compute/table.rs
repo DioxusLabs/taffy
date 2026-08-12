@@ -6,13 +6,13 @@
 //! constructing the tree. Border collapsing is likewise expected to be resolved by the
 //! embedder: with `border-collapse: collapse`, resolve the winning border for each edge,
 //! write half of it into each cell's border style, and set `border_spacing` to zero.
+#[cfg(feature = "content_size")]
+use crate::compute::common::content_size::compute_content_size_contribution;
 use crate::geometry::{AbsoluteAxis, Line, Point, Rect, Size};
 use crate::style::{
     AvailableSpace, BlockContainerStyle, CompactLength, CoreStyle, Direction, TableContainerStyle, TableItemStyle,
     TableLayout, TableRole,
 };
-#[cfg(feature = "content_size")]
-use crate::compute::common::content_size::compute_content_size_contribution;
 use crate::tree::traits::{LayoutPartialTreeExt, LayoutTableContainer};
 use crate::tree::{Layout, LayoutInput, LayoutOutput, NodeId, RequestedAxis, RunMode, SizingMode};
 use crate::util::sys::Vec;
@@ -1017,8 +1017,11 @@ fn resolve_auto_layout_columns(columns: &mut [Column], assignable: f32) {
 
                 column.used = if percent.is_some() { percent_width(column, target) } else { column.max };
                 if grows {
-                    let delta =
-                        if weight_sum > 0.0 { distributable * weight / weight_sum } else { distributable / count as f32 };
+                    let delta = if weight_sum > 0.0 {
+                        distributable * weight / weight_sum
+                    } else {
+                        distributable / count as f32
+                    };
                     column.used += delta;
                     shortfall -= delta;
                     last_grown = Some(index);
