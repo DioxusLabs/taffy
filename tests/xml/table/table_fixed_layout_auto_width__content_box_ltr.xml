@@ -1,0 +1,35 @@
+<test name="table_fixed_layout_auto_width__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="table" direction="ltr" table-layout="fixed" border-spacing-x="0px" border-spacing-y="0px">
+      <div display="table-row-group" box-sizing="content-box" direction="ltr">
+        <div display="table-row" box-sizing="content-box" direction="ltr">
+          <div display="table-cell" direction="ltr" width="100px" height="20px" padding-top="0px" padding-left="0px" padding-bottom="0px" padding-right="0px"/>
+          <div display="table-cell" direction="ltr" height="20px" padding-top="0px" padding-left="0px" padding-bottom="0px" padding-right="0px"/>
+        </div>
+        <div display="table-row" box-sizing="content-box" direction="ltr">
+          <div display="table-cell" direction="ltr" height="20px" padding-top="0px" padding-left="0px" padding-bottom="0px" padding-right="0px">
+            <div box-sizing="content-box" direction="ltr" width="300px" height="20px"/>
+          </div>
+          <div display="table-cell" direction="ltr" height="20px" padding-top="0px" padding-left="0px" padding-bottom="0px" padding-right="0px"/>
+        </div>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="300" height="40">
+      <node x="0" y="0" width="300" height="40">
+        <node x="0" y="0" width="300" height="20">
+          <node x="0" y="0" width="300" height="20"/>
+          <node x="300" y="0" width="0" height="20"/>
+        </node>
+        <node x="0" y="20" width="300" height="20">
+          <node x="0" y="0" width="300" height="20">
+            <node x="0" y="0" width="300" height="20"/>
+          </node>
+          <node x="300" y="0" width="0" height="20"/>
+        </node>
+      </node>
+    </node>
+  </expectations>
+</test>
