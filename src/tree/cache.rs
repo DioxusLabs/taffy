@@ -201,6 +201,7 @@ impl Cache {
                         && entry.key.known_dimensions_are_definite == key.known_dimensions_are_definite
                         && (entry.key.x_axis_parent_size() == key.x_axis_parent_size())
                         && entry.key.size_is_valid_for(&key)
+                        && entry.key.content_offset_y == key.content_offset_y
                     {
                         self.recently_used_entries |= 1 << index;
                         return Some(LayoutOutput::from_outer_size(entry.content));
@@ -302,6 +303,7 @@ mod tests {
             parent_size: Size::NONE,
             available_space: Size { width: AvailableSpace::MaxContent, height: AvailableSpace::MaxContent },
             vertical_margins_are_collapsible: Line::FALSE,
+            content_offset_y: 0.0,
         }
     }
 

@@ -59,14 +59,6 @@ pub trait TableContainerStyle: CoreStyle {
 /// The set of styles required for the descendants of a Table container
 /// (row groups, rows, and cells)
 pub trait TableItemStyle: CoreStyle {
-    /// How a cell's content is aligned in the block axis (the modern equivalent of
-    /// `vertical-align` on cells, per css-align-3). `None` means the CSS default:
-    /// the cell participates in row baseline alignment.
-    #[inline(always)]
-    fn align_content(&self) -> Option<crate::style::AlignContent> {
-        None
-    }
-
     /// The item's role within the table, derived from its `display` value
     #[inline(always)]
     fn table_role(&self) -> TableRole {
@@ -76,12 +68,12 @@ pub trait TableItemStyle: CoreStyle {
     /// The number of columns this cell spans (HTML `colspan`)
     #[inline(always)]
     fn colspan(&self) -> u16 {
-        1
+        Style::<Self::CustomIdent>::DEFAULT.colspan
     }
 
     /// The number of rows this cell spans (HTML `rowspan`)
     #[inline(always)]
     fn rowspan(&self) -> u16 {
-        1
+        Style::<Self::CustomIdent>::DEFAULT.rowspan
     }
 }

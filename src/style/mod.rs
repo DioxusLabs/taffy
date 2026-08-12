@@ -1475,11 +1475,6 @@ impl<T: TableContainerStyle> TableContainerStyle for &'_ T {
 #[cfg(feature = "table_layout")]
 impl<S: CheapCloneStr> TableItemStyle for Style<S> {
     #[inline(always)]
-    fn align_content(&self) -> Option<AlignContent> {
-        self.align_content
-    }
-
-    #[inline(always)]
     fn table_role(&self) -> TableRole {
         match self.display {
             Display::TableCell => TableRole::Cell,
@@ -1502,11 +1497,6 @@ impl<S: CheapCloneStr> TableItemStyle for Style<S> {
 
 #[cfg(feature = "table_layout")]
 impl<T: TableItemStyle> TableItemStyle for &'_ T {
-    #[inline(always)]
-    fn align_content(&self) -> Option<AlignContent> {
-        (*self).align_content()
-    }
-
     #[inline(always)]
     fn table_role(&self) -> TableRole {
         (*self).table_role()
