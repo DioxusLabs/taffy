@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    A column+wrap flex container with an indefinite (content-derived) height must not wrap its items into multiple columns (https://github.com/DioxusLabs/taffy/issues/999)
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="display: flex; flex-direction: column; width: 300px; color: white;">
+  <div style="display: flex; flex-direction: column; flex-wrap: wrap; width: 300px;">
+    <div style="flex-basis: 100%; flex-shrink: 0;">HHHHHHHHHH&ZeroWidthSpace;HHHHHHHHHH</div>
+    <div>HHHHHHHHHH&ZeroWidthSpace;HHHHHHHHHH</div>
+  </div>
+</div>
+
+</body>
+</html>

@@ -6,7 +6,7 @@ use crate::{
 };
 use core::{borrow::Borrow, cmp::Ordering, fmt::Debug};
 
-use super::GridLine;
+use super::{GridLine, MAX_GRID_TRACKS};
 // use alloc::fmt::format;
 use crate::sys::{format, single_value_vec, Map, Vec};
 
@@ -122,19 +122,37 @@ impl<S: CheapCloneStr> NamedLineResolver<S> {
                             RepetitionCount::AutoFill | RepetitionCount::AutoFit => column_auto_repetitions,
                         };
 
+                        // Line name sets are positional: set `i` names the `i`th line of each
+                        // repetition, and the final line name set of each repetition collapses
+                        // with the first line name set of the following one. An empty list means
+                        // the repetition's lines are unnamed; any other length must be exactly
+                        // `track_count + 1` (one set per line, including both edge lines).
+                        let line_name_set_count = repeat.lines_names().len() as u32;
+                        let lines_per_repetition = repeat.track_count() as u32;
+                        assert!(
+                            line_name_set_count == 0 || line_name_set_count == lines_per_repetition + 1,
+                            "grid template repetition must have no line name sets or exactly track count + 1 of them ({} tracks but {} line name sets)",
+                            lines_per_repetition,
+                            line_name_set_count,
+                        );
+
                         for _ in 0..repeat_count {
-                            for line_name_set in repeat.lines_names() {
+                            for (line, line_name_set) in (current_line..).zip(repeat.lines_names()) {
                                 for line_name in line_name_set {
-                                    upsert_line_name_map(&mut column_lines, line_name.clone(), current_line);
+                                    upsert_line_name_map(&mut column_lines, line_name.clone(), line);
                                 }
-                                current_line += 1;
                             }
-                            // Last line name set collapses with following line name set
-                            current_line -= 1;
+                            current_line += lines_per_repetition;
+
+                            // Names for lines beyond the maximum track limit are never resolvable:
+                            // stop generating them (the explicit grid is clamped to MAX_GRID_TRACKS)
+                            if current_line > MAX_GRID_TRACKS as u32 {
+                                break;
+                            }
                         }
                         // Last line name set collapses with following line name set
                         if repeat_count > 0 {
-                            current_line -= 1;
+                            current_line = current_line.saturating_sub(1);
                         }
                     }
                 }
@@ -164,19 +182,37 @@ impl<S: CheapCloneStr> NamedLineResolver<S> {
                             RepetitionCount::AutoFill | RepetitionCount::AutoFit => row_auto_repetitions,
                         };
 
+                        // Line name sets are positional: set `i` names the `i`th line of each
+                        // repetition, and the final line name set of each repetition collapses
+                        // with the first line name set of the following one. An empty list means
+                        // the repetition's lines are unnamed; any other length must be exactly
+                        // `track_count + 1` (one set per line, including both edge lines).
+                        let line_name_set_count = repeat.lines_names().len() as u32;
+                        let lines_per_repetition = repeat.track_count() as u32;
+                        assert!(
+                            line_name_set_count == 0 || line_name_set_count == lines_per_repetition + 1,
+                            "grid template repetition must have no line name sets or exactly track count + 1 of them ({} tracks but {} line name sets)",
+                            lines_per_repetition,
+                            line_name_set_count,
+                        );
+
                         for _ in 0..repeat_count {
-                            for line_name_set in repeat.lines_names() {
+                            for (line, line_name_set) in (current_line..).zip(repeat.lines_names()) {
                                 for line_name in line_name_set {
-                                    upsert_line_name_map(&mut row_lines, line_name.clone(), current_line);
+                                    upsert_line_name_map(&mut row_lines, line_name.clone(), line);
                                 }
-                                current_line += 1;
                             }
-                            // Last line name set collapses with following line name set
-                            current_line -= 1;
+                            current_line += lines_per_repetition;
+
+                            // Names for lines beyond the maximum track limit are never resolvable:
+                            // stop generating them (the explicit grid is clamped to MAX_GRID_TRACKS)
+                            if current_line > MAX_GRID_TRACKS as u32 {
+                                break;
+                            }
                         }
                         // Last line name set collapses with following line name set
                         if repeat_count > 0 {
-                            current_line -= 1;
+                            current_line = current_line.saturating_sub(1);
                         }
                     }
                 }

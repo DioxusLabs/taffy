@@ -126,6 +126,17 @@ pub struct LayoutInput {
     ///   "The exact size of this node is WIDTHxHEIGHT. Please lay out your children"
     ///
     pub known_dimensions: Size<Option<f32>>,
+    /// Whether each known dimension should be treated as a *definite* size when laying out the node's
+    /// own content (resolving percentage sizes of children, and collecting flex items into flex lines).
+    ///
+    /// This should be set to `false` for a dimension when a parent imposes a known dimension on a node
+    /// that is derived from the node's own content, and is therefore indefinite per CSS. For example,
+    /// the post-flexing main size of a flex item is indefinite if the flex container's main size is
+    /// indefinite and the item's used flex basis is not definite
+    /// (see <https://www.w3.org/TR/css-flexbox-1/#definite-sizes>).
+    ///
+    /// This flag is ignored (treated as `true`) for axes where the corresponding known dimension is `None`.
+    pub known_dimensions_are_definite: Size<bool>,
     /// Parent size dimensions are intended to be used for percentage resolution.
     pub parent_size: Size<Option<f32>>,
     /// Available space represents an amount of space to layout into, and is used as a soft constraint
@@ -142,6 +153,7 @@ impl LayoutInput {
         run_mode: RunMode::PerformHiddenLayout,
         // The rest will be ignored
         known_dimensions: Size::NONE,
+        known_dimensions_are_definite: Size { width: true, height: true },
         parent_size: Size::NONE,
         available_space: Size::MAX_CONTENT,
         sizing_mode: SizingMode::InherentSize,

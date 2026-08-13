@@ -493,7 +493,11 @@ fn compute_inner(
         let derived = known_dimensions.maybe_apply_aspect_ratio(aspect_ratio).maybe_clamp(min_size, max_size);
         Size { width: known_dimensions.width.or(derived.width), height: known_dimensions.height.or(derived.height) }
     };
-    let container_content_box_size = known_dimensions.maybe_sub(content_box_inset.sum_axes());
+    let percentage_basis_dimensions = Size {
+        width: known_dimensions.width,
+        height: known_dimensions.height.filter(|_| inputs.known_dimensions_are_definite.height),
+    };
+    let container_content_box_size = percentage_basis_dimensions.maybe_sub(content_box_inset.sum_axes());
 
     let overflow = style.overflow();
     let is_scroll_container = overflow.x.is_scroll_container() || overflow.y.is_scroll_container();
@@ -550,7 +554,7 @@ fn compute_inner(
     }
 
     let container_percentage_resolution_height =
-        known_dimensions.height.or(size.height.maybe_max(min_size.height)).or(min_size.height);
+        percentage_basis_dimensions.height.or(size.height.maybe_max(min_size.height)).or(min_size.height);
 
     // 3. Perform final item layout and return content height
     //
@@ -1158,6 +1162,7 @@ fn perform_final_layout_on_in_flow_children(
                 sizing_mode: SizingMode::InherentSize,
                 axis: RequestedAxis::Both,
                 known_dimensions,
+                known_dimensions_are_definite: Size { width: true, height: true },
                 parent_size,
                 available_space: available_space.map_width(|_| AvailableSpace::Definite(stretch_width)),
                 vertical_margins_are_collapsible: if item.is_in_same_bfc { Line::TRUE } else { Line::FALSE },
@@ -1615,9 +1620,7 @@ fn perform_absolute_layout_on_absolute_children(
                 // the 'direction' property of the containing block is 'rtl') or 'right' (in case 'direction' is 'ltr') and solve for that value.
                 width: {
                     let auto_margin_count = margin.left.is_none() as u8 + margin.right.is_none() as u8;
-                    if auto_margin_count == 2
-                        && (style_size.width.is_none() || style_size.width.unwrap() >= free_space.width)
-                    {
+                    if auto_margin_count == 2 && free_space.width <= 0.0 {
                         0.0
                     } else if auto_margin_count > 0 {
                         free_space.width / auto_margin_count as f32
@@ -1627,9 +1630,7 @@ fn perform_absolute_layout_on_absolute_children(
                 },
                 height: {
                     let auto_margin_count = margin.top.is_none() as u8 + margin.bottom.is_none() as u8;
-                    if auto_margin_count == 2
-                        && (style_size.height.is_none() || style_size.height.unwrap() >= free_space.height)
-                    {
+                    if auto_margin_count == 2 && free_space.height <= 0.0 {
                         0.0
                     } else if auto_margin_count > 0 {
                         free_space.height / auto_margin_count as f32
