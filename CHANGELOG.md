@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Added
+
+- Grid: `GridTemplateAreas` can now be parsed from a CSS string (`FromStr`/`FromCss`, behind the `parse` feature), e.g. `"\"header header\" \"nav main\"".parse::<GridTemplateAreas<String>>()`. The parser follows the [CSS Grid specification](https://drafts.csswg.org/css-grid/#grid-template-areas-property), including longest-match tokenization of `.` runs and validation that rows have equal widths and named areas form rectangles
+
 ### Changed
 
 - `TaffyTree::compute_layout_with_measure`'s measure function now takes the full `LayoutInput` (plus `NodeId`, `Option<&mut NodeContext>` and `&Style`) and returns a `LayoutOutput` directly instead of a `Size<f32>`, allowing measure functions to set baselines (and other `LayoutOutput` fields) on leaf nodes. `compute_leaf_layout` is no longer called implicitly (#953)
