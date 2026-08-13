@@ -670,6 +670,11 @@ impl<NodeContext> TaffyTree<NodeContext> {
     pub fn add_child(&mut self, parent: NodeId, child: NodeId) -> TaffyResult<()> {
         let parent_key = parent.into();
         let child_key = child.into();
+
+        if let Some(old_parent) = self.parents[child_key] {
+            self.remove_child(old_parent, child);
+        }
+
         self.parents[child_key] = Some(parent);
         self.children[parent_key].push(child);
         self.mark_dirty(parent)?;
@@ -680,13 +685,18 @@ impl<NodeContext> TaffyTree<NodeContext> {
     /// Inserts a `child` node at the given `child_index` under the supplied `parent`, shifting all children after it to the right.
     pub fn insert_child_at_index(&mut self, parent: NodeId, child_index: usize, child: NodeId) -> TaffyResult<()> {
         let parent_key = parent.into();
+        let child_key = child.into();
+
+        if let Some(old_parent) = self.parents[child_key] {
+            self.remove_child(old_parent, child);
+        }
 
         let child_count = self.children[parent_key].len();
         if child_index > child_count {
             return Err(TaffyError::ChildIndexOutOfBounds { parent, child_index, child_count });
         }
 
-        self.parents[child.into()] = Some(parent);
+        self.parents[child_key] = Some(parent);
         self.children[parent_key].insert(child_index, child);
         self.mark_dirty(parent)?;
 
