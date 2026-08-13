@@ -183,6 +183,42 @@ pub(super) fn align_and_position_item(
         height: grid_area_size.height.maybe_sub(margin.top).maybe_sub(margin.bottom) - baseline_shim,
     };
 
+    // A size that is a sizing keyword (min-content, max-content, fit-content,
+    // fit-content(...), stretch) either resolves to an exact size or is resolved
+    // by measuring the item under the corresponding available space constraint
+    let keyword_width = inherent_size.width.is_none().then(|| {
+        resolve_sizing_keyword(
+            size_style.width,
+            Some(grid_area_minus_item_margins_size.width),
+            Some(grid_area_size.width),
+        )
+    });
+    let keyword_height = inherent_size.height.is_none().then(|| {
+        resolve_sizing_keyword(
+            size_style.height,
+            Some(grid_area_minus_item_margins_size.height),
+            Some(grid_area_size.height),
+        )
+    });
+
+    // If both axes need to be measured then resolve them with a single measure call
+    let keyword_measured_size: Size<Option<f32>> = match (&keyword_width, &keyword_height) {
+        (
+            Some(Some(SizingKeywordResolution::Measure(available_width))),
+            Some(Some(SizingKeywordResolution::Measure(available_height))),
+        ) if position != Position::Absolute => tree
+            .measure_child_size_both(
+                node,
+                Size::NONE,
+                grid_area_size.map(Option::Some),
+                Size { width: *available_width, height: *available_height },
+                SizingMode::InherentSize,
+                Line::FALSE,
+            )
+            .map(Option::Some),
+        _ => Size::NONE,
+    };
+
     // If node is absolutely positioned and width is not set explicitly, then deduce it
     // from left, right and container_content_box if both are set.
     let width = inherent_size.width.or_else(|| {
@@ -194,29 +230,23 @@ pub(super) fn align_and_position_item(
             }
         }
 
-        // A width that is a sizing keyword (min-content, max-content, fit-content,
-        // fit-content(...), stretch) either resolves to an exact width or is resolved
-        // by measuring the item under the corresponding available space constraint
-        let keyword_width = resolve_sizing_keyword(
-            size_style.width,
-            Some(grid_area_minus_item_margins_size.width),
-            Some(grid_area_size.width),
-        );
-        if let Some(resolution) = keyword_width {
+        if let Some(Some(resolution)) = keyword_width {
             return Some(match resolution {
                 SizingKeywordResolution::Exact(width) => width,
-                SizingKeywordResolution::Measure(available_width) => tree.measure_child_size(
-                    node,
-                    Size::NONE,
-                    grid_area_size.map(Option::Some),
-                    Size {
-                        width: available_width,
-                        height: AvailableSpace::Definite(grid_area_minus_item_margins_size.height),
-                    },
-                    SizingMode::InherentSize,
-                    AbsoluteAxis::Horizontal,
-                    Line::FALSE,
-                ),
+                SizingKeywordResolution::Measure(available_width) => keyword_measured_size.width.unwrap_or_else(|| {
+                    tree.measure_child_size(
+                        node,
+                        Size::NONE,
+                        grid_area_size.map(Option::Some),
+                        Size {
+                            width: available_width,
+                            height: AvailableSpace::Definite(grid_area_minus_item_margins_size.height),
+                        },
+                        SizingMode::InherentSize,
+                        AbsoluteAxis::Horizontal,
+                        Line::FALSE,
+                    )
+                }),
             });
         }
 
@@ -245,31 +275,27 @@ pub(super) fn align_and_position_item(
             }
         }
 
-        // A height that is a sizing keyword (min-content, max-content, fit-content,
-        // fit-content(...), stretch) either resolves to an exact height or is resolved
-        // by measuring the item under the corresponding available space constraint
-        let keyword_height = resolve_sizing_keyword(
-            size_style.height,
-            Some(grid_area_minus_item_margins_size.height),
-            Some(grid_area_size.height),
-        );
-        if let Some(resolution) = keyword_height {
+        if let Some(Some(resolution)) = keyword_height {
             return Some(match resolution {
                 SizingKeywordResolution::Exact(height) => height,
-                SizingKeywordResolution::Measure(available_height) => tree.measure_child_size(
-                    node,
-                    Size { width, height: None },
-                    grid_area_size.map(Option::Some),
-                    Size {
-                        width: width
-                            .map(AvailableSpace::Definite)
-                            .unwrap_or(AvailableSpace::Definite(grid_area_minus_item_margins_size.width)),
-                        height: available_height,
-                    },
-                    SizingMode::InherentSize,
-                    AbsoluteAxis::Vertical,
-                    Line::FALSE,
-                ),
+                SizingKeywordResolution::Measure(available_height) => {
+                    keyword_measured_size.height.unwrap_or_else(|| {
+                        tree.measure_child_size(
+                            node,
+                            Size { width, height: None },
+                            grid_area_size.map(Option::Some),
+                            Size {
+                                width: width
+                                    .map(AvailableSpace::Definite)
+                                    .unwrap_or(AvailableSpace::Definite(grid_area_minus_item_margins_size.width)),
+                                height: available_height,
+                            },
+                            SizingMode::InherentSize,
+                            AbsoluteAxis::Vertical,
+                            Line::FALSE,
+                        )
+                    })
+                }
             });
         }
 
