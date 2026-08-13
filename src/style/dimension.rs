@@ -266,6 +266,7 @@ impl FromCss for Dimension {
                 "min-content" => Ok(Self::min_content()),
                 "max-content" => Ok(Self::max_content()),
                 "fit-content" => Ok(Self::fit_content()),
+                "stretch" => Ok(Self::stretch()),
                 _ => Err(parser.new_unexpected_token_error(token))?,
             },
             Token::Function(ref name) if name.as_ref() == "fit-content" => parser.parse_nested_block(|parser| {
@@ -336,6 +337,14 @@ impl Dimension {
         Self(CompactLength::fit_content_px(limit))
     }
 
+    /// The size should be the "stretch-fit" size: the size the box would take
+    /// if it filled the available space
+    /// (<https://www.w3.org/TR/css-sizing-4/#stretch-fit-sizing>)
+    #[inline(always)]
+    pub const fn stretch() -> Self {
+        Self(CompactLength::stretch())
+    }
+
     /// The size should be computed according to the "fit content" formula:
     ///    `max(min_content, min(max_content, limit))`
     /// where `limit` is a PERCENTAGE value
@@ -381,7 +390,7 @@ impl Dimension {
         self.0.is_auto()
     }
 
-    /// Returns true if value is min-content, max-content, fit-content, or fit-content(...)
+    /// Returns true if value is min-content, max-content, fit-content, fit-content(...), or stretch
     #[inline(always)]
     pub fn is_intrinsic_sizing_keyword(self) -> bool {
         self.0.is_intrinsic_sizing_keyword()
@@ -416,6 +425,7 @@ impl<'de> serde::Deserialize<'de> for Dimension {
                 | CompactLength::FIT_CONTENT_KEYWORD_TAG
                 | CompactLength::FIT_CONTENT_PX_TAG
                 | CompactLength::FIT_CONTENT_PERCENT_TAG
+                | CompactLength::STRETCH_TAG
         ) {
             Ok(Self(inner))
         } else {

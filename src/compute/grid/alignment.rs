@@ -14,7 +14,8 @@ use crate::util::{MaybeMath, MaybeResolve, ResolveOrZero};
 
 #[cfg(feature = "content_size")]
 use crate::compute::common::content_size::compute_content_size_contribution;
-use crate::{BoxSizing, Direction, LayoutGridContainer};
+use crate::compute::common::sizing_keyword::{resolve_sizing_keyword, SizingKeywordResolution};
+use crate::{AbsoluteAxis, BoxSizing, Direction, LayoutGridContainer};
 
 /// Align the grid tracks within the grid according to the align-content (rows) or
 /// justify-content (columns) property. This only does anything if the size of the
@@ -128,8 +129,8 @@ pub(super) fn align_and_position_item(
     let box_sizing_adjustment =
         if style.box_sizing() == BoxSizing::ContentBox { padding_border_size } else { Size::ZERO };
 
-    let inherent_size = style
-        .size()
+    let size_style = style.size();
+    let inherent_size = size_style
         .maybe_resolve(grid_area_size, |val, basis| tree.calc(val, basis))
         .maybe_apply_aspect_ratio(aspect_ratio)
         .maybe_add(box_sizing_adjustment);
@@ -152,14 +153,17 @@ pub(super) fn align_and_position_item(
     // See: https://www.w3.org/TR/css-grid-1/#grid-item-sizing
     let alignment_styles = InBothAbsAxis {
         horizontal: justify_self.or(container_alignment_styles.horizontal).unwrap_or_else(|| {
-            if inherent_size.width.is_some() {
+            if inherent_size.width.is_some() || size_style.width.is_intrinsic_sizing_keyword() {
                 AlignSelf::START
             } else {
                 AlignSelf::STRETCH
             }
         }),
         vertical: align_self.or(container_alignment_styles.vertical).unwrap_or_else(|| {
-            if inherent_size.height.is_some() || aspect_ratio.is_some() {
+            if inherent_size.height.is_some()
+                || size_style.height.is_intrinsic_sizing_keyword()
+                || aspect_ratio.is_some()
+            {
                 AlignSelf::START
             } else {
                 AlignSelf::STRETCH
@@ -171,6 +175,8 @@ pub(super) fn align_and_position_item(
     // resolve against the WIDTH of the grid area.
     let margin =
         style.margin().map(|margin| margin.resolve_to_option(grid_area_size.width, |val, basis| tree.calc(val, basis)));
+
+    drop(style);
 
     let grid_area_minus_item_margins_size = Size {
         width: grid_area_size.width.maybe_sub(margin.left).maybe_sub(margin.right),
@@ -186,6 +192,32 @@ pub(super) fn align_and_position_item(
             if let (Some(left), Some(right)) = (inset_horizontal.start, inset_horizontal.end) {
                 return Some(f32_max(grid_area_minus_item_margins_size.width - left - right, 0.0));
             }
+        }
+
+        // A width that is a sizing keyword (min-content, max-content, fit-content,
+        // fit-content(...), stretch) either resolves to an exact width or is resolved
+        // by measuring the item under the corresponding available space constraint
+        let keyword_width = resolve_sizing_keyword(
+            size_style.width,
+            Some(grid_area_minus_item_margins_size.width),
+            Some(grid_area_size.width),
+        );
+        if let Some(resolution) = keyword_width {
+            return Some(match resolution {
+                SizingKeywordResolution::Exact(width) => width,
+                SizingKeywordResolution::Measure(available_width) => tree.measure_child_size(
+                    node,
+                    Size::NONE,
+                    grid_area_size.map(Option::Some),
+                    Size {
+                        width: available_width,
+                        height: AvailableSpace::Definite(grid_area_minus_item_margins_size.height),
+                    },
+                    SizingMode::InherentSize,
+                    AbsoluteAxis::Horizontal,
+                    Line::FALSE,
+                ),
+            });
         }
 
         // Apply width based on stretch alignment if:
@@ -213,6 +245,34 @@ pub(super) fn align_and_position_item(
             }
         }
 
+        // A height that is a sizing keyword (min-content, max-content, fit-content,
+        // fit-content(...), stretch) either resolves to an exact height or is resolved
+        // by measuring the item under the corresponding available space constraint
+        let keyword_height = resolve_sizing_keyword(
+            size_style.height,
+            Some(grid_area_minus_item_margins_size.height),
+            Some(grid_area_size.height),
+        );
+        if let Some(resolution) = keyword_height {
+            return Some(match resolution {
+                SizingKeywordResolution::Exact(height) => height,
+                SizingKeywordResolution::Measure(available_height) => tree.measure_child_size(
+                    node,
+                    Size { width, height: None },
+                    grid_area_size.map(Option::Some),
+                    Size {
+                        width: width
+                            .map(AvailableSpace::Definite)
+                            .unwrap_or(AvailableSpace::Definite(grid_area_minus_item_margins_size.width)),
+                        height: available_height,
+                    },
+                    SizingMode::InherentSize,
+                    AbsoluteAxis::Vertical,
+                    Line::FALSE,
+                ),
+            });
+        }
+
         // Apply height based on stretch alignment if:
         //  - Alignment style is "stretch"
         //  - The node is not absolutely positioned
@@ -234,8 +294,6 @@ pub(super) fn align_and_position_item(
     let Size { width, height } = Size { width, height }.maybe_clamp(min_size, max_size);
 
     // Layout node
-    drop(style);
-
     let size = if position == Position::Absolute && (width.is_none() || height.is_none()) {
         tree.measure_child_size_both(
             node,

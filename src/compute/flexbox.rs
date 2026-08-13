@@ -13,11 +13,12 @@ use crate::util::debug::debug_log;
 use crate::util::sys::{f32_max, new_vec_with_capacity, Vec};
 use crate::util::MaybeMath;
 use crate::util::{MaybeResolve, ResolveOrZero};
-use crate::{BoxGenerationMode, BoxSizing, Direction, RequestedAxis};
+use crate::{BoxGenerationMode, BoxSizing, Dimension, Direction, RequestedAxis};
 
 use super::common::alignment::apply_alignment_fallback;
 #[cfg(feature = "content_size")]
 use super::common::content_size::compute_content_size_contribution;
+use super::common::sizing_keyword::{resolve_sizing_keyword, SizingKeywordResolution};
 
 /// The intermediate results of a flexbox calculation for a single item
 struct FlexItem {
@@ -29,6 +30,9 @@ struct FlexItem {
 
     /// The base size of this item
     size: Size<Option<f32>>,
+    /// The raw size style of this item. Used to detect and resolve sizing
+    /// keywords (`min-content`, `max-content`, `fit-content`, `fit-content(...)`, and `stretch`)
+    size_style: Size<Dimension>,
     /// The minimum allowable size of this item
     min_size: Size<Option<f32>>,
     /// The maximum allowable size of this item
@@ -588,6 +592,7 @@ fn generate_anonymous_flex_items(
                     .maybe_resolve(percent_resolution_size, |val, basis| tree.calc(val, basis))
                     .maybe_apply_aspect_ratio(aspect_ratio)
                     .maybe_add(box_sizing_adjustment),
+                size_style: child_style.size(),
                 min_size: child_style
                     .min_size()
                     .maybe_resolve(percent_resolution_size, |val, basis| tree.calc(val, basis))
@@ -845,15 +850,34 @@ fn determine_flex_base_size(
             //    is auto and not definite, in this calculation use fit-content as the
             //    flex item’s cross size. The flex base size is the item’s resulting main size.
 
+            // A main size that is a sizing keyword (min-content, max-content, fit-content,
+            // fit-content(...), stretch) either resolves to an exact size or determines the
+            // available space constraint the item is measured under
+            let main_stretch_size = percent_resolution_main_size.maybe_sub(child.margin.main_axis_sum(dir));
+            let keyword_main_available_space = match resolve_sizing_keyword(
+                child.size_style.main(dir),
+                main_stretch_size,
+                percent_resolution_main_size,
+            ) {
+                Some(SizingKeywordResolution::Exact(size)) => {
+                    child.flex_basis_is_definite = true;
+                    break 'flex_basis size;
+                }
+                Some(SizingKeywordResolution::Measure(available)) => Some(available),
+                None => None,
+            };
+
             let child_available_space = Size::MAX_CONTENT
                 .with_main(
                     dir,
-                    // Map AvailableSpace::Definite to AvailableSpace::MaxContent
-                    if available_space.main(dir) == AvailableSpace::MinContent {
-                        AvailableSpace::MinContent
-                    } else {
-                        AvailableSpace::MaxContent
-                    },
+                    keyword_main_available_space.unwrap_or(
+                        // Map AvailableSpace::Definite to AvailableSpace::MaxContent
+                        if available_space.main(dir) == AvailableSpace::MinContent {
+                            AvailableSpace::MinContent
+                        } else {
+                            AvailableSpace::MaxContent
+                        },
+                    ),
                 )
                 .with_cross(dir, cross_axis_available_space);
 
@@ -1503,6 +1527,24 @@ fn determine_hypothetical_cross_size(
             .cross(constants.dir)
             .maybe_clamp(transferred_min_cross, transferred_max_cross)
             .maybe_max(padding_border_sum);
+
+        // A cross size that is a sizing keyword (min-content, max-content, fit-content,
+        // fit-content(...), stretch) either resolves to an exact size or determines the
+        // available space constraint the item is measured under
+        let cross_stretch_size =
+            constants.node_inner_size.cross(constants.dir).maybe_sub(child.margin.cross_axis_sum(constants.dir));
+        let (child_cross, child_available_cross) = match resolve_sizing_keyword(
+            child.size_style.cross(constants.dir),
+            cross_stretch_size,
+            constants.node_inner_size.cross(constants.dir),
+        ) {
+            Some(SizingKeywordResolution::Exact(size)) => (
+                Some(size.maybe_clamp(transferred_min_cross, transferred_max_cross).max(padding_border_sum)),
+                child_available_cross,
+            ),
+            Some(SizingKeywordResolution::Measure(available)) => (child_cross, available),
+            None => (child_cross, child_available_cross),
+        };
 
         let child_inner_cross = child_cross.unwrap_or_else(|| {
             tree.compute_child_layout(

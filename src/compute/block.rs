@@ -10,7 +10,7 @@ use crate::util::sys::Vec;
 use crate::util::MaybeMath;
 use crate::util::{MaybeResolve, ResolveOrZero};
 use crate::{
-    BlockContainerStyle, BlockItemStyle, BoxGenerationMode, BoxSizing, CompactLength, Direction, LayoutBlockContainer,
+    BlockContainerStyle, BlockItemStyle, BoxGenerationMode, BoxSizing, Dimension, Direction, LayoutBlockContainer,
     RequestedAxis, TextAlign,
 };
 
@@ -265,6 +265,7 @@ impl BlockContext<'_> {
 use super::common::alignment::{apply_alignment_fallback, compute_alignment_offset};
 #[cfg(feature = "content_size")]
 use super::common::content_size::compute_content_size_contribution;
+use super::common::sizing_keyword::{resolve_sizing_keyword, SizingKeywordResolution};
 
 /// Per-child data that is accumulated and modified over the course of the layout algorithm
 struct BlockItem {
@@ -293,9 +294,9 @@ struct BlockItem {
     /// The `clear` style of the node
     clear: Clear,
 
-    /// The raw width style of this item. Used to detect and resolve intrinsic sizing
-    /// keywords (`min-content`, `max-content`, `fit-content`, and `fit-content(...)`)
-    width_style: CompactLength,
+    /// The width style of this item. Used to detect and resolve sizing
+    /// keywords (`min-content`, `max-content`, `fit-content`, `fit-content(...)`, and `stretch`)
+    width_style: Dimension,
 
     /// The base size of this item
     size: Size<Option<f32>>,
@@ -806,7 +807,7 @@ fn generate_item_list(
                 float,
                 #[cfg(feature = "float_layout")]
                 clear: child_style.clear(),
-                width_style: child_style.size().width.into_raw(),
+                width_style: child_style.size().width,
                 size: child_style
                     .size()
                     .maybe_resolve(node_inner_size, |val, basis| tree.calc(val, basis))
@@ -861,8 +862,11 @@ fn determine_content_based_container_width(
             .resolve_or_zero(available_space.width.into_option(), |val, basis| tree.calc(val, basis))
             .horizontal_axis_sum();
         let width = known_dimensions.width.unwrap_or_else(|| {
-            let item_available_width = intrinsic_sizing_keyword_available_width(item.width_style, None, None)
-                .unwrap_or_else(|| available_space.width.maybe_sub(item_x_margin_sum));
+            let item_available_width = match resolve_sizing_keyword(item.width_style, None, None) {
+                Some(SizingKeywordResolution::Measure(available_width)) => available_width,
+                Some(SizingKeywordResolution::Exact(width)) => AvailableSpace::Definite(width),
+                None => available_space.width.maybe_sub(item_x_margin_sum),
+            };
             tree.measure_child_size(
                 item.node_id,
                 known_dimensions,
@@ -891,29 +895,6 @@ fn determine_content_based_container_width(
     }
 
     max_child_width
-}
-
-/// Compute the available width against which to measure an item whose width style is an
-/// intrinsic sizing keyword (`min-content`, `max-content`, `fit-content`, or `fit-content(...)`).
-///
-/// Returns `None` if the width style is not an intrinsic sizing keyword, or if it cannot
-/// be resolved in the current context (in which case it behaves as `auto`).
-#[inline]
-fn intrinsic_sizing_keyword_available_width(
-    width_style: CompactLength,
-    stretch_width: Option<f32>,
-    percent_resolution_basis: Option<f32>,
-) -> Option<AvailableSpace> {
-    match width_style.tag() {
-        CompactLength::MIN_CONTENT_TAG => Some(AvailableSpace::MinContent),
-        CompactLength::MAX_CONTENT_TAG => Some(AvailableSpace::MaxContent),
-        CompactLength::FIT_CONTENT_PX_TAG => Some(AvailableSpace::Definite(width_style.value())),
-        CompactLength::FIT_CONTENT_PERCENT_TAG => {
-            percent_resolution_basis.map(|basis| AvailableSpace::Definite(basis * width_style.value()))
-        }
-        CompactLength::FIT_CONTENT_KEYWORD_TAG => stretch_width.map(AvailableSpace::Definite),
-        _ => None,
-    }
 }
 
 /// Compute each child's final size and position
@@ -1008,15 +989,18 @@ fn perform_final_layout_on_in_flow_children(
                 // A float with `width: auto` is shrink-to-fit (fit-content) sized: the available
                 // space clamped between its min-content and max-content sizes.
                 let available_width = container_inner_width - item_non_auto_x_margin_sum;
-                let item_available_width = intrinsic_sizing_keyword_available_width(
+                let (item_known_width, item_available_width) = match resolve_sizing_keyword(
                     item.width_style,
                     Some(available_width),
                     Some(container_inner_width),
-                )
-                .unwrap_or(AvailableSpace::Definite(available_width));
+                ) {
+                    Some(SizingKeywordResolution::Measure(available)) => (None, available),
+                    Some(SizingKeywordResolution::Exact(width)) => (Some(width), AvailableSpace::Definite(width)),
+                    None => (None, AvailableSpace::Definite(available_width)),
+                };
                 let item_layout = tree.perform_child_layout(
                     item.node_id,
-                    Size::NONE,
+                    Size { width: item_known_width, height: None },
                     parent_size,
                     Size { width: item_available_width, height: AvailableSpace::MaxContent },
                     SizingMode::InherentSize,
@@ -1184,25 +1168,24 @@ fn perform_final_layout_on_in_flow_children(
             let known_dimensions = if item.is_table || item.is_replaced {
                 Size::NONE
             } else {
-                // Items with an intrinsic sizing keyword width (min-content, max-content,
-                // fit-content, fit-content(...)) resolve their width by measuring the item
-                // under the corresponding available space constraint
-                let keyword_width = intrinsic_sizing_keyword_available_width(
-                    item.width_style,
-                    Some(stretch_width),
-                    Some(container_inner_width),
-                )
-                .map(|item_available_width| {
-                    tree.measure_child_size(
-                        item.node_id,
-                        Size::NONE,
-                        parent_size,
-                        Size { width: item_available_width, height: AvailableSpace::MaxContent },
-                        SizingMode::InherentSize,
-                        crate::AbsoluteAxis::Horizontal,
-                        Line::TRUE,
-                    )
-                });
+                // Items with a sizing keyword width (min-content, max-content, fit-content,
+                // fit-content(...), stretch) resolve their width either directly or by measuring
+                // the item under the corresponding available space constraint
+                let keyword_width =
+                    resolve_sizing_keyword(item.width_style, Some(stretch_width), Some(container_inner_width)).map(
+                        |resolution| match resolution {
+                            SizingKeywordResolution::Exact(width) => width,
+                            SizingKeywordResolution::Measure(item_available_width) => tree.measure_child_size(
+                                item.node_id,
+                                Size::NONE,
+                                parent_size,
+                                Size { width: item_available_width, height: AvailableSpace::MaxContent },
+                                SizingMode::InherentSize,
+                                crate::AbsoluteAxis::Horizontal,
+                                Line::TRUE,
+                            ),
+                        },
+                    );
 
                 item.size
                     .map_width(|width| {

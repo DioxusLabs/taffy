@@ -265,12 +265,12 @@ fn build_style<S: CheapCloneStr>(xnode: roxmltree::Node) -> taffy::Style<S> {
             height: parse_or(xnode.attribute("height"), Dimension::auto()),
         },
         min_size: Size {
-            width: parse_or(xnode.attribute("min-width"), Dimension::auto()),
-            height: parse_or(xnode.attribute("min-height"), Dimension::auto()),
+            width: parse_or(xnode.attribute("min-width"), LengthPercentageAuto::auto()),
+            height: parse_or(xnode.attribute("min-height"), LengthPercentageAuto::auto()),
         },
         max_size: Size {
-            width: parse_or(xnode.attribute("max-width"), Dimension::auto()),
-            height: parse_or(xnode.attribute("max-height"), Dimension::auto()),
+            width: parse_or(xnode.attribute("max-width"), LengthPercentageAuto::auto()),
+            height: parse_or(xnode.attribute("max-height"), LengthPercentageAuto::auto()),
         },
         inset: Rect {
             top: parse_or(xnode.attribute("top"), LengthPercentageAuto::auto()),

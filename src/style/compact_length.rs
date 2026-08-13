@@ -231,6 +231,8 @@ impl CompactLength {
     pub const FIT_CONTENT_PERCENT_TAG: usize = 0b00011111;
     /// The tag indicating a plain fit-content keyword value (no limit)
     pub const FIT_CONTENT_KEYWORD_TAG: usize = 0b00100111;
+    /// The tag indicating a stretch keyword value
+    pub const STRETCH_TAG: usize = 0b00101111;
 }
 
 impl CompactLength {
@@ -329,6 +331,14 @@ impl CompactLength {
         Self(CompactLengthInner::from_tag(Self::FIT_CONTENT_KEYWORD_TAG))
     }
 
+    /// The size should be the "stretch-fit" size: the size the box would take
+    /// if it filled the available space
+    /// (<https://www.w3.org/TR/css-sizing-4/#stretch-fit-sizing>)
+    #[inline(always)]
+    pub const fn stretch() -> Self {
+        Self(CompactLengthInner::from_tag(Self::STRETCH_TAG))
+    }
+
     /// Get the primary tag
     #[inline(always)]
     pub fn tag(self) -> usize {
@@ -392,7 +402,7 @@ impl CompactLength {
         matches!(self.tag(), Self::FIT_CONTENT_PX_TAG | Self::FIT_CONTENT_PERCENT_TAG)
     }
 
-    /// Returns true if the value is min-content, max-content, fit-content, or fit-content(...)
+    /// Returns true if the value is min-content, max-content, fit-content, fit-content(...), or stretch
     #[inline(always)]
     pub fn is_intrinsic_sizing_keyword(self) -> bool {
         matches!(
@@ -402,6 +412,7 @@ impl CompactLength {
                 | Self::FIT_CONTENT_KEYWORD_TAG
                 | Self::FIT_CONTENT_PX_TAG
                 | Self::FIT_CONTENT_PERCENT_TAG
+                | Self::STRETCH_TAG
         )
     }
 
@@ -557,6 +568,7 @@ impl<'de> serde::Deserialize<'de> for CompactLength {
                 | CompactLength::FIT_CONTENT_KEYWORD_TAG
                 | CompactLength::FIT_CONTENT_PX_TAG
                 | CompactLength::FIT_CONTENT_PERCENT_TAG
+                | CompactLength::STRETCH_TAG
                 | CompactLength::FR_TAG
         ) {
             Ok(value)
