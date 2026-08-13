@@ -257,10 +257,25 @@ impl From<LengthPercentageAuto> for Dimension {
 #[cfg(feature = "parse")]
 impl FromCss for Dimension {
     fn from_css<'i>(parser: &mut Parser<'i, '_>) -> CssParseResult<'i, Self> {
-        match parser.next()?.clone() {
+        let token = parser.next()?.clone();
+        match token {
             Token::Percentage { unit_value, .. } => Ok(Self::percent(unit_value)),
             Token::Dimension { unit, value, .. } if unit == "px" => Ok(Self::length(value)),
-            Token::Ident(ident) if ident == "auto" => Ok(Self::auto()),
+            Token::Ident(ref ident) => match ident.as_ref() {
+                "auto" => Ok(Self::auto()),
+                "min-content" => Ok(Self::min_content()),
+                "max-content" => Ok(Self::max_content()),
+                "fit-content" => Ok(Self::fit_content()),
+                _ => Err(parser.new_unexpected_token_error(token))?,
+            },
+            Token::Function(ref name) if name.as_ref() == "fit-content" => parser.parse_nested_block(|parser| {
+                let token = parser.next()?.clone();
+                match token {
+                    Token::Percentage { unit_value, .. } => Ok(Self::fit_content_percent(unit_value)),
+                    Token::Dimension { unit, value, .. } if unit == "px" => Ok(Self::fit_content_px(value)),
+                    token => Err(parser.new_unexpected_token_error(token))?,
+                }
+            }),
             token => Err(parser.new_unexpected_token_error(token))?,
         }
     }
@@ -289,6 +304,44 @@ impl Dimension {
     #[inline(always)]
     pub const fn auto() -> Self {
         Self(CompactLength::auto())
+    }
+
+    /// The size should be the "min-content" size.
+    /// This is the smallest size that can fit the item's contents with ALL soft line-wrapping opportunities taken
+    #[inline(always)]
+    pub const fn min_content() -> Self {
+        Self(CompactLength::min_content())
+    }
+
+    /// The size should be the "max-content" size.
+    /// This is the smallest size that can fit the item's contents with NO soft line-wrapping opportunities taken
+    #[inline(always)]
+    pub const fn max_content() -> Self {
+        Self(CompactLength::max_content())
+    }
+
+    /// The size should be computed according to the "fit content" formula:
+    ///    `max(min_content, min(max_content, stretch))`
+    /// where `stretch` is the size the box would take if it filled the available space
+    #[inline(always)]
+    pub const fn fit_content() -> Self {
+        Self(CompactLength::fit_content_keyword())
+    }
+
+    /// The size should be computed according to the "fit content" formula:
+    ///    `max(min_content, min(max_content, limit))`
+    /// where `limit` is a LENGTH value
+    #[inline(always)]
+    pub const fn fit_content_px(limit: f32) -> Self {
+        Self(CompactLength::fit_content_px(limit))
+    }
+
+    /// The size should be computed according to the "fit content" formula:
+    ///    `max(min_content, min(max_content, limit))`
+    /// where `limit` is a PERCENTAGE value
+    #[inline(always)]
+    pub const fn fit_content_percent(limit: f32) -> Self {
+        Self(CompactLength::fit_content_percent(limit))
     }
 
     /// A `calc()` value. The value passed here is treated as an opaque handle to
@@ -328,6 +381,12 @@ impl Dimension {
         self.0.is_auto()
     }
 
+    /// Returns true if value is min-content, max-content, fit-content, or fit-content(...)
+    #[inline(always)]
+    pub fn is_intrinsic_sizing_keyword(self) -> bool {
+        self.0.is_intrinsic_sizing_keyword()
+    }
+
     /// Get the raw `CompactLength` tag
     pub fn tag(self) -> usize {
         self.0.tag()
@@ -347,7 +406,17 @@ impl<'de> serde::Deserialize<'de> for Dimension {
     {
         let inner = CompactLength::deserialize(deserializer)?;
         // Note: validation intentionally excludes the CALC_TAG as deserializing calc() values is not supported
-        if matches!(inner.tag(), CompactLength::LENGTH_TAG | CompactLength::PERCENT_TAG | CompactLength::AUTO_TAG) {
+        if matches!(
+            inner.tag(),
+            CompactLength::LENGTH_TAG
+                | CompactLength::PERCENT_TAG
+                | CompactLength::AUTO_TAG
+                | CompactLength::MIN_CONTENT_TAG
+                | CompactLength::MAX_CONTENT_TAG
+                | CompactLength::FIT_CONTENT_KEYWORD_TAG
+                | CompactLength::FIT_CONTENT_PX_TAG
+                | CompactLength::FIT_CONTENT_PERCENT_TAG
+        ) {
             Ok(Self(inner))
         } else {
             Err(serde::de::Error::custom("Invalid tag"))
