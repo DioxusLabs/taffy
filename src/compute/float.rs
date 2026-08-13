@@ -637,8 +637,14 @@ impl FloatContext {
         }
     }
 
-    /// Search for a space suitable for laying out a box that establishes an independent
-    /// formatting context (whose border box must not overlap floats).
+    /// Compute a slot for a box that establishes an independent formatting context (whose
+    /// border box must not overlap floats), with its top border edge at `y`.
+    ///
+    /// The float insets are unioned over all segments that the box (of the given `height`)
+    /// vertically intersects: the box fits in the slot if its border box width does not exceed
+    /// `border_width`. Since the box's height generally depends on the width it is laid out at,
+    /// callers should iterate: measure the box at the slot's width, then recompute the slot with
+    /// the measured height until it stabilises (insets only grow with height, so this converges).
     ///
     /// The box's margins are resolved against the containing block's content edges. When there
     /// are floats beside the box:
@@ -659,80 +665,96 @@ impl FloatContext {
     /// When there are no floats beside the box, its (possibly negative) margins apply as usual.
     pub fn find_bfc_slot(
         &self,
-        min_y: f32,
+        y: f32,
+        height: f32,
         containing_block_insets: [f32; 2],
         margins: [f32; 2],
         direction: Direction,
-        clear: Clear,
-        after: Option<usize>,
     ) -> BfcSlot {
         let margin_insets = [containing_block_insets[0] + margins[0], containing_block_insets[1] + margins[1]];
         let no_float_width = self.available_width - margin_insets[0] - margin_insets[1];
         let no_float_slot = BfcSlot {
             segment_id: None,
             x: margin_insets[0],
-            y: min_y,
+            y,
             border_width: no_float_width,
             stretch_width: no_float_width,
         };
 
-        if !self.has_active_floats(min_y) {
+        if !self.has_active_floats(y) {
             return no_float_slot;
         }
 
-        // Clearance clears past the bottom of floats on the relevant side, including
-        // zero-sized floats which occupy no segment
-        let min_y = min_y.max(self.cleared_threshold(clear).unwrap_or(f32::NEG_INFINITY));
-
-        // The min starting segment index
-        let at_least = after.map(|idx| idx + 1).unwrap_or(0);
-        let hwm = at_least.max(self.cleared_segment(clear).map(|idx| idx + 1).unwrap_or(0));
-
-        let start_idx = self
-            .segments
-            .get(hwm..)
-            .and_then(|segments| segments.iter().position(|segment| segment.y.end > min_y).map(|idx| idx + hwm));
-        let start_idx = start_idx.unwrap_or(self.segments.len());
-        match self.segments.get(start_idx) {
-            Some(segment) => {
-                let lead = match direction {
-                    Direction::Ltr => 0,
-                    Direction::Rtl => 1,
-                };
-                let trail = 1 - lead;
-                let has_lead_float = segment.has_float[lead];
-                let has_trail_float = segment.has_float[trail];
-                let mut fit_insets = [0.0; 2];
-                let mut stretch_insets = [0.0; 2];
-                fit_insets[lead] =
-                    if has_lead_float { segment.insets[lead].max(margin_insets[lead]) } else { margin_insets[lead] };
-                stretch_insets[lead] = fit_insets[lead];
-                fit_insets[trail] = if has_trail_float {
-                    segment.insets[trail].max(containing_block_insets[trail])
-                } else {
-                    // A positive trailing margin may overflow the containing block edge (it does
-                    // not affect fit), but a negative one widens the space for the border box
-                    margin_insets[trail].min(containing_block_insets[trail])
-                };
-                stretch_insets[trail] = if has_trail_float {
-                    segment.insets[trail].max(margin_insets[trail])
-                } else {
-                    margin_insets[trail]
-                };
-                BfcSlot {
-                    segment_id: Some(start_idx),
-                    x: fit_insets[0],
-                    y: segment.y.start.max(min_y),
-                    border_width: self.available_width - fit_insets[0] - fit_insets[1],
-                    stretch_width: self.available_width - stretch_insets[0] - stretch_insets[1],
-                }
+        // Union the float insets (and float presence per side) of all segments that the box
+        // vertically intersects
+        let end_y = y + height.max(0.0);
+        let mut float_insets: Option<[f32; 2]> = None;
+        let mut has_float = [false; 2];
+        let mut segment_id = None;
+        for (idx, segment) in self.segments.iter().enumerate() {
+            if segment.y.end <= y {
+                continue;
             }
-            // Below all floats
-            None => BfcSlot {
-                y: self.segments.last().map(|segment| segment.y.end).unwrap_or(min_y).max(min_y),
-                ..no_float_slot
-            },
+            if segment_id.is_none() {
+                segment_id = Some(idx);
+            }
+            if segment.y.start > end_y || (segment.y.start == end_y && segment.y.start > y) {
+                break;
+            }
+            float_insets = Some(match float_insets {
+                Some(insets) => [insets[0].max(segment.insets[0]), insets[1].max(segment.insets[1])],
+                None => segment.insets,
+            });
+            has_float = [has_float[0] || segment.has_float[0], has_float[1] || segment.has_float[1]];
         }
+
+        // The box does not vertically intersect any float segment
+        let Some(float_insets) = float_insets else {
+            return BfcSlot { segment_id, ..no_float_slot };
+        };
+
+        let lead = match direction {
+            Direction::Ltr => 0,
+            Direction::Rtl => 1,
+        };
+        let trail = 1 - lead;
+        let has_lead_float = has_float[lead];
+        let has_trail_float = has_float[trail];
+        let mut fit_insets = [0.0; 2];
+        let mut stretch_insets = [0.0; 2];
+        fit_insets[lead] =
+            if has_lead_float { float_insets[lead].max(margin_insets[lead]) } else { margin_insets[lead] };
+        stretch_insets[lead] = fit_insets[lead];
+        fit_insets[trail] = if has_trail_float {
+            float_insets[trail].max(containing_block_insets[trail])
+        } else {
+            // A positive trailing margin may overflow the containing block edge (it does
+            // not affect fit), but a negative one widens the space for the border box
+            margin_insets[trail].min(containing_block_insets[trail])
+        };
+        stretch_insets[trail] =
+            if has_trail_float { float_insets[trail].max(margin_insets[trail]) } else { margin_insets[trail] };
+        BfcSlot {
+            segment_id,
+            x: fit_insets[0],
+            y,
+            border_width: self.available_width - fit_insets[0] - fit_insets[1],
+            stretch_width: self.available_width - stretch_insets[0] - stretch_insets[1],
+        }
+    }
+
+    /// The next candidate y position (below `y`) at which to try placing a box that must not
+    /// overlap floats: the next float-segment boundary strictly below `y`.
+    ///
+    /// Returns `None` if there are no float boundaries below `y` (in which case moving the box
+    /// further down cannot change which floats it is beside).
+    pub fn next_bfc_candidate_y(&self, y: f32) -> Option<f32> {
+        for segment in &self.segments {
+            if segment.y.start > y {
+                return Some(segment.y.start);
+            }
+        }
+        self.segments.last().map(|segment| segment.y.end).filter(|end| *end > y)
     }
 }
 
