@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Added
+
+- `Dimension` (used for `size`) now supports the intrinsic sizing keywords `min-content`, `max-content`, `fit-content` and `fit-content(<length-percentage>)` via new constructors (`Dimension::min_content()`, `Dimension::max_content()`, `Dimension::fit_content()`, `Dimension::fit_content_px()`, `Dimension::fit_content_percent()`), a new `CompactLength::FIT_CONTENT_KEYWORD_TAG` representation for the plain `fit-content` keyword, and CSS parsing support. Block layout resolves these keywords for the widths of in-flow children and floats; other layout modes do not yet support them
+
 ### Changed
 
 - `TaffyTree::compute_layout_with_measure`'s measure function now takes the full `LayoutInput` (plus `NodeId`, `Option<&mut NodeContext>` and `&Style`) and returns a `LayoutOutput` directly instead of a `Size<f32>`, allowing measure functions to set baselines (and other `LayoutOutput` fields) on leaf nodes. `compute_leaf_layout` is no longer called implicitly (#953)
