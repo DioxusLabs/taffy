@@ -26,6 +26,8 @@
 
 - Grid: fixed a subtract-with-overflow panic (in debug builds) when resolving named lines for a template containing a repetition with fewer line name sets than tracks. Any template combining line names with a repetition created by the `repeat()` style helper (or parsed from CSS such as `[a] repeat(2, 10px) [c] 10px`) could trigger this. In release builds the same bug silently mis-numbered the lines following the repetition. The length of `GridTemplateRepetition::line_names` is now part of the API contract: it must either be empty (all lines unnamed) or contain exactly `tracks.len() + 1` line name sets, and any other length panics (in all builds) during layout
 
+- Grid: the track sizing algorithm no longer loops forever when styles contain non-finite values (e.g. `NaN` flex factors or non-finite lengths). The "find the size of an fr" and "distribute space up to limits" loops are now bounded by the track count
+
 - Flexbox: the definiteness of known dimensions is now tracked through nested layouts via a new `known_dimensions_are_definite` field on `LayoutInput`. A flex item's post-flexing main size is only treated as definite (for resolving percentage sizes of its children and for collecting its children into flex lines) when the container's main size is definite or the item's used flex basis is definite. Previously a wrapping flex container nested in a container with an indefinite main size could incorrectly wrap its items into multiple lines based on its own content-derived size (#999)
 
 - Flexbox: percentage heights of block descendants no longer resolve against a flex item's post-flexing main size when that size is indefinite (#950)
