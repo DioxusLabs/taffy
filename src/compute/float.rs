@@ -648,13 +648,20 @@ impl FloatContext {
         direction: Direction,
     ) -> BfcSlot {
         let mut seg_insets = [f32::NEG_INFINITY; 2];
+        let mut has_float = [false, false];
         for segment in &self.segments {
             if segment.y.start < y.end - 0.001 && segment.y.end > y.start + 0.001 {
-                seg_insets[0] = seg_insets[0].max(segment.insets[0]);
-                seg_insets[1] = seg_insets[1].max(segment.insets[1]);
+                for side in 0..2 {
+                    if segment.has_float[side] {
+                        has_float[side] = true;
+                        seg_insets[side] = seg_insets[side].max(segment.insets[side]);
+                    }
+                }
             }
         }
 
+        // Margins are applied with the same semantics as in `find_bfc_slot`, based on
+        // whether a float intrudes on the relevant side anywhere within the y range
         let margin_insets = [containing_block_insets[0] + margins[0], containing_block_insets[1] + margins[1]];
         let lead = match direction {
             Direction::Ltr => 0,
@@ -663,10 +670,16 @@ impl FloatContext {
         let trail = 1 - lead;
         let mut fit_insets = [0.0; 2];
         let mut stretch_insets = [0.0; 2];
-        fit_insets[lead] = seg_insets[lead].max(containing_block_insets[lead]).max(margin_insets[lead]);
+        fit_insets[lead] =
+            if has_float[lead] { seg_insets[lead].max(margin_insets[lead]) } else { margin_insets[lead] };
         stretch_insets[lead] = fit_insets[lead];
-        fit_insets[trail] = seg_insets[trail].max(containing_block_insets[trail]);
-        stretch_insets[trail] = fit_insets[trail].max(containing_block_insets[trail] + margins[trail].max(0.0));
+        fit_insets[trail] = if has_float[trail] {
+            seg_insets[trail].max(containing_block_insets[trail])
+        } else {
+            margin_insets[trail].min(containing_block_insets[trail])
+        };
+        stretch_insets[trail] =
+            if has_float[trail] { seg_insets[trail].max(margin_insets[trail]) } else { margin_insets[trail] };
         BfcSlot {
             segment_id: None,
             x: fit_insets[0],
