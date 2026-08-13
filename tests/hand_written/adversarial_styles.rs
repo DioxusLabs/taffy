@@ -5,7 +5,10 @@
 #[cfg(test)]
 mod adversarial_styles {
     use taffy::prelude::*;
-    use taffy::style::{GridTemplateComponent, MaxTrackSizingFunction, MinTrackSizingFunction, TrackSizingFunction};
+    use taffy::style::{
+        GridTemplateComponent, GridTemplateRepetition, MaxTrackSizingFunction, MinTrackSizingFunction,
+        TrackSizingFunction,
+    };
     use taffy_test_helpers::new_test_tree;
 
     fn definite(size: f32) -> Size<AvailableSpace> {
@@ -65,9 +68,9 @@ mod adversarial_styles {
         }
     }
 
-    /// `repeat()` definitions are allowed to contain fewer line name sets than they have tracks
-    /// (the `repeat` style helper creates repetitions with no line names at all). Line numbering
-    /// must still account for the tracks that each repetition generates.
+    /// `repeat()` definitions are allowed to contain no line name sets at all (the `repeat` style
+    /// helper creates such repetitions). Line numbering must still account for the tracks that
+    /// each repetition generates.
     #[test]
     fn repetition_without_line_names_resolves_lines() {
         let mut tree = new_test_tree();
@@ -95,6 +98,33 @@ mod adversarial_styles {
 
         // "c" is the 4th line of the grid: the line after the three 10px columns
         assert_eq!(tree.layout(child).unwrap().location.x, 30.0);
+    }
+
+    /// A non-empty list of line name sets whose length does not match `track_count + 1` violates
+    /// the `GridTemplateRepetition` API contract and must panic rather than silently mis-numbering
+    /// the lines that follow the repetition.
+    #[test]
+    #[should_panic(expected = "line name sets")]
+    fn repetition_with_wrong_line_name_set_count_panics() {
+        let mut tree = new_test_tree();
+        let child = tree.new_leaf(Style::default()).unwrap();
+        let root = tree
+            .new_with_children(
+                Style {
+                    display: Display::Grid,
+                    grid_template_columns: vec![GridTemplateComponent::Repeat(GridTemplateRepetition {
+                        count: RepetitionCount::Count(2),
+                        tracks: vec![length(10.0)],
+                        line_names: vec![vec!["a".into()]],
+                    })],
+                    grid_template_column_names: vec![vec![], vec![]],
+                    ..Default::default()
+                },
+                &[child],
+            )
+            .unwrap();
+
+        tree.compute_layout(root, definite(100.0)).unwrap();
     }
 
     /// When auto-placement collides with an occupied area, the search cursor must jump past the
