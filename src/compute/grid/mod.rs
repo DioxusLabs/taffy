@@ -323,6 +323,22 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     let initial_column_sum = columns.iter().map(|track| track.base_size).sum::<f32>();
     inner_node_size.width = inner_node_size.width.or_else(|| initial_column_sum.into());
 
+    // If the container has an aspect-ratio and its height is not otherwise definite, then the height
+    // is transferred from the (now definite) width
+    let transferred_height: Option<f32> = match (inner_node_size.height, aspect_ratio, inner_node_size.width) {
+        (None, Some(ratio), Some(inner_width)) => {
+            let border_box_width = inner_width + content_box_inset.horizontal_axis_sum();
+            let border_box_height = (border_box_width / ratio)
+                .maybe_clamp(min_size.height, max_size.height)
+                .max(padding_border_size.height);
+            Some(border_box_height)
+        }
+        _ => None,
+    };
+    inner_node_size.height = inner_node_size
+        .height
+        .or_else(|| transferred_height.map(|height| height - content_box_inset.vertical_axis_sum()));
+
     items.iter_mut().for_each(|item| item.grid_area_size_cache = None);
 
     // Run track sizing algorithm for Block axis
@@ -359,6 +375,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
             .max(padding_border_size.width),
         height: resolved_style_size
             .get(AbstractAxis::Block)
+            .or(transferred_height)
             .unwrap_or_else(|| initial_row_sum + content_box_inset.vertical_axis_sum())
             .maybe_clamp(min_size.height, max_size.height)
             .max(padding_border_size.height),
