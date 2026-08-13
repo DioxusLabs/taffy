@@ -167,6 +167,8 @@ struct AlgoConstants {
     /// Whether the node has a known main size which is definite (as of the start of layout,
     /// before the main size is determined from the node's contents)
     has_definite_main_size: bool,
+    /// Whether the node has a known cross size which is definite
+    has_definite_cross_size: bool,
 
     /// The size of the virtual container containing the flex items.
     container_size: Size<f32>,
@@ -501,6 +503,7 @@ fn compute_constants(
     let node_inner_size = node_outer_size.maybe_sub(content_box_inset.sum_axes());
     let known_main_size_is_definite = known_dimensions_are_definite.main(dir);
     let has_definite_main_size = known_main_size_is_definite && known_dimensions.main(dir).is_some();
+    let has_definite_cross_size = known_dimensions_are_definite.cross(dir) && known_dimensions.cross(dir).is_some();
     let gap = style.gap().resolve_or_zero(node_inner_size.or(Size::zero()), |val, basis| tree.calc(val, basis));
 
     let container_size = Size::zero();
@@ -535,6 +538,7 @@ fn compute_constants(
         node_inner_size,
         known_main_size_is_definite,
         has_definite_main_size,
+        has_definite_cross_size,
         container_size,
         inner_container_size,
     }
@@ -743,6 +747,7 @@ fn determine_flex_base_size(
         };
 
         // Known dimensions for child sizing
+        let mut child_cross_size_is_definite = child.size.cross(dir).is_some();
         let child_known_dimensions = {
             let mut ckd = child.size.with_main(dir, None);
             // Clamp the definite cross size by the cross min/max sizes so that sizes
@@ -761,6 +766,10 @@ fn determine_flex_base_size(
                     dir,
                     cross_axis_available_space.into_option().maybe_sub(child.margin.cross_axis_sum(dir)),
                 );
+                // The cross size of a stretched item is definite if the container has a definite
+                // cross size (https://www.w3.org/TR/css-flexbox-1/#definite-sizes)
+                child_cross_size_is_definite =
+                    !constants.is_wrap && constants.has_definite_cross_size && cross_axis_parent_size.is_some();
             }
             ckd
         };
@@ -818,6 +827,16 @@ fn determine_flex_base_size(
             //    is the item’s max-content main size.
 
             // TODO if/when vertical writing modes are supported
+
+            // If the item has an aspect ratio and a definite cross size then the flex base size
+            // is derived from that cross size via the aspect ratio (case B above, as applied by
+            // the child's own layout below), and is therefore definite.
+            if child.aspect_ratio.is_some()
+                && child_cross_size_is_definite
+                && child_known_dimensions.cross(dir).is_some()
+            {
+                child.flex_basis_is_definite = true;
+            }
 
             // E. Otherwise, size the item into the available space using its used flex basis
             //    in place of its main size, treating a value of content as max-content.

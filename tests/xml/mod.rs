@@ -11306,6 +11306,26 @@ mod flex {
     }
 
     #[test]
+    fn flex_percent_child_of_aspect_ratio_stretched_item_resolves__border_box_ltr() {
+        crate::run_xml_test("flex", "flex_percent_child_of_aspect_ratio_stretched_item_resolves__border_box_ltr");
+    }
+
+    #[test]
+    fn flex_percent_child_of_aspect_ratio_stretched_item_resolves__content_box_ltr() {
+        crate::run_xml_test("flex", "flex_percent_child_of_aspect_ratio_stretched_item_resolves__content_box_ltr");
+    }
+
+    #[test]
+    fn flex_percent_child_of_aspect_ratio_stretched_item_resolves__border_box_rtl() {
+        crate::run_xml_test("flex", "flex_percent_child_of_aspect_ratio_stretched_item_resolves__border_box_rtl");
+    }
+
+    #[test]
+    fn flex_percent_child_of_aspect_ratio_stretched_item_resolves__content_box_rtl() {
+        crate::run_xml_test("flex", "flex_percent_child_of_aspect_ratio_stretched_item_resolves__content_box_rtl");
+    }
+
+    #[test]
     fn flex_percent_child_of_definite_basis_item_resolves__border_box_ltr() {
         crate::run_xml_test("flex", "flex_percent_child_of_definite_basis_item_resolves__border_box_ltr");
     }
