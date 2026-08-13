@@ -99,6 +99,10 @@ pub trait GenericRepetition {
         self.tracks().len().min(u16::MAX as usize) as u16
     }
     /// Returns an iterator over the lines names
+    ///
+    /// Line name sets are positional: set `i` names the `i`th line of each repetition. The iterator
+    /// must yield either no line name sets at all (all lines are unnamed) or exactly
+    /// `track_count() + 1` of them (one set per line, including both edge lines).
     fn lines_names(&self) -> Self::TemplateLineNames<'_>;
 }
 
@@ -1448,6 +1452,10 @@ pub struct GridTemplateRepetition<S: CheapCloneStr> {
     /// The tracks to repeat
     pub tracks: Vec<TrackSizingFunction>,
     /// The line names for the repeated tracks
+    ///
+    /// Line name sets are positional: set `i` names the `i`th line of each repetition. This must
+    /// either be empty (all lines are unnamed) or contain exactly `tracks.len() + 1` sets (one set
+    /// per line, including both edge lines; sets may be empty). Other lengths panic during layout.
     pub line_names: Vec<Vec<S>>,
 }
 
