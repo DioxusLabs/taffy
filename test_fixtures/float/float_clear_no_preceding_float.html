@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    Clear on a float with no preceding float on the relevant side is a no-op,
+    but clears past a preceding float. Reduced from WPT css/CSS2/floats-clear/clear-002.xht
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="display: block; width: 500px;">
+  <div style="display: block; float: right; width: 96px; height: 96px;"></div>
+  <div style="display: block; float: right; clear: right; width: 96px; height: 96px;"></div>
+</div>
+
+</body>
+</html>

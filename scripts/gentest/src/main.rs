@@ -515,7 +515,19 @@ async fn test_root_element(
         .map_err(|_| format!("timed out loading the test fixture {name} ({})", fixture_path.display()))?
         .map_err(|err| format!("could not load the test fixture {name}: {err}"))?;
 
-    // Navigation can occasionally return before the document is fully loaded, so retry a few times
+    // Navigation can occasionally return before the document is fully loaded, in which case the
+    // test helper script and stylesheet may not have been applied yet. Wait for the load event
+    // (after which stylesheets are guaranteed to be applied) before reading anything back.
+    const AWAIT_LOAD: &str = "
+        const done = arguments[arguments.length - 1];
+        if (document.readyState === 'complete') { done(); } else { addEventListener('load', done); }
+    ";
+    timeout(TIMEOUT, client.execute_async(AWAIT_LOAD, vec![]))
+        .await
+        .map_err(|_| format!("timed out waiting for the test fixture {name} to finish loading"))?
+        .map_err(|err| format!("could not wait for the test fixture {name} to finish loading: {err}"))?;
+
+    // Retry a few times as a backstop in case anything is still not ready
     let mut attempts = 0;
     let description = loop {
         let result = timeout(TIMEOUT, client.execute("return getTestData()", vec![]))

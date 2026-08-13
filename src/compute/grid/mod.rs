@@ -154,8 +154,13 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
         }
     }
 
-    let get_child_styles_iter =
-        |node| tree.child_ids(node).map(|child_node: NodeId| tree.get_grid_child_style(child_node));
+    // Absolutely positioned children do not take part in grid placement and do not create
+    // implicit tracks, so they are excluded from the grid size estimate.
+    let get_child_styles_iter = |node| {
+        tree.child_ids(node).map(|child_node: NodeId| tree.get_grid_child_style(child_node)).filter(|style| {
+            style.box_generation_mode() != BoxGenerationMode::None && style.position() != Position::Absolute
+        })
+    };
     let child_styles_iter = get_child_styles_iter(node);
 
     // 2. Resolve the explicit grid
@@ -587,6 +592,8 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
 
     #[cfg_attr(not(feature = "content_size"), allow(unused_mut))]
     let mut item_content_size_contribution = Size::ZERO;
+    #[cfg_attr(not(feature = "content_size"), allow(unused_mut, unused))]
+    let mut absolute_content_size = Size::ZERO;
 
     // Sort items back into original order to allow them to be matched up with styles
     items.sort_by_key(|item| item.source_order);
@@ -610,6 +617,8 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
             container_alignment_styles,
             item.baseline_shim,
             direction,
+            container_border_box.width,
+            border,
         );
         item.y_position = y_position;
         item.height = height;
@@ -676,20 +685,38 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
                     maybe_grid_line.and_then(|line: OriginZeroLine| line.try_into_track_vec_index(final_row_counts))
                 });
 
+            // Content alignment (align-content/justify-content) may distribute free space before, between,
+            // or after tracks. Grid lines used by absolutely positioned items resolve to the edges of the
+            // tracks adjacent to the line rather than to the raw gutter offset:
+            //   - As a start edge, a line resolves to the start of the track that follows it
+            //   - As an end edge, a line resolves to the end of the track that precedes it
+            /// Resolve a grid line (by track vector index) used as a start edge to a position
+            fn line_as_start_edge(tracks: &[GridTrack], index: usize) -> f32 {
+                tracks.get(index + 1).unwrap_or(&tracks[index]).offset
+            }
+            /// Resolve a grid line (by track vector index) used as an end edge to a position
+            fn line_as_end_edge(tracks: &[GridTrack], index: usize) -> f32 {
+                if index == 0 {
+                    tracks.get(1).unwrap_or(&tracks[0]).offset
+                } else {
+                    tracks[index].offset
+                }
+            }
+
             let grid_area = Rect {
-                top: maybe_row_indexes.start.map(|index| rows[index].offset).unwrap_or(border.top),
+                top: maybe_row_indexes.start.map(|index| line_as_start_edge(&rows, index)).unwrap_or(border.top),
                 bottom: maybe_row_indexes
                     .end
-                    .map(|index| rows[index].offset)
+                    .map(|index| line_as_end_edge(&rows, index))
                     .unwrap_or(container_border_box.height - border.bottom - scrollbar_gutter.y),
-                left: maybe_col_indexes.start.map(|index| columns[index].offset).unwrap_or_else(|| {
+                left: maybe_col_indexes.start.map(|index| line_as_start_edge(&columns, index)).unwrap_or_else(|| {
                     if direction.is_rtl() {
                         border.left + scrollbar_gutter.x
                     } else {
                         border.left
                     }
                 }),
-                right: maybe_col_indexes.end.map(|index| columns[index].offset).unwrap_or_else(|| {
+                right: maybe_col_indexes.end.map(|index| line_as_end_edge(&columns, index)).unwrap_or_else(|| {
                     if direction.is_rtl() {
                         container_border_box.width - border.right
                     } else {
@@ -701,11 +728,20 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
 
             // TODO: Baseline alignment support for absolutely positioned items (should check if is actually specified)
             #[cfg_attr(not(feature = "content_size"), allow(unused_variables))]
-            let (content_size_contribution, _, _) =
-                align_and_position_item(tree, child, order, grid_area, container_alignment_styles, 0.0, direction);
+            let (content_size_contribution, _, _) = align_and_position_item(
+                tree,
+                child,
+                order,
+                grid_area,
+                container_alignment_styles,
+                0.0,
+                direction,
+                container_border_box.width,
+                border,
+            );
             #[cfg(feature = "content_size")]
             {
-                item_content_size_contribution = item_content_size_contribution.f32_max(content_size_contribution);
+                absolute_content_size = absolute_content_size.f32_max(content_size_contribution);
             }
 
             order += 1;
@@ -751,9 +787,21 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
         item.y_position + item.baseline.unwrap_or(item.height)
     };
 
+    // The container's own padding at the end of the content is part of its scrollable
+    // overflow region, so it is included in the in-flow content size.
+    #[cfg(feature = "content_size")]
+    let content_size = {
+        let mut content_size = item_content_size_contribution;
+        content_size.width += if direction.is_rtl() { padding.left } else { padding.right };
+        content_size.height += padding.bottom;
+        content_size.f32_max(absolute_content_size)
+    };
+    #[cfg(not(feature = "content_size"))]
+    let content_size = item_content_size_contribution;
+
     LayoutOutput::from_sizes_and_baselines(
         container_border_box,
-        item_content_size_contribution,
+        content_size,
         Point { x: None, y: Some(grid_container_baseline) },
     )
 }
