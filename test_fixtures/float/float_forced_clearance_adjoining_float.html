@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    A float placed while the enclosing margin-collapse strut is unresolved forces
+    clearance on a later cleared sibling whose top margin adjoins the same strut:
+    no matter how large the margin is, the cleared element sits just below the float.
+    Reduced from WPT css/CSS2/floats-clear/adjoining-float-before-clearance.html
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="display: block; width: 100px;">
+  <div style="display: block;">
+    <div style="display: block;">
+      <div style="display: block; float: left; width: 100px; height: 50px;"></div>
+    </div>
+    <div style="display: block; clear: left; margin-top: 400px; height: 50px;"></div>
+  </div>
+</div>
+
+</body>
+</html>

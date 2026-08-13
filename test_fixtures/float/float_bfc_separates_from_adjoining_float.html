@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    A BFC root with a large top margin separates from an adjoining float (similar to clearance)
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="display: block; overflow: hidden; width: 200px;">
+  <div style="display: block;">
+    <div style="display: block;">
+      <div style="float: left; width: 200px; height: 200px;"></div>
+    </div>
+    <div style="display: block; overflow: hidden; width: 200px; height: 1px; margin-top: 200px;"></div>
+  </div>
+</div>
+
+</body>
+</html>

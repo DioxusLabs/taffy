@@ -89,6 +89,9 @@ struct CacheKey {
     kd_available_space: u64,
     /// The initial cached size of the parent's node
     parent_size: u64,
+    /// Whether each known dimension is definite. Normalized such that an axis
+    /// without a known dimension is always `true`.
+    known_dimensions_are_definite: Size<bool>,
 }
 
 impl CacheKey {
@@ -118,6 +121,9 @@ impl From<&LayoutInput> for CacheKey {
         Self {
             kd_available_space: size_mixed_cache_key(input.known_dimensions, input.available_space),
             parent_size: (size_option_cache_key(input.parent_size) & NON_SIGN_BITS_MASK) | extra_bits,
+            known_dimensions_are_definite: input
+                .known_dimensions_are_definite
+                .zip_map(input.known_dimensions, |is_definite, kd| is_definite || kd.is_none()),
         }
     }
 }
@@ -229,6 +235,7 @@ impl Cache {
             RunMode::ComputeSize => {
                 for entry in self.measure_entries.iter().flatten() {
                     if entry.key.kd_available_space == key.kd_available_space
+                        && entry.key.known_dimensions_are_definite == key.known_dimensions_are_definite
                         && (entry.key.x_axis_parent_size() == key.x_axis_parent_size())
                     {
                         return Some(LayoutOutput::from_outer_size(entry.content));

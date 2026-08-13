@@ -89,6 +89,10 @@ pub trait CoreStyle {
         BoxGenerationMode::DEFAULT
     }
     /// Is block layout?
+    ///
+    /// This should only return `true` for `display: block`, and NOT for `display: flow-root`.
+    /// Flow-root boxes establish a new block formatting context and must not be treated as
+    /// being part of their parent's block formatting context (which is what this method controls).
     #[inline(always)]
     fn is_block(&self) -> bool {
         false
@@ -185,6 +189,9 @@ pub enum Display {
     /// The children will follow the block layout algorithm
     #[cfg(feature = "block_layout")]
     Block,
+    /// The children will follow the block layout algorithm and establish a new block formatting context
+    #[cfg(feature = "block_layout")]
+    FlowRoot,
     /// The children will follow the flexbox layout algorithm
     #[cfg(feature = "flexbox")]
     Flex,
@@ -228,6 +235,8 @@ crate::util::parse::impl_parse_for_keyword_enum!(Display,
     "grid" => Grid,
     #[cfg(feature = "block_layout")]
     "block" => Block,
+    #[cfg(feature = "block_layout")]
+    "flow-root" => FlowRoot,
 );
 
 impl core::fmt::Display for Display {
@@ -236,6 +245,8 @@ impl core::fmt::Display for Display {
             Display::None => write!(f, "NONE"),
             #[cfg(feature = "block_layout")]
             Display::Block => write!(f, "BLOCK"),
+            #[cfg(feature = "block_layout")]
+            Display::FlowRoot => write!(f, "FLOW-ROOT"),
             #[cfg(feature = "flexbox")]
             Display::Flex => write!(f, "FLEX"),
             #[cfg(feature = "grid")]

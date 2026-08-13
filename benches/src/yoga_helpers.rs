@@ -152,7 +152,10 @@ fn items_into_align(align: Option<tf::AlignSelf>) -> yg::Align {
         tf::AlignItemsKeyword::Center => yg::Align::Center,
         tf::AlignItemsKeyword::Baseline => yg::Align::Baseline,
         tf::AlignItemsKeyword::Stretch => yg::Align::Stretch,
-        tf::AlignItemsKeyword::Start | tf::AlignItemsKeyword::End => unimplemented!(),
+        tf::AlignItemsKeyword::Start
+        | tf::AlignItemsKeyword::End
+        | tf::AlignItemsKeyword::SelfStart
+        | tf::AlignItemsKeyword::SelfEnd => unimplemented!(),
     }
 }
 
@@ -188,6 +191,7 @@ fn apply_taffy_style(node: &mut yg::Node, style: &tf::Style) {
         tf::Display::Flex => yg::Display::Flex,
         tf::Display::Grid => panic!("Yoga does not support CSS Grid layout"),
         tf::Display::Block => panic!("Yoga does not support CSS Block layout"),
+        tf::Display::FlowRoot => panic!("Yoga does not support CSS Block layout"),
     });
 
     // box_sizing

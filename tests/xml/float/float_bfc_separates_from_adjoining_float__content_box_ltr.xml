@@ -1,0 +1,23 @@
+<test name="float_bfc_separates_from_adjoining_float__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="block" box-sizing="content-box" direction="ltr" overflow-x="hidden" overflow-y="hidden" scrollbar-width="15" width="200px">
+      <div display="block" box-sizing="content-box" direction="ltr">
+        <div display="block" box-sizing="content-box" direction="ltr">
+          <div box-sizing="content-box" direction="ltr" float="left" width="200px" height="200px"/>
+        </div>
+        <div display="block" box-sizing="content-box" direction="ltr" overflow-x="hidden" overflow-y="hidden" scrollbar-width="15" width="200px" height="1px" margin-top="200px"/>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="200" height="201" scroll_width="0" scroll_height="0">
+      <node x="0" y="0" width="200" height="201">
+        <node x="0" y="0" width="200" height="0">
+          <node x="0" y="0" width="200" height="200"/>
+        </node>
+        <node x="0" y="200" width="200" height="1" scroll_width="0" scroll_height="0"/>
+      </node>
+    </node>
+  </expectations>
+</test>

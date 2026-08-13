@@ -1,0 +1,13 @@
+<test name="align_self_self_end_wrap_reverse__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div box-sizing="content-box" direction="ltr" flex-wrap="wrap-reverse" width="100px" height="100px">
+      <div box-sizing="content-box" direction="ltr" align-self="self-end" width="10px" height="10px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="100" height="100">
+      <node x="0" y="90" width="10" height="10"/>
+    </node>
+  </expectations>
+</test>

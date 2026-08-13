@@ -1,0 +1,35 @@
+<test name="float_shrink_to_fit_contains_floats__content_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="block" box-sizing="content-box" direction="rtl" width="400px" height="200px">
+      <div display="block" box-sizing="content-box" direction="rtl" float="left">
+        <div display="block" box-sizing="content-box" direction="rtl" float="left" width="15px" height="10px" border-top="1px" border-left="1px" border-bottom="1px" border-right="1px"/>
+        <div display="block" box-sizing="content-box" direction="rtl" float="left" width="15px" height="10px" border-top="1px" border-left="1px" border-bottom="1px" border-right="1px"/>
+        <div display="block" box-sizing="content-box" direction="rtl" float="left" width="15px" height="10px" border-top="1px" border-left="1px" border-bottom="1px" border-right="1px"/>
+      </div>
+      <div display="block" box-sizing="content-box" direction="rtl" clear="both"/>
+      <div display="block" box-sizing="content-box" direction="rtl" float="left">
+        <div display="block" box-sizing="content-box" direction="rtl" float="left" width="120px" height="10px" border-top="1px" border-left="1px" border-bottom="1px" border-right="1px"/>
+        <div display="block" box-sizing="content-box" direction="rtl" float="left" width="120px" height="10px" border-top="1px" border-left="1px" border-bottom="1px" border-right="1px"/>
+        <div display="block" box-sizing="content-box" direction="rtl" float="left" width="120px" height="10px" border-top="1px" border-left="1px" border-bottom="1px" border-right="1px"/>
+        <div display="block" box-sizing="content-box" direction="rtl" float="left" width="120px" height="10px" border-top="1px" border-left="1px" border-bottom="1px" border-right="1px"/>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="400" height="200">
+      <node x="0" y="0" width="51" height="12">
+        <node x="0" y="0" width="17" height="12"/>
+        <node x="17" y="0" width="17" height="12"/>
+        <node x="34" y="0" width="17" height="12"/>
+      </node>
+      <node x="0" y="12" width="400" height="0"/>
+      <node x="0" y="12" width="400" height="24">
+        <node x="0" y="0" width="122" height="12"/>
+        <node x="122" y="0" width="122" height="12"/>
+        <node x="244" y="0" width="122" height="12"/>
+        <node x="0" y="12" width="122" height="12"/>
+      </node>
+    </node>
+  </expectations>
+</test>

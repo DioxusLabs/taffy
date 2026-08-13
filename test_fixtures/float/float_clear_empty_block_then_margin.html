@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    Clearance on a self-collapsing block suppresses margin collapsing with following
+    siblings, and a following cleared sibling with a large top margin gets no clearance.
+    Reduced from WPT css/CSS2/floats-clear/clear-with-top-margin-after-cleared-empty-block.html
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="display: block; width: 100px; border-top: 1px solid;">
+  <div style="display: block; float: left; width: 100px; height: 20px;"></div>
+  <div style="display: block; clear: both;"></div>
+  <div style="display: block; clear: both; margin-top: 100px; height: 20px;"></div>
+</div>
+
+</body>
+</html>
