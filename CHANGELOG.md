@@ -22,6 +22,12 @@
   })?;
   ```
 
+### Fixed
+
+- Flexbox: the definiteness of known dimensions is now tracked through nested layouts via a new `known_dimensions_are_definite` field on `LayoutInput`. A flex item's post-flexing main size is only treated as definite (for resolving percentage sizes of its children and for collecting its children into flex lines) when the container's main size is definite or the item's used flex basis is definite. Previously a wrapping flex container nested in a container with an indefinite main size could incorrectly wrap its items into multiple lines based on its own content-derived size (#999)
+
+- Flexbox: percentage heights of block descendants no longer resolve against a flex item's post-flexing main size when that size is indefinite (#950)
+
 ## 0.13.0
 
 The MSRV for this release is 1.71.

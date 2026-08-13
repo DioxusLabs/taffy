@@ -46,6 +46,8 @@ struct FlexItem {
     flex_shrink: f32,
     /// The flex grow style of the item
     flex_grow: f32,
+    /// Whether the item's used flex basis is definite (rather than derived from the item's content)
+    flex_basis_is_definite: bool,
 
     /// The minimum size of the item. This differs from min_size above because it also
     /// takes into account content based automatic minimum sizes
@@ -157,6 +159,16 @@ struct AlgoConstants {
     node_outer_size: Size<Option<f32>>,
     /// The content-box size of the node being laid out (if known)
     node_inner_size: Size<Option<f32>>,
+    /// Whether the known main size of the node (if any) is definite. This is `false` when a parent
+    /// imposes a main size on this node that is derived from the node's own content, in which case
+    /// it is indefinite for the purposes of resolving percentage sizes of items and collecting items
+    /// into flex lines. See <https://www.w3.org/TR/css-flexbox-1/#definite-sizes>.
+    known_main_size_is_definite: bool,
+    /// Whether the node has a known main size which is definite (as of the start of layout,
+    /// before the main size is determined from the node's contents)
+    has_definite_main_size: bool,
+    /// Whether the node has a known cross size which is definite
+    has_definite_cross_size: bool,
 
     /// The size of the virtual container containing the flex items.
     container_size: Size<f32>,
@@ -238,7 +250,17 @@ pub fn compute_flexbox_layout(
     debug_log!("FLEX:", dbg:style.flex_direction());
     drop(style);
 
-    compute_preliminary(tree, node, LayoutInput { known_dimensions: styled_based_known_dimensions, ..inputs })
+    // Normalize the definiteness flags: they only apply to dimensions which were passed in as known
+    // by the parent. Dimensions resolved from the node's own style are always definite.
+    let known_dimensions_are_definite = inputs
+        .known_dimensions_are_definite
+        .zip_map(known_dimensions, |is_definite, known_dimension| is_definite || known_dimension.is_none());
+
+    compute_preliminary(
+        tree,
+        node,
+        LayoutInput { known_dimensions: styled_based_known_dimensions, known_dimensions_are_definite, ..inputs },
+    )
 }
 
 /// Compute a preliminary size for an item
@@ -246,7 +268,13 @@ fn compute_preliminary(tree: &mut impl LayoutFlexboxContainer, node: NodeId, inp
     let LayoutInput { known_dimensions, parent_size, available_space, run_mode, .. } = inputs;
 
     // Define some general constants we will need for the remainder of the algorithm.
-    let mut constants = compute_constants(tree, tree.get_flexbox_container_style(node), known_dimensions, parent_size);
+    let mut constants = compute_constants(
+        tree,
+        tree.get_flexbox_container_style(node),
+        known_dimensions,
+        inputs.known_dimensions_are_definite,
+        parent_size,
+    );
 
     // 9. Flex Layout Algorithm
 
@@ -434,6 +462,7 @@ fn compute_constants(
     tree: &impl LayoutFlexboxContainer,
     style: impl FlexboxContainerStyle,
     known_dimensions: Size<Option<f32>>,
+    known_dimensions_are_definite: Size<bool>,
     parent_size: Size<Option<f32>>,
 ) -> AlgoConstants {
     let dir = style.flex_direction();
@@ -472,6 +501,9 @@ fn compute_constants(
 
     let node_outer_size = known_dimensions;
     let node_inner_size = node_outer_size.maybe_sub(content_box_inset.sum_axes());
+    let known_main_size_is_definite = known_dimensions_are_definite.main(dir);
+    let has_definite_main_size = known_main_size_is_definite && known_dimensions.main(dir).is_some();
+    let has_definite_cross_size = known_dimensions_are_definite.cross(dir) && known_dimensions.cross(dir).is_some();
     let gap = style.gap().resolve_or_zero(node_inner_size.or(Size::zero()), |val, basis| tree.calc(val, basis));
 
     let container_size = Size::zero();
@@ -504,6 +536,9 @@ fn compute_constants(
         justify_content,
         node_outer_size,
         node_inner_size,
+        known_main_size_is_definite,
+        has_definite_main_size,
+        has_definite_cross_size,
         container_size,
         inner_container_size,
     }
@@ -520,6 +555,15 @@ fn generate_anonymous_flex_items(
     node: NodeId,
     constants: &AlgoConstants,
 ) -> Vec<FlexItem> {
+    // Percentage sizes of items resolve against the container's inner size, but only if that size
+    // is definite. A known main size which is derived from the container's own content is treated
+    // as indefinite here.
+    let percent_resolution_size = if constants.known_main_size_is_definite {
+        constants.node_inner_size
+    } else {
+        constants.node_inner_size.with_main(constants.dir, None)
+    };
+
     tree.child_ids(node)
         .enumerate()
         .map(|(index, child)| (index, child, tree.get_flexbox_child_style(child)))
@@ -541,16 +585,16 @@ fn generate_anonymous_flex_items(
                 order: index as u32,
                 size: child_style
                     .size()
-                    .maybe_resolve(constants.node_inner_size, |val, basis| tree.calc(val, basis))
+                    .maybe_resolve(percent_resolution_size, |val, basis| tree.calc(val, basis))
                     .maybe_apply_aspect_ratio(aspect_ratio)
                     .maybe_add(box_sizing_adjustment),
                 min_size: child_style
                     .min_size()
-                    .maybe_resolve(constants.node_inner_size, |val, basis| tree.calc(val, basis))
+                    .maybe_resolve(percent_resolution_size, |val, basis| tree.calc(val, basis))
                     .maybe_add(box_sizing_adjustment),
                 max_size: child_style
                     .max_size()
-                    .maybe_resolve(constants.node_inner_size, |val, basis| tree.calc(val, basis))
+                    .maybe_resolve(percent_resolution_size, |val, basis| tree.calc(val, basis))
                     .maybe_add(box_sizing_adjustment),
                 aspect_ratio,
 
@@ -576,6 +620,7 @@ fn generate_anonymous_flex_items(
                 scrollbar_width: child_style.scrollbar_width(),
                 flex_grow: child_style.flex_grow(),
                 flex_shrink: child_style.flex_shrink(),
+                flex_basis_is_definite: false,
                 flex_basis: 0.0,
                 inner_flex_basis: 0.0,
                 violation: 0.0,
@@ -702,6 +747,7 @@ fn determine_flex_base_size(
         };
 
         // Known dimensions for child sizing
+        let mut child_cross_size_is_definite = child.size.cross(dir).is_some();
         let child_known_dimensions = {
             let mut ckd = child.size.with_main(dir, None);
             // Clamp the definite cross size by the cross min/max sizes so that sizes
@@ -720,6 +766,10 @@ fn determine_flex_base_size(
                     dir,
                     cross_axis_available_space.into_option().maybe_sub(child.margin.cross_axis_sum(dir)),
                 );
+                // The cross size of a stretched item is definite if the container has a definite
+                // cross size (https://www.w3.org/TR/css-flexbox-1/#definite-sizes)
+                child_cross_size_is_definite =
+                    !constants.is_wrap && constants.has_definite_cross_size && cross_axis_parent_size.is_some();
             }
             ckd
         };
@@ -733,9 +783,14 @@ fn determine_flex_base_size(
             Size::ZERO
         }
         .main(dir);
+        // Percentage flex basis values resolve against the container's inner main size, but only
+        // if that size is definite. A known main size which is derived from the container's own
+        // content is treated as indefinite here.
+        let percent_resolution_main_size =
+            if constants.known_main_size_is_definite { constants.node_inner_size.main(dir) } else { None };
         let flex_basis = child_style
             .flex_basis()
-            .maybe_resolve(container_width, |val, basis| tree.calc(val, basis))
+            .maybe_resolve(percent_resolution_main_size, |val, basis| tree.calc(val, basis))
             .maybe_add(box_sizing_adjustment);
 
         drop(child_style);
@@ -752,6 +807,7 @@ fn determine_flex_base_size(
             // So B will just work here by using main_size without special handling for aspect_ratio
             let main_size = child.size.main(dir);
             if let Some(flex_basis) = flex_basis.or(main_size) {
+                child.flex_basis_is_definite = true;
                 break 'flex_basis flex_basis;
             };
 
@@ -771,6 +827,16 @@ fn determine_flex_base_size(
             //    is the item’s max-content main size.
 
             // TODO if/when vertical writing modes are supported
+
+            // If the item has an aspect ratio and a definite cross size then the flex base size
+            // is derived from that cross size via the aspect ratio (case B above, as applied by
+            // the child's own layout below), and is therefore definite.
+            if child.aspect_ratio.is_some()
+                && child_cross_size_is_definite
+                && child_known_dimensions.cross(dir).is_some()
+            {
+                child.flex_basis_is_definite = true;
+            }
 
             // E. Otherwise, size the item into the available space using its used flex basis
             //    in place of its main size, treating a value of content as max-content.
@@ -892,7 +958,10 @@ fn collect_flex_lines<'a>(
     available_space: Size<AvailableSpace>,
     flex_items: &'a mut Vec<FlexItem>,
 ) -> Vec<FlexLine<'a>> {
-    if !constants.is_wrap {
+    // Wrapping into multiple lines requires a definite main size. If the container's known main size
+    // is derived from its own content (and is thus indefinite) then all items are collected into a
+    // single flex line, matching how the container was sized under a min/max-content constraint.
+    if !constants.is_wrap || !constants.known_main_size_is_definite {
         let mut lines = new_vec_with_capacity(1);
         lines.push(FlexLine { items: flex_items.as_mut_slice(), cross_size: 0.0, offset_cross: 0.0 });
         lines
@@ -958,6 +1027,16 @@ fn collect_flex_lines<'a>(
             }
         }
     }
+}
+
+/// Compute whether each of an item's known dimensions should be treated as definite when performing
+/// layout on the item. An item's post-flexing main size is only treated as definite if the container
+/// has a definite main size or the item's used flex basis is definite.
+/// See <https://www.w3.org/TR/css-flexbox-1/#definite-sizes>
+#[inline]
+fn item_definiteness(constants: &AlgoConstants, item: &FlexItem) -> Size<bool> {
+    let main_is_definite = constants.has_definite_main_size || item.flex_basis_is_definite;
+    Size { width: true, height: true }.with_main(constants.dir, main_is_definite)
 }
 
 /// Determine the container's main size (if not already known)
@@ -1426,21 +1505,27 @@ fn determine_hypothetical_cross_size(
             .maybe_max(padding_border_sum);
 
         let child_inner_cross = child_cross.unwrap_or_else(|| {
-            tree.measure_child_size(
+            tree.compute_child_layout(
                 child.node,
-                Size {
-                    width: if constants.is_row { child.target_size.width.into() } else { child_cross },
-                    height: if constants.is_row { child_cross } else { child.target_size.height.into() },
+                LayoutInput {
+                    run_mode: RunMode::ComputeSize,
+                    sizing_mode: SizingMode::ContentSize,
+                    axis: constants.dir.cross_axis().into(),
+                    known_dimensions: Size {
+                        width: if constants.is_row { child.target_size.width.into() } else { child_cross },
+                        height: if constants.is_row { child_cross } else { child.target_size.height.into() },
+                    },
+                    known_dimensions_are_definite: item_definiteness(constants, child),
+                    parent_size: constants.node_inner_size,
+                    available_space: Size {
+                        width: if constants.is_row { child_known_main } else { child_available_cross },
+                        height: if constants.is_row { child_available_cross } else { child_known_main },
+                    },
+                    vertical_margins_are_collapsible: Line::FALSE,
                 },
-                constants.node_inner_size,
-                Size {
-                    width: if constants.is_row { child_known_main } else { child_available_cross },
-                    height: if constants.is_row { child_available_cross } else { child_known_main },
-                },
-                SizingMode::ContentSize,
-                constants.dir.cross_axis(),
-                Line::FALSE,
             )
+            .size
+            .get_abs(constants.dir.cross_axis())
             .maybe_clamp(transferred_min_cross, transferred_max_cross)
             .max(padding_border_sum)
         });
@@ -1481,35 +1566,40 @@ fn calculate_children_base_lines(
                 continue;
             }
 
-            let measured_size_and_baselines = tree.perform_child_layout(
+            let measured_size_and_baselines = tree.compute_child_layout(
                 child.node,
-                Size {
-                    width: if constants.is_row {
-                        child.target_size.width.into()
-                    } else {
-                        child.hypothetical_inner_size.width.into()
+                LayoutInput {
+                    run_mode: RunMode::PerformLayout,
+                    sizing_mode: SizingMode::ContentSize,
+                    axis: RequestedAxis::Both,
+                    known_dimensions: Size {
+                        width: if constants.is_row {
+                            child.target_size.width.into()
+                        } else {
+                            child.hypothetical_inner_size.width.into()
+                        },
+                        height: if constants.is_row {
+                            child.hypothetical_inner_size.height.into()
+                        } else {
+                            child.target_size.height.into()
+                        },
                     },
-                    height: if constants.is_row {
-                        child.hypothetical_inner_size.height.into()
-                    } else {
-                        child.target_size.height.into()
+                    known_dimensions_are_definite: item_definiteness(constants, child),
+                    parent_size: constants.node_inner_size,
+                    available_space: Size {
+                        width: if constants.is_row {
+                            constants.container_size.width.into()
+                        } else {
+                            available_space.width.maybe_set(node_size.width)
+                        },
+                        height: if constants.is_row {
+                            available_space.height.maybe_set(node_size.height)
+                        } else {
+                            constants.container_size.height.into()
+                        },
                     },
+                    vertical_margins_are_collapsible: Line::FALSE,
                 },
-                constants.node_inner_size,
-                Size {
-                    width: if constants.is_row {
-                        constants.container_size.width.into()
-                    } else {
-                        available_space.width.maybe_set(node_size.width)
-                    },
-                    height: if constants.is_row {
-                        available_space.height.maybe_set(node_size.height)
-                    } else {
-                        constants.container_size.height.into()
-                    },
-                },
-                SizingMode::ContentSize,
-                Line::FALSE,
             );
 
             let baseline = measured_size_and_baselines.first_baselines.y;
@@ -1983,16 +2073,24 @@ fn calculate_flex_item(
     #[cfg(feature = "content_size")] border: Rect<f32>,
     container_size: Size<f32>,
     node_inner_size: Size<Option<f32>>,
+    has_definite_main_size: bool,
     direction: FlexDirection,
     layout_direction: Direction,
 ) {
-    let layout_output = tree.perform_child_layout(
+    let item_definiteness =
+        Size { width: true, height: true }.with_main(direction, has_definite_main_size || item.flex_basis_is_definite);
+    let layout_output = tree.compute_child_layout(
         item.node,
-        item.target_size.map(|s| s.into()),
-        node_inner_size,
-        container_size.map(|s| s.into()),
-        SizingMode::ContentSize,
-        Line::FALSE,
+        LayoutInput {
+            run_mode: RunMode::PerformLayout,
+            sizing_mode: SizingMode::ContentSize,
+            axis: RequestedAxis::Both,
+            known_dimensions: item.target_size.map(|s| s.into()),
+            known_dimensions_are_definite: item_definiteness,
+            parent_size: node_inner_size,
+            available_space: container_size.map(|s| s.into()),
+            vertical_margins_are_collapsible: Line::FALSE,
+        },
     );
     let LayoutOutput {
         size,
@@ -2105,6 +2203,7 @@ fn calculate_layout_line(
     #[cfg(feature = "content_size")] border: Rect<f32>,
     container_size: Size<f32>,
     node_inner_size: Size<Option<f32>>,
+    has_definite_main_size: bool,
     padding_border: Rect<f32>,
     direction: FlexDirection,
     layout_direction: Direction,
@@ -2135,6 +2234,7 @@ fn calculate_layout_line(
                 border,
                 container_size,
                 node_inner_size,
+                has_definite_main_size,
                 direction,
                 layout_direction,
             );
@@ -2153,6 +2253,7 @@ fn calculate_layout_line(
                 border,
                 container_size,
                 node_inner_size,
+                has_definite_main_size,
                 direction,
                 layout_direction,
             );
@@ -2192,6 +2293,7 @@ fn final_layout_pass(
                 constants.border,
                 constants.container_size,
                 constants.node_inner_size,
+                constants.has_definite_main_size,
                 constants.content_box_inset,
                 constants.dir,
                 constants.layout_direction,
@@ -2209,6 +2311,7 @@ fn final_layout_pass(
                 constants.border,
                 constants.container_size,
                 constants.node_inner_size,
+                constants.has_definite_main_size,
                 constants.content_box_inset,
                 constants.dir,
                 constants.layout_direction,
