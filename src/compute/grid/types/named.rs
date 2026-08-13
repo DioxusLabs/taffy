@@ -4,7 +4,7 @@ use crate::{
     CheapCloneStr, GenericGridTemplateComponent, GenericRepetition as _, GridAreaAxis, GridAreaEnd, GridContainerStyle,
     GridPlacement, GridTemplateArea, Line, NonNamedGridPlacement, RepetitionCount,
 };
-use core::{borrow::Borrow, cmp::max, cmp::Ordering, fmt::Debug};
+use core::{borrow::Borrow, cmp::Ordering, fmt::Debug};
 
 use super::{GridLine, MAX_GRID_TRACKS};
 // use alloc::fmt::format;
@@ -122,11 +122,19 @@ impl<S: CheapCloneStr> NamedLineResolver<S> {
                             RepetitionCount::AutoFill | RepetitionCount::AutoFit => column_auto_repetitions,
                         };
 
-                        // Each repetition spans at least as many lines as it generates tracks, even when it
-                        // has fewer line name sets than that (the final line name set of each repetition
-                        // collapses with the first line name set of the following one).
+                        // Line name sets are positional: set `i` names the `i`th line of each
+                        // repetition, and the final line name set of each repetition collapses
+                        // with the first line name set of the following one. An empty list means
+                        // the repetition's lines are unnamed; any other length must be exactly
+                        // `track_count + 1` (one set per line, including both edge lines).
                         let line_name_set_count = repeat.lines_names().len() as u32;
-                        let lines_per_repetition = max(line_name_set_count, repeat.track_count() as u32 + 1) - 1;
+                        let lines_per_repetition = repeat.track_count() as u32;
+                        assert!(
+                            line_name_set_count == 0 || line_name_set_count == lines_per_repetition + 1,
+                            "grid template repetition must have no line name sets or exactly track count + 1 of them ({} tracks but {} line name sets)",
+                            lines_per_repetition,
+                            line_name_set_count,
+                        );
 
                         for _ in 0..repeat_count {
                             for (line, line_name_set) in (current_line..).zip(repeat.lines_names()) {
@@ -174,11 +182,19 @@ impl<S: CheapCloneStr> NamedLineResolver<S> {
                             RepetitionCount::AutoFill | RepetitionCount::AutoFit => row_auto_repetitions,
                         };
 
-                        // Each repetition spans at least as many lines as it generates tracks, even when it
-                        // has fewer line name sets than that (the final line name set of each repetition
-                        // collapses with the first line name set of the following one).
+                        // Line name sets are positional: set `i` names the `i`th line of each
+                        // repetition, and the final line name set of each repetition collapses
+                        // with the first line name set of the following one. An empty list means
+                        // the repetition's lines are unnamed; any other length must be exactly
+                        // `track_count + 1` (one set per line, including both edge lines).
                         let line_name_set_count = repeat.lines_names().len() as u32;
-                        let lines_per_repetition = max(line_name_set_count, repeat.track_count() as u32 + 1) - 1;
+                        let lines_per_repetition = repeat.track_count() as u32;
+                        assert!(
+                            line_name_set_count == 0 || line_name_set_count == lines_per_repetition + 1,
+                            "grid template repetition must have no line name sets or exactly track count + 1 of them ({} tracks but {} line name sets)",
+                            lines_per_repetition,
+                            line_name_set_count,
+                        );
 
                         for _ in 0..repeat_count {
                             for (line, line_name_set) in (current_line..).zip(repeat.lines_names()) {
