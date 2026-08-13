@@ -332,6 +332,34 @@ pub(crate) trait LayoutPartialTreeExt: LayoutPartialTree {
         axis: AbsoluteAxis,
         vertical_margins_are_collapsible: Line<bool>,
     ) -> f32 {
+        self.measure_child_layout(
+            node_id,
+            known_dimensions,
+            parent_size,
+            available_space,
+            sizing_mode,
+            axis,
+            vertical_margins_are_collapsible,
+        )
+        .size
+        .get_abs(axis)
+    }
+
+    /// As `measure_child_size`, but returning the full [`LayoutOutput`] so that the caller can also
+    /// read out e.g. [`LayoutOutput::depends_on_block_size`]. Only the requested axis of `size` is
+    /// meaningful.
+    #[inline(always)]
+    #[allow(clippy::too_many_arguments)]
+    fn measure_child_layout(
+        &mut self,
+        node_id: NodeId,
+        known_dimensions: Size<Option<f32>>,
+        parent_size: Size<Option<f32>>,
+        available_space: Size<AvailableSpace>,
+        sizing_mode: SizingMode,
+        axis: AbsoluteAxis,
+        vertical_margins_are_collapsible: Line<bool>,
+    ) -> LayoutOutput {
         self.compute_child_layout(
             node_id,
             LayoutInput {
@@ -345,8 +373,6 @@ pub(crate) trait LayoutPartialTreeExt: LayoutPartialTree {
                 vertical_margins_are_collapsible,
             },
         )
-        .size
-        .get_abs(axis)
     }
 
     /// Compute the size of the node given the specified constraints

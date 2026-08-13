@@ -84,6 +84,9 @@ pub(in super::super) struct GridItem {
     pub minimum_contribution_cache: Size<Option<f32>>,
     /// Cache for the max-content size
     pub max_content_contribution_cache: Size<Option<f32>>,
+    /// Whether the item's inline size can be affected by the block-axis constraint imposed on it.
+    /// Conservatively `true` until the item has been measured at least once.
+    pub depends_on_block_size: bool,
 
     /// Final y position. Used to compute baseline alignment for the container.
     pub y_position: f32,
@@ -131,6 +134,7 @@ impl GridItem {
             min_content_contribution_cache: Size::NONE,
             max_content_contribution_cache: Size::NONE,
             minimum_contribution_cache: Size::NONE,
+            depends_on_block_size: true,
             y_position: 0.0,
             height: 0.0,
         }
@@ -418,7 +422,7 @@ impl GridItem {
 
     /// Compute the item's min content contribution from the provided parameters
     pub fn min_content_contribution(
-        &self,
+        &mut self,
         axis: AbstractAxis,
         tree: &mut impl LayoutPartialTree,
         grid_area_size: Size<Option<f32>>,
@@ -430,7 +434,7 @@ impl GridItem {
         // Spec:
         // https://www.w3.org/TR/css-grid-1/#grid-item-sizing
         // https://www.w3.org/TR/css-grid-1/#algo-overview
-        tree.measure_child_size(
+        let output = tree.measure_child_layout(
             self.node,
             known_dimensions,
             grid_area_size,
@@ -441,7 +445,9 @@ impl GridItem {
             SizingMode::InherentSize,
             axis.as_abs_naive(),
             Line::FALSE,
-        )
+        );
+        self.depends_on_block_size = output.depends_on_block_size;
+        output.size.get_abs(axis.as_abs_naive())
     }
 
     /// Retrieve the item's min content contribution from the cache or compute it using the provided parameters
@@ -462,7 +468,7 @@ impl GridItem {
 
     /// Compute the item's max content contribution from the provided parameters
     pub fn max_content_contribution(
-        &self,
+        &mut self,
         axis: AbstractAxis,
         tree: &mut impl LayoutPartialTree,
         grid_area_size: Size<Option<f32>>,
@@ -472,7 +478,7 @@ impl GridItem {
         // See the min-content path above. Max-content measurement uses the same containing-block
         // basis so percentage-dependent item geometry is measured from the grid area rather than
         // from the container.
-        tree.measure_child_size(
+        let output = tree.measure_child_layout(
             self.node,
             known_dimensions,
             grid_area_size,
@@ -483,7 +489,9 @@ impl GridItem {
             SizingMode::InherentSize,
             axis.as_abs_naive(),
             Line::FALSE,
-        )
+        );
+        self.depends_on_block_size = output.depends_on_block_size;
+        output.size.get_abs(axis.as_abs_naive())
     }
 
     /// Retrieve the item's max content contribution from the cache or compute it using the provided parameters

@@ -89,6 +89,9 @@ struct FlexItem {
     /// The position of the bottom edge of this item
     baseline: f32,
 
+    /// Whether this item's inline size can be affected by the block-axis constraint imposed on it
+    depends_on_block_size: bool,
+
     /// A temporary value for the main offset
     ///
     /// Offset is the relative position from the item's natural flow position based on
@@ -154,6 +157,8 @@ struct AlgoConstants {
     align_content: AlignContent,
     /// The justify_content property of this node
     justify_content: Option<JustifyContent>,
+    /// The aspect_ratio property of this node
+    aspect_ratio: Option<f32>,
 
     /// The border-box size of the node being laid out (if known)
     node_outer_size: Size<Option<f32>>,
@@ -228,22 +233,16 @@ pub fn compute_flexbox_layout(
     // is ComputeSize (and thus the container's size is all that we're interested in)
     if run_mode == RunMode::ComputeSize {
         if let Size { width: Some(width), height: Some(height) } = styled_based_known_dimensions {
-            return LayoutOutput::from_outer_size(Size { width, height });
+            return LayoutOutput::from_outer_size(Size { width, height })
+                .with_depends_on_block_size(aspect_ratio.is_some());
         }
 
         // We can also short-circuit if the width is known and only the width has been requested.
         if inputs.axis == RequestedAxis::Horizontal {
             if let Some(width) = styled_based_known_dimensions.width {
-                return LayoutOutput::from_outer_size(Size { width, height: 0.0 });
+                return LayoutOutput::from_outer_size(Size { width, height: 0.0 })
+                    .with_depends_on_block_size(aspect_ratio.is_some());
             }
-        }
-    }
-
-    // Short-circuit layout if the container's size is fully determined by the container's size and the run mode
-    // is ComputeSize (and thus the container's size is all that we're interested in)
-    if run_mode == RunMode::ComputeSize {
-        if let Size { width: Some(width), height: Some(height) } = styled_based_known_dimensions {
-            return LayoutOutput::from_outer_size(Size { width, height });
         }
     }
 
@@ -401,10 +400,13 @@ fn compute_preliminary(tree: &mut impl LayoutFlexboxContainer, node: NodeId, inp
     debug_log!("determine_container_cross_size");
     let total_line_cross_size = determine_container_cross_size(&flex_lines, known_dimensions, &mut constants);
 
+    let depends_on_block_size = flexbox_depends_on_block_size(&flex_lines, &constants);
+
     // We have the container size.
     // If our caller does not care about performing layout we are done now.
     if run_mode == RunMode::ComputeSize {
-        return LayoutOutput::from_outer_size(constants.container_size);
+        return LayoutOutput::from_outer_size(constants.container_size)
+            .with_depends_on_block_size(depends_on_block_size);
     }
 
     // 16. Align all flex lines per align-content.
@@ -454,6 +456,18 @@ fn compute_preliminary(tree: &mut impl LayoutFlexboxContainer, node: NodeId, inp
         inflow_content_size.f32_max(absolute_content_size),
         Point { x: None, y: first_vertical_baseline },
     )
+    .with_depends_on_block_size(depends_on_block_size)
+}
+
+/// Whether the block-axis constraint imposed on the container can affect its inline size.
+///
+/// As well as the usual aspect-ratio transfer and the contribution of the items, a *wrapping column*
+/// container's width depends on how many columns its content wraps into, which is determined by the
+/// block-axis (main-axis) constraint.
+fn flexbox_depends_on_block_size(flex_lines: &[FlexLine<'_>], constants: &AlgoConstants) -> bool {
+    constants.node_outer_size.height.is_none() && (constants.is_column && constants.is_wrap)
+        || constants.aspect_ratio.is_some()
+        || flex_lines.iter().flat_map(|line| line.items.iter()).any(|item| item.depends_on_block_size)
 }
 
 /// Compute constants that can be reused during the flexbox algorithm.
@@ -534,6 +548,7 @@ fn compute_constants(
         align_items,
         align_content,
         justify_content,
+        aspect_ratio,
         node_outer_size,
         node_inner_size,
         known_main_size_is_definite,
@@ -634,6 +649,7 @@ fn generate_anonymous_flex_items(
                 content_flex_fraction: 0.0,
 
                 baseline: 0.0,
+                depends_on_block_size: true,
 
                 offset_main: 0.0,
                 offset_cross: 0.0,
@@ -858,7 +874,7 @@ fn determine_flex_base_size(
                 .with_cross(dir, cross_axis_available_space);
 
             debug_log!("COMPUTE CHILD BASE SIZE:");
-            break 'flex_basis tree.measure_child_size(
+            let output = tree.measure_child_layout(
                 child.node,
                 child_known_dimensions,
                 child_parent_size,
@@ -867,6 +883,8 @@ fn determine_flex_base_size(
                 dir.main_axis(),
                 Line::FALSE,
             );
+            child.depends_on_block_size = output.depends_on_block_size;
+            break 'flex_basis output.size.main(dir);
         };
 
         // Floor flex-basis by the padding_border_sum (floors inner_flex_basis at zero)
@@ -901,7 +919,7 @@ fn determine_flex_base_size(
                 let child_available_space = Size::MIN_CONTENT.with_cross(dir, cross_axis_available_space);
 
                 debug_log!("COMPUTE CHILD MIN SIZE:");
-                tree.measure_child_size(
+                let output = tree.measure_child_layout(
                     child.node,
                     child_known_dimensions,
                     child_parent_size,
@@ -909,7 +927,9 @@ fn determine_flex_base_size(
                     SizingMode::ContentSize,
                     dir.main_axis(),
                     Line::FALSE,
-                )
+                );
+                child.depends_on_block_size |= output.depends_on_block_size;
+                output.size.main(dir)
             };
 
             // 4.5. Automatic Minimum Size of Flex Items
