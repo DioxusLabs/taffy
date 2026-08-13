@@ -22,6 +22,20 @@
   })?;
   ```
 
+### Fixed
+
+- `TaffyTree::remove` now marks the removed node's former parent as dirty, like `remove_child`, `remove_child_at_index` and `remove_children_range` already did. Previously the parent and its ancestors kept their stale cached layout, so recomputing the layout of an ancestor did not account for the removed node (#998)
+
+- Grid: fixed a subtract-with-overflow panic (in debug builds) when resolving named lines for a template containing a repetition with fewer line name sets than tracks. Any template combining line names with a repetition created by the `repeat()` style helper (or parsed from CSS such as `[a] repeat(2, 10px) [c] 10px`) could trigger this. In release builds the same bug silently mis-numbered the lines following the repetition. The length of `GridTemplateRepetition::line_names` is now part of the API contract: it must either be empty (all lines unnamed) or contain exactly `tracks.len() + 1` line name sets, and any other length panics (in all builds) during layout
+
+- Grid: the track sizing algorithm no longer loops forever when styles contain non-finite values (e.g. `NaN` flex factors or non-finite lengths). The "find the size of an fr" and "distribute space up to limits" loops are now bounded by the track count
+
+- Grid: fixed an infinite loop in auto-placement when an item's placement resolved to a span larger than the implicit grid size estimate (e.g. a zero span — an invalid value which is now normalized to 1 — combined with an unresolvable named span). The auto-placement search now bails out (and clamps the placement into the limited grid) when a span cannot fit even at the start of the grid
+
+- Flexbox: the definiteness of known dimensions is now tracked through nested layouts via a new `known_dimensions_are_definite` field on `LayoutInput`. A flex item's post-flexing main size is only treated as definite (for resolving percentage sizes of its children and for collecting its children into flex lines) when the container's main size is definite or the item's used flex basis is definite. Previously a wrapping flex container nested in a container with an indefinite main size could incorrectly wrap its items into multiple lines based on its own content-derived size (#999)
+
+- Flexbox: percentage heights of block descendants no longer resolve against a flex item's post-flexing main size when that size is indefinite (#950)
+
 ## 0.13.0
 
 The MSRV for this release is 1.71.

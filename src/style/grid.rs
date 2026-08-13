@@ -99,6 +99,10 @@ pub trait GenericRepetition {
         self.tracks().len().min(u16::MAX as usize) as u16
     }
     /// Returns an iterator over the lines names
+    ///
+    /// Line name sets are positional: set `i` names the `i`th line of each repetition. The iterator
+    /// must yield either no line name sets at all (all lines are unnamed) or exactly
+    /// `track_count() + 1` of them (one set per line, including both edge lines).
     fn lines_names(&self) -> Self::TemplateLineNames<'_>;
 }
 
@@ -533,9 +537,9 @@ impl<S: CheapCloneStr> GridPlacement<S> {
     pub fn into_origin_zero_placement_ignoring_named(&self, explicit_track_count: u16) -> OriginZeroGridPlacement {
         match self {
             Self::Auto => OriginZeroGridPlacement::Auto,
-            // Spans are clamped to the maximum track limit
-            // https://www.w3.org/TR/css-grid-1/#overlarge-grids
-            Self::Span(span) => OriginZeroGridPlacement::Span(min(*span, MAX_GRID_TRACKS)),
+            // Spans are clamped between 1 (a zero span is an invalid value which is treated as 1)
+            // and the maximum track limit (https://www.w3.org/TR/css-grid-1/#overlarge-grids)
+            Self::Span(span) => OriginZeroGridPlacement::Span((*span).clamp(1, MAX_GRID_TRACKS)),
             // Grid line zero is an invalid index, so it gets treated as Auto
             // See: https://developer.mozilla.org/en-US/docs/Web/CSS/grid-row-start#values
             Self::Line(line) => match line.as_i16() {
@@ -567,9 +571,9 @@ impl NonNamedGridPlacement {
     ) -> OriginZeroGridPlacement {
         match self {
             Self::Auto => OriginZeroGridPlacement::Auto,
-            // Spans are clamped to the maximum track limit
-            // https://www.w3.org/TR/css-grid-1/#overlarge-grids
-            Self::Span(span) => OriginZeroGridPlacement::Span(min(*span, MAX_GRID_TRACKS)),
+            // Spans are clamped between 1 (a zero span is an invalid value which is treated as 1)
+            // and the maximum track limit (https://www.w3.org/TR/css-grid-1/#overlarge-grids)
+            Self::Span(span) => OriginZeroGridPlacement::Span((*span).clamp(1, MAX_GRID_TRACKS)),
             // Grid line zero is an invalid index, so it gets treated as Auto
             // See: https://developer.mozilla.org/en-US/docs/Web/CSS/grid-row-start#values
             Self::Line(line) => match line.as_i16() {
@@ -1448,6 +1452,10 @@ pub struct GridTemplateRepetition<S: CheapCloneStr> {
     /// The tracks to repeat
     pub tracks: Vec<TrackSizingFunction>,
     /// The line names for the repeated tracks
+    ///
+    /// Line name sets are positional: set `i` names the `i`th line of each repetition. This must
+    /// either be empty (all lines are unnamed) or contain exactly `tracks.len() + 1` sets (one set
+    /// per line, including both edge lines; sets may be empty). Other lengths panic during layout.
     pub line_names: Vec<Vec<S>>,
 }
 
