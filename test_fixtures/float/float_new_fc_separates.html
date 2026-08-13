@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    A block establishing a new formatting context that does not fit beside a float is
+    pushed below it, and its top margin no longer collapses with preceding margins
+    (so the float, which adjoins the unresolved margin strut, does not move down).
+    Reduced from WPT css/CSS2/floats/new-fc-separates-from-float.html
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="display: block; overflow: hidden; width: 200px;">
+  <div style="display: block;">
+    <div style="display: block;">
+      <div style="display: block; float: left; width: 200px; height: 200px;"></div>
+    </div>
+    <div style="display: block; overflow: hidden; margin-top: 200px; width: 200px; height: 1px;"></div>
+  </div>
+</div>
+
+</body>
+</html>

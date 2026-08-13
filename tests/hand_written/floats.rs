@@ -1,7 +1,7 @@
 #![cfg(feature = "float_layout")]
 use taffy::geometry::Point;
 use taffy::prelude::*;
-use taffy::style::Float;
+use taffy::style::{Clear, Float};
 use taffy_test_helpers::new_test_tree;
 
 /// Regression test for <https://wpt.live/css/CSS2/floats-clear/floats-146.xht>
@@ -50,4 +50,102 @@ fn float_no_higher_than_earlier_floats() {
     assert_eq!(layout_b.location, Point { x: 0.0, y: 85.0 });
     // C must not be placed higher than B (it fits next to B on the right)
     assert_eq!(layout_c.location, Point { x: 302.0, y: 85.0 });
+}
+
+/// Regression test for <https://wpt.live/css/CSS2/floats-clear/margin-collapse-033.xht>
+///
+/// Floats that occupy no horizontal space (e.g. a zero-width float) still affect
+/// `clear`: a cleared block must be placed past the bottom of all floats on the
+/// relevant side, regardless of their width.
+#[test]
+fn clear_past_zero_width_float() {
+    let mut taffy = new_test_tree();
+
+    // float: left with auto width resolving to 0
+    let floated = taffy
+        .new_leaf(Style {
+            display: Display::Block,
+            float: Float::Left,
+            size: Size { width: auto(), height: length(1.0) },
+            ..Default::default()
+        })
+        .unwrap();
+    let cleared = taffy.new_leaf(Style { display: Display::Block, clear: Clear::Left, ..Default::default() }).unwrap();
+    let sibling = taffy
+        .new_leaf(Style {
+            display: Display::Block,
+            margin: Rect { top: length(99.0), ..Rect::zero() },
+            ..Default::default()
+        })
+        .unwrap();
+
+    let container = taffy
+        .new_with_children(
+            Style {
+                display: Display::Block,
+                size: Size { width: length(100.0), height: auto() },
+                ..Default::default()
+            },
+            &[floated, cleared, sibling],
+        )
+        .unwrap();
+    let root = taffy.new_with_children(Style { display: Display::Block, ..Default::default() }, &[container]).unwrap();
+
+    taffy.compute_layout(root, Size::MAX_CONTENT).unwrap();
+
+    // The cleared (self-collapsing) block is placed below the float (y=1). Its clearance
+    // prevents the sibling's 99px margin from collapsing with preceding margins, so the
+    // container's height is 1 + 99 = 100.
+    assert_eq!(taffy.layout(container).unwrap().size.height, 100.0);
+}
+
+fn float_block(width: f32, height: f32, float: Float) -> Style {
+    Style {
+        display: Display::Block,
+        float,
+        size: Size { width: length(width), height: length(height) },
+        ..Default::default()
+    }
+}
+
+fn root_style(width: f32) -> Style {
+    Style { display: Display::Block, size: Size { width: length(width), height: auto() }, ..Default::default() }
+}
+
+/// Regression test for <https://wpt.live/css/CSS2/floats/floats-rule3-outside-left-001.xht>
+///
+/// CSS2 float rule 7: a float that is wider than its containing block and has no other
+/// float beside it may overflow the containing block's edge rather than being pushed down.
+#[test]
+fn oversized_float_overflows_containing_block() {
+    let mut taffy = new_test_tree();
+
+    let float_a = taffy.new_leaf(float_block(150.0, 50.0, Float::Left)).unwrap();
+    let root = taffy.new_with_children(root_style(100.0), &[float_a]).unwrap();
+
+    taffy.compute_layout(root, Size::MAX_CONTENT).unwrap();
+
+    assert_eq!(taffy.layout(float_a).unwrap().location, Point { x: 0.0, y: 0.0 });
+}
+
+/// CSS2 float rules 3 & 7: a float with another float beside it must not overlap that float
+/// (rule 3) nor extend past the containing block's opposite edge (rule 7) - it must move down.
+#[test]
+fn float_beside_existing_float_moves_down_instead_of_overflowing() {
+    let mut taffy = new_test_tree();
+
+    // Rule 3: an opposite-direction float that doesn't fit must move down, not overlap
+    let left = taffy.new_leaf(float_block(60.0, 50.0, Float::Left)).unwrap();
+    let right = taffy.new_leaf(float_block(60.0, 50.0, Float::Right)).unwrap();
+    // Rule 7: a same-direction float that doesn't fit must move down, not overflow the
+    // containing block's trailing edge
+    let left2 = taffy.new_leaf(float_block(60.0, 50.0, Float::Left)).unwrap();
+
+    let root = taffy.new_with_children(root_style(100.0), &[left, right, left2]).unwrap();
+
+    taffy.compute_layout(root, Size::MAX_CONTENT).unwrap();
+
+    assert_eq!(taffy.layout(left).unwrap().location, Point { x: 0.0, y: 0.0 });
+    assert_eq!(taffy.layout(right).unwrap().location, Point { x: 40.0, y: 50.0 });
+    assert_eq!(taffy.layout(left2).unwrap().location, Point { x: 0.0, y: 100.0 });
 }

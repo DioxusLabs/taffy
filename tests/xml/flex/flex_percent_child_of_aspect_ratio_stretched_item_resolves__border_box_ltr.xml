@@ -1,0 +1,17 @@
+<test name="flex_percent_child_of_aspect_ratio_stretched_item_resolves__border_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="flex" direction="ltr" flex-direction="column" width="100px">
+      <div display="block" direction="ltr" aspect-ratio="1">
+        <div display="block" direction="ltr" width="20px" height="100%"/>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="100" height="100">
+      <node x="0" y="0" width="100" height="100">
+        <node x="0" y="0" width="20" height="100"/>
+      </node>
+    </node>
+  </expectations>
+</test>

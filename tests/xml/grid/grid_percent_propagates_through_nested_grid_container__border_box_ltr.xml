@@ -1,0 +1,21 @@
+<test name="grid_percent_propagates_through_nested_grid_container__border_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="flex" direction="ltr" flex-direction="column" width="200px" min-height="200px">
+      <div display="grid" direction="ltr" flex-grow="1" grid-template-rows="1fr" grid-template-columns="1fr">
+        <div display="block" direction="ltr">
+          <div display="block" direction="ltr" height="100%"/>
+        </div>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="200" height="200">
+      <node x="0" y="0" width="200" height="200">
+        <node x="0" y="0" width="200" height="200">
+          <node x="0" y="0" width="200" height="200"/>
+        </node>
+      </node>
+    </node>
+  </expectations>
+</test>
