@@ -295,9 +295,17 @@ pub(super) fn track_sizing_algorithm<Tree: LayoutPartialTree>(
         resolve_item_baselines(tree, axis, items, inner_node_size);
     }
 
-    // If all tracks have base_size = growth_limit, then skip the rest of this function.
-    // Note: this can only happen both track sizing function have the same fixed track sizing function
-    if axis_tracks.iter().all(|track| track.base_size == track.growth_limit) {
+    // If all tracks have a fixed min track sizing function and base_size = growth_limit,
+    // then the track sizes are already final and we can skip the rest of this function.
+    // Note that tracks with an intrinsic min track sizing function can still grow beyond
+    // a fixed growth limit (e.g. minmax(auto, 0px)), so they cannot be skipped.
+    if axis_tracks.iter().all(|track| {
+        track.base_size == track.growth_limit
+            && track
+                .min_track_sizing_function
+                .definite_value(percentage_basis, |val, basis| tree.calc(val, basis))
+                .is_some()
+    }) {
         return;
     }
 
