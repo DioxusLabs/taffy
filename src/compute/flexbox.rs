@@ -1529,21 +1529,18 @@ fn determine_hypothetical_cross_size(
             .maybe_max(padding_border_sum);
 
         // A cross size that is a sizing keyword (min-content, max-content, fit-content,
-        // fit-content(...), stretch) either resolves to an exact size or determines the
-        // available space constraint the item is measured under
+        // fit-content(...)) determines the available space constraint the item is measured under.
+        // The `stretch` keyword is not resolved here: it stretches to the flex line, which is
+        // handled in `determine_used_cross_size`
         let cross_stretch_size =
             constants.node_inner_size.cross(constants.dir).maybe_sub(child.margin.cross_axis_sum(constants.dir));
-        let (child_cross, child_available_cross) = match resolve_sizing_keyword(
+        let child_available_cross = match resolve_sizing_keyword(
             child.size_style.cross(constants.dir),
             cross_stretch_size,
             constants.node_inner_size.cross(constants.dir),
         ) {
-            Some(SizingKeywordResolution::Exact(size)) => (
-                Some(size.maybe_clamp(transferred_min_cross, transferred_max_cross).max(padding_border_sum)),
-                child_available_cross,
-            ),
-            Some(SizingKeywordResolution::Measure(available)) => (child_cross, available),
-            None => (child_cross, child_available_cross),
+            Some(SizingKeywordResolution::Measure(available)) => available,
+            _ => child_available_cross,
         };
 
         let child_inner_cross = child_cross.unwrap_or_else(|| {
@@ -1780,12 +1777,16 @@ fn determine_used_cross_size(
 
         for child in line.items.iter_mut() {
             let child_style = tree.get_flexbox_child_style(child.node);
+            // A cross size of `stretch` stretches to the flex line like align-self: stretch
+            // (but regardless of the alignment style)
+            let cross_is_stretch = child.size_style.cross(constants.dir).is_stretch();
             child.target_size.set_cross(
                 constants.dir,
-                if child.align_self == AlignSelf::STRETCH
-                    && !child.margin_is_auto.cross_start(constants.dir)
+                if !child.margin_is_auto.cross_start(constants.dir)
                     && !child.margin_is_auto.cross_end(constants.dir)
-                    && child_style.size().cross(constants.dir).is_auto()
+                    && (cross_is_stretch
+                        || (child.align_self == AlignSelf::STRETCH
+                            && child_style.size().cross(constants.dir).is_auto()))
                 {
                     // For some reason this particular usage of max_width is an exception to the rule that max_width's transfer
                     // using the aspect_ratio (if set). Both Chrome and Firefox agree on this. And reading the spec, it seems like

@@ -396,6 +396,12 @@ impl Dimension {
         self.0.is_intrinsic_sizing_keyword()
     }
 
+    /// Returns true if value is the stretch keyword
+    #[inline(always)]
+    pub fn is_stretch(self) -> bool {
+        self.0.tag() == CompactLength::STRETCH_TAG
+    }
+
     /// Get the raw `CompactLength` tag
     pub fn tag(self) -> usize {
         self.0.tag()
