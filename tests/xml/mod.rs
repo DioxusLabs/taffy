@@ -9725,6 +9725,30 @@ mod flex {
 
     #[cfg(feature = "flexbox_balance")]
     #[test]
+    fn balance_row_large_sizes__border_box_ltr() {
+        crate::run_xml_test("flex", "balance_row_large_sizes__border_box_ltr");
+    }
+
+    #[cfg(feature = "flexbox_balance")]
+    #[test]
+    fn balance_row_large_sizes__content_box_ltr() {
+        crate::run_xml_test("flex", "balance_row_large_sizes__content_box_ltr");
+    }
+
+    #[cfg(feature = "flexbox_balance")]
+    #[test]
+    fn balance_row_large_sizes__border_box_rtl() {
+        crate::run_xml_test("flex", "balance_row_large_sizes__border_box_rtl");
+    }
+
+    #[cfg(feature = "flexbox_balance")]
+    #[test]
+    fn balance_row_large_sizes__content_box_rtl() {
+        crate::run_xml_test("flex", "balance_row_large_sizes__content_box_rtl");
+    }
+
+    #[cfg(feature = "flexbox_balance")]
+    #[test]
     fn balance_row_line_count__border_box_ltr() {
         crate::run_xml_test("flex", "balance_row_line_count__border_box_ltr");
     }
