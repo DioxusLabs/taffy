@@ -265,7 +265,9 @@ impl BlockContext<'_> {
 use super::common::alignment::{apply_alignment_fallback, compute_alignment_offset};
 #[cfg(feature = "content_size")]
 use super::common::content_size::compute_content_size_contribution;
-use super::common::sizing_keyword::{resolve_sizing_keyword, SizingKeywordResolution};
+use super::common::sizing_keyword::{
+    resolve_absolute_sizing_keywords, resolve_sizing_keyword, SizingKeywordResolution,
+};
 
 /// Per-child data that is accumulated and modified over the course of the layout algorithm
 struct BlockItem {
@@ -1600,8 +1602,8 @@ fn perform_absolute_layout_on_absolute_children(
         let bottom = child_style.inset().bottom.maybe_resolve(area_height, |val, basis| tree.calc(val, basis));
 
         // Compute known dimensions from min/max/inherent size styles
-        let style_size = child_style
-            .size()
+        let size_style = child_style.size();
+        let style_size = size_style
             .maybe_resolve(area_size, |val, basis| tree.calc(val, basis))
             .maybe_apply_aspect_ratio(aspect_ratio)
             .maybe_add(box_sizing_adjustment);
@@ -1620,6 +1622,23 @@ fn perform_absolute_layout_on_absolute_children(
         let mut known_dimensions = style_size.maybe_clamp(min_size, max_size);
 
         drop(child_style);
+
+        // Resolve any sizing keywords (min-content, max-content, fit-content, fit-content(...),
+        // stretch) in the size styles. An explicitly sized axis takes precedence over the
+        // inset-derived size below.
+        if size_style.width.is_sizing_keyword() || size_style.height.is_sizing_keyword() {
+            resolve_absolute_sizing_keywords(
+                tree,
+                item.node_id,
+                &mut known_dimensions,
+                size_style,
+                area_size,
+                Rect { left, right, top, bottom },
+                margin,
+                SizingMode::ContentSize,
+            );
+            known_dimensions = known_dimensions.maybe_apply_aspect_ratio(aspect_ratio).maybe_clamp(min_size, max_size);
+        }
 
         // Fill in width from left/right and reapply aspect ratio if:
         //   - Width is not already known

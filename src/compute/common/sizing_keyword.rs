@@ -1,6 +1,9 @@
 //! Shared resolution logic for sizing keywords (`min-content`, `max-content`, `fit-content`,
 //! `fit-content(...)`, and `stretch`) on the `width`/`height` style properties
+use crate::geometry::{AbsoluteAxis, Line, Rect, Size};
 use crate::style::AvailableSpace;
+use crate::tree::{LayoutPartialTree, LayoutPartialTreeExt, NodeId, SizingMode};
+use crate::util::sys::f32_max;
 use crate::{CompactLength, Dimension};
 
 /// How a sizing keyword resolves to a used size
@@ -40,5 +43,109 @@ pub(crate) fn resolve_sizing_keyword(
         }
         CompactLength::STRETCH_TAG => stretch_size.map(SizingKeywordResolution::Exact),
         _ => None,
+    }
+}
+
+/// Resolve the sizing keywords (`min-content`, `max-content`, `fit-content`, `fit-content(...)`,
+/// and `stretch`) on the size styles of an absolutely positioned item, filling in the
+/// corresponding `known_dimensions` axes.
+///
+/// - `area_size` is the size of the item's containing block (which insets and percentages
+///   resolve against).
+/// - The stretch size in each axis is the containing block minus the item's insets and margins
+///   in that axis.
+#[allow(clippy::too_many_arguments)]
+pub(crate) fn resolve_absolute_sizing_keywords(
+    tree: &mut impl LayoutPartialTree,
+    node: NodeId,
+    known_dimensions: &mut Size<Option<f32>>,
+    size_style: Size<Dimension>,
+    area_size: Size<f32>,
+    inset: Rect<Option<f32>>,
+    margin: Rect<Option<f32>>,
+    sizing_mode: SizingMode,
+) {
+    let stretch_size = Size {
+        width: f32_max(
+            area_size.width
+                - inset.left.unwrap_or(0.0)
+                - inset.right.unwrap_or(0.0)
+                - margin.left.unwrap_or(0.0)
+                - margin.right.unwrap_or(0.0),
+            0.0,
+        ),
+        height: f32_max(
+            area_size.height
+                - inset.top.unwrap_or(0.0)
+                - inset.bottom.unwrap_or(0.0)
+                - margin.top.unwrap_or(0.0)
+                - margin.bottom.unwrap_or(0.0),
+            0.0,
+        ),
+    };
+
+    let keyword_width = if known_dimensions.width.is_none() {
+        resolve_sizing_keyword(size_style.width, Some(stretch_size.width), Some(area_size.width))
+    } else {
+        None
+    };
+    let keyword_height = if known_dimensions.height.is_none() {
+        resolve_sizing_keyword(size_style.height, Some(stretch_size.height), Some(area_size.height))
+    } else {
+        None
+    };
+
+    match (keyword_width, keyword_height) {
+        // If both axes need to be measured then resolve them with a single measure call
+        (
+            Some(SizingKeywordResolution::Measure(available_width)),
+            Some(SizingKeywordResolution::Measure(available_height)),
+        ) => {
+            let measured_size = tree.measure_child_size_both(
+                node,
+                Size::NONE,
+                area_size.map(Some),
+                Size { width: available_width, height: available_height },
+                sizing_mode,
+                Line::FALSE,
+            );
+            *known_dimensions = measured_size.map(Some);
+        }
+        (keyword_width, keyword_height) => {
+            if let Some(resolution) = keyword_width {
+                known_dimensions.width = Some(match resolution {
+                    SizingKeywordResolution::Exact(width) => width,
+                    SizingKeywordResolution::Measure(available_width) => tree.measure_child_size(
+                        node,
+                        *known_dimensions,
+                        area_size.map(Some),
+                        Size { width: available_width, height: AvailableSpace::Definite(stretch_size.height) },
+                        sizing_mode,
+                        AbsoluteAxis::Horizontal,
+                        Line::FALSE,
+                    ),
+                });
+            }
+            if let Some(resolution) = keyword_height {
+                known_dimensions.height = Some(match resolution {
+                    SizingKeywordResolution::Exact(height) => height,
+                    SizingKeywordResolution::Measure(available_height) => tree.measure_child_size(
+                        node,
+                        *known_dimensions,
+                        area_size.map(Some),
+                        Size {
+                            width: known_dimensions
+                                .width
+                                .map(AvailableSpace::Definite)
+                                .unwrap_or(AvailableSpace::Definite(stretch_size.width)),
+                            height: available_height,
+                        },
+                        sizing_mode,
+                        AbsoluteAxis::Vertical,
+                        Line::FALSE,
+                    ),
+                });
+            }
+        }
     }
 }
