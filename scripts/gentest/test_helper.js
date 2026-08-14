@@ -120,8 +120,13 @@ function parseDimension(input, options = { allowFrUnits: false }) {
   if (input === 'max-content') return { unit: 'max-content' };
   if (input === 'fit-content') return { unit: 'fit-content' };
   if (input === 'stretch') return { unit: 'stretch' };
-  // Note: Chrome does not support `fit-content(<length-percentage>)` for width/height,
-  // so there is no need to parse it here (only for grid tracks, which are parsed separately)
+  if (input === 'content') return { unit: 'content' };
+  const fitContentMatch = /^fit-content\((.*)\)$/.exec(input);
+  if (fitContentMatch) {
+    const arg = fitContentMatch[1].trim();
+    if (arg.endsWith('px')) return { unit: 'fit-content-px', value: parseFloat(arg) };
+    if (arg.endsWith('%')) return { unit: 'fit-content-percent', value: parseFloat(arg) / 100 };
+  }
   return undefined;
 }
 

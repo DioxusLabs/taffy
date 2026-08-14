@@ -772,7 +772,9 @@ impl From<Dimension> for MaxTrackSizingFunction {
         // Dimension supports values that are not valid max track sizing functions.
         // Map those to `auto`.
         match input.0.tag() {
-            CompactLength::FIT_CONTENT_KEYWORD_TAG | CompactLength::STRETCH_TAG => Self::auto(),
+            CompactLength::FIT_CONTENT_KEYWORD_TAG | CompactLength::STRETCH_TAG | CompactLength::CONTENT_TAG => {
+                Self::auto()
+            }
             _ => Self(input.0),
         }
     }
@@ -1100,7 +1102,8 @@ impl From<Dimension> for MinTrackSizingFunction {
             CompactLength::FIT_CONTENT_PX_TAG
             | CompactLength::FIT_CONTENT_PERCENT_TAG
             | CompactLength::FIT_CONTENT_KEYWORD_TAG
-            | CompactLength::STRETCH_TAG => Self::auto(),
+            | CompactLength::STRETCH_TAG
+            | CompactLength::CONTENT_TAG => Self::auto(),
             _ => Self(input.0),
         }
     }

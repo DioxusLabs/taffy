@@ -795,8 +795,8 @@ fn determine_flex_base_size(
         // content is treated as indefinite here.
         let percent_resolution_main_size =
             if constants.known_main_size_is_definite { constants.node_inner_size.main(dir) } else { None };
-        let flex_basis = child_style
-            .flex_basis()
+        let flex_basis_style = child_style.flex_basis();
+        let flex_basis = flex_basis_style
             .maybe_resolve(percent_resolution_main_size, |val, basis| tree.calc(val, basis))
             .maybe_add(box_sizing_adjustment);
 
@@ -813,9 +813,47 @@ fn determine_flex_base_size(
             // Note: `child.size` has already been resolved against aspect_ratio in generate_anonymous_flex_items
             // So B will just work here by using main_size without special handling for aspect_ratio
             let main_size = child.size.main(dir);
-            if let Some(flex_basis) = flex_basis.or(main_size) {
-                child.flex_basis_is_definite = true;
-                break 'flex_basis flex_basis;
+            let main_stretch_size = percent_resolution_main_size.maybe_sub(child.margin.main_axis_sum(dir));
+
+            // A flex basis that is a sizing keyword (min-content, max-content, fit-content,
+            // fit-content(...), stretch) is used in place of the main size property: `stretch`
+            // resolves to an exact (definite) size while the other keywords determine the
+            // available space constraint the item is measured under. A keyword that cannot be
+            // resolved in the current context behaves as `content`.
+            let keyword_main_available_space = if flex_basis_style.is_content() {
+                // A flex basis of `content` indicates an automatic size based on the item's
+                // content: the item is measured (ignoring its main size property) under the
+                // default constraint below
+                None
+            } else if flex_basis_style.is_sizing_keyword() {
+                match resolve_sizing_keyword(flex_basis_style, main_stretch_size, percent_resolution_main_size) {
+                    Some(SizingKeywordResolution::Exact(size)) => {
+                        child.flex_basis_is_definite = true;
+                        break 'flex_basis size;
+                    }
+                    Some(SizingKeywordResolution::Measure(available)) => Some(available),
+                    None => None,
+                }
+            } else {
+                if let Some(flex_basis) = flex_basis.or(main_size) {
+                    child.flex_basis_is_definite = true;
+                    break 'flex_basis flex_basis;
+                };
+
+                // A main size that is a sizing keyword either resolves to an exact size or
+                // determines the available space constraint the item is measured under
+                match resolve_sizing_keyword(
+                    child.size_style.main(dir),
+                    main_stretch_size,
+                    percent_resolution_main_size,
+                ) {
+                    Some(SizingKeywordResolution::Exact(size)) => {
+                        child.flex_basis_is_definite = true;
+                        break 'flex_basis size;
+                    }
+                    Some(SizingKeywordResolution::Measure(available)) => Some(available),
+                    None => None,
+                }
             };
 
             // C. If the used flex basis is content or depends on its available space,
@@ -851,23 +889,6 @@ fn determine_flex_base_size(
             //    flex item’s main size is in its block axis) and the flex item’s cross size
             //    is auto and not definite, in this calculation use fit-content as the
             //    flex item’s cross size. The flex base size is the item’s resulting main size.
-
-            // A main size that is a sizing keyword (min-content, max-content, fit-content,
-            // fit-content(...), stretch) either resolves to an exact size or determines the
-            // available space constraint the item is measured under
-            let main_stretch_size = percent_resolution_main_size.maybe_sub(child.margin.main_axis_sum(dir));
-            let keyword_main_available_space = match resolve_sizing_keyword(
-                child.size_style.main(dir),
-                main_stretch_size,
-                percent_resolution_main_size,
-            ) {
-                Some(SizingKeywordResolution::Exact(size)) => {
-                    child.flex_basis_is_definite = true;
-                    break 'flex_basis size;
-                }
-                Some(SizingKeywordResolution::Measure(available)) => Some(available),
-                None => None,
-            };
 
             let child_available_space = Size::MAX_CONTENT
                 .with_main(

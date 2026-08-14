@@ -1,0 +1,15 @@
+<test name="flex_basis_content_column__border_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div direction="ltr" flex-direction="column" width="50px" height="200px">
+      <text direction="ltr" flex-shrink="0" flex-basis="content" height="100px">
+        XXXX​XXXX
+      </text>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="50" height="200">
+      <node x="0" y="0" width="50" height="20"/>
+    </node>
+  </expectations>
+</test>

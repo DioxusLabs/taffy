@@ -1,0 +1,15 @@
+<test name="flex_basis_stretch_column__content_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div box-sizing="content-box" direction="rtl" flex-direction="column" width="50px" height="200px">
+      <text box-sizing="content-box" direction="rtl" flex-shrink="0" flex-basis="stretch">
+        XXXX​XXXX
+      </text>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="50" height="200">
+      <node x="0" y="0" width="50" height="200"/>
+    </node>
+  </expectations>
+</test>

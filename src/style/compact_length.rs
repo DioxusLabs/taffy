@@ -233,6 +233,8 @@ impl CompactLength {
     pub const FIT_CONTENT_KEYWORD_TAG: usize = 0b00100111;
     /// The tag indicating a stretch keyword value
     pub const STRETCH_TAG: usize = 0b00101111;
+    /// The tag indicating a content keyword value
+    pub const CONTENT_TAG: usize = 0b00110111;
 }
 
 impl CompactLength {
@@ -339,6 +341,15 @@ impl CompactLength {
         Self(CompactLengthInner::from_tag(Self::STRETCH_TAG))
     }
 
+    /// The size should be an automatic size based on the box's content
+    /// (<https://www.w3.org/TR/css-flexbox-1/#valdef-flex-basis-content>)
+    ///
+    /// This keyword is only valid for `flex-basis`. In any other context it behaves as [`auto`](Self::auto).
+    #[inline(always)]
+    pub const fn content() -> Self {
+        Self(CompactLengthInner::from_tag(Self::CONTENT_TAG))
+    }
+
     /// Get the primary tag
     #[inline(always)]
     pub fn tag(self) -> usize {
@@ -382,6 +393,12 @@ impl CompactLength {
     #[inline(always)]
     pub fn is_auto(self) -> bool {
         self.tag() == Self::AUTO_TAG
+    }
+
+    /// Returns true if the value is the content keyword
+    #[inline(always)]
+    pub fn is_content(self) -> bool {
+        self.tag() == Self::CONTENT_TAG
     }
 
     /// Returns true if the value is min-content
@@ -569,6 +586,7 @@ impl<'de> serde::Deserialize<'de> for CompactLength {
                 | CompactLength::FIT_CONTENT_PX_TAG
                 | CompactLength::FIT_CONTENT_PERCENT_TAG
                 | CompactLength::STRETCH_TAG
+                | CompactLength::CONTENT_TAG
                 | CompactLength::FR_TAG
         ) {
             Ok(value)
