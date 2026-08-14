@@ -37,6 +37,7 @@ default = [
     "std",
     "taffy_tree",
     "flexbox",
+    "flexbox_balance",
     "grid",
     "block_layout",
     "float_layout",
@@ -54,6 +55,8 @@ block_layout = []
 float_layout = []
 ## Enables the Flexbox layout algorithm. See [`compute_flexbox_layout`](crate::compute_flexbox_layout).
 flexbox = []
+## Enables support for `flex-wrap: balance` and `flex-line-count` from [CSS Flexbox Level 2](https://drafts.csswg.org/css-flexbox-2/)
+flexbox_balance = ["flexbox"]
 ## Enables the CSS Grid layout algorithm. See [`compute_grid_layout`](crate::compute_grid_layout).
 grid = ["alloc", "dep:smallvec"]
 ## Enables calc() values for all layout algorithms

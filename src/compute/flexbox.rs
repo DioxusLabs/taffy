@@ -2,8 +2,8 @@
 use crate::compute::common::alignment::{compute_alignment_offset, resolve_self_alignment_safety};
 use crate::geometry::{Line, Point, Rect, Size};
 use crate::style::{
-    AlignContent, AlignContentKeyword, AlignItems, AlignItemsKeyword, AlignSelf, AvailableSpace, FlexWrap,
-    JustifyContent, LengthPercentageAuto, Overflow, Position,
+    AlignContent, AlignContentKeyword, AlignItems, AlignItemsKeyword, AlignSelf, AvailableSpace, JustifyContent,
+    LengthPercentageAuto, Overflow, Position,
 };
 use crate::style::{CoreStyle, FlexDirection, FlexboxContainerStyle, FlexboxItemStyle};
 use crate::style_helpers::{TaffyMaxContent, TaffyMinContent};
@@ -138,6 +138,10 @@ struct AlgoConstants {
     is_wrap: bool,
     /// Is the wrap direction inverted
     is_wrap_reverse: bool,
+    /// The minimum number of lines to balance items into. `Some` if and only if items are
+    /// balanced across lines (`flex-wrap: balance`).
+    #[cfg(feature = "flexbox_balance")]
+    balance_line_count: Option<u16>,
 
     /// The item's min_size style
     min_size: Size<Option<f32>>,
@@ -180,6 +184,24 @@ struct AlgoConstants {
     container_size: Size<f32>,
     /// The size of the internal container
     inner_container_size: Size<f32>,
+}
+
+impl AlgoConstants {
+    /// When items are balanced into a requested minimum number of lines, definite cross-axis
+    /// available space for measuring items is divided between the requested number of lines
+    /// (after subtracting the cross-axis gaps between them).
+    /// See <https://github.com/w3c/csswg-drafts/issues/13414>
+    #[inline]
+    fn balance_divided_cross_space(&self, value: f32) -> f32 {
+        #[cfg(feature = "flexbox_balance")]
+        if let Some(line_count) = self.balance_line_count {
+            if line_count > 1 {
+                let line_count = line_count as f32;
+                return (value - (line_count - 1.0) * self.gap.cross(self.dir)) / line_count;
+            }
+        }
+        value
+    }
 }
 
 /// Computes the layout of a box according to the flexbox algorithm
@@ -474,8 +496,11 @@ fn compute_constants(
     let dir = style.flex_direction();
     let is_row = dir.is_row();
     let is_column = dir.is_column();
-    let is_wrap = matches!(style.flex_wrap(), FlexWrap::Wrap | FlexWrap::WrapReverse);
-    let is_wrap_reverse = style.flex_wrap() == FlexWrap::WrapReverse;
+    let flex_wrap = style.flex_wrap();
+    let is_wrap = flex_wrap.is_multi_line();
+    let is_wrap_reverse = flex_wrap.is_reverse();
+    #[cfg(feature = "flexbox_balance")]
+    let balance_line_count = if flex_wrap.is_balance() { Some(style.flex_line_count().max(1)) } else { None };
 
     let aspect_ratio = style.aspect_ratio();
     let margin = style.margin().resolve_or_zero(parent_size.width, |val, basis| tree.calc(val, basis));
@@ -522,6 +547,8 @@ fn compute_constants(
         is_column,
         is_wrap,
         is_wrap_reverse,
+        #[cfg(feature = "flexbox_balance")]
+        balance_line_count,
         min_size: style
             .min_size()
             .maybe_resolve(parent_size, |val, basis| tree.calc(val, basis))
@@ -741,7 +768,9 @@ fn determine_flex_base_size(
         // Clamp available space by min- and max- size
         let cross_axis_available_space: AvailableSpace = match available_space.cross(dir) {
             AvailableSpace::Definite(val) => AvailableSpace::Definite(
-                cross_axis_parent_size.unwrap_or(val).maybe_clamp(child_min_cross, child_max_cross),
+                constants
+                    .balance_divided_cross_space(cross_axis_parent_size.unwrap_or(val))
+                    .maybe_clamp(child_min_cross, child_max_cross),
             ),
             AvailableSpace::MinContent => match child_min_cross {
                 Some(min) => AvailableSpace::Definite(min),
@@ -1005,6 +1034,11 @@ fn collect_flex_lines<'a>(
     available_space: Size<AvailableSpace>,
     flex_items: &'a mut Vec<FlexItem>,
 ) -> Vec<FlexLine<'a>> {
+    #[cfg(feature = "flexbox_balance")]
+    if constants.balance_line_count.is_some() {
+        return collect_balanced_flex_lines(constants, available_space, flex_items);
+    }
+
     // Wrapping into multiple lines requires a definite main size. If the container's known main size
     // is derived from its own content (and is thus indefinite) then all items are collected into a
     // single flex line, matching how the container was sized under a min/max-content constraint.
@@ -1074,6 +1108,72 @@ fn collect_flex_lines<'a>(
             }
         }
     }
+}
+
+/// Collect flex items into balanced flex lines (`flex-wrap: balance`), such that the largest
+/// line is as small as possible.
+///
+/// See <https://drafts.csswg.org/css-flexbox-2/#balance-values>
+#[cfg(feature = "flexbox_balance")]
+fn collect_balanced_flex_lines<'a>(
+    constants: &AlgoConstants,
+    available_space: Size<AvailableSpace>,
+    flex_items: &'a mut [FlexItem],
+) -> Vec<FlexLine<'a>> {
+    if flex_items.is_empty() {
+        return new_vec_with_capacity(0);
+    }
+
+    // If the container's known main size is derived from its own content (and is thus indefinite)
+    // then items are balanced without a size limit, matching how the container was sized under a
+    // min/max-content constraint.
+    let main_axis_available_space = if constants.known_main_size_is_definite {
+        match constants.max_size.main(constants.dir) {
+            Some(max_size) => AvailableSpace::Definite({
+                let available = available_space.main(constants.dir).into_option().unwrap_or(max_size);
+                // If the container's main size is not definite then it is at most the max main size,
+                // so the max size (and not the available space) is the limit that items wrap against.
+                let available = if constants.has_definite_main_size { available } else { available.min(max_size) };
+                available.maybe_max(constants.min_size.main(constants.dir))
+            }),
+            None => available_space.main(constants.dir),
+        }
+    } else {
+        AvailableSpace::MaxContent
+    };
+
+    // If we're sizing under a min-content constraint then we take every possible wrapping
+    // opportunity and place each item in its own line, the same as greedy wrapping (the
+    // min-content main size of a multi-line container is the size of its largest item)
+    if main_axis_available_space == AvailableSpace::MinContent {
+        let mut lines = new_vec_with_capacity(flex_items.len());
+        let mut items = &mut flex_items[..];
+        while !items.is_empty() {
+            let (line_items, rest) = items.split_at_mut(1);
+            lines.push(FlexLine { items: line_items, cross_size: 0.0, offset_cross: 0.0 });
+            items = rest;
+        }
+        return lines;
+    }
+
+    let line_break_size = main_axis_available_space.into_option().unwrap_or(f32::INFINITY);
+    let min_line_count = constants.balance_line_count.unwrap_or(1) as usize;
+    let item_counts = balance::balanced_line_item_counts(
+        flex_items.iter().map(|item| item.hypothetical_outer_size.main(constants.dir)),
+        line_break_size,
+        constants.gap.main(constants.dir),
+        min_line_count,
+    );
+
+    let mut lines = new_vec_with_capacity(item_counts.len());
+    let mut items = &mut flex_items[..];
+    for count in item_counts {
+        let (line_items, rest) = items.split_at_mut(count);
+        lines.push(FlexLine { items: line_items, cross_size: 0.0, offset_cross: 0.0 });
+        items = rest;
+    }
+    debug_assert!(items.is_empty());
+    lines
 }
 
 /// Compute whether each of an item's known dimensions should be treated as definite when performing
@@ -1199,7 +1299,9 @@ fn determine_container_main_size(
                                 let child_max_cross = item.max_size.cross(dir).maybe_add(cross_axis_margin_sum);
                                 let cross_axis_available_space: AvailableSpace = available_space
                                     .cross(dir)
-                                    .map_definite_value(|val| cross_axis_parent_size.unwrap_or(val))
+                                    .map_definite_value(|val| {
+                                        constants.balance_divided_cross_space(cross_axis_parent_size.unwrap_or(val))
+                                    })
                                     .maybe_clamp(child_min_cross, child_max_cross);
 
                                 let child_available_space = available_space.with_cross(dir, cross_axis_available_space);
@@ -1548,6 +1650,7 @@ fn determine_hypothetical_cross_size(
 
         let child_available_cross = available_space
             .cross(constants.dir)
+            .map_definite_value(|val| constants.balance_divided_cross_space(val))
             .maybe_clamp(transferred_min_cross, transferred_max_cross)
             .maybe_max(padding_border_sum);
 
@@ -2821,5 +2924,230 @@ fn sum_axis_gaps(gap: f32, num_items: usize) -> f32 {
     } else {
         // ...otherwise there are (num_items - 1) gaps
         gap * (num_items - 1) as f32
+    }
+}
+
+/// Balanced line breaking for `flex-wrap: balance`.
+///
+/// This is a port of Chromium's `FlexLineBreaker`
+/// (`third_party/blink/renderer/core/layout/flex/flex_line_breaker.cc`): a dynamic program which
+/// chooses the contiguous partition of items into lines that minimises the sum of the squares of
+/// each line's free space, where lines with more free space than the line-break size score zero.
+/// Item sizes and scores use saturating fixed-point arithmetic (1/64th of a pixel, matching
+/// Chromium's `LayoutUnit`) so that tie-breaking between equal-score partitions is exact and
+/// matches Chrome.
+#[cfg(feature = "flexbox_balance")]
+mod balance {
+    use crate::util::sys::{new_vec_with_capacity, Vec};
+
+    /// The score type: a saturating fixed-point number (with 6 fractional bits for sizes)
+    type ScoreUnit = u64;
+
+    /// Score assigned to unreachable partitions
+    const INFINITY: ScoreUnit = ScoreUnit::MAX;
+
+    /// The maximum fixed-point size value (matches Chromium's `LayoutUnit::Max()` raw value)
+    const MAX_SIZE: ScoreUnit = i32::MAX as ScoreUnit;
+
+    /// Convert a size in pixels to fixed-point, clamping negative sizes to zero and saturating
+    /// at [`MAX_SIZE`] (infinite sizes convert to [`MAX_SIZE`])
+    fn to_fixed(value: f32) -> ScoreUnit {
+        let scaled = (value.max(0.0) as f64) * 64.0;
+        if scaled >= MAX_SIZE as f64 {
+            MAX_SIZE
+        } else {
+            scaled.round() as ScoreUnit
+        }
+    }
+
+    /// The number of lines that greedy line breaking (each line collects items until the next
+    /// item no longer fits, and lines with no fitting item take a single item) would produce
+    fn greedy_line_count(sums: &[ScoreUnit], gap_between_items: ScoreUnit, line_break_size: ScoreUnit) -> usize {
+        let mut line_count = 1;
+        let mut previous_sum: ScoreUnit = 0;
+        let mut index = 0;
+        while index < sums.len() {
+            let limit = previous_sum.saturating_add(line_break_size).saturating_add(gap_between_items);
+            let mut next = index;
+            while next < sums.len() && sums[next] <= limit {
+                next += 1;
+            }
+            if next == index {
+                // No item fits: place the single (overflowing) item in its own line
+                next = index + 1;
+            }
+            previous_sum = sums[next - 1];
+            index = next;
+            if index < sums.len() {
+                line_count += 1;
+            }
+        }
+        line_count
+    }
+
+    /// Reduce the line-break size until greedy line breaking produces at least `min_line_count`
+    /// lines. If no line-break size produces enough lines because several items are exactly the
+    /// same size, perturb the item sizes (from the last such boundary backwards) by the smallest
+    /// representable amount until enough lines are produced.
+    ///
+    /// Returns the resulting line count.
+    fn apply_min_line_count(
+        min_line_count: usize,
+        sums: &mut [ScoreUnit],
+        gap_between_items: ScoreUnit,
+        line_break_size: &mut ScoreUnit,
+    ) -> usize {
+        // Find the largest line-break size that produces at least `min_line_count` lines by
+        // bisecting the range of possible sizes. `greedy_line_count` is monotonically
+        // non-increasing in the line-break size.
+        let mut low: ScoreUnit = 0;
+        let mut high: ScoreUnit = (*line_break_size).min(sums[sums.len() - 1].saturating_sub(gap_between_items));
+        while low < high {
+            let midpoint = low + (high - low) / 2;
+            if greedy_line_count(sums, gap_between_items, midpoint) > min_line_count {
+                low = midpoint + 1;
+            } else {
+                high = midpoint;
+            }
+        }
+        *line_break_size = high;
+
+        let mut line_count = greedy_line_count(sums, gap_between_items, *line_break_size);
+        if line_count >= min_line_count {
+            return line_count;
+        }
+
+        // Even a line-break size exactly equal to some item sizes doesn't produce enough lines:
+        // several lines' contents fit the line-break size perfectly. Making a perfectly-fitting
+        // line infinitesimally larger forces an extra line break.
+        let mut perfect_fit_indices: Vec<usize> = new_vec_with_capacity(0);
+        {
+            let mut previous_sum: ScoreUnit = 0;
+            let mut line_has_content = false;
+            for index in 0..sums.len() {
+                let line_size = sums[index].saturating_sub(previous_sum).saturating_sub(gap_between_items);
+                if line_size == *line_break_size {
+                    perfect_fit_indices.push(index);
+                }
+                if line_size > *line_break_size {
+                    previous_sum = if line_has_content { sums[index - 1] } else { sums[index] };
+                    line_has_content = false;
+                    continue;
+                }
+                line_has_content = true;
+            }
+        }
+        for &index in perfect_fit_indices.iter().rev() {
+            for sum in &mut sums[index..] {
+                *sum = sum.saturating_add(1);
+            }
+            line_count = greedy_line_count(sums, gap_between_items, *line_break_size);
+            if line_count >= min_line_count {
+                break;
+            }
+        }
+        line_count
+    }
+
+    /// Determine the number of items on each line that balances items across lines, such that
+    /// the largest line is as small as possible, with a minimum of `min_line_count` lines
+    /// (or one line per item if there are fewer items).
+    ///
+    /// `item_sizes` must be non-empty. The returned line item counts are all non-zero and sum to
+    /// the number of items.
+    pub(super) fn balanced_line_item_counts(
+        item_sizes: impl ExactSizeIterator<Item = f32>,
+        line_break_size: f32,
+        gap_between_items: f32,
+        min_line_count: usize,
+    ) -> Vec<usize> {
+        let item_count = item_sizes.len();
+        debug_assert!(item_count > 0);
+        let min_line_count = min_line_count.clamp(1, item_count);
+        let gap_between_items = to_fixed(gap_between_items);
+        let mut line_break_size = to_fixed(line_break_size);
+
+        // Prefix sums of the item sizes, where each item also contributes one trailing gap.
+        // The size of the line holding items `start..=end` is therefore
+        // `sums[end] - sums[start - 1] - gap_between_items`.
+        let mut sums: Vec<ScoreUnit> = new_vec_with_capacity(item_count);
+        let mut sum: ScoreUnit = 0;
+        for size in item_sizes {
+            sum = sum.saturating_add(to_fixed(size)).saturating_add(gap_between_items);
+            sums.push(sum);
+        }
+
+        let mut expected_line_count = greedy_line_count(&sums, gap_between_items, line_break_size);
+        if expected_line_count < min_line_count {
+            expected_line_count =
+                apply_min_line_count(min_line_count, &mut sums, gap_between_items, &mut line_break_size);
+        }
+
+        // The size of the line holding items `start..=end`
+        let line_size = |start: usize, end: usize| -> ScoreUnit {
+            let start_sum = if start == 0 { 0 } else { sums[start - 1] };
+            sums[end].saturating_sub(start_sum).saturating_sub(gap_between_items)
+        };
+
+        // initial_start[end]: the smallest `start` such that items `start..=end` fit on one line
+        // (or such that the line is the single item `end` if item `end` alone doesn't fit)
+        let mut initial_start: Vec<usize> = new_vec_with_capacity(item_count);
+        let mut start = 0;
+        for end in 0..item_count {
+            while start < end && line_size(start, end) > line_break_size {
+                start += 1;
+            }
+            initial_start.push(start);
+            // A single item which is larger than the line-break size can only ever be alone on
+            // its line, so subsequent lines start past it
+            if start == end && line_size(start, end) > line_break_size {
+                start += 1;
+            }
+        }
+
+        // For each `end`, find the partition of items `0..=end` with the best (lowest) score.
+        // `best_breaks[end]` is the index of the last item of the previous line in the best
+        // partition (or `None` if items `0..=end` form a single line).
+        let mut best_scores: Vec<ScoreUnit> = new_vec_with_capacity(item_count);
+        let mut best_breaks: Vec<Option<usize>> = new_vec_with_capacity(item_count);
+        for (end, &min_start) in initial_start.iter().enumerate() {
+            let mut best_score = INFINITY;
+            let mut best_break = None;
+            for start in min_start..=end {
+                let length = line_size(start, end);
+                // Overflowing lines (which can only ever hold a single item) score zero
+                let line_score = if length > line_break_size {
+                    0
+                } else {
+                    let free_space = line_break_size - length;
+                    free_space.saturating_mul(free_space)
+                };
+                // Line scores increase as `start` decreases, so no better score is possible
+                if line_score > best_score {
+                    break;
+                }
+                let previous_score = if start == 0 { 0 } else { best_scores[start - 1] };
+                let score = line_score.saturating_add(previous_score);
+                // Break ties in favour of the largest `start` (most items on earlier lines)
+                if score <= best_score {
+                    best_score = score;
+                    best_break = start.checked_sub(1);
+                }
+            }
+            best_scores.push(best_score);
+            best_breaks.push(best_break);
+        }
+
+        // Walk the chain of best breaks backwards to recover the item count of each line
+        let mut item_counts: Vec<usize> = new_vec_with_capacity(expected_line_count);
+        let mut end = item_count - 1;
+        while let Some(break_index) = best_breaks[end] {
+            item_counts.push(end - break_index);
+            end = break_index;
+        }
+        item_counts.push(end + 1);
+        item_counts.reverse();
+        debug_assert_eq!(item_counts.len(), expected_line_count);
+        item_counts
     }
 }

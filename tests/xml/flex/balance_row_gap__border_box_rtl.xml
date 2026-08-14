@@ -1,0 +1,19 @@
+<test name="balance_row_gap__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div direction="rtl" flex-wrap="balance" width="100px" column-gap="10px">
+      <div direction="rtl" width="31px" height="30px"/>
+      <div direction="rtl" width="32px" height="30px"/>
+      <div direction="rtl" width="33px" height="30px"/>
+      <div direction="rtl" width="34px" height="30px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="100" height="60">
+      <node x="69" y="0" width="31" height="30"/>
+      <node x="27" y="0" width="32" height="30"/>
+      <node x="67" y="30" width="33" height="30"/>
+      <node x="23" y="30" width="34" height="30"/>
+    </node>
+  </expectations>
+</test>

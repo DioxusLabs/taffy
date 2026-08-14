@@ -127,6 +127,9 @@ async fn main() {
         if name.starts_with("grid") {
             writeln!(&mut mod_file, r#"#[cfg(feature = "grid")]"#).unwrap();
         }
+        if name.starts_with("balance") {
+            writeln!(&mut mod_file, r#"#[cfg(feature = "flexbox_balance")]"#).unwrap();
+        }
         writeln!(
             &mut mod_file,
             "#[test]
@@ -650,6 +653,7 @@ fn generate_node(w: &mut XmlWriter, node: &Value) {
     maybe_write(w, "clear", get_str_attr(&style["clear"], None));
     maybe_write(w, "flex-direction", get_str_attr(&style["flexDirection"], Some("row")));
     maybe_write(w, "flex-wrap", get_str_attr(&style["flexWrap"], Some("nowrap")));
+    maybe_write(w, "flex-line-count", get_num_attr(&style["flexLineCount"], Some(1.0)));
     maybe_write(w, "overflow-x", get_str_attr(&style["overflowX"], Some("visible")));
     maybe_write(w, "overflow-y", get_str_attr(&style["overflowY"], Some("visible")));
 

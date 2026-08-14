@@ -542,6 +542,12 @@ pub struct Style<S: CheapCloneStr = DefaultCheapStr> {
     /// Should elements wrap, or stay in a single line?
     #[cfg(feature = "flexbox")]
     pub flex_wrap: FlexWrap,
+    /// The minimum number of flex lines to balance items into when `flex_wrap` is
+    /// [`FlexWrap::Balance`] or [`FlexWrap::WrapReverseBalance`]
+    ///
+    /// 1 is the default value, and this value must be at least 1.
+    #[cfg(feature = "flexbox_balance")]
+    pub flex_line_count: u16,
 
     // Flexbox item properties
     /// Sets the initial main axis size of the item
@@ -642,6 +648,8 @@ impl<S: CheapCloneStr> Style<S> {
         flex_direction: FlexDirection::Row,
         #[cfg(feature = "flexbox")]
         flex_wrap: FlexWrap::NoWrap,
+        #[cfg(feature = "flexbox_balance")]
+        flex_line_count: 1,
         #[cfg(feature = "flexbox")]
         flex_grow: 0.0,
         #[cfg(feature = "flexbox")]
@@ -896,6 +904,11 @@ impl<S: CheapCloneStr> FlexboxContainerStyle for Style<S> {
     fn flex_wrap(&self) -> FlexWrap {
         self.flex_wrap
     }
+    #[cfg(feature = "flexbox_balance")]
+    #[inline(always)]
+    fn flex_line_count(&self) -> u16 {
+        self.flex_line_count
+    }
     #[inline(always)]
     fn gap(&self) -> Size<LengthPercentage> {
         self.gap
@@ -923,6 +936,11 @@ impl<T: FlexboxContainerStyle> FlexboxContainerStyle for &'_ T {
     #[inline(always)]
     fn flex_wrap(&self) -> FlexWrap {
         (*self).flex_wrap()
+    }
+    #[cfg(feature = "flexbox_balance")]
+    #[inline(always)]
+    fn flex_line_count(&self) -> u16 {
+        (*self).flex_line_count()
     }
     #[inline(always)]
     fn gap(&self) -> Size<LengthPercentage> {
@@ -1250,6 +1268,8 @@ mod tests {
             flex_direction: Default::default(),
             #[cfg(feature = "flexbox")]
             flex_wrap: Default::default(),
+            #[cfg(feature = "flexbox_balance")]
+            flex_line_count: 1,
             #[cfg(any(feature = "flexbox", feature = "grid"))]
             align_items: Default::default(),
             #[cfg(any(feature = "flexbox", feature = "grid"))]

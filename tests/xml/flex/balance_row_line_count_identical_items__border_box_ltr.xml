@@ -1,0 +1,19 @@
+<test name="balance_row_line_count_identical_items__border_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div direction="ltr" flex-wrap="balance" flex-line-count="3" width="100px">
+      <div direction="ltr" width="50px" height="30px"/>
+      <div direction="ltr" width="50px" height="30px"/>
+      <div direction="ltr" width="50px" height="30px"/>
+      <div direction="ltr" width="50px" height="30px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="100" height="90">
+      <node x="0" y="0" width="50" height="30"/>
+      <node x="50" y="0" width="50" height="30"/>
+      <node x="0" y="30" width="50" height="30"/>
+      <node x="0" y="60" width="50" height="30"/>
+    </node>
+  </expectations>
+</test>
