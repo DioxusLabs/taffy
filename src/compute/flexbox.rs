@@ -2931,124 +2931,62 @@ fn sum_axis_gaps(gap: f32, num_items: usize) -> f32 {
 
 /// Balanced line breaking for `flex-wrap: balance`.
 ///
-/// This is a port of Chromium's `FlexLineBreaker`
-/// (`third_party/blink/renderer/core/layout/flex/flex_line_breaker.cc`): a dynamic program which
-/// chooses the contiguous partition of items into lines that minimises the sum of the squares of
-/// each line's free space, where lines with more free space than the line-break size score zero.
-/// Item sizes and scores use `f64` arithmetic, with sizes clamped to [`MAX_SIZE`] so that
-/// squared free-space scores are exactly representable and comparisons (and therefore
-/// tie-breaking between equal-score partitions) are exact.
+/// Implements the balancing algorithm from the CSS Flexbox Level 2 draft
+/// (<https://drafts.csswg.org/css-flexbox-2/#balancing>). Items are divided into exactly
+/// `line_count` contiguous sequences (lines), where `line_count` is the number of lines that
+/// greedy line breaking would produce (with item sizes floored at zero), raised to the minimum
+/// flex line count (`flex-line-count`, clamped to the number of items), such that:
+///
+/// - every line holds at least one item;
+/// - no line's size exceeds the container's inner main size, unless the line holds a single
+///   (overflowing) item;
+/// - calling the difference between a line's size and the container's inner main size the
+///   line's *error*, the sum of the squared errors of all lines is minimized;
+/// - ties are broken by assigning the most items to the first line, then the most items to the
+///   second line, and so on. (This tie-break also subsumes the spec's rule that a zero-sized
+///   item is assigned to the end of the preceding line where possible.)
+///
+/// All arithmetic uses `f64`, so that the squares and sums involved in scoring partitions are
+/// computed exactly enough that equally-balanced partitions compare equal and are resolved by
+/// the tie-break rather than by rounding noise.
 #[cfg(feature = "flexbox_balance")]
 mod balance {
     use crate::util::sys::{new_vec_with_capacity, Vec};
 
-    /// The size and score type
-    type ScoreUnit = f64;
+    /// Score assigned to partitions that violate the line size constraint
+    const INFEASIBLE: f64 = f64::INFINITY;
 
-    /// Score assigned to unreachable partitions
-    const INFINITY: ScoreUnit = f64::INFINITY;
+    /// The largest line limit (and item size) used for scoring, in pixels. An indefinite
+    /// (infinite) line limit is clamped to this value so that errors remain finite: every line
+    /// then has a large negative error, and minimizing the sum of squared errors equalizes the
+    /// line sizes. `f32` pixel values lose integer precision beyond this value (2^24) anyway.
+    const MAX_LIMIT: f64 = 16_777_216.0;
 
-    /// The maximum size value in pixels (matches Chromium's `LayoutUnit::Max()`).
-    /// Its square is below 2^53 and so exactly representable as an `f64`.
-    const MAX_SIZE: ScoreUnit = (i32::MAX as ScoreUnit) / 64.0;
-
-    /// Convert a size in pixels to a [`ScoreUnit`], clamping negative sizes to zero and
-    /// saturating at [`MAX_SIZE`] (infinite sizes convert to [`MAX_SIZE`])
-    fn to_size(value: f32) -> ScoreUnit {
-        (value as ScoreUnit).clamp(0.0, MAX_SIZE)
+    /// Convert a size in pixels to an `f64`, flooring negative sizes at zero and clamping to
+    /// [`MAX_LIMIT`]
+    fn to_size(value: f32) -> f64 {
+        (value as f64).clamp(0.0, MAX_LIMIT)
     }
 
-    /// The smallest value greater than `value` (which must be a non-negative finite float)
-    fn next_up(value: ScoreUnit) -> ScoreUnit {
-        ScoreUnit::from_bits(value.to_bits() + 1)
-    }
-
-    /// The number of lines that greedy line breaking (each line collects items until the next
-    /// item no longer fits, and lines with no fitting item take a single item) would produce
-    fn greedy_line_count(sums: &[ScoreUnit], gap_between_items: ScoreUnit, line_break_size: ScoreUnit) -> usize {
+    /// The number of lines that greedy line breaking produces: each line collects consecutive
+    /// items until the next item no longer fits, and if even the first item of a line doesn't
+    /// fit, that line takes just the one (overflowing) item.
+    fn greedy_line_count(sums: &[f64], gap_between_items: f64, limit: f64) -> usize {
         let mut line_count = 1;
-        let mut previous_sum: ScoreUnit = 0.0;
+        let mut previous_sum = 0.0;
         let mut index = 0;
         while index < sums.len() {
             let mut next = index;
-            // The line size is computed exactly as elsewhere so that all passes agree on which
-            // items fit on a line (`a - b <= c` and `a <= b + c` can disagree due to rounding)
-            while next < sums.len() && sums[next] - previous_sum - gap_between_items <= line_break_size {
+            while next < sums.len() && sums[next] - previous_sum - gap_between_items <= limit {
                 next += 1;
             }
             if next == index {
-                // No item fits: place the single (overflowing) item in its own line
                 next = index + 1;
             }
             previous_sum = sums[next - 1];
             index = next;
             if index < sums.len() {
                 line_count += 1;
-            }
-        }
-        line_count
-    }
-
-    /// Reduce the line-break size until greedy line breaking produces at least `min_line_count`
-    /// lines. If no line-break size produces enough lines because several items are exactly the
-    /// same size, perturb the item sizes (from the last such boundary backwards) by the smallest
-    /// representable amount until enough lines are produced.
-    ///
-    /// Returns the resulting line count.
-    fn apply_min_line_count(
-        min_line_count: usize,
-        sums: &mut [ScoreUnit],
-        gap_between_items: ScoreUnit,
-        line_break_size: &mut ScoreUnit,
-    ) -> usize {
-        // Find the largest line-break size that produces at least `min_line_count` lines by
-        // bisecting the range of possible sizes (as the ordered bit representations of the
-        // non-negative floats in that range). `greedy_line_count` is monotonically
-        // non-increasing in the line-break size.
-        let mut low: u64 = 0;
-        let mut high: u64 = (*line_break_size).min((sums[sums.len() - 1] - gap_between_items).max(0.0)).to_bits();
-        while low < high {
-            let midpoint = low + (high - low) / 2;
-            if greedy_line_count(sums, gap_between_items, ScoreUnit::from_bits(midpoint)) > min_line_count {
-                low = midpoint + 1;
-            } else {
-                high = midpoint;
-            }
-        }
-        *line_break_size = ScoreUnit::from_bits(high);
-
-        let mut line_count = greedy_line_count(sums, gap_between_items, *line_break_size);
-        if line_count >= min_line_count {
-            return line_count;
-        }
-
-        // Even a line-break size exactly equal to some item sizes doesn't produce enough lines:
-        // several lines' contents fit the line-break size perfectly. Making a perfectly-fitting
-        // line infinitesimally larger forces an extra line break.
-        let mut perfect_fit_indices: Vec<usize> = new_vec_with_capacity(0);
-        {
-            let mut previous_sum: ScoreUnit = 0.0;
-            let mut line_has_content = false;
-            for index in 0..sums.len() {
-                let line_size = sums[index] - previous_sum - gap_between_items;
-                if line_size == *line_break_size {
-                    perfect_fit_indices.push(index);
-                }
-                if line_size > *line_break_size {
-                    previous_sum = if line_has_content { sums[index - 1] } else { sums[index] };
-                    line_has_content = false;
-                    continue;
-                }
-                line_has_content = true;
-            }
-        }
-        for &index in perfect_fit_indices.iter().rev() {
-            for sum in &mut sums[index..] {
-                *sum = next_up(*sum);
-            }
-            line_count = greedy_line_count(sums, gap_between_items, *line_break_size);
-            if line_count >= min_line_count {
-                break;
             }
         }
         line_count
@@ -3062,97 +3000,93 @@ mod balance {
     /// the number of items.
     pub(super) fn balanced_line_item_counts(
         item_sizes: impl ExactSizeIterator<Item = f32>,
-        line_break_size: f32,
+        line_limit: f32,
         gap_between_items: f32,
         min_line_count: usize,
     ) -> Vec<usize> {
         let item_count = item_sizes.len();
         debug_assert!(item_count > 0);
-        let min_line_count = min_line_count.clamp(1, item_count);
         let gap_between_items = to_size(gap_between_items);
-        let mut line_break_size = to_size(line_break_size);
+        let limit = to_size(line_limit);
 
         // Prefix sums of the item sizes, where each item also contributes one trailing gap.
         // The size of the line holding items `start..=end` is therefore
         // `sums[end] - sums[start - 1] - gap_between_items`.
-        let mut sums: Vec<ScoreUnit> = new_vec_with_capacity(item_count);
-        let mut sum: ScoreUnit = 0.0;
+        let mut sums: Vec<f64> = new_vec_with_capacity(item_count);
+        let mut sum = 0.0;
         for size in item_sizes {
             sum += to_size(size) + gap_between_items;
             sums.push(sum);
         }
 
-        let mut expected_line_count = greedy_line_count(&sums, gap_between_items, line_break_size);
-        if expected_line_count < min_line_count {
-            expected_line_count =
-                apply_min_line_count(min_line_count, &mut sums, gap_between_items, &mut line_break_size);
-        }
-
         // The size of the line holding items `start..=end`
-        let line_size = |start: usize, end: usize| -> ScoreUnit {
+        let line_size = |start: usize, end: usize| -> f64 {
             let start_sum = if start == 0 { 0.0 } else { sums[start - 1] };
             sums[end] - start_sum - gap_between_items
         };
+        // The squared error of the line holding items `start..=end`
+        let line_error = |start: usize, end: usize| -> f64 {
+            let error = line_size(start, end) - limit;
+            error * error
+        };
 
-        // initial_start[end]: the smallest `start` such that items `start..=end` fit on one line
-        // (or such that the line is the single item `end` if item `end` alone doesn't fit)
-        let mut initial_start: Vec<usize> = new_vec_with_capacity(item_count);
+        let line_count = greedy_line_count(&sums, gap_between_items, limit).max(min_line_count.clamp(1, item_count));
+
+        // `min_errors[(lines - 1) * item_count + start]` is the minimum total squared error of
+        // any valid division of items `start..` into exactly `lines` lines ([`INFEASIBLE`] if
+        // there is none). Rows are filled bottom-up: a division into `lines` lines is a first
+        // line `start..=end` plus a division of `end + 1..` into `lines - 1` lines.
+        let mut min_errors: Vec<f64> = new_vec_with_capacity(line_count * item_count);
+        for start in 0..item_count {
+            let feasible = start == item_count - 1 || line_size(start, item_count - 1) <= limit;
+            min_errors.push(if feasible { line_error(start, item_count - 1) } else { INFEASIBLE });
+        }
+        for lines in 2..=line_count {
+            let row = (lines - 1) * item_count;
+            for start in 0..item_count {
+                let mut min_error = INFEASIBLE;
+                // The remaining `lines - 1` lines need one item each, bounding this line's end
+                let mut end = start;
+                while end + lines <= item_count {
+                    if end > start && line_size(start, end) > limit {
+                        break;
+                    }
+                    let error = line_error(start, end) + min_errors[row - item_count + end + 1];
+                    if error < min_error {
+                        min_error = error;
+                    }
+                    end += 1;
+                }
+                min_errors.push(min_error);
+            }
+        }
+
+        // Read the division back out front to back. For each line, the *largest* end whose
+        // error plus the minimum remaining error adds up to the (feasible) minimum is chosen,
+        // assigning the most items to the earliest lines as the tie-break requires. Comparing
+        // recomputed errors for exact equality is sound because the expressions are identical
+        // to the ones the table was filled from.
+        debug_assert!(min_errors[(line_count - 1) * item_count].is_finite());
+        let mut item_counts: Vec<usize> = new_vec_with_capacity(line_count);
         let mut start = 0;
-        for end in 0..item_count {
-            while start < end && line_size(start, end) > line_break_size {
-                start += 1;
-            }
-            initial_start.push(start);
-            // A single item which is larger than the line-break size can only ever be alone on
-            // its line, so subsequent lines start past it
-            if start == end && line_size(start, end) > line_break_size {
-                start += 1;
-            }
-        }
-
-        // For each `end`, find the partition of items `0..=end` with the best (lowest) score.
-        // `best_breaks[end]` is the index of the last item of the previous line in the best
-        // partition (or `None` if items `0..=end` form a single line).
-        let mut best_scores: Vec<ScoreUnit> = new_vec_with_capacity(item_count);
-        let mut best_breaks: Vec<Option<usize>> = new_vec_with_capacity(item_count);
-        for (end, &min_start) in initial_start.iter().enumerate() {
-            let mut best_score = INFINITY;
-            let mut best_break = None;
-            for start in min_start..=end {
-                let length = line_size(start, end);
-                // Overflowing lines (which can only ever hold a single item) score zero
-                let line_score = if length > line_break_size {
-                    0.0
-                } else {
-                    let free_space = line_break_size - length;
-                    free_space * free_space
-                };
-                // Line scores increase as `start` decreases, so no better score is possible
-                if line_score > best_score {
-                    break;
+        for lines_after in (0..line_count).rev() {
+            let target = min_errors[lines_after * item_count + start];
+            let mut end = item_count - 1 - lines_after;
+            loop {
+                if end == start || line_size(start, end) <= limit {
+                    let remaining_error =
+                        if lines_after == 0 { 0.0 } else { min_errors[(lines_after - 1) * item_count + end + 1] };
+                    if line_error(start, end) + remaining_error == target {
+                        break;
+                    }
                 }
-                let previous_score = if start == 0 { 0.0 } else { best_scores[start - 1] };
-                let score = line_score + previous_score;
-                // Break ties in favour of the largest `start` (most items on earlier lines)
-                if score <= best_score {
-                    best_score = score;
-                    best_break = start.checked_sub(1);
-                }
+                debug_assert!(end > start);
+                end -= 1;
             }
-            best_scores.push(best_score);
-            best_breaks.push(best_break);
+            item_counts.push(end - start + 1);
+            start = end + 1;
         }
-
-        // Walk the chain of best breaks backwards to recover the item count of each line
-        let mut item_counts: Vec<usize> = new_vec_with_capacity(expected_line_count);
-        let mut end = item_count - 1;
-        while let Some(break_index) = best_breaks[end] {
-            item_counts.push(end - break_index);
-            end = break_index;
-        }
-        item_counts.push(end + 1);
-        item_counts.reverse();
-        debug_assert_eq!(item_counts.len(), expected_line_count);
+        debug_assert_eq!(start, item_count);
         item_counts
     }
 }
