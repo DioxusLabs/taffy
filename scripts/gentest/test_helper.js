@@ -120,6 +120,7 @@ function parseDimension(input, options = { allowFrUnits: false }) {
   if (input === 'max-content') return { unit: 'max-content' };
   if (input === 'fit-content') return { unit: 'fit-content' };
   if (input === 'stretch') return { unit: 'stretch' };
+  if (input === 'content') return { unit: 'content' };
   const fitContentMatch = /^fit-content\((.*)\)$/.exec(input);
   if (fitContentMatch) {
     const arg = fitContentMatch[1].trim();

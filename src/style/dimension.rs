@@ -267,6 +267,7 @@ impl FromCss for Dimension {
                 "max-content" => Ok(Self::max_content()),
                 "fit-content" => Ok(Self::fit_content()),
                 "stretch" => Ok(Self::stretch()),
+                "content" => Ok(Self::content()),
                 _ => Err(parser.new_unexpected_token_error(token))?,
             },
             Token::Function(ref name) if name.as_ref() == "fit-content" => parser.parse_nested_block(|parser| {
@@ -345,6 +346,15 @@ impl Dimension {
         Self(CompactLength::stretch())
     }
 
+    /// The size should be an automatic size based on the box's content
+    /// (<https://www.w3.org/TR/css-flexbox-1/#valdef-flex-basis-content>)
+    ///
+    /// This keyword is only valid for `flex-basis`. In any other context it behaves as [`auto`](Self::auto).
+    #[inline(always)]
+    pub const fn content() -> Self {
+        Self(CompactLength::content())
+    }
+
     /// The size should be computed according to the "fit content" formula:
     ///    `max(min_content, min(max_content, limit))`
     /// where `limit` is a PERCENTAGE value
@@ -402,6 +412,12 @@ impl Dimension {
         self.0.tag() == CompactLength::STRETCH_TAG
     }
 
+    /// Returns true if value is the content keyword
+    #[inline(always)]
+    pub fn is_content(self) -> bool {
+        self.0.is_content()
+    }
+
     /// Get the raw `CompactLength` tag
     pub fn tag(self) -> usize {
         self.0.tag()
@@ -432,6 +448,7 @@ impl<'de> serde::Deserialize<'de> for Dimension {
                 | CompactLength::FIT_CONTENT_PX_TAG
                 | CompactLength::FIT_CONTENT_PERCENT_TAG
                 | CompactLength::STRETCH_TAG
+                | CompactLength::CONTENT_TAG
         ) {
             Ok(Self(inner))
         } else {

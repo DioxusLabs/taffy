@@ -829,6 +829,11 @@ fn determine_flex_base_size(
                     Some(SizingKeywordResolution::Measure(available)) => Some(available),
                     None => None,
                 }
+            } else if flex_basis_style.is_content() {
+                // A flex basis of `content` indicates an automatic size based on the item's
+                // content: the item is measured (ignoring its main size property) under the
+                // default constraint below
+                None
             } else {
                 if let Some(flex_basis) = flex_basis.or(main_size) {
                     child.flex_basis_is_definite = true;

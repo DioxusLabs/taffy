@@ -11,6 +11,8 @@
 
   In contexts where a keyword cannot be resolved it behaves as `auto`
 
+- `Dimension` also supports the `content` keyword (`Dimension::content()`, CSS `content`), which indicates an automatic size based on the box's content. This keyword is only valid for `flex-basis`, where it sizes the item based on its content (ignoring its main size property) when computing its flex base size. In any other context (e.g. `width`/`height`) it behaves as `auto`
+
 ### Changed
 
 - `Style::min_size` and `Style::max_size` (and the corresponding `CoreStyle::min_size`/`CoreStyle::max_size` trait methods) are now `Size<LengthPercentageAuto>` rather than `Size<Dimension>`, as the min/max sizing properties do not support the new sizing keywords that `Dimension` now supports

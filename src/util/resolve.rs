@@ -61,6 +61,8 @@ impl MaybeResolve<Option<f32>, Option<f32>> for Dimension {
     fn maybe_resolve(self, context: Option<f32>, calc: impl Fn(*const (), f32) -> f32) -> Option<f32> {
         match self.0.tag() {
             CompactLength::AUTO_TAG => None,
+            // The content keyword is only valid for flex-basis. In any other context it behaves as auto.
+            CompactLength::CONTENT_TAG => None,
             CompactLength::LENGTH_TAG => Some(self.0.value()),
             CompactLength::PERCENT_TAG => context.map(|dim| dim * self.0.value()),
             #[cfg(feature = "calc")]

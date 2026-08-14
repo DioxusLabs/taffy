@@ -776,6 +776,7 @@ fn serialize_dimension(obj: &serde_json::Value) -> Option<Cow<'static, str>> {
                     "min-content" => Cow::from("min-content"),
                     "fit-content" => Cow::from("fit-content"),
                     "stretch" => Cow::from("stretch"),
+                    "content" => Cow::from("content"),
                     "fit-content-px" => {
                         Cow::from(format!("fit-content({}px)", value.expect("Expected value for fit-content(px) unit")))
                     }
