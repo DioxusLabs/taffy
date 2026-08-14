@@ -672,7 +672,7 @@ impl<NodeContext> TaffyTree<NodeContext> {
         let child_key = child.into();
 
         if let Some(old_parent) = self.parents[child_key] {
-            self.remove_child(old_parent, child);
+            let _ = self.remove_child(old_parent, child);
         }
 
         self.parents[child_key] = Some(parent);
@@ -688,7 +688,7 @@ impl<NodeContext> TaffyTree<NodeContext> {
         let child_key = child.into();
 
         if let Some(old_parent) = self.parents[child_key] {
-            self.remove_child(old_parent, child);
+            let _ = self.remove_child(old_parent, child);
         }
 
         let child_count = self.children[parent_key].len();
