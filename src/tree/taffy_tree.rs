@@ -784,13 +784,18 @@ impl<NodeContext> TaffyTree<NodeContext> {
         new_child: NodeId,
     ) -> TaffyResult<NodeId> {
         let parent_key = parent.into();
+        let new_child_key = new_child.into();
+
+        if let Some(old_parent) = self.parents[new_child_key] {
+            self.remove_child(old_parent, new_child)?;
+        }
 
         let child_count = self.children[parent_key].len();
         if child_index >= child_count {
             return Err(TaffyError::ChildIndexOutOfBounds { parent, child_index, child_count });
         }
 
-        self.parents[new_child.into()] = Some(parent);
+        self.parents[new_child_key] = Some(parent);
         let old_child = core::mem::replace(&mut self.children[parent_key][child_index], new_child);
         self.parents[old_child.into()] = None;
 
