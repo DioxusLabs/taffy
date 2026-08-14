@@ -44,7 +44,7 @@ pub(crate) fn contained_size_is_definite(
 
     // Sizes imposed by the parent keep the parent's definiteness; otherwise definiteness is
     // determined by whether the node's own style resolves to a definite size.
-    Size {
+    let size_is_definite = Size {
         width: match inputs.known_dimensions.width {
             Some(_) => inputs.known_dimensions_are_definite.width,
             None => styled_size_is_definite.width,
@@ -53,6 +53,20 @@ pub(crate) fn contained_size_is_definite(
             Some(_) => inputs.known_dimensions_are_definite.height,
             None => styled_size_is_definite.height,
         },
+    };
+
+    // aspect-ratio transfers definiteness across axes: an automatic size in one axis is derived
+    // from a definite size in the other axis, and is therefore also definite. Sizes imposed by
+    // the parent are used as-is (not derived through the ratio), so nothing transfers into an
+    // axis with a known dimension.
+    // <https://drafts.csswg.org/css-sizing-4/#aspect-ratio-size-transfers>
+    if aspect_ratio.is_some() {
+        Size {
+            width: size_is_definite.width || (inputs.known_dimensions.width.is_none() && size_is_definite.height),
+            height: size_is_definite.height || (inputs.known_dimensions.height.is_none() && size_is_definite.width),
+        }
+    } else {
+        size_is_definite
     }
 }
 

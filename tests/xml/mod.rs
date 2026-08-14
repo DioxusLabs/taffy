@@ -5608,6 +5608,26 @@ mod contain {
     }
 
     #[test]
+    fn contain_size_aspect_ratio_percent_child__border_box_ltr() {
+        crate::run_xml_test("contain", "contain_size_aspect_ratio_percent_child__border_box_ltr");
+    }
+
+    #[test]
+    fn contain_size_aspect_ratio_percent_child__content_box_ltr() {
+        crate::run_xml_test("contain", "contain_size_aspect_ratio_percent_child__content_box_ltr");
+    }
+
+    #[test]
+    fn contain_size_aspect_ratio_percent_child__border_box_rtl() {
+        crate::run_xml_test("contain", "contain_size_aspect_ratio_percent_child__border_box_rtl");
+    }
+
+    #[test]
+    fn contain_size_aspect_ratio_percent_child__content_box_rtl() {
+        crate::run_xml_test("contain", "contain_size_aspect_ratio_percent_child__content_box_rtl");
+    }
+
+    #[test]
     fn contain_size_block__border_box_ltr() {
         crate::run_xml_test("contain", "contain_size_block__border_box_ltr");
     }
