@@ -1,0 +1,27 @@
+<test name="block_width_keywords__content_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="block" box-sizing="content-box" direction="rtl" width="120px">
+      <text box-sizing="content-box" direction="rtl" width="stretch">
+        HH​HH
+      </text>
+      <text box-sizing="content-box" direction="rtl" width="fit-content">
+        HH​HH
+      </text>
+      <text box-sizing="content-box" direction="rtl" width="min-content">
+        HH​HH
+      </text>
+      <text box-sizing="content-box" direction="rtl" width="max-content">
+        HH​HH
+      </text>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="120" height="50">
+      <node x="0" y="0" width="120" height="10"/>
+      <node x="80" y="10" width="40" height="10"/>
+      <node x="100" y="20" width="20" height="20"/>
+      <node x="80" y="40" width="40" height="10"/>
+    </node>
+  </expectations>
+</test>

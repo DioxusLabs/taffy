@@ -769,7 +769,12 @@ impl From<LengthPercentageAuto> for MaxTrackSizingFunction {
 }
 impl From<Dimension> for MaxTrackSizingFunction {
     fn from(input: Dimension) -> Self {
-        Self(input.0)
+        // Dimension supports values that are not valid max track sizing functions.
+        // Map those to `auto`.
+        match input.0.tag() {
+            CompactLength::FIT_CONTENT_KEYWORD_TAG | CompactLength::STRETCH_TAG => Self::auto(),
+            _ => Self(input.0),
+        }
     }
 }
 impl From<MinTrackSizingFunction> for MaxTrackSizingFunction {
@@ -1089,7 +1094,15 @@ impl From<LengthPercentageAuto> for MinTrackSizingFunction {
 }
 impl From<Dimension> for MinTrackSizingFunction {
     fn from(input: Dimension) -> Self {
-        Self(input.0)
+        // Dimension supports values that are not valid min track sizing functions.
+        // Map those to `auto`.
+        match input.0.tag() {
+            CompactLength::FIT_CONTENT_PX_TAG
+            | CompactLength::FIT_CONTENT_PERCENT_TAG
+            | CompactLength::FIT_CONTENT_KEYWORD_TAG
+            | CompactLength::STRETCH_TAG => Self::auto(),
+            _ => Self(input.0),
+        }
     }
 }
 

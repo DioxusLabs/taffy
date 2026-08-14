@@ -10,8 +10,14 @@ mod min_max_overrides {
         let child = taffy
             .new_leaf(Style {
                 size: Size { width: Dimension::from_length(50.0), height: Dimension::from_length(50.0) },
-                min_size: Size { width: Dimension::from_length(100.0), height: Dimension::from_length(100.0) },
-                max_size: Size { width: Dimension::from_length(10.0), height: Dimension::from_length(10.0) },
+                min_size: Size {
+                    width: LengthPercentageAuto::from_length(100.0),
+                    height: LengthPercentageAuto::from_length(100.0),
+                },
+                max_size: Size {
+                    width: LengthPercentageAuto::from_length(10.0),
+                    height: LengthPercentageAuto::from_length(10.0),
+                },
                 ..Default::default()
             })
             .unwrap();
@@ -33,7 +39,10 @@ mod min_max_overrides {
         let child = taffy
             .new_leaf(Style {
                 size: Size { width: Dimension::from_length(50.0), height: Dimension::from_length(50.0) },
-                max_size: Size { width: Dimension::from_length(10.0), height: Dimension::from_length(10.0) },
+                max_size: Size {
+                    width: LengthPercentageAuto::from_length(10.0),
+                    height: LengthPercentageAuto::from_length(10.0),
+                },
                 ..Default::default()
             })
             .unwrap();
@@ -55,7 +64,10 @@ mod min_max_overrides {
         let child = taffy
             .new_leaf(Style {
                 size: Size { width: Dimension::from_length(50.0), height: Dimension::from_length(50.0) },
-                min_size: Size { width: Dimension::from_length(100.0), height: Dimension::from_length(100.0) },
+                min_size: Size {
+                    width: LengthPercentageAuto::from_length(100.0),
+                    height: LengthPercentageAuto::from_length(100.0),
+                },
                 ..Default::default()
             })
             .unwrap();

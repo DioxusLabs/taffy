@@ -1,0 +1,27 @@
+<test name="flex_absolute_width_keywords__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="flex" direction="rtl" width="120px" height="120px">
+      <text direction="rtl" position="absolute" width="stretch" top="0px">
+        HH​HH
+      </text>
+      <text direction="rtl" position="absolute" width="fit-content" top="30px">
+        HH​HH
+      </text>
+      <text direction="rtl" position="absolute" width="min-content" top="60px">
+        HH​HH
+      </text>
+      <text direction="rtl" position="absolute" width="max-content" top="90px">
+        HH​HH
+      </text>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="120" height="120">
+      <node x="0" y="0" width="120" height="10"/>
+      <node x="80" y="30" width="40" height="10"/>
+      <node x="100" y="60" width="20" height="20"/>
+      <node x="80" y="90" width="40" height="10"/>
+    </node>
+  </expectations>
+</test>

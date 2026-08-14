@@ -1,5 +1,6 @@
 //! Contains GridItem used to represent a single grid item during layout
 use super::GridTrack;
+use crate::compute::common::sizing_keyword::{resolve_sizing_keyword, SizingKeywordResolution};
 use crate::compute::grid::OriginZeroLine;
 use crate::geometry::AbstractAxis;
 use crate::geometry::{Line, Point, Rect, Size};
@@ -38,9 +39,9 @@ pub(in super::super) struct GridItem {
     /// The item's size style
     pub size: Size<Dimension>,
     /// The item's min_size style
-    pub min_size: Size<Dimension>,
+    pub min_size: Size<LengthPercentageAuto>,
     /// The item's max_size style
-    pub max_size: Size<Dimension>,
+    pub max_size: Size<LengthPercentageAuto>,
     /// The item's aspect_ratio style
     pub aspect_ratio: Option<f32>,
     /// The item's padding style
@@ -281,6 +282,19 @@ impl GridItem {
         // If node is absolutely positioned and width is not set explicitly, then deduce it
         // from left, right and container_content_box if both are set.
         let width = inherent_size.width.or_else(|| {
+            // A width that is a sizing keyword is not auto, so it does not stretch. The stretch
+            // keyword resolves to an exact width; the others resolve during content measurement.
+            if self.size.width.is_sizing_keyword() {
+                return match resolve_sizing_keyword(
+                    self.size.width,
+                    grid_area_minus_item_margins_size.width,
+                    grid_area_size.width,
+                ) {
+                    Some(SizingKeywordResolution::Exact(width)) => Some(width),
+                    _ => None,
+                };
+            }
+
             // Apply width based on stretch alignment if:
             //  - Alignment style is "stretch"
             //  - The node is not absolutely positioned
@@ -296,6 +310,19 @@ impl GridItem {
             Size { width, height: inherent_size.height }.maybe_apply_aspect_ratio(aspect_ratio);
 
         let height = height.or_else(|| {
+            // A height that is a sizing keyword is not auto, so it does not stretch. The stretch
+            // keyword resolves to an exact height; the others resolve during content measurement.
+            if self.size.height.is_sizing_keyword() {
+                return match resolve_sizing_keyword(
+                    self.size.height,
+                    grid_area_minus_item_margins_size.height,
+                    grid_area_size.height,
+                ) {
+                    Some(SizingKeywordResolution::Exact(height)) => Some(height),
+                    _ => None,
+                };
+            }
+
             // Apply height based on stretch alignment if:
             //  - Alignment style is "stretch"
             //  - The node is not absolutely positioned
@@ -434,10 +461,14 @@ impl GridItem {
             self.node,
             known_dimensions,
             grid_area_size,
-            available_space.map(|opt| match opt {
-                Some(size) => AvailableSpace::Definite(size),
-                None => AvailableSpace::MinContent,
-            }),
+            self.keyword_adjusted_available_space(
+                grid_area_size,
+                available_space.map(|opt| match opt {
+                    Some(size) => AvailableSpace::Definite(size),
+                    None => AvailableSpace::MinContent,
+                }),
+                tree,
+            ),
             SizingMode::InherentSize,
             axis.as_abs_naive(),
             Line::FALSE,
@@ -476,14 +507,47 @@ impl GridItem {
             self.node,
             known_dimensions,
             grid_area_size,
-            available_space.map(|opt| match opt {
-                Some(size) => AvailableSpace::Definite(size),
-                None => AvailableSpace::MaxContent,
-            }),
+            self.keyword_adjusted_available_space(
+                grid_area_size,
+                available_space.map(|opt| match opt {
+                    Some(size) => AvailableSpace::Definite(size),
+                    None => AvailableSpace::MaxContent,
+                }),
+                tree,
+            ),
             SizingMode::InherentSize,
             axis.as_abs_naive(),
             Line::FALSE,
         )
+    }
+
+    /// Override the available space in each axis whose size style is a sizing keyword that
+    /// measures the item under a specific available space constraint
+    /// (min-content, max-content, fit-content, fit-content(...))
+    fn keyword_adjusted_available_space(
+        &self,
+        grid_area_size: Size<Option<f32>>,
+        available_space: Size<AvailableSpace>,
+        tree: &impl LayoutPartialTree,
+    ) -> Size<AvailableSpace> {
+        if !self.size.width.is_sizing_keyword() && !self.size.height.is_sizing_keyword() {
+            return available_space;
+        }
+        let margins = self.margins_axis_sums_with_baseline_shims(grid_area_size.width, tree);
+        let mut adjusted = available_space;
+        for axis in [AbstractAxis::Inline, AbstractAxis::Block] {
+            let size_style = self.size.get(axis);
+            if !size_style.is_sizing_keyword() {
+                continue;
+            }
+            let stretch_size = grid_area_size.get(axis).maybe_sub(margins.get(axis));
+            if let Some(SizingKeywordResolution::Measure(available)) =
+                resolve_sizing_keyword(size_style, stretch_size, grid_area_size.get(axis))
+            {
+                adjusted.set(axis, available);
+            }
+        }
+        adjusted
     }
 
     /// Retrieve the item's max content contribution from the cache or compute it using the provided parameters

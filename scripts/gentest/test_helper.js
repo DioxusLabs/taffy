@@ -118,6 +118,10 @@ function parseDimension(input, options = { allowFrUnits: false }) {
   if (input === 'auto') return { unit: 'auto' };
   if (input === 'min-content') return { unit: 'min-content' };
   if (input === 'max-content') return { unit: 'max-content' };
+  if (input === 'fit-content') return { unit: 'fit-content' };
+  if (input === 'stretch') return { unit: 'stretch' };
+  // Note: Chrome does not support `fit-content(<length-percentage>)` for width/height,
+  // so there is no need to parse it here (only for grid tracks, which are parsed separately)
   return undefined;
 }
 

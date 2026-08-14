@@ -2,7 +2,18 @@
 
 ## Unreleased
 
+### Added
+
+- `Dimension` (used for `size`) now supports the sizing keywords `min-content`, `max-content`, `fit-content`, `fit-content(<length-percentage>)` and `stretch` via new constructors (`Dimension::min_content()`, `Dimension::max_content()`, `Dimension::fit_content()`, `Dimension::fit_content_px()`, `Dimension::fit_content_percent()`, `Dimension::stretch()`), new `CompactLength::FIT_CONTENT_KEYWORD_TAG`/`CompactLength::STRETCH_TAG` representations, and CSS parsing support. These keywords are resolved:
+  - In block layout: for the widths of in-flow children and floats
+  - In flexbox layout: for the main-axis size when determining an item's flex base size, and for the cross-axis size when determining an item's hypothetical cross size
+  - In grid layout: for the width/height of grid items, both during track sizing (content contributions) and during final item sizing/alignment. A keyword-sized axis is treated as non-`auto`, so the default `normal` self-alignment resolves to `start` rather than `stretch` in that axis
+
+  In contexts where a keyword cannot be resolved it behaves as `auto`
+
 ### Changed
+
+- `Style::min_size` and `Style::max_size` (and the corresponding `CoreStyle::min_size`/`CoreStyle::max_size` trait methods) are now `Size<LengthPercentageAuto>` rather than `Size<Dimension>`, as the min/max sizing properties do not support the new sizing keywords that `Dimension` now supports
 
 - `TaffyTree::compute_layout_with_measure`'s measure function now takes the full `LayoutInput` (plus `NodeId`, `Option<&mut NodeContext>` and `&Style`) and returns a `LayoutOutput` directly instead of a `Size<f32>`, allowing measure functions to set baselines (and other `LayoutOutput` fields) on leaf nodes. `compute_leaf_layout` is no longer called implicitly (#953)
 

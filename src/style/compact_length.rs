@@ -229,6 +229,10 @@ impl CompactLength {
     pub const FIT_CONTENT_PX_TAG: usize = 0b00010111;
     /// The tag indicating a fit-content value with percent limit
     pub const FIT_CONTENT_PERCENT_TAG: usize = 0b00011111;
+    /// The tag indicating a plain fit-content keyword value (no limit)
+    pub const FIT_CONTENT_KEYWORD_TAG: usize = 0b00100111;
+    /// The tag indicating a stretch keyword value
+    pub const STRETCH_TAG: usize = 0b00101111;
 }
 
 impl CompactLength {
@@ -316,6 +320,25 @@ impl CompactLength {
         Self(CompactLengthInner::from_val(limit, Self::FIT_CONTENT_PERCENT_TAG))
     }
 
+    /// The size should be computed according to the "fit content" formula:
+    ///    `max(min_content, min(max_content, stretch))`
+    /// where:
+    ///    - `min_content` is the [min-content](Self::min_content) size
+    ///    - `max_content` is the [max-content](Self::max_content) size
+    ///    - `stretch` is the "stretch-fit" size (the size the box would take if it filled the available space)
+    #[inline(always)]
+    pub const fn fit_content_keyword() -> Self {
+        Self(CompactLengthInner::from_tag(Self::FIT_CONTENT_KEYWORD_TAG))
+    }
+
+    /// The size should be the "stretch-fit" size: the size the box would take
+    /// if it filled the available space
+    /// (<https://www.w3.org/TR/css-sizing-4/#stretch-fit-sizing>)
+    #[inline(always)]
+    pub const fn stretch() -> Self {
+        Self(CompactLengthInner::from_tag(Self::STRETCH_TAG))
+    }
+
     /// Get the primary tag
     #[inline(always)]
     pub fn tag(self) -> usize {
@@ -377,6 +400,20 @@ impl CompactLength {
     #[inline(always)]
     pub fn is_fit_content(self) -> bool {
         matches!(self.tag(), Self::FIT_CONTENT_PX_TAG | Self::FIT_CONTENT_PERCENT_TAG)
+    }
+
+    /// Returns true if the value is min-content, max-content, fit-content, fit-content(...), or stretch
+    #[inline(always)]
+    pub fn is_sizing_keyword(self) -> bool {
+        matches!(
+            self.tag(),
+            Self::MIN_CONTENT_TAG
+                | Self::MAX_CONTENT_TAG
+                | Self::FIT_CONTENT_KEYWORD_TAG
+                | Self::FIT_CONTENT_PX_TAG
+                | Self::FIT_CONTENT_PERCENT_TAG
+                | Self::STRETCH_TAG
+        )
     }
 
     /// Returns true if the value is max-content or a fit-content(...) value
@@ -528,8 +565,10 @@ impl<'de> serde::Deserialize<'de> for CompactLength {
                 | CompactLength::AUTO_TAG
                 | CompactLength::MIN_CONTENT_TAG
                 | CompactLength::MAX_CONTENT_TAG
+                | CompactLength::FIT_CONTENT_KEYWORD_TAG
                 | CompactLength::FIT_CONTENT_PX_TAG
                 | CompactLength::FIT_CONTENT_PERCENT_TAG
+                | CompactLength::STRETCH_TAG
                 | CompactLength::FR_TAG
         ) {
             Ok(value)
