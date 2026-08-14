@@ -2935,43 +2935,45 @@ fn sum_axis_gaps(gap: f32, num_items: usize) -> f32 {
 /// (`third_party/blink/renderer/core/layout/flex/flex_line_breaker.cc`): a dynamic program which
 /// chooses the contiguous partition of items into lines that minimises the sum of the squares of
 /// each line's free space, where lines with more free space than the line-break size score zero.
-/// Item sizes and scores use saturating fixed-point arithmetic (1/64th of a pixel, matching
-/// Chromium's `LayoutUnit`) so that tie-breaking between equal-score partitions is exact and
-/// matches Chrome.
+/// Item sizes and scores use `f64` arithmetic, with sizes clamped to [`MAX_SIZE`] so that
+/// squared free-space scores are exactly representable and comparisons (and therefore
+/// tie-breaking between equal-score partitions) are exact.
 #[cfg(feature = "flexbox_balance")]
 mod balance {
     use crate::util::sys::{new_vec_with_capacity, Vec};
 
-    /// The score type: a saturating fixed-point number (with 6 fractional bits for sizes)
-    type ScoreUnit = u64;
+    /// The size and score type
+    type ScoreUnit = f64;
 
     /// Score assigned to unreachable partitions
-    const INFINITY: ScoreUnit = ScoreUnit::MAX;
+    const INFINITY: ScoreUnit = f64::INFINITY;
 
-    /// The maximum fixed-point size value (matches Chromium's `LayoutUnit::Max()` raw value)
-    const MAX_SIZE: ScoreUnit = i32::MAX as ScoreUnit;
+    /// The maximum size value in pixels (matches Chromium's `LayoutUnit::Max()`).
+    /// Its square is below 2^53 and so exactly representable as an `f64`.
+    const MAX_SIZE: ScoreUnit = (i32::MAX as ScoreUnit) / 64.0;
 
-    /// Convert a size in pixels to fixed-point, clamping negative sizes to zero and saturating
-    /// at [`MAX_SIZE`] (infinite sizes convert to [`MAX_SIZE`])
-    fn to_fixed(value: f32) -> ScoreUnit {
-        let scaled = (value.max(0.0) as f64) * 64.0;
-        if scaled >= MAX_SIZE as f64 {
-            MAX_SIZE
-        } else {
-            scaled.round() as ScoreUnit
-        }
+    /// Convert a size in pixels to a [`ScoreUnit`], clamping negative sizes to zero and
+    /// saturating at [`MAX_SIZE`] (infinite sizes convert to [`MAX_SIZE`])
+    fn to_size(value: f32) -> ScoreUnit {
+        (value as ScoreUnit).clamp(0.0, MAX_SIZE)
+    }
+
+    /// The smallest value greater than `value` (which must be a non-negative finite float)
+    fn next_up(value: ScoreUnit) -> ScoreUnit {
+        ScoreUnit::from_bits(value.to_bits() + 1)
     }
 
     /// The number of lines that greedy line breaking (each line collects items until the next
     /// item no longer fits, and lines with no fitting item take a single item) would produce
     fn greedy_line_count(sums: &[ScoreUnit], gap_between_items: ScoreUnit, line_break_size: ScoreUnit) -> usize {
         let mut line_count = 1;
-        let mut previous_sum: ScoreUnit = 0;
+        let mut previous_sum: ScoreUnit = 0.0;
         let mut index = 0;
         while index < sums.len() {
-            let limit = previous_sum.saturating_add(line_break_size).saturating_add(gap_between_items);
             let mut next = index;
-            while next < sums.len() && sums[next] <= limit {
+            // The line size is computed exactly as elsewhere so that all passes agree on which
+            // items fit on a line (`a - b <= c` and `a <= b + c` can disagree due to rounding)
+            while next < sums.len() && sums[next] - previous_sum - gap_between_items <= line_break_size {
                 next += 1;
             }
             if next == index {
@@ -3000,19 +3002,20 @@ mod balance {
         line_break_size: &mut ScoreUnit,
     ) -> usize {
         // Find the largest line-break size that produces at least `min_line_count` lines by
-        // bisecting the range of possible sizes. `greedy_line_count` is monotonically
+        // bisecting the range of possible sizes (as the ordered bit representations of the
+        // non-negative floats in that range). `greedy_line_count` is monotonically
         // non-increasing in the line-break size.
-        let mut low: ScoreUnit = 0;
-        let mut high: ScoreUnit = (*line_break_size).min(sums[sums.len() - 1].saturating_sub(gap_between_items));
+        let mut low: u64 = 0;
+        let mut high: u64 = (*line_break_size).min((sums[sums.len() - 1] - gap_between_items).max(0.0)).to_bits();
         while low < high {
             let midpoint = low + (high - low) / 2;
-            if greedy_line_count(sums, gap_between_items, midpoint) > min_line_count {
+            if greedy_line_count(sums, gap_between_items, ScoreUnit::from_bits(midpoint)) > min_line_count {
                 low = midpoint + 1;
             } else {
                 high = midpoint;
             }
         }
-        *line_break_size = high;
+        *line_break_size = ScoreUnit::from_bits(high);
 
         let mut line_count = greedy_line_count(sums, gap_between_items, *line_break_size);
         if line_count >= min_line_count {
@@ -3024,10 +3027,10 @@ mod balance {
         // line infinitesimally larger forces an extra line break.
         let mut perfect_fit_indices: Vec<usize> = new_vec_with_capacity(0);
         {
-            let mut previous_sum: ScoreUnit = 0;
+            let mut previous_sum: ScoreUnit = 0.0;
             let mut line_has_content = false;
             for index in 0..sums.len() {
-                let line_size = sums[index].saturating_sub(previous_sum).saturating_sub(gap_between_items);
+                let line_size = sums[index] - previous_sum - gap_between_items;
                 if line_size == *line_break_size {
                     perfect_fit_indices.push(index);
                 }
@@ -3041,7 +3044,7 @@ mod balance {
         }
         for &index in perfect_fit_indices.iter().rev() {
             for sum in &mut sums[index..] {
-                *sum = sum.saturating_add(1);
+                *sum = next_up(*sum);
             }
             line_count = greedy_line_count(sums, gap_between_items, *line_break_size);
             if line_count >= min_line_count {
@@ -3066,16 +3069,16 @@ mod balance {
         let item_count = item_sizes.len();
         debug_assert!(item_count > 0);
         let min_line_count = min_line_count.clamp(1, item_count);
-        let gap_between_items = to_fixed(gap_between_items);
-        let mut line_break_size = to_fixed(line_break_size);
+        let gap_between_items = to_size(gap_between_items);
+        let mut line_break_size = to_size(line_break_size);
 
         // Prefix sums of the item sizes, where each item also contributes one trailing gap.
         // The size of the line holding items `start..=end` is therefore
         // `sums[end] - sums[start - 1] - gap_between_items`.
         let mut sums: Vec<ScoreUnit> = new_vec_with_capacity(item_count);
-        let mut sum: ScoreUnit = 0;
+        let mut sum: ScoreUnit = 0.0;
         for size in item_sizes {
-            sum = sum.saturating_add(to_fixed(size)).saturating_add(gap_between_items);
+            sum += to_size(size) + gap_between_items;
             sums.push(sum);
         }
 
@@ -3087,8 +3090,8 @@ mod balance {
 
         // The size of the line holding items `start..=end`
         let line_size = |start: usize, end: usize| -> ScoreUnit {
-            let start_sum = if start == 0 { 0 } else { sums[start - 1] };
-            sums[end].saturating_sub(start_sum).saturating_sub(gap_between_items)
+            let start_sum = if start == 0 { 0.0 } else { sums[start - 1] };
+            sums[end] - start_sum - gap_between_items
         };
 
         // initial_start[end]: the smallest `start` such that items `start..=end` fit on one line
@@ -3119,17 +3122,17 @@ mod balance {
                 let length = line_size(start, end);
                 // Overflowing lines (which can only ever hold a single item) score zero
                 let line_score = if length > line_break_size {
-                    0
+                    0.0
                 } else {
                     let free_space = line_break_size - length;
-                    free_space.saturating_mul(free_space)
+                    free_space * free_space
                 };
                 // Line scores increase as `start` decreases, so no better score is possible
                 if line_score > best_score {
                     break;
                 }
-                let previous_score = if start == 0 { 0 } else { best_scores[start - 1] };
-                let score = line_score.saturating_add(previous_score);
+                let previous_score = if start == 0 { 0.0 } else { best_scores[start - 1] };
+                let score = line_score + previous_score;
                 // Break ties in favour of the largest `start` (most items on earlier lines)
                 if score <= best_score {
                     best_score = score;
