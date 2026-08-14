@@ -338,6 +338,13 @@ fn compute_preliminary(tree: &mut impl LayoutFlexboxContainer, node: NodeId, inp
 
     // 5. Collect flex items into flex lines.
     debug_log!("collect_flex_lines");
+    #[cfg(feature = "flexbox_balance")]
+    let mut flex_lines = if constants.balance_line_count.is_some() {
+        collect_balanced_flex_lines(&constants, available_space, &mut flex_items)
+    } else {
+        collect_flex_lines(&constants, available_space, &mut flex_items)
+    };
+    #[cfg(not(feature = "flexbox_balance"))]
     let mut flex_lines = collect_flex_lines(&constants, available_space, &mut flex_items);
 
     // If container size is undefined, determine the container's main size
@@ -1034,11 +1041,6 @@ fn collect_flex_lines<'a>(
     available_space: Size<AvailableSpace>,
     flex_items: &'a mut Vec<FlexItem>,
 ) -> Vec<FlexLine<'a>> {
-    #[cfg(feature = "flexbox_balance")]
-    if constants.balance_line_count.is_some() {
-        return collect_balanced_flex_lines(constants, available_space, flex_items);
-    }
-
     // Wrapping into multiple lines requires a definite main size. If the container's known main size
     // is derived from its own content (and is thus indefinite) then all items are collected into a
     // single flex line, matching how the container was sized under a min/max-content constraint.
