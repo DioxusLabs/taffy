@@ -1,0 +1,15 @@
+<test name="flex_basis_min_content_row__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div direction="rtl" width="200px" height="50px">
+      <text direction="rtl" flex-shrink="0" flex-basis="min-content">
+        XXXX​XXXX
+      </text>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="200" height="50">
+      <node x="160" y="0" width="40" height="50"/>
+    </node>
+  </expectations>
+</test>

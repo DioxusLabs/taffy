@@ -776,6 +776,13 @@ fn serialize_dimension(obj: &serde_json::Value) -> Option<Cow<'static, str>> {
                     "min-content" => Cow::from("min-content"),
                     "fit-content" => Cow::from("fit-content"),
                     "stretch" => Cow::from("stretch"),
+                    "fit-content-px" => {
+                        Cow::from(format!("fit-content({}px)", value.expect("Expected value for fit-content(px) unit")))
+                    }
+                    "fit-content-percent" => Cow::from(format!(
+                        "fit-content({}%)",
+                        value.expect("Expected value for fit-content(%) unit") * 100.0
+                    )),
                     "px" => Cow::from(format!("{}px", value.expect("Expected value for px unit"))),
                     "percent" => Cow::from(format!("{}%", value.expect("Expected value for % unit") * 100.0)),
                     "fraction" => Cow::from(format!("{}fr", value.expect("Expected value for fr unit"))),
