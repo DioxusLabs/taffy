@@ -192,15 +192,15 @@ impl AlgoConstants {
     /// (after subtracting the cross-axis gaps between them).
     /// See <https://github.com/w3c/csswg-drafts/issues/13414>
     #[inline]
-    fn balance_divided_cross_space(&self, value: f32) -> f32 {
+    fn balance_divided_cross_space(&self, cross_available_space: f32) -> f32 {
         #[cfg(feature = "flexbox_balance")]
         if let Some(line_count) = self.balance_line_count {
             if line_count > 1 {
                 let line_count = line_count as f32;
-                return (value - (line_count - 1.0) * self.gap.cross(self.dir)) / line_count;
+                return (cross_available_space - (line_count - 1.0) * self.gap.cross(self.dir)) / line_count;
             }
         }
-        value
+        cross_available_space
     }
 }
 
