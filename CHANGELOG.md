@@ -17,6 +17,10 @@
 
 - `Dimension` also supports the `content` keyword (`Dimension::content()`, CSS `content`), which indicates an automatic size based on the box's content. This keyword is only valid for `flex-basis`, where it sizes the item based on its content (ignoring its main size property) when computing its flex base size. In any other context (e.g. `width`/`height`) it behaves as `auto`
 
+### Fixed
+
+- Grid: the first baselines of grid items which are scroll containers are now clamped to the item's border box (matching the existing flexbox behaviour, per the [CSSWG resolution](https://github.com/w3c/csswg-drafts/issues/7660))
+
 ### Changed
 
 - `LayoutOutput`'s `first_baselines: Point<Option<f32>>` field has been replaced with `baselines: Baselines`, where the new `Baselines` struct has `first: Option<f32>` and `last: Option<f32>` fields (both horizontal baselines, measured from the top edge of the node). The never-read vertical (x) baseline slot has been dropped in favour of a last-baseline slot. Last baselines are not yet computed by any of the built-in layout algorithms (this is purely a representational change), but custom tree implementations and measure functions can now report them

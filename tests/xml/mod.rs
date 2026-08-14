@@ -20699,6 +20699,30 @@ mod grid {
 
     #[cfg(feature = "grid")]
     #[test]
+    fn grid_align_items_baseline_overflow_scroll__border_box_ltr() {
+        crate::run_xml_test("grid", "grid_align_items_baseline_overflow_scroll__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_align_items_baseline_overflow_scroll__content_box_ltr() {
+        crate::run_xml_test("grid", "grid_align_items_baseline_overflow_scroll__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_align_items_baseline_overflow_scroll__border_box_rtl() {
+        crate::run_xml_test("grid", "grid_align_items_baseline_overflow_scroll__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_align_items_baseline_overflow_scroll__content_box_rtl() {
+        crate::run_xml_test("grid", "grid_align_items_baseline_overflow_scroll__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
     fn grid_align_items_sized_center__border_box_ltr() {
         crate::run_xml_test("grid", "grid_align_items_sized_center__border_box_ltr");
     }
