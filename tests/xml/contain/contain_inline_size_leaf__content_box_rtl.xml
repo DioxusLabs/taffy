@@ -1,0 +1,15 @@
+<test name="contain_inline_size_leaf__content_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="block" box-sizing="content-box" direction="rtl" width="max-content" border-top="2px" border-left="2px" border-bottom="2px" border-right="2px">
+      <text box-sizing="content-box" direction="rtl" contain="inline-size" padding-top="4px" padding-left="4px" padding-bottom="4px" padding-right="4px">
+        XXX
+      </text>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="12" height="22">
+      <node x="2" y="2" width="8" height="18"/>
+    </node>
+  </expectations>
+</test>

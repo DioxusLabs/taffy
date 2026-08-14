@@ -1,0 +1,17 @@
+<test name="contain_size_grid_percent_child_auto_height__border_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" direction="ltr" contain="size" width="100px">
+      <div display="block" direction="ltr" height="50%">
+        <div display="block" direction="ltr" height="20px"/>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="100" height="0">
+      <node x="0" y="0" width="100" height="10">
+        <node x="0" y="0" width="100" height="20"/>
+      </node>
+    </node>
+  </expectations>
+</test>

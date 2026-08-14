@@ -1,0 +1,17 @@
+<test name="contain_size_width_fit_content__content_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="block" box-sizing="content-box" direction="rtl" width="100px">
+      <div display="block" box-sizing="content-box" direction="rtl" contain="size" width="fit-content" height="10px">
+        <div display="block" box-sizing="content-box" direction="rtl" width="80px" height="20px"/>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="100" height="10">
+      <node x="100" y="0" width="0" height="10">
+        <node x="-80" y="0" width="80" height="20"/>
+      </node>
+    </node>
+  </expectations>
+</test>

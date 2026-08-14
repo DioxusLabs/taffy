@@ -17,6 +17,15 @@
 
 - `Dimension` also supports the `content` keyword (`Dimension::content()`, CSS `content`), which indicates an automatic size based on the box's content. This keyword is only valid for `flex-basis`, where it sizes the item based on its content (ignoring its main size property) when computing its flex base size. In any other context (e.g. `width`/`height`) it behaves as `auto`
 
+- Support for the layout-affecting parts of the CSS `contain` property via a new `Contain` bitflags style type, a new `Style::contain` field and a new (defaulted) `CoreStyle::contain` trait method:
+  - `Contain::SIZE` (size containment): the box is sized as if it were empty (padding, border, aspect ratio, min/max constraints and, for grid containers, sizes of empty tracks still apply). Its children are then laid out normally inside the resulting fixed-size box
+  - `Contain::INLINE_SIZE` (inline-size containment): like size containment, but only in the inline (horizontal) axis; the box's height is still content-based
+  - `Contain::LAYOUT` (layout containment): the box establishes an independent formatting context (its margins do not collapse with those of its children, it contains its own floats, and it avoids external floats) and its baseline is suppressed (boxes requiring a baseline synthesize one from its border box)
+  - `Contain::PAINT` (paint containment): the box establishes an independent formatting context like layout containment, but its baseline is not suppressed. Paint containment's other effects (clipping, containing absolutely-positioned descendants, stacking context) do not affect layout and are not implemented
+  - Layout and paint containment also prevent the box's overflowing content from contributing to its ancestors' `content_size` (scrollable overflow region): layout containment treats such overflow as ink overflow, and paint containment clips it. The contained box's own `content_size` still includes its overflowing content
+
+  The CSS parser (`parse` feature) accepts `none | strict | content | [ size || inline-size || layout || style || paint ]` for the `contain` property: `strict` maps to `SIZE | LAYOUT | PAINT`, `content` maps to `LAYOUT | PAINT`, and the `style` keyword is accepted but ignored as it does not affect layout
+
 ### Changed
 
 - `Style::min_size` and `Style::max_size` (and the corresponding `CoreStyle::min_size`/`CoreStyle::max_size` trait methods) are now `Size<LengthPercentageAuto>` rather than `Size<Dimension>`, as the min/max sizing properties do not support the new sizing keywords that `Dimension` now supports
@@ -52,6 +61,8 @@
 - Flexbox: the definiteness of known dimensions is now tracked through nested layouts via a new `known_dimensions_are_definite` field on `LayoutInput`. A flex item's post-flexing main size is only treated as definite (for resolving percentage sizes of its children and for collecting its children into flex lines) when the container's main size is definite or the item's used flex basis is definite. Previously a wrapping flex container nested in a container with an indefinite main size could incorrectly wrap its items into multiple lines based on its own content-derived size (#999)
 
 - Flexbox: percentage heights of block descendants no longer resolve against a flex item's post-flexing main size when that size is indefinite (#950)
+
+- Block/float: the height of overflowing in-flow content of a nested block no longer contributes to the height of the block formatting context root as if it were floated content. Previously an auto-height BFC root containing a block whose in-flow content overflowed it (e.g. a fixed-height block with taller content) was incorrectly extended to contain that overflowing content
 
 - Flexbox: a wrapping container with an indefinite main size now wraps its items against its max main size (e.g. `max-width` for a row container) when the available space exceeds it. Previously items were collected into flex lines using the raw available space, so a fit-content sized container (such as a float) with a `max-width` smaller than the available space never wrapped
 
