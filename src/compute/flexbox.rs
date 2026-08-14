@@ -967,13 +967,13 @@ fn collect_flex_lines<'a>(
         lines
     } else {
         let main_axis_available_space = match constants.max_size.main(constants.dir) {
-            Some(max_size) => AvailableSpace::Definite(
-                available_space
-                    .main(constants.dir)
-                    .into_option()
-                    .unwrap_or(max_size)
-                    .maybe_max(constants.min_size.main(constants.dir)),
-            ),
+            Some(max_size) => AvailableSpace::Definite({
+                let available = available_space.main(constants.dir).into_option().unwrap_or(max_size);
+                // If the container's main size is not definite then it is at most the max main size,
+                // so the max size (and not the available space) is the limit that items wrap against.
+                let available = if constants.has_definite_main_size { available } else { available.min(max_size) };
+                available.maybe_max(constants.min_size.main(constants.dir))
+            }),
             None => available_space.main(constants.dir),
         };
 

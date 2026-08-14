@@ -36,6 +36,8 @@
 
 - Flexbox: percentage heights of block descendants no longer resolve against a flex item's post-flexing main size when that size is indefinite (#950)
 
+- Flexbox: a wrapping container with an indefinite main size now wraps its items against its max main size (e.g. `max-width` for a row container) when the available space exceeds it. Previously items were collected into flex lines using the raw available space, so a fit-content sized container (such as a float) with a `max-width` smaller than the available space never wrapped
+
 ## 0.13.0
 
 The MSRV for this release is 1.71.

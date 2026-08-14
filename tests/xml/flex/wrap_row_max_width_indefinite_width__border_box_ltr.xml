@@ -1,0 +1,15 @@
+<test name="wrap_row_max_width_indefinite_width__border_box_ltr" use-rounding="true">
+  <viewport width="200px" height="max-content"/>
+  <input>
+    <div direction="ltr" flex-wrap="wrap" height="110px" max-width="20px">
+      <div direction="ltr" width="20px" height="10px"/>
+      <div direction="ltr" width="20px" height="40px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="20" height="110">
+      <node x="0" y="0" width="20" height="10"/>
+      <node x="0" y="40" width="20" height="40"/>
+    </node>
+  </expectations>
+</test>
