@@ -462,7 +462,6 @@ impl GridItem {
             known_dimensions,
             grid_area_size,
             self.keyword_adjusted_available_space(
-                axis,
                 grid_area_size,
                 available_space.map(|opt| match opt {
                     Some(size) => AvailableSpace::Definite(size),
@@ -509,7 +508,6 @@ impl GridItem {
             known_dimensions,
             grid_area_size,
             self.keyword_adjusted_available_space(
-                axis,
                 grid_area_size,
                 available_space.map(|opt| match opt {
                     Some(size) => AvailableSpace::Definite(size),
@@ -523,30 +521,33 @@ impl GridItem {
         )
     }
 
-    /// Override the available space in the axis being measured when the item's size style in that
-    /// axis is a sizing keyword that measures the item under a specific available space constraint
+    /// Override the available space in each axis whose size style is a sizing keyword that
+    /// measures the item under a specific available space constraint
     /// (min-content, max-content, fit-content, fit-content(...))
     fn keyword_adjusted_available_space(
         &self,
-        axis: AbstractAxis,
         grid_area_size: Size<Option<f32>>,
         available_space: Size<AvailableSpace>,
         tree: &impl LayoutPartialTree,
     ) -> Size<AvailableSpace> {
-        let size_style = self.size.get(axis);
-        if !size_style.is_sizing_keyword() {
+        if !self.size.width.is_sizing_keyword() && !self.size.height.is_sizing_keyword() {
             return available_space;
         }
         let margins = self.margins_axis_sums_with_baseline_shims(grid_area_size.width, tree);
-        let stretch_size = grid_area_size.get(axis).maybe_sub(margins.get(axis));
-        match resolve_sizing_keyword(size_style, stretch_size, grid_area_size.get(axis)) {
-            Some(SizingKeywordResolution::Measure(available)) => {
-                let mut adjusted = available_space;
-                adjusted.set(axis, available);
-                adjusted
+        let mut adjusted = available_space;
+        for axis in [AbstractAxis::Inline, AbstractAxis::Block] {
+            let size_style = self.size.get(axis);
+            if !size_style.is_sizing_keyword() {
+                continue;
             }
-            _ => available_space,
+            let stretch_size = grid_area_size.get(axis).maybe_sub(margins.get(axis));
+            if let Some(SizingKeywordResolution::Measure(available)) =
+                resolve_sizing_keyword(size_style, stretch_size, grid_area_size.get(axis))
+            {
+                adjusted.set(axis, available);
+            }
         }
+        adjusted
     }
 
     /// Retrieve the item's max content contribution from the cache or compute it using the provided parameters
