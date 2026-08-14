@@ -17222,6 +17222,26 @@ mod flex {
     }
 
     #[test]
+    fn wrap_row_max_width_indefinite_width__border_box_ltr() {
+        crate::run_xml_test("flex", "wrap_row_max_width_indefinite_width__border_box_ltr");
+    }
+
+    #[test]
+    fn wrap_row_max_width_indefinite_width__content_box_ltr() {
+        crate::run_xml_test("flex", "wrap_row_max_width_indefinite_width__content_box_ltr");
+    }
+
+    #[test]
+    fn wrap_row_max_width_indefinite_width__border_box_rtl() {
+        crate::run_xml_test("flex", "wrap_row_max_width_indefinite_width__border_box_rtl");
+    }
+
+    #[test]
+    fn wrap_row_max_width_indefinite_width__content_box_rtl() {
+        crate::run_xml_test("flex", "wrap_row_max_width_indefinite_width__content_box_rtl");
+    }
+
+    #[test]
     fn wrapped_column_max_height__border_box_ltr() {
         crate::run_xml_test("flex", "wrapped_column_max_height__border_box_ltr");
     }
