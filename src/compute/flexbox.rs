@@ -640,6 +640,10 @@ fn generate_anonymous_flex_items(
     constants: &AlgoConstants,
     hide_children: bool,
 ) -> Vec<FlexItem> {
+    if hide_children {
+        return Vec::new();
+    }
+
     // Percentage sizes of items resolve against the container's inner size, but only if that size
     // is definite. A known size which is derived from the container's own content (e.g. a size
     // computed by size containment's as-if-empty pass) is treated as indefinite here.
@@ -655,7 +659,6 @@ fn generate_anonymous_flex_items(
     };
 
     tree.child_ids(node)
-        .filter(move |_| !hide_children)
         .enumerate()
         .map(|(index, child)| (index, child, tree.get_flexbox_child_style(child)))
         .filter(|(_, _, style)| style.position() != Position::Absolute)

@@ -830,8 +830,11 @@ fn generate_item_list(
     node_inner_size: Size<Option<f32>>,
     hide_children: bool,
 ) -> Vec<BlockItem> {
+    if hide_children {
+        return Vec::new();
+    }
+
     tree.child_ids(node)
-        .filter(move |_| !hide_children)
         .map(|child_node_id| (child_node_id, tree.get_block_child_style(child_node_id)))
         .filter(|(_, style)| style.box_generation_mode() != BoxGenerationMode::None)
         .enumerate()
