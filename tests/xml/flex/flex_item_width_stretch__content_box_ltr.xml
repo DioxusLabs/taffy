@@ -1,0 +1,17 @@
+<test name="flex_item_width_stretch__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="flex" box-sizing="content-box" direction="ltr" width="150px">
+      <text box-sizing="content-box" direction="ltr" width="stretch">
+        HH​HH
+      </text>
+      <div box-sizing="content-box" direction="ltr" flex-shrink="0" width="30px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="150" height="10">
+      <node x="0" y="0" width="120" height="10"/>
+      <node x="120" y="0" width="30" height="10"/>
+    </node>
+  </expectations>
+</test>

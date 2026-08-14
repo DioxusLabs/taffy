@@ -1,0 +1,27 @@
+<test name="grid_item_width_keywords__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" direction="rtl" grid-template-columns="120px" grid-auto-rows="30px">
+      <text direction="rtl" width="stretch">
+        HH​HH
+      </text>
+      <text direction="rtl" width="fit-content">
+        HH​HH
+      </text>
+      <text direction="rtl" width="min-content">
+        HH​HH
+      </text>
+      <text direction="rtl" width="max-content">
+        HH​HH
+      </text>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="120" height="120">
+      <node x="0" y="0" width="120" height="30"/>
+      <node x="80" y="30" width="40" height="30"/>
+      <node x="100" y="60" width="20" height="30"/>
+      <node x="80" y="90" width="40" height="30"/>
+    </node>
+  </expectations>
+</test>

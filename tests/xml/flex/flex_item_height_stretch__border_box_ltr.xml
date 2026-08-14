@@ -1,0 +1,19 @@
+<test name="flex_item_height_stretch__border_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="flex" direction="ltr" align-items="flex-start" width="120px" height="60px">
+      <text direction="ltr" width="40px" height="stretch">
+        HH​HH
+      </text>
+      <text direction="ltr" width="40px" height="stretch" margin-top="5px" margin-left="0px" margin-bottom="10px" margin-right="0px">
+        HH​HH
+      </text>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="120" height="60">
+      <node x="0" y="0" width="40" height="60"/>
+      <node x="40" y="5" width="40" height="45"/>
+    </node>
+  </expectations>
+</test>

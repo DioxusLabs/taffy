@@ -1,0 +1,27 @@
+<test name="grid_item_height_keywords__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" box-sizing="content-box" direction="ltr" grid-template-rows="60px" grid-template-columns="40px 40px 40px 40px">
+      <text box-sizing="content-box" direction="ltr" height="stretch">
+        HH​HH
+      </text>
+      <text box-sizing="content-box" direction="ltr" height="fit-content">
+        HH​HH
+      </text>
+      <text box-sizing="content-box" direction="ltr" height="min-content">
+        HH​HH
+      </text>
+      <text box-sizing="content-box" direction="ltr" height="max-content">
+        HH​HH
+      </text>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="160" height="60">
+      <node x="0" y="0" width="40" height="60"/>
+      <node x="40" y="0" width="40" height="10"/>
+      <node x="80" y="0" width="40" height="10"/>
+      <node x="120" y="0" width="40" height="10"/>
+    </node>
+  </expectations>
+</test>
