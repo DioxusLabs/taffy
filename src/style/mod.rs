@@ -514,6 +514,9 @@ impl crate::util::parse::FromCss for Contain {
         /// Duplicate-detection bit for the ignored `style` keyword, which does not map to a
         /// `Contain` flag
         const STYLE_BIT: u8 = 1 << 6;
+        /// Shared duplicate-detection bits for the `[ size | inline-size ]` group, whose
+        /// keywords are mutually exclusive
+        const SIZE_GROUP_BITS: u8 = Contain::SIZE.0 | Contain::INLINE_SIZE.0;
 
         let mut flags = Contain::NONE;
         let mut seen: u8 = 0;
@@ -534,8 +537,8 @@ impl crate::util::parse::FromCss for Contain {
                         _ => Contain::NONE,
                     });
                 },
-                "size" => (Contain::SIZE, Contain::SIZE.0),
-                "inline-size" => (Contain::INLINE_SIZE, Contain::INLINE_SIZE.0),
+                "size" => (Contain::SIZE, SIZE_GROUP_BITS),
+                "inline-size" => (Contain::INLINE_SIZE, SIZE_GROUP_BITS),
                 "layout" => (Contain::LAYOUT, Contain::LAYOUT.0),
                 "paint" => (Contain::PAINT, Contain::PAINT.0),
                 // `style` containment has no layout effect: accept and ignore it so that real
@@ -1529,6 +1532,9 @@ mod tests {
         assert!("".parse::<Contain>().is_err());
         assert!("banana".parse::<Contain>().is_err());
         assert!("size size".parse::<Contain>().is_err());
+        assert!("size inline-size".parse::<Contain>().is_err());
+        assert!("inline-size size".parse::<Contain>().is_err());
+        assert!("size layout inline-size".parse::<Contain>().is_err());
         assert!("none layout".parse::<Contain>().is_err());
         assert!("layout none".parse::<Contain>().is_err());
         assert!("strict layout".parse::<Contain>().is_err());
