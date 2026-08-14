@@ -162,12 +162,36 @@ impl LayoutInput {
     };
 }
 
+/// The first and last baselines of a node in the horizontal axis (i.e. baselines for horizontal text,
+/// measured as an offset from the top edge of the node's border box).
+///
+/// A baseline is the line on which text sits. See <https://www.w3.org/TR/css-writing-modes-3/#intro-baselines>
+/// for details.
+#[derive(Debug, Copy, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize))]
+pub struct Baselines {
+    /// The first baseline of the node, if any
+    pub first: Option<f32>,
+    /// The last baseline of the node, if any
+    pub last: Option<f32>,
+}
+
+impl Baselines {
+    /// A `Baselines` with neither a first nor a last baseline
+    pub const NONE: Self = Self { first: None, last: None };
+
+    /// Create a `Baselines` from just a first baseline
+    pub const fn from_first(first: Option<f32>) -> Self {
+        Self { first, last: None }
+    }
+}
+
 /// A struct containing the result of laying a single node, which is returned up to the parent node
 ///
 /// A baseline is the line on which text sits. Your node likely has a baseline if it is a text node, or contains
 /// children that may be text nodes. See <https://www.w3.org/TR/css-writing-modes-3/#intro-baselines> for details.
-/// If your node does not have a baseline (or you are unsure how to compute it), then simply return `Point::NONE`
-/// for the first_baselines field
+/// If your node does not have a baseline (or you are unsure how to compute it), then simply return `Baselines::NONE`
+/// for the baselines field
 #[derive(Debug, Copy, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize))]
 pub struct LayoutOutput {
@@ -176,8 +200,8 @@ pub struct LayoutOutput {
     #[cfg(feature = "content_size")]
     /// The size of the content within the node
     pub content_size: Size<f32>,
-    /// The first baseline of the node in each dimension, if any
-    pub first_baselines: Point<Option<f32>>,
+    /// The first and last baselines of the node in the horizontal axis, if any
+    pub baselines: Baselines,
     /// Top margin that can be collapsed with. This is used for CSS block layout and can be set to
     /// `CollapsibleMarginSet::ZERO` for other layout modes that don't support margin collapsing
     pub top_margin: CollapsibleMarginSet,
@@ -195,7 +219,7 @@ impl LayoutOutput {
         size: Size::ZERO,
         #[cfg(feature = "content_size")]
         content_size: Size::ZERO,
-        first_baselines: Point::NONE,
+        baselines: Baselines::NONE,
         top_margin: CollapsibleMarginSet::ZERO,
         bottom_margin: CollapsibleMarginSet::ZERO,
         margins_can_collapse_through: false,
@@ -208,13 +232,13 @@ impl LayoutOutput {
     pub fn from_sizes_and_baselines(
         size: Size<f32>,
         #[cfg_attr(not(feature = "content_size"), allow(unused_variables))] content_size: Size<f32>,
-        first_baselines: Point<Option<f32>>,
+        baselines: Baselines,
     ) -> Self {
         Self {
             size,
             #[cfg(feature = "content_size")]
             content_size,
-            first_baselines,
+            baselines,
             top_margin: CollapsibleMarginSet::ZERO,
             bottom_margin: CollapsibleMarginSet::ZERO,
             margins_can_collapse_through: false,
@@ -223,7 +247,7 @@ impl LayoutOutput {
 
     /// Construct a `LayoutOutput` from just the container and content sizes
     pub fn from_sizes(size: Size<f32>, content_size: Size<f32>) -> Self {
-        Self::from_sizes_and_baselines(size, content_size, Point::NONE)
+        Self::from_sizes_and_baselines(size, content_size, Baselines::NONE)
     }
 
     /// Construct a `LayoutOutput` from just the container's size.

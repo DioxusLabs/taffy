@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod baseline {
     use taffy::prelude::*;
-    use taffy::{LayoutInput, LayoutOutput, Point};
+    use taffy::{Baselines, LayoutInput, LayoutOutput};
 
     /// A node context that pairs an intrinsic size with a first-baseline offset
     /// (measured from the node's top edge in the block axis).
@@ -18,7 +18,11 @@ mod baseline {
         _style: &Style,
     ) -> LayoutOutput {
         let Some(context) = context else { return LayoutOutput::DEFAULT };
-        LayoutOutput::from_sizes_and_baselines(context.size, Size::ZERO, Point { x: None, y: Some(context.baseline_y) })
+        LayoutOutput::from_sizes_and_baselines(
+            context.size,
+            Size::ZERO,
+            Baselines::from_first(Some(context.baseline_y)),
+        )
     }
 
     /// Two flex items with different intrinsic baselines are aligned along their baselines
