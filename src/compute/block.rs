@@ -298,6 +298,11 @@ struct BlockItem {
     /// keywords (`min-content`, `max-content`, `fit-content`, `fit-content(...)`, and `stretch`)
     width_style: Dimension,
 
+    /// The height style of this item. Used to detect and resolve the `stretch` sizing keyword
+    /// (in the block axis the intrinsic sizing keywords are all equal to the content size,
+    /// which is what an auto height already resolves to)
+    height_style: Dimension,
+
     /// The base size of this item
     size: Size<Option<f32>>,
     /// The minimum allowable size of this item
@@ -808,6 +813,7 @@ fn generate_item_list(
                 #[cfg(feature = "float_layout")]
                 clear: child_style.clear(),
                 width_style: child_style.size().width,
+                height_style: child_style.size().height,
                 size: child_style
                     .size()
                     .maybe_resolve(node_inner_size, |val, basis| tree.calc(val, basis))
@@ -840,6 +846,26 @@ fn generate_item_list(
             }
         })
         .collect()
+}
+
+/// Resolve the `stretch` sizing keyword for an item's height style. In the block axis the
+/// intrinsic sizing keywords (`min-content`, `max-content`, `fit-content`, `fit-content(...)`)
+/// are all equal to the content size, which is what an auto height already resolves to, so
+/// only `stretch` requires explicit resolution.
+#[inline]
+fn resolve_stretch_height(
+    height_style: Dimension,
+    container_inner_height: Option<f32>,
+    item_y_margin_sum: f32,
+) -> Option<f32> {
+    match resolve_sizing_keyword(
+        height_style,
+        container_inner_height.maybe_sub(item_y_margin_sum),
+        container_inner_height,
+    ) {
+        Some(SizingKeywordResolution::Exact(height)) => Some(height),
+        _ => None,
+    }
 }
 
 /// Compute the content-based width in the case that the width of the container is not known
@@ -998,9 +1024,14 @@ fn perform_final_layout_on_in_flow_children(
                     Some(SizingKeywordResolution::Exact(width)) => (Some(width), AvailableSpace::Definite(width)),
                     None => (None, AvailableSpace::Definite(available_width)),
                 };
+                let item_known_height = resolve_stretch_height(
+                    item.height_style,
+                    container_percentage_resolution_height,
+                    item_non_auto_margin.vertical_axis_sum(),
+                );
                 let item_layout = tree.perform_child_layout(
                     item.node_id,
-                    Size { width: item_known_width, height: None },
+                    Size { width: item_known_width, height: item_known_height },
                     parent_size,
                     Size { width: item_available_width, height: AvailableSpace::MaxContent },
                     SizingMode::InherentSize,
@@ -1187,6 +1218,12 @@ fn perform_final_layout_on_in_flow_children(
                         },
                     );
 
+                let keyword_height = resolve_stretch_height(
+                    item.height_style,
+                    container_percentage_resolution_height,
+                    item_non_auto_margin.vertical_axis_sum(),
+                );
+
                 item.size
                     .map_width(|width| {
                         Some(
@@ -1196,6 +1233,7 @@ fn perform_final_layout_on_in_flow_children(
                                 .maybe_clamp(item.min_size.width, item.max_size.width),
                         )
                     })
+                    .map_height(|height| height.or(keyword_height))
                     .maybe_clamp(item.min_size, item.max_size)
             };
 
