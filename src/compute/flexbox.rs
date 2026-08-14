@@ -1701,8 +1701,11 @@ fn determine_hypothetical_cross_size(
         // fit-content(...)) determines the available space constraint the item is measured under.
         // The `stretch` keyword is not resolved here: it stretches to the flex line, which is
         // handled in `determine_used_cross_size`
-        let cross_stretch_size =
-            constants.node_inner_size.cross(constants.dir).maybe_sub(child.margin.cross_axis_sum(constants.dir));
+        let cross_stretch_size = constants
+            .node_inner_size
+            .cross(constants.dir)
+            .map(|val| constants.divided_cross_space(val))
+            .maybe_sub(child.margin.cross_axis_sum(constants.dir));
         let child_available_cross = match resolve_sizing_keyword(
             child.size_style.cross(constants.dir),
             cross_stretch_size,
