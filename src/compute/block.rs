@@ -14,7 +14,7 @@ use crate::{
     LayoutBlockContainer, RequestedAxis, TextAlign,
 };
 
-use super::common::containment::compute_contained_size_layout;
+use super::common::containment::{compute_contained_size_layout, contained_size_is_definite};
 
 #[cfg(feature = "float_layout")]
 use super::float::{BfcSlot, ContentSlot, FloatContext, FloatIntrinsicWidthCalculator};
@@ -351,17 +351,28 @@ pub fn compute_block_layout(
     inputs: LayoutInput,
     block_ctx: Option<&mut BlockContext<'_>>,
 ) -> LayoutOutput {
-    let contain = tree.get_block_container_style(node_id).contain();
+    let style = tree.get_block_container_style(node_id);
+    let contain = style.contain();
 
     let mut output = if contain.intersects(Contain::SIZE.union(Contain::INLINE_SIZE)) {
+        let size_is_definite = contained_size_is_definite(&style, &inputs, |val, basis| tree.calc(val, basis));
+        drop(style);
         let mut block_ctx = block_ctx;
-        compute_contained_size_layout(tree, node_id, inputs, contain, |tree, node_id, inputs, hide_children| {
-            // The as-if-empty sizing pass uses a fresh formatting context so that it cannot
-            // disturb the inherited one (an empty box contributes nothing to it anyway)
-            let block_ctx = if hide_children { None } else { block_ctx.as_deref_mut() };
-            compute_block_layout_inner(tree, node_id, inputs, block_ctx, hide_children)
-        })
+        compute_contained_size_layout(
+            tree,
+            node_id,
+            inputs,
+            contain,
+            size_is_definite,
+            |tree, node_id, inputs, hide_children| {
+                // The as-if-empty sizing pass uses a fresh formatting context so that it cannot
+                // disturb the inherited one (an empty box contributes nothing to it anyway)
+                let block_ctx = if hide_children { None } else { block_ctx.as_deref_mut() };
+                compute_block_layout_inner(tree, node_id, inputs, block_ctx, hide_children)
+            },
+        )
     } else {
+        drop(style);
         compute_block_layout_inner(tree, node_id, inputs, block_ctx, false)
     };
 

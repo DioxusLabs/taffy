@@ -5668,6 +5668,26 @@ mod contain {
     }
 
     #[test]
+    fn contain_size_flex_percent_child_auto_height__border_box_ltr() {
+        crate::run_xml_test("contain", "contain_size_flex_percent_child_auto_height__border_box_ltr");
+    }
+
+    #[test]
+    fn contain_size_flex_percent_child_auto_height__content_box_ltr() {
+        crate::run_xml_test("contain", "contain_size_flex_percent_child_auto_height__content_box_ltr");
+    }
+
+    #[test]
+    fn contain_size_flex_percent_child_auto_height__border_box_rtl() {
+        crate::run_xml_test("contain", "contain_size_flex_percent_child_auto_height__border_box_rtl");
+    }
+
+    #[test]
+    fn contain_size_flex_percent_child_auto_height__content_box_rtl() {
+        crate::run_xml_test("contain", "contain_size_flex_percent_child_auto_height__content_box_rtl");
+    }
+
+    #[test]
     fn contain_size_grid_container__border_box_ltr() {
         crate::run_xml_test("contain", "contain_size_grid_container__border_box_ltr");
     }
@@ -5728,6 +5748,26 @@ mod contain {
     }
 
     #[test]
+    fn contain_size_grid_percent_child_auto_height__border_box_ltr() {
+        crate::run_xml_test("contain", "contain_size_grid_percent_child_auto_height__border_box_ltr");
+    }
+
+    #[test]
+    fn contain_size_grid_percent_child_auto_height__content_box_ltr() {
+        crate::run_xml_test("contain", "contain_size_grid_percent_child_auto_height__content_box_ltr");
+    }
+
+    #[test]
+    fn contain_size_grid_percent_child_auto_height__border_box_rtl() {
+        crate::run_xml_test("contain", "contain_size_grid_percent_child_auto_height__border_box_rtl");
+    }
+
+    #[test]
+    fn contain_size_grid_percent_child_auto_height__content_box_rtl() {
+        crate::run_xml_test("contain", "contain_size_grid_percent_child_auto_height__content_box_rtl");
+    }
+
+    #[test]
     fn contain_size_leaf__border_box_ltr() {
         crate::run_xml_test("contain", "contain_size_leaf__border_box_ltr");
     }
@@ -5745,6 +5785,46 @@ mod contain {
     #[test]
     fn contain_size_leaf__content_box_rtl() {
         crate::run_xml_test("contain", "contain_size_leaf__content_box_rtl");
+    }
+
+    #[test]
+    fn contain_size_percent_child_auto_height__border_box_ltr() {
+        crate::run_xml_test("contain", "contain_size_percent_child_auto_height__border_box_ltr");
+    }
+
+    #[test]
+    fn contain_size_percent_child_auto_height__content_box_ltr() {
+        crate::run_xml_test("contain", "contain_size_percent_child_auto_height__content_box_ltr");
+    }
+
+    #[test]
+    fn contain_size_percent_child_auto_height__border_box_rtl() {
+        crate::run_xml_test("contain", "contain_size_percent_child_auto_height__border_box_rtl");
+    }
+
+    #[test]
+    fn contain_size_percent_child_auto_height__content_box_rtl() {
+        crate::run_xml_test("contain", "contain_size_percent_child_auto_height__content_box_rtl");
+    }
+
+    #[test]
+    fn contain_size_percent_child_definite_height__border_box_ltr() {
+        crate::run_xml_test("contain", "contain_size_percent_child_definite_height__border_box_ltr");
+    }
+
+    #[test]
+    fn contain_size_percent_child_definite_height__content_box_ltr() {
+        crate::run_xml_test("contain", "contain_size_percent_child_definite_height__content_box_ltr");
+    }
+
+    #[test]
+    fn contain_size_percent_child_definite_height__border_box_rtl() {
+        crate::run_xml_test("contain", "contain_size_percent_child_definite_height__border_box_rtl");
+    }
+
+    #[test]
+    fn contain_size_percent_child_definite_height__content_box_rtl() {
+        crate::run_xml_test("contain", "contain_size_percent_child_definite_height__content_box_rtl");
     }
 
     #[test]

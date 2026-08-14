@@ -13,7 +13,7 @@ use crate::{
     GridItemStyle, JustifyContent, LayoutGridContainer, RequestedAxis,
 };
 
-use super::common::containment::compute_contained_size_layout;
+use super::common::containment::{compute_contained_size_layout, contained_size_is_definite};
 use alignment::{align_and_position_item, align_tracks};
 use explicit_grid::{compute_explicit_grid_size_in_axis, initialize_grid_tracks, AutoRepeatStrategy};
 use implicit_grid::compute_grid_size_estimate;
@@ -47,11 +47,15 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     node: NodeId,
     inputs: LayoutInput,
 ) -> LayoutOutput {
-    let contain = tree.get_grid_container_style(node).contain();
+    let style = tree.get_grid_container_style(node);
+    let contain = style.contain();
 
     let mut output = if contain.intersects(Contain::SIZE.union(Contain::INLINE_SIZE)) {
-        compute_contained_size_layout(tree, node, inputs, contain, compute_grid_layout_inner)
+        let size_is_definite = contained_size_is_definite(&style, &inputs, |val, basis| tree.calc(val, basis));
+        drop(style);
+        compute_contained_size_layout(tree, node, inputs, contain, size_is_definite, compute_grid_layout_inner)
     } else {
+        drop(style);
         compute_grid_layout_inner(tree, node, inputs, false)
     };
 

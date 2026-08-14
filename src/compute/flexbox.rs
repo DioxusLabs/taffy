@@ -16,7 +16,7 @@ use crate::util::{MaybeResolve, ResolveOrZero};
 use crate::{BoxGenerationMode, BoxSizing, Contain, Dimension, Direction, RequestedAxis};
 
 use super::common::alignment::apply_alignment_fallback;
-use super::common::containment::compute_contained_size_layout;
+use super::common::containment::{compute_contained_size_layout, contained_size_is_definite};
 #[cfg(feature = "content_size")]
 use super::common::content_size::compute_content_size_contribution;
 use super::common::sizing_keyword::{
@@ -214,11 +214,15 @@ pub fn compute_flexbox_layout(
     node: NodeId,
     inputs: LayoutInput,
 ) -> LayoutOutput {
-    let contain = tree.get_flexbox_container_style(node).contain();
+    let style = tree.get_flexbox_container_style(node);
+    let contain = style.contain();
 
     let mut output = if contain.intersects(Contain::SIZE.union(Contain::INLINE_SIZE)) {
-        compute_contained_size_layout(tree, node, inputs, contain, compute_flexbox_layout_inner)
+        let size_is_definite = contained_size_is_definite(&style, &inputs, |val, basis| tree.calc(val, basis));
+        drop(style);
+        compute_contained_size_layout(tree, node, inputs, contain, size_is_definite, compute_flexbox_layout_inner)
     } else {
+        drop(style);
         compute_flexbox_layout_inner(tree, node, inputs, false)
     };
 
@@ -635,12 +639,17 @@ fn generate_anonymous_flex_items(
     hide_children: bool,
 ) -> Vec<FlexItem> {
     // Percentage sizes of items resolve against the container's inner size, but only if that size
-    // is definite. A known main size which is derived from the container's own content is treated
-    // as indefinite here.
-    let percent_resolution_size = if constants.known_main_size_is_definite {
-        constants.node_inner_size
-    } else {
-        constants.node_inner_size.with_main(constants.dir, None)
+    // is definite. A known size which is derived from the container's own content (e.g. a size
+    // computed by size containment's as-if-empty pass) is treated as indefinite here.
+    let percent_resolution_size = {
+        let mut size = constants.node_inner_size;
+        if !constants.known_main_size_is_definite {
+            size.set_main(constants.dir, None);
+        }
+        if !constants.has_definite_cross_size {
+            size.set_cross(constants.dir, None);
+        }
+        size
     };
 
     tree.child_ids(node)
@@ -1872,7 +1881,7 @@ fn calculate_children_base_lines(
 fn calculate_cross_size(flex_lines: &mut [FlexLine], node_size: Size<Option<f32>>, constants: &AlgoConstants) {
     // If the flex container is single-line and has a definite cross size,
     // the cross size of the flex line is the flex container’s inner cross size.
-    if !constants.is_wrap && node_size.cross(constants.dir).is_some() {
+    if !constants.is_wrap && node_size.cross(constants.dir).is_some() && constants.has_definite_cross_size {
         let cross_axis_padding_border = constants.content_box_inset.cross_axis_sum(constants.dir);
         let cross_min_size = constants.min_size.cross(constants.dir);
         let cross_max_size = constants.max_size.cross(constants.dir);
