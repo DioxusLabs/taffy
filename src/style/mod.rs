@@ -542,8 +542,10 @@ pub struct Style<S: CheapCloneStr = DefaultCheapStr> {
     /// Should elements wrap, or stay in a single line?
     #[cfg(feature = "flexbox")]
     pub flex_wrap: FlexWrap,
-    /// The minimum number of flex lines to balance items into when `flex_wrap` is
-    /// [`FlexWrap::Balance`] or [`FlexWrap::BalanceReverse`]
+    /// The minimum number of flex lines requested for a multi-line container. When items are
+    /// balanced ([`FlexWrap::Balance`] or [`FlexWrap::BalanceReverse`]) they are balanced into
+    /// at least this many lines. For any multi-line container, definite cross-axis available
+    /// space for measuring items is divided between this many lines.
     ///
     /// 1 is the default value, and this value must be at least 1.
     #[cfg(feature = "flexbox_balance")]

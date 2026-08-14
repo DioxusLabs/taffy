@@ -14,8 +14,10 @@ pub trait FlexboxContainerStyle: CoreStyle {
     fn flex_wrap(&self) -> FlexWrap {
         Style::<Self::CustomIdent>::DEFAULT.flex_wrap
     }
-    /// The minimum number of flex lines to balance items into when `flex-wrap` is
-    /// [`FlexWrap::Balance`] or [`FlexWrap::BalanceReverse`]
+    /// The minimum number of flex lines requested for a multi-line container. When items are
+    /// balanced ([`FlexWrap::Balance`] or [`FlexWrap::BalanceReverse`]) they are balanced into
+    /// at least this many lines. For any multi-line container, definite cross-axis available
+    /// space for measuring items is divided between this many lines.
     #[cfg(feature = "flexbox_balance")]
     #[inline(always)]
     fn flex_line_count(&self) -> u16 {

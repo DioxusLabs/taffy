@@ -138,10 +138,13 @@ struct AlgoConstants {
     is_wrap: bool,
     /// Is the wrap direction inverted
     is_wrap_reverse: bool,
-    /// The minimum number of lines to balance items into. `Some` if and only if items are
-    /// balanced across lines (`flex-wrap: balance`).
+    /// Are items balanced across lines (`flex-wrap: balance`)?
     #[cfg(feature = "flexbox_balance")]
-    balance_line_count: Option<u16>,
+    is_balance: bool,
+    /// The requested minimum number of lines (`flex-line-count`). `Some` for every
+    /// multi-line container, `None` for `nowrap`.
+    #[cfg(feature = "flexbox_balance")]
+    line_count: Option<u16>,
 
     /// The item's min_size style
     min_size: Size<Option<f32>>,
@@ -187,14 +190,14 @@ struct AlgoConstants {
 }
 
 impl AlgoConstants {
-    /// When items are balanced into a requested minimum number of lines, definite cross-axis
-    /// available space for measuring items is divided between the requested number of lines
-    /// (after subtracting the cross-axis gaps between them).
+    /// When a multi-line container requests a minimum number of lines (`flex-line-count`),
+    /// definite cross-axis available space for measuring items is divided between the requested
+    /// number of lines (after subtracting the cross-axis gaps between them).
     /// See <https://github.com/w3c/csswg-drafts/issues/13414>
     #[inline]
-    fn balance_divided_cross_space(&self, cross_available_space: f32) -> f32 {
+    fn divided_cross_space(&self, cross_available_space: f32) -> f32 {
         #[cfg(feature = "flexbox_balance")]
-        if let Some(line_count) = self.balance_line_count {
+        if let Some(line_count) = self.line_count {
             if line_count > 1 {
                 let line_count = line_count as f32;
                 return (cross_available_space - (line_count - 1.0) * self.gap.cross(self.dir)) / line_count;
@@ -339,7 +342,7 @@ fn compute_preliminary(tree: &mut impl LayoutFlexboxContainer, node: NodeId, inp
     // 5. Collect flex items into flex lines.
     debug_log!("collect_flex_lines");
     #[cfg(feature = "flexbox_balance")]
-    let mut flex_lines = if constants.balance_line_count.is_some() {
+    let mut flex_lines = if constants.is_balance {
         collect_balanced_flex_lines(&constants, available_space, &mut flex_items)
     } else {
         collect_flex_lines(&constants, available_space, &mut flex_items)
@@ -507,7 +510,9 @@ fn compute_constants(
     let is_wrap = flex_wrap.is_multi_line();
     let is_wrap_reverse = flex_wrap.is_reverse();
     #[cfg(feature = "flexbox_balance")]
-    let balance_line_count = if flex_wrap.is_balance() { Some(style.flex_line_count().max(1)) } else { None };
+    let is_balance = flex_wrap.is_balance();
+    #[cfg(feature = "flexbox_balance")]
+    let line_count = if is_wrap { Some(style.flex_line_count().max(1)) } else { None };
 
     let aspect_ratio = style.aspect_ratio();
     let margin = style.margin().resolve_or_zero(parent_size.width, |val, basis| tree.calc(val, basis));
@@ -555,7 +560,9 @@ fn compute_constants(
         is_wrap,
         is_wrap_reverse,
         #[cfg(feature = "flexbox_balance")]
-        balance_line_count,
+        is_balance,
+        #[cfg(feature = "flexbox_balance")]
+        line_count,
         min_size: style
             .min_size()
             .maybe_resolve(parent_size, |val, basis| tree.calc(val, basis))
@@ -776,7 +783,7 @@ fn determine_flex_base_size(
         let cross_axis_available_space: AvailableSpace = match available_space.cross(dir) {
             AvailableSpace::Definite(val) => AvailableSpace::Definite(
                 constants
-                    .balance_divided_cross_space(cross_axis_parent_size.unwrap_or(val))
+                    .divided_cross_space(cross_axis_parent_size.unwrap_or(val))
                     .maybe_clamp(child_min_cross, child_max_cross),
             ),
             AvailableSpace::MinContent => match child_min_cross {
@@ -1159,7 +1166,7 @@ fn collect_balanced_flex_lines<'a>(
     }
 
     let line_break_size = main_axis_available_space.into_option().unwrap_or(f32::INFINITY);
-    let min_line_count = constants.balance_line_count.unwrap_or(1) as usize;
+    let min_line_count = constants.line_count.unwrap_or(1) as usize;
     let item_counts = balance::balanced_line_item_counts(
         flex_items.iter().map(|item| item.hypothetical_outer_size.main(constants.dir)),
         line_break_size,
@@ -1224,7 +1231,8 @@ fn determine_container_main_size(
                 // uses its max-content size: the longest line when items are balanced across
                 // the minimum line count without a size limit.
                 #[cfg(feature = "flexbox_balance")]
-                if let Some(min_line_count) = constants.balance_line_count {
+                if constants.is_balance {
+                    let min_line_count = constants.line_count.unwrap_or(1);
                     let item_count = lines.iter().map(|line| line.items.len()).sum::<usize>();
                     if item_count == 0 {
                         return size;
@@ -1335,7 +1343,7 @@ fn determine_container_main_size(
                                 let cross_axis_available_space: AvailableSpace = available_space
                                     .cross(dir)
                                     .map_definite_value(|val| {
-                                        constants.balance_divided_cross_space(cross_axis_parent_size.unwrap_or(val))
+                                        constants.divided_cross_space(cross_axis_parent_size.unwrap_or(val))
                                     })
                                     .maybe_clamp(child_min_cross, child_max_cross);
 
@@ -1685,7 +1693,7 @@ fn determine_hypothetical_cross_size(
 
         let child_available_cross = available_space
             .cross(constants.dir)
-            .map_definite_value(|val| constants.balance_divided_cross_space(val))
+            .map_definite_value(|val| constants.divided_cross_space(val))
             .maybe_clamp(transferred_min_cross, transferred_max_cross)
             .maybe_max(padding_border_sum);
 
