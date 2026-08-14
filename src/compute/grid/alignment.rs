@@ -153,17 +153,14 @@ pub(super) fn align_and_position_item(
     // See: https://www.w3.org/TR/css-grid-1/#grid-item-sizing
     let alignment_styles = InBothAbsAxis {
         horizontal: justify_self.or(container_alignment_styles.horizontal).unwrap_or_else(|| {
-            if inherent_size.width.is_some() || size_style.width.is_intrinsic_sizing_keyword() {
+            if inherent_size.width.is_some() || size_style.width.is_sizing_keyword() {
                 AlignSelf::START
             } else {
                 AlignSelf::STRETCH
             }
         }),
         vertical: align_self.or(container_alignment_styles.vertical).unwrap_or_else(|| {
-            if inherent_size.height.is_some()
-                || size_style.height.is_intrinsic_sizing_keyword()
-                || aspect_ratio.is_some()
-            {
+            if inherent_size.height.is_some() || size_style.height.is_sizing_keyword() || aspect_ratio.is_some() {
                 AlignSelf::START
             } else {
                 AlignSelf::STRETCH

@@ -284,7 +284,7 @@ impl GridItem {
         let width = inherent_size.width.or_else(|| {
             // A width that is a sizing keyword is not auto, so it does not stretch. The stretch
             // keyword resolves to an exact width; the others resolve during content measurement.
-            if self.size.width.is_intrinsic_sizing_keyword() {
+            if self.size.width.is_sizing_keyword() {
                 return match resolve_sizing_keyword(
                     self.size.width,
                     grid_area_minus_item_margins_size.width,
@@ -312,7 +312,7 @@ impl GridItem {
         let height = height.or_else(|| {
             // A height that is a sizing keyword is not auto, so it does not stretch. The stretch
             // keyword resolves to an exact height; the others resolve during content measurement.
-            if self.size.height.is_intrinsic_sizing_keyword() {
+            if self.size.height.is_sizing_keyword() {
                 return match resolve_sizing_keyword(
                     self.size.height,
                     grid_area_minus_item_margins_size.height,
@@ -534,7 +534,7 @@ impl GridItem {
         tree: &impl LayoutPartialTree,
     ) -> Size<AvailableSpace> {
         let size_style = self.size.get(axis);
-        if !size_style.is_intrinsic_sizing_keyword() {
+        if !size_style.is_sizing_keyword() {
             return available_space;
         }
         let margins = self.margins_axis_sums_with_baseline_shims(grid_area_size.width, tree);

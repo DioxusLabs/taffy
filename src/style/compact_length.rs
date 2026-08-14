@@ -404,7 +404,7 @@ impl CompactLength {
 
     /// Returns true if the value is min-content, max-content, fit-content, fit-content(...), or stretch
     #[inline(always)]
-    pub fn is_intrinsic_sizing_keyword(self) -> bool {
+    pub fn is_sizing_keyword(self) -> bool {
         matches!(
             self.tag(),
             Self::MIN_CONTENT_TAG

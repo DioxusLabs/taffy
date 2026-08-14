@@ -392,8 +392,8 @@ impl Dimension {
 
     /// Returns true if value is min-content, max-content, fit-content, fit-content(...), or stretch
     #[inline(always)]
-    pub fn is_intrinsic_sizing_keyword(self) -> bool {
-        self.0.is_intrinsic_sizing_keyword()
+    pub fn is_sizing_keyword(self) -> bool {
+        self.0.is_sizing_keyword()
     }
 
     /// Returns true if value is the stretch keyword

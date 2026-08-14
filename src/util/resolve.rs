@@ -67,7 +67,7 @@ impl MaybeResolve<Option<f32>, Option<f32>> for Dimension {
             _ if self.0.is_calc() => context.map(|dim| calc(self.0.calc_value(), dim)),
             // Intrinsic sizing keywords cannot be resolved to a definite size out of context.
             // Layout algorithms that support them must handle them explicitly.
-            _ if self.0.is_intrinsic_sizing_keyword() => None,
+            _ if self.0.is_sizing_keyword() => None,
             _ => unreachable!(),
         }
     }
