@@ -2990,6 +2990,11 @@ fn sum_axis_gaps(gap: f32, num_items: usize) -> f32 {
 /// All arithmetic uses `f64`, so that the squares and sums involved in scoring partitions are
 /// computed exactly enough that equally-balanced partitions compare equal and are resolved by
 /// the tie-break rather than by rounding noise.
+///
+/// The minimization is a dynamic program over (line count, first item of suffix) accelerated
+/// with the divide-and-conquer optimization, running in `O(line_count * item_count *
+/// log(item_count))` time; the naive `O(line_count * item_count²)` dynamic program is kept as
+/// a test oracle.
 #[cfg(feature = "flexbox_balance")]
 mod balance {
     use crate::util::sys::{new_vec_with_capacity, Vec};
@@ -3009,28 +3014,111 @@ mod balance {
         (value as f64).clamp(0.0, MAX_LIMIT)
     }
 
-    /// The number of lines that greedy line breaking produces: each line collects consecutive
-    /// items until the next item no longer fits, and if even the first item of a line doesn't
-    /// fit, that line takes just the one (overflowing) item.
-    fn greedy_line_count(sums: &[f64], gap_between_items: f64, limit: f64) -> usize {
-        let mut line_count = 1;
-        let mut previous_sum = 0.0;
-        let mut index = 0;
-        while index < sums.len() {
-            let mut next = index;
-            while next < sums.len() && sums[next] - previous_sum - gap_between_items <= limit {
-                next += 1;
+    /// Line sizing shared by the scoring and readback phases
+    struct LineSizes {
+        /// Prefix sums of the item sizes, where each item also contributes one trailing gap.
+        /// The size of the line holding items `start..=end` is therefore
+        /// `sums[end] - sums[start - 1] - gap_between_items`.
+        sums: Vec<f64>,
+        /// The size of the gap between adjacent items on a line
+        gap_between_items: f64,
+        /// The container's inner main size: the size lines may not exceed (unless they hold a
+        /// single item) and the target size the balancing errors are measured against
+        limit: f64,
+    }
+
+    impl LineSizes {
+        /// The size of the line holding items `start..=end`
+        fn line_size(&self, start: usize, end: usize) -> f64 {
+            let start_sum = if start == 0 { 0.0 } else { self.sums[start - 1] };
+            self.sums[end] - start_sum - self.gap_between_items
+        }
+
+        /// The squared error of the line holding items `start..=end`, or [`INFEASIBLE`] for a
+        /// line of more than one item exceeding the limit
+        fn line_cost(&self, start: usize, end: usize) -> f64 {
+            if end > start && self.line_size(start, end) > self.limit {
+                return INFEASIBLE;
             }
-            if next == index {
-                next = index + 1;
+            let error = self.line_size(start, end) - self.limit;
+            error * error
+        }
+
+        /// For every suffix of the items, the number of lines that greedy line breaking
+        /// produces for it: each line collects consecutive items until the next item no longer
+        /// fits, and if even the first item of a line doesn't fit, that line takes just the one
+        /// (overflowing) item. (The entry for the empty suffix is zero.)
+        fn suffix_greedy_line_counts(&self) -> Vec<u32> {
+            let item_count = self.sums.len();
+            let mut counts: Vec<u32> = new_vec_with_capacity(item_count + 1);
+            counts.extend(core::iter::repeat(0).take(item_count + 1));
+            // The (exclusive) end of the greedy first line of the suffix, which only moves
+            // down as the suffix grows leftwards since lines starting earlier are larger
+            let mut line_end = item_count;
+            for start in (0..item_count).rev() {
+                while line_end > start + 1 && self.line_size(start, line_end - 1) > self.limit {
+                    line_end -= 1;
+                }
+                counts[start] = 1 + counts[line_end];
             }
-            previous_sum = sums[next - 1];
-            index = next;
-            if index < sums.len() {
-                line_count += 1;
+            counts
+        }
+    }
+
+    /// Compute `cur[start]` and `opts[start]` for `start` in `start_lo..=start_hi`, where
+    /// `cur[start]` is the minimum over `end` of `sizes.line_cost(start, end) + prev[end + 1]`
+    /// and `opts[start]` is the largest `end` achieving that minimum, considering only `end` in
+    /// `end_lo..=end_hi`.
+    ///
+    /// Uses the divide-and-conquer dynamic programming optimization: because the cost function
+    /// satisfies the concave quadrangle inequality (it is the square of a quantity that
+    /// increases in `end` and decreases in `start`, plus a term depending on `end` alone, with
+    /// infeasibility monotone in line length), the largest minimizing `end` is non-decreasing
+    /// in `start`. Solving the middle `start` therefore splits the `end` range in two, and each
+    /// recursion level scans each candidate `end` a bounded number of times.
+    #[allow(clippy::too_many_arguments)]
+    fn fill_row(
+        sizes: &LineSizes,
+        prev: &[f64],
+        cur: &mut [f64],
+        opts: &mut [u32],
+        start_lo: usize,
+        start_hi: usize,
+        end_lo: usize,
+        end_hi: usize,
+    ) {
+        if start_lo > start_hi {
+            return;
+        }
+        let mid = start_lo + (start_hi - start_lo) / 2;
+        let mut min_cost = INFEASIBLE;
+        let mut min_end = end_hi;
+        for end in end_lo.max(mid)..=end_hi {
+            let line_cost = sizes.line_cost(mid, end);
+            if line_cost == INFEASIBLE {
+                // Every longer line also exceeds the limit
+                break;
+            }
+            let cost = line_cost + prev[end + 1];
+            // `<=` keeps the *largest* minimizing end, assigning the most items to the
+            // earliest lines as the tie-break requires. (This tie-break also subsumes the
+            // spec's rule that a zero-sized item is assigned to the end of the preceding line
+            // where possible.)
+            if cost <= min_cost {
+                min_cost = cost;
+                min_end = end;
             }
         }
-        line_count
+        // Infeasible states are excluded from the range by the caller
+        debug_assert!(min_cost.is_finite());
+        cur[mid] = min_cost;
+        opts[mid] = min_end as u32;
+        if mid > start_lo {
+            fill_row(sizes, prev, cur, opts, start_lo, mid - 1, end_lo, min_end);
+        }
+        if mid < start_hi {
+            fill_row(sizes, prev, cur, opts, mid + 1, start_hi, min_end, end_hi);
+        }
     }
 
     /// Determine the number of items on each line that balances items across lines, such that
@@ -3039,6 +3127,9 @@ mod balance {
     ///
     /// `item_sizes` must be non-empty. The returned line item counts are all non-zero and sum to
     /// the number of items.
+    ///
+    /// Runs in `O(line_count * item_count * log(item_count))` time using
+    /// `O(line_count * item_count)` transient memory.
     pub(super) fn balanced_line_item_counts(
         item_sizes: impl ExactSizeIterator<Item = f32>,
         line_limit: f32,
@@ -3050,84 +3141,214 @@ mod balance {
         let gap_between_items = to_size(gap_between_items);
         let limit = to_size(line_limit);
 
-        // Prefix sums of the item sizes, where each item also contributes one trailing gap.
-        // The size of the line holding items `start..=end` is therefore
-        // `sums[end] - sums[start - 1] - gap_between_items`.
         let mut sums: Vec<f64> = new_vec_with_capacity(item_count);
         let mut sum = 0.0;
         for size in item_sizes {
             sum += to_size(size) + gap_between_items;
             sums.push(sum);
         }
+        let sizes = LineSizes { sums, gap_between_items, limit };
 
-        // The size of the line holding items `start..=end`
-        let line_size = |start: usize, end: usize| -> f64 {
-            let start_sum = if start == 0 { 0.0 } else { sums[start - 1] };
-            sums[end] - start_sum - gap_between_items
-        };
-        // The squared error of the line holding items `start..=end`
-        let line_error = |start: usize, end: usize| -> f64 {
-            let error = line_size(start, end) - limit;
-            error * error
-        };
+        // `suffix_greedy[start]` is the number of lines greedy line breaking produces for items
+        // `start..`, which is also the *fewest* lines the suffix can validly be divided into
+        let suffix_greedy = sizes.suffix_greedy_line_counts();
+        let line_count = (suffix_greedy[0] as usize).max(min_line_count.clamp(1, item_count));
 
-        let line_count = greedy_line_count(&sums, gap_between_items, limit).max(min_line_count.clamp(1, item_count));
-
-        // `min_errors[(lines - 1) * item_count + start]` is the minimum total squared error of
-        // any valid division of items `start..` into exactly `lines` lines ([`INFEASIBLE`] if
-        // there is none). Rows are filled bottom-up: a division into `lines` lines is a first
-        // line `start..=end` plus a division of `end + 1..` into `lines - 1` lines.
-        let mut min_errors: Vec<f64> = new_vec_with_capacity(line_count * item_count);
-        for start in 0..item_count {
-            let feasible = start == item_count - 1 || line_size(start, item_count - 1) <= limit;
-            min_errors.push(if feasible { line_error(start, item_count - 1) } else { INFEASIBLE });
-        }
-        for lines in 2..=line_count {
-            let row = (lines - 1) * item_count;
-            for start in 0..item_count {
-                let mut min_error = INFEASIBLE;
-                // The remaining `lines - 1` lines need one item each, bounding this line's end
-                let mut end = start;
-                while end + lines <= item_count {
-                    if end > start && line_size(start, end) > limit {
-                        break;
-                    }
-                    let error = line_error(start, end) + min_errors[row - item_count + end + 1];
-                    if error < min_error {
-                        min_error = error;
-                    }
-                    end += 1;
-                }
-                min_errors.push(min_error);
-            }
-        }
-
-        // Read the division back out front to back. For each line, the *largest* end whose
-        // error plus the minimum remaining error adds up to the (feasible) minimum is chosen,
-        // assigning the most items to the earliest lines as the tie-break requires. Comparing
-        // recomputed errors for exact equality is sound because the expressions are identical
-        // to the ones the table was filled from.
-        debug_assert!(min_errors[(line_count - 1) * item_count].is_finite());
         let mut item_counts: Vec<usize> = new_vec_with_capacity(line_count);
-        let mut start = 0;
-        for lines_after in (0..line_count).rev() {
-            let target = min_errors[lines_after * item_count + start];
-            let mut end = item_count - 1 - lines_after;
-            loop {
-                if end == start || line_size(start, end) <= limit {
-                    let remaining_error =
-                        if lines_after == 0 { 0.0 } else { min_errors[(lines_after - 1) * item_count + end + 1] };
-                    if line_error(start, end) + remaining_error == target {
-                        break;
-                    }
-                }
-                debug_assert!(end > start);
-                end -= 1;
+        if line_count == item_count {
+            // One item per line is the only division (this covers `flex-line-count` of at least
+            // the item count as well as every item overflowing a line of its own)
+            item_counts.extend(core::iter::repeat(1).take(item_count));
+            return item_counts;
+        }
+
+        // `prev[start]` is the minimum total squared error of any valid division of items
+        // `start..` into exactly `lines - 1` lines ([`INFEASIBLE`] if there is none), and `cur`
+        // is the row being computed for `lines` lines: a division into `lines` lines is a first
+        // line `start..=end` plus a division of `end + 1..` into `lines - 1` lines.
+        // `opts[(lines - 2) * item_count + start]` records the largest `end` achieving
+        // `cur[start]`, from which the chosen division is read back.
+        let mut prev: Vec<f64> = new_vec_with_capacity(item_count);
+        for start in 0..item_count {
+            prev.push(sizes.line_cost(start, item_count - 1));
+        }
+        let mut cur: Vec<f64> = new_vec_with_capacity(item_count);
+        cur.extend(core::iter::repeat(INFEASIBLE).take(item_count));
+        let mut opts: Vec<u32> = new_vec_with_capacity((line_count - 1) * item_count);
+        opts.extend(core::iter::repeat(0).take((line_count - 1) * item_count));
+        for lines in 2..=line_count {
+            // The remaining `lines - 1` lines need one item each, bounding this line's end
+            let max_end = item_count - lines;
+            // Starts whose suffix doesn't fit in `lines` lines even with greedy breaking are
+            // infeasible; they form a prefix (a longer suffix never needs fewer lines), and
+            // excluding them keeps every state `fill_row` solves feasible
+            let mut first_start = 0;
+            while first_start < max_end && suffix_greedy[first_start] as usize > lines {
+                cur[first_start] = INFEASIBLE;
+                first_start += 1;
             }
+            let opts_row = &mut opts[(lines - 2) * item_count..(lines - 1) * item_count];
+            fill_row(&sizes, &prev, &mut cur, opts_row, first_start, max_end, first_start, max_end);
+            core::mem::swap(&mut prev, &mut cur);
+        }
+
+        // Read the division back out front to back
+        debug_assert!(prev[0].is_finite());
+        let mut start = 0;
+        for lines in (2..=line_count).rev() {
+            let end = opts[(lines - 2) * item_count + start] as usize;
             item_counts.push(end - start + 1);
             start = end + 1;
         }
-        debug_assert_eq!(start, item_count);
+        item_counts.push(item_count - start);
         item_counts
+    }
+
+    #[cfg(test)]
+    mod tests {
+        use super::*;
+
+        /// The number of lines that greedy line breaking produces: each line collects
+        /// consecutive items until the next item no longer fits, and if even the first item of
+        /// a line doesn't fit, that line takes just the one (overflowing) item
+        fn greedy_line_count(sizes: &LineSizes) -> usize {
+            let item_count = sizes.sums.len();
+            let mut line_count = 1;
+            let mut index = 0;
+            while index < item_count {
+                let mut next = index;
+                while next < item_count && sizes.line_size(index, next) <= sizes.limit {
+                    next += 1;
+                }
+                if next == index {
+                    next = index + 1;
+                }
+                index = next;
+                if index < item_count {
+                    line_count += 1;
+                }
+            }
+            line_count
+        }
+
+        /// The naive `O(line_count * item_count²)` dynamic program from the spec, used as a
+        /// test oracle for the divide-and-conquer optimized implementation
+        fn naive_line_item_counts(
+            item_sizes: &[f32],
+            line_limit: f32,
+            gap_between_items: f32,
+            min_line_count: usize,
+        ) -> Vec<usize> {
+            let item_count = item_sizes.len();
+            let gap_between_items = to_size(gap_between_items);
+            let limit = to_size(line_limit);
+
+            let mut sums: Vec<f64> = new_vec_with_capacity(item_count);
+            let mut sum = 0.0;
+            for size in item_sizes {
+                sum += to_size(*size) + gap_between_items;
+                sums.push(sum);
+            }
+            let sizes = LineSizes { sums, gap_between_items, limit };
+
+            let line_count = greedy_line_count(&sizes).max(min_line_count.clamp(1, item_count));
+
+            // `min_errors[(lines - 1) * item_count + start]` is the minimum total squared error
+            // of any valid division of items `start..` into exactly `lines` lines
+            let mut min_errors: Vec<f64> = new_vec_with_capacity(line_count * item_count);
+            for start in 0..item_count {
+                min_errors.push(sizes.line_cost(start, item_count - 1));
+            }
+            for lines in 2..=line_count {
+                let row = (lines - 1) * item_count;
+                for start in 0..item_count {
+                    let mut min_error = INFEASIBLE;
+                    let mut end = start;
+                    while end + lines <= item_count {
+                        let line_cost = sizes.line_cost(start, end);
+                        if line_cost == INFEASIBLE {
+                            break;
+                        }
+                        let error = line_cost + min_errors[row - item_count + end + 1];
+                        if error < min_error {
+                            min_error = error;
+                        }
+                        end += 1;
+                    }
+                    min_errors.push(min_error);
+                }
+            }
+
+            // For each line, the *largest* end whose error plus the minimum remaining error
+            // adds up to the (feasible) minimum is chosen
+            assert!(min_errors[(line_count - 1) * item_count].is_finite());
+            let mut item_counts: Vec<usize> = new_vec_with_capacity(line_count);
+            let mut start = 0;
+            for lines_after in (0..line_count).rev() {
+                let target = min_errors[lines_after * item_count + start];
+                let mut end = item_count - 1 - lines_after;
+                loop {
+                    if sizes.line_cost(start, end) != INFEASIBLE {
+                        let remaining_error =
+                            if lines_after == 0 { 0.0 } else { min_errors[(lines_after - 1) * item_count + end + 1] };
+                        if sizes.line_cost(start, end) + remaining_error == target {
+                            break;
+                        }
+                    }
+                    assert!(end > start);
+                    end -= 1;
+                }
+                item_counts.push(end - start + 1);
+                start = end + 1;
+            }
+            assert_eq!(start, item_count);
+            item_counts
+        }
+
+        #[test]
+        fn matches_naive_dp() {
+            // A simple xorshift PRNG so the test is deterministic and dependency-free
+            let mut state: u64 = 0x243F6A8885A308D3;
+            let mut rand = move |bound: u32| -> u32 {
+                state ^= state << 13;
+                state ^= state >> 7;
+                state ^= state << 17;
+                ((state >> 32) as u32) % bound
+            };
+
+            for case in 0..5000 {
+                // Mostly small item counts (quantized sizes maximize ties, exercising the
+                // tie-break rules), with some larger ones exercising the recursion
+                let item_count = if case % 20 == 0 { (rand(60) + 1) as usize } else { (rand(15) + 1) as usize };
+                let mut item_sizes: Vec<f32> = new_vec_with_capacity(item_count);
+                for _ in 0..item_count {
+                    let size = match rand(6) {
+                        0 => 0.0,
+                        1 => -10.0,
+                        _ => rand(8) as f32 * 25.0,
+                    };
+                    item_sizes.push(size);
+                }
+                let line_limit = match rand(5) {
+                    0 => f32::INFINITY,
+                    _ => rand(10) as f32 * 30.0,
+                };
+                let gap_between_items = rand(3) as f32 * 5.0;
+                let min_line_count = rand(item_count as u32 + 2) as usize;
+
+                let expected = naive_line_item_counts(&item_sizes, line_limit, gap_between_items, min_line_count);
+                let actual = balanced_line_item_counts(
+                    item_sizes.iter().copied(),
+                    line_limit,
+                    gap_between_items,
+                    min_line_count,
+                );
+                assert_eq!(
+                    actual, expected,
+                    "case {case}: item_sizes={item_sizes:?} line_limit={line_limit} \
+                     gap_between_items={gap_between_items} min_line_count={min_line_count}"
+                );
+            }
+        }
     }
 }
