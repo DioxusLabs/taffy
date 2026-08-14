@@ -15,7 +15,7 @@ pub trait FlexboxContainerStyle: CoreStyle {
         Style::<Self::CustomIdent>::DEFAULT.flex_wrap
     }
     /// The minimum number of flex lines to balance items into when `flex-wrap` is
-    /// [`FlexWrap::Balance`] or [`FlexWrap::WrapReverseBalance`]
+    /// [`FlexWrap::Balance`] or [`FlexWrap::BalanceReverse`]
     #[cfg(feature = "flexbox_balance")]
     #[inline(always)]
     fn flex_line_count(&self) -> u16 {
@@ -101,7 +101,7 @@ pub enum FlexWrap {
     ///
     /// [Specification](https://drafts.csswg.org/css-flexbox-2/#balance-values)
     #[cfg(feature = "flexbox_balance")]
-    WrapReverseBalance,
+    BalanceReverse,
 }
 
 impl FlexWrap {
@@ -117,7 +117,7 @@ impl FlexWrap {
         match self {
             Self::WrapReverse => true,
             #[cfg(feature = "flexbox_balance")]
-            Self::WrapReverseBalance => true,
+            Self::BalanceReverse => true,
             _ => false,
         }
     }
@@ -126,7 +126,7 @@ impl FlexWrap {
     #[cfg(feature = "flexbox_balance")]
     #[inline]
     pub(crate) fn is_balance(self) -> bool {
-        matches!(self, Self::Balance | Self::WrapReverseBalance)
+        matches!(self, Self::Balance | Self::BalanceReverse)
     }
 }
 
@@ -172,7 +172,7 @@ impl crate::util::parse::FromCss for FlexWrap {
             is_first = false;
         }
         Ok(match (wrap, balance) {
-            (Some(Self::WrapReverse), true) => Self::WrapReverseBalance,
+            (Some(Self::WrapReverse), true) => Self::BalanceReverse,
             (_, true) => Self::Balance,
             // At least one keyword is always parsed, so `wrap` must be `Some` if `balance` is false
             (wrap, false) => wrap.unwrap_or(Self::NoWrap),

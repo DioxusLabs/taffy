@@ -543,7 +543,7 @@ pub struct Style<S: CheapCloneStr = DefaultCheapStr> {
     #[cfg(feature = "flexbox")]
     pub flex_wrap: FlexWrap,
     /// The minimum number of flex lines to balance items into when `flex_wrap` is
-    /// [`FlexWrap::Balance`] or [`FlexWrap::WrapReverseBalance`]
+    /// [`FlexWrap::Balance`] or [`FlexWrap::BalanceReverse`]
     ///
     /// 1 is the default value, and this value must be at least 1.
     #[cfg(feature = "flexbox_balance")]
