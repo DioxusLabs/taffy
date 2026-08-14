@@ -3019,12 +3019,11 @@ mod balance {
 
     /// Line sizing shared by the scoring and readback phases
     struct LineSizes {
-        /// Prefix sums of the item sizes, where each item also contributes one trailing gap.
-        /// The size of the line holding items `start..=end` is therefore
-        /// `sums[end] - sums[start - 1] - gap_between_items`.
-        sums: Vec<f64>,
-        /// Whether each item's (floored) size is zero
-        zero: Vec<bool>,
+        /// Per item, the prefix sum of the item sizes through it (each item also contributes
+        /// one trailing gap, so the size of the line holding items `start..=end` is
+        /// `sums[end].0 - sums[start - 1].0 - gap_between_items`), paired with whether the
+        /// item's (floored) size is zero
+        sums: Vec<(f64, bool)>,
         /// The size of the gap between adjacent items on a line
         gap_between_items: f64,
         /// The container's inner main size, which lines may not exceed (unless they hold a
@@ -3038,10 +3037,15 @@ mod balance {
             self.sums.len()
         }
 
+        /// Whether the item at `index` has a (floored) size of zero
+        fn is_zero_item(&self, index: usize) -> bool {
+            self.sums[index].1
+        }
+
         /// The size of the line holding items `start..=end`
         fn line_size(&self, start: usize, end: usize) -> f64 {
-            let start_sum = if start == 0 { 0.0 } else { self.sums[start - 1] };
-            self.sums[end] - start_sum - self.gap_between_items
+            let start_sum = if start == 0 { 0.0 } else { self.sums[start - 1].0 };
+            self.sums[end].0 - start_sum - self.gap_between_items
         }
 
         /// The squared size of the line holding items `start..=end`, or [`INFEASIBLE`] for a
@@ -3182,7 +3186,7 @@ mod balance {
         // Merge the single end preceding a zero item that the zero-sized-item rule allows
         let mut min_end = min_col.map(|col| row.nonzero_ends[col] as usize);
         let zero_end = (row.fit_ends[start] as usize).min(row.max_end);
-        if row.sizes.zero[zero_end + 1] {
+        if row.sizes.is_zero_item(zero_end + 1) {
             let cost = row.sizes.line_cost(start, zero_end) + row.prev[zero_end + 1];
             if cost < min_cost || (cost == min_cost && min_end.map_or(true, |end| end < zero_end)) {
                 min_cost = cost;
@@ -3228,16 +3232,14 @@ mod balance {
         let gap_between_items = to_size(gap_between_items);
         let limit = line_limit as f64;
 
-        let mut sums: Vec<f64> = new_vec_with_capacity(item_count);
-        let mut zero: Vec<bool> = new_vec_with_capacity(item_count);
+        let mut sums: Vec<(f64, bool)> = new_vec_with_capacity(item_count);
         let mut sum = 0.0;
         for size in item_sizes {
             let size = to_size(size);
-            zero.push(size == 0.0);
             sum += size + gap_between_items;
-            sums.push(sum);
+            sums.push((sum, size == 0.0));
         }
-        let sizes = LineSizes { sums, zero, gap_between_items, limit };
+        let sizes = LineSizes { sums, gap_between_items, limit };
 
         // `suffix_greedy[start]` is the number of lines greedy line breaking produces for items
         // `start..`, which is also the *fewest* lines the suffix can validly be divided into
@@ -3255,7 +3257,7 @@ mod balance {
         let fit_ends = sizes.fit_ends();
         let mut nonzero_ends: Vec<u32> = new_vec_with_capacity(item_count - 1);
         for end in 0..item_count - 1 {
-            if !sizes.zero[end + 1] {
+            if !sizes.is_zero_item(end + 1) {
                 nonzero_ends.push(end as u32);
             }
         }
@@ -3338,7 +3340,7 @@ mod balance {
         /// lines. (`min_errors` rows below `lines` must already be computed.)
         fn zero_boundary_valid(sizes: &LineSizes, min_errors: &[f64], lines: usize, start: usize, end: usize) -> bool {
             let item_count = sizes.item_count();
-            if !sizes.zero[end + 1] {
+            if !sizes.is_zero_item(end + 1) {
                 return true;
             }
             for glued_end in end + 1..=item_count - lines {
@@ -3364,16 +3366,14 @@ mod balance {
             let gap_between_items = to_size(gap_between_items);
             let limit = line_limit as f64;
 
-            let mut sums: Vec<f64> = new_vec_with_capacity(item_count);
-            let mut zero: Vec<bool> = new_vec_with_capacity(item_count);
+            let mut sums: Vec<(f64, bool)> = new_vec_with_capacity(item_count);
             let mut sum = 0.0;
             for size in item_sizes {
                 let size = to_size(*size);
-                zero.push(size == 0.0);
                 sum += size + gap_between_items;
-                sums.push(sum);
+                sums.push((sum, size == 0.0));
             }
-            let sizes = LineSizes { sums, zero, gap_between_items, limit };
+            let sizes = LineSizes { sums, gap_between_items, limit };
 
             let line_count = greedy_line_count(&sizes).max(min_line_count.clamp(1, item_count));
 
