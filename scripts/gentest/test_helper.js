@@ -233,8 +233,6 @@ function describeElement(e) {
       overflowY: parseEnum(e.style.overflowY),
       scrollbarWidth: getScrollBarWidth(),
 
-      contain: parseEnum(e.style.contain),
-
       alignItems: parseEnum(e.style.alignItems),
       alignSelf: parseEnum(e.style.alignSelf),
       justifyItems: parseEnum(e.style.justifyItems),

@@ -13,10 +13,9 @@ use crate::util::debug::debug_log;
 use crate::util::sys::{f32_max, f32_min, new_vec_with_capacity, Vec};
 use crate::util::MaybeMath;
 use crate::util::{MaybeResolve, ResolveOrZero};
-use crate::{BoxGenerationMode, BoxSizing, Contain, Dimension, Direction, RequestedAxis};
+use crate::{BoxGenerationMode, BoxSizing, Dimension, Direction, RequestedAxis};
 
 use super::common::alignment::apply_alignment_fallback;
-use super::common::containment::{compute_contained_size_layout, contained_size_is_definite};
 #[cfg(feature = "content_size")]
 use super::common::content_size::compute_content_size_contribution;
 use super::common::sizing_keyword::{
@@ -47,8 +46,6 @@ struct FlexItem {
 
     /// The overflow style of the item
     overflow: Point<Overflow>,
-    /// The contain style of the item
-    contain: Contain,
     /// The width of the scrollbars (if it has any)
     scrollbar_width: f32,
     /// The flex shrink style of the item
@@ -216,34 +213,6 @@ pub fn compute_flexbox_layout(
     node: NodeId,
     inputs: LayoutInput,
 ) -> LayoutOutput {
-    let style = tree.get_flexbox_container_style(node);
-    let contain = style.contain();
-
-    let mut output = if contain.intersects(Contain::SIZE.union(Contain::INLINE_SIZE)) {
-        let size_is_definite = contained_size_is_definite(&style, &inputs, |val, basis| tree.calc(val, basis));
-        drop(style);
-        compute_contained_size_layout(tree, node, inputs, contain, size_is_definite, compute_flexbox_layout_inner)
-    } else {
-        drop(style);
-        compute_flexbox_layout_inner(tree, node, inputs, false)
-    };
-
-    // Layout containment suppresses the box's baseline for baseline-alignment purposes
-    if contain.suppresses_baseline() {
-        output.first_baselines = Point::NONE;
-    }
-
-    output
-}
-
-/// The main body of the flexbox layout algorithm. When `ignore_children` is `true` the node is laid
-/// out as if it had no children (used for the as-if-empty sizing pass of size containment).
-fn compute_flexbox_layout_inner(
-    tree: &mut impl LayoutFlexboxContainer,
-    node: NodeId,
-    inputs: LayoutInput,
-    ignore_children: bool,
-) -> LayoutOutput {
     let LayoutInput { known_dimensions, parent_size, run_mode, .. } = inputs;
     let style = tree.get_flexbox_container_style(node);
 
@@ -322,17 +291,11 @@ fn compute_flexbox_layout_inner(
         tree,
         node,
         LayoutInput { known_dimensions: styled_based_known_dimensions, known_dimensions_are_definite, ..inputs },
-        ignore_children,
     )
 }
 
 /// Compute a preliminary size for an item
-fn compute_preliminary(
-    tree: &mut impl LayoutFlexboxContainer,
-    node: NodeId,
-    inputs: LayoutInput,
-    ignore_children: bool,
-) -> LayoutOutput {
+fn compute_preliminary(tree: &mut impl LayoutFlexboxContainer, node: NodeId, inputs: LayoutInput) -> LayoutOutput {
     let LayoutInput { known_dimensions, parent_size, available_space, run_mode, .. } = inputs;
 
     // Define some general constants we will need for the remainder of the algorithm.
@@ -350,8 +313,7 @@ fn compute_preliminary(
 
     // 1. Generate anonymous flex items as described in §4 Flex Items.
     debug_log!("generate_anonymous_flex_items");
-    let mut flex_items =
-        if ignore_children { Vec::new() } else { generate_anonymous_flex_items(tree, node, &constants) };
+    let mut flex_items = generate_anonymous_flex_items(tree, node, &constants);
 
     // 9.2. Line Length Determination
 
@@ -641,17 +603,12 @@ fn generate_anonymous_flex_items(
     constants: &AlgoConstants,
 ) -> Vec<FlexItem> {
     // Percentage sizes of items resolve against the container's inner size, but only if that size
-    // is definite. A known size which is derived from the container's own content (e.g. a size
-    // computed by size containment's as-if-empty pass) is treated as indefinite here.
-    let percent_resolution_size = {
-        let mut size = constants.node_inner_size;
-        if !constants.known_main_size_is_definite {
-            size.set_main(constants.dir, None);
-        }
-        if !constants.has_definite_cross_size {
-            size.set_cross(constants.dir, None);
-        }
-        size
+    // is definite. A known main size which is derived from the container's own content is treated
+    // as indefinite here.
+    let percent_resolution_size = if constants.known_main_size_is_definite {
+        constants.node_inner_size
+    } else {
+        constants.node_inner_size.with_main(constants.dir, None)
     };
 
     tree.child_ids(node)
@@ -708,7 +665,6 @@ fn generate_anonymous_flex_items(
                     constants.is_column,
                 ),
                 overflow: child_style.overflow(),
-                contain: child_style.contain(),
                 scrollbar_width: child_style.scrollbar_width(),
                 flex_grow: child_style.flex_grow(),
                 flex_shrink: child_style.flex_shrink(),
@@ -1883,7 +1839,7 @@ fn calculate_children_base_lines(
 fn calculate_cross_size(flex_lines: &mut [FlexLine], node_size: Size<Option<f32>>, constants: &AlgoConstants) {
     // If the flex container is single-line and has a definite cross size,
     // the cross size of the flex line is the flex container’s inner cross size.
-    if !constants.is_wrap && node_size.cross(constants.dir).is_some() && constants.has_definite_cross_size {
+    if !constants.is_wrap && node_size.cross(constants.dir).is_some() {
         let cross_axis_padding_border = constants.content_box_inset.cross_axis_sum(constants.dir);
         let cross_min_size = constants.min_size.cross(constants.dir);
         let cross_max_size = constants.max_size.cross(constants.dir);
@@ -2448,7 +2404,6 @@ fn calculate_flex_item(
             size,
             content_size,
             item.overflow,
-            item.contain,
         ));
     }
 }
@@ -2615,7 +2570,6 @@ fn perform_absolute_layout_on_absolute_children(
         }
 
         let overflow = child_style.overflow();
-        let contain = child_style.contain();
         let scrollbar_width = child_style.scrollbar_width();
         let aspect_ratio = child_style.aspect_ratio();
         let align_self = child_style.align_self().unwrap_or(constants.align_items).resolve_self_relative(
@@ -2968,18 +2922,13 @@ fn perform_absolute_layout_on_absolute_children(
 
         #[cfg(feature = "content_size")]
         {
-            let overflow_contributes = !contain.contains_scrollable_overflow();
             let size_content_size_contribution = Size {
                 width: match overflow.x {
-                    Overflow::Visible if overflow_contributes => {
-                        f32_max(final_size.width, layout_output.content_size.width)
-                    }
+                    Overflow::Visible => f32_max(final_size.width, layout_output.content_size.width),
                     _ => final_size.width,
                 },
                 height: match overflow.y {
-                    Overflow::Visible if overflow_contributes => {
-                        f32_max(final_size.height, layout_output.content_size.height)
-                    }
+                    Overflow::Visible => f32_max(final_size.height, layout_output.content_size.height),
                     _ => final_size.height,
                 },
             };

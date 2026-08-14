@@ -8,7 +8,7 @@ use crate::util::debug::debug_log;
 use crate::util::sys::f32_max;
 use crate::util::MaybeMath;
 use crate::util::{MaybeResolve, ResolveOrZero};
-use crate::{BoxSizing, Contain, CoreStyle, RequestedAxis};
+use crate::{BoxSizing, CoreStyle};
 use core::unreachable;
 
 /// Compute the size of a leaf node (node with no children)
@@ -73,13 +73,10 @@ where
     content_box_inset.right += scrollbar_gutter.x;
     content_box_inset.bottom += scrollbar_gutter.y;
 
-    let contain = style.contain();
-
     let has_styles_preventing_being_collapsed_through = !style.is_block()
         || style.overflow().x.is_scroll_container()
         || style.overflow().y.is_scroll_container()
         || style.position() == Position::Absolute
-        || contain.establishes_independent_formatting_context()
         || padding.top > 0.0
         || padding.bottom > 0.0
         || border.top > 0.0
@@ -134,71 +131,6 @@ where
             }),
     };
 
-    // Size containment: the box is sized as if it were empty. The box's content is still laid out
-    // (into the resulting fixed-size box) for content size purposes.
-    // <https://drafts.csswg.org/css-contain-2/#containment-size>
-    if contain.contains(Contain::SIZE) {
-        let clamped_size = known_dimensions
-            .or(node_size)
-            .unwrap_or(content_box_inset.sum_axes())
-            .maybe_clamp(node_min_size, node_max_size);
-        let size = Size {
-            width: clamped_size.width,
-            height: f32_max(clamped_size.height, aspect_ratio.map(|ratio| clamped_size.width / ratio).unwrap_or(0.0)),
-        };
-        let size = size.maybe_max(padding_border.sum_axes().map(Some));
-
-        #[cfg(feature = "content_size")]
-        let content_size = if run_mode == RunMode::PerformLayout {
-            let inner_size = Size {
-                width: f32_max(size.width - content_box_inset.horizontal_axis_sum(), 0.0),
-                height: f32_max(size.height - content_box_inset.vertical_axis_sum(), 0.0),
-            };
-            measure_function(Size::NONE, inner_size.map(AvailableSpace::Definite)) + padding.sum_axes()
-        } else {
-            Size::ZERO
-        };
-
-        return LayoutOutput {
-            size,
-            #[cfg(feature = "content_size")]
-            content_size,
-            first_baselines: Point::NONE,
-            top_margin: CollapsibleMarginSet::ZERO,
-            bottom_margin: CollapsibleMarginSet::ZERO,
-            margins_can_collapse_through: !has_styles_preventing_being_collapsed_through && size.height == 0.0,
-        };
-    }
-
-    // Inline-size containment: the box's width is determined as if it were empty, but the box's
-    // content is still laid out (at that width) and continues to determine the box's height.
-    // <https://drafts.csswg.org/css-contain-2/#containment-inline-size>
-    let has_inline_size_containment = contain.contains(Contain::INLINE_SIZE);
-
-    // If only the width was requested then measured content cannot affect it, so the measure
-    // function does not need to be called.
-    if has_inline_size_containment && run_mode == RunMode::ComputeSize && inputs.axis == RequestedAxis::Horizontal {
-        let width = known_dimensions
-            .width
-            .or(node_size.width)
-            .unwrap_or(content_box_inset.horizontal_axis_sum())
-            .maybe_clamp(node_min_size.width, node_max_size.width);
-        let width = f32_max(width, padding_border.horizontal_axis_sum());
-        return LayoutOutput::from_outer_size(Size { width, height: 0.0 });
-    }
-
-    let available_space =
-        if has_inline_size_containment && known_dimensions.width.is_none() && node_size.width.is_none() {
-            let empty_width =
-                content_box_inset.horizontal_axis_sum().maybe_clamp(node_min_size.width, node_max_size.width);
-            Size {
-                width: AvailableSpace::Definite(f32_max(empty_width - content_box_inset.horizontal_axis_sum(), 0.0)),
-                height: available_space.height,
-            }
-        } else {
-            available_space
-        };
-
     // Measure node
     let measured_size = measure_function(
         match run_mode {
@@ -208,12 +140,9 @@ where
         },
         available_space,
     );
-    // With inline-size containment the content does not contribute to the box's width
-    let sizing_measured_size =
-        if has_inline_size_containment { Size { width: 0.0, height: measured_size.height } } else { measured_size };
     let clamped_size = known_dimensions
         .or(node_size)
-        .unwrap_or(sizing_measured_size + content_box_inset.sum_axes())
+        .unwrap_or(measured_size + content_box_inset.sum_axes())
         .maybe_clamp(node_min_size, node_max_size);
     let size = Size {
         width: clamped_size.width,

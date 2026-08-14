@@ -178,12 +178,6 @@ pub trait CoreStyle {
     fn border(&self) -> Rect<LengthPercentage> {
         Style::<Self::CustomIdent>::DEFAULT.border
     }
-
-    /// The layout-affecting parts of the CSS `contain` property that apply to this node
-    #[inline(always)]
-    fn contain(&self) -> Contain {
-        Contain::NONE
-    }
 }
 
 /// Sets the layout used for the children of this node
@@ -404,167 +398,6 @@ crate::util::parse::impl_parse_for_keyword_enum!(Overflow,
     "scroll" => Scroll,
 );
 
-/// The layout-affecting parts of the CSS `contain` property.
-///
-/// Containment limits the ways in which a box's contents can affect layout outside of the box
-/// (and vice versa). Taffy implements the layout-relevant containment types:
-///
-///   - [`Contain::SIZE`]: the box is sized as if it were empty, then its contents are laid out
-///     into the resulting fixed-size box (size containment).
-///   - [`Contain::INLINE_SIZE`]: like size containment, but only in the inline (horizontal) axis.
-///   - [`Contain::LAYOUT`]: the box establishes an independent formatting context, and is treated
-///     as having no baseline for baseline-alignment purposes (layout containment).
-///   - [`Contain::PAINT`]: the box establishes an independent formatting context. Paint
-///     containment's other effects (clipping, containing absolutely-positioned descendants,
-///     stacking context) are outside of Taffy's scope.
-///
-/// The `style` containment type has no effect on layout and is therefore not represented
-/// (it is accepted and ignored when parsing).
-///
-/// <https://developer.mozilla.org/en-US/docs/Web/CSS/contain>
-#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-pub struct Contain(u8);
-
-impl Contain {
-    /// No containment (the default)
-    pub const NONE: Contain = Contain(0);
-    /// Size containment: the box is sized as if it were empty, then its contents are laid out
-    /// into the resulting fixed-size box.
-    /// <https://drafts.csswg.org/css-contain-2/#containment-size>
-    pub const SIZE: Contain = Contain(1 << 0);
-    /// Inline-size containment: size containment applied to the inline (horizontal) axis only.
-    /// <https://drafts.csswg.org/css-contain-2/#containment-inline-size>
-    pub const INLINE_SIZE: Contain = Contain(1 << 1);
-    /// Layout containment: the box establishes an independent formatting context and is treated
-    /// as having no baseline for baseline-alignment purposes.
-    /// <https://drafts.csswg.org/css-contain-2/#containment-layout>
-    pub const LAYOUT: Contain = Contain(1 << 2);
-    /// Paint containment: the box establishes an independent formatting context. Its other
-    /// effects don't affect layout.
-    /// <https://drafts.csswg.org/css-contain-2/#containment-paint>
-    pub const PAINT: Contain = Contain(1 << 3);
-    /// The containment implied by `contain: strict` (`size layout paint`, ignoring style containment)
-    pub const STRICT: Contain = Contain(Contain::SIZE.0 | Contain::LAYOUT.0 | Contain::PAINT.0);
-    /// The containment implied by `contain: content` (`layout paint`, ignoring style containment)
-    pub const CONTENT: Contain = Contain(Contain::LAYOUT.0 | Contain::PAINT.0);
-
-    /// The default containment (no containment)
-    pub const DEFAULT: Contain = Contain::NONE;
-
-    /// Returns whether `self` contains all of the containment types in `other`
-    #[inline(always)]
-    pub const fn contains(self, other: Contain) -> bool {
-        self.0 & other.0 == other.0
-    }
-
-    /// Returns whether `self` contains any of the containment types in `other`
-    #[inline(always)]
-    pub const fn intersects(self, other: Contain) -> bool {
-        self.0 & other.0 != 0
-    }
-
-    /// Returns the union of the containment types in `self` and `other`
-    #[inline(always)]
-    pub const fn union(self, other: Contain) -> Contain {
-        Contain(self.0 | other.0)
-    }
-
-    /// Whether this containment causes the box to establish an independent formatting context
-    /// (both layout and paint containment do)
-    #[inline(always)]
-    pub const fn establishes_independent_formatting_context(self) -> bool {
-        self.intersects(Contain::LAYOUT.union(Contain::PAINT))
-    }
-
-    /// Whether this containment suppresses the box's baseline for baseline-alignment purposes
-    /// (layout containment does, paint containment does not)
-    #[inline(always)]
-    pub const fn suppresses_baseline(self) -> bool {
-        self.contains(Contain::LAYOUT)
-    }
-
-    /// Whether this containment prevents the box's overflowing content from contributing to an
-    /// ancestor's scrollable overflow region (layout containment treats such overflow as ink
-    /// overflow; paint containment clips it)
-    #[inline(always)]
-    pub const fn contains_scrollable_overflow(self) -> bool {
-        self.intersects(Contain::LAYOUT.union(Contain::PAINT))
-    }
-}
-
-impl core::ops::BitOr for Contain {
-    type Output = Contain;
-    #[inline(always)]
-    fn bitor(self, rhs: Contain) -> Contain {
-        self.union(rhs)
-    }
-}
-
-impl core::ops::BitOrAssign for Contain {
-    #[inline(always)]
-    fn bitor_assign(&mut self, rhs: Contain) {
-        *self = self.union(rhs);
-    }
-}
-
-#[cfg(feature = "parse")]
-impl crate::util::parse::FromCss for Contain {
-    fn from_css<'i>(input: &mut crate::util::parse::Parser<'i, '_>) -> crate::util::parse::CssParseResult<'i, Self> {
-        /// Duplicate-detection bit for the ignored `style` keyword, which does not map to a
-        /// `Contain` flag
-        const STYLE_BIT: u8 = 1 << 6;
-        /// Shared duplicate-detection bits for the `[ size | inline-size ]` group, whose
-        /// keywords are mutually exclusive
-        const SIZE_GROUP_BITS: u8 = Contain::SIZE.0 | Contain::INLINE_SIZE.0;
-
-        let mut flags = Contain::NONE;
-        let mut seen: u8 = 0;
-
-        loop {
-            let ident = input.expect_ident()?.clone();
-            let (flag, seen_bit) = cssparser::match_ignore_ascii_case! { &*ident,
-                // Single-keyword values (only valid on their own; `parse_entirely` in the
-                // `FromStr` impl rejects trailing keywords, and a leading keyword before them
-                // is rejected by the `seen != 0` check below)
-                "none" | "strict" | "content" => {
-                    if seen != 0 || !input.is_exhausted() {
-                        return Err(input.new_unexpected_token_error(crate::util::parse::Token::Ident(ident)));
-                    }
-                    return Ok(cssparser::match_ignore_ascii_case! { &*ident,
-                        "strict" => Contain::STRICT,
-                        "content" => Contain::CONTENT,
-                        _ => Contain::NONE,
-                    });
-                },
-                "size" => (Contain::SIZE, SIZE_GROUP_BITS),
-                "inline-size" => (Contain::INLINE_SIZE, SIZE_GROUP_BITS),
-                "layout" => (Contain::LAYOUT, Contain::LAYOUT.0),
-                "paint" => (Contain::PAINT, Contain::PAINT.0),
-                // `style` containment has no layout effect: accept and ignore it so that real
-                // CSS values round-trip
-                "style" => (Contain::NONE, STYLE_BIT),
-                _ => {
-                    return Err(input.new_unexpected_token_error(crate::util::parse::Token::Ident(ident)));
-                }
-            };
-
-            // Reject duplicate keywords
-            if seen & seen_bit != 0 {
-                return Err(input.new_unexpected_token_error(crate::util::parse::Token::Ident(ident)));
-            }
-            seen |= seen_bit;
-            flags |= flag;
-
-            if input.is_exhausted() {
-                return Ok(flags);
-            }
-        }
-    }
-}
-#[cfg(feature = "parse")]
-crate::util::parse::from_str_from_css!(Contain);
-
 /// Sets the direction of text, table and grid columns, and horizontal overflow.
 /// <https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/direction>
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
@@ -630,8 +463,6 @@ pub struct Style<S: CheapCloneStr = DefaultCheapStr> {
     pub overflow: Point<Overflow>,
     /// How much space (in points) should be reserved for the scrollbars of `Overflow::Scroll` and `Overflow::Auto` nodes.
     pub scrollbar_width: f32,
-    /// The layout-affecting parts of the CSS `contain` property
-    pub contain: Contain,
 
     #[cfg(feature = "float_layout")]
     /// Should the box be floated
@@ -783,7 +614,6 @@ impl<S: CheapCloneStr> Style<S> {
         direction: Direction::Ltr,
         overflow: Point { x: Overflow::Visible, y: Overflow::Visible },
         scrollbar_width: 0.0,
-        contain: Contain::NONE,
         #[cfg(feature = "float_layout")]
         float: Float::None,
         #[cfg(feature = "float_layout")]
@@ -929,10 +759,6 @@ impl<S: CheapCloneStr> CoreStyle for Style<S> {
     fn border(&self) -> Rect<LengthPercentage> {
         self.border
     }
-    #[inline(always)]
-    fn contain(&self) -> Contain {
-        self.contain
-    }
 }
 
 impl<T: CoreStyle> CoreStyle for &'_ T {
@@ -1001,10 +827,6 @@ impl<T: CoreStyle> CoreStyle for &'_ T {
     #[inline(always)]
     fn border(&self) -> Rect<LengthPercentage> {
         (*self).border()
-    }
-    #[inline(always)]
-    fn contain(&self) -> Contain {
-        (*self).contain()
     }
 }
 
@@ -1443,7 +1265,6 @@ mod tests {
             direction: Default::default(),
             overflow: Default::default(),
             scrollbar_width: 0.0,
-            contain: Default::default(),
             position: Default::default(),
             #[cfg(feature = "flexbox")]
             flex_direction: Default::default(),
@@ -1504,41 +1325,6 @@ mod tests {
 
         assert_eq!(Style::DEFAULT, Style::<DefaultCheapStr>::default());
         assert_eq!(Style::DEFAULT, old_defaults);
-    }
-
-    #[test]
-    #[cfg(feature = "parse")]
-    fn parse_contain() {
-        use super::Contain;
-
-        fn parse(input: &str) -> Contain {
-            input.parse().unwrap()
-        }
-
-        assert_eq!(parse("none"), Contain::NONE);
-        assert_eq!(parse("strict"), Contain::SIZE | Contain::LAYOUT | Contain::PAINT);
-        assert_eq!(parse("content"), Contain::LAYOUT | Contain::PAINT);
-        assert_eq!(parse("size"), Contain::SIZE);
-        assert_eq!(parse("inline-size"), Contain::INLINE_SIZE);
-        assert_eq!(parse("layout"), Contain::LAYOUT);
-        assert_eq!(parse("style"), Contain::NONE);
-        assert_eq!(parse("paint"), Contain::PAINT);
-        assert_eq!(parse("size layout"), Contain::SIZE | Contain::LAYOUT);
-        assert_eq!(parse("layout size"), Contain::SIZE | Contain::LAYOUT);
-        assert_eq!(parse("layout paint style"), Contain::LAYOUT | Contain::PAINT);
-        assert_eq!(parse("SIZE Layout"), Contain::SIZE | Contain::LAYOUT);
-        assert!("paint paint".parse::<Contain>().is_err());
-
-        assert!("".parse::<Contain>().is_err());
-        assert!("banana".parse::<Contain>().is_err());
-        assert!("size size".parse::<Contain>().is_err());
-        assert!("size inline-size".parse::<Contain>().is_err());
-        assert!("inline-size size".parse::<Contain>().is_err());
-        assert!("size layout inline-size".parse::<Contain>().is_err());
-        assert!("none layout".parse::<Contain>().is_err());
-        assert!("layout none".parse::<Contain>().is_err());
-        assert!("strict layout".parse::<Contain>().is_err());
-        assert!("size content".parse::<Contain>().is_err());
     }
 
     // NOTE: Please feel free the update the sizes in this test as required. This test is here to prevent unintentional size changes
@@ -1611,12 +1397,12 @@ mod tests {
         assert_type_size::<GridTemplateComponent<String>>(56);
         assert_type_size::<GridPlacement<String>>(32);
         assert_type_size::<Line<GridPlacement<String>>>(64);
-        assert_type_size::<Style<String>>(560);
+        assert_type_size::<Style<String>>(552);
 
         // String-type dependent (Arc<str>)
         assert_type_size::<GridTemplateComponent<Arc<str>>>(56);
         assert_type_size::<GridPlacement<Arc<str>>>(24);
         assert_type_size::<Line<GridPlacement<Arc<str>>>>(48);
-        assert_type_size::<Style<Arc<str>>>(528);
+        assert_type_size::<Style<Arc<str>>>(520);
     }
 }
