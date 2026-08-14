@@ -1,0 +1,17 @@
+<test name="balance_row_max_content_uneven_line_count__border_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div direction="ltr" flex-wrap="balance" flex-line-count="2" column-gap="20px">
+      <div direction="ltr" width="100px" height="50px"/>
+      <div direction="ltr" width="30px" height="50px"/>
+      <div direction="ltr" width="30px" height="50px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="100" height="100">
+      <node x="0" y="0" width="100" height="50"/>
+      <node x="0" y="50" width="30" height="50"/>
+      <node x="50" y="50" width="30" height="50"/>
+    </node>
+  </expectations>
+</test>
