@@ -21,8 +21,9 @@
   - `Contain::SIZE` (size containment): the box is sized as if it were empty (padding, border, aspect ratio, min/max constraints and, for grid containers, sizes of empty tracks still apply). Its children are then laid out normally inside the resulting fixed-size box
   - `Contain::INLINE_SIZE` (inline-size containment): like size containment, but only in the inline (horizontal) axis; the box's height is still content-based
   - `Contain::LAYOUT` (layout containment): the box establishes an independent formatting context (its margins do not collapse with those of its children, it contains its own floats, and it avoids external floats) and its baseline is suppressed (boxes requiring a baseline synthesize one from its border box)
+  - `Contain::PAINT` (paint containment): the box establishes an independent formatting context like layout containment, but its baseline is not suppressed. Paint containment's other effects (clipping, containing absolutely-positioned descendants, stacking context) do not affect layout and are not implemented
 
-  The CSS parser (`parse` feature) accepts `none | strict | content | [ size || inline-size || layout || style || paint ]` for the `contain` property: `strict` maps to `SIZE | LAYOUT`, `content` maps to `LAYOUT`, and the `style`/`paint` keywords are accepted but ignored as they do not affect layout
+  The CSS parser (`parse` feature) accepts `none | strict | content | [ size || inline-size || layout || style || paint ]` for the `contain` property: `strict` maps to `SIZE | LAYOUT | PAINT`, `content` maps to `LAYOUT | PAINT`, and the `style` keyword is accepted but ignored as it does not affect layout
 
 ### Changed
 

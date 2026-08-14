@@ -227,7 +227,7 @@ pub fn compute_flexbox_layout(
     };
 
     // Layout containment suppresses the box's baseline for baseline-alignment purposes
-    if contain.contains(Contain::LAYOUT) {
+    if contain.suppresses_baseline() {
         output.first_baselines = Point::NONE;
     }
 

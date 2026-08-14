@@ -414,9 +414,12 @@ crate::util::parse::impl_parse_for_keyword_enum!(Overflow,
 ///   - [`Contain::INLINE_SIZE`]: like size containment, but only in the inline (horizontal) axis.
 ///   - [`Contain::LAYOUT`]: the box establishes an independent formatting context, and is treated
 ///     as having no baseline for baseline-alignment purposes (layout containment).
+///   - [`Contain::PAINT`]: the box establishes an independent formatting context. Paint
+///     containment's other effects (clipping, containing absolutely-positioned descendants,
+///     stacking context) are outside of Taffy's scope.
 ///
-/// The `style` and `paint` containment types have no effect on layout and are therefore not
-/// represented (they are accepted and ignored when parsing).
+/// The `style` containment type has no effect on layout and is therefore not represented
+/// (it is accepted and ignored when parsing).
 ///
 /// <https://developer.mozilla.org/en-US/docs/Web/CSS/contain>
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
@@ -437,10 +440,14 @@ impl Contain {
     /// as having no baseline for baseline-alignment purposes.
     /// <https://drafts.csswg.org/css-contain-2/#containment-layout>
     pub const LAYOUT: Contain = Contain(1 << 2);
-    /// The containment implied by `contain: strict` (`size layout`, ignoring non-layout types)
-    pub const STRICT: Contain = Contain(Contain::SIZE.0 | Contain::LAYOUT.0);
-    /// The containment implied by `contain: content` (`layout`, ignoring non-layout types)
-    pub const CONTENT: Contain = Contain(Contain::LAYOUT.0);
+    /// Paint containment: the box establishes an independent formatting context. Its other
+    /// effects don't affect layout.
+    /// <https://drafts.csswg.org/css-contain-2/#containment-paint>
+    pub const PAINT: Contain = Contain(1 << 3);
+    /// The containment implied by `contain: strict` (`size layout paint`, ignoring style containment)
+    pub const STRICT: Contain = Contain(Contain::SIZE.0 | Contain::LAYOUT.0 | Contain::PAINT.0);
+    /// The containment implied by `contain: content` (`layout paint`, ignoring style containment)
+    pub const CONTENT: Contain = Contain(Contain::LAYOUT.0 | Contain::PAINT.0);
 
     /// The default containment (no containment)
     pub const DEFAULT: Contain = Contain::NONE;
@@ -462,6 +469,20 @@ impl Contain {
     pub const fn union(self, other: Contain) -> Contain {
         Contain(self.0 | other.0)
     }
+
+    /// Whether this containment causes the box to establish an independent formatting context
+    /// (both layout and paint containment do)
+    #[inline(always)]
+    pub const fn establishes_independent_formatting_context(self) -> bool {
+        self.intersects(Contain::LAYOUT.union(Contain::PAINT))
+    }
+
+    /// Whether this containment suppresses the box's baseline for baseline-alignment purposes
+    /// (layout containment does, paint containment does not)
+    #[inline(always)]
+    pub const fn suppresses_baseline(self) -> bool {
+        self.contains(Contain::LAYOUT)
+    }
 }
 
 impl core::ops::BitOr for Contain {
@@ -482,11 +503,9 @@ impl core::ops::BitOrAssign for Contain {
 #[cfg(feature = "parse")]
 impl crate::util::parse::FromCss for Contain {
     fn from_css<'i>(input: &mut crate::util::parse::Parser<'i, '_>) -> crate::util::parse::CssParseResult<'i, Self> {
-        /// Bits used to detect duplicate keywords while parsing (includes the ignored
-        /// `style` and `paint` keywords, which do not map to `Contain` flags)
+        /// Duplicate-detection bit for the ignored `style` keyword, which does not map to a
+        /// `Contain` flag
         const STYLE_BIT: u8 = 1 << 6;
-        /// Duplicate-detection bit for the ignored `paint` keyword
-        const PAINT_BIT: u8 = 1 << 7;
 
         let mut flags = Contain::NONE;
         let mut seen: u8 = 0;
@@ -510,10 +529,10 @@ impl crate::util::parse::FromCss for Contain {
                 "size" => (Contain::SIZE, Contain::SIZE.0),
                 "inline-size" => (Contain::INLINE_SIZE, Contain::INLINE_SIZE.0),
                 "layout" => (Contain::LAYOUT, Contain::LAYOUT.0),
-                // `style` and `paint` containment have no layout effect: accept and ignore
-                // them so that real CSS values round-trip
+                "paint" => (Contain::PAINT, Contain::PAINT.0),
+                // `style` containment has no layout effect: accept and ignore it so that real
+                // CSS values round-trip
                 "style" => (Contain::NONE, STYLE_BIT),
-                "paint" => (Contain::NONE, PAINT_BIT),
                 _ => {
                     return Err(input.new_unexpected_token_error(crate::util::parse::Token::Ident(ident)));
                 }
@@ -1486,17 +1505,18 @@ mod tests {
         }
 
         assert_eq!(parse("none"), Contain::NONE);
-        assert_eq!(parse("strict"), Contain::SIZE | Contain::LAYOUT);
-        assert_eq!(parse("content"), Contain::LAYOUT);
+        assert_eq!(parse("strict"), Contain::SIZE | Contain::LAYOUT | Contain::PAINT);
+        assert_eq!(parse("content"), Contain::LAYOUT | Contain::PAINT);
         assert_eq!(parse("size"), Contain::SIZE);
         assert_eq!(parse("inline-size"), Contain::INLINE_SIZE);
         assert_eq!(parse("layout"), Contain::LAYOUT);
         assert_eq!(parse("style"), Contain::NONE);
-        assert_eq!(parse("paint"), Contain::NONE);
+        assert_eq!(parse("paint"), Contain::PAINT);
         assert_eq!(parse("size layout"), Contain::SIZE | Contain::LAYOUT);
         assert_eq!(parse("layout size"), Contain::SIZE | Contain::LAYOUT);
-        assert_eq!(parse("layout paint style"), Contain::LAYOUT);
+        assert_eq!(parse("layout paint style"), Contain::LAYOUT | Contain::PAINT);
         assert_eq!(parse("SIZE Layout"), Contain::SIZE | Contain::LAYOUT);
+        assert!("paint paint".parse::<Contain>().is_err());
 
         assert!("".parse::<Contain>().is_err());
         assert!("banana".parse::<Contain>().is_err());

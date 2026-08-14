@@ -377,7 +377,7 @@ pub fn compute_block_layout(
     };
 
     // Layout containment suppresses the box's baseline for baseline-alignment purposes
-    if contain.contains(Contain::LAYOUT) {
+    if contain.suppresses_baseline() {
         output.first_baselines = Point::NONE;
     }
 
@@ -402,10 +402,11 @@ fn compute_block_layout_inner(
     let is_scroll_container = overflow.x.is_scroll_container() || overflow.y.is_scroll_container();
     // css-align-3 §5.1.1: a non-`normal` `align-content` makes a block container establish an
     // independent formatting context. <https://drafts.csswg.org/css-align-3/#distribution-block>
-    // Layout containment also establishes an independent formatting context.
+    // Layout and paint containment also establish an independent formatting context.
     // <https://drafts.csswg.org/css-contain-2/#containment-layout>
-    let establishes_new_bfc =
-        is_scroll_container || style.align_content().is_some() || style.contain().contains(Contain::LAYOUT);
+    let establishes_new_bfc = is_scroll_container
+        || style.align_content().is_some()
+        || style.contain().establishes_independent_formatting_context();
     let aspect_ratio = style.aspect_ratio();
     let padding = style.padding().resolve_or_zero(parent_size.width, |val, basis| tree.calc(val, basis));
     let border = style.border().resolve_or_zero(parent_size.width, |val, basis| tree.calc(val, basis));
@@ -563,8 +564,9 @@ fn compute_inner(
 
     let overflow = style.overflow();
     let is_scroll_container = overflow.x.is_scroll_container() || overflow.y.is_scroll_container();
-    let establishes_new_bfc =
-        is_scroll_container || style.align_content().is_some() || style.contain().contains(Contain::LAYOUT);
+    let establishes_new_bfc = is_scroll_container
+        || style.align_content().is_some()
+        || style.contain().establishes_independent_formatting_context();
 
     // Determine margin collapsing behaviour
     let own_margins_collapse_with_children = Line {
@@ -853,14 +855,14 @@ fn generate_item_list(
             let is_table = child_style.is_table();
             let is_replaced = child_style.is_compressible_replaced();
             let is_scroll_container = overflow.x.is_scroll_container() || overflow.y.is_scroll_container();
-            let has_layout_containment = child_style.contain().contains(Contain::LAYOUT);
+            let establishes_independent_fc = child_style.contain().establishes_independent_formatting_context();
 
             let is_in_same_bfc: bool = is_block
                 && !is_table
                 && position != Position::Absolute
                 && is_not_floated
                 && !is_scroll_container
-                && !has_layout_containment;
+                && !establishes_independent_fc;
 
             BlockItem {
                 node_id: child_node_id,

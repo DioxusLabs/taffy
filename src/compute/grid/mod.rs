@@ -60,7 +60,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     };
 
     // Layout containment suppresses the box's baseline for baseline-alignment purposes
-    if contain.contains(Contain::LAYOUT) {
+    if contain.suppresses_baseline() {
         output.first_baselines = Point::NONE;
     }
 
