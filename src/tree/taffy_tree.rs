@@ -587,7 +587,13 @@ impl<NodeContext> TaffyTree<NodeContext> {
         let id = NodeId::from(self.nodes.insert(NodeData::new(layout)));
 
         for child in children {
-            self.parents[(*child).into()] = Some(id);
+            let child_key = (*child).into();
+
+            if let Some(old_parent) = self.parents[child_key] {
+                self.remove_child(old_parent, *child)?;
+            }
+
+            self.parents[child_key] = Some(id);
         }
 
         let _ = self.children.insert(children.iter().copied().collect::<_>());
