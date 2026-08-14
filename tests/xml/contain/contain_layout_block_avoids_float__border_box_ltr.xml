@@ -1,0 +1,19 @@
+<test name="contain_layout_block_avoids_float__border_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="block" direction="ltr" width="100px">
+      <div display="block" direction="ltr" float="left" width="30px" height="30px"/>
+      <div display="block" direction="ltr" contain="layout" height="50px">
+        <div display="block" direction="ltr" height="10px"/>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="100" height="50">
+      <node x="0" y="0" width="30" height="30"/>
+      <node x="30" y="0" width="70" height="50">
+        <node x="0" y="0" width="70" height="10"/>
+      </node>
+    </node>
+  </expectations>
+</test>

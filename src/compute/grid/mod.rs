@@ -9,9 +9,11 @@ use crate::util::sys::{f32_max, f32_min, GridTrackVec, Vec};
 use crate::util::MaybeMath;
 use crate::util::{MaybeResolve, ResolveOrZero};
 use crate::{
-    style_helpers::*, AlignContent, BoxGenerationMode, BoxSizing, CoreStyle, Direction, GridContainerStyle,
+    style_helpers::*, AlignContent, BoxGenerationMode, BoxSizing, Contain, CoreStyle, Direction, GridContainerStyle,
     GridItemStyle, JustifyContent, LayoutGridContainer, RequestedAxis,
 };
+
+use super::common::containment::compute_contained_size_layout;
 use alignment::{align_and_position_item, align_tracks};
 use explicit_grid::{compute_explicit_grid_size_in_axis, initialize_grid_tracks, AutoRepeatStrategy};
 use implicit_grid::compute_grid_size_estimate;
@@ -44,6 +46,30 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     tree: &mut Tree,
     node: NodeId,
     inputs: LayoutInput,
+) -> LayoutOutput {
+    let contain = tree.get_grid_container_style(node).contain();
+
+    let mut output = if contain.intersects(Contain::SIZE.union(Contain::INLINE_SIZE)) {
+        compute_contained_size_layout(tree, node, inputs, contain, compute_grid_layout_inner)
+    } else {
+        compute_grid_layout_inner(tree, node, inputs, false)
+    };
+
+    // Layout containment suppresses the box's baseline for baseline-alignment purposes
+    if contain.contains(Contain::LAYOUT) {
+        output.first_baselines = Point::NONE;
+    }
+
+    output
+}
+
+/// The main body of the grid layout algorithm. When `hide_children` is `true` the node is laid
+/// out as if it had no children (used for the as-if-empty sizing pass of size containment).
+fn compute_grid_layout_inner<Tree: LayoutGridContainer>(
+    tree: &mut Tree,
+    node: NodeId,
+    inputs: LayoutInput,
+    hide_children: bool,
 ) -> LayoutOutput {
     let LayoutInput { known_dimensions, parent_size, available_space, run_mode, .. } = inputs;
 
@@ -157,9 +183,12 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     // Absolutely positioned children do not take part in grid placement and do not create
     // implicit tracks, so they are excluded from the grid size estimate.
     let get_child_styles_iter = |node| {
-        tree.child_ids(node).map(|child_node: NodeId| tree.get_grid_child_style(child_node)).filter(|style| {
-            style.box_generation_mode() != BoxGenerationMode::None && style.position() != Position::Absolute
-        })
+        tree.child_ids(node)
+            .filter(move |_| !hide_children)
+            .map(|child_node: NodeId| tree.get_grid_child_style(child_node))
+            .filter(|style| {
+                style.box_generation_mode() != BoxGenerationMode::None && style.position() != Position::Absolute
+            })
     };
     let child_styles_iter = get_child_styles_iter(node);
 
@@ -225,6 +254,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     let mut cell_occupancy_matrix = CellOccupancyMatrix::with_track_counts(est_col_counts, est_row_counts);
     let in_flow_children_iter = || {
         tree.child_ids(node)
+            .filter(move |_| !hide_children)
             .enumerate()
             .map(|(index, child_node)| (index, child_node, tree.get_grid_child_style(child_node)))
             .filter(|(_, _, style)| {

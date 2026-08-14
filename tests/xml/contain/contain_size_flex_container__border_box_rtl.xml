@@ -1,0 +1,21 @@
+<test name="contain_size_flex_container__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="block" direction="rtl" width="200px">
+      <div display="flex" direction="rtl" contain="size" padding-top="5px" padding-left="5px" padding-bottom="5px" padding-right="5px">
+        <div direction="rtl" width="40px" height="30px"/>
+        <div direction="rtl" width="40px" height="30px"/>
+      </div>
+      <div direction="rtl" height="10px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="200" height="20">
+      <node x="0" y="0" width="200" height="10">
+        <node x="155" y="5" width="40" height="30"/>
+        <node x="115" y="5" width="40" height="30"/>
+      </node>
+      <node x="0" y="10" width="200" height="10"/>
+    </node>
+  </expectations>
+</test>

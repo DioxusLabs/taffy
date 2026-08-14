@@ -10,9 +10,11 @@ use crate::util::sys::Vec;
 use crate::util::MaybeMath;
 use crate::util::{MaybeResolve, ResolveOrZero};
 use crate::{
-    BlockContainerStyle, BlockItemStyle, BoxGenerationMode, BoxSizing, Dimension, Direction, LayoutBlockContainer,
-    RequestedAxis, TextAlign,
+    BlockContainerStyle, BlockItemStyle, BoxGenerationMode, BoxSizing, Contain, Dimension, Direction,
+    LayoutBlockContainer, RequestedAxis, TextAlign,
 };
+
+use super::common::containment::compute_contained_size_layout;
 
 #[cfg(feature = "float_layout")]
 use super::float::{BfcSlot, ContentSlot, FloatContext, FloatIntrinsicWidthCalculator};
@@ -48,7 +50,7 @@ impl BlockFormattingContext {
             y_offset: 0.0,
             insets: [0.0, 0.0],
             content_box_insets: [0.0, 0.0],
-            float_content_contribution: 0.0,
+            float_content_contribution: f32::NEG_INFINITY,
             is_root: true,
             #[cfg(feature = "float_layout")]
             adjoining_floats: [false, false],
@@ -71,7 +73,8 @@ pub struct BlockContext<'bfc> {
     insets: [f32; 2],
     /// The x-insets of the content box
     content_box_insets: [f32; 2],
-    /// The height that floats take up in the element
+    /// The height that floats take up in the element (`f32::NEG_INFINITY` if the element's
+    /// subtree does not contain any floats)
     float_content_contribution: f32,
     /// Whether the node is the root of the Block Formatting Context is belongs to.
     is_root: bool,
@@ -97,7 +100,7 @@ impl BlockContext<'_> {
             y_offset: self.y_offset + additional_y_offset,
             insets,
             content_box_insets: insets,
-            float_content_contribution: 0.0,
+            float_content_contribution: f32::NEG_INFINITY,
             is_root: false,
             // Floats adjoining the parent's current strut also adjoin this block's top strut
             // (if this block's top margin collapses with its first child's, which is checked separately)
@@ -348,6 +351,38 @@ pub fn compute_block_layout(
     inputs: LayoutInput,
     block_ctx: Option<&mut BlockContext<'_>>,
 ) -> LayoutOutput {
+    let contain = tree.get_block_container_style(node_id).contain();
+
+    let mut output = if contain.intersects(Contain::SIZE.union(Contain::INLINE_SIZE)) {
+        let mut block_ctx = block_ctx;
+        compute_contained_size_layout(tree, node_id, inputs, contain, |tree, node_id, inputs, hide_children| {
+            // The as-if-empty sizing pass uses a fresh formatting context so that it cannot
+            // disturb the inherited one (an empty box contributes nothing to it anyway)
+            let block_ctx = if hide_children { None } else { block_ctx.as_deref_mut() };
+            compute_block_layout_inner(tree, node_id, inputs, block_ctx, hide_children)
+        })
+    } else {
+        compute_block_layout_inner(tree, node_id, inputs, block_ctx, false)
+    };
+
+    // Layout containment suppresses the box's baseline for baseline-alignment purposes
+    if contain.contains(Contain::LAYOUT) {
+        output.first_baselines = Point::NONE;
+    }
+
+    output
+}
+
+/// The main body of the block layout algorithm. Sets up an appropriate `BlockContext` and then
+/// delegates to [`compute_inner`]. When `hide_children` is `true` the node is laid out as if it
+/// had no children (used for the as-if-empty sizing pass of size containment).
+fn compute_block_layout_inner(
+    tree: &mut impl LayoutBlockContainer,
+    node_id: NodeId,
+    inputs: LayoutInput,
+    block_ctx: Option<&mut BlockContext<'_>>,
+    hide_children: bool,
+) -> LayoutOutput {
     let LayoutInput { known_dimensions, parent_size, run_mode, .. } = inputs;
     let style = tree.get_block_container_style(node_id);
 
@@ -356,7 +391,10 @@ pub fn compute_block_layout(
     let is_scroll_container = overflow.x.is_scroll_container() || overflow.y.is_scroll_container();
     // css-align-3 §5.1.1: a non-`normal` `align-content` makes a block container establish an
     // independent formatting context. <https://drafts.csswg.org/css-align-3/#distribution-block>
-    let establishes_new_bfc = is_scroll_container || style.align_content().is_some();
+    // Layout containment also establishes an independent formatting context.
+    // <https://drafts.csswg.org/css-contain-2/#containment-layout>
+    let establishes_new_bfc =
+        is_scroll_container || style.align_content().is_some() || style.contain().contains(Contain::LAYOUT);
     let aspect_ratio = style.aspect_ratio();
     let padding = style.padding().resolve_or_zero(parent_size.width, |val, basis| tree.calc(val, basis));
     let border = style.border().resolve_or_zero(parent_size.width, |val, basis| tree.calc(val, basis));
@@ -419,6 +457,7 @@ pub fn compute_block_layout(
             node_id,
             LayoutInput { known_dimensions: styled_based_known_dimensions, ..inputs },
             inherited_bfc,
+            hide_children,
         ),
         _ => {
             let mut root_bfc = BlockFormattingContext::new();
@@ -428,6 +467,7 @@ pub fn compute_block_layout(
                 node_id,
                 LayoutInput { known_dimensions: styled_based_known_dimensions, ..inputs },
                 &mut root_ctx,
+                hide_children,
             )
         }
     }
@@ -439,6 +479,7 @@ fn compute_inner(
     node_id: NodeId,
     inputs: LayoutInput,
     #[allow(unused_mut)] mut block_ctx: &mut BlockContext<'_>,
+    hide_children: bool,
 ) -> LayoutOutput {
     let LayoutInput {
         known_dimensions, parent_size, available_space, run_mode, vertical_margins_are_collapsible, ..
@@ -511,7 +552,8 @@ fn compute_inner(
 
     let overflow = style.overflow();
     let is_scroll_container = overflow.x.is_scroll_container() || overflow.y.is_scroll_container();
-    let establishes_new_bfc = is_scroll_container || style.align_content().is_some();
+    let establishes_new_bfc =
+        is_scroll_container || style.align_content().is_some() || style.contain().contains(Contain::LAYOUT);
 
     // Determine margin collapsing behaviour
     let own_margins_collapse_with_children = Line {
@@ -543,7 +585,7 @@ fn compute_inner(
     drop(style);
 
     // 1. Generate items
-    let mut items = generate_item_list(tree, node_id, container_content_box_size);
+    let mut items = generate_item_list(tree, node_id, container_content_box_size, hide_children);
 
     // 2. Compute container width
     let container_outer_width = known_dimensions.width.unwrap_or_else(|| {
@@ -770,8 +812,10 @@ fn generate_item_list(
     tree: &impl LayoutBlockContainer,
     node: NodeId,
     node_inner_size: Size<Option<f32>>,
+    hide_children: bool,
 ) -> Vec<BlockItem> {
     tree.child_ids(node)
+        .filter(move |_| !hide_children)
         .map(|child_node_id| (child_node_id, tree.get_block_child_style(child_node_id)))
         .filter(|(_, style)| style.box_generation_mode() != BoxGenerationMode::None)
         .enumerate()
@@ -798,9 +842,14 @@ fn generate_item_list(
             let is_table = child_style.is_table();
             let is_replaced = child_style.is_compressible_replaced();
             let is_scroll_container = overflow.x.is_scroll_container() || overflow.y.is_scroll_container();
+            let has_layout_containment = child_style.contain().contains(Contain::LAYOUT);
 
-            let is_in_same_bfc: bool =
-                is_block && !is_table && position != Position::Absolute && is_not_floated && !is_scroll_container;
+            let is_in_same_bfc: bool = is_block
+                && !is_table
+                && position != Position::Absolute
+                && is_not_floated
+                && !is_scroll_container
+                && !has_layout_containment;
 
             BlockItem {
                 node_id: child_node_id,
