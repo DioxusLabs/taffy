@@ -8,7 +8,7 @@ use crate::util::debug::debug_log;
 use crate::util::sys::f32_max;
 use crate::util::MaybeMath;
 use crate::util::{MaybeResolve, ResolveOrZero};
-use crate::{BoxSizing, Contain, CoreStyle};
+use crate::{BoxSizing, Contain, CoreStyle, RequestedAxis};
 use core::unreachable;
 
 /// Compute the size of a leaf node (node with no children)
@@ -174,6 +174,19 @@ where
     // content is still laid out (at that width) and continues to determine the box's height.
     // <https://drafts.csswg.org/css-contain-2/#containment-inline-size>
     let has_inline_size_containment = contain.contains(Contain::INLINE_SIZE);
+
+    // If only the width was requested then measured content cannot affect it, so the measure
+    // function does not need to be called.
+    if has_inline_size_containment && run_mode == RunMode::ComputeSize && inputs.axis == RequestedAxis::Horizontal {
+        let width = known_dimensions
+            .width
+            .or(node_size.width)
+            .unwrap_or(content_box_inset.horizontal_axis_sum())
+            .maybe_clamp(node_min_size.width, node_max_size.width);
+        let width = f32_max(width, padding_border.horizontal_axis_sum());
+        return LayoutOutput::from_outer_size(Size { width, height: 0.0 });
+    }
+
     let available_space =
         if has_inline_size_containment && known_dimensions.width.is_none() && node_size.width.is_none() {
             let empty_width =
