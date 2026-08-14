@@ -137,8 +137,6 @@ crate::util::parse::impl_parse_for_keyword_enum!(FlexWrap,
     "wrap-reverse" => WrapReverse,
 );
 
-// `flex-wrap: balance` makes `flex-wrap` a multi-keyword grammar
-// (`nowrap | [ wrap | wrap-reverse ] || balance`) so it requires a custom parser
 #[cfg(all(feature = "parse", feature = "flexbox_balance"))]
 impl crate::util::parse::FromCss for FlexWrap {
     fn from_css<'i>(input: &mut crate::util::parse::Parser<'i, '_>) -> crate::util::parse::CssParseResult<'i, Self> {
