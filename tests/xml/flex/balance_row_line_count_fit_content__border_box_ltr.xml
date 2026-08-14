@@ -1,0 +1,21 @@
+<test name="balance_row_line_count_fit_content__border_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div direction="ltr" flex-direction="column" align-items="flex-start" width="200px" height="200px">
+      <div direction="ltr" flex-wrap="balance" flex-line-count="2" width="fit-content" row-gap="20px" column-gap="20px">
+        <div direction="ltr" width="40px" height="25px"/>
+        <div direction="ltr" width="40px" height="25px"/>
+        <div direction="ltr" width="40px" height="25px"/>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="200" height="200">
+      <node x="0" y="0" width="100" height="70">
+        <node x="0" y="0" width="40" height="25"/>
+        <node x="60" y="0" width="40" height="25"/>
+        <node x="0" y="45" width="40" height="25"/>
+      </node>
+    </node>
+  </expectations>
+</test>

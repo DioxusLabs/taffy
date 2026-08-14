@@ -10,7 +10,7 @@ use crate::style_helpers::{TaffyMaxContent, TaffyMinContent};
 use crate::tree::{Layout, LayoutInput, LayoutOutput, RunMode, SizingMode};
 use crate::tree::{LayoutFlexboxContainer, LayoutPartialTreeExt, NodeId};
 use crate::util::debug::debug_log;
-use crate::util::sys::{f32_max, new_vec_with_capacity, Vec};
+use crate::util::sys::{f32_max, f32_min, new_vec_with_capacity, Vec};
 use crate::util::MaybeMath;
 use crate::util::{MaybeResolve, ResolveOrZero};
 use crate::{BoxGenerationMode, BoxSizing, Dimension, Direction, RequestedAxis};
@@ -1201,25 +1201,58 @@ fn determine_container_main_size(
     let outer_main_size: f32 = constants.node_outer_size.main(constants.dir).unwrap_or_else(|| {
         match available_space.main(dir) {
             AvailableSpace::Definite(main_axis_available_space) => {
+                let main_axis_gap = constants.gap.main(constants.dir);
+                let item_main_length = |child: &FlexItem| {
+                    let padding_border_sum = (child.padding + child.border).main_axis_sum(constants.dir);
+                    (child.flex_basis.maybe_max(child.min_size.main(constants.dir))
+                        + child.margin.main_axis_sum(constants.dir))
+                    .max(padding_border_sum)
+                };
                 let longest_line_length: f32 = lines
                     .iter()
                     .map(|line| {
-                        let line_main_axis_gap = sum_axis_gaps(constants.gap.main(constants.dir), line.items.len());
-                        let total_target_size = line
-                            .items
-                            .iter()
-                            .map(|child| {
-                                let padding_border_sum = (child.padding + child.border).main_axis_sum(constants.dir);
-                                (child.flex_basis.maybe_max(child.min_size.main(constants.dir))
-                                    + child.margin.main_axis_sum(constants.dir))
-                                .max(padding_border_sum)
-                            })
-                            .sum::<f32>();
+                        let line_main_axis_gap = sum_axis_gaps(main_axis_gap, line.items.len());
+                        let total_target_size = line.items.iter().map(item_main_length).sum::<f32>();
                         total_target_size + line_main_axis_gap
                     })
                     .max_by(|a, b| a.total_cmp(b))
                     .unwrap_or(0.0);
                 let size = longest_line_length + main_content_box_inset;
+
+                // A balanced container can produce multiple lines that all fit within the
+                // available space (via `flex-line-count`), in which case fit-content sizing
+                // uses its max-content size: the longest line when items are balanced across
+                // the minimum line count without a size limit.
+                #[cfg(feature = "flexbox_balance")]
+                if let Some(min_line_count) = constants.balance_line_count {
+                    let item_count = lines.iter().map(|line| line.items.len()).sum::<usize>();
+                    if item_count == 0 {
+                        return size;
+                    }
+                    let mut item_lengths: Vec<f32> = new_vec_with_capacity(item_count);
+                    for line in lines.iter() {
+                        for child in line.items.iter() {
+                            item_lengths.push(item_main_length(child));
+                        }
+                    }
+                    let item_counts = balance::balanced_line_item_counts(
+                        item_lengths.iter().copied(),
+                        f32::INFINITY,
+                        main_axis_gap,
+                        min_line_count.max(1) as usize,
+                    );
+                    let mut widest_line_length: f32 = 0.0;
+                    let mut index = 0;
+                    for count in item_counts {
+                        let line_length: f32 = item_lengths[index..index + count].iter().sum::<f32>()
+                            + sum_axis_gaps(main_axis_gap, count);
+                        widest_line_length = widest_line_length.max(line_length);
+                        index += count;
+                    }
+                    let max_content_size = widest_line_length + main_content_box_inset;
+                    return f32_max(size, f32_min(max_content_size, main_axis_available_space));
+                }
+
                 if lines.len() > 1 {
                     f32_max(size, main_axis_available_space)
                 } else {
