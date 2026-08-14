@@ -312,6 +312,8 @@ fn build_style<S: CheapCloneStr>(xnode: roxmltree::Node) -> taffy::Style<S> {
         text_align: parse_or_default(xnode.attribute("text-align")),
         flex_direction: parse_or_default(xnode.attribute("flex-direction")),
         flex_wrap: parse_or_default(xnode.attribute("flex-wrap")),
+        #[cfg(feature = "flexbox_balance")]
+        flex_line_count: parse_or(xnode.attribute("flex-line-count"), 1),
         flex_grow: parse_or(xnode.attribute("flex-grow"), 0.0),
         flex_shrink: parse_or(xnode.attribute("flex-shrink"), 1.0),
         flex_basis: parse_or(xnode.attribute("flex-basis"), Dimension::auto()),

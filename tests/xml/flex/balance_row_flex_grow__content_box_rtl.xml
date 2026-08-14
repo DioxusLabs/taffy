@@ -1,0 +1,19 @@
+<test name="balance_row_flex_grow__content_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div box-sizing="content-box" direction="rtl" flex-wrap="balance" width="100px" height="100px" column-gap="10px">
+      <div box-sizing="content-box" direction="rtl" flex-grow="1" width="30px"/>
+      <div box-sizing="content-box" direction="rtl" flex-grow="1" width="20px"/>
+      <div box-sizing="content-box" direction="rtl" flex-grow="1" width="20px"/>
+      <div box-sizing="content-box" direction="rtl" flex-grow="1" width="30px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="100" height="100">
+      <node x="50" y="0" width="50" height="50"/>
+      <node x="0" y="0" width="40" height="50"/>
+      <node x="60" y="50" width="40" height="50"/>
+      <node x="0" y="50" width="50" height="50"/>
+    </node>
+  </expectations>
+</test>

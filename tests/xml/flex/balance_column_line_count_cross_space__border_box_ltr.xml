@@ -1,0 +1,17 @@
+<test name="balance_column_line_count_cross_space__border_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div direction="ltr" flex-direction="column" flex-wrap="balance" flex-line-count="2" align-items="start" align-content="start" width="210px" height="100px" column-gap="10px">
+      <text direction="ltr">
+        HHHHHHHHHH​HHHHHHHHHH​HHHHHHHHHH
+      </text>
+      <div direction="ltr" width="30px" height="60px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="210" height="100">
+      <node x="0" y="0" width="100" height="30"/>
+      <node x="110" y="0" width="30" height="60"/>
+    </node>
+  </expectations>
+</test>

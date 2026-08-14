@@ -1,0 +1,19 @@
+<test name="balance_row_intrinsic_line_count__content_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div box-sizing="content-box" direction="rtl" flex-wrap="balance" flex-line-count="2">
+      <div box-sizing="content-box" direction="rtl" width="30px" height="30px"/>
+      <div box-sizing="content-box" direction="rtl" width="30px" height="30px"/>
+      <div box-sizing="content-box" direction="rtl" width="30px" height="30px"/>
+      <div box-sizing="content-box" direction="rtl" width="30px" height="30px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="60" height="60">
+      <node x="30" y="0" width="30" height="30"/>
+      <node x="0" y="0" width="30" height="30"/>
+      <node x="30" y="30" width="30" height="30"/>
+      <node x="0" y="30" width="30" height="30"/>
+    </node>
+  </expectations>
+</test>

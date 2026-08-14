@@ -1,0 +1,21 @@
+<test name="balance_row_min_content_line_count__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div box-sizing="content-box" direction="ltr" align-items="flex-start" width="400px">
+      <div box-sizing="content-box" direction="ltr" flex-wrap="balance" flex-line-count="2" width="min-content" column-gap="20px">
+        <div box-sizing="content-box" direction="ltr" width="100px" height="50px"/>
+        <div box-sizing="content-box" direction="ltr" width="100px" height="50px"/>
+        <div box-sizing="content-box" direction="ltr" width="100px" height="50px"/>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="400" height="150">
+      <node x="0" y="0" width="100" height="150">
+        <node x="0" y="0" width="100" height="50"/>
+        <node x="0" y="50" width="100" height="50"/>
+        <node x="0" y="100" width="100" height="50"/>
+      </node>
+    </node>
+  </expectations>
+</test>

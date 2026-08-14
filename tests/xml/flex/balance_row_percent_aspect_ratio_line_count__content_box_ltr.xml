@@ -1,0 +1,17 @@
+<test name="balance_row_percent_aspect_ratio_line_count__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div box-sizing="content-box" direction="ltr" flex-wrap="balance" flex-line-count="2" align-items="start" align-content="start" width="220px" height="100px" row-gap="20px" column-gap="20px">
+      <div box-sizing="content-box" direction="ltr" height="60%" aspect-ratio="1"/>
+      <div box-sizing="content-box" direction="ltr" height="60%" aspect-ratio="1"/>
+      <div box-sizing="content-box" direction="ltr" height="60%" aspect-ratio="1"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="220" height="100">
+      <node x="0" y="0" width="60" height="60"/>
+      <node x="80" y="0" width="60" height="60"/>
+      <node x="0" y="80" width="60" height="60"/>
+    </node>
+  </expectations>
+</test>

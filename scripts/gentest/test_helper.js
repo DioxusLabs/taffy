@@ -228,6 +228,7 @@ function describeElement(e) {
 
       flexDirection: parseEnum(e.style.flexDirection),
       flexWrap: parseEnum(e.style.flexWrap),
+      flexLineCount: parseNumber(e.style.flexLineCount),
       overflowX: parseEnum(e.style.overflowX),
       overflowY: parseEnum(e.style.overflowY),
       scrollbarWidth: getScrollBarWidth(),

@@ -1,0 +1,23 @@
+<test name="balance_nowrap_line_count_no_effect__border_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div direction="ltr" flex-line-count="10000" width="20px" column-gap="20px">
+      <div direction="ltr" flex-shrink="0" width="20px" height="20px"/>
+      <div direction="ltr" flex-shrink="0" width="20px" height="20px"/>
+      <div direction="ltr" flex-shrink="0" width="20px" height="20px"/>
+      <div direction="ltr" flex-shrink="0" width="20px" height="20px"/>
+      <div direction="ltr" flex-shrink="0" width="20px" height="20px"/>
+      <div direction="ltr" flex-shrink="0" width="20px" height="20px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="20" height="20">
+      <node x="0" y="0" width="20" height="20"/>
+      <node x="40" y="0" width="20" height="20"/>
+      <node x="80" y="0" width="20" height="20"/>
+      <node x="120" y="0" width="20" height="20"/>
+      <node x="160" y="0" width="20" height="20"/>
+      <node x="200" y="0" width="20" height="20"/>
+    </node>
+  </expectations>
+</test>

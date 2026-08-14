@@ -259,6 +259,9 @@ fn apply_taffy_style(node: &mut yg::Node, style: &tf::Style) {
         tf::FlexWrap::NoWrap => yg::Wrap::NoWrap,
         tf::FlexWrap::Wrap => yg::Wrap::Wrap,
         tf::FlexWrap::WrapReverse => yg::Wrap::WrapReverse,
+        // Yoga has no equivalent of `flex-wrap: balance`
+        tf::FlexWrap::Balance => yg::Wrap::Wrap,
+        tf::FlexWrap::BalanceReverse => yg::Wrap::WrapReverse,
     });
     node.set_flex_basis(into_yg_units(style.flex_basis));
     node.set_flex_grow(style.flex_grow);
