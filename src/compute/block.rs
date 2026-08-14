@@ -366,11 +366,11 @@ pub fn compute_block_layout(
             inputs,
             contain,
             size_is_definite,
-            |tree, node_id, inputs, hide_children| {
+            |tree, node_id, inputs, ignore_children| {
                 // The as-if-empty sizing pass uses a fresh formatting context so that it cannot
                 // disturb the inherited one (an empty box contributes nothing to it anyway)
-                let block_ctx = if hide_children { None } else { block_ctx.as_deref_mut() };
-                compute_block_layout_inner(tree, node_id, inputs, block_ctx, hide_children)
+                let block_ctx = if ignore_children { None } else { block_ctx.as_deref_mut() };
+                compute_block_layout_inner(tree, node_id, inputs, block_ctx, ignore_children)
             },
         )
     } else {
@@ -387,14 +387,14 @@ pub fn compute_block_layout(
 }
 
 /// The main body of the block layout algorithm. Sets up an appropriate `BlockContext` and then
-/// delegates to [`compute_inner`]. When `hide_children` is `true` the node is laid out as if it
+/// delegates to [`compute_inner`]. When `ignore_children` is `true` the node is laid out as if it
 /// had no children (used for the as-if-empty sizing pass of size containment).
 fn compute_block_layout_inner(
     tree: &mut impl LayoutBlockContainer,
     node_id: NodeId,
     inputs: LayoutInput,
     block_ctx: Option<&mut BlockContext<'_>>,
-    hide_children: bool,
+    ignore_children: bool,
 ) -> LayoutOutput {
     let LayoutInput { known_dimensions, parent_size, run_mode, .. } = inputs;
     let style = tree.get_block_container_style(node_id);
@@ -471,7 +471,7 @@ fn compute_block_layout_inner(
             node_id,
             LayoutInput { known_dimensions: styled_based_known_dimensions, ..inputs },
             inherited_bfc,
-            hide_children,
+            ignore_children,
         ),
         _ => {
             let mut root_bfc = BlockFormattingContext::new();
@@ -481,7 +481,7 @@ fn compute_block_layout_inner(
                 node_id,
                 LayoutInput { known_dimensions: styled_based_known_dimensions, ..inputs },
                 &mut root_ctx,
-                hide_children,
+                ignore_children,
             )
         }
     }
@@ -493,7 +493,7 @@ fn compute_inner(
     node_id: NodeId,
     inputs: LayoutInput,
     #[allow(unused_mut)] mut block_ctx: &mut BlockContext<'_>,
-    hide_children: bool,
+    ignore_children: bool,
 ) -> LayoutOutput {
     let LayoutInput {
         known_dimensions, parent_size, available_space, run_mode, vertical_margins_are_collapsible, ..
@@ -600,7 +600,7 @@ fn compute_inner(
     drop(style);
 
     // 1. Generate items
-    let mut items = generate_item_list(tree, node_id, container_content_box_size, hide_children);
+    let mut items = generate_item_list(tree, node_id, container_content_box_size, ignore_children);
 
     // 2. Compute container width
     let container_outer_width = known_dimensions.width.unwrap_or_else(|| {
@@ -828,9 +828,9 @@ fn generate_item_list(
     tree: &impl LayoutBlockContainer,
     node: NodeId,
     node_inner_size: Size<Option<f32>>,
-    hide_children: bool,
+    ignore_children: bool,
 ) -> Vec<BlockItem> {
-    if hide_children {
+    if ignore_children {
         return Vec::new();
     }
 

@@ -67,13 +67,13 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     output
 }
 
-/// The main body of the grid layout algorithm. When `hide_children` is `true` the node is laid
+/// The main body of the grid layout algorithm. When `ignore_children` is `true` the node is laid
 /// out as if it had no children (used for the as-if-empty sizing pass of size containment).
 fn compute_grid_layout_inner<Tree: LayoutGridContainer>(
     tree: &mut Tree,
     node: NodeId,
     inputs: LayoutInput,
-    hide_children: bool,
+    ignore_children: bool,
 ) -> LayoutOutput {
     let LayoutInput { known_dimensions, parent_size, available_space, run_mode, .. } = inputs;
 
@@ -245,7 +245,7 @@ fn compute_grid_layout_inner<Tree: LayoutGridContainer>(
     // 3. Implicit Grid: Estimate Track Counts
     // Estimate the number of rows and columns in the implicit grid (= the entire grid)
     // This is necessary as part of placement. Doing it early here is a perf optimisation to reduce allocations.
-    let (est_col_counts, est_row_counts) = if hide_children {
+    let (est_col_counts, est_row_counts) = if ignore_children {
         compute_grid_size_estimate::<Tree::GridItemStyle<'_>>(
             explicit_col_count,
             explicit_row_count,
@@ -258,9 +258,9 @@ fn compute_grid_layout_inner<Tree: LayoutGridContainer>(
 
     // 4. Grid Item Placement
     // Match items (children) to a definite grid position (row start/end and column start/end position)
-    let mut items = if hide_children { Vec::new() } else { Vec::with_capacity(tree.child_count(node)) };
+    let mut items = if ignore_children { Vec::new() } else { Vec::with_capacity(tree.child_count(node)) };
     let mut cell_occupancy_matrix = CellOccupancyMatrix::with_track_counts(est_col_counts, est_row_counts);
-    if !hide_children {
+    if !ignore_children {
         let in_flow_children_iter = || {
             tree.child_ids(node)
                 .enumerate()

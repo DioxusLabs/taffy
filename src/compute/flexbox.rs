@@ -236,13 +236,13 @@ pub fn compute_flexbox_layout(
     output
 }
 
-/// The main body of the flexbox layout algorithm. When `hide_children` is `true` the node is laid
+/// The main body of the flexbox layout algorithm. When `ignore_children` is `true` the node is laid
 /// out as if it had no children (used for the as-if-empty sizing pass of size containment).
 fn compute_flexbox_layout_inner(
     tree: &mut impl LayoutFlexboxContainer,
     node: NodeId,
     inputs: LayoutInput,
-    hide_children: bool,
+    ignore_children: bool,
 ) -> LayoutOutput {
     let LayoutInput { known_dimensions, parent_size, run_mode, .. } = inputs;
     let style = tree.get_flexbox_container_style(node);
@@ -322,7 +322,7 @@ fn compute_flexbox_layout_inner(
         tree,
         node,
         LayoutInput { known_dimensions: styled_based_known_dimensions, known_dimensions_are_definite, ..inputs },
-        hide_children,
+        ignore_children,
     )
 }
 
@@ -331,7 +331,7 @@ fn compute_preliminary(
     tree: &mut impl LayoutFlexboxContainer,
     node: NodeId,
     inputs: LayoutInput,
-    hide_children: bool,
+    ignore_children: bool,
 ) -> LayoutOutput {
     let LayoutInput { known_dimensions, parent_size, available_space, run_mode, .. } = inputs;
 
@@ -350,7 +350,7 @@ fn compute_preliminary(
 
     // 1. Generate anonymous flex items as described in §4 Flex Items.
     debug_log!("generate_anonymous_flex_items");
-    let mut flex_items = generate_anonymous_flex_items(tree, node, &constants, hide_children);
+    let mut flex_items = generate_anonymous_flex_items(tree, node, &constants, ignore_children);
 
     // 9.2. Line Length Determination
 
@@ -638,9 +638,9 @@ fn generate_anonymous_flex_items(
     tree: &impl LayoutFlexboxContainer,
     node: NodeId,
     constants: &AlgoConstants,
-    hide_children: bool,
+    ignore_children: bool,
 ) -> Vec<FlexItem> {
-    if hide_children {
+    if ignore_children {
         return Vec::new();
     }
 
