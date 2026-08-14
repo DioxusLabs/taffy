@@ -350,7 +350,8 @@ fn compute_preliminary(
 
     // 1. Generate anonymous flex items as described in §4 Flex Items.
     debug_log!("generate_anonymous_flex_items");
-    let mut flex_items = generate_anonymous_flex_items(tree, node, &constants, ignore_children);
+    let mut flex_items =
+        if ignore_children { Vec::new() } else { generate_anonymous_flex_items(tree, node, &constants) };
 
     // 9.2. Line Length Determination
 
@@ -638,12 +639,7 @@ fn generate_anonymous_flex_items(
     tree: &impl LayoutFlexboxContainer,
     node: NodeId,
     constants: &AlgoConstants,
-    ignore_children: bool,
 ) -> Vec<FlexItem> {
-    if ignore_children {
-        return Vec::new();
-    }
-
     // Percentage sizes of items resolve against the container's inner size, but only if that size
     // is definite. A known size which is derived from the container's own content (e.g. a size
     // computed by size containment's as-if-empty pass) is treated as indefinite here.

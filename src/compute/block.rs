@@ -600,7 +600,8 @@ fn compute_inner(
     drop(style);
 
     // 1. Generate items
-    let mut items = generate_item_list(tree, node_id, container_content_box_size, ignore_children);
+    let mut items =
+        if ignore_children { Vec::new() } else { generate_item_list(tree, node_id, container_content_box_size) };
 
     // 2. Compute container width
     let container_outer_width = known_dimensions.width.unwrap_or_else(|| {
@@ -828,12 +829,7 @@ fn generate_item_list(
     tree: &impl LayoutBlockContainer,
     node: NodeId,
     node_inner_size: Size<Option<f32>>,
-    ignore_children: bool,
 ) -> Vec<BlockItem> {
-    if ignore_children {
-        return Vec::new();
-    }
-
     tree.child_ids(node)
         .map(|child_node_id| (child_node_id, tree.get_block_child_style(child_node_id)))
         .filter(|(_, style)| style.box_generation_mode() != BoxGenerationMode::None)
