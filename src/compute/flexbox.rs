@@ -820,7 +820,7 @@ fn determine_flex_base_size(
             // resolves to an exact (definite) size while the other keywords determine the
             // available space constraint the item is measured under. A keyword that cannot be
             // resolved in the current context behaves as `content`.
-            let keyword_main_available_space = if flex_basis_style.is_intrinsic_sizing_keyword() {
+            let keyword_main_available_space = if flex_basis_style.is_sizing_keyword() {
                 match resolve_sizing_keyword(flex_basis_style, main_stretch_size, percent_resolution_main_size) {
                     Some(SizingKeywordResolution::Exact(size)) => {
                         child.flex_basis_is_definite = true;
