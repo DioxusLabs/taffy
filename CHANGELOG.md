@@ -22,6 +22,7 @@
   - `Contain::INLINE_SIZE` (inline-size containment): like size containment, but only in the inline (horizontal) axis; the box's height is still content-based
   - `Contain::LAYOUT` (layout containment): the box establishes an independent formatting context (its margins do not collapse with those of its children, it contains its own floats, and it avoids external floats) and its baseline is suppressed (boxes requiring a baseline synthesize one from its border box)
   - `Contain::PAINT` (paint containment): the box establishes an independent formatting context like layout containment, but its baseline is not suppressed. Paint containment's other effects (clipping, containing absolutely-positioned descendants, stacking context) do not affect layout and are not implemented
+  - Layout and paint containment also prevent the box's overflowing content from contributing to its ancestors' `content_size` (scrollable overflow region): layout containment treats such overflow as ink overflow, and paint containment clips it. The contained box's own `content_size` still includes its overflowing content
 
   The CSS parser (`parse` feature) accepts `none | strict | content | [ size || inline-size || layout || style || paint ]` for the `contain` property: `strict` maps to `SIZE | LAYOUT | PAINT`, `content` maps to `LAYOUT | PAINT`, and the `style` keyword is accepted but ignored as it does not affect layout
 

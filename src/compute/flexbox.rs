@@ -47,6 +47,8 @@ struct FlexItem {
 
     /// The overflow style of the item
     overflow: Point<Overflow>,
+    /// The contain style of the item
+    contain: Contain,
     /// The width of the scrollbars (if it has any)
     scrollbar_width: f32,
     /// The flex shrink style of the item
@@ -707,6 +709,7 @@ fn generate_anonymous_flex_items(
                     constants.is_column,
                 ),
                 overflow: child_style.overflow(),
+                contain: child_style.contain(),
                 scrollbar_width: child_style.scrollbar_width(),
                 flex_grow: child_style.flex_grow(),
                 flex_shrink: child_style.flex_shrink(),
@@ -2446,6 +2449,7 @@ fn calculate_flex_item(
             size,
             content_size,
             item.overflow,
+            item.contain,
         ));
     }
 }
@@ -2612,6 +2616,7 @@ fn perform_absolute_layout_on_absolute_children(
         }
 
         let overflow = child_style.overflow();
+        let contain = child_style.contain();
         let scrollbar_width = child_style.scrollbar_width();
         let aspect_ratio = child_style.aspect_ratio();
         let align_self = child_style.align_self().unwrap_or(constants.align_items).resolve_self_relative(
@@ -2964,13 +2969,18 @@ fn perform_absolute_layout_on_absolute_children(
 
         #[cfg(feature = "content_size")]
         {
+            let overflow_contributes = !contain.contains_scrollable_overflow();
             let size_content_size_contribution = Size {
                 width: match overflow.x {
-                    Overflow::Visible => f32_max(final_size.width, layout_output.content_size.width),
+                    Overflow::Visible if overflow_contributes => {
+                        f32_max(final_size.width, layout_output.content_size.width)
+                    }
                     _ => final_size.width,
                 },
                 height: match overflow.y {
-                    Overflow::Visible => f32_max(final_size.height, layout_output.content_size.height),
+                    Overflow::Visible if overflow_contributes => {
+                        f32_max(final_size.height, layout_output.content_size.height)
+                    }
                     _ => final_size.height,
                 },
             };

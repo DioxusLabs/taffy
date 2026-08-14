@@ -315,6 +315,8 @@ struct BlockItem {
 
     /// The overflow style of the item
     overflow: Point<Overflow>,
+    /// The contain style of the item
+    contain: Contain,
     /// The width of the item's scrollbars (if it has scrollbars)
     scrollbar_width: f32,
 
@@ -722,6 +724,7 @@ fn compute_inner(
                             layout.size,
                             layout.content_size,
                             item.overflow,
+                            item.contain,
                         ));
                     }
                 }
@@ -855,7 +858,8 @@ fn generate_item_list(
             let is_table = child_style.is_table();
             let is_replaced = child_style.is_compressible_replaced();
             let is_scroll_container = overflow.x.is_scroll_container() || overflow.y.is_scroll_container();
-            let establishes_independent_fc = child_style.contain().establishes_independent_formatting_context();
+            let contain = child_style.contain();
+            let establishes_independent_fc = contain.establishes_independent_formatting_context();
 
             let is_in_same_bfc: bool = is_block
                 && !is_table
@@ -891,6 +895,7 @@ fn generate_item_list(
                     .maybe_apply_aspect_ratio(aspect_ratio)
                     .maybe_add(box_sizing_adjustment),
                 overflow,
+                contain,
                 scrollbar_width: child_style.scrollbar_width(),
                 position,
                 inset: child_style.inset(),
@@ -1172,6 +1177,7 @@ fn perform_final_layout_on_in_flow_children(
                         item_layout.size,
                         item_layout.content_size,
                         item.overflow,
+                        item.contain,
                     ));
                 }
 
@@ -1550,6 +1556,7 @@ fn perform_final_layout_on_in_flow_children(
                     final_size,
                     item_layout.content_size,
                     item.overflow,
+                    item.contain,
                 ));
             }
 
@@ -1870,6 +1877,7 @@ fn perform_absolute_layout_on_absolute_children(
                 final_size,
                 layout_output.content_size,
                 item.overflow,
+                item.contain,
             ));
         }
     }

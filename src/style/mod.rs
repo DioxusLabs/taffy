@@ -483,6 +483,14 @@ impl Contain {
     pub const fn suppresses_baseline(self) -> bool {
         self.contains(Contain::LAYOUT)
     }
+
+    /// Whether this containment prevents the box's overflowing content from contributing to an
+    /// ancestor's scrollable overflow region (layout containment treats such overflow as ink
+    /// overflow; paint containment clips it)
+    #[inline(always)]
+    pub const fn contains_scrollable_overflow(self) -> bool {
+        self.intersects(Contain::LAYOUT.union(Contain::PAINT))
+    }
 }
 
 impl core::ops::BitOr for Contain {

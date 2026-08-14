@@ -1,6 +1,6 @@
 //! Generic CSS content size code that is shared between all CSS algorithms.
 use crate::geometry::{Point, Size};
-use crate::style::Overflow;
+use crate::style::{Contain, Overflow};
 use crate::util::sys::{f32_max, f32_min};
 
 #[inline(always)]
@@ -10,14 +10,18 @@ pub(crate) fn compute_content_size_contribution(
     size: Size<f32>,
     content_size: Size<f32>,
     overflow: Point<Overflow>,
+    contain: Contain,
 ) -> Size<f32> {
+    // A box whose containment contains its scrollable overflow contributes only its border box
+    // to its parent's content size, regardless of its overflow style
+    let overflow_contributes = !contain.contains_scrollable_overflow();
     let size_content_size_contribution = Size {
         width: match overflow.x {
-            Overflow::Visible => f32_max(size.width, content_size.width),
+            Overflow::Visible if overflow_contributes => f32_max(size.width, content_size.width),
             _ => size.width,
         },
         height: match overflow.y {
-            Overflow::Visible => f32_max(size.height, content_size.height),
+            Overflow::Visible if overflow_contributes => f32_max(size.height, content_size.height),
             _ => size.height,
         },
     };
