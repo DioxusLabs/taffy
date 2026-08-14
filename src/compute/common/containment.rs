@@ -18,6 +18,12 @@ pub(crate) fn contained_size_is_definite(
     inputs: &LayoutInput,
     calc: impl Fn(*const (), f32) -> f32 + Copy,
 ) -> Size<bool> {
+    // Sizes imposed by the parent keep the parent's definiteness, so if both dimensions are known
+    // then the node's own style never needs to be consulted.
+    if let Size { width: Some(_), height: Some(_) } = inputs.known_dimensions {
+        return inputs.known_dimensions_are_definite;
+    }
+
     let parent_size = inputs.parent_size;
     let aspect_ratio = style.aspect_ratio();
 
