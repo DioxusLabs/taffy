@@ -90,7 +90,7 @@ pub(super) fn align_and_position_item(
     order: u32,
     grid_area: Rect<f32>,
     container_alignment_styles: InBothAbsAxis<Option<AlignItems>>,
-    baseline_shim: f32,
+    baseline_shims: Line<f32>,
     direction: Direction,
     container_border_box_width: f32,
     container_border: Rect<f32>,
@@ -186,7 +186,7 @@ pub(super) fn align_and_position_item(
 
     let grid_area_minus_item_margins_size = Size {
         width: grid_area_size.width.maybe_sub(margin.left).maybe_sub(margin.right),
-        height: grid_area_size.height.maybe_sub(margin.top).maybe_sub(margin.bottom) - baseline_shim,
+        height: grid_area_size.height.maybe_sub(margin.top).maybe_sub(margin.bottom) - baseline_shims.sum(),
     };
 
     // A size that is a sizing keyword (min-content, max-content, fit-content,
@@ -359,7 +359,7 @@ pub(super) fn align_and_position_item(
         position,
         inset_horizontal,
         margin.horizontal_components(),
-        0.0,
+        Line { start: 0.0, end: 0.0 },
         direction,
     );
     let (y, y_margin) = align_item_within_area(
@@ -369,7 +369,7 @@ pub(super) fn align_and_position_item(
         position,
         inset_vertical,
         margin.vertical_components(),
-        baseline_shim,
+        baseline_shims,
         Direction::Ltr,
     );
 
@@ -438,11 +438,14 @@ pub(super) fn align_item_within_area(
     position: Position,
     inset: Line<Option<f32>>,
     margin: Line<Option<f32>>,
-    baseline_shim: f32,
+    baseline_shims: Line<f32>,
     direction: Direction,
 ) -> (f32, Line<f32>) {
     // Calculate grid area dimension in the axis
-    let non_auto_margin = Line { start: margin.start.unwrap_or(0.0) + baseline_shim, end: margin.end.unwrap_or(0.0) };
+    let non_auto_margin = Line {
+        start: margin.start.unwrap_or(0.0) + baseline_shims.start,
+        end: margin.end.unwrap_or(0.0) + baseline_shims.end,
+    };
     let grid_area_size = f32_max(grid_area.end - grid_area.start, 0.0);
     let free_space = f32_max(grid_area_size - resolved_size - non_auto_margin.sum(), 0.0);
 
@@ -450,8 +453,8 @@ pub(super) fn align_item_within_area(
     let auto_margin_count = margin.start.is_none() as u8 + margin.end.is_none() as u8;
     let auto_margin_size = if auto_margin_count > 0 { free_space / auto_margin_count as f32 } else { 0.0 };
     let resolved_margin = Line {
-        start: margin.start.unwrap_or(auto_margin_size) + baseline_shim,
-        end: margin.end.unwrap_or(auto_margin_size),
+        start: margin.start.unwrap_or(auto_margin_size) + baseline_shims.start,
+        end: margin.end.unwrap_or(auto_margin_size) + baseline_shims.end,
     };
 
     let overflows = resolved_size + non_auto_margin.sum() > grid_area_size;
@@ -459,7 +462,8 @@ pub(super) fn align_item_within_area(
 
     // Compute offset in the axis
     let alignment_based_offset = match alignment_keyword {
-        // TODO: Add support for baseline alignment. For now we treat it as "start".
+        // First-baseline aligned items are aligned to "start" with a baseline shim applied as
+        // an extra start-side margin (which aligns the baselines of the items in the group)
         AlignItemsKeyword::Start
         | AlignItemsKeyword::FlexStart
         | AlignItemsKeyword::Baseline
@@ -470,7 +474,9 @@ pub(super) fn align_item_within_area(
                 resolved_margin.start
             }
         }
-        AlignItemsKeyword::End | AlignItemsKeyword::FlexEnd => {
+        // Last-baseline aligned items are aligned to "end" with a baseline shim applied as
+        // an extra end-side margin (which aligns the baselines of the items in the group)
+        AlignItemsKeyword::End | AlignItemsKeyword::FlexEnd | AlignItemsKeyword::LastBaseline => {
             if direction.is_rtl() {
                 resolved_margin.start
             } else {

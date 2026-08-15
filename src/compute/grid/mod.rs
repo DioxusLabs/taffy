@@ -2,7 +2,7 @@
 //! <https://www.w3.org/TR/css-grid-1>
 use crate::geometry::{AbsoluteAxis, AbstractAxis, InBothAbsAxis};
 use crate::geometry::{Line, Point, Rect, Size};
-use crate::style::{AlignItems, AvailableSpace, Overflow, Position};
+use crate::style::{AlignItems, AlignItemsKeyword, AvailableSpace, Overflow, Position};
 use crate::tree::{Baselines, Layout, LayoutInput, LayoutOutput, LayoutPartialTreeExt, NodeId, RunMode, SizingMode};
 use crate::util::debug::debug_log;
 use crate::util::sys::{f32_max, f32_min, GridTrackVec, Vec};
@@ -629,7 +629,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
             index as u32,
             grid_area,
             container_alignment_styles,
-            item.baseline_shim,
+            Line { start: item.baseline_shim, end: item.last_baseline_shim },
             direction,
             container_border_box.width,
             border,
@@ -776,7 +776,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
                 order,
                 grid_area,
                 container_alignment_styles,
-                0.0,
+                Line { start: 0.0, end: 0.0 },
                 direction,
                 container_border_box.width,
                 border,
@@ -844,19 +844,18 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
         // Create a slice of all of the items start in this row (taking advantage of the fact that we have just sorted the array)
         let first_row_items = &items[0..].split(|item| item.row_indexes.start != first_row).next().unwrap();
 
-        // Check if any items in *this row* participate in baseline alignment
-        // (items with an auto block-axis margin do not participate: https://www.w3.org/TR/css-align-3/#baseline-align-self)
+        // Prefer the first item in *this row* which participates in first-baseline alignment
+        // (items with an auto block-axis margin do not participate: https://www.w3.org/TR/css-align-3/#baseline-align-self),
+        // falling back to the row's first item
         let item = first_row_items
             .iter()
-            .find(|item| item.participates_in_baseline_alignment())
+            .find(|item| item.participates_in_baseline_group(AlignItemsKeyword::Baseline))
             .unwrap_or(&first_row_items[0]);
 
         Some(item.y_position + item.baseline.unwrap_or(item.height))
     };
 
-    // Determine the grid container's last baseline, generated from the last row containing items.
-    // As no items ever participate in last-baseline alignment (which is not yet supported), it is
-    // always generated from the row's first item.
+    // Determine the grid container's last baseline, generated from the last row containing items
     let grid_container_last_baseline: Option<f32> = if contain.suppresses_baseline() {
         None
     } else {
@@ -869,7 +868,12 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
         // Create a slice of all of the items that start in this row (taking advantage of the fact that the array is sorted)
         let last_row_items = &items[0..].rsplit(|item| item.row_indexes.start != last_row).next().unwrap();
 
-        let item = &last_row_items[0];
+        // Prefer the first item in *this row* which participates in last-baseline alignment,
+        // falling back to the row's first item
+        let item = last_row_items
+            .iter()
+            .find(|item| item.align_self.keyword == AlignItemsKeyword::LastBaseline)
+            .unwrap_or(&last_row_items[0]);
         Some(item.y_position + item.last_baseline.unwrap_or(item.height))
     };
 
