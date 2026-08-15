@@ -1,8 +1,8 @@
 //! Computes size using styles and measure functions
 
-use crate::geometry::{Point, Size};
+use crate::geometry::Size;
 use crate::style::{AvailableSpace, Overflow, Position};
-use crate::tree::{CollapsibleMarginSet, RunMode};
+use crate::tree::{Baselines, CollapsibleMarginSet, RunMode};
 use crate::tree::{LayoutInput, LayoutOutput, SizingMode};
 use crate::util::debug::debug_log;
 use crate::util::sys::f32_max;
@@ -99,7 +99,7 @@ where
                 size,
                 #[cfg(feature = "content_size")]
                 content_size: Size::ZERO,
-                first_baselines: Point::NONE,
+                baselines: Baselines::NONE,
                 top_margin: CollapsibleMarginSet::ZERO,
                 bottom_margin: CollapsibleMarginSet::ZERO,
                 margins_can_collapse_through: false,
@@ -154,7 +154,7 @@ where
         size,
         #[cfg(feature = "content_size")]
         content_size: measured_size + padding.sum_axes(),
-        first_baselines: Point::NONE,
+        baselines: Baselines::NONE,
         top_margin: CollapsibleMarginSet::ZERO,
         bottom_margin: CollapsibleMarginSet::ZERO,
         margins_can_collapse_through: !has_styles_preventing_being_collapsed_through

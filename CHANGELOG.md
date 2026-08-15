@@ -19,6 +19,10 @@
 
 ### Changed
 
+- `LayoutOutput`'s `first_baselines: Point<Option<f32>>` field has been replaced with `baselines: Baselines`, where the new `Baselines` struct has `first: Option<f32>` and `last: Option<f32>` fields (both horizontal baselines, measured from the top edge of the node). The never-read vertical (x) baseline slot has been dropped in favour of a last-baseline slot. Last baselines are not yet computed by any of the built-in layout algorithms (this is purely a representational change), but custom tree implementations and measure functions can now report them
+
+  Migration: replace `first_baselines: Point { x: None, y: baseline }` with `baselines: Baselines::from_first(baseline)`, and reads of `first_baselines.y` with `baselines.first`
+
 - `Style::min_size` and `Style::max_size` (and the corresponding `CoreStyle::min_size`/`CoreStyle::max_size` trait methods) are now `Size<LengthPercentageAuto>` rather than `Size<Dimension>`, as the min/max sizing properties do not support the new sizing keywords that `Dimension` now supports
 
 - `TaffyTree::compute_layout_with_measure`'s measure function now takes the full `LayoutInput` (plus `NodeId`, `Option<&mut NodeContext>` and `&Style`) and returns a `LayoutOutput` directly instead of a `Size<f32>`, allowing measure functions to set baselines (and other `LayoutOutput` fields) on leaf nodes. `compute_leaf_layout` is no longer called implicitly (#953)

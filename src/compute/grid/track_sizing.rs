@@ -509,7 +509,7 @@ fn resolve_item_baselines(
                 Line::FALSE,
             );
 
-            let baseline = measured_size_and_baselines.first_baselines.y;
+            let baseline = measured_size_and_baselines.baselines.first;
             let height = measured_size_and_baselines.size.height;
 
             item.baseline = Some(

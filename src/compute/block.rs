@@ -2,7 +2,7 @@
 use crate::geometry::{Line, Point, Rect, Size};
 use crate::style::{AvailableSpace, CoreStyle, LengthPercentageAuto, Overflow, Position};
 use crate::style_helpers::TaffyMaxContent;
-use crate::tree::{CollapsibleMarginSet, Layout, LayoutInput, LayoutOutput, RunMode, SizingMode};
+use crate::tree::{Baselines, CollapsibleMarginSet, Layout, LayoutInput, LayoutOutput, RunMode, SizingMode};
 use crate::tree::{LayoutPartialTree, LayoutPartialTreeExt, NodeId};
 use crate::util::debug::debug_log;
 use crate::util::sys::f32_max;
@@ -689,7 +689,7 @@ fn compute_inner(
         size: final_outer_size,
         #[cfg(feature = "content_size")]
         content_size: Size::ZERO,
-        first_baselines: Point { x: None, y: first_baseline },
+        baselines: Baselines::from_first(first_baseline),
         top_margin: if own_margins_collapse_with_children.start {
             first_child_top_margin_set
         } else {
@@ -1456,7 +1456,7 @@ fn perform_final_layout_on_in_flow_children(
             // A block container's first baseline is the first baseline of its first in-flow child
             // that has one.
             if first_baseline.is_none() {
-                first_baseline = item_layout.first_baselines.y.map(|baseline| location.y + baseline);
+                first_baseline = item_layout.baselines.first.map(|baseline| location.y + baseline);
             }
 
             // Defer `set_unrounded_layout` to the post-loop pass in `compute_inner` so that

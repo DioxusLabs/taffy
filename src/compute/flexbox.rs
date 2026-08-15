@@ -7,7 +7,7 @@ use crate::style::{
 };
 use crate::style::{CoreStyle, FlexDirection, FlexboxContainerStyle, FlexboxItemStyle};
 use crate::style_helpers::{TaffyMaxContent, TaffyMinContent};
-use crate::tree::{Layout, LayoutInput, LayoutOutput, RunMode, SizingMode};
+use crate::tree::{Baselines, Layout, LayoutInput, LayoutOutput, RunMode, SizingMode};
 use crate::tree::{LayoutFlexboxContainer, LayoutPartialTreeExt, NodeId};
 use crate::util::debug::debug_log;
 use crate::util::sys::{f32_max, f32_min, new_vec_with_capacity, Vec};
@@ -490,7 +490,7 @@ fn compute_preliminary(tree: &mut impl LayoutFlexboxContainer, node: NodeId, inp
     LayoutOutput::from_sizes_and_baselines(
         constants.container_size,
         inflow_content_size.f32_max(absolute_content_size),
-        Point { x: None, y: first_vertical_baseline },
+        Baselines::from_first(first_vertical_baseline),
     )
 }
 
@@ -1813,7 +1813,7 @@ fn calculate_children_base_lines(
                 },
             );
 
-            let baseline = measured_size_and_baselines.first_baselines.y;
+            let baseline = measured_size_and_baselines.baselines.first;
             let height = measured_size_and_baselines.size.height;
 
             // Scroll containers' baselines are determined from their content as if scrolled to the
@@ -2347,7 +2347,7 @@ fn calculate_flex_item(
         // position, but are additionally clamped to their border box.
         // See https://github.com/w3c/csswg-drafts/issues/7660
         let inner_baseline = {
-            let baseline = layout_output.first_baselines.y.unwrap_or(size.height);
+            let baseline = layout_output.baselines.first.unwrap_or(size.height);
             if item.overflow.y.is_scroll_container() {
                 baseline.min(size.height).max(0.0)
             } else {
@@ -2357,7 +2357,7 @@ fn calculate_flex_item(
         item.baseline = baseline_offset_cross + inner_baseline;
     } else {
         let baseline_offset_main = *total_offset_main + item.offset_main + item.margin.main_start(direction);
-        let inner_baseline = layout_output.first_baselines.y.unwrap_or(size.height);
+        let inner_baseline = layout_output.baselines.first.unwrap_or(size.height);
         item.baseline = baseline_offset_main + inner_baseline;
     }
 
