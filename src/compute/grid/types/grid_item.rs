@@ -55,10 +55,15 @@ pub(in super::super) struct GridItem {
     pub baseline: Option<f32>,
     /// The item's last baseline (horizontal), measured from the top of its border box.
     /// Set from the item's final layout. Used to compute the container's last baseline.
+    /// During track sizing this field transiently stores the item's last-baseline *descent*
+    /// (the distance from its last baseline to the bottom of its margin box), which is used
+    /// to compute last-baseline shims.
     pub last_baseline: Option<f32>,
-    /// Shim for baseline alignment that acts like an extra top margin
-    /// TODO: Support last baseline and vertical text baselines
+    /// Shim for first-baseline alignment that acts like an extra top margin
+    /// TODO: Support vertical text baselines
     pub baseline_shim: f32,
+    /// Shim for last-baseline alignment that acts like an extra bottom margin
+    pub last_baseline_shim: f32,
 
     /// The item's definite row-start and row-end (same as `row` field, except in a different coordinate system)
     /// (as indexes into the Vec<GridTrack> stored in a grid's AbstractAxisTracks)
@@ -126,6 +131,7 @@ impl GridItem {
             baseline: None,
             last_baseline: None,
             baseline_shim: 0.0,
+            last_baseline_shim: 0.0,
             row_indexes: Line { start: 0, end: 0 }, // Properly initialised later
             column_indexes: Line { start: 0, end: 0 }, // Properly initialised later
             crosses_flexible_row: false,            // Properly initialised later
@@ -162,7 +168,16 @@ impl GridItem {
     /// See <https://www.w3.org/TR/css-align-3/#baseline-align-self>
     #[inline(always)]
     pub fn participates_in_baseline_alignment(&self) -> bool {
-        self.align_self.keyword == AlignItemsKeyword::Baseline
+        matches!(self.align_self.keyword, AlignItemsKeyword::Baseline | AlignItemsKeyword::LastBaseline)
+            && !self.has_auto_block_margin()
+            && !self.has_cyclic_block_size_dependency()
+    }
+
+    /// Whether this item participates in the specified baseline alignment group
+    /// (items with an auto block-axis margin do not participate: <https://www.w3.org/TR/css-align-3/#baseline-align-self>)
+    #[inline(always)]
+    pub fn participates_in_baseline_group(&self, group_keyword: AlignItemsKeyword) -> bool {
+        self.align_self.keyword == group_keyword
             && !self.has_auto_block_margin()
             && !self.has_cyclic_block_size_dependency()
     }
@@ -478,7 +493,8 @@ impl GridItem {
             right: self.margin.right.resolve_or_zero(Some(0.0), |val, basis| tree.calc(val, basis)),
             top: self.margin.top.resolve_or_zero(inner_node_width, |val, basis| tree.calc(val, basis))
                 + self.baseline_shim,
-            bottom: self.margin.bottom.resolve_or_zero(inner_node_width, |val, basis| tree.calc(val, basis)),
+            bottom: self.margin.bottom.resolve_or_zero(inner_node_width, |val, basis| tree.calc(val, basis))
+                + self.last_baseline_shim,
         }
         .sum_axes()
     }
