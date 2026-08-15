@@ -155,7 +155,8 @@ fn items_into_align(align: Option<tf::AlignSelf>) -> yg::Align {
         tf::AlignItemsKeyword::Start
         | tf::AlignItemsKeyword::End
         | tf::AlignItemsKeyword::SelfStart
-        | tf::AlignItemsKeyword::SelfEnd => unimplemented!(),
+        | tf::AlignItemsKeyword::SelfEnd
+        | tf::AlignItemsKeyword::LastBaseline => unimplemented!(),
     }
 }
 
