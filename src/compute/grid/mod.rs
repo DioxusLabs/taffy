@@ -629,7 +629,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
             index as u32,
             grid_area,
             container_alignment_styles,
-            Line { start: item.baseline_shim, end: item.last_baseline_shim },
+            item.baseline_shims,
             direction,
             container_border_box.width,
             border,

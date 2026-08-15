@@ -62,11 +62,10 @@ pub(in super::super) struct GridItem {
     /// (the distance from its last baseline to the bottom of its margin box), which is used
     /// to compute last-baseline shims.
     pub last_baseline: Option<f32>,
-    /// Shim for first-baseline alignment that acts like an extra top margin
+    /// Shims for baseline alignment: `start` acts like an extra top margin (first-baseline
+    /// alignment) and `end` like an extra bottom margin (last-baseline alignment)
     /// TODO: Support vertical text baselines
-    pub baseline_shim: f32,
-    /// Shim for last-baseline alignment that acts like an extra bottom margin
-    pub last_baseline_shim: f32,
+    pub baseline_shims: Line<f32>,
 
     /// The item's definite row-start and row-end (same as `row` field, except in a different coordinate system)
     /// (as indexes into the Vec<GridTrack> stored in a grid's AbstractAxisTracks)
@@ -130,8 +129,7 @@ impl GridItem {
             justify_self: style.justify_self().unwrap_or(parent_justify_items),
             baseline: None,
             last_baseline: None,
-            baseline_shim: 0.0,
-            last_baseline_shim: 0.0,
+            baseline_shims: Line { start: 0.0, end: 0.0 },
             row_indexes: Line { start: 0, end: 0 }, // Properly initialised later
             column_indexes: Line { start: 0, end: 0 }, // Properly initialised later
             crosses_flexible_row: false,            // Properly initialised later
@@ -469,9 +467,9 @@ impl GridItem {
             left: self.margin.left.resolve_or_zero(Some(0.0), |val, basis| tree.calc(val, basis)),
             right: self.margin.right.resolve_or_zero(Some(0.0), |val, basis| tree.calc(val, basis)),
             top: self.margin.top.resolve_or_zero(inner_node_width, |val, basis| tree.calc(val, basis))
-                + self.baseline_shim,
+                + self.baseline_shims.start,
             bottom: self.margin.bottom.resolve_or_zero(inner_node_width, |val, basis| tree.calc(val, basis))
-                + self.last_baseline_shim,
+                + self.baseline_shims.end,
         }
         .sum_axes()
     }

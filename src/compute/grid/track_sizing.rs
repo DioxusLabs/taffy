@@ -563,7 +563,7 @@ fn resolve_item_baselines(
             for item in
                 row_items.iter_mut().filter(|item| item.participates_in_baseline_group(AlignItemsKeyword::Baseline))
             {
-                item.baseline_shim = row_max_baseline - item.baseline.unwrap_or(0.0);
+                item.baseline_shims.start = row_max_baseline - item.baseline.unwrap_or(0.0);
             }
         }
 
@@ -579,7 +579,7 @@ fn resolve_item_baselines(
                 .iter_mut()
                 .filter(|item| item.participates_in_baseline_group(AlignItemsKeyword::LastBaseline))
             {
-                item.last_baseline_shim = row_max_descent - item.last_baseline.unwrap_or(0.0);
+                item.baseline_shims.end = row_max_descent - item.last_baseline.unwrap_or(0.0);
             }
         }
     }
