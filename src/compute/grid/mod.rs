@@ -622,7 +622,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
             },
         };
         #[cfg_attr(not(feature = "content_size"), allow(unused_variables))]
-        let (overflow_contribution, y_position, height) = align_and_position_item(
+        let (overflow_contribution, y_position, height, baselines) = align_and_position_item(
             tree,
             item.node,
             index as u32,
@@ -638,6 +638,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
         );
         item.y_position = y_position;
         item.height = height;
+        item.last_baseline = baselines.last;
 
         #[cfg(feature = "content_size")]
         {
@@ -822,7 +823,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
         return output;
     }
 
-    // Determine the grid container baseline(s) (currently we only compute the first baseline)
+    // Determine the grid container's first baseline, generated from the first row containing items.
     // Layout containment suppresses the box's baseline for baseline-alignment purposes
     let grid_container_baseline: Option<f32> = if contain.suppresses_baseline() {
         None
@@ -843,6 +844,25 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
         Some(item.y_position + item.baseline.unwrap_or(item.height))
     };
 
+    // Determine the grid container's last baseline, generated from the last row containing items.
+    // As no items ever participate in last-baseline alignment (which is not yet supported), it is
+    // always generated from the row's first item.
+    let grid_container_last_baseline: Option<f32> = if contain.suppresses_baseline() {
+        None
+    } else {
+        // Sort items by row start position so that we can iterate items in groups which are in the same row
+        items.sort_by_key(|item| item.row_indexes.start);
+
+        // Get the row index of the last row containing items
+        let last_row = items[items.len() - 1].row_indexes.start;
+
+        // Create a slice of all of the items that start in this row (taking advantage of the fact that the array is sorted)
+        let last_row_items = &items[0..].rsplit(|item| item.row_indexes.start != last_row).next().unwrap();
+
+        let item = &last_row_items[0];
+        Some(item.y_position + item.last_baseline.unwrap_or(item.height))
+    };
+
     // A scroll container's own padding at the end of the content is part of its scrollable
     // overflow region, so it is included in the in-flow overflow rect. Boxes that are not
     // scroll containers do not extend their overflow region by their own padding.
@@ -861,7 +881,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     let mut output = LayoutOutput::from_sizes_and_baselines(
         container_border_box,
         scrollable_overflow_rect,
-        Baselines::from_first(grid_container_baseline),
+        Baselines { first: grid_container_baseline, last: grid_container_last_baseline },
     );
     output.oof_candidates = oof_candidates;
     output.oof_positioning_area = oof_positioning_area;
