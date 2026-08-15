@@ -112,6 +112,15 @@ impl FlexItem {
     fn is_scroll_container(&self) -> bool {
         self.overflow.x.is_scroll_container() | self.overflow.y.is_scroll_container()
     }
+
+    /// Returns true if the item participates in baseline alignment: it has `align-self: baseline`
+    /// and neither of its cross-axis margins are `auto`.
+    /// See <https://www.w3.org/TR/css-flexbox-1/#baseline-participation>
+    fn participates_in_baseline_alignment(&self, dir: FlexDirection) -> bool {
+        self.align_self == AlignSelf::BASELINE
+            && !self.margin_is_auto.cross_start(dir)
+            && !self.margin_is_auto.cross_end(dir)
+    }
 }
 
 /// A line of [`FlexItem`] used for intermediate computation
@@ -482,7 +491,7 @@ fn compute_preliminary(tree: &mut impl LayoutFlexboxContainer, node: NodeId, inp
     let first_vertical_baseline = first_line.and_then(|line| {
         line.items
             .iter()
-            .find(|item| constants.is_column || item.align_self == AlignSelf::BASELINE)
+            .find(|item| constants.is_column || item.participates_in_baseline_alignment(constants.dir))
             .or_else(|| line.items.iter().next())
             .map(|child| child.baseline)
     });
@@ -1766,14 +1775,14 @@ fn calculate_children_base_lines(
     for line in flex_lines {
         // If a flex line has one or zero items participating in baseline alignment then baseline alignment is a no-op so we skip
         let line_baseline_child_count =
-            line.items.iter().filter(|child| child.align_self == AlignSelf::BASELINE).count();
+            line.items.iter().filter(|child| child.participates_in_baseline_alignment(constants.dir)).count();
         if line_baseline_child_count <= 1 {
             continue;
         }
 
         for child in line.items.iter_mut() {
             // Only calculate baselines for children participating in baseline alignment
-            if child.align_self != AlignSelf::BASELINE {
+            if !child.participates_in_baseline_alignment(constants.dir) {
                 continue;
             }
 
@@ -1869,10 +1878,7 @@ fn calculate_cross_size(flex_lines: &mut [FlexLine], node_size: Size<Option<f32>
                 .items
                 .iter()
                 .map(|child| {
-                    if child.align_self == AlignSelf::BASELINE
-                        && !child.margin_is_auto.cross_start(constants.dir)
-                        && !child.margin_is_auto.cross_end(constants.dir)
-                    {
+                    if child.participates_in_baseline_alignment(constants.dir) {
                         max_baseline - child.baseline + child.hypothetical_outer_size.cross(constants.dir)
                     } else {
                         child.hypothetical_outer_size.cross(constants.dir)
@@ -2083,7 +2089,7 @@ fn resolve_cross_axis_auto_margins(flex_lines: &mut [FlexLine], constants: &Algo
         let max_baseline_to_bottom_distance: f32 = line
             .items
             .iter_mut()
-            .filter(|child| child.align_self == AlignSelf::BASELINE)
+            .filter(|child| child.participates_in_baseline_alignment(constants.dir))
             .map(|child| child.outer_target_size.cross(constants.dir) - child.baseline)
             .fold(0.0, |acc, x| acc.max(x));
 

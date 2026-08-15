@@ -1,0 +1,29 @@
+<test name="align_baseline_child_auto_margin_cross_end__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div direction="rtl" align-items="baseline" width="200px" height="100px">
+      <div direction="rtl" flex-direction="column" width="50px" height="40px">
+        <div direction="rtl" width="50px" height="20px"/>
+      </div>
+      <div direction="rtl" flex-direction="column" width="50px" height="60px">
+        <div direction="rtl" width="50px" height="30px"/>
+      </div>
+      <div direction="rtl" flex-direction="column" width="50px" height="50px" margin-bottom="auto">
+        <div direction="rtl" width="50px" height="45px"/>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="200" height="100">
+      <node x="150" y="10" width="50" height="40">
+        <node x="0" y="0" width="50" height="20"/>
+      </node>
+      <node x="100" y="0" width="50" height="60">
+        <node x="0" y="0" width="50" height="30"/>
+      </node>
+      <node x="50" y="0" width="50" height="50">
+        <node x="0" y="0" width="50" height="45"/>
+      </node>
+    </node>
+  </expectations>
+</test>
