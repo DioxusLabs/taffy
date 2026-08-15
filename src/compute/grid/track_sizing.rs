@@ -512,9 +512,17 @@ fn resolve_item_baselines(
             let baseline = measured_size_and_baselines.baselines.first;
             let height = measured_size_and_baselines.size.height;
 
-            item.baseline = Some(
+            // Scroll containers' baselines are determined from their content as if scrolled to the
+            // initial position, but are additionally clamped to their border box.
+            // See https://github.com/w3c/csswg-drafts/issues/7660
+            let baseline = if item.overflow.y.is_scroll_container() {
+                baseline.unwrap_or(height).min(height).max(0.0)
+            } else {
                 baseline.unwrap_or(height)
-                    + item.margin.top.resolve_or_zero(inner_node_size.width, |val, basis| tree.calc(val, basis)),
+            };
+
+            item.baseline = Some(
+                baseline + item.margin.top.resolve_or_zero(inner_node_size.width, |val, basis| tree.calc(val, basis)),
             );
         }
 
