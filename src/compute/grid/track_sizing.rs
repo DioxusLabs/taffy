@@ -1,6 +1,6 @@
 //! Implements the track sizing algorithm
 //! <https://www.w3.org/TR/css-grid-1/#layout-algorithm>
-use super::types::{GridItem, GridTrack, TrackCounts};
+use super::types::{GridItem, GridTrack, GridTrackKind, TrackCounts};
 use crate::geometry::{AbstractAxis, Line, Size};
 use crate::style::{AlignContent, AlignContentKeyword, AlignSelf, AvailableSpace};
 use crate::style_helpers::TaffyMinContent;
@@ -424,6 +424,14 @@ fn initialize_track_sizes(
     axis_inner_node_size: Option<f32>,
 ) {
     for track in axis_tracks.iter_mut() {
+        // Percentage gaps resolving against an indefinite size are treated as zero for the purposes
+        // of intrinsic sizing (so calc() gaps resolve against a percentage basis of zero). They are
+        // re-resolved against the container's resolved content-box size in `compute_grid_layout`.
+        let percentage_basis = match track.kind {
+            GridTrackKind::Gutter => axis_inner_node_size.or(Some(0.0)),
+            GridTrackKind::Track => axis_inner_node_size,
+        };
+
         // For each track, if the track’s min track sizing function is:
         // - A fixed sizing function
         //     Resolve to an absolute length and use that size as the track’s initial base size.
@@ -432,7 +440,7 @@ fn initialize_track_sizes(
         //     Use an initial base size of zero.
         track.base_size = track
             .min_track_sizing_function
-            .definite_value(axis_inner_node_size, |val, basis| tree.calc(val, basis))
+            .definite_value(percentage_basis, |val, basis| tree.calc(val, basis))
             .unwrap_or(0.0);
 
         // For each track, if the track’s max track sizing function is:
@@ -444,7 +452,7 @@ fn initialize_track_sizes(
         //     Use an initial growth limit of infinity.
         track.growth_limit = track
             .max_track_sizing_function
-            .definite_value(axis_inner_node_size, |val, basis| tree.calc(val, basis))
+            .definite_value(percentage_basis, |val, basis| tree.calc(val, basis))
             .unwrap_or(f32::INFINITY);
 
         // In all cases, if the growth limit is less than the base size, increase the growth limit to match the base size.

@@ -1,0 +1,19 @@
+<test name="grid_percent_gap_indefinite_both_axes__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" box-sizing="content-box" direction="ltr" row-gap="20%" column-gap="20%" padding-top="10px" padding-left="10px" padding-bottom="10px" padding-right="10px" grid-template-rows="40px 40px" grid-template-columns="40px 40px">
+      <div box-sizing="content-box" direction="ltr"/>
+      <div box-sizing="content-box" direction="ltr"/>
+      <div box-sizing="content-box" direction="ltr"/>
+      <div box-sizing="content-box" direction="ltr"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="100" height="100">
+      <node x="10" y="10" width="40" height="40"/>
+      <node x="66" y="10" width="40" height="40"/>
+      <node x="10" y="66" width="40" height="40"/>
+      <node x="66" y="66" width="40" height="40"/>
+    </node>
+  </expectations>
+</test>

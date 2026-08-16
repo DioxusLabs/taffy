@@ -1,0 +1,23 @@
+<test name="blockgrid_grid_percent_gap_definite_width_indefinite_height__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="block" direction="rtl" width="250px">
+      <div display="grid" direction="rtl" width="200px" row-gap="10%" column-gap="10%" grid-template-rows="90px 90px" grid-template-columns="90px 90px">
+        <div direction="rtl"/>
+        <div direction="rtl"/>
+        <div direction="rtl"/>
+        <div direction="rtl"/>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="250" height="180">
+      <node x="50" y="0" width="200" height="180">
+        <node x="110" y="0" width="90" height="90"/>
+        <node x="0" y="0" width="90" height="90"/>
+        <node x="110" y="108" width="90" height="90"/>
+        <node x="0" y="108" width="90" height="90"/>
+      </node>
+    </node>
+  </expectations>
+</test>

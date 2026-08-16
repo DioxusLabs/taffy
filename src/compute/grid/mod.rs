@@ -302,6 +302,12 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     // Determine if the grid has any baseline aligned items
     let has_baseline_aligned_item = items.iter().any(|item| item.align_self == AlignSelf::BASELINE);
 
+    // Record whether the node's own size is definite in each axis before `inner_node_size` is
+    // overwritten with content-based sizes below. Percentage track sizing functions and gaps
+    // resolve against these sizes and must be re-resolved later if they were indefinite here.
+    let inner_node_width_indefinite = inner_node_size.width.is_none();
+    let inner_node_height_indefinite = inner_node_size.height.is_none();
+
     // Run track sizing algorithm for Inline axis
     track_sizing_algorithm(
         tree,
@@ -376,7 +382,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     // 7. Resolve percentage track base sizes
     // In the case of an indefinitely sized container these resolve to zero during the "Initialise Tracks" step
     // and therefore need to be re-resolved here based on the content-sized content box of the container
-    if !available_grid_space.width.is_definite() {
+    if inner_node_width_indefinite {
         for column in &mut columns {
             let min: Option<f32> = column
                 .min_track_sizing_function
@@ -387,7 +393,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
             column.base_size = column.base_size.maybe_clamp(min, max);
         }
     }
-    if !available_grid_space.height.is_definite() {
+    if inner_node_height_indefinite {
         for row in &mut rows {
             let min: Option<f32> = row
                 .min_track_sizing_function
@@ -408,8 +414,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
 
     let has_percentage_column = columns.iter().any(|track| track.uses_percentage());
     let has_percentage_row = rows.iter().any(|track| track.uses_percentage());
-    let parent_width_indefinite = !available_space.width.is_definite();
-    rerun_column_sizing = parent_width_indefinite && has_percentage_column;
+    rerun_column_sizing = inner_node_width_indefinite && has_percentage_column;
 
     if !rerun_column_sizing {
         intrinsic_column_contribution_changed =
@@ -472,8 +477,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
         // TODO: Only rerun sizing for tracks that actually require it rather than for all tracks if any need it.
         let mut rerun_row_sizing;
 
-        let parent_height_indefinite = !available_space.height.is_definite();
-        rerun_row_sizing = parent_height_indefinite && has_percentage_row;
+        rerun_row_sizing = inner_node_height_indefinite && has_percentage_row;
 
         if !rerun_row_sizing {
             intrinsic_row_contribution_changed =
