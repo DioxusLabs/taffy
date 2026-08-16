@@ -168,6 +168,9 @@ struct AlgoConstants {
     content_box_inset: Rect<f32>,
     /// The size reserved for scrollbar gutters in each axis
     scrollbar_gutter: Point<f32>,
+    /// Whether the node being laid out is a scroll container
+    #[cfg(feature = "content_size")]
+    is_scroll_container: bool,
     /// The gap of this section
     gap: Size<f32>,
     /// The align_items property of this node
@@ -543,6 +546,11 @@ fn compute_constants(
         Overflow::Scroll => style.scrollbar_width(),
         _ => 0.0,
     });
+    #[cfg(feature = "content_size")]
+    let is_scroll_container = {
+        let overflow = style.overflow();
+        overflow.x.is_scroll_container() || overflow.y.is_scroll_container()
+    };
     let mut content_box_inset = padding + border;
     content_box_inset.bottom += scrollbar_gutter.y;
 
@@ -587,6 +595,8 @@ fn compute_constants(
         gap,
         content_box_inset,
         scrollbar_gutter,
+        #[cfg(feature = "content_size")]
+        is_scroll_container,
         align_items,
         align_content,
         justify_content,
@@ -2540,12 +2550,19 @@ fn final_layout_pass(
         }
     }
 
-    content_size.width += if constants.layout_direction.is_rtl() {
-        constants.content_box_inset.left - constants.border.left - constants.scrollbar_gutter.x
-    } else {
-        constants.content_box_inset.right - constants.border.right - constants.scrollbar_gutter.x
-    };
-    content_size.height += constants.content_box_inset.bottom - constants.border.bottom - constants.scrollbar_gutter.y;
+    // A scroll container's own padding at the end of the content is part of its scrollable
+    // overflow region, so it is included in the content size. Boxes that are not scroll
+    // containers do not extend their overflow region by their own padding.
+    #[cfg(feature = "content_size")]
+    if constants.is_scroll_container {
+        content_size.width += if constants.layout_direction.is_rtl() {
+            constants.content_box_inset.left - constants.border.left - constants.scrollbar_gutter.x
+        } else {
+            constants.content_box_inset.right - constants.border.right - constants.scrollbar_gutter.x
+        };
+        content_size.height +=
+            constants.content_box_inset.bottom - constants.border.bottom - constants.scrollbar_gutter.y;
+    }
 
     content_size
 }

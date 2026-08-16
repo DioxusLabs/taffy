@@ -735,10 +735,14 @@ fn compute_inner(
 
     #[cfg(feature = "content_size")]
     {
-        // The container's own padding at the end of the content is part of its scrollable
-        // overflow region, so it is included in the in-flow content size.
-        inflow_content_size.width += if direction.is_rtl() { resolved_padding.left } else { resolved_padding.right };
-        inflow_content_size.height += resolved_padding.bottom;
+        // A scroll container's own padding at the end of the content is part of its scrollable
+        // overflow region, so it is included in the in-flow content size. Boxes that are not
+        // scroll containers do not extend their overflow region by their own padding.
+        if is_scroll_container {
+            inflow_content_size.width +=
+                if direction.is_rtl() { resolved_padding.left } else { resolved_padding.right };
+            inflow_content_size.height += resolved_padding.bottom;
+        }
         output.content_size = inflow_content_size.f32_max(absolute_content_size);
     }
 

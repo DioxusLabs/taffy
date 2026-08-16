@@ -87,6 +87,11 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
         Overflow::Scroll => style.scrollbar_width(),
         _ => 0.0,
     });
+    #[cfg(feature = "content_size")]
+    let is_scroll_container = {
+        let overflow = style.overflow();
+        overflow.x.is_scroll_container() || overflow.y.is_scroll_container()
+    };
     let mut content_box_inset = padding_border;
     content_box_inset.bottom += scrollbar_gutter.y;
 
@@ -787,13 +792,16 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
         item.y_position + item.baseline.unwrap_or(item.height)
     };
 
-    // The container's own padding at the end of the content is part of its scrollable
-    // overflow region, so it is included in the in-flow content size.
+    // A scroll container's own padding at the end of the content is part of its scrollable
+    // overflow region, so it is included in the in-flow content size. Boxes that are not
+    // scroll containers do not extend their overflow region by their own padding.
     #[cfg(feature = "content_size")]
     let content_size = {
         let mut content_size = item_content_size_contribution;
-        content_size.width += if direction.is_rtl() { padding.left } else { padding.right };
-        content_size.height += padding.bottom;
+        if is_scroll_container {
+            content_size.width += if direction.is_rtl() { padding.left } else { padding.right };
+            content_size.height += padding.bottom;
+        }
         content_size.f32_max(absolute_content_size)
     };
     #[cfg(not(feature = "content_size"))]
