@@ -100,6 +100,37 @@ fn content_size_includes_the_containers_own_padding() {
 }
 
 #[test]
+fn content_size_excludes_the_own_padding_of_a_non_scroll_container() {
+    for display in [Display::Block, Display::Flex, Display::Grid] {
+        for (top, bottom) in [(PADDING, 0.0), (0.0, PADDING), (PADDING, PADDING), (0.0, 0.0)] {
+            let mut tree = new_test_tree();
+            let child = tree
+                .new_leaf(Style { size: Size { width: length(100.0), height: length(CONTENT) }, ..Default::default() })
+                .unwrap();
+            let node = tree
+                .new_with_children(
+                    Style {
+                        display,
+                        box_sizing: BoxSizing::BorderBox,
+                        size: Size { width: length(300.0), height: length(CONTAINER) },
+                        padding: edge(top, bottom),
+                        ..Default::default()
+                    },
+                    &[child],
+                )
+                .unwrap();
+
+            tree.compute_layout(node, Size::MAX_CONTENT).unwrap();
+            let layout = tree.layout(node).unwrap();
+
+            // A box that is not a scroll container does not extend its scrollable overflow
+            // region by its own padding: only the content contributes.
+            assert_eq!(layout.content_size.height, top + CONTENT, "{display:?} with padding {top}/{bottom}");
+        }
+    }
+}
+
+#[test]
 fn scroll_height_accounts_for_the_containers_own_padding() {
     for display in [Display::Block, Display::Flex, Display::Grid] {
         for (top, bottom) in [(PADDING, 0.0), (0.0, PADDING), (PADDING, PADDING), (0.0, 0.0)] {

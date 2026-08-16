@@ -19,6 +19,8 @@
 
 ### Fixed
 
+- Block/Flexbox/Grid: a container's own end-side padding (right padding for LTR, left padding for RTL, and bottom padding) is now only included in its `content_size` when the container is a scroll container (i.e. has `overflow` other than `visible`/`clip` in either axis). Per the [CSS Overflow spec](https://www.w3.org/TR/css-overflow-3/#scrollable), boxes that are not scroll containers do not extend their scrollable overflow region by their own padding, so overflowing content within an ordinary padded box no longer propagates spuriously enlarged content sizes to ancestor scroll containers
+
 - Grid: the first baselines of grid items which are scroll containers are now clamped to the item's border box (matching the existing flexbox behaviour, per the [CSSWG resolution](https://github.com/w3c/csswg-drafts/issues/7660))
 
 - Flexbox: items with `align-self: baseline` and an `auto` cross-axis margin no longer participate in baseline alignment, per [CSS Flexbox §8.3](https://www.w3.org/TR/css-flexbox-1/#baseline-participation). Previously such items were still counted when deciding whether a line performs baseline alignment, had their baselines measured, and could affect the container's own first baseline
