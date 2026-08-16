@@ -342,7 +342,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
         &mut columns,
         &mut items,
         |track: &GridTrack, _, _| Some(track.base_size),
-        false, // TODO: Support baseline alignment in the vertical axis
+        has_baseline_aligned_item,
     );
     let initial_row_sum = rows.iter().map(|track| track.base_size).sum::<f32>();
     inner_node_size.height = inner_node_size.height.or_else(|| initial_row_sum.into());
@@ -528,7 +528,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
                 &mut columns,
                 &mut items,
                 |track: &GridTrack, _, _| Some(track.base_size),
-                false, // TODO: Support baseline alignment in the vertical axis
+                has_baseline_aligned_item,
             );
         }
     }
@@ -638,6 +638,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
         );
         item.y_position = y_position;
         item.height = height;
+        item.baseline = baselines.first;
         item.last_baseline = baselines.last;
 
         #[cfg(feature = "content_size")]
@@ -835,8 +836,11 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     let grid_container_baseline: Option<f32> = if contain.suppresses_baseline() {
         None
     } else {
-        // Sort items by row start position so that we can iterate items in groups which are in the same row
-        items.sort_by_key(|item| item.row_indexes.start);
+        // Sort items into "grid order" (row-major order of the grid areas they occupy, with ties
+        // resolved by document order, which the items are already sorted by at this point)
+        // (column indexes are visually reversed for RTL, so negate them to recover logical column order)
+        let column_dir_factor: i32 = if direction.is_rtl() { -1 } else { 1 };
+        items.sort_by_key(|item| (item.row_indexes.start, column_dir_factor * item.column_indexes.start as i32));
 
         // Get the row index of the first row containing items
         let first_row = items[0].row_indexes.start;
@@ -859,10 +863,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     let grid_container_last_baseline: Option<f32> = if contain.suppresses_baseline() {
         None
     } else {
-        // Sort items by row start position so that we can iterate items in groups which are in the same row
-        items.sort_by_key(|item| item.row_indexes.start);
-
-        // Get the row index of the last row containing items
+        // Get the row index of the last row containing items (items are sorted by row start position above)
         let last_row = items[items.len() - 1].row_indexes.start;
 
         // Create a slice of all of the items that start in this row (taking advantage of the fact that the array is sorted)

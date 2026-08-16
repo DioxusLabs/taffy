@@ -3,7 +3,6 @@
 use super::types::{GridItem, GridTrack, TrackCounts};
 use crate::geometry::{AbstractAxis, Line, Size};
 use crate::style::{AlignContent, AlignContentKeyword, AlignItemsKeyword, AvailableSpace};
-use crate::style_helpers::TaffyMinContent;
 use crate::tree::{LayoutPartialTree, LayoutPartialTreeExt, SizingMode};
 use crate::util::sys::{f32_max, f32_min, Vec};
 use crate::util::{MaybeMath, ResolveOrZero};
@@ -291,8 +290,10 @@ pub(super) fn track_sizing_algorithm<Tree: LayoutPartialTree>(
     initialize_track_sizes(tree, axis_tracks, percentage_basis);
 
     // 11.5.1 Shim item baselines
-    if has_baseline_aligned_item {
-        resolve_item_baselines(tree, axis, items, inner_node_size);
+    // Baseline shims apply in the block axis, and are resolved once the inline axis (column) tracks
+    // have been sized so that percentage-sized and aspect-ratio-dependent items measure correctly.
+    if has_baseline_aligned_item && axis == AbstractAxis::Block {
+        resolve_item_baselines(tree, items, inner_node_size, other_axis_tracks);
     }
 
     // If all tracks have a fixed min track sizing function and base_size = growth_limit,
@@ -457,13 +458,12 @@ fn initialize_track_sizes(
 /// 11.5.1 Shim baseline-aligned items so their intrinsic size contributions reflect their baseline alignment.
 fn resolve_item_baselines(
     tree: &mut impl LayoutPartialTree,
-    axis: AbstractAxis,
     items: &mut [GridItem],
     inner_node_size: Size<Option<f32>>,
+    columns: &[GridTrack],
 ) {
-    // Sort items by track in the other axis (row) start position so that we can iterate items in groups which
-    // are in the same track in the other axis (row)
-    let other_axis = axis.other();
+    // Sort items by row start position so that we can iterate items in groups which are in the same row
+    let other_axis = AbstractAxis::Block;
     items.sort_by_key(|item| item.placement(other_axis).start);
 
     // Iterate over grid rows
@@ -514,11 +514,18 @@ fn resolve_item_baselines(
                 continue;
             }
 
+            // Measure the item using its grid area width (including any spanned gutters) as the
+            // containing block width so that percentage sizes and aspect ratios resolve correctly
+            let grid_area_width: f32 =
+                item.track_range_excluding_lines(AbstractAxis::Inline).map(|index| columns[index].base_size).sum();
+            let grid_area_size = Size { width: Some(grid_area_width), height: None };
+            let known_dimensions = item.known_dimensions(tree, grid_area_size);
+
             let measured_size_and_baselines = tree.perform_child_layout(
                 item.node,
-                Size::NONE,
-                inner_node_size,
-                Size::MIN_CONTENT,
+                known_dimensions,
+                grid_area_size,
+                Size { width: AvailableSpace::Definite(grid_area_width), height: AvailableSpace::MinContent },
                 SizingMode::InherentSize,
                 Line::FALSE,
             );
