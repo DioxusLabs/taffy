@@ -23,6 +23,8 @@
 
 - Flexbox: items with `align-self: baseline` and an `auto` cross-axis margin no longer participate in baseline alignment, per [CSS Flexbox §8.3](https://www.w3.org/TR/css-flexbox-1/#baseline-participation). Previously such items were still counted when deciding whether a line performs baseline alignment, had their baselines measured, and could affect the container's own first baseline
 
+- Grid: percentage (and `calc()`) gaps now resolve against an indefinite container size correctly, matching Chrome. During intrinsic sizing a percentage gap with an indefinite basis contributes zero (so `calc()` gaps resolve their percentage part against zero); once the container's content-box size in that axis is resolved, gaps re-resolve against it and track positions account for the resolved gap. Previously such gaps remained zero (or their percentage part remained zero) in the final layout
+
 ### Changed
 
 - `LayoutOutput`'s `first_baselines: Point<Option<f32>>` field has been replaced with `baselines: Baselines`, where the new `Baselines` struct has `first: Option<f32>` and `last: Option<f32>` fields (both horizontal baselines, measured from the top edge of the node). The never-read vertical (x) baseline slot has been dropped in favour of a last-baseline slot. Last baselines are not yet computed by any of the built-in layout algorithms (this is purely a representational change), but custom tree implementations and measure functions can now report them
