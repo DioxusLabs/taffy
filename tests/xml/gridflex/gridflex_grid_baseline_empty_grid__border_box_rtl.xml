@@ -1,0 +1,17 @@
+<test name="gridflex_grid_baseline_empty_grid__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div direction="rtl" align-items="baseline" width="300px">
+      <div direction="rtl" width="20px" height="45px"/>
+      <div display="grid" direction="rtl" width="50px" height="30px" margin-top="15px" margin-left="0px" margin-bottom="30px" margin-right="0px" padding-top="10px" padding-left="0px" padding-bottom="20px" padding-right="0px" border-top="5px" border-bottom="10px"/>
+      <div display="grid" direction="rtl" width="50px" height="60px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="300" height="90">
+      <node x="280" y="15" width="20" height="45"/>
+      <node x="230" y="15" width="50" height="45"/>
+      <node x="180" y="0" width="50" height="60"/>
+    </node>
+  </expectations>
+</test>

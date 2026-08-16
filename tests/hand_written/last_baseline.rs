@@ -332,9 +332,9 @@ mod last_baseline {
         );
 
         let output = tree.layout_root(root);
-        // First baseline: no baseline-aligned items, so synthesized from the first item's
-        // border box (y=0 + height=50). Last baseline: the last row's item's last baseline (y=50 + 55).
-        assert_eq!(output.baselines, Baselines { first: Some(50.0), last: Some(50.0 + 55.0) });
+        // First baseline: the first row's item's first baseline (y=0 + 30).
+        // Last baseline: the last row's item's last baseline (y=50 + 55).
+        assert_eq!(output.baselines, Baselines { first: Some(30.0), last: Some(50.0 + 55.0) });
     }
 
     /// A block container's first baseline comes from its first in-flow child with a baseline,

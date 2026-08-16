@@ -1,0 +1,25 @@
+<test name="gridflex_align_last_baseline_nested_grid__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div direction="rtl" align-items="last baseline" width="300px">
+      <div direction="rtl" width="20px" height="45px"/>
+      <div display="grid" direction="rtl" row-gap="10px" column-gap="10px" grid-template-columns="40px 40px">
+        <div direction="rtl" height="10px"/>
+        <div direction="rtl" align-self="last baseline" height="30px" margin-top="10px" margin-left="0px" margin-bottom="10px" margin-right="0px"/>
+        <div direction="rtl" height="50px"/>
+        <div direction="rtl" align-self="last baseline" height="40px" margin-top="10px" margin-left="0px" margin-bottom="10px" margin-right="0px"/>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="300" height="120">
+      <node x="280" y="65" width="20" height="45"/>
+      <node x="190" y="0" width="90" height="120">
+        <node x="50" y="0" width="40" height="10"/>
+        <node x="0" y="10" width="40" height="30"/>
+        <node x="50" y="60" width="40" height="50"/>
+        <node x="0" y="70" width="40" height="40"/>
+      </node>
+    </node>
+  </expectations>
+</test>
