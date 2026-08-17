@@ -9,9 +9,10 @@ use crate::util::sys::{f32_max, f32_min};
 ///
 /// `location` is the position of the node's border box measured from the parent's scroll origin
 /// (logical start edge): callers pass coordinates that are mirrored for RTL. The node's own
-/// `scrollable_overflow_rect` propagates to the parent only where the node's `overflow` is
-/// `visible`; in other values of `overflow` the node clips its overflow and contributes only its
-/// border box.
+/// `scrollable_overflow_rect` propagates to the parent only where the node's overflow allows it
+/// to escape: a scroll container (`Hidden`/`Scroll` in either axis) clips both axes and
+/// contributes only its border box, while for non-scroll-containers `Clip` clips just its own
+/// axis and `Visible` propagates.
 ///
 /// Boxes positioned wholly in the unreachable scrollable overflow region (entirely before the
 /// scroll origin in either axis) must be clipped by a scroll container and are excluded from its
@@ -25,28 +26,21 @@ pub(crate) fn compute_scrollable_overflow_contribution(
     overflow: Point<Overflow>,
     parent_is_scroll_container: bool,
 ) -> Rect<f32> {
+    let is_scroll_container = overflow.x.is_scroll_container() || overflow.y.is_scroll_container();
+    let propagates = Point {
+        x: !is_scroll_container && overflow.x == Overflow::Visible,
+        y: !is_scroll_container && overflow.y == Overflow::Visible,
+    };
     let end_extent = Size {
-        width: match overflow.x {
-            Overflow::Visible => f32_max(size.width, scrollable_overflow_rect.right),
-            _ => size.width,
-        },
-        height: match overflow.y {
-            Overflow::Visible => f32_max(size.height, scrollable_overflow_rect.bottom),
-            _ => size.height,
-        },
+        width: if propagates.x { f32_max(size.width, scrollable_overflow_rect.right) } else { size.width },
+        height: if propagates.y { f32_max(size.height, scrollable_overflow_rect.bottom) } else { size.height },
     };
     if end_extent.width <= 0.0 || end_extent.height <= 0.0 {
         return Rect::ZERO;
     }
     let start_extent = Point {
-        x: match overflow.x {
-            Overflow::Visible => f32_min(0.0, scrollable_overflow_rect.left),
-            _ => 0.0,
-        },
-        y: match overflow.y {
-            Overflow::Visible => f32_min(0.0, scrollable_overflow_rect.top),
-            _ => 0.0,
-        },
+        x: if propagates.x { f32_min(0.0, scrollable_overflow_rect.left) } else { 0.0 },
+        y: if propagates.y { f32_min(0.0, scrollable_overflow_rect.top) } else { 0.0 },
     };
     let contribution = Rect {
         left: location.x + start_extent.x,

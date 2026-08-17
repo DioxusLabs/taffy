@@ -96,6 +96,61 @@ fn end_side_overflow_is_captured_and_scrollable() {
     }
 }
 
+fn nested_overflow_layout(display: Display, child_overflow: Point<Overflow>) -> Layout {
+    let mut tree = new_test_tree();
+    // Grandchild overflowing the child in the y axis (extends to y=300 in a 200-high child)
+    let grandchild = tree
+        .new_leaf(Style {
+            position: Position::Absolute,
+            inset: Rect { left: length(0.0), right: auto(), top: length(CONTAINER), bottom: auto() },
+            size: Size { width: length(CHILD), height: length(CHILD) },
+            ..Default::default()
+        })
+        .unwrap();
+    let child = tree
+        .new_with_children(
+            Style {
+                display,
+                size: Size { width: length(CONTAINER), height: length(CONTAINER) },
+                overflow: child_overflow,
+                ..Default::default()
+            },
+            &[grandchild],
+        )
+        .unwrap();
+    let node = tree
+        .new_with_children(
+            Style { display, size: Size { width: length(CONTAINER), height: length(CONTAINER) }, ..Default::default() },
+            &[child],
+        )
+        .unwrap();
+
+    tree.compute_layout(node, Size::MAX_CONTENT).unwrap();
+    *tree.layout(node).unwrap()
+}
+
+#[test]
+fn scroll_container_in_one_axis_clips_both_axes() {
+    for display in [Display::Block, Display::Flex, Display::Grid] {
+        // `Hidden`/`Scroll` in either axis makes the child a scroll container, which clips
+        // overflow in both axes: the grandchild's y overflow must not propagate.
+        let layout = nested_overflow_layout(display, Point { x: Overflow::Hidden, y: Overflow::Visible });
+
+        assert_eq!(layout.scrollable_overflow_rect.bottom, CONTAINER, "{display:?}");
+    }
+}
+
+#[test]
+fn clip_in_one_axis_does_not_clip_the_other() {
+    for display in [Display::Block, Display::Flex, Display::Grid] {
+        // `Clip` does not establish a scroll container: overflow in the other (visible) axis
+        // still propagates.
+        let layout = nested_overflow_layout(display, Point { x: Overflow::Clip, y: Overflow::Visible });
+
+        assert_eq!(layout.scrollable_overflow_rect.bottom, CONTAINER + CHILD, "{display:?}");
+    }
+}
+
 #[test]
 fn wholly_unreachable_boxes_are_excluded_for_rtl_scroll_containers() {
     for display in [Display::Block, Display::Flex, Display::Grid] {
