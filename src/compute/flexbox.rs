@@ -2085,6 +2085,7 @@ fn determine_hypothetical_cross_size(
                         height: if constants.is_row { child_available_cross } else { child_available_main },
                     },
                     vertical_margins_are_collapsible: Line::FALSE,
+                    content_offset_y: 0.0,
                 },
             )
             .size
@@ -2165,6 +2166,7 @@ fn calculate_children_base_lines(
                     .maybe_sub(child.margin.sum_axes())
                     .maybe_max(Size::ZERO),
                     vertical_margins_are_collapsible: Line::FALSE,
+                    content_offset_y: 0.0,
                 },
             );
 
@@ -2639,6 +2641,7 @@ fn calculate_flex_item(
             // The available space passed to the child excludes the child's margins
             available_space: (container_size - item.margin.sum_axes()).map(|s| s.max(0.0).into()),
             vertical_margins_are_collapsible: Line::FALSE,
+            content_offset_y: 0.0,
         },
     );
     let LayoutOutput {
