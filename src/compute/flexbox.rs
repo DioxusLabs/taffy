@@ -2027,7 +2027,7 @@ fn distribute_remaining_free_space(flex_lines: &mut [FlexLine], constants: &Algo
         let total_main_axis_gap = sum_axis_gaps(constants.gap.main(constants.dir), line.items.len());
         let used_space: f32 = total_main_axis_gap
             + line.items.iter().map(|child| child.outer_target_size.main(constants.dir)).sum::<f32>();
-        let free_space = constants.inner_container_size.main(constants.dir) - used_space;
+        let mut free_space = constants.inner_container_size.main(constants.dir) - used_space;
         let mut num_auto_margins = 0;
 
         for child in line.items.iter_mut() {
@@ -2058,6 +2058,9 @@ fn distribute_remaining_free_space(flex_lines: &mut [FlexLine], constants: &Algo
                     }
                 }
             }
+
+            // The auto margins have absorbed all of the free space, leaving none for `justify-content`
+            free_space = 0.0;
         }
 
         let num_items = line.items.len();
