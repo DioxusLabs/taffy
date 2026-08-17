@@ -162,7 +162,7 @@ fn leaf_content_size_includes_the_containers_own_padding() {
     for (top, bottom) in [(PADDING, 0.0), (0.0, PADDING), (PADDING, PADDING), (0.0, 0.0)] {
         let layout = measured_leaf(Overflow::Scroll, edge(top, bottom));
 
-        assert_eq!(layout.content_size.height, top + CONTENT + bottom, "Leaf with padding {top}/{bottom}");
+        assert_eq!(layout.scrollable_overflow_rect.bottom, top + CONTENT + bottom, "Leaf with padding {top}/{bottom}");
     }
 }
 
@@ -173,7 +173,7 @@ fn leaf_content_size_excludes_the_own_padding_of_a_non_scroll_container() {
 
         // A box that is not a scroll container does not extend its scrollable overflow
         // region by its own padding: only the content contributes.
-        assert_eq!(layout.content_size.height, top + CONTENT, "Leaf with padding {top}/{bottom}");
+        assert_eq!(layout.scrollable_overflow_rect.bottom, top + CONTENT, "Leaf with padding {top}/{bottom}");
     }
 }
 
