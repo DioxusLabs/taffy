@@ -10,8 +10,8 @@
 use crate::compute::common::content_size::compute_content_size_contribution;
 use crate::geometry::{AbsoluteAxis, Line, Point, Rect, Size};
 use crate::style::{
-    AvailableSpace, BlockContainerStyle, BoxGenerationMode, CompactLength, CoreStyle, Direction, TableContainerStyle,
-    TableItemStyle, TableLayout, TableRole,
+    AvailableSpace, BoxGenerationMode, CompactLength, CoreStyle, Direction, TableContainerStyle, TableItemStyle,
+    TableLayout, TableRole,
 };
 use crate::style_helpers::TaffyMaxContent;
 use crate::tree::traits::{LayoutPartialTreeExt, LayoutTableContainer};
@@ -259,7 +259,7 @@ pub fn compute_table_layout(
         sizing.height = output.size.height;
 
         let cell_style = tree.get_table_child_style(cell.node_id);
-        let participates = tree.get_block_container_style(cell.node_id).align_content().is_none();
+        let participates = tree.get_table_child_style(cell.node_id).align_content().is_none();
         let height_dim = cell_style.size().height;
         drop(cell_style);
 
