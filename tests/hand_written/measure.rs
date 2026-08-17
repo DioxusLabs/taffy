@@ -333,6 +333,30 @@ mod measure {
     }
 
     #[test]
+    fn explicit_min_main_size_skips_min_content_measurement() {
+        fn assert_not_min_content(
+            inputs: LayoutInput,
+            _node_id: NodeId,
+            _context: Option<&mut ()>,
+            _style: &Style,
+        ) -> LayoutOutput {
+            assert_ne!(inputs.available_space.width, AvailableSpace::MinContent);
+            LayoutOutput::from_outer_size(Size { width: 10.0, height: 10.0 })
+        }
+
+        let mut taffy = TaffyTree::new();
+        let child = taffy
+            .new_leaf_with_context(
+                Style { min_size: Size { width: length(10.0), height: auto() }, ..Default::default() },
+                (),
+            )
+            .unwrap();
+        let root = taffy.new_with_children(Style::default(), &[child]).unwrap();
+
+        taffy.compute_layout_with_measure(root, Size::MAX_CONTENT, assert_not_min_content).unwrap();
+    }
+
+    #[test]
     fn measure_absolute_child() {
         let mut taffy = new_test_tree();
         let child = taffy
