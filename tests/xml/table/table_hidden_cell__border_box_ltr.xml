@@ -1,0 +1,33 @@
+<test name="table_hidden_cell__border_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="table" direction="ltr" border-spacing-x="0px" border-spacing-y="0px">
+      <div display="table-row-group" direction="ltr">
+        <div display="table-row" direction="ltr">
+          <div display="table-cell" direction="ltr" width="20px" height="20px"/>
+          <div display="none" direction="ltr" width="60px" height="40px"/>
+          <div display="table-cell" direction="ltr" width="30px" height="20px"/>
+        </div>
+        <div display="table-row" direction="ltr">
+          <div display="table-cell" direction="ltr" width="25px" height="20px"/>
+          <div display="table-cell" direction="ltr" width="35px" height="20px"/>
+        </div>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="60" height="40">
+      <node x="0" y="0" width="60" height="40">
+        <node x="0" y="0" width="60" height="20">
+          <node x="0" y="0" width="25" height="20"/>
+          <node x="0" y="0" width="0" height="0"/>
+          <node x="25" y="0" width="35" height="20"/>
+        </node>
+        <node x="0" y="20" width="60" height="20">
+          <node x="0" y="0" width="25" height="20"/>
+          <node x="25" y="0" width="35" height="20"/>
+        </node>
+      </node>
+    </node>
+  </expectations>
+</test>
