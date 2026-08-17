@@ -17,6 +17,10 @@
 
 - `Dimension` also supports the `content` keyword (`Dimension::content()`, CSS `content`), which indicates an automatic size based on the box's content. This keyword is only valid for `flex-basis`, where it sizes the item based on its content (ignoring its main size property) when computing its flex base size. In any other context (e.g. `width`/`height`) it behaves as `auto`
 
+### Changed
+
+- Flexbox/Block: absolutely positioned children are no longer measured when both of their dimensions are already known (e.g. from explicit sizes or insets), matching the existing grid behaviour
+
 ### Fixed
 
 - Flexbox: skip the automatic min-content measurement when an item's minimum main size is already resolved from its style or overflow. Previously this fallback was evaluated eagerly and could cause nested flex layouts with explicit minimum sizes to perform unnecessary recursive measurements
