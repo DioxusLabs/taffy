@@ -96,6 +96,39 @@ fn end_side_overflow_is_captured_and_scrollable() {
     }
 }
 
+#[test]
+fn absolute_only_containers_include_scroll_container_end_padding() {
+    for display in [Display::Block, Display::Flex, Display::Grid] {
+        let mut tree = new_test_tree();
+        let abs = tree
+            .new_leaf(Style {
+                position: Position::Absolute,
+                inset: Rect { left: length(0.0), right: auto(), top: length(0.0), bottom: auto() },
+                size: Size { width: length(5.0), height: length(5.0) },
+                ..Default::default()
+            })
+            .unwrap();
+        let node = tree
+            .new_with_children(
+                Style {
+                    display,
+                    overflow: Point { x: Overflow::Scroll, y: Overflow::Scroll },
+                    padding: Rect { left: length(0.0), right: length(20.0), top: length(0.0), bottom: length(30.0) },
+                    size: Size { width: length(CONTAINER), height: length(CONTAINER) },
+                    ..Default::default()
+                },
+                &[abs],
+            )
+            .unwrap();
+
+        tree.compute_layout(node, Size::MAX_CONTENT).unwrap();
+        let layout = tree.layout(node).unwrap();
+
+        assert_eq!(layout.scrollable_overflow_rect.right, 20.0, "{display:?}");
+        assert_eq!(layout.scrollable_overflow_rect.bottom, 30.0, "{display:?}");
+    }
+}
+
 fn nested_overflow_layout(display: Display, child_overflow: Point<Overflow>) -> Layout {
     let mut tree = new_test_tree();
     // Grandchild overflowing the child in the y axis (extends to y=300 in a 200-high child)

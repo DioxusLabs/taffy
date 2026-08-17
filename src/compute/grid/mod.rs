@@ -772,7 +772,14 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     // contributed by absolutely positioned children (no baseline)
     if items.is_empty() {
         #[cfg(feature = "content_size")]
-        return LayoutOutput::from_sizes(container_border_box, absolute_overflow_rect);
+        {
+            let mut overflow_rect = item_overflow_rect;
+            if is_scroll_container {
+                overflow_rect.right += if direction.is_rtl() { padding.left } else { padding.right };
+                overflow_rect.bottom += padding.bottom;
+            }
+            return LayoutOutput::from_sizes(container_border_box, overflow_rect.union(absolute_overflow_rect));
+        }
         #[cfg(not(feature = "content_size"))]
         return LayoutOutput::from_outer_size(container_border_box);
     }
