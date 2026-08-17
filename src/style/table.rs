@@ -62,7 +62,7 @@ pub trait TableItemStyle: CoreStyle {
     /// The item's role within the table, derived from its `display` value
     #[inline(always)]
     fn table_role(&self) -> TableRole {
-        TableRole::Cell
+        TableRole::Other
     }
 
     /// The number of columns this cell spans (HTML `colspan`)
