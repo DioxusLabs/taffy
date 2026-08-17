@@ -31,7 +31,7 @@ pub fn write_tree(mut writer: impl io::Write, tree: &impl PrintTree, root: NodeI
         #[cfg(feature = "content_size")]
         writeln!(
                 writer,
-                "{lines}{fork} {display} [x: {x:<4} y: {y:<4} w: {width:<4} h: {height:<4} content_w: {content_width:<4} content_h: {content_height:<4} border: l:{bl} r:{br} t:{bt} b:{bb}, padding: l:{pl} r:{pr} t:{pt} b:{pb}] ({key:?})",
+                "{lines}{fork} {display} [x: {x:<4} y: {y:<4} w: {width:<4} h: {height:<4} overflow: l:{ol} r:{or} t:{ot} b:{ob}, border: l:{bl} r:{br} t:{bt} b:{bb}, padding: l:{pl} r:{pr} t:{pt} b:{pb}] ({key:?})",
                 lines = lines_string,
                 fork = fork_string,
                 display = display,
@@ -39,8 +39,10 @@ pub fn write_tree(mut writer: impl io::Write, tree: &impl PrintTree, root: NodeI
                 y = layout.location.y,
                 width = layout.size.width,
                 height = layout.size.height,
-                content_width = layout.content_size.width,
-                content_height = layout.content_size.height,
+                ol = layout.scrollable_overflow_rect.left,
+                or = layout.scrollable_overflow_rect.right,
+                ot = layout.scrollable_overflow_rect.top,
+                ob = layout.scrollable_overflow_rect.bottom,
                 bl = layout.border.left,
                 br = layout.border.right,
                 bt = layout.border.top,

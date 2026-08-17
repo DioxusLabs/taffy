@@ -20,7 +20,7 @@ mod baseline {
         let Some(context) = context else { return LayoutOutput::DEFAULT };
         LayoutOutput::from_sizes_and_baselines(
             context.size,
-            Size::ZERO,
+            Rect::ZERO,
             Baselines::from_first(Some(context.baseline_y)),
         )
     }
