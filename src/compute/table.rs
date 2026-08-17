@@ -10,9 +10,10 @@
 use crate::compute::common::content_size::compute_content_size_contribution;
 use crate::geometry::{AbsoluteAxis, Line, Point, Rect, Size};
 use crate::style::{
-    AvailableSpace, BlockContainerStyle, CompactLength, CoreStyle, Direction, TableContainerStyle, TableItemStyle,
-    TableLayout, TableRole,
+    AvailableSpace, BlockContainerStyle, BoxGenerationMode, CompactLength, CoreStyle, Direction, TableContainerStyle,
+    TableItemStyle, TableLayout, TableRole,
 };
+use crate::style_helpers::TaffyMaxContent;
 use crate::tree::traits::{LayoutPartialTreeExt, LayoutTableContainer};
 use crate::tree::{Baselines, Layout, LayoutInput, LayoutOutput, NodeId, RequestedAxis, RunMode, SizingMode};
 use crate::util::sys::Vec;
@@ -86,6 +87,8 @@ struct Grid {
     groups: Vec<Group>,
     /// The number of columns the placed cells add up to
     col_count: usize,
+    /// The rows and cells that generate no box, which still need their layout cleared
+    hidden: Vec<NodeId>,
 }
 
 /// A row group of the table
@@ -168,8 +171,7 @@ pub fn compute_table_layout(
     let v_spacing = border_spacing.height.resolve_or_zero(parent_width, |v, b| tree.calc(v, b));
 
     // Phase 1: place cells into the grid
-    let table_children: Vec<NodeId> = (0..tree.child_count(node_id)).map(|i| tree.get_child_id(node_id, i)).collect();
-    let Grid { mut rows, cells, groups, col_count } = build_grid(tree, &table_children);
+    let Grid { mut rows, cells, groups, col_count, hidden } = build_grid(tree, node_id);
 
     if col_count == 0 || rows.is_empty() {
         let size = Size {
@@ -177,7 +179,8 @@ pub fn compute_table_layout(
             height: styled_known.height.unwrap_or(pb_size.height).maybe_clamp(min_size.height, max_size.height),
         };
         if run_mode == RunMode::PerformLayout {
-            for (order, child_id) in table_children.into_iter().enumerate() {
+            for order in 0..tree.child_count(node_id) {
+                let child_id = tree.get_child_id(node_id, order);
                 tree.set_unrounded_layout(child_id, &Layout::with_order(order as u32));
             }
         }
@@ -483,6 +486,18 @@ pub fn compute_table_layout(
         }
     }
 
+    for (order, &child_id) in hidden.iter().enumerate() {
+        tree.set_unrounded_layout(child_id, &Layout::with_order(order as u32));
+        tree.perform_child_layout(
+            child_id,
+            Size::NONE,
+            Size::NONE,
+            Size::MAX_CONTENT,
+            SizingMode::InherentSize,
+            Line::FALSE,
+        );
+    }
+
     LayoutOutput::from_sizes_and_baselines(final_size, content_size, baselines)
 }
 
@@ -497,10 +512,11 @@ fn group_row_range(rows: &[Row], group: usize) -> core::ops::Range<usize> {
 /// Place every cell of the table into the grid, and collect its row groups. Rows outside a row
 /// group belong to an anonymous one, and a rowspan never leaves the group it starts in
 /// (css-tables-3 §2.2)
-fn build_grid(tree: &mut impl LayoutTableContainer, table_children: &[NodeId]) -> Grid {
+fn build_grid(tree: &mut impl LayoutTableContainer, node_id: NodeId) -> Grid {
     let mut grid = Grid::default();
     // How many further rows the cell placed in each column still covers
     let mut occupancy: Vec<usize> = Vec::new();
+    let table_children = visible_children(tree, node_id, &mut grid.hidden);
     let mut index = 0;
 
     while index < table_children.len() {
@@ -511,10 +527,9 @@ fn build_grid(tree: &mut impl LayoutTableContainer, table_children: &[NodeId]) -
             let group = Some(grid.groups.len());
             grid.groups.push(Group { node_id: group_id, order: index as u32 });
 
-            let row_count = tree.child_count(group_id);
-            for row in 0..row_count {
-                let row_id = tree.get_child_id(group_id, row);
-                place_row(tree, row_id, group, row as u32, row_count - row, &mut occupancy, &mut grid);
+            let group_rows = visible_children(tree, group_id, &mut grid.hidden);
+            for (row, &row_id) in group_rows.iter().enumerate() {
+                place_row(tree, row_id, group, row as u32, group_rows.len() - row, &mut occupancy, &mut grid);
             }
             index += 1;
         } else {
@@ -535,6 +550,21 @@ fn build_grid(tree: &mut impl LayoutTableContainer, table_children: &[NodeId]) -
     }
 
     grid
+}
+
+/// Collect the children of `node_id` that generate a box, pushing the rest onto `hidden`
+fn visible_children(tree: &impl LayoutTableContainer, node_id: NodeId, hidden: &mut Vec<NodeId>) -> Vec<NodeId> {
+    let mut visible = Vec::with_capacity(tree.child_count(node_id));
+    for index in 0..tree.child_count(node_id) {
+        let child_id = tree.get_child_id(node_id, index);
+        if tree.get_table_child_style(child_id).box_generation_mode() == BoxGenerationMode::None {
+            hidden.push(child_id);
+        } else {
+            visible.push(child_id);
+        }
+    }
+
+    visible
 }
 
 /// Place one row's cells into the grid, skipping columns still covered by
@@ -562,10 +592,9 @@ fn place_row(
         fallback_descent: None,
     });
 
-    let cell_count = tree.child_count(row_id);
+    let row_cells = visible_children(tree, row_id, &mut grid.hidden);
     let mut col = 0;
-    for cell in 0..cell_count {
-        let cell_id = tree.get_child_id(row_id, cell);
+    for (cell, &cell_id) in row_cells.iter().enumerate() {
         let cell_style = tree.get_table_child_style(cell_id);
         let colspan = (cell_style.colspan() as usize).max(1);
         let rowspan = (cell_style.rowspan() as usize).clamp(1, rows_left);

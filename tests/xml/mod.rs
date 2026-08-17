@@ -34461,6 +34461,78 @@ mod table {
 
     #[cfg(feature = "table_layout")]
     #[test]
+    fn table_hidden_cell__border_box_ltr() {
+        crate::run_xml_test("table", "table_hidden_cell__border_box_ltr");
+    }
+
+    #[cfg(feature = "table_layout")]
+    #[test]
+    fn table_hidden_cell__content_box_ltr() {
+        crate::run_xml_test("table", "table_hidden_cell__content_box_ltr");
+    }
+
+    #[cfg(feature = "table_layout")]
+    #[test]
+    fn table_hidden_cell__border_box_rtl() {
+        crate::run_xml_test("table", "table_hidden_cell__border_box_rtl");
+    }
+
+    #[cfg(feature = "table_layout")]
+    #[test]
+    fn table_hidden_cell__content_box_rtl() {
+        crate::run_xml_test("table", "table_hidden_cell__content_box_rtl");
+    }
+
+    #[cfg(feature = "table_layout")]
+    #[test]
+    fn table_hidden_row__border_box_ltr() {
+        crate::run_xml_test("table", "table_hidden_row__border_box_ltr");
+    }
+
+    #[cfg(feature = "table_layout")]
+    #[test]
+    fn table_hidden_row__content_box_ltr() {
+        crate::run_xml_test("table", "table_hidden_row__content_box_ltr");
+    }
+
+    #[cfg(feature = "table_layout")]
+    #[test]
+    fn table_hidden_row__border_box_rtl() {
+        crate::run_xml_test("table", "table_hidden_row__border_box_rtl");
+    }
+
+    #[cfg(feature = "table_layout")]
+    #[test]
+    fn table_hidden_row__content_box_rtl() {
+        crate::run_xml_test("table", "table_hidden_row__content_box_rtl");
+    }
+
+    #[cfg(feature = "table_layout")]
+    #[test]
+    fn table_hidden_row_group__border_box_ltr() {
+        crate::run_xml_test("table", "table_hidden_row_group__border_box_ltr");
+    }
+
+    #[cfg(feature = "table_layout")]
+    #[test]
+    fn table_hidden_row_group__content_box_ltr() {
+        crate::run_xml_test("table", "table_hidden_row_group__content_box_ltr");
+    }
+
+    #[cfg(feature = "table_layout")]
+    #[test]
+    fn table_hidden_row_group__border_box_rtl() {
+        crate::run_xml_test("table", "table_hidden_row_group__border_box_rtl");
+    }
+
+    #[cfg(feature = "table_layout")]
+    #[test]
+    fn table_hidden_row_group__content_box_rtl() {
+        crate::run_xml_test("table", "table_hidden_row_group__content_box_rtl");
+    }
+
+    #[cfg(feature = "table_layout")]
+    #[test]
     fn table_intrinsic_flex_item_max_content__border_box_ltr() {
         crate::run_xml_test("table", "table_intrinsic_flex_item_max_content__border_box_ltr");
     }
