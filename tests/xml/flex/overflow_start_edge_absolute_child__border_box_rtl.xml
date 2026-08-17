@@ -1,0 +1,17 @@
+<test name="overflow_start_edge_absolute_child__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="flex" direction="rtl" overflow-x="hidden" overflow-y="hidden" scrollbar-width="15" width="100px" height="100px">
+      <div display="block" direction="rtl" width="40px" height="20px" margin-left="60px">
+        <div direction="rtl" position="absolute" width="80px" height="40px" top="0px" right="0px"/>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="100" height="100" scroll_width="0" scroll_height="0">
+      <node x="60" y="0" width="40" height="20">
+        <node x="-40" y="0" width="80" height="40"/>
+      </node>
+    </node>
+  </expectations>
+</test>

@@ -4542,6 +4542,26 @@ mod block {
     }
 
     #[test]
+    fn block_overflow_start_edge_absolute_child__border_box_ltr() {
+        crate::run_xml_test("block", "block_overflow_start_edge_absolute_child__border_box_ltr");
+    }
+
+    #[test]
+    fn block_overflow_start_edge_absolute_child__content_box_ltr() {
+        crate::run_xml_test("block", "block_overflow_start_edge_absolute_child__content_box_ltr");
+    }
+
+    #[test]
+    fn block_overflow_start_edge_absolute_child__border_box_rtl() {
+        crate::run_xml_test("block", "block_overflow_start_edge_absolute_child__border_box_rtl");
+    }
+
+    #[test]
+    fn block_overflow_start_edge_absolute_child__content_box_rtl() {
+        crate::run_xml_test("block", "block_overflow_start_edge_absolute_child__content_box_rtl");
+    }
+
+    #[test]
     fn block_padding_border_fixed_size__border_box_ltr() {
         crate::run_xml_test("block", "block_padding_border_fixed_size__border_box_ltr");
     }
@@ -16383,6 +16403,26 @@ mod flex {
     #[test]
     fn overflow_scrollbars_take_up_space_main_axis__content_box_rtl() {
         crate::run_xml_test("flex", "overflow_scrollbars_take_up_space_main_axis__content_box_rtl");
+    }
+
+    #[test]
+    fn overflow_start_edge_absolute_child__border_box_ltr() {
+        crate::run_xml_test("flex", "overflow_start_edge_absolute_child__border_box_ltr");
+    }
+
+    #[test]
+    fn overflow_start_edge_absolute_child__content_box_ltr() {
+        crate::run_xml_test("flex", "overflow_start_edge_absolute_child__content_box_ltr");
+    }
+
+    #[test]
+    fn overflow_start_edge_absolute_child__border_box_rtl() {
+        crate::run_xml_test("flex", "overflow_start_edge_absolute_child__border_box_rtl");
+    }
+
+    #[test]
+    fn overflow_start_edge_absolute_child__content_box_rtl() {
+        crate::run_xml_test("flex", "overflow_start_edge_absolute_child__content_box_rtl");
     }
 
     #[test]
@@ -30089,6 +30129,30 @@ mod grid {
     #[test]
     fn grid_overflow_scrollbars_take_up_space_y_axis__content_box_rtl() {
         crate::run_xml_test("grid", "grid_overflow_scrollbars_take_up_space_y_axis__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_overflow_start_edge_absolute_child__border_box_ltr() {
+        crate::run_xml_test("grid", "grid_overflow_start_edge_absolute_child__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_overflow_start_edge_absolute_child__content_box_ltr() {
+        crate::run_xml_test("grid", "grid_overflow_start_edge_absolute_child__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_overflow_start_edge_absolute_child__border_box_rtl() {
+        crate::run_xml_test("grid", "grid_overflow_start_edge_absolute_child__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_overflow_start_edge_absolute_child__content_box_rtl() {
+        crate::run_xml_test("grid", "grid_overflow_start_edge_absolute_child__content_box_rtl");
     }
 
     #[cfg(feature = "grid")]

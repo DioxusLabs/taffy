@@ -1806,7 +1806,15 @@ fn perform_absolute_layout_on_absolute_children(
 
         #[cfg(feature = "content_size")]
         {
-            let relative_location = Point { x: location.x - area_offset.x, y: location.y - area_offset.y };
+            // Location is measured from the scroll origin (the inline-start edge: right side in RTL)
+            let relative_location = if direction.is_rtl() {
+                Point {
+                    x: area_size.width - (location.x - area_offset.x) - final_size.width,
+                    y: location.y - area_offset.y,
+                }
+            } else {
+                Point { x: location.x - area_offset.x, y: location.y - area_offset.y }
+            };
             absolute_content_size = absolute_content_size.f32_max(compute_content_size_contribution(
                 relative_location,
                 final_size,
