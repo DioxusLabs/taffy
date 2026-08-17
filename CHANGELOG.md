@@ -19,6 +19,8 @@
 
 ### Fixed
 
+- Flexbox: skip the automatic min-content measurement when an item's minimum main size is already resolved from its style or overflow. Previously this fallback was evaluated eagerly and could cause nested flex layouts with explicit minimum sizes to perform unnecessary recursive measurements
+
 - Block/Flexbox/Grid: content overflowing a box past its scroll origin (the inline-start/block-start edge, e.g. an absolutely positioned child with a negative position) no longer inflates the box's `content_size`. Per the [CSS Overflow spec](https://www.w3.org/TR/css-overflow-3/#scrollable), the scrollable overflow region only extends from the scroll origin towards the inline-end/block-end directions, so such content is unreachable and does not contribute to scrollable overflow. Additionally, block layout now correctly measures absolutely positioned children from the inline-end edge in RTL when computing their `content_size` contribution, matching the existing flexbox and grid behaviour
 
 - Flexbox: free space absorbed by main-axis `auto` margins is no longer also distributed by `justify-content`. Previously an item with e.g. `margin: 0 auto` inside a `justify-content: center` container was pushed past the centre by an extra half of the free space, as the same free space was counted twice (once by the auto margins and once by the alignment step). Per [CSS Flexbox §9.5](https://www.w3.org/TR/css-flexbox-1/#algo-main-align), auto margins consume all of the positive free space, leaving none for `justify-content`
