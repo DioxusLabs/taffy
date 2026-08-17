@@ -1485,6 +1485,11 @@ impl<S: CheapCloneStr> TableItemStyle for Style<S> {
     }
 
     #[inline(always)]
+    fn align_content(&self) -> Option<AlignContent> {
+        self.align_content
+    }
+
+    #[inline(always)]
     fn colspan(&self) -> u16 {
         self.colspan
     }
@@ -1500,6 +1505,11 @@ impl<T: TableItemStyle> TableItemStyle for &'_ T {
     #[inline(always)]
     fn table_role(&self) -> TableRole {
         (*self).table_role()
+    }
+
+    #[inline(always)]
+    fn align_content(&self) -> Option<AlignContent> {
+        (*self).align_content()
     }
 
     #[inline(always)]

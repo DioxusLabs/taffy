@@ -317,11 +317,10 @@ pub trait LayoutBlockContainer: LayoutPartialTree {
 }
 
 #[cfg(feature = "table_layout")]
-/// Extends [`LayoutBlockContainer`] with getters for the styles required for CSS Table layout.
+/// Extends [`LayoutPartialTree`] with getters for the styles required for CSS Table layout.
 /// Table layout reaches past its own children into the rows and cells below them, so the tree
-/// must also be traversable to any depth. A cell is a block container, and reads its
-/// `align_content` through [`LayoutBlockContainer`].
-pub trait LayoutTableContainer: LayoutBlockContainer + TraverseTree {
+/// must also be traversable to any depth.
+pub trait LayoutTableContainer: LayoutPartialTree + TraverseTree {
     /// The style type representing the CSS Table container's styles
     type TableContainerStyle<'a>: TableContainerStyle
     where

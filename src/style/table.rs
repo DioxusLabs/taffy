@@ -1,6 +1,6 @@
 //! Style types for Table layout
 use crate::geometry::Size;
-use crate::style::LengthPercentage;
+use crate::style::{AlignContent, LengthPercentage};
 use crate::{CoreStyle, Style};
 
 /// The value of the `table-layout` property, which selects the algorithm
@@ -63,6 +63,13 @@ pub trait TableItemStyle: CoreStyle {
     #[inline(always)]
     fn table_role(&self) -> TableRole {
         TableRole::Other
+    }
+
+    /// How a cell aligns its content in the block axis. `None` means the cell takes part in
+    /// its row's baseline alignment
+    #[inline(always)]
+    fn align_content(&self) -> Option<AlignContent> {
+        Style::<Self::CustomIdent>::DEFAULT.align_content
     }
 
     /// The number of columns this cell spans (HTML `colspan`)
