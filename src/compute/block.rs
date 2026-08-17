@@ -1662,19 +1662,24 @@ fn perform_absolute_layout_on_absolute_children(
             known_dimensions = known_dimensions.maybe_apply_aspect_ratio(aspect_ratio).maybe_clamp(min_size, max_size);
         }
 
-        let measured_size = tree.measure_child_size_both(
-            item.node_id,
-            known_dimensions,
-            area_size.map(Some),
-            Size {
-                width: AvailableSpace::Definite(area_width.maybe_clamp(min_size.width, max_size.width)),
-                height: AvailableSpace::Definite(area_height.maybe_clamp(min_size.height, max_size.height)),
-            },
-            SizingMode::ContentSize,
-            Line::FALSE,
-        );
-
-        let final_size = known_dimensions.unwrap_or(measured_size).maybe_clamp(min_size, max_size);
+        let final_size = match (known_dimensions.width, known_dimensions.height) {
+            (Some(width), Some(height)) => Size { width, height },
+            _ => {
+                let measured_size = tree.measure_child_size_both(
+                    item.node_id,
+                    known_dimensions,
+                    area_size.map(Some),
+                    Size {
+                        width: AvailableSpace::Definite(area_width.maybe_clamp(min_size.width, max_size.width)),
+                        height: AvailableSpace::Definite(area_height.maybe_clamp(min_size.height, max_size.height)),
+                    },
+                    SizingMode::ContentSize,
+                    Line::FALSE,
+                );
+                known_dimensions.unwrap_or(measured_size)
+            }
+        }
+        .maybe_clamp(min_size, max_size);
 
         let layout_output = tree.perform_child_layout(
             item.node_id,
