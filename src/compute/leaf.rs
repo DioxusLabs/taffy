@@ -150,10 +150,25 @@ where
     };
     let size = size.maybe_max(padding_border.sum_axes().map(Some));
 
+    // A scroll container's own padding at the end of the content is part of its scrollable
+    // overflow region, so it is included in the content size. Boxes that are not scroll
+    // containers do not extend their overflow region by their own padding.
+    #[cfg(feature = "content_size")]
+    let content_size = {
+        let is_scroll_container = style.overflow().x.is_scroll_container() || style.overflow().y.is_scroll_container();
+        let is_rtl = style.direction().is_rtl();
+        let start_padding = if is_rtl { padding.right } else { padding.left };
+        let end_padding = if is_rtl { padding.left } else { padding.right };
+        Size {
+            width: start_padding + measured_size.width + if is_scroll_container { end_padding } else { 0.0 },
+            height: padding.top + measured_size.height + if is_scroll_container { padding.bottom } else { 0.0 },
+        }
+    };
+
     LayoutOutput {
         size,
         #[cfg(feature = "content_size")]
-        content_size: measured_size + padding.sum_axes(),
+        content_size,
         baselines: Baselines::NONE,
         top_margin: CollapsibleMarginSet::ZERO,
         bottom_margin: CollapsibleMarginSet::ZERO,
