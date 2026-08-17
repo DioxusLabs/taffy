@@ -14,7 +14,7 @@ use crate::style::{
     TableLayout, TableRole,
 };
 use crate::tree::traits::{LayoutPartialTreeExt, LayoutTableContainer};
-use crate::tree::{Layout, LayoutInput, LayoutOutput, NodeId, RequestedAxis, RunMode, SizingMode};
+use crate::tree::{Baselines, Layout, LayoutInput, LayoutOutput, NodeId, RequestedAxis, RunMode, SizingMode};
 use crate::util::sys::Vec;
 use crate::util::{MaybeMath, MaybeResolve, ResolveOrZero};
 use crate::BoxSizing;
@@ -240,6 +240,7 @@ pub fn compute_table_layout(
             cell.node_id,
             LayoutInput {
                 known_dimensions: Size { width: Some(sizing.width), height: None },
+                known_dimensions_are_definite: Size { width: true, height: true },
                 parent_size: Size { width: Some(table_width - pb_size.width), height: None },
                 available_space: Size {
                     width: AvailableSpace::Definite(sizing.width),
@@ -282,7 +283,7 @@ pub fn compute_table_layout(
             if tree.child_count(cell.node_id) == 0 {
                 row.fallback_descent = Some(row.fallback_descent.map_or(pb_bottom, |d: f32| d.min(pb_bottom)));
             } else {
-                let baseline = output.first_baselines.y.unwrap_or(output.size.height - pb_bottom);
+                let baseline = output.baselines.first.unwrap_or(output.size.height - pb_bottom);
                 sizing.baseline = Some(baseline);
                 row.baseline = Some(row.baseline.map_or(baseline, |b: f32| b.max(baseline)));
             }
@@ -353,7 +354,7 @@ pub fn compute_table_layout(
     // The table's baseline is its first row's baseline (css-tables-3 §4.2)
     let table_baseline =
         rows.first().and_then(|row| row.baseline).map(|baseline| padding_border.top + v_spacing + baseline);
-    let baselines = Point { x: None, y: table_baseline };
+    let baselines = Baselines::from_first(table_baseline);
 
     if run_mode == RunMode::ComputeSize {
         return LayoutOutput::from_sizes_and_baselines(final_size, Size::zero(), baselines);
@@ -430,6 +431,7 @@ pub fn compute_table_layout(
             cell.node_id,
             LayoutInput {
                 known_dimensions: Size { width: Some(cell_width), height: Some(cell_height) },
+                known_dimensions_are_definite: Size { width: true, height: true },
                 parent_size: Size { width: Some(grid_width), height: Some(table_height - pb_size.height) },
                 available_space: Size {
                     width: AvailableSpace::Definite(cell_width),
