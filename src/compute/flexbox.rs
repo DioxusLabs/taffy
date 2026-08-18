@@ -17,7 +17,7 @@ use crate::{BoxGenerationMode, BoxSizing, Dimension, Direction, RequestedAxis};
 
 use super::common::alignment::apply_alignment_fallback;
 #[cfg(feature = "content_size")]
-use super::common::content_size::compute_content_size_contribution;
+use super::common::scrollable_overflow::compute_scrollable_overflow_contribution;
 use super::common::sizing_keyword::{
     resolve_absolute_sizing_keywords, resolve_sizing_keyword, SizingKeywordResolution,
 };
@@ -469,11 +469,11 @@ fn compute_preliminary(tree: &mut impl LayoutFlexboxContainer, node: NodeId, inp
 
     // Do a final layout pass and gather the resulting layouts
     debug_log!("final_layout_pass");
-    let inflow_content_size = final_layout_pass(tree, &mut flex_lines, &constants);
+    let inflow_overflow_rect = final_layout_pass(tree, &mut flex_lines, &constants);
 
     // Before returning we perform absolute layout on all absolutely positioned children
     debug_log!("perform_absolute_layout_on_absolute_children");
-    let absolute_content_size = perform_absolute_layout_on_absolute_children(tree, node, &constants);
+    let absolute_overflow_rect = perform_absolute_layout_on_absolute_children(tree, node, &constants);
 
     debug_log!("hidden_layout");
     let len = tree.child_count(node);
@@ -507,7 +507,7 @@ fn compute_preliminary(tree: &mut impl LayoutFlexboxContainer, node: NodeId, inp
 
     LayoutOutput::from_sizes_and_baselines(
         constants.container_size,
-        inflow_content_size.f32_max(absolute_content_size),
+        inflow_overflow_rect.union(absolute_overflow_rect),
         Baselines::from_first(first_vertical_baseline),
     )
 }
@@ -2330,7 +2330,7 @@ fn calculate_flex_item(
     total_offset_main: &mut f32,
     total_offset_cross: f32,
     line_offset_cross: f32,
-    #[cfg(feature = "content_size")] total_content_size: &mut Size<f32>,
+    #[cfg(feature = "content_size")] total_overflow_rect: &mut Rect<f32>,
     #[cfg(feature = "content_size")] border: Rect<f32>,
     constants: &AlgoConstants,
 ) {
@@ -2355,7 +2355,7 @@ fn calculate_flex_item(
     let LayoutOutput {
         size,
         #[cfg(feature = "content_size")]
-        content_size,
+        scrollable_overflow_rect,
         ..
     } = layout_output;
 
@@ -2422,7 +2422,7 @@ fn calculate_flex_item(
             order: item.order,
             size,
             #[cfg(feature = "content_size")]
-            content_size,
+            scrollable_overflow_rect,
             scrollbar_size,
             location,
             padding: item.padding,
@@ -2444,11 +2444,12 @@ fn calculate_flex_item(
         } else {
             Point { x: location.x - border.left, y: location.y - border.top }
         };
-        *total_content_size = total_content_size.f32_max(compute_content_size_contribution(
+        *total_overflow_rect = total_overflow_rect.union(compute_scrollable_overflow_contribution(
             contribution_location,
             size,
-            content_size,
+            scrollable_overflow_rect,
             item.overflow,
+            constants.is_scroll_container,
         ));
     }
 }
@@ -2459,7 +2460,7 @@ fn calculate_layout_line(
     tree: &mut impl LayoutFlexboxContainer,
     line: &mut FlexLine,
     total_offset_cross: &mut f32,
-    #[cfg(feature = "content_size")] content_size: &mut Size<f32>,
+    #[cfg(feature = "content_size")] overflow_rect: &mut Rect<f32>,
     #[cfg(feature = "content_size")] border: Rect<f32>,
     constants: &AlgoConstants,
 ) {
@@ -2488,7 +2489,7 @@ fn calculate_layout_line(
                 *total_offset_cross,
                 line_offset_cross,
                 #[cfg(feature = "content_size")]
-                content_size,
+                overflow_rect,
                 #[cfg(feature = "content_size")]
                 border,
                 constants,
@@ -2503,7 +2504,7 @@ fn calculate_layout_line(
                 *total_offset_cross,
                 line_offset_cross,
                 #[cfg(feature = "content_size")]
-                content_size,
+                overflow_rect,
                 #[cfg(feature = "content_size")]
                 border,
                 constants,
@@ -2522,7 +2523,7 @@ fn final_layout_pass(
     tree: &mut impl LayoutFlexboxContainer,
     flex_lines: &mut [FlexLine],
     constants: &AlgoConstants,
-) -> Size<f32> {
+) -> Rect<f32> {
     let mut total_offset_cross = if constants.is_column && constants.layout_direction.is_rtl() {
         constants.container_size.width - constants.content_box_inset.cross_end(constants.dir)
     } else {
@@ -2530,7 +2531,7 @@ fn final_layout_pass(
     };
 
     #[cfg_attr(not(feature = "content_size"), allow(unused_mut))]
-    let mut content_size = Size::ZERO;
+    let mut overflow_rect = Rect::ZERO;
 
     if constants.is_wrap_reverse {
         for line in flex_lines.iter_mut().rev() {
@@ -2539,7 +2540,7 @@ fn final_layout_pass(
                 line,
                 &mut total_offset_cross,
                 #[cfg(feature = "content_size")]
-                &mut content_size,
+                &mut overflow_rect,
                 #[cfg(feature = "content_size")]
                 constants.border,
                 constants,
@@ -2552,7 +2553,7 @@ fn final_layout_pass(
                 line,
                 &mut total_offset_cross,
                 #[cfg(feature = "content_size")]
-                &mut content_size,
+                &mut overflow_rect,
                 #[cfg(feature = "content_size")]
                 constants.border,
                 constants,
@@ -2561,20 +2562,20 @@ fn final_layout_pass(
     }
 
     // A scroll container's own padding at the end of the content is part of its scrollable
-    // overflow region, so it is included in the content size. Boxes that are not scroll
+    // overflow region, so it is included in the overflow rect. Boxes that are not scroll
     // containers do not extend their overflow region by their own padding.
     #[cfg(feature = "content_size")]
     if constants.is_scroll_container {
-        content_size.width += if constants.layout_direction.is_rtl() {
+        overflow_rect.right += if constants.layout_direction.is_rtl() {
             constants.content_box_inset.left - constants.border.left - constants.scrollbar_gutter.x
         } else {
             constants.content_box_inset.right - constants.border.right - constants.scrollbar_gutter.x
         };
-        content_size.height +=
+        overflow_rect.bottom +=
             constants.content_box_inset.bottom - constants.border.bottom - constants.scrollbar_gutter.y;
     }
 
-    content_size
+    overflow_rect
 }
 
 /// Perform absolute layout on all absolutely positioned children.
@@ -2583,14 +2584,14 @@ fn perform_absolute_layout_on_absolute_children(
     tree: &mut impl LayoutFlexboxContainer,
     node: NodeId,
     constants: &AlgoConstants,
-) -> Size<f32> {
+) -> Rect<f32> {
     let container_width = constants.container_size.width;
     let container_height = constants.container_size.height;
     let inset_relative_size =
         constants.container_size - constants.border.sum_axes() - constants.scrollbar_gutter.into();
 
     #[cfg_attr(not(feature = "content_size"), allow(unused_mut))]
-    let mut content_size = Size::ZERO;
+    let mut overflow_rect = Rect::ZERO;
 
     for order in 0..tree.child_count(node) {
         let child = tree.get_child_id(node, order);
@@ -2952,7 +2953,7 @@ fn perform_absolute_layout_on_absolute_children(
                 order: order as u32,
                 size: final_size,
                 #[cfg(feature = "content_size")]
-                content_size: layout_output.content_size,
+                scrollable_overflow_rect: layout_output.scrollable_overflow_rect,
                 scrollbar_size,
                 location,
                 padding,
@@ -2963,40 +2964,30 @@ fn perform_absolute_layout_on_absolute_children(
 
         #[cfg(feature = "content_size")]
         {
-            let size_content_size_contribution = Size {
-                width: match overflow.x {
-                    Overflow::Visible => f32_max(final_size.width, layout_output.content_size.width),
-                    _ => final_size.width,
-                },
-                height: match overflow.y {
-                    Overflow::Visible => f32_max(final_size.height, layout_output.content_size.height),
-                    _ => final_size.height,
-                },
+            // Location is measured from the scroll origin (the inline-start edge: right side in RTL)
+            let absolute_area_offset = Point {
+                x: constants.border.left
+                    + if constants.layout_direction.is_rtl() { constants.scrollbar_gutter.x } else { 0.0 },
+                y: constants.border.top,
             };
-            if size_content_size_contribution.has_non_zero_area() {
-                let absolute_area_offset = Point {
-                    x: constants.border.left
-                        + if constants.layout_direction.is_rtl() { constants.scrollbar_gutter.x } else { 0.0 },
-                    y: constants.border.top,
-                };
-                let relative_location =
-                    Point { x: location.x - absolute_area_offset.x, y: location.y - absolute_area_offset.y };
-                let content_size_contribution = Size {
-                    width: if constants.layout_direction.is_rtl() {
-                        let overflow_extra_width =
-                            f32_max(size_content_size_contribution.width - final_size.width, 0.0);
-                        f32_max(inset_relative_size.width - relative_location.x, 0.0) + overflow_extra_width
-                    } else {
-                        relative_location.x + size_content_size_contribution.width
-                    },
-                    height: relative_location.y + size_content_size_contribution.height,
-                };
-                content_size = content_size.f32_max(content_size_contribution);
-            }
+            let relative_location =
+                Point { x: location.x - absolute_area_offset.x, y: location.y - absolute_area_offset.y };
+            let contribution_location = if constants.layout_direction.is_rtl() {
+                Point { x: inset_relative_size.width - relative_location.x - final_size.width, y: relative_location.y }
+            } else {
+                relative_location
+            };
+            overflow_rect = overflow_rect.union(compute_scrollable_overflow_contribution(
+                contribution_location,
+                final_size,
+                layout_output.scrollable_overflow_rect,
+                overflow,
+                constants.is_scroll_container,
+            ));
         }
     }
 
-    content_size
+    overflow_rect
 }
 
 /// Computes the total space taken up by gaps in an axis given:

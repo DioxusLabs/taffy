@@ -157,7 +157,7 @@ pub fn compute_root_layout(tree: &mut impl LayoutPartialTree, root: NodeId, avai
             location,
             size: output.size,
             #[cfg(feature = "content_size")]
-            content_size: output.content_size,
+            scrollable_overflow_rect: output.scrollable_overflow_rect,
             scrollbar_size,
             padding,
             border,
@@ -247,7 +247,12 @@ pub fn round_layout(tree: &mut impl RoundTree, node_id: NodeId) {
             - round(cumulative_y + unrounded_layout.size.height - unrounded_layout.padding.bottom);
 
         #[cfg(feature = "content_size")]
-        round_content_size(&mut layout, unrounded_layout.content_size, cumulative_x, cumulative_y);
+        round_scrollable_overflow_rect(
+            &mut layout,
+            unrounded_layout.scrollable_overflow_rect,
+            cumulative_x,
+            cumulative_y,
+        );
 
         tree.set_final_layout(node_id, &layout);
 
@@ -260,16 +265,18 @@ pub fn round_layout(tree: &mut impl RoundTree, node_id: NodeId) {
 
     #[cfg(feature = "content_size")]
     #[inline(always)]
-    /// Round content size variables.
+    /// Round the scrollable overflow rect.
     /// This is split into a separate function to make it easier to feature flag.
-    fn round_content_size(
+    fn round_scrollable_overflow_rect(
         layout: &mut Layout,
-        unrounded_content_size: Size<f32>,
+        unrounded_rect: crate::geometry::Rect<f32>,
         cumulative_x: f32,
         cumulative_y: f32,
     ) {
-        layout.content_size.width = round(cumulative_x + unrounded_content_size.width) - round(cumulative_x);
-        layout.content_size.height = round(cumulative_y + unrounded_content_size.height) - round(cumulative_y);
+        layout.scrollable_overflow_rect.left = round(cumulative_x + unrounded_rect.left) - round(cumulative_x);
+        layout.scrollable_overflow_rect.right = round(cumulative_x + unrounded_rect.right) - round(cumulative_x);
+        layout.scrollable_overflow_rect.top = round(cumulative_y + unrounded_rect.top) - round(cumulative_y);
+        layout.scrollable_overflow_rect.bottom = round(cumulative_y + unrounded_rect.bottom) - round(cumulative_y);
     }
 }
 

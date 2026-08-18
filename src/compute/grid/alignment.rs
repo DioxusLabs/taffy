@@ -13,7 +13,7 @@ use crate::util::sys::f32_max;
 use crate::util::{MaybeMath, MaybeResolve, ResolveOrZero};
 
 #[cfg(feature = "content_size")]
-use crate::compute::common::content_size::compute_content_size_contribution;
+use crate::compute::common::scrollable_overflow::compute_scrollable_overflow_contribution;
 use crate::compute::common::sizing_keyword::{resolve_sizing_keyword, SizingKeywordResolution};
 use crate::{AbsoluteAxis, BoxSizing, Direction, LayoutGridContainer};
 
@@ -88,7 +88,8 @@ pub(super) fn align_and_position_item(
     direction: Direction,
     container_border_box_width: f32,
     container_border: Rect<f32>,
-) -> (Size<f32>, f32, f32) {
+    #[cfg(feature = "content_size")] container_is_scroll_container: bool,
+) -> (Rect<f32>, f32, f32) {
     let grid_area_size = Size { width: grid_area.right - grid_area.left, height: grid_area.bottom - grid_area.top };
 
     let style = tree.get_grid_child_style(node);
@@ -378,7 +379,7 @@ pub(super) fn align_and_position_item(
             location: Point { x, y },
             size: Size { width, height },
             #[cfg(feature = "content_size")]
-            content_size: layout_output.content_size,
+            scrollable_overflow_rect: layout_output.scrollable_overflow_rect,
             scrollbar_size,
             padding,
             border,
@@ -388,22 +389,23 @@ pub(super) fn align_and_position_item(
 
     #[cfg(feature = "content_size")]
     let contribution = {
-        // Contributions to the container's content size are measured from the container's
-        // padding-box origin (mirrored for RTL), matching the scrollable overflow region.
+        // Contributions to the container's scrollable overflow rect are measured from the
+        // container's padding-box origin (mirrored for RTL), matching the scrollable overflow region.
         let contribution_location = if direction.is_rtl() {
             Point { x: container_border_box_width - (x + width) - container_border.right, y: y - container_border.top }
         } else {
             Point { x: x - container_border.left, y: y - container_border.top }
         };
-        compute_content_size_contribution(
+        compute_scrollable_overflow_contribution(
             contribution_location,
             Size { width, height },
-            layout_output.content_size,
+            layout_output.scrollable_overflow_rect,
             overflow,
+            container_is_scroll_container,
         )
     };
     #[cfg(not(feature = "content_size"))]
-    let contribution = Size::ZERO;
+    let contribution = Rect::ZERO;
 
     (contribution, y, height)
 }

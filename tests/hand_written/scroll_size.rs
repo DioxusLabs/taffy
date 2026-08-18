@@ -78,29 +78,33 @@ fn scroll_height_is_the_content_beyond_the_padding_box() {
 }
 
 #[test]
-fn content_size_excludes_the_containers_own_border() {
+fn scrollable_overflow_excludes_the_containers_own_border() {
     for display in [Display::Block, Display::Flex, Display::Grid] {
         for (top, bottom) in [(BORDER, 0.0), (0.0, BORDER), (BORDER, BORDER), (0.0, 0.0)] {
             let layout = scroller(display, edge(top, bottom));
 
-            assert_eq!(layout.content_size.height, CONTENT, "{display:?} with border {top}/{bottom}");
+            assert_eq!(layout.scrollable_overflow_rect.bottom, CONTENT, "{display:?} with border {top}/{bottom}");
         }
     }
 }
 
 #[test]
-fn content_size_includes_the_containers_own_padding() {
+fn scrollable_overflow_includes_the_containers_own_padding() {
     for display in [Display::Block, Display::Flex, Display::Grid] {
         for (top, bottom) in [(PADDING, 0.0), (0.0, PADDING), (PADDING, PADDING), (0.0, 0.0)] {
             let layout = scroller_with_padding(display, edge(0.0, 0.0), edge(top, bottom));
 
-            assert_eq!(layout.content_size.height, CONTENT + top + bottom, "{display:?} with padding {top}/{bottom}");
+            assert_eq!(
+                layout.scrollable_overflow_rect.bottom,
+                CONTENT + top + bottom,
+                "{display:?} with padding {top}/{bottom}"
+            );
         }
     }
 }
 
 #[test]
-fn content_size_excludes_the_own_padding_of_a_non_scroll_container() {
+fn scrollable_overflow_excludes_the_own_padding_of_a_non_scroll_container() {
     for display in [Display::Block, Display::Flex, Display::Grid] {
         for (top, bottom) in [(PADDING, 0.0), (0.0, PADDING), (PADDING, PADDING), (0.0, 0.0)] {
             let mut tree = new_test_tree();
@@ -125,7 +129,11 @@ fn content_size_excludes_the_own_padding_of_a_non_scroll_container() {
 
             // A box that is not a scroll container does not extend its scrollable overflow
             // region by its own padding: only the content contributes.
-            assert_eq!(layout.content_size.height, top + CONTENT, "{display:?} with padding {top}/{bottom}");
+            assert_eq!(
+                layout.scrollable_overflow_rect.bottom,
+                top + CONTENT,
+                "{display:?} with padding {top}/{bottom}"
+            );
         }
     }
 }
@@ -154,7 +162,7 @@ fn leaf_content_size_includes_the_containers_own_padding() {
     for (top, bottom) in [(PADDING, 0.0), (0.0, PADDING), (PADDING, PADDING), (0.0, 0.0)] {
         let layout = measured_leaf(Overflow::Scroll, edge(top, bottom));
 
-        assert_eq!(layout.content_size.height, top + CONTENT + bottom, "Leaf with padding {top}/{bottom}");
+        assert_eq!(layout.scrollable_overflow_rect.bottom, top + CONTENT + bottom, "Leaf with padding {top}/{bottom}");
     }
 }
 
@@ -165,7 +173,7 @@ fn leaf_content_size_excludes_the_own_padding_of_a_non_scroll_container() {
 
         // A box that is not a scroll container does not extend its scrollable overflow
         // region by its own padding: only the content contributes.
-        assert_eq!(layout.content_size.height, top + CONTENT, "Leaf with padding {top}/{bottom}");
+        assert_eq!(layout.scrollable_overflow_rect.bottom, top + CONTENT, "Leaf with padding {top}/{bottom}");
     }
 }
 
@@ -186,7 +194,7 @@ fn scroll_height_accounts_for_the_containers_own_padding() {
 /// Items in overflowing rows must contribute their position within the container (not just
 /// their size) to the container's content size.
 #[test]
-fn grid_content_size_includes_item_positions_in_overflowing_tracks() {
+fn grid_scrollable_overflow_includes_item_positions_in_overflowing_tracks() {
     let mut tree = new_test_tree();
     let child = || Style { size: Size { width: length(100.0), height: length(500.0) }, ..Default::default() };
     let c1 = tree.new_leaf(child()).unwrap();
@@ -206,7 +214,7 @@ fn grid_content_size_includes_item_positions_in_overflowing_tracks() {
     tree.compute_layout(node, Size::MAX_CONTENT).unwrap();
     let layout = tree.layout(node).unwrap();
 
-    assert_eq!(layout.content_size.height, 1000.0);
+    assert_eq!(layout.scrollable_overflow_rect.bottom, 1000.0);
     assert_eq!(layout.scroll_height(), 1000.0 - CONTAINER);
 }
 
