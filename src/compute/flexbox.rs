@@ -1209,9 +1209,18 @@ fn collect_balanced_flex_lines<'a>(
 /// has a definite main size or the item's used flex basis is definite.
 /// See <https://www.w3.org/TR/css-flexbox-1/#definite-sizes>
 #[inline]
-fn item_definiteness(constants: &AlgoConstants, item: &FlexItem) -> Size<bool> {
-    let main_is_definite = constants.has_definite_main_size || item.flex_basis_is_definite;
-    Size { width: true, height: true }.with_main(constants.dir, main_is_definite)
+fn item_definiteness(dir: FlexDirection, has_definite_main_size: bool, item: &FlexItem) -> Size<bool> {
+    let main_is_definite = has_definite_main_size || item.flex_basis_is_definite;
+    // An item's cross size is definite if it is stretched (it stretches to the flex line, whose
+    // size is known by the time the item's final layout is performed), or if its cross size
+    // style resolved to a definite size. Widths are always definite as they resolve via
+    // fit-content against definite available space.
+    let is_stretched = !item.margin_is_auto.cross_start(dir)
+        && !item.margin_is_auto.cross_end(dir)
+        && (item.size_style.cross(dir).is_stretch()
+            || (item.align_self == AlignSelf::STRETCH && item.size_style.cross(dir).is_auto()));
+    let cross_is_definite = !dir.is_row() || is_stretched || item.size.cross(dir).is_some();
+    Size { width: true, height: true }.with_main(dir, main_is_definite).with_cross(dir, cross_is_definite)
 }
 
 /// Determine the container's main size (if not already known)
@@ -1745,7 +1754,11 @@ fn determine_hypothetical_cross_size(
                         width: if constants.is_row { child.target_size.width.into() } else { child_cross },
                         height: if constants.is_row { child_cross } else { child.target_size.height.into() },
                     },
-                    known_dimensions_are_definite: item_definiteness(constants, child),
+                    known_dimensions_are_definite: item_definiteness(
+                        constants.dir,
+                        constants.has_definite_main_size,
+                        child,
+                    ),
                     parent_size: constants.node_inner_size,
                     available_space: Size {
                         width: if constants.is_row { child_known_main } else { child_available_cross },
@@ -1814,7 +1827,11 @@ fn calculate_children_base_lines(
                             child.target_size.height.into()
                         },
                     },
-                    known_dimensions_are_definite: item_definiteness(constants, child),
+                    known_dimensions_are_definite: item_definiteness(
+                        constants.dir,
+                        constants.has_definite_main_size,
+                        child,
+                    ),
                     parent_size: constants.node_inner_size,
                     available_space: Size {
                         width: if constants.is_row {
@@ -2311,8 +2328,7 @@ fn calculate_flex_item(
     direction: FlexDirection,
     layout_direction: Direction,
 ) {
-    let item_definiteness =
-        Size { width: true, height: true }.with_main(direction, has_definite_main_size || item.flex_basis_is_definite);
+    let item_definiteness = item_definiteness(direction, has_definite_main_size, item);
     let layout_output = tree.compute_child_layout(
         item.node,
         LayoutInput {
