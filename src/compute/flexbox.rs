@@ -1219,7 +1219,7 @@ fn collect_balanced_flex_lines<'a>(
 /// has a definite main size or the item's used flex basis is definite.
 /// See <https://www.w3.org/TR/css-flexbox-1/#definite-sizes>
 #[inline]
-fn item_definiteness(
+fn item_known_dimension_definiteness(
     dir: FlexDirection,
     has_definite_main_size: bool,
     cross_axis_available_space_is_definite: bool,
@@ -1775,7 +1775,7 @@ fn determine_hypothetical_cross_size(
                         width: if constants.is_row { child.target_size.width.into() } else { child_cross },
                         height: if constants.is_row { child_cross } else { child.target_size.height.into() },
                     },
-                    known_dimensions_are_definite: item_definiteness(
+                    known_dimensions_are_definite: item_known_dimension_definiteness(
                         constants.dir,
                         constants.has_definite_main_size,
                         constants.cross_axis_available_space_is_definite,
@@ -1849,7 +1849,7 @@ fn calculate_children_base_lines(
                             child.target_size.height.into()
                         },
                     },
-                    known_dimensions_are_definite: item_definiteness(
+                    known_dimensions_are_definite: item_known_dimension_definiteness(
                         constants.dir,
                         constants.has_definite_main_size,
                         constants.cross_axis_available_space_is_definite,
@@ -2352,8 +2352,12 @@ fn calculate_flex_item(
     direction: FlexDirection,
     layout_direction: Direction,
 ) {
-    let item_definiteness =
-        item_definiteness(direction, has_definite_main_size, cross_axis_available_space_is_definite, item);
+    let item_known_dimension_definiteness = item_known_dimension_definiteness(
+        direction,
+        has_definite_main_size,
+        cross_axis_available_space_is_definite,
+        item,
+    );
     let layout_output = tree.compute_child_layout(
         item.node,
         LayoutInput {
@@ -2361,7 +2365,7 @@ fn calculate_flex_item(
             sizing_mode: SizingMode::ContentSize,
             axis: RequestedAxis::Both,
             known_dimensions: item.target_size.map(|s| s.into()),
-            known_dimensions_are_definite: item_definiteness,
+            known_dimensions_are_definite: item_known_dimension_definiteness,
             parent_size: node_inner_size,
             available_space: container_size.map(|s| s.into()),
             vertical_margins_are_collapsible: Line::FALSE,
