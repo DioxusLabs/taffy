@@ -2,7 +2,7 @@
 //! <https://www.w3.org/TR/css-grid-1/#layout-algorithm>
 use super::types::{GridItem, GridTrack, TrackCounts};
 use crate::geometry::{AbstractAxis, Line, Size};
-use crate::style::{AlignContent, AlignContentKeyword, AlignSelf, AvailableSpace};
+use crate::style::{AlignContent, AlignContentKeyword, AvailableSpace};
 use crate::style_helpers::TaffyMinContent;
 use crate::tree::{LayoutPartialTree, LayoutPartialTreeExt, SizingMode};
 use crate::util::sys::{f32_max, f32_min, Vec};
@@ -493,13 +493,17 @@ fn resolve_item_baselines(
         // Count how many items in *this row* are baseline aligned
         // If a row has one or zero items participating in baseline alignment then baseline alignment is a no-op
         // for those items and we skip further computations for that row
-        let row_baseline_item_count = row_items.iter().filter(|item| item.align_self == AlignSelf::BASELINE).count();
+        let row_baseline_item_count = row_items.iter().filter(|item| item.participates_in_baseline_alignment()).count();
         if row_baseline_item_count <= 1 {
             continue;
         }
 
-        // Compute the baselines of all items in the row
+        // Compute the baselines of all items in the row participating in baseline alignment
         for item in row_items.iter_mut() {
+            if !item.participates_in_baseline_alignment() {
+                continue;
+            }
+
             let measured_size_and_baselines = tree.perform_child_layout(
                 item.node,
                 Size::NONE,
@@ -526,13 +530,19 @@ fn resolve_item_baselines(
             );
         }
 
-        // Compute the max baseline of all items in the row
-        let row_max_baseline =
-            row_items.iter().map(|item| item.baseline.unwrap_or(0.0)).max_by(|a, b| a.total_cmp(b)).unwrap();
+        // Compute the max baseline of all items in the row participating in baseline alignment
+        let row_max_baseline = row_items
+            .iter()
+            .filter(|item| item.participates_in_baseline_alignment())
+            .map(|item| item.baseline.unwrap_or(0.0))
+            .max_by(|a, b| a.total_cmp(b))
+            .unwrap();
 
-        // Compute the baseline shim for each item in the row
+        // Compute the baseline shim for each item in the row participating in baseline alignment
         for item in row_items.iter_mut() {
-            item.baseline_shim = row_max_baseline - item.baseline.unwrap_or(0.0);
+            if item.participates_in_baseline_alignment() {
+                item.baseline_shim = row_max_baseline - item.baseline.unwrap_or(0.0);
+            }
         }
     }
 }

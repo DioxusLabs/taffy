@@ -137,6 +137,14 @@ impl GridItem {
         }
     }
 
+    /// Returns true if the item participates in baseline alignment: it has `align-self: baseline`
+    /// and neither of its block-axis margins are `auto`.
+    /// See <https://www.w3.org/TR/css-align-3/#baseline-align-self>
+    #[inline(always)]
+    pub fn participates_in_baseline_alignment(&self) -> bool {
+        self.align_self == AlignSelf::BASELINE && !self.margin.top.is_auto() && !self.margin.bottom.is_auto()
+    }
+
     /// This item's placement in the specified axis in OriginZero coordinates
     pub fn placement(&self, axis: AbstractAxis) -> Line<OriginZeroLine> {
         match axis {

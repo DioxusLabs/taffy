@@ -2,7 +2,7 @@
 //! <https://www.w3.org/TR/css-grid-1>
 use crate::geometry::{AbsoluteAxis, AbstractAxis, InBothAbsAxis};
 use crate::geometry::{Line, Rect, Size};
-use crate::style::{AlignItems, AlignSelf, AvailableSpace, Overflow, Position};
+use crate::style::{AlignItems, AvailableSpace, Overflow, Position};
 use crate::tree::{Baselines, Layout, LayoutInput, LayoutOutput, LayoutPartialTreeExt, NodeId, RunMode, SizingMode};
 use crate::util::debug::debug_log;
 use crate::util::sys::{f32_max, f32_min, GridTrackVec, Vec};
@@ -305,7 +305,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     determine_if_item_crosses_flexible_or_intrinsic_tracks(&mut items, &columns, &rows);
 
     // Determine if the grid has any baseline aligned items
-    let has_baseline_aligned_item = items.iter().any(|item| item.align_self == AlignSelf::BASELINE);
+    let has_baseline_aligned_item = items.iter().any(|item| item.participates_in_baseline_alignment());
 
     // Run track sizing algorithm for Inline axis
     track_sizing_algorithm(
@@ -795,14 +795,12 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
         // Create a slice of all of the items start in this row (taking advantage of the fact that we have just sorted the array)
         let first_row_items = &items[0..].split(|item| item.row_indexes.start != first_row).next().unwrap();
 
-        // Check if any items in *this row* are baseline aligned
-        let row_has_baseline_item = first_row_items.iter().any(|item| item.align_self == AlignSelf::BASELINE);
-
-        let item = if row_has_baseline_item {
-            first_row_items.iter().find(|item| item.align_self == AlignSelf::BASELINE).unwrap()
-        } else {
-            &first_row_items[0]
-        };
+        // Check if any items in *this row* participate in baseline alignment
+        // (items with an auto block-axis margin do not participate: https://www.w3.org/TR/css-align-3/#baseline-align-self)
+        let item = first_row_items
+            .iter()
+            .find(|item| item.participates_in_baseline_alignment())
+            .unwrap_or(&first_row_items[0]);
 
         item.y_position + item.baseline.unwrap_or(item.height)
     };
