@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    The first baseline of a multi-line wrap-reverse flex container with baseline-aligned items
+    containing text is generated from the first flex line (in flex-line order).
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="width: 300px; height: 200px; align-items: baseline;">
+  <div style="width: 50px; height: 100px;"></div>
+  <div style="width: 100px; height: 120px; flex-wrap: wrap-reverse; align-content: flex-start;">
+    <div style="width: 60px; align-self: baseline;">HH</div>
+    <div style="width: 40px; height: 40px;"></div>
+    <div style="width: 60px; height: 30px;"></div>
+    <div style="width: 40px; height: 10px;"></div>
+  </div>
+</div>
+
+</body>
+</html>

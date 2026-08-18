@@ -1,0 +1,21 @@
+<test name="flex_container_baseline_column_reverse__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div box-sizing="content-box" direction="ltr" align-items="baseline" width="200px" height="200px">
+      <div box-sizing="content-box" direction="ltr" width="50px" height="100px"/>
+      <div box-sizing="content-box" direction="ltr" flex-direction="column-reverse" width="60px" height="90px">
+        <div box-sizing="content-box" direction="ltr" width="60px" height="20px"/>
+        <div box-sizing="content-box" direction="ltr" width="60px" height="30px"/>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="200" height="200">
+      <node x="0" y="0" width="50" height="100"/>
+      <node x="50" y="30" width="60" height="90">
+        <node x="0" y="70" width="60" height="20"/>
+        <node x="0" y="40" width="60" height="30"/>
+      </node>
+    </node>
+  </expectations>
+</test>

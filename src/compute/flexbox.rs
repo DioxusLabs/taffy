@@ -494,15 +494,23 @@ fn compute_preliminary(tree: &mut impl LayoutFlexboxContainer, node: NodeId, inp
 
     // 8.5. Flex Container Baselines: calculate the flex container's first baseline
     // See https://www.w3.org/TR/css-flexbox-1/#flex-baselines
-    // For wrap-reverse containers the cross-start-most line is the last line rather than the first,
-    // and it is that line which the container's first baseline is generated from.
+    // The baselines are generated from the startmost flex line, where "startmost" refers to the
+    // line's visual position: for wrap-reverse containers the cross axis is flipped, so the
+    // startmost line is the last line in flex-line order rather than the first.
     let first_line = if constants.is_wrap_reverse { flex_lines.last() } else { flex_lines.first() };
     let first_vertical_baseline = first_line.and_then(|line| {
-        line.items
-            .iter()
-            .find(|item| constants.is_column || item.participates_in_baseline_alignment(constants.dir))
-            .or_else(|| line.items.iter().next())
-            .map(|child| child.baseline)
+        if constants.is_column {
+            // For column containers the baseline is generated from the startmost item in the line,
+            // which for reverse-direction containers is the last item in flex order.
+            let item = if constants.dir.is_reverse() { line.items.last() } else { line.items.first() };
+            item.map(|child| child.baseline)
+        } else {
+            line.items
+                .iter()
+                .find(|item| item.participates_in_baseline_alignment(constants.dir))
+                .or_else(|| line.items.iter().next())
+                .map(|child| child.baseline)
+        }
     });
 
     LayoutOutput::from_sizes_and_baselines(

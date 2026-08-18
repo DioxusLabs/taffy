@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    The first baseline of a multi-line wrap-reverse column flex container is generated from the
+    first flex line (in flex-line order), even though wrap-reverse places that line at the cross end.
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="width: 200px; height: 200px; align-items: baseline;">
+  <div style="width: 50px; height: 100px;"></div>
+  <div style="width: 120px; height: 100px; flex-direction: column; flex-wrap: wrap-reverse; align-content: flex-start;">
+    <div style="width: 40px; height: 60px;"></div>
+    <div style="width: 40px; height: 60px;"></div>
+    <div style="width: 40px; height: 60px;"></div>
+  </div>
+</div>
+
+</body>
+</html>
