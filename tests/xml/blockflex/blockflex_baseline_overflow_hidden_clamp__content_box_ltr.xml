@@ -1,0 +1,27 @@
+<test name="blockflex_baseline_overflow_hidden_clamp__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="flex" box-sizing="content-box" direction="ltr" align-items="baseline" width="200px" height="120px">
+      <div display="block" box-sizing="content-box" direction="ltr" width="40px" padding-bottom="20px">
+        <div display="block" box-sizing="content-box" direction="ltr" overflow-x="hidden" overflow-y="hidden" scrollbar-width="15" width="30px" height="30px">
+          <div display="flex" box-sizing="content-box" direction="ltr" width="30px">
+            <div box-sizing="content-box" direction="ltr" width="10px" height="40px"/>
+          </div>
+        </div>
+      </div>
+      <div display="block" box-sizing="content-box" direction="ltr" width="40px" height="80px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="200" height="120">
+      <node x="0" y="50" width="40" height="50">
+        <node x="0" y="0" width="30" height="30" scroll_width="0" scroll_height="10">
+          <node x="0" y="0" width="30" height="40">
+            <node x="0" y="0" width="10" height="40"/>
+          </node>
+        </node>
+      </node>
+      <node x="40" y="0" width="40" height="80"/>
+    </node>
+  </expectations>
+</test>

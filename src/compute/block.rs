@@ -1468,8 +1468,25 @@ fn perform_final_layout_on_in_flow_children(
 
             // A block container's first baseline is the first baseline of its first in-flow child
             // that has one.
+            //
+            // Scroll containers' baselines are determined from their content as if scrolled to the
+            // initial position, but are additionally clamped to their border box. A scroll container
+            // with no baseline synthesizes one from its border-box bottom edge.
+            // See https://github.com/w3c/csswg-drafts/issues/7660
             if first_baseline.is_none() {
-                first_baseline = item_layout.baselines.first.map(|baseline| location.y + baseline);
+                let child_baseline = if item.overflow.y.is_scroll_container() {
+                    Some(
+                        item_layout
+                            .baselines
+                            .first
+                            .unwrap_or(item_layout.size.height)
+                            .min(item_layout.size.height)
+                            .max(0.0),
+                    )
+                } else {
+                    item_layout.baselines.first
+                };
+                first_baseline = child_baseline.map(|baseline| location.y + baseline);
             }
 
             // Defer `set_unrounded_layout` to the post-loop pass in `compute_inner` so that
