@@ -564,7 +564,7 @@ fn compute_inner(
     }
 
     let container_percentage_resolution_height =
-        percentage_basis_dimensions.height.or(size.height.maybe_max(min_size.height)).or(min_size.height);
+        percentage_basis_dimensions.height.or(size.height.maybe_max(min_size.height));
 
     // 3. Perform final item layout and return content height
     //
@@ -1314,9 +1314,11 @@ fn perform_final_layout_on_in_flow_children(
             };
 
             // Resolve item inset
-            let inset = item.inset.zip_size(Size { width: container_inner_width, height: 0.0 }, |p, s| {
-                p.maybe_resolve(s, |val, basis| tree.calc(val, basis))
-            });
+            let inset_percentage_basis =
+                Size { width: Some(container_inner_width), height: container_percentage_resolution_height };
+            let inset = item
+                .inset
+                .zip_size(inset_percentage_basis, |p, s| p.maybe_resolve(s, |val, basis| tree.calc(val, basis)));
             let inset_offset = Point {
                 x: if direction.is_rtl() {
                     inset.right.map(|x| -x).or(inset.left).unwrap_or(0.0)
