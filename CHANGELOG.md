@@ -23,6 +23,8 @@
 
 ### Fixed
 
+- Block: the baselines contributed by in-flow children that are scroll containers are now clamped to the child's border box, and a scroll-container child with no natural baseline synthesizes one at its border-box bottom edge, matching the existing flexbox/grid behaviour per the [CSSWG resolution](https://github.com/w3c/csswg-drafts/issues/7660). Previously baselines of clipped content could leak outside an `overflow: hidden` child, and an empty scroll-container child contributed no baseline
+
 - Grid: items with an `auto` block-axis margin no longer participate in baseline alignment, per [CSS Align §9.5](https://www.w3.org/TR/css-align-3/#baseline-align-self). Such items are no longer baseline-shimmed (their auto margin aligns them instead), and they are no longer selected as the item the grid container's own first baseline is generated from, matching the existing flexbox behaviour
 
 - Flexbox: a flex item's cross-axis size is now only treated as definite (for resolving percentage sizes of its descendants) when the item is stretched or its cross size style resolves to a definite size, per [CSS Flexbox §4.5](https://www.w3.org/TR/css-flexbox-1/#definite-sizes). Previously content-derived cross sizes of non-stretched items were incorrectly used as percentage resolution bases
