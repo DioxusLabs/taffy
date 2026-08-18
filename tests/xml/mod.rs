@@ -20839,6 +20839,54 @@ mod grid {
 
     #[cfg(feature = "grid")]
     #[test]
+    fn grid_align_baseline_spanned_nested_grid__border_box_ltr() {
+        crate::run_xml_test("grid", "grid_align_baseline_spanned_nested_grid__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_align_baseline_spanned_nested_grid__content_box_ltr() {
+        crate::run_xml_test("grid", "grid_align_baseline_spanned_nested_grid__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_align_baseline_spanned_nested_grid__border_box_rtl() {
+        crate::run_xml_test("grid", "grid_align_baseline_spanned_nested_grid__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_align_baseline_spanned_nested_grid__content_box_rtl() {
+        crate::run_xml_test("grid", "grid_align_baseline_spanned_nested_grid__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_align_baseline_spanned_nested_grid_spanned_item__border_box_ltr() {
+        crate::run_xml_test("grid", "grid_align_baseline_spanned_nested_grid_spanned_item__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_align_baseline_spanned_nested_grid_spanned_item__content_box_ltr() {
+        crate::run_xml_test("grid", "grid_align_baseline_spanned_nested_grid_spanned_item__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_align_baseline_spanned_nested_grid_spanned_item__border_box_rtl() {
+        crate::run_xml_test("grid", "grid_align_baseline_spanned_nested_grid_spanned_item__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_align_baseline_spanned_nested_grid_spanned_item__content_box_rtl() {
+        crate::run_xml_test("grid", "grid_align_baseline_spanned_nested_grid_spanned_item__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
     fn grid_align_content_center__border_box_ltr() {
         crate::run_xml_test("grid", "grid_align_content_center__border_box_ltr");
     }
@@ -21927,6 +21975,54 @@ mod grid {
     #[test]
     fn grid_align_last_baseline_double_nested_grid__content_box_rtl() {
         crate::run_xml_test("grid", "grid_align_last_baseline_double_nested_grid__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_align_last_baseline_spanned_nested_grid__border_box_ltr() {
+        crate::run_xml_test("grid", "grid_align_last_baseline_spanned_nested_grid__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_align_last_baseline_spanned_nested_grid__content_box_ltr() {
+        crate::run_xml_test("grid", "grid_align_last_baseline_spanned_nested_grid__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_align_last_baseline_spanned_nested_grid__border_box_rtl() {
+        crate::run_xml_test("grid", "grid_align_last_baseline_spanned_nested_grid__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_align_last_baseline_spanned_nested_grid__content_box_rtl() {
+        crate::run_xml_test("grid", "grid_align_last_baseline_spanned_nested_grid__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_align_last_baseline_spanned_nested_grid_spanned_item__border_box_ltr() {
+        crate::run_xml_test("grid", "grid_align_last_baseline_spanned_nested_grid_spanned_item__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_align_last_baseline_spanned_nested_grid_spanned_item__content_box_ltr() {
+        crate::run_xml_test("grid", "grid_align_last_baseline_spanned_nested_grid_spanned_item__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_align_last_baseline_spanned_nested_grid_spanned_item__border_box_rtl() {
+        crate::run_xml_test("grid", "grid_align_last_baseline_spanned_nested_grid_spanned_item__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_align_last_baseline_spanned_nested_grid_spanned_item__content_box_rtl() {
+        crate::run_xml_test("grid", "grid_align_last_baseline_spanned_nested_grid_spanned_item__content_box_rtl");
     }
 
     #[cfg(feature = "grid")]

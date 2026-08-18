@@ -859,22 +859,23 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
         Some(item.y_position + item.baseline.unwrap_or(item.height))
     };
 
-    // Determine the grid container's last baseline, generated from the last row containing items
+    // Determine the grid container's last baseline, generated from the last row containing items.
+    // Items participate in the last row's baseline-sharing group if their grid area *ends* in that
+    // row, so the last row is the one with the maximum row end index and membership is determined
+    // by row end rather than row start.
     let grid_container_last_baseline: Option<f32> = if contain.suppresses_baseline() {
         None
     } else {
-        // Get the row index of the last row containing items (items are sorted by row start position above)
-        let last_row = items[items.len() - 1].row_indexes.start;
+        // Get the row end index of the last row containing items
+        let last_row_end = items.iter().map(|item| item.row_indexes.end).max().unwrap();
 
-        // Create a slice of all of the items that start in this row (taking advantage of the fact that the array is sorted)
-        let last_row_items = &items[0..].rsplit(|item| item.row_indexes.start != last_row).next().unwrap();
-
-        // Prefer the first item in *this row* which participates in last-baseline alignment,
-        // falling back to the row's first item
+        // Prefer the first item (in grid order) ending in this row which participates in
+        // last-baseline alignment, falling back to the first item ending in this row
+        let mut last_row_items = items.iter().filter(|item| item.row_indexes.end == last_row_end);
+        let first_item = last_row_items.clone().next().unwrap();
         let item = last_row_items
-            .iter()
             .find(|item| item.align_self.keyword == AlignItemsKeyword::LastBaseline)
-            .unwrap_or(&last_row_items[0]);
+            .unwrap_or(first_item);
         Some(item.y_position + item.last_baseline.unwrap_or(item.height))
     };
 
