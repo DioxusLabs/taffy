@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    An item with an auto block-axis margin does not participate in baseline alignment and is
+    not baseline-shimmed: it is bottom-aligned by its auto margin instead
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="display: grid; grid-auto-flow: column; grid-auto-columns: 40px; align-items: baseline; width: 120px;">
+  <div style="display: grid; height: 20px;"></div>
+  <div style="display: grid; height: 30px;"></div>
+  <div style="display: grid; margin-top: auto; height: 25px;">
+    <div style="display: grid; align-self: start; height: 5px;"></div>
+  </div>
+</div>
+
+</body>
+</html>

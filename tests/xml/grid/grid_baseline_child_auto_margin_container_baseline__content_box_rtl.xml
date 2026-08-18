@@ -1,0 +1,21 @@
+<test name="grid_baseline_child_auto_margin_container_baseline__content_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" box-sizing="content-box" direction="rtl" align-items="baseline" width="120px" height="80px" grid-template-columns="60px 60px">
+      <div display="grid" box-sizing="content-box" direction="rtl" width="50px" height="30px"/>
+      <div display="grid" box-sizing="content-box" direction="rtl" width="50px" grid-auto-flow="column" grid-auto-rows="40px" grid-auto-columns="25px">
+        <div display="grid" box-sizing="content-box" direction="rtl" height="20px"/>
+        <div display="grid" box-sizing="content-box" direction="rtl" align-self="baseline" height="10px" margin-top="auto"/>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="120" height="80">
+      <node x="70" y="0" width="50" height="30"/>
+      <node x="10" y="10" width="50" height="40">
+        <node x="25" y="0" width="25" height="20"/>
+        <node x="0" y="30" width="25" height="10"/>
+      </node>
+    </node>
+  </expectations>
+</test>
