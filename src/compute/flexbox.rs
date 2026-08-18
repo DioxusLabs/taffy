@@ -1219,13 +1219,9 @@ fn collect_balanced_flex_lines<'a>(
 /// has a definite main size or the item's used flex basis is definite.
 /// See <https://www.w3.org/TR/css-flexbox-1/#definite-sizes>
 #[inline]
-fn item_known_dimension_definiteness(
-    dir: FlexDirection,
-    has_definite_main_size: bool,
-    cross_axis_available_space_is_definite: bool,
-    item: &FlexItem,
-) -> Size<bool> {
-    let main_is_definite = has_definite_main_size || item.flex_basis_is_definite;
+fn item_known_dimension_definiteness(constants: &AlgoConstants, item: &FlexItem) -> Size<bool> {
+    let dir = constants.dir;
+    let main_is_definite = constants.has_definite_main_size || item.flex_basis_is_definite;
 
     // An item's cross size is definite if it is stretched (it stretches to the flex line, whose
     // size is known by the time the item's final layout is performed), or if its cross size style
@@ -1238,8 +1234,9 @@ fn item_known_dimension_definiteness(
     let cross_size = item.size_style.cross(dir);
     let is_stretched = !has_cross_auto_margins
         && (cross_size.is_stretch() || (item.align_self == AlignSelf::STRETCH && cross_size.is_auto()));
-    let cross_is_definite =
-        is_stretched || item.size.cross(dir).is_some() || (!dir.is_row() && cross_axis_available_space_is_definite);
+    let cross_is_definite = is_stretched
+        || item.size.cross(dir).is_some()
+        || (!dir.is_row() && constants.cross_axis_available_space_is_definite);
 
     Size { width: true, height: true }.with_main(dir, main_is_definite).with_cross(dir, cross_is_definite)
 }
@@ -1775,12 +1772,7 @@ fn determine_hypothetical_cross_size(
                         width: if constants.is_row { child.target_size.width.into() } else { child_cross },
                         height: if constants.is_row { child_cross } else { child.target_size.height.into() },
                     },
-                    known_dimensions_are_definite: item_known_dimension_definiteness(
-                        constants.dir,
-                        constants.has_definite_main_size,
-                        constants.cross_axis_available_space_is_definite,
-                        child,
-                    ),
+                    known_dimensions_are_definite: item_known_dimension_definiteness(constants, child),
                     parent_size: constants.node_inner_size,
                     available_space: Size {
                         width: if constants.is_row { child_known_main } else { child_available_cross },
@@ -1849,12 +1841,7 @@ fn calculate_children_base_lines(
                             child.target_size.height.into()
                         },
                     },
-                    known_dimensions_are_definite: item_known_dimension_definiteness(
-                        constants.dir,
-                        constants.has_definite_main_size,
-                        constants.cross_axis_available_space_is_definite,
-                        child,
-                    ),
+                    known_dimensions_are_definite: item_known_dimension_definiteness(constants, child),
                     parent_size: constants.node_inner_size,
                     available_space: Size {
                         width: if constants.is_row {
@@ -2345,19 +2332,13 @@ fn calculate_flex_item(
     line_offset_cross: f32,
     #[cfg(feature = "content_size")] total_content_size: &mut Size<f32>,
     #[cfg(feature = "content_size")] border: Rect<f32>,
-    container_size: Size<f32>,
-    node_inner_size: Size<Option<f32>>,
-    has_definite_main_size: bool,
-    cross_axis_available_space_is_definite: bool,
-    direction: FlexDirection,
-    layout_direction: Direction,
+    constants: &AlgoConstants,
 ) {
-    let item_known_dimension_definiteness = item_known_dimension_definiteness(
-        direction,
-        has_definite_main_size,
-        cross_axis_available_space_is_definite,
-        item,
-    );
+    let container_size = constants.container_size;
+    let node_inner_size = constants.node_inner_size;
+    let direction = constants.dir;
+    let layout_direction = constants.layout_direction;
+    let item_known_dimension_definiteness = item_known_dimension_definiteness(constants, item);
     let layout_output = tree.compute_child_layout(
         item.node,
         LayoutInput {
@@ -2480,14 +2461,12 @@ fn calculate_layout_line(
     total_offset_cross: &mut f32,
     #[cfg(feature = "content_size")] content_size: &mut Size<f32>,
     #[cfg(feature = "content_size")] border: Rect<f32>,
-    container_size: Size<f32>,
-    node_inner_size: Size<Option<f32>>,
-    has_definite_main_size: bool,
-    cross_axis_available_space_is_definite: bool,
-    padding_border: Rect<f32>,
-    direction: FlexDirection,
-    layout_direction: Direction,
+    constants: &AlgoConstants,
 ) {
+    let container_size = constants.container_size;
+    let padding_border = constants.content_box_inset;
+    let direction = constants.dir;
+    let layout_direction = constants.layout_direction;
     let mut total_offset_main = if layout_direction.is_rtl() && direction.is_row() {
         container_size.width - padding_border.main_end(direction)
     } else {
@@ -2512,12 +2491,7 @@ fn calculate_layout_line(
                 content_size,
                 #[cfg(feature = "content_size")]
                 border,
-                container_size,
-                node_inner_size,
-                has_definite_main_size,
-                cross_axis_available_space_is_definite,
-                direction,
-                layout_direction,
+                constants,
             );
         }
     } else {
@@ -2532,12 +2506,7 @@ fn calculate_layout_line(
                 content_size,
                 #[cfg(feature = "content_size")]
                 border,
-                container_size,
-                node_inner_size,
-                has_definite_main_size,
-                cross_axis_available_space_is_definite,
-                direction,
-                layout_direction,
+                constants,
             );
         }
     }
@@ -2573,13 +2542,7 @@ fn final_layout_pass(
                 &mut content_size,
                 #[cfg(feature = "content_size")]
                 constants.border,
-                constants.container_size,
-                constants.node_inner_size,
-                constants.has_definite_main_size,
-                constants.cross_axis_available_space_is_definite,
-                constants.content_box_inset,
-                constants.dir,
-                constants.layout_direction,
+                constants,
             );
         }
     } else {
@@ -2592,13 +2555,7 @@ fn final_layout_pass(
                 &mut content_size,
                 #[cfg(feature = "content_size")]
                 constants.border,
-                constants.container_size,
-                constants.node_inner_size,
-                constants.has_definite_main_size,
-                constants.cross_axis_available_space_is_definite,
-                constants.content_box_inset,
-                constants.dir,
-                constants.layout_direction,
+                constants,
             );
         }
     }
