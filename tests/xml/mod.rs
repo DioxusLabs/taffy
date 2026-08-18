@@ -5102,6 +5102,46 @@ mod blockflex {
     fn blockflex_percentage_height_in_auto_height_flex_item__content_box_rtl() {
         crate::run_xml_test("blockflex", "blockflex_percentage_height_in_auto_height_flex_item__content_box_rtl");
     }
+
+    #[test]
+    fn blockflex_percentage_height_in_stretched_flex_item__border_box_ltr() {
+        crate::run_xml_test("blockflex", "blockflex_percentage_height_in_stretched_flex_item__border_box_ltr");
+    }
+
+    #[test]
+    fn blockflex_percentage_height_in_stretched_flex_item__content_box_ltr() {
+        crate::run_xml_test("blockflex", "blockflex_percentage_height_in_stretched_flex_item__content_box_ltr");
+    }
+
+    #[test]
+    fn blockflex_percentage_height_in_stretched_flex_item__border_box_rtl() {
+        crate::run_xml_test("blockflex", "blockflex_percentage_height_in_stretched_flex_item__border_box_rtl");
+    }
+
+    #[test]
+    fn blockflex_percentage_height_in_stretched_flex_item__content_box_rtl() {
+        crate::run_xml_test("blockflex", "blockflex_percentage_height_in_stretched_flex_item__content_box_rtl");
+    }
+
+    #[test]
+    fn blockflex_percentage_height_in_unstretched_flex_item__border_box_ltr() {
+        crate::run_xml_test("blockflex", "blockflex_percentage_height_in_unstretched_flex_item__border_box_ltr");
+    }
+
+    #[test]
+    fn blockflex_percentage_height_in_unstretched_flex_item__content_box_ltr() {
+        crate::run_xml_test("blockflex", "blockflex_percentage_height_in_unstretched_flex_item__content_box_ltr");
+    }
+
+    #[test]
+    fn blockflex_percentage_height_in_unstretched_flex_item__border_box_rtl() {
+        crate::run_xml_test("blockflex", "blockflex_percentage_height_in_unstretched_flex_item__border_box_rtl");
+    }
+
+    #[test]
+    fn blockflex_percentage_height_in_unstretched_flex_item__content_box_rtl() {
+        crate::run_xml_test("blockflex", "blockflex_percentage_height_in_unstretched_flex_item__content_box_rtl");
+    }
 }
 
 mod blockgrid {

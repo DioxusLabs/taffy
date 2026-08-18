@@ -23,6 +23,8 @@
 
 ### Fixed
 
+- Flexbox: a flex item's cross-axis size is now only treated as definite (for resolving percentage sizes of its descendants) when the item is stretched or its cross size style resolves to a definite size, per [CSS Flexbox §4.5](https://www.w3.org/TR/css-flexbox-1/#definite-sizes). Previously content-derived cross sizes of non-stretched items were incorrectly used as percentage resolution bases
+
 - Block: a container's `min-height` alone no longer acts as the resolution basis for the percentage heights of its children when the container's own height is indefinite. Per [CSS 2 §10.5](https://www.w3.org/TR/CSS22/visudet.html#the-height-property), such percentages resolve as `auto`
 
 - Block: percentage vertical insets (`top`/`bottom`) of relatively positioned children now resolve against the containing block's height when it is definite. Previously they always resolved against a zero basis, so e.g. `top: 50%` had no effect
