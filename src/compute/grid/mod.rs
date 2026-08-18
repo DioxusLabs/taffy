@@ -22,7 +22,7 @@ use placement::place_grid_items;
 use track_sizing::{
     determine_if_item_crosses_flexible_or_intrinsic_tracks, resolve_item_track_indexes, track_sizing_algorithm,
 };
-use types::{CellOccupancyMatrix, GridTrack, NamedLineResolver};
+use types::{CellOccupancyMatrix, GridItem, GridTrack, NamedLineResolver};
 
 use crate::sys::{DefaultCheapStr, String};
 use crate::{CheapCloneStr, GridPlacement};
