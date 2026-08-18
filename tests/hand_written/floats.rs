@@ -1,7 +1,7 @@
 #![cfg(feature = "float_layout")]
 use taffy::geometry::Point;
 use taffy::prelude::*;
-use taffy::style::{Clear, Float};
+use taffy::style::{Clear, Float, Overflow};
 use taffy_test_helpers::new_test_tree;
 
 /// Regression test for <https://wpt.live/css/CSS2/floats-clear/floats-146.xht>
@@ -148,4 +148,134 @@ fn float_beside_existing_float_moves_down_instead_of_overflowing() {
     assert_eq!(taffy.layout(left).unwrap().location, Point { x: 0.0, y: 0.0 });
     assert_eq!(taffy.layout(right).unwrap().location, Point { x: 40.0, y: 50.0 });
     assert_eq!(taffy.layout(left2).unwrap().location, Point { x: 0.0, y: 100.0 });
+}
+
+/// Regression test for <https://wpt.live/css/CSS2/floats/new-fc-relayout.html>
+///
+/// A box that establishes a new formatting context must not overlap floats over its
+/// *entire* height, not just at its top: if it extends down beside lower (wider)
+/// floats, an auto width re-resolves against the narrower available space.
+#[test]
+fn new_fc_narrows_beside_lower_floats() {
+    let mut taffy = new_test_tree();
+
+    let float_a = taffy
+        .new_leaf(Style {
+            display: Display::Block,
+            float: Float::Right,
+            size: Size { width: length(50.0), height: length(50.0) },
+            ..Default::default()
+        })
+        .unwrap();
+    let float_b = taffy
+        .new_leaf(Style {
+            display: Display::Block,
+            float: Float::Right,
+            size: Size { width: length(75.0), height: length(50.0) },
+            ..Default::default()
+        })
+        .unwrap();
+    // Content whose height grows as the available width narrows: two 25px-wide blocks
+    // that fit side-by-side at width 50 but stack at width 25
+    let content_a = taffy
+        .new_leaf(Style {
+            display: Display::Block,
+            float: Float::Left,
+            size: Size { width: length(25.0), height: length(75.0) },
+            ..Default::default()
+        })
+        .unwrap();
+    let bfc_box = taffy
+        .new_with_children(
+            Style {
+                display: Display::Block,
+                overflow: taffy::geometry::Point { x: Overflow::Hidden, y: Overflow::Hidden },
+                size: Size { width: auto(), height: auto() },
+                ..Default::default()
+            },
+            &[content_a],
+        )
+        .unwrap();
+
+    let root = taffy
+        .new_with_children(
+            Style {
+                display: Display::Block,
+                size: Size { width: length(100.0), height: auto() },
+                ..Default::default()
+            },
+            &[float_a, float_b, bfc_box],
+        )
+        .unwrap();
+
+    taffy.compute_layout(root, Size::MAX_CONTENT).unwrap();
+
+    // float_a occupies (50..100, 0..50); float_b does not fit beside it: (25..100, 50..100)
+    assert_eq!(taffy.layout(float_a).unwrap().location, Point { x: 50.0, y: 0.0 });
+    assert_eq!(taffy.layout(float_b).unwrap().location, Point { x: 25.0, y: 50.0 });
+    // The BFC box is 75 tall, so it extends down beside float_b and its auto width
+    // resolves to 25 (not the 50 available at its top)
+    let bfc_layout = taffy.layout(bfc_box).unwrap();
+    assert_eq!(bfc_layout.location, Point { x: 0.0, y: 0.0 });
+    assert_eq!(bfc_layout.size, Size { width: 25.0, height: 75.0 });
+}
+
+/// Regression test for <https://wpt.live/css/CSS2/floats/new-fc-beside-adjoining-float.html>
+///
+/// A new formatting context that fits beside an adjoining float stays beside it (its
+/// margin remains adjoining and pulls the float down with it).
+#[test]
+fn new_fc_beside_adjoining_float() {
+    let mut taffy = new_test_tree();
+
+    let float = taffy
+        .new_leaf(Style {
+            display: Display::Block,
+            float: Float::Left,
+            size: Size { width: length(200.0), height: length(10.0) },
+            ..Default::default()
+        })
+        .unwrap();
+    let float_wrapper =
+        taffy.new_with_children(Style { display: Display::Block, ..Default::default() }, &[float]).unwrap();
+    let bfc_box = taffy
+        .new_leaf(Style {
+            display: Display::Block,
+            overflow: taffy::geometry::Point { x: Overflow::Hidden, y: Overflow::Hidden },
+            size: Size { width: length(100.0), height: length(10.0) },
+            margin: Rect { top: length(190.0), ..Rect::zero() },
+            ..Default::default()
+        })
+        .unwrap();
+    // A 300px-wide block inside a 200px-wide BFC root: the 100px-wide BFC box fits
+    // beside the 200px-wide float
+    let inner = taffy
+        .new_with_children(
+            Style {
+                display: Display::Block,
+                size: Size { width: length(300.0), height: auto() },
+                margin: Rect { top: length(50.0), ..Rect::zero() },
+                ..Default::default()
+            },
+            &[float_wrapper, bfc_box],
+        )
+        .unwrap();
+    let root = taffy
+        .new_with_children(
+            Style {
+                display: Display::Block,
+                overflow: taffy::geometry::Point { x: Overflow::Hidden, y: Overflow::Hidden },
+                size: Size { width: length(200.0), height: auto() },
+                ..Default::default()
+            },
+            &[inner],
+        )
+        .unwrap();
+
+    taffy.compute_layout(root, Size::MAX_CONTENT).unwrap();
+
+    // The BFC box's 190px top margin adjoins the float and pulls it down; the box is
+    // placed beside the float rather than being pushed below it
+    assert_eq!(taffy.layout(bfc_box).unwrap().location, Point { x: 200.0, y: 0.0 });
+    assert_eq!(taffy.layout(root).unwrap().size.height, 200.0);
 }
