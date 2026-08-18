@@ -831,30 +831,31 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
         return LayoutOutput::from_outer_size(container_border_box);
     }
 
+    // "Grid order" key: row-major order of the grid areas items occupy, with ties resolved by
+    // document order (`items` is sorted by document order at this point, and `min_by_key` returns
+    // the first of equally-minimum elements, so ties fall back to document order for free)
+    // (column indexes are visually reversed for RTL, so negate them to recover logical column order)
+    let column_dir_factor: i32 = if direction.is_rtl() { -1 } else { 1 };
+    let column_order_key = |item: &&GridItem| column_dir_factor * item.column_indexes.start as i32;
+
     // Determine the grid container's first baseline, generated from the first row containing items.
     // Layout containment suppresses the box's baseline for baseline-alignment purposes
     let grid_container_baseline: Option<f32> = if contain.suppresses_baseline() {
         None
     } else {
-        // Sort items into "grid order" (row-major order of the grid areas they occupy, with ties
-        // resolved by document order, which the items are already sorted by at this point)
-        // (column indexes are visually reversed for RTL, so negate them to recover logical column order)
-        let column_dir_factor: i32 = if direction.is_rtl() { -1 } else { 1 };
-        items.sort_by_key(|item| (item.row_indexes.start, column_dir_factor * item.column_indexes.start as i32));
-
         // Get the row index of the first row containing items
-        let first_row = items[0].row_indexes.start;
+        let first_row = items.iter().map(|item| item.row_indexes.start).min().unwrap();
+        let first_row_items = items.iter().filter(|item| item.row_indexes.start == first_row);
 
-        // Create a slice of all of the items start in this row (taking advantage of the fact that we have just sorted the array)
-        let first_row_items = &items[0..].split(|item| item.row_indexes.start != first_row).next().unwrap();
-
-        // Prefer the first item in *this row* which participates in first-baseline alignment
-        // (items with an auto block-axis margin do not participate: https://www.w3.org/TR/css-align-3/#baseline-align-self),
-        // falling back to the row's first item
+        // Prefer the first item (in grid order) in *this row* which participates in
+        // first-baseline alignment (items with an auto block-axis margin do not participate:
+        // https://www.w3.org/TR/css-align-3/#baseline-align-self), falling back to the row's first item
         let item = first_row_items
-            .iter()
-            .find(|item| item.participates_in_baseline_group(AlignItemsKeyword::Baseline))
-            .unwrap_or(&first_row_items[0]);
+            .clone()
+            .filter(|item| item.participates_in_baseline_group(AlignItemsKeyword::Baseline))
+            .min_by_key(column_order_key)
+            .or_else(|| first_row_items.min_by_key(column_order_key))
+            .unwrap();
 
         Some(item.y_position + item.baseline.unwrap_or(item.height))
     };
@@ -868,14 +869,17 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     } else {
         // Get the row end index of the last row containing items
         let last_row_end = items.iter().map(|item| item.row_indexes.end).max().unwrap();
+        let last_row_items = items.iter().filter(|item| item.row_indexes.end == last_row_end);
 
         // Prefer the first item (in grid order) ending in this row which participates in
         // last-baseline alignment, falling back to the first item ending in this row
-        let mut last_row_items = items.iter().filter(|item| item.row_indexes.end == last_row_end);
-        let first_item = last_row_items.clone().next().unwrap();
         let item = last_row_items
-            .find(|item| item.align_self.keyword == AlignItemsKeyword::LastBaseline)
-            .unwrap_or(first_item);
+            .clone()
+            .filter(|item| item.align_self.keyword == AlignItemsKeyword::LastBaseline)
+            .min_by_key(column_order_key)
+            .or_else(|| last_row_items.min_by_key(column_order_key))
+            .unwrap();
+
         Some(item.y_position + item.last_baseline.unwrap_or(item.height))
     };
 

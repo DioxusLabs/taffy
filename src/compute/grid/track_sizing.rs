@@ -477,6 +477,12 @@ fn resolve_item_baselines_for_group(
     columns: &[GridTrack],
     group_keyword: AlignItemsKeyword,
 ) {
+    // If fewer than two items participate in this kind of baseline alignment then no row can
+    // contain a multi-item baseline-sharing group, so skip sorting and grouping entirely
+    if items.iter().filter(|item| item.align_self.keyword == group_keyword).count() <= 1 {
+        return;
+    }
+
     let is_first_baseline = group_keyword == AlignItemsKeyword::Baseline;
 
     // The grid row line at which an item participates in baseline alignment: the start of its
