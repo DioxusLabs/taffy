@@ -194,6 +194,11 @@ struct AlgoConstants {
     has_definite_main_size: bool,
     /// Whether the node has a known cross size which is definite
     has_definite_cross_size: bool,
+    /// Whether the cross-axis space that non-stretched items are fit-content sized into is
+    /// definite (either the node's cross size is definite, or the cross-axis available space is).
+    /// A size resolved by fit-content sizing against definite available space is itself definite
+    /// (see <https://www.w3.org/TR/css-sizing-3/#definite>).
+    cross_axis_available_space_is_definite: bool,
 
     /// The size of the virtual container containing the flex items.
     container_size: Size<f32>,
@@ -317,6 +322,7 @@ fn compute_preliminary(tree: &mut impl LayoutFlexboxContainer, node: NodeId, inp
         known_dimensions,
         inputs.known_dimensions_are_definite,
         parent_size,
+        available_space,
     );
 
     // 9. Flex Layout Algorithm
@@ -514,6 +520,7 @@ fn compute_constants(
     known_dimensions: Size<Option<f32>>,
     known_dimensions_are_definite: Size<bool>,
     parent_size: Size<Option<f32>>,
+    available_space: Size<AvailableSpace>,
 ) -> AlgoConstants {
     let dir = style.flex_direction();
     let is_row = dir.is_row();
@@ -564,6 +571,8 @@ fn compute_constants(
     let known_main_size_is_definite = known_dimensions_are_definite.main(dir);
     let has_definite_main_size = known_main_size_is_definite && known_dimensions.main(dir).is_some();
     let has_definite_cross_size = known_dimensions_are_definite.cross(dir) && known_dimensions.cross(dir).is_some();
+    let cross_axis_available_space_is_definite =
+        has_definite_cross_size || matches!(available_space.cross(dir), AvailableSpace::Definite(_));
     let gap = style.gap().resolve_or_zero(node_inner_size.or(Size::zero()), |val, basis| tree.calc(val, basis));
 
     let container_size = Size::zero();
@@ -605,6 +614,7 @@ fn compute_constants(
         known_main_size_is_definite,
         has_definite_main_size,
         has_definite_cross_size,
+        cross_axis_available_space_is_definite,
         container_size,
         inner_container_size,
     }
@@ -1209,17 +1219,28 @@ fn collect_balanced_flex_lines<'a>(
 /// has a definite main size or the item's used flex basis is definite.
 /// See <https://www.w3.org/TR/css-flexbox-1/#definite-sizes>
 #[inline]
-fn item_definiteness(dir: FlexDirection, has_definite_main_size: bool, item: &FlexItem) -> Size<bool> {
+fn item_definiteness(
+    dir: FlexDirection,
+    has_definite_main_size: bool,
+    cross_axis_available_space_is_definite: bool,
+    item: &FlexItem,
+) -> Size<bool> {
     let main_is_definite = has_definite_main_size || item.flex_basis_is_definite;
+
     // An item's cross size is definite if it is stretched (it stretches to the flex line, whose
-    // size is known by the time the item's final layout is performed), or if its cross size
-    // style resolved to a definite size. Widths are always definite as they resolve via
-    // fit-content against definite available space.
-    let is_stretched = !item.margin_is_auto.cross_start(dir)
-        && !item.margin_is_auto.cross_end(dir)
-        && (item.size_style.cross(dir).is_stretch()
-            || (item.align_self == AlignSelf::STRETCH && item.size_style.cross(dir).is_auto()));
-    let cross_is_definite = !dir.is_row() || is_stretched || item.size.cross(dir).is_some();
+    // size is known by the time the item's final layout is performed), or if its cross size style
+    // resolved to a definite size. Additionally, a non-stretched item's cross *width* is fit-content
+    // sized, and a size resolved by fit-content sizing against definite available space is itself
+    // definite (<https://www.w3.org/TR/css-sizing-3/#definite>). The same does not apply to cross
+    // heights, which are content-based and therefore indefinite when not stretched.
+
+    let has_cross_auto_margins = item.margin_is_auto.cross_start(dir) || item.margin_is_auto.cross_end(dir);
+    let cross_size = item.size_style.cross(dir);
+    let is_stretched = !has_cross_auto_margins
+        && (cross_size.is_stretch() || (item.align_self == AlignSelf::STRETCH && cross_size.is_auto()));
+    let cross_is_definite =
+        is_stretched || item.size.cross(dir).is_some() || (!dir.is_row() && cross_axis_available_space_is_definite);
+
     Size { width: true, height: true }.with_main(dir, main_is_definite).with_cross(dir, cross_is_definite)
 }
 
@@ -1757,6 +1778,7 @@ fn determine_hypothetical_cross_size(
                     known_dimensions_are_definite: item_definiteness(
                         constants.dir,
                         constants.has_definite_main_size,
+                        constants.cross_axis_available_space_is_definite,
                         child,
                     ),
                     parent_size: constants.node_inner_size,
@@ -1830,6 +1852,7 @@ fn calculate_children_base_lines(
                     known_dimensions_are_definite: item_definiteness(
                         constants.dir,
                         constants.has_definite_main_size,
+                        constants.cross_axis_available_space_is_definite,
                         child,
                     ),
                     parent_size: constants.node_inner_size,
@@ -2325,10 +2348,12 @@ fn calculate_flex_item(
     container_size: Size<f32>,
     node_inner_size: Size<Option<f32>>,
     has_definite_main_size: bool,
+    cross_axis_available_space_is_definite: bool,
     direction: FlexDirection,
     layout_direction: Direction,
 ) {
-    let item_definiteness = item_definiteness(direction, has_definite_main_size, item);
+    let item_definiteness =
+        item_definiteness(direction, has_definite_main_size, cross_axis_available_space_is_definite, item);
     let layout_output = tree.compute_child_layout(
         item.node,
         LayoutInput {
@@ -2454,6 +2479,7 @@ fn calculate_layout_line(
     container_size: Size<f32>,
     node_inner_size: Size<Option<f32>>,
     has_definite_main_size: bool,
+    cross_axis_available_space_is_definite: bool,
     padding_border: Rect<f32>,
     direction: FlexDirection,
     layout_direction: Direction,
@@ -2485,6 +2511,7 @@ fn calculate_layout_line(
                 container_size,
                 node_inner_size,
                 has_definite_main_size,
+                cross_axis_available_space_is_definite,
                 direction,
                 layout_direction,
             );
@@ -2504,6 +2531,7 @@ fn calculate_layout_line(
                 container_size,
                 node_inner_size,
                 has_definite_main_size,
+                cross_axis_available_space_is_definite,
                 direction,
                 layout_direction,
             );
@@ -2544,6 +2572,7 @@ fn final_layout_pass(
                 constants.container_size,
                 constants.node_inner_size,
                 constants.has_definite_main_size,
+                constants.cross_axis_available_space_is_definite,
                 constants.content_box_inset,
                 constants.dir,
                 constants.layout_direction,
@@ -2562,6 +2591,7 @@ fn final_layout_pass(
                 constants.container_size,
                 constants.node_inner_size,
                 constants.has_definite_main_size,
+                constants.cross_axis_available_space_is_definite,
                 constants.content_box_inset,
                 constants.dir,
                 constants.layout_direction,
