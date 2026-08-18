@@ -131,7 +131,7 @@ mod last_baseline {
                         let style_size =
                             node.style.size.map(|dim| dim.into_option().unwrap_or(0.0)).map(Some).unwrap_or(Size::ZERO);
                         let size = inputs.known_dimensions.unwrap_or(style_size);
-                        LayoutOutput::from_sizes_and_baselines(size, Size::ZERO, baselines)
+                        LayoutOutput::from_sizes_and_baselines(size, taffy::Rect::ZERO, baselines)
                     }
                 }
             })
