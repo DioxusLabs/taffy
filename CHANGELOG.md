@@ -23,6 +23,10 @@
 
 ### Fixed
 
+- Block: a container's `min-height` alone no longer acts as the resolution basis for the percentage heights of its children when the container's own height is indefinite. Per [CSS 2 §10.5](https://www.w3.org/TR/CSS22/visudet.html#the-height-property), such percentages resolve as `auto`
+
+- Block: percentage vertical insets (`top`/`bottom`) of relatively positioned children now resolve against the containing block's height when it is definite. Previously they always resolved against a zero basis, so e.g. `top: 50%` had no effect
+
 - Flexbox: skip the automatic min-content measurement when an item's minimum main size is already resolved from its style or overflow. Previously this fallback was evaluated eagerly and could cause nested flex layouts with explicit minimum sizes to perform unnecessary recursive measurements
 
 - Block/Flexbox/Grid: content overflowing a box past its scroll origin (the inline-start/block-start edge, e.g. an absolutely positioned child with a negative position) no longer inflates the box's `content_size`. Per the [CSS Overflow spec](https://www.w3.org/TR/css-overflow-3/#scrollable), the scrollable overflow region only extends from the scroll origin towards the inline-end/block-end directions, so such content is unreachable and does not contribute to scrollable overflow. Additionally, block layout now correctly measures absolutely positioned children from the inline-end edge in RTL when computing their `content_size` contribution, matching the existing flexbox and grid behaviour
