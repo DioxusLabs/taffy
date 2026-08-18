@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    The first baseline of a multi-line column-reverse wrap-reverse flex container is generated
+    from the startmost item (last in flex order) of the startmost (visually leftmost) flex line,
+    which is the last line in flex-line order.
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="width: 300px; height: 200px; align-items: baseline;">
+  <div style="width: 50px; height: 150px;"></div>
+  <div style="width: 120px; height: 130px; flex-direction: column-reverse; flex-wrap: wrap-reverse; align-content: flex-start;">
+    <div style="width: 40px; height: 60px;"></div>
+    <div style="width: 40px; height: 60px;"></div>
+    <div style="width: 40px; height: 50px;"></div>
+    <div style="width: 40px; height: 40px;"></div>
+  </div>
+</div>
+
+</body>
+</html>

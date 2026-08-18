@@ -1,0 +1,25 @@
+<test name="flex_container_baseline_column_reverse_wrap_reverse__border_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div direction="ltr" align-items="baseline" width="300px" height="200px">
+      <div direction="ltr" width="50px" height="150px"/>
+      <div direction="ltr" flex-direction="column-reverse" flex-wrap="wrap-reverse" align-content="flex-start" width="120px" height="130px">
+        <div direction="ltr" width="40px" height="60px"/>
+        <div direction="ltr" width="40px" height="60px"/>
+        <div direction="ltr" width="40px" height="50px"/>
+        <div direction="ltr" width="40px" height="40px"/>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="300" height="200">
+      <node x="0" y="0" width="50" height="150"/>
+      <node x="50" y="70" width="120" height="130">
+        <node x="80" y="70" width="40" height="60"/>
+        <node x="80" y="10" width="40" height="60"/>
+        <node x="40" y="80" width="40" height="50"/>
+        <node x="40" y="40" width="40" height="40"/>
+      </node>
+    </node>
+  </expectations>
+</test>
