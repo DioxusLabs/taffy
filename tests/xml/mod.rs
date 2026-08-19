@@ -5386,6 +5386,52 @@ mod blockgrid {
     }
 
     #[test]
+    fn blockgrid_grid_percent_gap_definite_width_indefinite_height__border_box_ltr() {
+        crate::run_xml_test("blockgrid", "blockgrid_grid_percent_gap_definite_width_indefinite_height__border_box_ltr");
+    }
+
+    #[test]
+    fn blockgrid_grid_percent_gap_definite_width_indefinite_height__content_box_ltr() {
+        crate::run_xml_test(
+            "blockgrid",
+            "blockgrid_grid_percent_gap_definite_width_indefinite_height__content_box_ltr",
+        );
+    }
+
+    #[test]
+    fn blockgrid_grid_percent_gap_definite_width_indefinite_height__border_box_rtl() {
+        crate::run_xml_test("blockgrid", "blockgrid_grid_percent_gap_definite_width_indefinite_height__border_box_rtl");
+    }
+
+    #[test]
+    fn blockgrid_grid_percent_gap_definite_width_indefinite_height__content_box_rtl() {
+        crate::run_xml_test(
+            "blockgrid",
+            "blockgrid_grid_percent_gap_definite_width_indefinite_height__content_box_rtl",
+        );
+    }
+
+    #[test]
+    fn blockgrid_grid_percent_gap_fit_content_width__border_box_ltr() {
+        crate::run_xml_test("blockgrid", "blockgrid_grid_percent_gap_fit_content_width__border_box_ltr");
+    }
+
+    #[test]
+    fn blockgrid_grid_percent_gap_fit_content_width__content_box_ltr() {
+        crate::run_xml_test("blockgrid", "blockgrid_grid_percent_gap_fit_content_width__content_box_ltr");
+    }
+
+    #[test]
+    fn blockgrid_grid_percent_gap_fit_content_width__border_box_rtl() {
+        crate::run_xml_test("blockgrid", "blockgrid_grid_percent_gap_fit_content_width__border_box_rtl");
+    }
+
+    #[test]
+    fn blockgrid_grid_percent_gap_fit_content_width__content_box_rtl() {
+        crate::run_xml_test("blockgrid", "blockgrid_grid_percent_gap_fit_content_width__content_box_rtl");
+    }
+
+    #[test]
     fn blockgrid_margin_y_collapse_through_blocked_by_grid__border_box_ltr() {
         crate::run_xml_test("blockgrid", "blockgrid_margin_y_collapse_through_blocked_by_grid__border_box_ltr");
     }
@@ -31561,6 +31607,54 @@ mod grid {
     #[test]
     fn grid_padding_border_overrides_size__content_box_rtl() {
         crate::run_xml_test("grid", "grid_padding_border_overrides_size__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_percent_gap_definite_width_indefinite_height__border_box_ltr() {
+        crate::run_xml_test("grid", "grid_percent_gap_definite_width_indefinite_height__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_percent_gap_definite_width_indefinite_height__content_box_ltr() {
+        crate::run_xml_test("grid", "grid_percent_gap_definite_width_indefinite_height__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_percent_gap_definite_width_indefinite_height__border_box_rtl() {
+        crate::run_xml_test("grid", "grid_percent_gap_definite_width_indefinite_height__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_percent_gap_definite_width_indefinite_height__content_box_rtl() {
+        crate::run_xml_test("grid", "grid_percent_gap_definite_width_indefinite_height__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_percent_gap_indefinite_both_axes__border_box_ltr() {
+        crate::run_xml_test("grid", "grid_percent_gap_indefinite_both_axes__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_percent_gap_indefinite_both_axes__content_box_ltr() {
+        crate::run_xml_test("grid", "grid_percent_gap_indefinite_both_axes__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_percent_gap_indefinite_both_axes__border_box_rtl() {
+        crate::run_xml_test("grid", "grid_percent_gap_indefinite_both_axes__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_percent_gap_indefinite_both_axes__content_box_rtl() {
+        crate::run_xml_test("grid", "grid_percent_gap_indefinite_both_axes__content_box_rtl");
     }
 
     #[cfg(feature = "grid")]

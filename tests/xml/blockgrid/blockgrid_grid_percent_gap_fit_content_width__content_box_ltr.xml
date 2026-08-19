@@ -1,0 +1,23 @@
+<test name="blockgrid_grid_percent_gap_fit_content_width__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="block" box-sizing="content-box" direction="ltr" width="250px">
+      <div display="grid" box-sizing="content-box" direction="ltr" width="fit-content" row-gap="15%" column-gap="10%" padding-top="5px" padding-left="5px" padding-bottom="5px" padding-right="5px" grid-template-rows="auto auto" grid-template-columns="auto auto">
+        <div box-sizing="content-box" direction="ltr" width="70px" height="30px" margin-top="5px" margin-left="10px" margin-bottom="5px" margin-right="10px"/>
+        <div box-sizing="content-box" direction="ltr" width="70px" height="30px" margin-top="5px" margin-left="10px" margin-bottom="5px" margin-right="10px"/>
+        <div box-sizing="content-box" direction="ltr" width="70px" height="30px" margin-top="5px" margin-left="10px" margin-bottom="5px" margin-right="10px"/>
+        <div box-sizing="content-box" direction="ltr" width="70px" height="30px" margin-top="5px" margin-left="10px" margin-bottom="5px" margin-right="10px"/>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="250" height="90">
+      <node x="0" y="0" width="190" height="90">
+        <node x="15" y="10" width="70" height="30"/>
+        <node x="123" y="10" width="70" height="30"/>
+        <node x="15" y="62" width="70" height="30"/>
+        <node x="123" y="62" width="70" height="30"/>
+      </node>
+    </node>
+  </expectations>
+</test>

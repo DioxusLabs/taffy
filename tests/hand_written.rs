@@ -4,6 +4,8 @@ mod hand_written {
     mod block_replaced;
     mod border_and_padding;
     mod caching;
+    #[cfg(feature = "calc")]
+    mod calc_gap;
     #[cfg(feature = "flexbox_balance")]
     mod flex_line_count;
     mod floats;
