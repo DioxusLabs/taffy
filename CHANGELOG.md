@@ -4,6 +4,8 @@
 
 ### Added
 
+- The tagged-pointer size types can now be inspected via a plain enum. `LengthPercentage`, `LengthPercentageAuto`, `Dimension`, `MinTrackSizingFunction` and `MaxTrackSizingFunction` each gain an `expand()` method returning a matching `Expanded*` enum (`ExpandedLengthPercentage`, `ExpandedDimension`, etc.) whose variants map one-to-one onto the type's constructors, along with `From` conversions in both directions. This makes it possible to read back the original value of a style property (for style inspection, serialization or integration with other libraries) without having to work with the raw `CompactLength` representation
+
 - Support for `flex-wrap: balance` and the `flex-line-count` property from [CSS Flexbox Level 2](https://drafts.csswg.org/css-flexbox-2/#balance-values), gated behind a new on-by-default `flexbox_balance` cargo feature (which depends on `flexbox`):
   - `FlexWrap` gains `Balance` and `BalanceReverse` variants, and its CSS parser accepts the multi-keyword grammar `nowrap | [ wrap | wrap-reverse ] || balance`. When balancing, items are collected into flex lines such that the largest line is as small as possible (minimising the sum of squares of each line's free space), rather than greedily filling each line
   - `Style::flex_line_count` (and a corresponding `FlexboxContainerStyle::flex_line_count` trait method) specifies the minimum number of lines to balance items into (default `1`). When it is greater than 1 on any multi-line container (`wrap`, `wrap-reverse`, `balance` or `balance-reverse`), definite cross-axis available space for measuring items is divided between the requested number of lines (after subtracting cross-axis gaps), per the [CSSWG resolution](https://github.com/w3c/csswg-drafts/issues/13414)
