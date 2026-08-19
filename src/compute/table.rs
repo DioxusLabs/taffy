@@ -7,7 +7,7 @@
 //! embedder: with `border-collapse: collapse`, resolve the winning border for each edge,
 //! write half of it into each cell's border style, and set `border_spacing` to zero.
 #[cfg(feature = "content_size")]
-use crate::compute::common::content_size::compute_content_size_contribution;
+use crate::compute::common::scrollable_overflow::compute_scrollable_overflow_contribution;
 use crate::geometry::{AbsoluteAxis, Line, Point, Rect, Size};
 use crate::style::{
     AvailableSpace, BoxGenerationMode, CompactLength, CoreStyle, Direction, TableContainerStyle, TableItemStyle,
@@ -141,6 +141,11 @@ pub fn compute_table_layout(
     let aspect_ratio = style.aspect_ratio();
     let border_spacing = style.border_spacing();
     let table_layout_mode = style.table_layout();
+    #[cfg(feature = "content_size")]
+    let is_scroll_container = {
+        let overflow = style.overflow();
+        overflow.x.is_scroll_container() || overflow.y.is_scroll_container()
+    };
     drop(style);
 
     let parent_width = parent_size.width;
@@ -360,7 +365,7 @@ pub fn compute_table_layout(
     let baselines = Baselines::from_first(table_baseline);
 
     if run_mode == RunMode::ComputeSize {
-        return LayoutOutput::from_sizes_and_baselines(final_size, Size::zero(), baselines);
+        return LayoutOutput::from_sizes_and_baselines(final_size, Rect::ZERO, baselines);
     }
 
     // Phase 5: position rows, row groups, and cells (in RTL the first column is rightmost)
@@ -422,7 +427,7 @@ pub fn compute_table_layout(
         );
     }
 
-    let mut content_size = Size::ZERO;
+    let mut cell_overflow_rect = Rect::ZERO;
     for (cell, sizing) in cells.iter().zip(sizing.iter()) {
         let cell_width = sizing.width;
         let range = cell.row..(cell.row + cell.rowspan).min(num_rows);
@@ -467,7 +472,7 @@ pub fn compute_table_layout(
                 location,
                 size: Size { width: cell_width, height: cell_height },
                 #[cfg(feature = "content_size")]
-                content_size: output.content_size,
+                scrollable_overflow_rect: output.scrollable_overflow_rect,
                 scrollbar_size: Size::ZERO,
                 padding: cell_padding,
                 border: cell_border,
@@ -477,11 +482,19 @@ pub fn compute_table_layout(
 
         #[cfg(feature = "content_size")]
         {
-            content_size = content_size.f32_max(compute_content_size_contribution(
-                Point { x: cell_x - border.left, y: row_y[cell.row] - border.top },
-                Size { width: cell_width, height: cell_height },
-                output.content_size,
+            // Contributions are measured from the table's padding-box origin, mirrored for RTL
+            let cell_size = Size { width: cell_width, height: cell_height };
+            let contribution_location = if rtl {
+                Point { x: table_width - (cell_x + cell_width) - border.right, y: row_y[cell.row] - border.top }
+            } else {
+                Point { x: cell_x - border.left, y: row_y[cell.row] - border.top }
+            };
+            cell_overflow_rect = cell_overflow_rect.union(compute_scrollable_overflow_contribution(
+                contribution_location,
+                cell_size,
+                output.scrollable_overflow_rect,
                 cell_overflow,
+                is_scroll_container,
             ));
         }
     }
@@ -498,7 +511,22 @@ pub fn compute_table_layout(
         );
     }
 
-    LayoutOutput::from_sizes_and_baselines(final_size, content_size, baselines)
+    // A scroll container's own padding at the end of the content is part of its scrollable
+    // overflow region, so it is included in the in-flow overflow rect. Boxes that are not
+    // scroll containers do not extend their overflow region by their own padding.
+    #[cfg(feature = "content_size")]
+    let scrollable_overflow_rect = {
+        let mut overflow_rect = cell_overflow_rect;
+        if is_scroll_container {
+            overflow_rect.right += if rtl { padding.left } else { padding.right };
+            overflow_rect.bottom += padding.bottom;
+        }
+        overflow_rect
+    };
+    #[cfg(not(feature = "content_size"))]
+    let scrollable_overflow_rect = cell_overflow_rect;
+
+    LayoutOutput::from_sizes_and_baselines(final_size, scrollable_overflow_rect, baselines)
 }
 
 /// The rows a row group holds, which `build_grid` places contiguously
@@ -1154,7 +1182,7 @@ fn set_item_layout(
             location,
             size,
             #[cfg(feature = "content_size")]
-            content_size: size,
+            scrollable_overflow_rect: Rect { left: 0.0, right: size.width, top: 0.0, bottom: size.height },
             scrollbar_size: Size::ZERO,
             padding,
             border,
