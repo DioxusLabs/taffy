@@ -875,7 +875,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
         // last-baseline alignment, falling back to the first item ending in this row
         let item = last_row_items
             .clone()
-            .filter(|item| item.align_self.keyword == AlignItemsKeyword::LastBaseline)
+            .filter(|item| item.participates_in_baseline_group(AlignItemsKeyword::LastBaseline))
             .min_by_key(column_order_key)
             .or_else(|| last_row_items.min_by_key(column_order_key))
             .unwrap();

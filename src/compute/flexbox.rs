@@ -543,7 +543,10 @@ fn compute_preliminary(tree: &mut impl LayoutFlexboxContainer, node: NodeId, inp
     let last_line = if constants.is_wrap_reverse { flex_lines.first() } else { flex_lines.last() };
     let last_vertical_baseline = last_line.and_then(|line| {
         if constants.is_column {
-            line.items.last().map(|child| child.last_baseline)
+            // For column containers the last baseline is generated from the endmost item in the
+            // line, which for reverse-direction containers is the first item in flex order.
+            let item = if constants.dir.is_reverse() { line.items.first() } else { line.items.last() };
+            item.map(|child| child.last_baseline)
         } else {
             // Prefer the first item in the line participating in last-baseline alignment, then the
             // first item participating in any baseline alignment, then the line's last item.
