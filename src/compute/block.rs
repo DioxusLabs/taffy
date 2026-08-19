@@ -825,14 +825,13 @@ fn generate_item_list(
             let is_replaced = child_style.is_compressible_replaced();
             let is_scroll_container = overflow.x.is_scroll_container() || overflow.y.is_scroll_container();
             let contain = child_style.contain();
-            let establishes_independent_fc = contain.establishes_independent_formatting_context();
 
             let is_in_same_bfc: bool = is_block
                 && !is_table
                 && position != Position::Absolute
                 && is_not_floated
                 && !is_scroll_container
-                && !establishes_independent_fc;
+                && !contain.establishes_independent_formatting_context();
 
             BlockItem {
                 node_id: child_node_id,
