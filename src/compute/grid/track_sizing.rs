@@ -496,8 +496,10 @@ fn resolve_item_baselines(
         // and we skip further computations for that group
         let row_first_baseline_item_count =
             row_items.iter().filter(|item| item.participates_in_baseline_group(AlignItemsKeyword::Baseline)).count();
-        let row_last_baseline_item_count =
-            row_items.iter().filter(|item| item.participates_in_baseline_group(AlignItemsKeyword::LastBaseline)).count();
+        let row_last_baseline_item_count = row_items
+            .iter()
+            .filter(|item| item.participates_in_baseline_group(AlignItemsKeyword::LastBaseline))
+            .count();
         if row_first_baseline_item_count <= 1 && row_last_baseline_item_count <= 1 {
             continue;
         }
@@ -511,7 +513,6 @@ fn resolve_item_baselines(
             if !should_measure {
                 continue;
             }
-
 
             let measured_size_and_baselines = tree.perform_child_layout(
                 item.node,
@@ -575,9 +576,8 @@ fn resolve_item_baselines(
                 .map(|item| item.last_baseline.unwrap_or(0.0))
                 .max_by(|a, b| a.total_cmp(b))
                 .unwrap();
-            for item in row_items
-                .iter_mut()
-                .filter(|item| item.participates_in_baseline_group(AlignItemsKeyword::LastBaseline))
+            for item in
+                row_items.iter_mut().filter(|item| item.participates_in_baseline_group(AlignItemsKeyword::LastBaseline))
             {
                 item.baseline_shims.end = row_max_descent - item.last_baseline.unwrap_or(0.0);
             }

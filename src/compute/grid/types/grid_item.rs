@@ -4,7 +4,9 @@ use crate::compute::common::sizing_keyword::{resolve_sizing_keyword, SizingKeywo
 use crate::compute::grid::OriginZeroLine;
 use crate::geometry::AbstractAxis;
 use crate::geometry::{Line, Point, Rect, Size};
-use crate::style::{AlignItems, AlignItemsKeyword, AlignSelf, AvailableSpace, Dimension, LengthPercentageAuto, Overflow};
+use crate::style::{
+    AlignItems, AlignItemsKeyword, AlignSelf, AvailableSpace, Dimension, LengthPercentageAuto, Overflow,
+};
 use crate::tree::{LayoutPartialTree, LayoutPartialTreeExt, NodeId, SizingMode};
 use crate::util::{MaybeMath, MaybeResolve, ResolveOrZero};
 use crate::{BoxSizing, GridItemStyle, LengthPercentage};
