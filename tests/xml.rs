@@ -256,6 +256,7 @@ fn build_style<S: CheapCloneStr>(xnode: roxmltree::Node) -> taffy::Style<S> {
             y: parse_or_default(xnode.attribute("overflow-y")),
         },
         scrollbar_width: parse_or_default(xnode.attribute("scrollbar-width")),
+        contain: parse_or_default(xnode.attribute("contain")),
         float: parse_or_default(xnode.attribute("float")),
         clear: parse_or_default(xnode.attribute("clear")),
         position: parse_or_default(xnode.attribute("position")),

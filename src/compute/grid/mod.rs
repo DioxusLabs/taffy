@@ -49,6 +49,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
 
     let style = tree.get_grid_container_style(node);
     let direction = style.direction();
+    let contain = style.contain();
 
     // 1. Compute "available grid space"
     // https://www.w3.org/TR/css-grid-1/#available-grid-space
@@ -785,7 +786,10 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     }
 
     // Determine the grid container baseline(s) (currently we only compute the first baseline)
-    let grid_container_baseline: f32 = {
+    // Layout containment suppresses the box's baseline for baseline-alignment purposes
+    let grid_container_baseline: Option<f32> = if contain.suppresses_baseline() {
+        None
+    } else {
         // Sort items by row start position so that we can iterate items in groups which are in the same row
         items.sort_by_key(|item| item.row_indexes.start);
 
@@ -802,7 +806,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
             .find(|item| item.participates_in_baseline_alignment())
             .unwrap_or(&first_row_items[0]);
 
-        item.y_position + item.baseline.unwrap_or(item.height)
+        Some(item.y_position + item.baseline.unwrap_or(item.height))
     };
 
     // A scroll container's own padding at the end of the content is part of its scrollable
@@ -823,7 +827,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     LayoutOutput::from_sizes_and_baselines(
         container_border_box,
         scrollable_overflow_rect,
-        Baselines::from_first(Some(grid_container_baseline)),
+        Baselines::from_first(grid_container_baseline),
     )
 }
 

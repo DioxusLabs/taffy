@@ -17,11 +17,20 @@
 
 - `Dimension` also supports the `content` keyword (`Dimension::content()`, CSS `content`), which indicates an automatic size based on the box's content. This keyword is only valid for `flex-basis`, where it sizes the item based on its content (ignoring its main size property) when computing its flex base size. In any other context (e.g. `width`/`height`) it behaves as `auto`
 
+- Support for the layout-affecting parts of the `layout` and `paint` values of the CSS `contain` property via a new `Contain` bitflags style type, a new `Style::contain` field and a new (defaulted) `CoreStyle::contain` trait method:
+  - `Contain::LAYOUT` (layout containment): the box establishes an independent formatting context (its margins do not collapse with those of its children, it contains its own floats, and it avoids external floats) and its baseline is suppressed (boxes requiring a baseline synthesize one from its border box)
+  - `Contain::PAINT` (paint containment): the box establishes an independent formatting context like layout containment, but its baseline is not suppressed. Paint containment's other effects (clipping, containing absolutely-positioned descendants, stacking context) do not affect layout and are not implemented
+  - Layout and paint containment also prevent the box's overflowing content from contributing to its ancestors' scrollable overflow regions: layout containment treats such overflow as ink overflow, and paint containment clips it. The contained box's own `scrollable_overflow_rect` still includes its overflowing content
+
+  The CSS parser (`parse` feature) accepts `none | content | [ layout || style || paint ]` for the `contain` property: `content` maps to `LAYOUT | PAINT`, and the `style` keyword is accepted but ignored as it does not affect layout. The `strict`, `size` and `inline-size` values are not supported as size containment is not implemented
+
 ### Changed
 
 - Flexbox/Block: absolutely positioned children are no longer measured when both of their dimensions are already known (e.g. from explicit sizes or insets), matching the existing grid behaviour
 
 ### Fixed
+
+- Block/float: the height of overflowing in-flow content of a nested block no longer contributes to the height of the block formatting context root as if it were floated content. Previously an auto-height BFC root containing a block whose in-flow content overflowed it (e.g. a fixed-height block with taller content) was incorrectly extended to contain that overflowing content
 
 - Block: the baselines contributed by in-flow children that are scroll containers are now clamped to the child's border box, and a scroll-container child with no natural baseline synthesizes one at its border-box bottom edge, matching the existing flexbox/grid behaviour per the [CSSWG resolution](https://github.com/w3c/csswg-drafts/issues/7660). Previously baselines of clipped content could leak outside an `overflow: hidden` child, and an empty scroll-container child contributed no baseline
 

@@ -95,6 +95,8 @@ pub(super) fn align_and_position_item(
     let style = tree.get_grid_child_style(node);
 
     let overflow = style.overflow();
+    #[cfg(feature = "content_size")]
+    let contain = style.contain();
     let scrollbar_width = style.scrollbar_width();
     let aspect_ratio = style.aspect_ratio();
     // Resolve writing-mode-relative self-start/self-end keywords against the item's own
@@ -401,6 +403,7 @@ pub(super) fn align_and_position_item(
             Size { width, height },
             layout_output.scrollable_overflow_rect,
             overflow,
+            contain,
             container_is_scroll_container,
         )
     };

@@ -79,6 +79,7 @@ where
         || style.overflow().x.is_scroll_container()
         || style.overflow().y.is_scroll_container()
         || style.position() == Position::Absolute
+        || style.contain().establishes_independent_formatting_context()
         || padding.top > 0.0
         || padding.bottom > 0.0
         || border.top > 0.0

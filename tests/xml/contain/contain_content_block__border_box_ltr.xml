@@ -1,0 +1,19 @@
+<test name="contain_content_block__border_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="block" direction="ltr" width="100px" border-top="2px" border-left="2px" border-bottom="2px" border-right="2px">
+      <div display="block" direction="ltr" height="10px" margin-bottom="10px"/>
+      <div display="block" direction="ltr" contain="content">
+        <div display="block" direction="ltr" height="10px" margin-top="20px"/>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="100" height="54">
+      <node x="2" y="2" width="96" height="10"/>
+      <node x="2" y="22" width="96" height="30">
+        <node x="0" y="20" width="96" height="10"/>
+      </node>
+    </node>
+  </expectations>
+</test>
