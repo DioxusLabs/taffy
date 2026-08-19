@@ -45,28 +45,11 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     node: NodeId,
     inputs: LayoutInput,
 ) -> LayoutOutput {
-    let contain = tree.get_grid_container_style(node).contain();
-
-    let mut output = compute_grid_layout_inner(tree, node, inputs);
-
-    // Layout containment suppresses the box's baseline for baseline-alignment purposes
-    if contain.suppresses_baseline() {
-        output.baselines = Baselines::NONE;
-    }
-
-    output
-}
-
-/// The main body of the grid layout algorithm
-fn compute_grid_layout_inner<Tree: LayoutGridContainer>(
-    tree: &mut Tree,
-    node: NodeId,
-    inputs: LayoutInput,
-) -> LayoutOutput {
     let LayoutInput { known_dimensions, parent_size, available_space, run_mode, .. } = inputs;
 
     let style = tree.get_grid_container_style(node);
     let direction = style.direction();
+    let contain = style.contain();
 
     // 1. Compute "available grid space"
     // https://www.w3.org/TR/css-grid-1/#available-grid-space
@@ -803,7 +786,10 @@ fn compute_grid_layout_inner<Tree: LayoutGridContainer>(
     }
 
     // Determine the grid container baseline(s) (currently we only compute the first baseline)
-    let grid_container_baseline: f32 = {
+    // Layout containment suppresses the box's baseline for baseline-alignment purposes
+    let grid_container_baseline: Option<f32> = if contain.suppresses_baseline() {
+        None
+    } else {
         // Sort items by row start position so that we can iterate items in groups which are in the same row
         items.sort_by_key(|item| item.row_indexes.start);
 
@@ -820,7 +806,7 @@ fn compute_grid_layout_inner<Tree: LayoutGridContainer>(
             .find(|item| item.participates_in_baseline_alignment())
             .unwrap_or(&first_row_items[0]);
 
-        item.y_position + item.baseline.unwrap_or(item.height)
+        Some(item.y_position + item.baseline.unwrap_or(item.height))
     };
 
     // A scroll container's own padding at the end of the content is part of its scrollable
@@ -841,7 +827,7 @@ fn compute_grid_layout_inner<Tree: LayoutGridContainer>(
     LayoutOutput::from_sizes_and_baselines(
         container_border_box,
         scrollable_overflow_rect,
-        Baselines::from_first(Some(grid_container_baseline)),
+        Baselines::from_first(grid_container_baseline),
     )
 }
 
