@@ -1,6 +1,6 @@
 //! Generic CSS scrollable overflow code that is shared between all CSS algorithms.
 use crate::geometry::{Point, Rect, Size};
-use crate::style::Overflow;
+use crate::style::{Contain, Overflow};
 use crate::util::sys::{f32_max, f32_min};
 
 #[inline(always)]
@@ -19,17 +19,22 @@ use crate::util::sys::{f32_max, f32_min};
 /// scrollable overflow region (<https://www.w3.org/TR/css-overflow-3/#scrollable>). This
 /// exclusion only applies when the parent is a scroll container: boxes with `overflow: visible`
 /// have no unreachable region of their own, so all of their content contributes.
+///
+/// A box whose containment contains its scrollable overflow (layout or paint containment)
+/// contributes only its border box, regardless of its overflow style.
 pub(crate) fn compute_scrollable_overflow_contribution(
     location: Point<f32>,
     size: Size<f32>,
     scrollable_overflow_rect: Rect<f32>,
     overflow: Point<Overflow>,
+    contain: Contain,
     parent_is_scroll_container: bool,
 ) -> Rect<f32> {
     let is_scroll_container = overflow.x.is_scroll_container() || overflow.y.is_scroll_container();
+    let overflow_is_contained = contain.contains_scrollable_overflow();
     let propagates = Point {
-        x: !is_scroll_container && overflow.x == Overflow::Visible,
-        y: !is_scroll_container && overflow.y == Overflow::Visible,
+        x: !is_scroll_container && !overflow_is_contained && overflow.x == Overflow::Visible,
+        y: !is_scroll_container && !overflow_is_contained && overflow.y == Overflow::Visible,
     };
     let end_extent = Size {
         width: if propagates.x { f32_max(size.width, scrollable_overflow_rect.right) } else { size.width },

@@ -45,6 +45,24 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     node: NodeId,
     inputs: LayoutInput,
 ) -> LayoutOutput {
+    let contain = tree.get_grid_container_style(node).contain();
+
+    let mut output = compute_grid_layout_inner(tree, node, inputs);
+
+    // Layout containment suppresses the box's baseline for baseline-alignment purposes
+    if contain.suppresses_baseline() {
+        output.baselines = Baselines::NONE;
+    }
+
+    output
+}
+
+/// The main body of the grid layout algorithm
+fn compute_grid_layout_inner<Tree: LayoutGridContainer>(
+    tree: &mut Tree,
+    node: NodeId,
+    inputs: LayoutInput,
+) -> LayoutOutput {
     let LayoutInput { known_dimensions, parent_size, available_space, run_mode, .. } = inputs;
 
     let style = tree.get_grid_container_style(node);

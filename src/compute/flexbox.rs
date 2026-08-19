@@ -2,8 +2,8 @@
 use crate::compute::common::alignment::{compute_alignment_offset, resolve_self_alignment_safety};
 use crate::geometry::{Line, Point, Rect, Size};
 use crate::style::{
-    AlignContent, AlignContentKeyword, AlignItems, AlignItemsKeyword, AlignSelf, AvailableSpace, JustifyContent,
-    LengthPercentageAuto, Overflow, Position,
+    AlignContent, AlignContentKeyword, AlignItems, AlignItemsKeyword, AlignSelf, AvailableSpace, Contain,
+    JustifyContent, LengthPercentageAuto, Overflow, Position,
 };
 use crate::style::{CoreStyle, FlexDirection, FlexboxContainerStyle, FlexboxItemStyle};
 use crate::style_helpers::{TaffyMaxContent, TaffyMinContent};
@@ -46,6 +46,8 @@ struct FlexItem {
 
     /// The overflow style of the item
     overflow: Point<Overflow>,
+    /// The contain style of the item
+    contain: Contain,
     /// The width of the scrollbars (if it has any)
     scrollbar_width: f32,
     /// The flex shrink style of the item
@@ -234,6 +236,7 @@ pub fn compute_flexbox_layout(
     let style = tree.get_flexbox_container_style(node);
 
     // Pull these out earlier to avoid borrowing issues
+    let contain = style.contain();
     let aspect_ratio = style.aspect_ratio();
     let padding = style.padding().resolve_or_zero(parent_size.width, |val, basis| tree.calc(val, basis));
     let border = style.border().resolve_or_zero(parent_size.width, |val, basis| tree.calc(val, basis));
@@ -304,11 +307,18 @@ pub fn compute_flexbox_layout(
         .known_dimensions_are_definite
         .zip_map(known_dimensions, |is_definite, known_dimension| is_definite || known_dimension.is_none());
 
-    compute_preliminary(
+    let mut output = compute_preliminary(
         tree,
         node,
         LayoutInput { known_dimensions: styled_based_known_dimensions, known_dimensions_are_definite, ..inputs },
-    )
+    );
+
+    // Layout containment suppresses the box's baseline for baseline-alignment purposes
+    if contain.suppresses_baseline() {
+        output.baselines = Baselines::NONE;
+    }
+
+    output
 }
 
 /// Compute a preliminary size for an item
@@ -702,6 +712,7 @@ fn generate_anonymous_flex_items(
                     constants.is_column,
                 ),
                 overflow: child_style.overflow(),
+                contain: child_style.contain(),
                 scrollbar_width: child_style.scrollbar_width(),
                 flex_grow: child_style.flex_grow(),
                 flex_shrink: child_style.flex_shrink(),
@@ -2457,6 +2468,7 @@ fn calculate_flex_item(
             size,
             scrollable_overflow_rect,
             item.overflow,
+            item.contain,
             constants.is_scroll_container,
         ));
     }
@@ -2612,6 +2624,7 @@ fn perform_absolute_layout_on_absolute_children(
         }
 
         let overflow = child_style.overflow();
+        let contain = child_style.contain();
         let scrollbar_width = child_style.scrollbar_width();
         let aspect_ratio = child_style.aspect_ratio();
         let align_self = child_style.align_self().unwrap_or(constants.align_items).resolve_self_relative(
@@ -2990,6 +3003,7 @@ fn perform_absolute_layout_on_absolute_children(
                 final_size,
                 layout_output.scrollable_overflow_rect,
                 overflow,
+                contain,
                 constants.is_scroll_container,
             ));
         }
