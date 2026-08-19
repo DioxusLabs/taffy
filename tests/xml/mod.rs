@@ -4944,6 +4944,26 @@ mod block {
 
 mod blockflex {
     #[test]
+    fn blockflex_baseline_overflow_hidden_clamp__border_box_ltr() {
+        crate::run_xml_test("blockflex", "blockflex_baseline_overflow_hidden_clamp__border_box_ltr");
+    }
+
+    #[test]
+    fn blockflex_baseline_overflow_hidden_clamp__content_box_ltr() {
+        crate::run_xml_test("blockflex", "blockflex_baseline_overflow_hidden_clamp__content_box_ltr");
+    }
+
+    #[test]
+    fn blockflex_baseline_overflow_hidden_clamp__border_box_rtl() {
+        crate::run_xml_test("blockflex", "blockflex_baseline_overflow_hidden_clamp__border_box_rtl");
+    }
+
+    #[test]
+    fn blockflex_baseline_overflow_hidden_clamp__content_box_rtl() {
+        crate::run_xml_test("blockflex", "blockflex_baseline_overflow_hidden_clamp__content_box_rtl");
+    }
+
+    #[test]
     fn blockflex_block_in_flex_column__border_box_ltr() {
         crate::run_xml_test("blockflex", "blockflex_block_in_flex_column__border_box_ltr");
     }
