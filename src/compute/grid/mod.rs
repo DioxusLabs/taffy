@@ -699,7 +699,17 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
             // the track that precedes it.
             /// Resolve a grid line used as an inline-start edge to a physical right x-position (RTL)
             fn rtl_line_as_start_edge(tracks: &[GridTrack], index: usize) -> f32 {
-                tracks[index].offset
+                if tracks.len() > index + 1 {
+                    // The gutter's offset is the physical right edge of the track that follows the line
+                    tracks[index].offset
+                } else if index == 0 {
+                    tracks[0].offset
+                } else {
+                    // No track follows the line: resolve to the line itself, which is the physical
+                    // left edge of the track that precedes it (the trailing gutter is assigned its
+                    // offset before any alignment offset is applied, so it cannot be used here)
+                    tracks[index - 1].offset
+                }
             }
             /// Resolve a grid line used as an inline-end edge to a physical left x-position (RTL)
             fn rtl_line_as_end_edge(tracks: &[GridTrack], index: usize) -> f32 {
