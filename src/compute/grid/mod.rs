@@ -1,7 +1,7 @@
 //! This module is a partial implementation of the CSS Grid Level 1 specification
 //! <https://www.w3.org/TR/css-grid-1>
 use crate::geometry::{AbsoluteAxis, AbstractAxis, InBothAbsAxis};
-use crate::geometry::{Line, Rect, Size};
+use crate::geometry::{Line, Point, Rect, Size};
 use crate::style::{AlignItems, AvailableSpace, Overflow, Position};
 use crate::tree::{Baselines, Layout, LayoutInput, LayoutOutput, LayoutPartialTreeExt, NodeId, RunMode, SizingMode};
 use crate::util::debug::debug_log;
@@ -893,23 +893,21 @@ pub struct DetailedGridInfo {
 
 #[cfg(feature = "detailed_layout_info")]
 impl DetailedGridInfo {
-    /// Compute the rectangle of the grid area occupied by the item at `item_index` (an index
-    /// into [`DetailedGridInfo::items`]), relative to the grid container's border box.
+    /// Compute the location and size of the grid area occupied by the item at `item_index` (an
+    /// index into [`DetailedGridInfo::items`]), relative to the grid container's border box.
     ///
     /// The edges resolve to the edges of the tracks bounding the item's grid area (a start line
     /// resolves to the start of the track that follows it and an end line to the end of the track
-    /// that precedes it), so the rectangle excludes any gutter or content-alignment spacing
-    /// around the area.
+    /// that precedes it), so the area excludes any gutter or content-alignment spacing around it.
     ///
     /// Returns `None` if `item_index` is out of bounds.
-    pub fn item_grid_area(&self, item_index: usize) -> Option<Rect<f32>> {
+    pub fn item_grid_area(&self, item_index: usize) -> Option<(Point<f32>, Size<f32>)> {
         let item = self.items.get(item_index)?;
-        Some(Rect {
-            left: self.columns.positions[item.column_start as usize - 1].start,
-            right: self.columns.positions[item.column_end as usize - 2].end,
-            top: self.rows.positions[item.row_start as usize - 1].start,
-            bottom: self.rows.positions[item.row_end as usize - 2].end,
-        })
+        let left = self.columns.positions[item.column_start as usize - 1].start;
+        let right = self.columns.positions[item.column_end as usize - 2].end;
+        let top = self.rows.positions[item.row_start as usize - 1].start;
+        let bottom = self.rows.positions[item.row_end as usize - 2].end;
+        Some((Point { x: left, y: top }, Size { width: right - left, height: bottom - top }))
     }
 }
 

@@ -1,7 +1,7 @@
 #[cfg(all(feature = "detailed_layout_info", feature = "grid"))]
 mod detailed_grid_info {
     use taffy::prelude::*;
-    use taffy::{DetailedGridInfo, DetailedLayoutInfo, Rect};
+    use taffy::{DetailedGridInfo, DetailedLayoutInfo, Point, Rect};
 
     fn detailed_grid_info(tree: &TaffyTree, node: NodeId) -> &DetailedGridInfo {
         match tree.detailed_layout_info(node) {
@@ -39,9 +39,9 @@ mod detailed_grid_info {
         let info = detailed_grid_info(&tree, container);
 
         // child_a is auto-placed into row 1 / column 1
-        assert_eq!(info.item_grid_area(0), Some(Rect { left: 5.0, right: 45.0, top: 5.0, bottom: 55.0 }));
+        assert_eq!(info.item_grid_area(0), Some((Point { x: 5.0, y: 5.0 }, Size { width: 40.0, height: 50.0 })));
         // child_b spans both columns in row 2
-        assert_eq!(info.item_grid_area(1), Some(Rect { left: 5.0, right: 115.0, top: 65.0, bottom: 95.0 }));
+        assert_eq!(info.item_grid_area(1), Some((Point { x: 5.0, y: 65.0 }, Size { width: 110.0, height: 30.0 })));
         // out of bounds index
         assert_eq!(info.item_grid_area(2), None);
     }
