@@ -278,7 +278,7 @@ pub trait LayoutGridContainer: LayoutPartialTree {
     /// Implementing this method is optional. Doing so allows you to access details about the the grid such as
     /// the computed size of each grid track and the computed placement of each grid item.
     #[cfg(feature = "detailed_layout_info")]
-    fn set_detailed_grid_info(&mut self, _node_id: NodeId, _detailed_grid_info: DetailedGridInfo) {
+    fn set_detailed_grid_info(&mut self, _node_id: NodeId, _detailed_grid_info: DetailedGridInfo<Self::CustomIdent>) {
         debug_log!("LayoutGridContainer::set_detailed_grid_info called");
     }
 }
