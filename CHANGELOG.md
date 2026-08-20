@@ -24,6 +24,8 @@
 
   The CSS parser (`parse` feature) accepts `none | content | [ layout || style || paint ]` for the `contain` property: `content` maps to `LAYOUT | PAINT`, and the `style` keyword is accepted but ignored as it does not affect layout. The `strict`, `size` and `inline-size` values are not supported as size containment is not implemented
 
+- `DetailedGridInfo` (behind the `detailed_layout_info` feature) gains an `item_grid_area(item_index)` method returning the location and size (`(Point<f32>, Size<f32>)`) of the grid area occupied by an item, relative to the grid container's border box
+
 ### Changed
 
 - `DetailedGridTracksInfo` (behind the `detailed_layout_info` feature) now exposes a single `positions: Vec<Line<f32>>` field containing the start and end position of each track relative to the grid container's border box, replacing the previous `gutters` and `sizes` fields. Unlike the previous fields, these positions account for content alignment (`align-content`/`justify-content`). Collapsed tracks are included as zero-width entries, so indices remain 1:1 with track numbers. Track sizes and gutters can be derived from the positions (`size = end - start`; gutter = distance between adjacent tracks)
