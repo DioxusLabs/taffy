@@ -891,6 +891,28 @@ pub struct DetailedGridInfo {
     pub items: Vec<DetailedGridItemsInfo>,
 }
 
+#[cfg(feature = "detailed_layout_info")]
+impl DetailedGridInfo {
+    /// Compute the rectangle of the grid area occupied by the item at `item_index` (an index
+    /// into [`DetailedGridInfo::items`]), relative to the grid container's border box.
+    ///
+    /// The edges resolve to the edges of the tracks bounding the item's grid area (a start line
+    /// resolves to the start of the track that follows it and an end line to the end of the track
+    /// that precedes it), so the rectangle excludes any gutter or content-alignment spacing
+    /// around the area.
+    ///
+    /// Returns `None` if `item_index` is out of bounds.
+    pub fn item_grid_area(&self, item_index: usize) -> Option<Rect<f32>> {
+        let item = self.items.get(item_index)?;
+        Some(Rect {
+            left: self.columns.positions[item.column_start as usize - 1].start,
+            right: self.columns.positions[item.column_end as usize - 2].end,
+            top: self.rows.positions[item.row_start as usize - 1].start,
+            bottom: self.rows.positions[item.row_end as usize - 2].end,
+        })
+    }
+}
+
 /// Information from the computation of grids tracks
 #[derive(Debug, Clone, PartialEq)]
 #[cfg(feature = "detailed_layout_info")]
