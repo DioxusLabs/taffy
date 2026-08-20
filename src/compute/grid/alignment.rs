@@ -51,10 +51,11 @@ pub(super) fn align_tracks(
         0.0
     };
 
-    // Compute offsets
+    // Compute offsets. Tracks are stored in logical order; when the axis is reversed (RTL)
+    // physical offsets are assigned right-to-left by iterating the tracks in reverse.
     let mut total_offset = origin + empty_grid_offset;
     let mut seen_non_collapsed_track = false;
-    tracks.iter_mut().enumerate().for_each(|(i, track)| {
+    let mut position_track = |i: usize, track: &mut GridTrack| {
         // Odd tracks are gutters (but slices are zero-indexed, so odd tracks have even indices)
         let is_gutter = i % 2 == 0;
         let is_non_collapsed_track = !is_gutter && !track.is_collapsed;
@@ -73,7 +74,12 @@ pub(super) fn align_tracks(
         if is_non_collapsed_track {
             seen_non_collapsed_track = true;
         }
-    });
+    };
+    if axis_is_reversed {
+        tracks.iter_mut().rev().enumerate().for_each(|(i, track)| position_track(i, track));
+    } else {
+        tracks.iter_mut().enumerate().for_each(|(i, track)| position_track(i, track));
+    }
 }
 
 /// Align and size a grid item into it's final position

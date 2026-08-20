@@ -30,6 +30,8 @@
 
 - `DetailedGridTracksInfo` (behind the `detailed_layout_info` feature) now exposes a single `positions: Vec<Line<f32>>` field containing the start and end position of each track relative to the grid container's border box, replacing the previous `gutters` and `sizes` fields. Unlike the previous fields, these positions account for content alignment (`align-content`/`justify-content`). Collapsed tracks are included as zero-width entries, so indices remain 1:1 with track numbers. Track sizes and gutters can be derived from the positions (`size = end - start`; gutter = distance between adjacent tracks)
 
+- Grid: for `direction: rtl` grid containers, all internal grid data structures and the `detailed_layout_info` output (`DetailedGridInfo`) are now in *logical* order (line 1 = inline-start = the right-hand side in RTL), matching LTR. Previously RTL grids were internally mirrored into visual order, so `DetailedGridTracksInfo` column track positions and `DetailedGridItemsInfo` column line numbers were reported in visual (left-to-right) order. RTL is now applied purely when assigning physical geometry, and the rendered layout is unchanged
+
 - Flexbox/Block: absolutely positioned children are no longer measured when both of their dimensions are already known (e.g. from explicit sizes or insets), matching the existing grid behaviour
 
 ### Fixed
