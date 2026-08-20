@@ -22,6 +22,10 @@ use track_sizing::{
 use types::{CellOccupancyMatrix, GridTrack, NamedLineResolver};
 
 #[cfg(feature = "detailed_layout_info")]
+use crate::sys::{format, DefaultCheapStr, String};
+#[cfg(feature = "detailed_layout_info")]
+use crate::{CheapCloneStr, GenericGridTemplateComponent, GenericRepetition as _, RepetitionCount};
+#[cfg(feature = "detailed_layout_info")]
 use types::{GridItem, GridTrackKind, TrackCounts};
 
 pub(crate) use types::{GridCoordinate, GridLine, OriginZeroLine, MAX_GRID_TRACKS, MAX_OZ_LINE, MIN_OZ_LINE};
@@ -218,6 +222,14 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
 
     name_resolver.set_explicit_column_count(explicit_col_count);
     name_resolver.set_explicit_row_count(explicit_row_count);
+
+    // Expand the per-line names of the explicit grid (must be done while the style is still borrowed)
+    #[cfg(feature = "detailed_layout_info")]
+    let detailed_column_line_names =
+        expand_explicit_line_names(&style, AbsoluteAxis::Horizontal, col_auto_repetition_count, explicit_col_count);
+    #[cfg(feature = "detailed_layout_info")]
+    let detailed_row_line_names =
+        expand_explicit_line_names(&style, AbsoluteAxis::Vertical, row_auto_repetition_count, explicit_row_count);
 
     // 3. Implicit Grid: Estimate Track Counts
     // Estimate the number of rows and columns in the implicit grid (= the entire grid)
@@ -783,8 +795,16 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     tree.set_detailed_grid_info(
         node,
         DetailedGridInfo {
-            rows: DetailedGridTracksInfo::from_grid_tracks_and_track_count(final_row_counts, rows),
-            columns: DetailedGridTracksInfo::from_grid_tracks_and_track_count(final_col_counts, columns),
+            rows: DetailedGridTracksInfo::from_grid_tracks_and_track_count(
+                final_row_counts,
+                rows,
+                finalize_line_names(detailed_row_line_names, final_row_counts),
+            ),
+            columns: DetailedGridTracksInfo::from_grid_tracks_and_track_count(
+                final_col_counts,
+                columns,
+                finalize_line_names(detailed_column_line_names, final_col_counts),
+            ),
             items: items.iter().map(DetailedGridItemsInfo::from_grid_item).collect(),
         },
     );
@@ -854,17 +874,43 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
 /// Information from the computation of grid
 #[derive(Debug, Clone, PartialEq)]
 #[cfg(feature = "detailed_layout_info")]
-pub struct DetailedGridInfo {
+pub struct DetailedGridInfo<S: CheapCloneStr = DefaultCheapStr> {
     /// <https://drafts.csswg.org/css-grid-1/#grid-row>
-    pub rows: DetailedGridTracksInfo,
+    pub rows: DetailedGridTracksInfo<S>,
     /// <https://drafts.csswg.org/css-grid-1/#grid-column>
-    pub columns: DetailedGridTracksInfo,
+    pub columns: DetailedGridTracksInfo<S>,
     /// <https://drafts.csswg.org/css-grid-1/#grid-items>
     pub items: Vec<DetailedGridItemsInfo>,
 }
 
 #[cfg(feature = "detailed_layout_info")]
-impl DetailedGridInfo {
+impl<S: CheapCloneStr> DetailedGridInfo<S> {
+    /// Write the used row track sizes and line names to the passed writer in the resolved value
+    /// format of the `grid-template-rows` property
+    /// (see <https://www.w3.org/TR/css-grid-1/#resolved-track-list>)
+    pub fn write_grid_template_rows(&self, out: &mut impl core::fmt::Write) -> core::fmt::Result {
+        self.rows.write_track_list(out)
+    }
+
+    /// Write the used column track sizes and line names to the passed writer in the resolved value
+    /// format of the `grid-template-columns` property
+    /// (see <https://www.w3.org/TR/css-grid-1/#resolved-track-list>)
+    pub fn write_grid_template_columns(&self, out: &mut impl core::fmt::Write) -> core::fmt::Result {
+        self.columns.write_track_list(out)
+    }
+
+    /// Serialize the used row track sizes and line names in the resolved value format of the
+    /// `grid-template-rows` property (see <https://www.w3.org/TR/css-grid-1/#resolved-track-list>)
+    pub fn grid_template_rows(&self) -> String {
+        self.rows.to_track_list_string()
+    }
+
+    /// Serialize the used column track sizes and line names in the resolved value format of the
+    /// `grid-template-columns` property (see <https://www.w3.org/TR/css-grid-1/#resolved-track-list>)
+    pub fn grid_template_columns(&self) -> String {
+        self.columns.to_track_list_string()
+    }
+
     /// Compute the location and size of the grid area occupied by the item at `item_index` (an
     /// index into [`DetailedGridInfo::items`]), relative to the grid container's border box.
     ///
@@ -888,7 +934,7 @@ impl DetailedGridInfo {
 /// Information from the computation of grids tracks
 #[derive(Debug, Clone, PartialEq)]
 #[cfg(feature = "detailed_layout_info")]
-pub struct DetailedGridTracksInfo {
+pub struct DetailedGridTracksInfo<S: CheapCloneStr = DefaultCheapStr> {
     /// Number of leading implicit grid tracks
     pub negative_implicit_tracks: u16,
     /// Number of explicit grid tracks
@@ -900,10 +946,14 @@ pub struct DetailedGridTracksInfo {
     /// These positions account for the container's border and padding, the `gap` property,
     /// content alignment (`align-content`/`justify-content`), and collapsed tracks.
     pub positions: Vec<Line<f32>>,
+
+    /// The names of each grid line. Line `i` (0-indexed) bounds the start of track `i`,
+    /// so there is one more line than there are tracks. Empty if the grid has no named lines.
+    pub line_names: GridLineNames<S>,
 }
 
 #[cfg(feature = "detailed_layout_info")]
-impl DetailedGridTracksInfo {
+impl<S: CheapCloneStr> DetailedGridTracksInfo<S> {
     /// Get the start and end position of each track relative to the grid container's border box
     fn positions_from_grid_track_layout(grid_tracks: &[GridTrack]) -> Vec<Line<f32>> {
         grid_tracks
@@ -914,14 +964,301 @@ impl DetailedGridTracksInfo {
     }
 
     /// Construct DetailedGridTracksInfo from TrackCounts and GridTracks
-    fn from_grid_tracks_and_track_count(track_count: TrackCounts, grid_tracks: Vec<GridTrack>) -> Self {
+    fn from_grid_tracks_and_track_count(
+        track_count: TrackCounts,
+        grid_tracks: Vec<GridTrack>,
+        line_names: GridLineNames<S>,
+    ) -> Self {
         DetailedGridTracksInfo {
             negative_implicit_tracks: track_count.negative_implicit,
             explicit_tracks: track_count.explicit,
             positive_implicit_tracks: track_count.positive_implicit,
-            positions: DetailedGridTracksInfo::positions_from_grid_track_layout(&grid_tracks),
+            positions: DetailedGridTracksInfo::<S>::positions_from_grid_track_layout(&grid_tracks),
+            line_names,
         }
     }
+
+    /// Write the used track sizes and line names of this axis to the passed writer in the
+    /// resolved value format of the `grid-template-rows`/`grid-template-columns` properties
+    /// (see <https://www.w3.org/TR/css-grid-1/#resolved-track-list>)
+    pub fn write_track_list(&self, out: &mut impl core::fmt::Write) -> core::fmt::Result {
+        /// Write a bracketed line name group (e.g. `[foo bar]`)
+        fn write_line_names<S: CheapCloneStr>(out: &mut impl core::fmt::Write, names: &[S]) -> core::fmt::Result {
+            out.write_char('[')?;
+            for (i, name) in names.iter().enumerate() {
+                if i != 0 {
+                    out.write_char(' ')?;
+                }
+                out.write_str(name.as_ref())?;
+            }
+            out.write_char(']')
+        }
+
+        if self.positions.is_empty() {
+            return out.write_str("none");
+        }
+
+        let mut needs_space = false;
+        for (track_index, position) in self.positions.iter().enumerate() {
+            let names = self.line_names.line(track_index);
+            if !names.is_empty() {
+                if needs_space {
+                    out.write_char(' ')?;
+                }
+                write_line_names(out, names)?;
+                needs_space = true;
+            }
+            if needs_space {
+                out.write_char(' ')?;
+            }
+            write!(out, "{}px", position.end - position.start)?;
+            needs_space = true;
+        }
+        let trailing_names = self.line_names.line(self.positions.len());
+        if !trailing_names.is_empty() {
+            out.write_char(' ')?;
+            write_line_names(out, trailing_names)?;
+        }
+        Ok(())
+    }
+
+    /// Serialize the used track sizes and line names of this axis in the resolved value format of
+    /// the `grid-template-rows`/`grid-template-columns` properties
+    /// (see <https://www.w3.org/TR/css-grid-1/#resolved-track-list>)
+    pub fn to_track_list_string(&self) -> String {
+        let mut out = String::new();
+        self.write_track_list(&mut out).expect("writing to a String cannot fail");
+        out
+    }
+}
+
+/// The names of each grid line in a single axis, stored in CSR (compressed sparse row) format:
+/// a single flat `Vec` of names plus a `Vec` of offsets into it (one more offset than there
+/// are lines). The names of line `i` (0-indexed) are `names[offsets[i]..offsets[i + 1]]`.
+///
+/// Iterate over per-line name groups with [`GridLineNames::iter`], or access a single line's
+/// names with [`GridLineNames::line`]. A grid with no named lines is represented by two empty
+/// `Vec`s (see [`GridLineNames::is_empty`]).
+#[derive(Debug, Clone, PartialEq, Default)]
+#[cfg(feature = "detailed_layout_info")]
+pub struct GridLineNames<S: CheapCloneStr = DefaultCheapStr> {
+    /// The names of every grid line in the axis, concatenated in line order
+    names: Vec<S>,
+    /// Offsets into `names`: line `i`'s names are `names[offsets[i]..offsets[i + 1]]`.
+    /// Either empty (no named lines) or of length `line count + 1`.
+    offsets: Vec<u32>,
+}
+
+#[cfg(feature = "detailed_layout_info")]
+impl<S: CheapCloneStr> GridLineNames<S> {
+    /// Create an empty `GridLineNames` with pre-allocated capacity
+    fn with_capacity(name_capacity: usize, offset_capacity: usize) -> Self {
+        let mut offsets = Vec::with_capacity(offset_capacity);
+        offsets.push(0);
+        Self { names: Vec::with_capacity(name_capacity), offsets }
+    }
+
+    /// Start a new (initially empty) line
+    fn start_line(&mut self) {
+        self.offsets.push(self.names.len() as u32);
+    }
+
+    /// Append a name to the current (last) line
+    fn push_name(&mut self, name: S) {
+        self.names.push(name);
+        *self.offsets.last_mut().unwrap() = self.names.len() as u32;
+    }
+
+    /// Whether the current (last) line already contains the passed name
+    fn current_line_contains(&self, name: &str) -> bool {
+        self.line(self.line_count().wrapping_sub(1)).iter().any(|n| n.as_ref() == name)
+    }
+
+    /// Whether the axis has any named lines at all
+    pub fn is_empty(&self) -> bool {
+        self.names.is_empty()
+    }
+
+    /// The number of grid lines represented (zero if the grid has no named lines)
+    pub fn line_count(&self) -> usize {
+        self.offsets.len().saturating_sub(1)
+    }
+
+    /// The names of the line with the passed 0-indexed line index.
+    /// Returns an empty slice if the line has no names or the index is out of range.
+    pub fn line(&self, line_index: usize) -> &[S] {
+        match (self.offsets.get(line_index), self.offsets.get(line_index + 1)) {
+            (Some(&start), Some(&end)) => &self.names[start as usize..end as usize],
+            _ => &[],
+        }
+    }
+
+    /// Iterate over the name group (`&[S]`) of each grid line in line order
+    pub fn iter(&self) -> GridLineNamesIter<'_, S> {
+        GridLineNamesIter { names: &self.names, offsets: self.offsets.windows(2) }
+    }
+}
+
+#[cfg(feature = "detailed_layout_info")]
+impl<'a, S: CheapCloneStr> IntoIterator for &'a GridLineNames<S> {
+    type Item = &'a [S];
+    type IntoIter = GridLineNamesIter<'a, S>;
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter()
+    }
+}
+
+/// Iterator over the per-line name groups of a [`GridLineNames`]. Yields one `&[S]` per grid
+/// line (which is empty for unnamed lines)
+#[derive(Debug, Clone)]
+#[cfg(feature = "detailed_layout_info")]
+pub struct GridLineNamesIter<'a, S: CheapCloneStr> {
+    /// The flat name storage being iterated over
+    names: &'a [S],
+    /// Iterator over adjacent pairs of offsets into `names`
+    offsets: core::slice::Windows<'a, u32>,
+}
+
+#[cfg(feature = "detailed_layout_info")]
+impl<'a, S: CheapCloneStr> Iterator for GridLineNamesIter<'a, S> {
+    type Item = &'a [S];
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let window = self.offsets.next()?;
+        Some(&self.names[window[0] as usize..window[1] as usize])
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.offsets.size_hint()
+    }
+}
+
+#[cfg(feature = "detailed_layout_info")]
+impl<S: CheapCloneStr> ExactSizeIterator for GridLineNamesIter<'_, S> {}
+
+/// Expand the line names of the explicit grid in the passed axis into one name group per grid
+/// line, expanding `repeat()`s (using the resolved auto-repetition count) and including the
+/// implicit `<name>-start`/`<name>-end` names generated by `grid-template-areas`.
+///
+/// Line indices are relative to the explicit grid (line 0 = start of the first explicit track).
+#[cfg(feature = "detailed_layout_info")]
+fn expand_explicit_line_names<S: CheapCloneStr>(
+    style: &impl GridContainerStyle<CustomIdent = S>,
+    axis: AbsoluteAxis,
+    auto_repetitions: u16,
+    explicit_track_count: u16,
+) -> GridLineNames<S> {
+    // Collect (1-indexed line number, name) pairs for the axis.
+    // This mirrors the expansion performed by `NamedLineResolver::new`.
+    let mut pairs: Vec<(u32, S)> = Vec::new();
+
+    let (template_tracks, template_line_names) = match axis {
+        AbsoluteAxis::Horizontal => (style.grid_template_columns(), style.grid_template_column_names()),
+        AbsoluteAxis::Vertical => (style.grid_template_rows(), style.grid_template_row_names()),
+    };
+    let mut current_line: u32 = 0;
+    if let (Some(mut tracks), Some(line_names_iter)) = (template_tracks, template_line_names) {
+        for line_names in line_names_iter {
+            current_line += 1;
+            for name in line_names {
+                pairs.push((current_line, name.clone()));
+            }
+
+            if let Some(GenericGridTemplateComponent::Repeat(repeat)) = tracks.next() {
+                let repeat_count = match repeat.count() {
+                    RepetitionCount::Count(count) => count,
+                    RepetitionCount::AutoFill | RepetitionCount::AutoFit => auto_repetitions,
+                };
+                let lines_per_repetition = repeat.track_count() as u32;
+
+                for _ in 0..repeat_count {
+                    for (line, line_name_set) in (current_line..).zip(repeat.lines_names()) {
+                        for name in line_name_set {
+                            pairs.push((line, name.clone()));
+                        }
+                    }
+                    current_line += lines_per_repetition;
+
+                    // Names for lines beyond the maximum track limit are never resolvable:
+                    // stop generating them (the explicit grid is clamped to MAX_GRID_TRACKS)
+                    if current_line > MAX_GRID_TRACKS as u32 {
+                        break;
+                    }
+                }
+                // Last line name set collapses with following line name set
+                if repeat_count > 0 {
+                    current_line = current_line.saturating_sub(1);
+                }
+            }
+        }
+    }
+
+    if let Some(areas) = style.grid_template_areas() {
+        for area in areas {
+            let (start, end) = match axis {
+                AbsoluteAxis::Horizontal => (area.column_start, area.column_end),
+                AbsoluteAxis::Vertical => (area.row_start, area.row_end),
+            };
+            pairs.push((start as u32, S::from(format!("{}-start", area.name.as_ref()))));
+            pairs.push((end as u32, S::from(format!("{}-end", area.name.as_ref()))));
+        }
+    }
+
+    if pairs.is_empty() {
+        return GridLineNames::default();
+    }
+
+    // Stable sort by line number preserves the source order of names within each line
+    pairs.sort_by_key(|(line, _)| *line);
+
+    let line_count = explicit_track_count as usize + 1;
+    let mut line_names = GridLineNames::with_capacity(pairs.len(), line_count + 1);
+    let mut pair_iter = pairs.into_iter().peekable();
+    for line in 1..=(line_count as u32) {
+        line_names.start_line();
+        while let Some(&(pair_line, _)) = pair_iter.peek() {
+            if pair_line != line {
+                break;
+            }
+            let (_, name) = pair_iter.next().unwrap();
+            if !line_names.current_line_contains(name.as_ref()) {
+                line_names.push_name(name);
+            }
+        }
+    }
+    line_names
+}
+
+/// Convert explicit-grid-relative line names into final-grid line names by padding with
+/// (unnamed) implicit grid lines, so indices match the logical track order used by
+/// [`DetailedGridTracksInfo::positions`]
+#[cfg(feature = "detailed_layout_info")]
+fn finalize_line_names<S: CheapCloneStr>(
+    explicit_line_names: GridLineNames<S>,
+    track_counts: TrackCounts,
+) -> GridLineNames<S> {
+    if explicit_line_names.is_empty() {
+        return GridLineNames::default();
+    }
+
+    let total_line_count = track_counts.len() + 1;
+    let negative_implicit = track_counts.negative_implicit as usize;
+    let explicit_line_count = track_counts.explicit as usize + 1;
+
+    if negative_implicit == 0 && explicit_line_names.line_count() == total_line_count {
+        return explicit_line_names;
+    }
+
+    let mut line_names = GridLineNames::with_capacity(explicit_line_names.names.len(), total_line_count + 1);
+    for line_index in 0..total_line_count {
+        line_names.start_line();
+        if line_index >= negative_implicit && line_index < negative_implicit + explicit_line_count {
+            for name in explicit_line_names.line(line_index - negative_implicit) {
+                line_names.push_name(name.clone());
+            }
+        }
+    }
+    line_names
 }
 
 /// Grid area information from the placement algorithm
