@@ -875,8 +875,10 @@ impl DetailedGridInfo {
     /// Returns `None` if `item_index` is out of bounds.
     pub fn item_grid_area(&self, item_index: usize) -> Option<(Point<f32>, Size<f32>)> {
         let item = self.items.get(item_index)?;
-        let left = self.columns.positions[item.column_start as usize - 1].start;
-        let right = self.columns.positions[item.column_end as usize - 2].end;
+        let start_col = self.columns.positions[item.column_start as usize - 1];
+        let end_col = self.columns.positions[item.column_end as usize - 2];
+        let left = f32_min(start_col.start, end_col.start);
+        let right = f32_max(start_col.end, end_col.end);
         let top = self.rows.positions[item.row_start as usize - 1].start;
         let bottom = self.rows.positions[item.row_end as usize - 2].end;
         Some((Point { x: left, y: top }, Size { width: right - left, height: bottom - top }))
