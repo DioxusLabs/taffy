@@ -26,6 +26,8 @@
 
 ### Changed
 
+- `DetailedGridTracksInfo` (behind the `detailed_layout_info` feature) now exposes a single `positions: Vec<Line<f32>>` field containing the start and end position of each track relative to the grid container's border box, replacing the previous `gutters` and `sizes` fields. Unlike the previous fields, these positions account for content alignment (`align-content`/`justify-content`). Collapsed tracks are included as zero-width entries, so indices remain 1:1 with track numbers. Track sizes and gutters can be derived from the positions (`size = end - start`; gutter = distance between adjacent tracks)
+
 - Flexbox/Block: absolutely positioned children are no longer measured when both of their dimensions are already known (e.g. from explicit sizes or insets), matching the existing grid behaviour
 
 ### Fixed

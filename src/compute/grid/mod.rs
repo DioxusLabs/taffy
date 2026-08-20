@@ -902,34 +902,21 @@ pub struct DetailedGridTracksInfo {
     /// Number of trailing implicit grid tracks
     pub positive_implicit_tracks: u16,
 
-    /// Gutters between tracks
-    pub gutters: Vec<f32>,
-    /// The used size of the tracks
-    pub sizes: Vec<f32>,
+    /// The start and end position of each track relative to the grid container's border box.
+    /// These positions account for the container's border and padding, the `gap` property,
+    /// content alignment (`align-content`/`justify-content`), and collapsed tracks.
+    pub positions: Vec<Line<f32>>,
 }
 
 #[cfg(feature = "detailed_layout_info")]
 impl DetailedGridTracksInfo {
-    /// Get the base_size of [`GridTrack`] with a kind [`types::GridTrackKind`]
-    #[inline(always)]
-    fn grid_track_base_size_of_kind(grid_tracks: &[GridTrack], kind: GridTrackKind) -> Vec<f32> {
+    /// Get the start and end position of each track relative to the grid container's border box
+    fn positions_from_grid_track_layout(grid_tracks: &[GridTrack]) -> Vec<Line<f32>> {
         grid_tracks
             .iter()
-            .filter_map(|track| match track.kind == kind {
-                true => Some(track.base_size),
-                false => None,
-            })
+            .filter(|track| track.kind == GridTrackKind::Track)
+            .map(|track| Line { start: track.offset, end: track.offset + track.base_size })
             .collect()
-    }
-
-    /// Get the sizes of the gutters
-    fn gutters_from_grid_track_layout(grid_tracks: &[GridTrack]) -> Vec<f32> {
-        DetailedGridTracksInfo::grid_track_base_size_of_kind(grid_tracks, GridTrackKind::Gutter)
-    }
-
-    /// Get the sizes of the tracks
-    fn sizes_from_grid_track_layout(grid_tracks: &[GridTrack]) -> Vec<f32> {
-        DetailedGridTracksInfo::grid_track_base_size_of_kind(grid_tracks, GridTrackKind::Track)
     }
 
     /// Construct DetailedGridTracksInfo from TrackCounts and GridTracks
@@ -938,8 +925,7 @@ impl DetailedGridTracksInfo {
             negative_implicit_tracks: track_count.negative_implicit,
             explicit_tracks: track_count.explicit,
             positive_implicit_tracks: track_count.positive_implicit,
-            gutters: DetailedGridTracksInfo::gutters_from_grid_track_layout(&grid_tracks),
-            sizes: DetailedGridTracksInfo::sizes_from_grid_track_layout(&grid_tracks),
+            positions: DetailedGridTracksInfo::positions_from_grid_track_layout(&grid_tracks),
         }
     }
 }
