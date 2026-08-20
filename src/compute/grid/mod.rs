@@ -913,6 +913,20 @@ pub struct DetailedGridInfo<S: CheapCloneStr = DefaultCheapStr> {
 
 #[cfg(feature = "detailed_layout_info")]
 impl<S: CheapCloneStr> DetailedGridInfo<S> {
+    /// Write the used row track sizes and line names to the passed writer in the resolved value
+    /// format of the `grid-template-rows` property
+    /// (see <https://www.w3.org/TR/css-grid-1/#resolved-track-list>)
+    pub fn write_grid_template_rows(&self, out: &mut impl core::fmt::Write) -> core::fmt::Result {
+        self.rows.write_track_list(out)
+    }
+
+    /// Write the used column track sizes and line names to the passed writer in the resolved value
+    /// format of the `grid-template-columns` property
+    /// (see <https://www.w3.org/TR/css-grid-1/#resolved-track-list>)
+    pub fn write_grid_template_columns(&self, out: &mut impl core::fmt::Write) -> core::fmt::Result {
+        self.columns.write_track_list(out)
+    }
+
     /// Serialize the used row track sizes and line names in the resolved value format of the
     /// `grid-template-rows` property (see <https://www.w3.org/TR/css-grid-1/#resolved-track-list>)
     pub fn grid_template_rows(&self) -> String {
@@ -973,47 +987,56 @@ impl<S: CheapCloneStr> DetailedGridTracksInfo<S> {
         }
     }
 
+    /// Write the used track sizes and line names of this axis to the passed writer in the
+    /// resolved value format of the `grid-template-rows`/`grid-template-columns` properties
+    /// (see <https://www.w3.org/TR/css-grid-1/#resolved-track-list>)
+    pub fn write_track_list(&self, out: &mut impl core::fmt::Write) -> core::fmt::Result {
+        /// Write a bracketed line name group (e.g. `[foo bar]`)
+        fn write_line_names<S: CheapCloneStr>(out: &mut impl core::fmt::Write, names: &[S]) -> core::fmt::Result {
+            out.write_char('[')?;
+            for (i, name) in names.iter().enumerate() {
+                if i != 0 {
+                    out.write_char(' ')?;
+                }
+                out.write_str(name.as_ref())?;
+            }
+            out.write_char(']')
+        }
+
+        if self.positions.is_empty() {
+            return out.write_str("none");
+        }
+
+        let mut needs_space = false;
+        for (track_index, position) in self.positions.iter().enumerate() {
+            let names = self.line_names.line(track_index);
+            if !names.is_empty() {
+                if needs_space {
+                    out.write_char(' ')?;
+                }
+                write_line_names(out, names)?;
+                needs_space = true;
+            }
+            if needs_space {
+                out.write_char(' ')?;
+            }
+            write!(out, "{}px", position.end - position.start)?;
+            needs_space = true;
+        }
+        let trailing_names = self.line_names.line(self.positions.len());
+        if !trailing_names.is_empty() {
+            out.write_char(' ')?;
+            write_line_names(out, trailing_names)?;
+        }
+        Ok(())
+    }
+
     /// Serialize the used track sizes and line names of this axis in the resolved value format of
     /// the `grid-template-rows`/`grid-template-columns` properties
     /// (see <https://www.w3.org/TR/css-grid-1/#resolved-track-list>)
     pub fn to_track_list_string(&self) -> String {
-        use core::fmt::Write;
-
-        /// Append a bracketed line name group (e.g. `[foo bar]`) to the output string
-        fn write_line_names<S: CheapCloneStr>(out: &mut String, names: &[S]) {
-            out.push('[');
-            for (i, name) in names.iter().enumerate() {
-                if i != 0 {
-                    out.push(' ');
-                }
-                out.push_str(name.as_ref());
-            }
-            out.push(']');
-        }
-
-        if self.positions.is_empty() {
-            return String::from("none");
-        }
-
         let mut out = String::new();
-        for (track_index, position) in self.positions.iter().enumerate() {
-            let names = self.line_names.line(track_index);
-            if !names.is_empty() {
-                if !out.is_empty() {
-                    out.push(' ');
-                }
-                write_line_names(&mut out, names);
-            }
-            if !out.is_empty() {
-                out.push(' ');
-            }
-            let _ = write!(out, "{}px", position.end - position.start);
-        }
-        let trailing_names = self.line_names.line(self.positions.len());
-        if !trailing_names.is_empty() {
-            out.push(' ');
-            write_line_names(&mut out, trailing_names);
-        }
+        self.write_track_list(&mut out).expect("writing to a String cannot fail");
         out
     }
 }
