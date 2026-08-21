@@ -1,7 +1,7 @@
 <test name="block_absolute_width_keywords__content_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="block" box-sizing="content-box" direction="ltr" width="120px" height="120px">
+    <div display="block" box-sizing="content-box" direction="ltr" position="relative" width="120px" height="120px">
       <text box-sizing="content-box" direction="ltr" position="absolute" width="stretch" top="0px">
         HH​HH
       </text>

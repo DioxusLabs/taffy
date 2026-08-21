@@ -2,7 +2,7 @@
   <viewport width="max-content" height="max-content"/>
   <input>
     <div display="grid" box-sizing="content-box" direction="ltr" overflow-x="hidden" overflow-y="hidden" scrollbar-width="15" width="100px" height="100px" grid-template-rows="20px" grid-template-columns="60px 40px">
-      <div display="block" box-sizing="content-box" direction="ltr" grid-column-start="2">
+      <div display="block" box-sizing="content-box" direction="ltr" position="relative" grid-column-start="2">
         <div box-sizing="content-box" direction="ltr" position="absolute" width="80px" height="40px" top="0px" right="0px"/>
       </div>
     </div>
