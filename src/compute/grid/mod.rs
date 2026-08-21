@@ -19,10 +19,10 @@ use placement::place_grid_items;
 use track_sizing::{
     determine_if_item_crosses_flexible_or_intrinsic_tracks, resolve_item_track_indexes, track_sizing_algorithm,
 };
-use types::{CellOccupancyMatrix, GridTrack, NamedLineResolver, TrackCounts};
+use types::{CellOccupancyMatrix, GridTrack, NamedLineResolver};
 
 #[cfg(feature = "detailed_layout_info")]
-use types::{GridItem, GridTrackKind};
+use types::{GridItem, GridTrackKind, TrackCounts};
 
 pub(crate) use types::{GridCoordinate, GridLine, OriginZeroLine, MAX_GRID_TRACKS, MAX_OZ_LINE, MIN_OZ_LINE};
 
@@ -223,7 +223,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     // Estimate the number of rows and columns in the implicit grid (= the entire grid)
     // This is necessary as part of placement. Doing it early here is a perf optimisation to reduce allocations.
     let (est_col_counts, est_row_counts) =
-        compute_grid_size_estimate(explicit_col_count, explicit_row_count, direction, child_styles_iter);
+        compute_grid_size_estimate(explicit_col_count, explicit_row_count, child_styles_iter);
 
     // 4. Grid Item Placement
     // Match items (children) to a definite grid position (row start/end and column start/end position)
@@ -241,7 +241,6 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
         &mut cell_occupancy_matrix,
         &mut items,
         in_flow_children_iter,
-        direction,
         style.grid_auto_flow(),
         align_items.unwrap_or(AlignItems::STRETCH),
         justify_items.unwrap_or(AlignItems::STRETCH),
@@ -257,25 +256,13 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     // This resolves the min and max track sizing functions for all tracks and gutters
     let mut columns = GridTrackVec::new();
     let mut rows = GridTrackVec::new();
-    let mut column_track_counts_for_init = final_col_counts;
-    if direction.is_rtl() && final_col_counts.explicit <= 1 {
-        column_track_counts_for_init.negative_implicit = final_col_counts.positive_implicit;
-        column_track_counts_for_init.positive_implicit = final_col_counts.negative_implicit;
-    }
     initialize_grid_tracks(
         &mut columns,
-        column_track_counts_for_init,
+        final_col_counts,
         &style,
         AbsoluteAxis::Horizontal,
         col_auto_repetition_count,
-        |column_index| {
-            let occupancy_index = if direction.is_rtl() {
-                rtl_column_occupancy_index_for_initialization(column_index, final_col_counts)
-            } else {
-                column_index
-            };
-            cell_occupancy_matrix.column_is_occupied(occupancy_index)
-        },
+        |column_index| cell_occupancy_matrix.column_is_occupied(column_index),
     );
     initialize_grid_tracks(
         &mut rows,
@@ -285,9 +272,6 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
         row_auto_repetition_count,
         |row_index| cell_occupancy_matrix.row_is_occupied(row_index),
     );
-    if direction.is_rtl() {
-        reverse_non_gutter_tracks(&mut columns, final_col_counts);
-    }
 
     drop(grid_template_rows);
     drop(grid_template_columns);
@@ -608,11 +592,22 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
 
     // Position in-flow children (stored in items vector)
     for (index, item) in items.iter_mut().enumerate() {
+        // Tracks are stored in logical order. In RTL the physical offsets are assigned
+        // right-to-left, so an item's physical left edge is derived from its logical end
+        // line and its physical right edge from its logical start line.
         let grid_area = Rect {
             top: rows[item.row_indexes.start as usize + 1].offset,
             bottom: rows[item.row_indexes.end as usize].offset,
-            left: columns[item.column_indexes.start as usize + 1].offset,
-            right: columns[item.column_indexes.end as usize].offset,
+            left: if direction.is_rtl() {
+                columns[item.column_indexes.end as usize - 1].offset
+            } else {
+                columns[item.column_indexes.start as usize + 1].offset
+            },
+            right: if direction.is_rtl() {
+                columns[item.column_indexes.start as usize].offset
+            } else {
+                columns[item.column_indexes.end as usize].offset
+            },
         };
         #[cfg_attr(not(feature = "content_size"), allow(unused_variables))]
         let (overflow_contribution, y_position, height) = align_and_position_item(
@@ -668,21 +663,8 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
                 .into_origin_zero(final_col_counts.explicit)
                 .resolve_absolutely_positioned_grid_tracks()
                 .map(|maybe_grid_line| {
-                    maybe_grid_line
-                        .map(|line: OriginZeroLine| {
-                            if direction.is_rtl() {
-                                OriginZeroLine(final_col_counts.explicit as i16 - line.0)
-                            } else {
-                                line
-                            }
-                        })
-                        .and_then(|line| line.try_into_track_vec_index(final_col_counts))
+                    maybe_grid_line.and_then(|line: OriginZeroLine| line.try_into_track_vec_index(final_col_counts))
                 });
-            let maybe_col_indexes = if direction.is_rtl() {
-                Line { start: maybe_col_indexes.end, end: maybe_col_indexes.start }
-            } else {
-                maybe_col_indexes
-            };
             // Convert grid-row-{start/end} into Option's of indexes into the row vector
             // The Option is None if the style property is Auto and an unresolvable Span
             let maybe_row_indexes = name_resolver
@@ -710,6 +692,56 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
                     tracks[index].offset
                 }
             }
+            // In RTL, tracks remain in logical order but physical offsets are assigned
+            // right-to-left: a line used as an inline-start edge resolves to the physical
+            // *right* edge of the track that follows it (its gutter's offset), and a line
+            // used as an inline-end edge resolves to the physical *left* edge (offset) of
+            // the track that precedes it.
+            /// Resolve a grid line used as an inline-start edge to a physical right x-position (RTL)
+            fn rtl_line_as_start_edge(tracks: &[GridTrack], index: usize) -> f32 {
+                if tracks.len() > index + 1 {
+                    // The gutter's offset is the physical right edge of the track that follows the line
+                    tracks[index].offset
+                } else if index == 0 {
+                    tracks[0].offset
+                } else {
+                    // No track follows the line: resolve to the line itself, which is the physical
+                    // left edge of the track that precedes it (the trailing gutter is assigned its
+                    // offset before any alignment offset is applied, so it cannot be used here)
+                    tracks[index - 1].offset
+                }
+            }
+            /// Resolve a grid line used as an inline-end edge to a physical left x-position (RTL)
+            fn rtl_line_as_end_edge(tracks: &[GridTrack], index: usize) -> f32 {
+                if index == 0 {
+                    tracks[0].offset
+                } else {
+                    tracks[index - 1].offset
+                }
+            }
+
+            // In RTL the item's physical left edge derives from its logical end line and its
+            // physical right edge from its logical start line.
+            let (grid_area_left, grid_area_right) = if direction.is_rtl() {
+                (
+                    maybe_col_indexes
+                        .end
+                        .map(|index| rtl_line_as_end_edge(&columns, index))
+                        .unwrap_or(border.left + scrollbar_gutter.x),
+                    maybe_col_indexes
+                        .start
+                        .map(|index| rtl_line_as_start_edge(&columns, index))
+                        .unwrap_or(container_border_box.width - border.right),
+                )
+            } else {
+                (
+                    maybe_col_indexes.start.map(|index| line_as_start_edge(&columns, index)).unwrap_or(border.left),
+                    maybe_col_indexes
+                        .end
+                        .map(|index| line_as_end_edge(&columns, index))
+                        .unwrap_or(container_border_box.width - border.right - scrollbar_gutter.x),
+                )
+            };
 
             let grid_area = Rect {
                 top: maybe_row_indexes.start.map(|index| line_as_start_edge(&rows, index)).unwrap_or(border.top),
@@ -717,20 +749,8 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
                     .end
                     .map(|index| line_as_end_edge(&rows, index))
                     .unwrap_or(container_border_box.height - border.bottom - scrollbar_gutter.y),
-                left: maybe_col_indexes.start.map(|index| line_as_start_edge(&columns, index)).unwrap_or_else(|| {
-                    if direction.is_rtl() {
-                        border.left + scrollbar_gutter.x
-                    } else {
-                        border.left
-                    }
-                }),
-                right: maybe_col_indexes.end.map(|index| line_as_end_edge(&columns, index)).unwrap_or_else(|| {
-                    if direction.is_rtl() {
-                        container_border_box.width - border.right
-                    } else {
-                        container_border_box.width - border.right - scrollbar_gutter.x
-                    }
-                }),
+                left: grid_area_left,
+                right: grid_area_right,
             };
             drop(child_style);
 
@@ -831,54 +851,6 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     )
 }
 
-/// Reverses only non-gutter column tracks in-place while preserving line/gutter slots.
-fn reverse_non_gutter_tracks(tracks: &mut [GridTrack], track_counts: TrackCounts) {
-    // When the explicit grid has 0/1 tracks, visual RTL mirroring is entirely determined by implicit tracks.
-    // Reverse all non-gutter tracks in that case.
-    if track_counts.explicit <= 1 {
-        const MIN_TRACK_VEC_LEN_TO_REVERSE_COLUMNS: usize = 5;
-        if tracks.len() < MIN_TRACK_VEC_LEN_TO_REVERSE_COLUMNS {
-            return;
-        }
-        let mut left = 1;
-        let mut right = tracks.len() - 2;
-        while left < right {
-            tracks.swap(left, right);
-            left += 2;
-            right = right.saturating_sub(2);
-        }
-        return;
-    }
-
-    let explicit_track_count = track_counts.explicit as usize;
-    if explicit_track_count < 2 {
-        return;
-    }
-
-    let mut left = track_counts.negative_implicit as usize;
-    let mut right = left + explicit_track_count - 1;
-    while left < right {
-        tracks.swap((2 * left) + 1, (2 * right) + 1);
-        left += 1;
-        right = right.saturating_sub(1);
-    }
-}
-
-/// Maps initialized column indexes to occupancy-matrix indexes for auto-fit collapsing in RTL.
-fn rtl_column_occupancy_index_for_initialization(column_index: usize, track_counts: TrackCounts) -> usize {
-    if track_counts.explicit <= 1 {
-        return track_counts.len() - column_index - 1;
-    }
-
-    let explicit_start = track_counts.negative_implicit as usize;
-    let explicit_end = explicit_start + track_counts.explicit as usize;
-    if (explicit_start..explicit_end).contains(&column_index) {
-        explicit_start + (explicit_end - column_index - 1)
-    } else {
-        column_index
-    }
-}
-
 /// Information from the computation of grid
 #[derive(Debug, Clone, PartialEq)]
 #[cfg(feature = "detailed_layout_info")]
@@ -903,8 +875,10 @@ impl DetailedGridInfo {
     /// Returns `None` if `item_index` is out of bounds.
     pub fn item_grid_area(&self, item_index: usize) -> Option<(Point<f32>, Size<f32>)> {
         let item = self.items.get(item_index)?;
-        let left = self.columns.positions[item.column_start as usize - 1].start;
-        let right = self.columns.positions[item.column_end as usize - 2].end;
+        let start_col = self.columns.positions[item.column_start as usize - 1];
+        let end_col = self.columns.positions[item.column_end as usize - 2];
+        let left = f32_min(start_col.start, end_col.start);
+        let right = f32_max(start_col.end, end_col.end);
         let top = self.rows.positions[item.row_start as usize - 1].start;
         let bottom = self.rows.positions[item.row_end as usize - 2].end;
         Some((Point { x: left, y: top }, Size { width: right - left, height: bottom - top }))

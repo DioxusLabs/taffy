@@ -45,4 +45,32 @@ mod detailed_grid_info {
         // out of bounds index
         assert_eq!(info.item_grid_area(2), None);
     }
+
+    #[test]
+    fn item_grid_area_rtl() {
+        let mut tree: TaffyTree<()> = TaffyTree::new();
+        let child = tree.new_leaf(Style::default()).unwrap();
+        let container = tree
+            .new_with_children(
+                Style {
+                    display: Display::Grid,
+                    direction: taffy::style::Direction::Rtl,
+                    size: Size { width: Dimension::from_length(100.0), height: Dimension::from_length(50.0) },
+                    grid_template_columns: vec![length(40.0), length(60.0)],
+                    grid_template_rows: vec![length(50.0)],
+                    ..Default::default()
+                },
+                &[child],
+            )
+            .unwrap();
+
+        tree.compute_layout(container, Size::MAX_CONTENT).unwrap();
+        let info = detailed_grid_info(&tree, container);
+
+        // Tracks are in logical order with physical coordinates: logical column track 1 is
+        // physically rightmost in RTL, and item_grid_area returns the physical rectangle
+        assert_eq!(info.columns.positions[0], Line { start: 60.0, end: 100.0 });
+        assert_eq!(info.columns.positions[1], Line { start: 0.0, end: 60.0 });
+        assert_eq!(info.item_grid_area(0), Some((Point { x: 60.0, y: 0.0 }, Size { width: 40.0, height: 50.0 })));
+    }
 }
