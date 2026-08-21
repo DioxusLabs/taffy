@@ -1,12 +1,12 @@
 <test name="grid_align_items_baseline_overflow_scroll__border_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="grid" direction="rtl" align-items="baseline" width="120px" height="100px" grid-template-columns="60px 60px">
-      <div display="grid" direction="rtl" overflow-x="scroll" overflow-y="scroll" scrollbar-width="15" width="60px" height="20px">
-        <div display="grid" direction="rtl" width="10px" height="40px"/>
+    <div display="grid" direction="rtl" position="absolute" align-items="baseline" width="120px" height="100px" grid-template-columns="60px 60px">
+      <div display="grid" direction="rtl" position="relative" overflow-x="scroll" overflow-y="scroll" scrollbar-width="15" width="60px" height="20px">
+        <div display="grid" direction="rtl" position="relative" width="10px" height="40px"/>
       </div>
-      <div display="grid" direction="rtl" width="60px" height="60px">
-        <div display="grid" direction="rtl" width="60px" height="30px"/>
+      <div display="grid" direction="rtl" position="relative" width="60px" height="60px">
+        <div display="grid" direction="rtl" position="relative" width="60px" height="30px"/>
       </div>
     </div>
   </input>

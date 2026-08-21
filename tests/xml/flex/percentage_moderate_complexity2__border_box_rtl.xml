@@ -1,9 +1,9 @@
 <test name="percentage_moderate_complexity2__border_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div direction="rtl" flex-direction="column" width="200px" height="200px">
-      <div direction="rtl" flex-direction="column" width="50%" padding-top="10%" padding-left="10%" padding-bottom="10%" padding-right="10%">
-        <div direction="rtl" width="20px" height="20px"/>
+    <div direction="rtl" position="absolute" flex-direction="column" width="200px" height="200px">
+      <div direction="rtl" position="relative" flex-direction="column" width="50%" padding-top="10%" padding-left="10%" padding-bottom="10%" padding-right="10%">
+        <div direction="rtl" position="relative" width="20px" height="20px"/>
       </div>
     </div>
   </input>

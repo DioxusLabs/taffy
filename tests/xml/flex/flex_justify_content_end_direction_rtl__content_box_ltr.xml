@@ -1,10 +1,10 @@
 <test name="flex_justify_content_end_direction_rtl__content_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div box-sizing="content-box" direction="rtl" justify-content="flex-end" width="200px" height="100px">
-      <div box-sizing="content-box" direction="ltr" width="20px" height="20px"/>
-      <div box-sizing="content-box" direction="ltr" width="20px" height="20px"/>
-      <div box-sizing="content-box" direction="ltr" width="20px" height="20px"/>
+    <div box-sizing="content-box" direction="rtl" position="absolute" justify-content="flex-end" width="200px" height="100px">
+      <div box-sizing="content-box" direction="ltr" position="relative" width="20px" height="20px"/>
+      <div box-sizing="content-box" direction="ltr" position="relative" width="20px" height="20px"/>
+      <div box-sizing="content-box" direction="ltr" position="relative" width="20px" height="20px"/>
     </div>
   </input>
   <expectations>

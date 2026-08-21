@@ -1,8 +1,8 @@
 <test name="measure_remeasure_child_after_stretching__content_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div box-sizing="content-box" direction="rtl" width="100px" height="100px">
-      <text box-sizing="content-box" direction="rtl">
+    <div box-sizing="content-box" direction="rtl" position="absolute" width="100px" height="100px">
+      <text box-sizing="content-box" direction="rtl" position="relative">
         HH
       </text>
     </div>

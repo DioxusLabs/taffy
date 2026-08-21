@@ -1,10 +1,10 @@
 <test name="float_after_sibling_bottom_margin__content_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="block" box-sizing="content-box" direction="rtl" width="200px">
-      <div display="block" box-sizing="content-box" direction="rtl" height="20px" margin-bottom="16px"/>
-      <div display="block" box-sizing="content-box" direction="rtl" float="left" width="50px" height="50px"/>
-      <div display="block" box-sizing="content-box" direction="rtl" height="30px"/>
+    <div display="block" box-sizing="content-box" direction="rtl" position="absolute" width="200px">
+      <div display="block" box-sizing="content-box" direction="rtl" position="relative" height="20px" margin-bottom="16px"/>
+      <div display="block" box-sizing="content-box" direction="rtl" position="relative" float="left" width="50px" height="50px"/>
+      <div display="block" box-sizing="content-box" direction="rtl" position="relative" height="30px"/>
     </div>
   </input>
   <expectations>

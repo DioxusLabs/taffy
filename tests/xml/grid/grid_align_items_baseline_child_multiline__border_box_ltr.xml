@@ -1,13 +1,13 @@
 <test name="grid_align_items_baseline_child_multiline__border_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="grid" direction="ltr" align-items="baseline" width="100px">
-      <div display="grid" direction="ltr" width="50px" height="60px"/>
-      <div display="grid" direction="ltr" flex-wrap="wrap" width="50px" grid-template-columns="auto auto">
-        <div display="grid" direction="ltr" width="25px" height="20px"/>
-        <div display="grid" direction="ltr" width="25px" height="10px"/>
-        <div display="grid" direction="ltr" width="25px" height="20px"/>
-        <div display="grid" direction="ltr" width="25px" height="10px"/>
+    <div display="grid" direction="ltr" position="absolute" align-items="baseline" width="100px">
+      <div display="grid" direction="ltr" position="relative" width="50px" height="60px"/>
+      <div display="grid" direction="ltr" position="relative" flex-wrap="wrap" width="50px" grid-template-columns="auto auto">
+        <div display="grid" direction="ltr" position="relative" width="25px" height="20px"/>
+        <div display="grid" direction="ltr" position="relative" width="25px" height="10px"/>
+        <div display="grid" direction="ltr" position="relative" width="25px" height="20px"/>
+        <div display="grid" direction="ltr" position="relative" width="25px" height="10px"/>
       </div>
     </div>
   </input>

@@ -1,10 +1,10 @@
 <test name="blockflex_margin_y_collapse_through_blocked_by_flex__border_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="block" direction="ltr" width="50px">
-      <div display="block" direction="ltr" height="10px" margin-bottom="10px"/>
-      <div display="flex" direction="ltr" margin-top="10px" margin-bottom="10px"/>
-      <div display="block" direction="ltr" height="10px" margin-top="10px"/>
+    <div display="block" direction="ltr" position="absolute" width="50px">
+      <div display="block" direction="ltr" position="relative" height="10px" margin-bottom="10px"/>
+      <div display="flex" direction="ltr" position="relative" margin-top="10px" margin-bottom="10px"/>
+      <div display="block" direction="ltr" position="relative" height="10px" margin-top="10px"/>
     </div>
   </input>
   <expectations>

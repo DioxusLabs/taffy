@@ -1,10 +1,10 @@
 <test name="flex_grow_height_maximized__border_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div direction="ltr" flex-direction="column" width="100px" height="500px">
-      <div direction="ltr" flex-direction="column" flex-grow="1" min-height="100px" max-height="500px">
-        <div direction="ltr" flex-grow="1" flex-basis="200px"/>
-        <div direction="ltr" height="100px"/>
+    <div direction="ltr" position="absolute" flex-direction="column" width="100px" height="500px">
+      <div direction="ltr" position="relative" flex-direction="column" flex-grow="1" min-height="100px" max-height="500px">
+        <div direction="ltr" position="relative" flex-grow="1" flex-basis="200px"/>
+        <div direction="ltr" position="relative" height="100px"/>
       </div>
     </div>
   </input>

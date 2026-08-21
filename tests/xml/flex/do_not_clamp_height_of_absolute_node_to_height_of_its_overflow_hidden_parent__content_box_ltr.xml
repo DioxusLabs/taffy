@@ -1,9 +1,9 @@
 <test name="do_not_clamp_height_of_absolute_node_to_height_of_its_overflow_hidden_parent__content_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div box-sizing="content-box" direction="ltr" overflow-x="hidden" overflow-y="hidden" scrollbar-width="15" width="50px" height="50px">
+    <div box-sizing="content-box" direction="ltr" position="absolute" overflow-x="hidden" overflow-y="hidden" scrollbar-width="15" width="50px" height="50px">
       <div box-sizing="content-box" direction="ltr" position="absolute" flex-direction="column" top="0px" left="0px">
-        <div box-sizing="content-box" direction="ltr" width="100px" height="100px"/>
+        <div box-sizing="content-box" direction="ltr" position="relative" width="100px" height="100px"/>
       </div>
     </div>
   </input>

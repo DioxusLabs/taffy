@@ -1,7 +1,7 @@
 <test name="block_absolute_layout_width_height_start_top__content_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="block" box-sizing="content-box" direction="ltr" width="100px" height="100px">
+    <div display="block" box-sizing="content-box" direction="ltr" position="absolute" width="100px" height="100px">
       <div display="block" box-sizing="content-box" direction="ltr" position="absolute" width="10px" height="10px" top="10px" left="10px"/>
     </div>
   </input>

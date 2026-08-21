@@ -1,10 +1,10 @@
 <test name="contain_layout_block_avoids_float__content_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="block" box-sizing="content-box" direction="ltr" width="100px">
-      <div display="block" box-sizing="content-box" direction="ltr" float="left" width="30px" height="30px"/>
-      <div display="block" box-sizing="content-box" direction="ltr" contain="layout" height="50px">
-        <div display="block" box-sizing="content-box" direction="ltr" height="10px"/>
+    <div display="block" box-sizing="content-box" direction="ltr" position="absolute" width="100px">
+      <div display="block" box-sizing="content-box" direction="ltr" position="relative" float="left" width="30px" height="30px"/>
+      <div display="block" box-sizing="content-box" direction="ltr" position="relative" contain="layout" height="50px">
+        <div display="block" box-sizing="content-box" direction="ltr" position="relative" height="10px"/>
       </div>
     </div>
   </input>

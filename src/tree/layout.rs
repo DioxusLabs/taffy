@@ -1,7 +1,8 @@
 //! Final data structures that represent the high-level UI layout
 use crate::geometry::{AbsoluteAxis, Line, Point, Rect, Size};
-use crate::style::AvailableSpace;
+use crate::style::{AvailableSpace, Position};
 use crate::style_helpers::TaffyMaxContent;
+use crate::tree::NodeId;
 use crate::util::sys::{f32_max, f32_min};
 
 /// Whether we are performing a full layout, or we merely need to size the node
@@ -186,13 +187,203 @@ impl Baselines {
     }
 }
 
+/// The edge of an out-of-flow box which its static-position anchor refers to (per-axis).
+///
+/// The static position of an out-of-flow box may depend on alignment properties
+/// (`justify-content`/`align-self` in flexbox, `justify-self`/`align-self` in grid) which cannot
+/// be fully resolved until the box's final size is known. To defer that resolution, the static
+/// position is recorded as an *anchor* point plus the edge of the box that should be placed at
+/// that anchor.
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+pub enum StaticEdge {
+    /// The anchor refers to the start (left/top) edge of the box's margin box
+    Start,
+    /// The anchor refers to the center of the box
+    Center,
+    /// The anchor refers to the end (right/bottom) edge of the box's margin box
+    End,
+}
+
+/// The static position of an out-of-flow box in a single axis.
+///
+/// Anchors are initially relative to the border box of the node which produced the candidate and
+/// are translated by each node's location as the candidate bubbles up the tree, so they are
+/// always relative to the border box of the node currently holding the candidate.
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub struct StaticPosition {
+    /// The static-position anchor coordinate
+    pub anchor: f32,
+    /// Which edge of the box the anchor refers to
+    pub edge: StaticEdge,
+    /// The anchor coordinate to fall back to if the box overflows `safe_extent`
+    pub fallback_anchor: f32,
+    /// Which edge of the box `fallback_anchor` refers to
+    pub fallback_edge: StaticEdge,
+    /// If set, the extent of the alignment container in this axis: when the box's margin box is
+    /// larger than this extent the `fallback_anchor`/`fallback_edge` pair is used instead
+    /// (the `safe` overflow-position keyword from CSS Box Alignment)
+    pub safe_extent: Option<f32>,
+}
+
+impl StaticPosition {
+    /// Create a `StaticPosition` from an anchor and edge with no safe fallback
+    pub const fn from_edge(anchor: f32, edge: StaticEdge) -> Self {
+        Self { anchor, edge, fallback_anchor: anchor, fallback_edge: edge, safe_extent: None }
+    }
+}
+
+/// A record of an out-of-flow (`position: absolute` or `position: fixed`) box which has not yet
+/// been laid out because its containing block is an ancestor of its parent.
+///
+/// Candidates are produced by the layout algorithm of the box's parent (which computes the static
+/// position) and bubble up through `LayoutOutput` until they reach a node which acts as the box's
+/// containing block, which lays the box out.
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub struct OofCandidate {
+    /// The id of the out-of-flow node
+    pub node: NodeId,
+    /// The `order` value that the node's layout should be assigned (its child index within its parent)
+    pub order: u32,
+    /// The position style of the node (`Position::Absolute` or `Position::Fixed`)
+    pub position: Position,
+    /// The static position of the box in each axis
+    pub static_position: Point<StaticPosition>,
+}
+
+/// A list of [`OofCandidate`]s.
+///
+/// When built with the `std` or `alloc` features this is a lazily-allocated heap vector
+/// (an empty list performs no allocation). In heapless builds it is an inline fixed-capacity
+/// vector which panics if more than 16 candidates accumulate in a single list.
+#[derive(Debug, Clone, PartialEq, Default)]
+pub struct OofCandidates {
+    /// Backing storage for the candidates
+    #[cfg(any(feature = "std", feature = "alloc"))]
+    inner: Option<crate::util::sys::Box<crate::util::sys::Vec<OofCandidate>>>,
+    /// Backing storage for the candidates
+    #[cfg(not(any(feature = "std", feature = "alloc")))]
+    inner: arrayvec::ArrayVec<OofCandidate, 16>,
+}
+
+impl OofCandidates {
+    /// An empty list of candidates
+    pub const NONE: Self = Self {
+        #[cfg(any(feature = "std", feature = "alloc"))]
+        inner: None,
+        #[cfg(not(any(feature = "std", feature = "alloc")))]
+        inner: arrayvec::ArrayVec::new_const(),
+    };
+
+    /// Create a new empty list of candidates
+    pub const fn new() -> Self {
+        Self::NONE
+    }
+
+    /// Whether the list contains no candidates
+    #[inline]
+    pub fn is_empty(&self) -> bool {
+        self.as_slice().is_empty()
+    }
+
+    /// The candidates as a slice
+    #[inline]
+    pub fn as_slice(&self) -> &[OofCandidate] {
+        #[cfg(any(feature = "std", feature = "alloc"))]
+        return self.inner.as_ref().map(|boxed| boxed.as_slice()).unwrap_or(&[]);
+        #[cfg(not(any(feature = "std", feature = "alloc")))]
+        return self.inner.as_slice();
+    }
+
+    /// The candidates as a mutable slice
+    #[inline]
+    pub fn as_mut_slice(&mut self) -> &mut [OofCandidate] {
+        #[cfg(any(feature = "std", feature = "alloc"))]
+        return self.inner.as_mut().map(|boxed| boxed.as_mut_slice()).unwrap_or(&mut []);
+        #[cfg(not(any(feature = "std", feature = "alloc")))]
+        return self.inner.as_mut_slice();
+    }
+
+    /// Append a candidate to the list
+    #[inline]
+    pub fn push(&mut self, candidate: OofCandidate) {
+        #[cfg(any(feature = "std", feature = "alloc"))]
+        self.inner.get_or_insert_with(Default::default).push(candidate);
+        #[cfg(not(any(feature = "std", feature = "alloc")))]
+        self.inner.push(candidate);
+    }
+
+    /// Move all candidates from `other` into `self`, leaving `other` empty
+    #[inline]
+    pub fn append(&mut self, other: &mut OofCandidates) {
+        if other.is_empty() {
+            return;
+        }
+        #[cfg(any(feature = "std", feature = "alloc"))]
+        match &mut self.inner {
+            None => self.inner = other.inner.take(),
+            Some(vec) => vec.append(other.inner.as_mut().unwrap()),
+        }
+        #[cfg(not(any(feature = "std", feature = "alloc")))]
+        {
+            for candidate in other.inner.drain(..) {
+                self.inner.push(candidate);
+            }
+        }
+    }
+
+    /// Take the candidates out of this list, leaving it empty
+    #[inline]
+    pub fn take(&mut self) -> Self {
+        core::mem::take(self)
+    }
+
+    /// Remove all candidates from the list
+    #[inline]
+    pub fn clear(&mut self) {
+        #[cfg(any(feature = "std", feature = "alloc"))]
+        {
+            self.inner = None;
+        }
+        #[cfg(not(any(feature = "std", feature = "alloc")))]
+        self.inner.clear();
+    }
+
+    /// Iterate over the candidates
+    #[inline]
+    pub fn iter(&self) -> core::slice::Iter<'_, OofCandidate> {
+        self.as_slice().iter()
+    }
+
+    /// Translate the static-position anchors of every candidate in the list by `offset`.
+    ///
+    /// This is used to convert anchors from being relative to a child node's border box to being
+    /// relative to the parent node's border box as candidates bubble up the tree.
+    #[inline]
+    pub fn translate(&mut self, offset: Point<f32>) {
+        for candidate in self.as_mut_slice() {
+            candidate.static_position.x.anchor += offset.x;
+            candidate.static_position.x.fallback_anchor += offset.x;
+            candidate.static_position.y.anchor += offset.y;
+            candidate.static_position.y.fallback_anchor += offset.y;
+        }
+    }
+}
+
+impl<'a> IntoIterator for &'a OofCandidates {
+    type Item = &'a OofCandidate;
+    type IntoIter = core::slice::Iter<'a, OofCandidate>;
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter()
+    }
+}
+
 /// A struct containing the result of laying a single node, which is returned up to the parent node
 ///
 /// A baseline is the line on which text sits. Your node likely has a baseline if it is a text node, or contains
 /// children that may be text nodes. See <https://www.w3.org/TR/css-writing-modes-3/#intro-baselines> for details.
 /// If your node does not have a baseline (or you are unsure how to compute it), then simply return `Baselines::NONE`
 /// for the baselines field
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize))]
 pub struct LayoutOutput {
     /// The size of the node
@@ -212,6 +403,13 @@ pub struct LayoutOutput {
     /// Whether margins can be collapsed through this node. This is used for CSS block layout and can
     /// be set to `false` for other layout modes that don't support margin collapsing
     pub margins_can_collapse_through: bool,
+    /// Out-of-flow (absolute/fixed) descendants of this node for which this node is *not* the
+    /// containing block. These bubble up the tree until they reach their containing block, which
+    /// lays them out. Empty (allocation-free) when there are no such descendants (the common case).
+    ///
+    /// Candidates are only produced by `RunMode::PerformLayout` passes.
+    #[cfg_attr(feature = "serde", serde(skip_serializing))]
+    pub oof_candidates: OofCandidates,
 }
 
 impl LayoutOutput {
@@ -224,6 +422,7 @@ impl LayoutOutput {
         top_margin: CollapsibleMarginSet::ZERO,
         bottom_margin: CollapsibleMarginSet::ZERO,
         margins_can_collapse_through: false,
+        oof_candidates: OofCandidates::NONE,
     };
 
     /// A blank layout output
@@ -243,6 +442,7 @@ impl LayoutOutput {
             top_margin: CollapsibleMarginSet::ZERO,
             bottom_margin: CollapsibleMarginSet::ZERO,
             margins_can_collapse_through: false,
+            oof_candidates: OofCandidates::NONE,
         }
     }
 

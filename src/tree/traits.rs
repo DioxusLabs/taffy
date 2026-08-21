@@ -196,6 +196,26 @@ pub trait LayoutPartialTree: TraversePartialTree {
     /// Set the node's unrounded layout
     fn set_unrounded_layout(&mut self, node_id: NodeId, layout: &Layout);
 
+    /// Record the list of out-of-flow (absolute/fixed) boxes whose containing block is `node_id`,
+    /// replacing any previously recorded list.
+    ///
+    /// This is called (exactly once) for each node laid out with `RunMode::PerformLayout`. The
+    /// recorded lists are consumed by [`round_layout`](crate::round_layout) (out-of-flow boxes
+    /// are rounded via their containing block rather than via their parent), and are also useful
+    /// for consumers implementing paint/hit-testing traversals.
+    fn set_hoisted_children(&mut self, node_id: NodeId, hoisted: &[NodeId]);
+
+    /// Append to the list of out-of-flow boxes whose containing block is `node_id`.
+    ///
+    /// This is used by [`compute_root_layout`](crate::compute_root_layout) to record boxes
+    /// (e.g. `position: fixed` boxes) which are positioned by the final root positioning pass,
+    /// which runs after the root node's own layout algorithm has already recorded its list.
+    ///
+    /// Implementations should ignore ids already present in the list: when the root node's
+    /// layout is served from the cache, its own list is not rebuilt, and the root positioning
+    /// pass may re-add ids recorded by a previous layout run.
+    fn add_hoisted_children(&mut self, node_id: NodeId, hoisted: &[NodeId]);
+
     /// Compute the specified node's size or full layout given the specified constraints
     fn compute_child_layout(&mut self, node_id: NodeId, inputs: LayoutInput) -> LayoutOutput;
 }
@@ -223,6 +243,19 @@ pub trait RoundTree: TraverseTree {
     fn get_unrounded_layout(&self, node_id: NodeId) -> Layout;
     /// Get a reference to the node's final layout
     fn set_final_layout(&mut self, node_id: NodeId, layout: &Layout);
+    /// Whether the node is an out-of-flow (absolute/fixed) box which has been hoisted to its
+    /// containing block (and should therefore be skipped when visited via its parent, being
+    /// instead visited via its containing block's hoisted child list).
+    ///
+    /// This should return `true` for box-generating nodes whose position style is `absolute` or
+    /// `fixed`, and `false` otherwise (including for `display: none` nodes).
+    fn is_hoisted(&self, node_id: NodeId) -> bool;
+    /// The number of out-of-flow boxes whose containing block is `node_id`
+    /// (as recorded by [`LayoutPartialTree::set_hoisted_children`])
+    fn hoisted_child_count(&self, node_id: NodeId) -> usize;
+    /// Get the nth out-of-flow box whose containing block is `node_id`
+    /// (as recorded by [`LayoutPartialTree::set_hoisted_children`])
+    fn get_hoisted_child_id(&self, node_id: NodeId, index: usize) -> NodeId;
 }
 
 /// Trait used by the `print_tree` method which prints a debug representation

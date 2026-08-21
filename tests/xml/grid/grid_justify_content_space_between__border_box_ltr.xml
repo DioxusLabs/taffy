@@ -1,16 +1,16 @@
 <test name="grid_justify_content_space_between__border_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="grid" direction="ltr" justify-content="space-between" width="200px" height="200px" grid-template-rows="40px 40px 40px" grid-template-columns="40px 40px 40px">
-      <div direction="ltr"/>
-      <div direction="ltr"/>
-      <div direction="ltr"/>
-      <div direction="ltr"/>
-      <div direction="ltr"/>
-      <div direction="ltr"/>
-      <div direction="ltr"/>
-      <div direction="ltr"/>
-      <div direction="ltr"/>
+    <div display="grid" direction="ltr" position="absolute" justify-content="space-between" width="200px" height="200px" grid-template-rows="40px 40px 40px" grid-template-columns="40px 40px 40px">
+      <div direction="ltr" position="relative"/>
+      <div direction="ltr" position="relative"/>
+      <div direction="ltr" position="relative"/>
+      <div direction="ltr" position="relative"/>
+      <div direction="ltr" position="relative"/>
+      <div direction="ltr" position="relative"/>
+      <div direction="ltr" position="relative"/>
+      <div direction="ltr" position="relative"/>
+      <div direction="ltr" position="relative"/>
     </div>
   </input>
   <expectations>

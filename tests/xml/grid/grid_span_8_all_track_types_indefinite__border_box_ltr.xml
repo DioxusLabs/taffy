@@ -1,18 +1,18 @@
 <test name="grid_span_8_all_track_types_indefinite__border_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="grid" direction="ltr" grid-template-rows="40px 40px" grid-template-columns="min-content max-content fit-content(20px) auto 10px 20% 1fr 2fr">
-      <text direction="ltr" grid-column-start="1" grid-column-end="span 8">
+    <div display="grid" direction="ltr" position="absolute" grid-template-rows="40px 40px" grid-template-columns="min-content max-content fit-content(20px) auto 10px 20% 1fr 2fr">
+      <text direction="ltr" position="relative" grid-column-start="1" grid-column-end="span 8">
         HHHHHHHH​HHHHHHHH
       </text>
-      <div direction="ltr"/>
-      <div direction="ltr"/>
-      <div direction="ltr"/>
-      <div direction="ltr"/>
-      <div direction="ltr"/>
-      <div direction="ltr"/>
-      <div direction="ltr"/>
-      <div direction="ltr"/>
+      <div direction="ltr" position="relative"/>
+      <div direction="ltr" position="relative"/>
+      <div direction="ltr" position="relative"/>
+      <div direction="ltr" position="relative"/>
+      <div direction="ltr" position="relative"/>
+      <div direction="ltr" position="relative"/>
+      <div direction="ltr" position="relative"/>
+      <div direction="ltr" position="relative"/>
     </div>
   </input>
   <expectations>

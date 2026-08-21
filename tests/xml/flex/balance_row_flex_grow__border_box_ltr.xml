@@ -1,11 +1,11 @@
 <test name="balance_row_flex_grow__border_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div direction="ltr" flex-wrap="balance" width="100px" height="100px" column-gap="10px">
-      <div direction="ltr" flex-grow="1" width="30px"/>
-      <div direction="ltr" flex-grow="1" width="20px"/>
-      <div direction="ltr" flex-grow="1" width="20px"/>
-      <div direction="ltr" flex-grow="1" width="30px"/>
+    <div direction="ltr" position="absolute" flex-wrap="balance" width="100px" height="100px" column-gap="10px">
+      <div direction="ltr" position="relative" flex-grow="1" width="30px"/>
+      <div direction="ltr" position="relative" flex-grow="1" width="20px"/>
+      <div direction="ltr" position="relative" flex-grow="1" width="20px"/>
+      <div direction="ltr" position="relative" flex-grow="1" width="30px"/>
     </div>
   </input>
   <expectations>

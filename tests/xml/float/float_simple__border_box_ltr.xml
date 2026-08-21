@@ -1,12 +1,12 @@
 <test name="float_simple__border_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="block" direction="ltr" height="300px" border-top="2px" border-left="2px" border-bottom="2px" border-right="2px">
-      <div direction="ltr" float="right" width="50px" height="50px"/>
-      <div direction="ltr" float="right" width="50px" height="50px"/>
-      <div direction="ltr" float="right" width="50px" height="50px"/>
-      <div direction="ltr" float="right" width="50px" height="50px"/>
-      <div direction="ltr" float="right" width="50px" height="50px"/>
+    <div display="block" direction="ltr" position="absolute" height="300px" border-top="2px" border-left="2px" border-bottom="2px" border-right="2px">
+      <div direction="ltr" position="relative" float="right" width="50px" height="50px"/>
+      <div direction="ltr" position="relative" float="right" width="50px" height="50px"/>
+      <div direction="ltr" position="relative" float="right" width="50px" height="50px"/>
+      <div direction="ltr" position="relative" float="right" width="50px" height="50px"/>
+      <div direction="ltr" position="relative" float="right" width="50px" height="50px"/>
     </div>
   </input>
   <expectations>

@@ -1,9 +1,9 @@
 <test name="absolute_child_with_max_height__border_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div direction="rtl" flex-direction="column" width="100px" height="200px">
+    <div direction="rtl" position="absolute" flex-direction="column" width="100px" height="200px">
       <div direction="rtl" position="absolute" flex-direction="column" max-height="100px" bottom="20px">
-        <div direction="rtl" width="100px" height="30px"/>
+        <div direction="rtl" position="relative" width="100px" height="30px"/>
       </div>
     </div>
   </input>

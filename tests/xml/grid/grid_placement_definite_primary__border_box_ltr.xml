@@ -1,12 +1,12 @@
 <test name="grid_placement_definite_primary__border_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="grid" direction="ltr" width="200px" height="200px" grid-template-columns="33% 74%">
-      <div direction="ltr" grid-column-start="1"/>
-      <div direction="ltr" grid-column-start="2"/>
-      <div direction="ltr" grid-column-start="1"/>
-      <div direction="ltr" grid-column-start="2"/>
-      <div direction="ltr" grid-column-start="1"/>
+    <div display="grid" direction="ltr" position="absolute" width="200px" height="200px" grid-template-columns="33% 74%">
+      <div direction="ltr" position="relative" grid-column-start="1"/>
+      <div direction="ltr" position="relative" grid-column-start="2"/>
+      <div direction="ltr" position="relative" grid-column-start="1"/>
+      <div direction="ltr" position="relative" grid-column-start="2"/>
+      <div direction="ltr" position="relative" grid-column-start="1"/>
     </div>
   </input>
   <expectations>

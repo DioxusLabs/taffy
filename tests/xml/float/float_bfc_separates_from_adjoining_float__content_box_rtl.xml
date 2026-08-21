@@ -1,12 +1,12 @@
 <test name="float_bfc_separates_from_adjoining_float__content_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="block" box-sizing="content-box" direction="rtl" overflow-x="hidden" overflow-y="hidden" scrollbar-width="15" width="200px">
-      <div display="block" box-sizing="content-box" direction="rtl">
-        <div display="block" box-sizing="content-box" direction="rtl">
-          <div box-sizing="content-box" direction="rtl" float="left" width="200px" height="200px"/>
+    <div display="block" box-sizing="content-box" direction="rtl" position="absolute" overflow-x="hidden" overflow-y="hidden" scrollbar-width="15" width="200px">
+      <div display="block" box-sizing="content-box" direction="rtl" position="relative">
+        <div display="block" box-sizing="content-box" direction="rtl" position="relative">
+          <div box-sizing="content-box" direction="rtl" position="relative" float="left" width="200px" height="200px"/>
         </div>
-        <div display="block" box-sizing="content-box" direction="rtl" overflow-x="hidden" overflow-y="hidden" scrollbar-width="15" width="200px" height="1px" margin-top="200px"/>
+        <div display="block" box-sizing="content-box" direction="rtl" position="relative" overflow-x="hidden" overflow-y="hidden" scrollbar-width="15" width="200px" height="1px" margin-top="200px"/>
       </div>
     </div>
   </input>

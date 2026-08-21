@@ -23,6 +23,7 @@
 //!
 pub(crate) mod common;
 pub(crate) mod leaf;
+pub(crate) mod oof;
 
 #[cfg(feature = "block_layout")]
 pub(crate) mod block;
@@ -53,10 +54,11 @@ pub use self::float::{BfcSlot, ContentSlot, FloatContext, FloatIntrinsicWidthCal
 use crate::geometry::{Line, Point, Size};
 use crate::style::{AvailableSpace, CoreStyle, Overflow};
 use crate::tree::{
-    Layout, LayoutInput, LayoutOutput, LayoutPartialTree, LayoutPartialTreeExt, NodeId, RoundTree, SizingMode,
+    Layout, LayoutInput, LayoutOutput, LayoutPartialTree, LayoutPartialTreeExt, NodeId, OofCandidates, RoundTree,
+    SizingMode,
 };
 use crate::util::debug::{debug_log, debug_log_node, debug_pop_node, debug_push_node};
-use crate::util::sys::round;
+use crate::util::sys::{round, Vec};
 use crate::util::ResolveOrZero;
 use crate::{CacheTree, MaybeMath, MaybeResolve};
 
@@ -121,7 +123,7 @@ pub fn compute_root_layout(tree: &mut impl LayoutPartialTree, root: NodeId, avai
     }
 
     // Recursively compute node layout
-    let output = tree.perform_child_layout(
+    let mut output = tree.perform_child_layout(
         root,
         known_dimensions,
         available_space.into_options(),
@@ -165,6 +167,43 @@ pub fn compute_root_layout(tree: &mut impl LayoutPartialTree, root: NodeId, avai
             margin,
         },
     );
+
+    // Final positioning pass for out-of-flow boxes with no nearer containing block: the root
+    // acts as the initial containing block for `position: fixed` boxes and for
+    // `position: absolute` boxes with no positioned ancestor.
+    let candidates = output.oof_candidates.take();
+    if !candidates.is_empty() {
+        let style = tree.get_core_container_style(root);
+        let direction = style.direction();
+        let is_scroll_container = style.overflow().x.is_scroll_container() || style.overflow().y.is_scroll_container();
+        #[cfg(not(feature = "content_size"))]
+        let _ = is_scroll_container;
+        drop(style);
+
+        let area_inset = border
+            + crate::geometry::Rect { left: 0.0, right: scrollbar_size.width, top: 0.0, bottom: scrollbar_size.height };
+        let area_size =
+            output.size - Size { width: area_inset.horizontal_axis_sum(), height: area_inset.vertical_axis_sum() };
+        let area_offset = Point { x: area_inset.left, y: area_inset.top };
+
+        let mut hoisted: Vec<NodeId> = Vec::new();
+        let mut unclaimed = OofCandidates::new();
+        oof::perform_oof_layout(
+            tree,
+            candidates,
+            area_size,
+            area_offset,
+            direction,
+            true, // claim_absolute
+            true, // claim_fixed
+            #[cfg(feature = "content_size")]
+            is_scroll_container,
+            &mut hoisted,
+            &mut unclaimed,
+        );
+        debug_assert!(unclaimed.is_empty(), "the root positioning pass must claim all remaining candidates");
+        tree.add_hoisted_children(root, &hoisted);
+    }
 }
 
 /// Attempts to find a cached layout for the specified node and layout inputs.
@@ -196,7 +235,7 @@ where
     let computed_size_and_baselines = compute_uncached(tree, node, inputs);
 
     // Cache result
-    tree.cache_store(node, &inputs, computed_size_and_baselines);
+    tree.cache_store(node, &inputs, computed_size_and_baselines.clone());
 
     debug_log!("RESULT", dbg:computed_size_and_baselines.size);
     debug_pop_node!();
@@ -256,9 +295,22 @@ pub fn round_layout(tree: &mut impl RoundTree, node_id: NodeId) {
 
         tree.set_final_layout(node_id, &layout);
 
+        // Recurse into in-flow children. Out-of-flow (absolute/fixed) children are skipped here:
+        // they are instead visited via their containing block's hoisted child list below, which
+        // ensures each node is visited exactly once and that its cumulative offset is accumulated
+        // relative to its containing block (which its `location` is relative to).
         let child_count = tree.child_count(node_id);
         for index in 0..child_count {
             let child = tree.get_child_id(node_id, index);
+            if !tree.is_hoisted(child) {
+                round_layout_inner(tree, child, cumulative_x, cumulative_y);
+            }
+        }
+
+        // Recurse into out-of-flow boxes for which this node is the containing block
+        let hoisted_count = tree.hoisted_child_count(node_id);
+        for index in 0..hoisted_count {
+            let child = tree.get_hoisted_child_id(node_id, index);
             round_layout_inner(tree, child, cumulative_x, cumulative_y);
         }
     }
