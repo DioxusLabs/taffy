@@ -2,7 +2,7 @@
 //! <https://www.w3.org/TR/css-grid-1>
 use crate::geometry::{AbsoluteAxis, AbstractAxis, InBothAbsAxis};
 use crate::geometry::{Line, Point, Rect, Size};
-use crate::style::{AlignItems, AvailableSpace, Overflow, Position};
+use crate::style::{AlignItems, AvailableSpace, Overflow};
 use crate::tree::{Baselines, Layout, LayoutInput, LayoutOutput, LayoutPartialTreeExt, NodeId, RunMode, SizingMode};
 use crate::util::debug::debug_log;
 use crate::util::sys::{f32_max, f32_min, GridTrackVec, Vec};
@@ -171,7 +171,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     // implicit tracks, so they are excluded from the grid size estimate.
     let get_child_styles_iter = |node| {
         tree.child_ids(node).map(|child_node: NodeId| tree.get_grid_child_style(child_node)).filter(|style| {
-            style.box_generation_mode() != BoxGenerationMode::None && style.position() != Position::Absolute
+            style.box_generation_mode() != BoxGenerationMode::None && !style.position().is_out_of_flow()
         })
     };
     let child_styles_iter = get_child_styles_iter(node);
@@ -247,7 +247,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
             .enumerate()
             .map(|(index, child_node)| (index, child_node, tree.get_grid_child_style(child_node)))
             .filter(|(_, _, style)| {
-                style.box_generation_mode() != BoxGenerationMode::None && style.position() != Position::Absolute
+                style.box_generation_mode() != BoxGenerationMode::None && !style.position().is_out_of_flow()
             })
     };
     place_grid_items(
@@ -668,7 +668,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
         }
 
         // Position absolutely positioned child
-        if child_style.position() == Position::Absolute {
+        if child_style.position().is_out_of_flow() {
             // Convert grid-col-{start/end} into Option's of indexes into the columns vector
             // The Option is None if the style property is Auto and an unresolvable Span
             let maybe_col_indexes = name_resolver

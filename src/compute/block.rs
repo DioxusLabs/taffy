@@ -533,12 +533,12 @@ fn compute_inner(
     let own_margins_collapse_with_children = Line {
         start: vertical_margins_are_collapsible.start
             && !establishes_new_bfc
-            && style.position() == Position::Relative
+            && !style.position().is_out_of_flow()
             && padding.top == 0.0
             && border.top == 0.0,
         end: vertical_margins_are_collapsible.end
             && !establishes_new_bfc
-            && style.position() == Position::Relative
+            && !style.position().is_out_of_flow()
             && padding.bottom == 0.0
             && border.bottom == 0.0
             && size.height.is_none(),
@@ -546,7 +546,7 @@ fn compute_inner(
     let has_styles_preventing_being_collapsed_through = !style.is_block()
         || block_ctx.is_bfc_root()
         || establishes_new_bfc
-        || style.position() == Position::Absolute
+        || style.position().is_out_of_flow()
         || padding.top > 0.0
         || padding.bottom > 0.0
         || border.top > 0.0
@@ -700,7 +700,7 @@ fn compute_inner(
         if item.float.is_floated() {
             return true;
         }
-        item.position == Position::Absolute || item.can_be_collapsed_through
+        item.position.is_out_of_flow() || item.can_be_collapsed_through
     });
     let can_be_collapsed_through =
         !has_styles_preventing_being_collapsed_through && all_in_flow_children_can_be_collapsed_through;
@@ -828,7 +828,7 @@ fn generate_item_list(
 
             let is_in_same_bfc: bool = is_block
                 && !is_table
-                && position != Position::Absolute
+                && !position.is_out_of_flow()
                 && is_not_floated
                 && !is_scroll_container
                 && !contain.establishes_independent_formatting_context();
@@ -911,7 +911,7 @@ fn determine_content_based_container_width(
     let mut max_child_width = 0.0;
     #[cfg(feature = "float_layout")]
     let mut float_contribution = FloatIntrinsicWidthCalculator::new(available_width);
-    for item in items.iter().filter(|item| item.position != Position::Absolute) {
+    for item in items.iter().filter(|item| !item.position.is_out_of_flow()) {
         let known_dimensions = item.size.maybe_clamp(item.min_size, item.max_size);
 
         let item_x_margin_sum = item
@@ -1021,7 +1021,7 @@ fn perform_final_layout_on_in_flow_children(
     let has_active_floats = false;
 
     for item in items.iter_mut() {
-        if item.position == Position::Absolute {
+        if item.position.is_out_of_flow() {
             let x = match direction {
                 Direction::Ltr => resolved_content_box_inset.left,
                 Direction::Rtl => container_outer_width - resolved_content_box_inset.right,
@@ -1350,13 +1350,17 @@ fn perform_final_layout_on_in_flow_children(
             let inset = item
                 .inset
                 .zip_size(inset_percentage_basis, |p, s| p.maybe_resolve(s, |val, basis| tree.calc(val, basis)));
-            let inset_offset = Point {
-                x: if direction.is_rtl() {
-                    inset.right.map(|x| -x).or(inset.left).unwrap_or(0.0)
-                } else {
-                    inset.left.or(inset.right.map(|x| -x)).unwrap_or(0.0)
-                },
-                y: inset.top.or(inset.bottom.map(|x| -x)).unwrap_or(0.0),
+            let inset_offset = if item.position == Position::Relative {
+                Point {
+                    x: if direction.is_rtl() {
+                        inset.right.map(|x| -x).or(inset.left).unwrap_or(0.0)
+                    } else {
+                        inset.left.or(inset.right.map(|x| -x)).unwrap_or(0.0)
+                    },
+                    y: inset.top.or(inset.bottom.map(|x| -x)).unwrap_or(0.0),
+                }
+            } else {
+                Point::ZERO
             };
 
             // Set y_margin_offset (same bfc child)
@@ -1634,12 +1638,11 @@ fn perform_absolute_layout_on_absolute_children(
     #[cfg_attr(not(feature = "content_size"), allow(unused_mut))]
     let mut absolute_overflow_rect = Rect::ZERO;
 
-    for item in items.iter().filter(|item| item.position == Position::Absolute) {
+    for item in items.iter().filter(|item| item.position.is_out_of_flow()) {
         let child_style = tree.get_block_child_style(item.node_id);
 
         // Skip items that are display:none or are not position:absolute
-        if child_style.box_generation_mode() == BoxGenerationMode::None || child_style.position() != Position::Absolute
-        {
+        if child_style.box_generation_mode() == BoxGenerationMode::None || !child_style.position().is_out_of_flow() {
             continue;
         }
 

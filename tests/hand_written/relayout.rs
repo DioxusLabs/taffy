@@ -351,6 +351,7 @@ fn relayout_is_stable_with_rounding() {
         .new_with_children(
             Style {
                 size: Size { width: percent(1.), height: auto() },
+                position: Position::Relative,
                 inset: Rect { left: length(1.5), right: auto(), top: auto(), bottom: auto() },
                 ..Default::default()
             },

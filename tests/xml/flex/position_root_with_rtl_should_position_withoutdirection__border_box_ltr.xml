@@ -2,7 +2,7 @@
   <viewport width="max-content" height="max-content"/>
   <input>
     <div direction="ltr">
-      <div direction="ltr" width="52px" height="52px" left="72px"/>
+      <div direction="ltr" position="relative" width="52px" height="52px" left="72px"/>
     </div>
   </input>
   <expectations>
