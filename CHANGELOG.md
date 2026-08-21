@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Breaking
+
+- `Position` gains `Static` and `Fixed` variants matching the CSS `position` property, and **`Position::Static` replaces `Position::Relative` as the default value** (matching CSS). Statically positioned items are laid out in normal flow like relatively positioned items, but their `inset` styles are ignored: code relying on the old default's inset behavior must explicitly set `position: Position::Relative`. `Position::Fixed` currently behaves identically to `Position::Absolute` (both are taken out of normal flow and positioned relative to their parent); a future release will hoist absolute/fixed boxes to their actual containing block (nearest positioned ancestor for `absolute`, root for `fixed`). `Position` also gains `is_out_of_flow()` and `is_positioned()` helper methods, and the CSS parser (`parse` feature) accepts `static` and `fixed` keywords
+
 ### Fixed
 
 - Grid: items with an `auto` start line and a definite end line (e.g. `grid-column: auto / 1`) no longer cause a phantom zero-sized positive implicit track to be created. This previously caused `grid_template_columns()`/`grid_template_rows()` to serialize an extra `0px` track (e.g. `10px 0px` instead of `10px`)
