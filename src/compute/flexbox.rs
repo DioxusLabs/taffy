@@ -519,6 +519,8 @@ fn compute_preliminary(tree: &mut impl LayoutFlexboxContainer, node: NodeId, inp
     // line's visual position: for wrap-reverse containers the cross axis is flipped, so the
     // startmost line is the last line in flex-line order rather than the first.
     let first_line = if constants.is_wrap_reverse { flex_lines.last() } else { flex_lines.first() };
+    // Prefer the first item in the line participating in first-baseline alignment, then the first
+    // item participating in any baseline alignment, then the line's first item.
     let first_vertical_baseline = first_line.and_then(|line| {
         if constants.is_column {
             // For column containers the baseline is generated from the startmost item in the line,
@@ -529,7 +531,8 @@ fn compute_preliminary(tree: &mut impl LayoutFlexboxContainer, node: NodeId, inp
             line.items
                 .iter()
                 .find(|item| item.participates_in_baseline_alignment(constants.dir))
-                .or_else(|| line.items.iter().next())
+                .or_else(|| line.items.iter().find(|item| item.participates_in_last_baseline_alignment(constants.dir)))
+                .or_else(|| line.items.first())
                 .map(|child| child.baseline)
         }
     });
@@ -540,11 +543,17 @@ fn compute_preliminary(tree: &mut impl LayoutFlexboxContainer, node: NodeId, inp
     let last_line = if constants.is_wrap_reverse { flex_lines.first() } else { flex_lines.last() };
     let last_vertical_baseline = last_line.and_then(|line| {
         if constants.is_column {
-            line.items.last().map(|child| child.last_baseline)
+            // For column containers the last baseline is generated from the endmost item in the
+            // line, which for reverse-direction containers is the first item in flex order.
+            let item = if constants.dir.is_reverse() { line.items.first() } else { line.items.last() };
+            item.map(|child| child.last_baseline)
         } else {
+            // Prefer the first item in the line participating in last-baseline alignment, then the
+            // first item participating in any baseline alignment, then the line's last item.
             line.items
                 .iter()
                 .find(|item| item.participates_in_last_baseline_alignment(constants.dir))
+                .or_else(|| line.items.iter().find(|item| item.participates_in_baseline_alignment(constants.dir)))
                 .or_else(|| line.items.last())
                 .map(|child| child.last_baseline)
         }

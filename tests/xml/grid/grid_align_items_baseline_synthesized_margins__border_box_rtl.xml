@@ -1,0 +1,17 @@
+<test name="grid_align_items_baseline_synthesized_margins__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" direction="rtl" align-items="baseline" width="200px" grid-template-columns="50px 50px 50px">
+      <div direction="rtl" height="20px" margin-top="40px" margin-left="0px" margin-bottom="40px" margin-right="0px"/>
+      <div direction="rtl" height="20px" margin-top="0px" margin-left="0px" margin-bottom="0px" margin-right="0px"/>
+      <div direction="rtl" height="20px" margin-top="20px" margin-left="0px" margin-bottom="20px" margin-right="0px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="200" height="100">
+      <node x="150" y="40" width="50" height="20"/>
+      <node x="100" y="40" width="50" height="20"/>
+      <node x="50" y="40" width="50" height="20"/>
+    </node>
+  </expectations>
+</test>

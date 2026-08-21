@@ -7410,6 +7410,106 @@ mod flex {
     }
 
     #[test]
+    fn align_baseline_nested_flex_wrap_first_baseline_items__border_box_ltr() {
+        crate::run_xml_test("flex", "align_baseline_nested_flex_wrap_first_baseline_items__border_box_ltr");
+    }
+
+    #[test]
+    fn align_baseline_nested_flex_wrap_first_baseline_items__content_box_ltr() {
+        crate::run_xml_test("flex", "align_baseline_nested_flex_wrap_first_baseline_items__content_box_ltr");
+    }
+
+    #[test]
+    fn align_baseline_nested_flex_wrap_first_baseline_items__border_box_rtl() {
+        crate::run_xml_test("flex", "align_baseline_nested_flex_wrap_first_baseline_items__border_box_rtl");
+    }
+
+    #[test]
+    fn align_baseline_nested_flex_wrap_first_baseline_items__content_box_rtl() {
+        crate::run_xml_test("flex", "align_baseline_nested_flex_wrap_first_baseline_items__content_box_rtl");
+    }
+
+    #[test]
+    fn align_baseline_nested_flex_wrap_last_baseline_items__border_box_ltr() {
+        crate::run_xml_test("flex", "align_baseline_nested_flex_wrap_last_baseline_items__border_box_ltr");
+    }
+
+    #[test]
+    fn align_baseline_nested_flex_wrap_last_baseline_items__content_box_ltr() {
+        crate::run_xml_test("flex", "align_baseline_nested_flex_wrap_last_baseline_items__content_box_ltr");
+    }
+
+    #[test]
+    fn align_baseline_nested_flex_wrap_last_baseline_items__border_box_rtl() {
+        crate::run_xml_test("flex", "align_baseline_nested_flex_wrap_last_baseline_items__border_box_rtl");
+    }
+
+    #[test]
+    fn align_baseline_nested_flex_wrap_last_baseline_items__content_box_rtl() {
+        crate::run_xml_test("flex", "align_baseline_nested_flex_wrap_last_baseline_items__content_box_rtl");
+    }
+
+    #[test]
+    fn align_baseline_nested_flex_wrap_mixed_baseline_items__border_box_ltr() {
+        crate::run_xml_test("flex", "align_baseline_nested_flex_wrap_mixed_baseline_items__border_box_ltr");
+    }
+
+    #[test]
+    fn align_baseline_nested_flex_wrap_mixed_baseline_items__content_box_ltr() {
+        crate::run_xml_test("flex", "align_baseline_nested_flex_wrap_mixed_baseline_items__content_box_ltr");
+    }
+
+    #[test]
+    fn align_baseline_nested_flex_wrap_mixed_baseline_items__border_box_rtl() {
+        crate::run_xml_test("flex", "align_baseline_nested_flex_wrap_mixed_baseline_items__border_box_rtl");
+    }
+
+    #[test]
+    fn align_baseline_nested_flex_wrap_mixed_baseline_items__content_box_rtl() {
+        crate::run_xml_test("flex", "align_baseline_nested_flex_wrap_mixed_baseline_items__content_box_rtl");
+    }
+
+    #[test]
+    fn align_baseline_nested_flex_wrap_reverse_first_baseline_items__border_box_ltr() {
+        crate::run_xml_test("flex", "align_baseline_nested_flex_wrap_reverse_first_baseline_items__border_box_ltr");
+    }
+
+    #[test]
+    fn align_baseline_nested_flex_wrap_reverse_first_baseline_items__content_box_ltr() {
+        crate::run_xml_test("flex", "align_baseline_nested_flex_wrap_reverse_first_baseline_items__content_box_ltr");
+    }
+
+    #[test]
+    fn align_baseline_nested_flex_wrap_reverse_first_baseline_items__border_box_rtl() {
+        crate::run_xml_test("flex", "align_baseline_nested_flex_wrap_reverse_first_baseline_items__border_box_rtl");
+    }
+
+    #[test]
+    fn align_baseline_nested_flex_wrap_reverse_first_baseline_items__content_box_rtl() {
+        crate::run_xml_test("flex", "align_baseline_nested_flex_wrap_reverse_first_baseline_items__content_box_rtl");
+    }
+
+    #[test]
+    fn align_baseline_nested_flex_wrap_reverse_last_baseline_items__border_box_ltr() {
+        crate::run_xml_test("flex", "align_baseline_nested_flex_wrap_reverse_last_baseline_items__border_box_ltr");
+    }
+
+    #[test]
+    fn align_baseline_nested_flex_wrap_reverse_last_baseline_items__content_box_ltr() {
+        crate::run_xml_test("flex", "align_baseline_nested_flex_wrap_reverse_last_baseline_items__content_box_ltr");
+    }
+
+    #[test]
+    fn align_baseline_nested_flex_wrap_reverse_last_baseline_items__border_box_rtl() {
+        crate::run_xml_test("flex", "align_baseline_nested_flex_wrap_reverse_last_baseline_items__border_box_rtl");
+    }
+
+    #[test]
+    fn align_baseline_nested_flex_wrap_reverse_last_baseline_items__content_box_rtl() {
+        crate::run_xml_test("flex", "align_baseline_nested_flex_wrap_reverse_last_baseline_items__content_box_rtl");
+    }
+
+    #[test]
     fn align_baseline_wrap_reverse__border_box_ltr() {
         crate::run_xml_test("flex", "align_baseline_wrap_reverse__border_box_ltr");
     }
@@ -9235,6 +9335,124 @@ mod flex {
     #[test]
     fn align_last_baseline_nested_child__content_box_rtl() {
         crate::run_xml_test("flex", "align_last_baseline_nested_child__content_box_rtl");
+    }
+
+    #[test]
+    fn align_last_baseline_nested_flex_wrap_first_baseline_items__border_box_ltr() {
+        crate::run_xml_test("flex", "align_last_baseline_nested_flex_wrap_first_baseline_items__border_box_ltr");
+    }
+
+    #[test]
+    fn align_last_baseline_nested_flex_wrap_first_baseline_items__content_box_ltr() {
+        crate::run_xml_test("flex", "align_last_baseline_nested_flex_wrap_first_baseline_items__content_box_ltr");
+    }
+
+    #[test]
+    fn align_last_baseline_nested_flex_wrap_first_baseline_items__border_box_rtl() {
+        crate::run_xml_test("flex", "align_last_baseline_nested_flex_wrap_first_baseline_items__border_box_rtl");
+    }
+
+    #[test]
+    fn align_last_baseline_nested_flex_wrap_first_baseline_items__content_box_rtl() {
+        crate::run_xml_test("flex", "align_last_baseline_nested_flex_wrap_first_baseline_items__content_box_rtl");
+    }
+
+    #[test]
+    fn align_last_baseline_nested_flex_wrap_last_baseline_items__border_box_ltr() {
+        crate::run_xml_test("flex", "align_last_baseline_nested_flex_wrap_last_baseline_items__border_box_ltr");
+    }
+
+    #[test]
+    fn align_last_baseline_nested_flex_wrap_last_baseline_items__content_box_ltr() {
+        crate::run_xml_test("flex", "align_last_baseline_nested_flex_wrap_last_baseline_items__content_box_ltr");
+    }
+
+    #[test]
+    fn align_last_baseline_nested_flex_wrap_last_baseline_items__border_box_rtl() {
+        crate::run_xml_test("flex", "align_last_baseline_nested_flex_wrap_last_baseline_items__border_box_rtl");
+    }
+
+    #[test]
+    fn align_last_baseline_nested_flex_wrap_last_baseline_items__content_box_rtl() {
+        crate::run_xml_test("flex", "align_last_baseline_nested_flex_wrap_last_baseline_items__content_box_rtl");
+    }
+
+    #[test]
+    fn align_last_baseline_nested_flex_wrap_mixed_baseline_items__border_box_ltr() {
+        crate::run_xml_test("flex", "align_last_baseline_nested_flex_wrap_mixed_baseline_items__border_box_ltr");
+    }
+
+    #[test]
+    fn align_last_baseline_nested_flex_wrap_mixed_baseline_items__content_box_ltr() {
+        crate::run_xml_test("flex", "align_last_baseline_nested_flex_wrap_mixed_baseline_items__content_box_ltr");
+    }
+
+    #[test]
+    fn align_last_baseline_nested_flex_wrap_mixed_baseline_items__border_box_rtl() {
+        crate::run_xml_test("flex", "align_last_baseline_nested_flex_wrap_mixed_baseline_items__border_box_rtl");
+    }
+
+    #[test]
+    fn align_last_baseline_nested_flex_wrap_mixed_baseline_items__content_box_rtl() {
+        crate::run_xml_test("flex", "align_last_baseline_nested_flex_wrap_mixed_baseline_items__content_box_rtl");
+    }
+
+    #[test]
+    fn align_last_baseline_nested_flex_wrap_reverse_first_baseline_items__border_box_ltr() {
+        crate::run_xml_test(
+            "flex",
+            "align_last_baseline_nested_flex_wrap_reverse_first_baseline_items__border_box_ltr",
+        );
+    }
+
+    #[test]
+    fn align_last_baseline_nested_flex_wrap_reverse_first_baseline_items__content_box_ltr() {
+        crate::run_xml_test(
+            "flex",
+            "align_last_baseline_nested_flex_wrap_reverse_first_baseline_items__content_box_ltr",
+        );
+    }
+
+    #[test]
+    fn align_last_baseline_nested_flex_wrap_reverse_first_baseline_items__border_box_rtl() {
+        crate::run_xml_test(
+            "flex",
+            "align_last_baseline_nested_flex_wrap_reverse_first_baseline_items__border_box_rtl",
+        );
+    }
+
+    #[test]
+    fn align_last_baseline_nested_flex_wrap_reverse_first_baseline_items__content_box_rtl() {
+        crate::run_xml_test(
+            "flex",
+            "align_last_baseline_nested_flex_wrap_reverse_first_baseline_items__content_box_rtl",
+        );
+    }
+
+    #[test]
+    fn align_last_baseline_nested_flex_wrap_reverse_last_baseline_items__border_box_ltr() {
+        crate::run_xml_test("flex", "align_last_baseline_nested_flex_wrap_reverse_last_baseline_items__border_box_ltr");
+    }
+
+    #[test]
+    fn align_last_baseline_nested_flex_wrap_reverse_last_baseline_items__content_box_ltr() {
+        crate::run_xml_test(
+            "flex",
+            "align_last_baseline_nested_flex_wrap_reverse_last_baseline_items__content_box_ltr",
+        );
+    }
+
+    #[test]
+    fn align_last_baseline_nested_flex_wrap_reverse_last_baseline_items__border_box_rtl() {
+        crate::run_xml_test("flex", "align_last_baseline_nested_flex_wrap_reverse_last_baseline_items__border_box_rtl");
+    }
+
+    #[test]
+    fn align_last_baseline_nested_flex_wrap_reverse_last_baseline_items__content_box_rtl() {
+        crate::run_xml_test(
+            "flex",
+            "align_last_baseline_nested_flex_wrap_reverse_last_baseline_items__content_box_rtl",
+        );
     }
 
     #[test]
@@ -20597,6 +20815,78 @@ mod grid {
 
     #[cfg(feature = "grid")]
     #[test]
+    fn grid_align_baseline_double_nested_grid__border_box_ltr() {
+        crate::run_xml_test("grid", "grid_align_baseline_double_nested_grid__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_align_baseline_double_nested_grid__content_box_ltr() {
+        crate::run_xml_test("grid", "grid_align_baseline_double_nested_grid__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_align_baseline_double_nested_grid__border_box_rtl() {
+        crate::run_xml_test("grid", "grid_align_baseline_double_nested_grid__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_align_baseline_double_nested_grid__content_box_rtl() {
+        crate::run_xml_test("grid", "grid_align_baseline_double_nested_grid__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_align_baseline_spanned_nested_grid__border_box_ltr() {
+        crate::run_xml_test("grid", "grid_align_baseline_spanned_nested_grid__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_align_baseline_spanned_nested_grid__content_box_ltr() {
+        crate::run_xml_test("grid", "grid_align_baseline_spanned_nested_grid__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_align_baseline_spanned_nested_grid__border_box_rtl() {
+        crate::run_xml_test("grid", "grid_align_baseline_spanned_nested_grid__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_align_baseline_spanned_nested_grid__content_box_rtl() {
+        crate::run_xml_test("grid", "grid_align_baseline_spanned_nested_grid__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_align_baseline_spanned_nested_grid_spanned_item__border_box_ltr() {
+        crate::run_xml_test("grid", "grid_align_baseline_spanned_nested_grid_spanned_item__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_align_baseline_spanned_nested_grid_spanned_item__content_box_ltr() {
+        crate::run_xml_test("grid", "grid_align_baseline_spanned_nested_grid_spanned_item__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_align_baseline_spanned_nested_grid_spanned_item__border_box_rtl() {
+        crate::run_xml_test("grid", "grid_align_baseline_spanned_nested_grid_spanned_item__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_align_baseline_spanned_nested_grid_spanned_item__content_box_rtl() {
+        crate::run_xml_test("grid", "grid_align_baseline_spanned_nested_grid_spanned_item__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
     fn grid_align_content_center__border_box_ltr() {
         crate::run_xml_test("grid", "grid_align_content_center__border_box_ltr");
     }
@@ -21449,6 +21739,54 @@ mod grid {
 
     #[cfg(feature = "grid")]
     #[test]
+    fn grid_align_items_baseline_synthesized_and_natural__border_box_ltr() {
+        crate::run_xml_test("grid", "grid_align_items_baseline_synthesized_and_natural__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_align_items_baseline_synthesized_and_natural__content_box_ltr() {
+        crate::run_xml_test("grid", "grid_align_items_baseline_synthesized_and_natural__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_align_items_baseline_synthesized_and_natural__border_box_rtl() {
+        crate::run_xml_test("grid", "grid_align_items_baseline_synthesized_and_natural__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_align_items_baseline_synthesized_and_natural__content_box_rtl() {
+        crate::run_xml_test("grid", "grid_align_items_baseline_synthesized_and_natural__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_align_items_baseline_synthesized_margins__border_box_ltr() {
+        crate::run_xml_test("grid", "grid_align_items_baseline_synthesized_margins__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_align_items_baseline_synthesized_margins__content_box_ltr() {
+        crate::run_xml_test("grid", "grid_align_items_baseline_synthesized_margins__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_align_items_baseline_synthesized_margins__border_box_rtl() {
+        crate::run_xml_test("grid", "grid_align_items_baseline_synthesized_margins__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_align_items_baseline_synthesized_margins__content_box_rtl() {
+        crate::run_xml_test("grid", "grid_align_items_baseline_synthesized_margins__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
     fn grid_align_items_last_baseline__border_box_ltr() {
         crate::run_xml_test("grid", "grid_align_items_last_baseline__border_box_ltr");
     }
@@ -21613,6 +21951,150 @@ mod grid {
     #[test]
     fn grid_align_items_sized_stretch__content_box_rtl() {
         crate::run_xml_test("grid", "grid_align_items_sized_stretch__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_align_last_baseline_double_nested_grid__border_box_ltr() {
+        crate::run_xml_test("grid", "grid_align_last_baseline_double_nested_grid__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_align_last_baseline_double_nested_grid__content_box_ltr() {
+        crate::run_xml_test("grid", "grid_align_last_baseline_double_nested_grid__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_align_last_baseline_double_nested_grid__border_box_rtl() {
+        crate::run_xml_test("grid", "grid_align_last_baseline_double_nested_grid__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_align_last_baseline_double_nested_grid__content_box_rtl() {
+        crate::run_xml_test("grid", "grid_align_last_baseline_double_nested_grid__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_align_last_baseline_spanned_nested_grid__border_box_ltr() {
+        crate::run_xml_test("grid", "grid_align_last_baseline_spanned_nested_grid__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_align_last_baseline_spanned_nested_grid__content_box_ltr() {
+        crate::run_xml_test("grid", "grid_align_last_baseline_spanned_nested_grid__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_align_last_baseline_spanned_nested_grid__border_box_rtl() {
+        crate::run_xml_test("grid", "grid_align_last_baseline_spanned_nested_grid__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_align_last_baseline_spanned_nested_grid__content_box_rtl() {
+        crate::run_xml_test("grid", "grid_align_last_baseline_spanned_nested_grid__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_align_last_baseline_spanned_nested_grid_spanned_item__border_box_ltr() {
+        crate::run_xml_test("grid", "grid_align_last_baseline_spanned_nested_grid_spanned_item__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_align_last_baseline_spanned_nested_grid_spanned_item__content_box_ltr() {
+        crate::run_xml_test("grid", "grid_align_last_baseline_spanned_nested_grid_spanned_item__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_align_last_baseline_spanned_nested_grid_spanned_item__border_box_rtl() {
+        crate::run_xml_test("grid", "grid_align_last_baseline_spanned_nested_grid_spanned_item__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_align_last_baseline_spanned_nested_grid_spanned_item__content_box_rtl() {
+        crate::run_xml_test("grid", "grid_align_last_baseline_spanned_nested_grid_spanned_item__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_align_self_baseline_aspect_ratio_percent_tracks__border_box_ltr() {
+        crate::run_xml_test("grid", "grid_align_self_baseline_aspect_ratio_percent_tracks__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_align_self_baseline_aspect_ratio_percent_tracks__content_box_ltr() {
+        crate::run_xml_test("grid", "grid_align_self_baseline_aspect_ratio_percent_tracks__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_align_self_baseline_aspect_ratio_percent_tracks__border_box_rtl() {
+        crate::run_xml_test("grid", "grid_align_self_baseline_aspect_ratio_percent_tracks__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_align_self_baseline_aspect_ratio_percent_tracks__content_box_rtl() {
+        crate::run_xml_test("grid", "grid_align_self_baseline_aspect_ratio_percent_tracks__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_align_self_baseline_synthesized_margins__border_box_ltr() {
+        crate::run_xml_test("grid", "grid_align_self_baseline_synthesized_margins__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_align_self_baseline_synthesized_margins__content_box_ltr() {
+        crate::run_xml_test("grid", "grid_align_self_baseline_synthesized_margins__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_align_self_baseline_synthesized_margins__border_box_rtl() {
+        crate::run_xml_test("grid", "grid_align_self_baseline_synthesized_margins__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_align_self_baseline_synthesized_margins__content_box_rtl() {
+        crate::run_xml_test("grid", "grid_align_self_baseline_synthesized_margins__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_align_self_last_baseline_synthesized_margins__border_box_ltr() {
+        crate::run_xml_test("grid", "grid_align_self_last_baseline_synthesized_margins__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_align_self_last_baseline_synthesized_margins__content_box_ltr() {
+        crate::run_xml_test("grid", "grid_align_self_last_baseline_synthesized_margins__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_align_self_last_baseline_synthesized_margins__border_box_rtl() {
+        crate::run_xml_test("grid", "grid_align_self_last_baseline_synthesized_margins__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_align_self_last_baseline_synthesized_margins__content_box_rtl() {
+        crate::run_xml_test("grid", "grid_align_self_last_baseline_synthesized_margins__content_box_rtl");
     }
 
     #[cfg(feature = "grid")]
@@ -33187,6 +33669,54 @@ mod grid {
 mod gridflex {
     #[cfg(feature = "grid")]
     #[test]
+    fn gridflex_align_baseline_nested_grid__border_box_ltr() {
+        crate::run_xml_test("gridflex", "gridflex_align_baseline_nested_grid__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn gridflex_align_baseline_nested_grid__content_box_ltr() {
+        crate::run_xml_test("gridflex", "gridflex_align_baseline_nested_grid__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn gridflex_align_baseline_nested_grid__border_box_rtl() {
+        crate::run_xml_test("gridflex", "gridflex_align_baseline_nested_grid__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn gridflex_align_baseline_nested_grid__content_box_rtl() {
+        crate::run_xml_test("gridflex", "gridflex_align_baseline_nested_grid__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn gridflex_align_last_baseline_nested_grid__border_box_ltr() {
+        crate::run_xml_test("gridflex", "gridflex_align_last_baseline_nested_grid__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn gridflex_align_last_baseline_nested_grid__content_box_ltr() {
+        crate::run_xml_test("gridflex", "gridflex_align_last_baseline_nested_grid__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn gridflex_align_last_baseline_nested_grid__border_box_rtl() {
+        crate::run_xml_test("gridflex", "gridflex_align_last_baseline_nested_grid__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn gridflex_align_last_baseline_nested_grid__content_box_rtl() {
+        crate::run_xml_test("gridflex", "gridflex_align_last_baseline_nested_grid__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
     fn gridflex_column_integration__border_box_ltr() {
         crate::run_xml_test("gridflex", "gridflex_column_integration__border_box_ltr");
     }
@@ -33207,6 +33737,126 @@ mod gridflex {
     #[test]
     fn gridflex_column_integration__content_box_rtl() {
         crate::run_xml_test("gridflex", "gridflex_column_integration__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn gridflex_grid_align_baseline_nested_flex_wrap__border_box_ltr() {
+        crate::run_xml_test("gridflex", "gridflex_grid_align_baseline_nested_flex_wrap__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn gridflex_grid_align_baseline_nested_flex_wrap__content_box_ltr() {
+        crate::run_xml_test("gridflex", "gridflex_grid_align_baseline_nested_flex_wrap__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn gridflex_grid_align_baseline_nested_flex_wrap__border_box_rtl() {
+        crate::run_xml_test("gridflex", "gridflex_grid_align_baseline_nested_flex_wrap__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn gridflex_grid_align_baseline_nested_flex_wrap__content_box_rtl() {
+        crate::run_xml_test("gridflex", "gridflex_grid_align_baseline_nested_flex_wrap__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn gridflex_grid_align_baseline_nested_flex_wrap_reverse__border_box_ltr() {
+        crate::run_xml_test("gridflex", "gridflex_grid_align_baseline_nested_flex_wrap_reverse__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn gridflex_grid_align_baseline_nested_flex_wrap_reverse__content_box_ltr() {
+        crate::run_xml_test("gridflex", "gridflex_grid_align_baseline_nested_flex_wrap_reverse__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn gridflex_grid_align_baseline_nested_flex_wrap_reverse__border_box_rtl() {
+        crate::run_xml_test("gridflex", "gridflex_grid_align_baseline_nested_flex_wrap_reverse__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn gridflex_grid_align_baseline_nested_flex_wrap_reverse__content_box_rtl() {
+        crate::run_xml_test("gridflex", "gridflex_grid_align_baseline_nested_flex_wrap_reverse__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn gridflex_grid_baseline_empty_grid__border_box_ltr() {
+        crate::run_xml_test("gridflex", "gridflex_grid_baseline_empty_grid__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn gridflex_grid_baseline_empty_grid__content_box_ltr() {
+        crate::run_xml_test("gridflex", "gridflex_grid_baseline_empty_grid__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn gridflex_grid_baseline_empty_grid__border_box_rtl() {
+        crate::run_xml_test("gridflex", "gridflex_grid_baseline_empty_grid__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn gridflex_grid_baseline_empty_grid__content_box_rtl() {
+        crate::run_xml_test("gridflex", "gridflex_grid_baseline_empty_grid__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn gridflex_grid_baseline_grid_order__border_box_ltr() {
+        crate::run_xml_test("gridflex", "gridflex_grid_baseline_grid_order__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn gridflex_grid_baseline_grid_order__content_box_ltr() {
+        crate::run_xml_test("gridflex", "gridflex_grid_baseline_grid_order__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn gridflex_grid_baseline_grid_order__border_box_rtl() {
+        crate::run_xml_test("gridflex", "gridflex_grid_baseline_grid_order__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn gridflex_grid_baseline_grid_order__content_box_rtl() {
+        crate::run_xml_test("gridflex", "gridflex_grid_baseline_grid_order__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn gridflex_grid_baseline_grid_order_columns__border_box_ltr() {
+        crate::run_xml_test("gridflex", "gridflex_grid_baseline_grid_order_columns__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn gridflex_grid_baseline_grid_order_columns__content_box_ltr() {
+        crate::run_xml_test("gridflex", "gridflex_grid_baseline_grid_order_columns__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn gridflex_grid_baseline_grid_order_columns__border_box_rtl() {
+        crate::run_xml_test("gridflex", "gridflex_grid_baseline_grid_order_columns__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn gridflex_grid_baseline_grid_order_columns__content_box_rtl() {
+        crate::run_xml_test("gridflex", "gridflex_grid_baseline_grid_order_columns__content_box_rtl");
     }
 
     #[cfg(feature = "grid")]

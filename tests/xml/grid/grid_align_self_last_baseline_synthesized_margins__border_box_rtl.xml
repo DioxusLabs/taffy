@@ -1,0 +1,19 @@
+<test name="grid_align_self_last_baseline_synthesized_margins__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" direction="rtl" width="250px" grid-template-columns="50px 50px 50px 50px">
+      <div direction="rtl" align-self="last baseline" height="20px"/>
+      <div direction="rtl" align-self="last baseline" height="10px" margin-top="30px" margin-left="0px" margin-bottom="10px" margin-right="0px"/>
+      <div direction="rtl" align-self="last baseline" height="10px" margin-top="20px" margin-left="0px" margin-bottom="0px" margin-right="0px"/>
+      <div direction="rtl" height="100px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="250" height="100">
+      <node x="200" y="70" width="50" height="20"/>
+      <node x="150" y="80" width="50" height="10"/>
+      <node x="100" y="80" width="50" height="10"/>
+      <node x="50" y="0" width="50" height="100"/>
+    </node>
+  </expectations>
+</test>

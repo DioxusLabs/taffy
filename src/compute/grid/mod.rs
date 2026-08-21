@@ -19,14 +19,14 @@ use placement::place_grid_items;
 use track_sizing::{
     determine_if_item_crosses_flexible_or_intrinsic_tracks, resolve_item_track_indexes, track_sizing_algorithm,
 };
-use types::{CellOccupancyMatrix, GridTrack, NamedLineResolver};
+use types::{CellOccupancyMatrix, GridItem, GridTrack, NamedLineResolver};
 
 #[cfg(feature = "detailed_layout_info")]
 use crate::sys::{DefaultCheapStr, String};
 #[cfg(feature = "detailed_layout_info")]
 use crate::{CheapCloneStr, GridPlacement, OriginZeroGridPlacement};
 #[cfg(feature = "detailed_layout_info")]
-use types::{GridItem, GridTrackKind, TrackCounts};
+use types::{GridTrackKind, TrackCounts};
 
 pub(crate) use types::{GridCoordinate, GridLine, OriginZeroLine, MAX_GRID_TRACKS, MAX_OZ_LINE, MIN_OZ_LINE};
 
@@ -342,7 +342,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
         &mut columns,
         &mut items,
         |track: &GridTrack, _, _| Some(track.base_size),
-        false, // TODO: Support baseline alignment in the vertical axis
+        has_baseline_aligned_item,
     );
     let initial_row_sum = rows.iter().map(|track| track.base_size).sum::<f32>();
     inner_node_size.height = inner_node_size.height.or_else(|| initial_row_sum.into());
@@ -528,7 +528,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
                 &mut columns,
                 &mut items,
                 |track: &GridTrack, _, _| Some(track.base_size),
-                false, // TODO: Support baseline alignment in the vertical axis
+                has_baseline_aligned_item,
             );
         }
     }
@@ -638,6 +638,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
         );
         item.y_position = y_position;
         item.height = height;
+        item.baseline = baselines.first;
         item.last_baseline = baselines.last;
 
         #[cfg(feature = "content_size")]
@@ -830,50 +831,54 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
         return LayoutOutput::from_outer_size(container_border_box);
     }
 
+    // "Grid order" key: row-major order of the grid areas items occupy, with ties resolved by
+    // document order (`items` is sorted by document order at this point, and `min_by_key` returns
+    // the first of equally-minimum elements, so ties fall back to document order for free)
+    // (column indexes are stored in logical order, including for RTL)
+    let column_order_key = |item: &&GridItem| item.column_indexes.start;
+
     // Determine the grid container's first baseline, generated from the first row containing items.
     // Layout containment suppresses the box's baseline for baseline-alignment purposes
     let grid_container_baseline: Option<f32> = if contain.suppresses_baseline() {
         None
     } else {
-        // Sort items by row start position so that we can iterate items in groups which are in the same row
-        items.sort_by_key(|item| item.row_indexes.start);
-
         // Get the row index of the first row containing items
-        let first_row = items[0].row_indexes.start;
+        let first_row = items.iter().map(|item| item.row_indexes.start).min().unwrap();
+        let first_row_items = items.iter().filter(|item| item.row_indexes.start == first_row);
 
-        // Create a slice of all of the items start in this row (taking advantage of the fact that we have just sorted the array)
-        let first_row_items = &items[0..].split(|item| item.row_indexes.start != first_row).next().unwrap();
-
-        // Prefer the first item in *this row* which participates in first-baseline alignment
-        // (items with an auto block-axis margin do not participate: https://www.w3.org/TR/css-align-3/#baseline-align-self),
-        // falling back to the row's first item
+        // Prefer the first item (in grid order) in *this row* which participates in
+        // first-baseline alignment (items with an auto block-axis margin do not participate:
+        // https://www.w3.org/TR/css-align-3/#baseline-align-self), falling back to the row's first item
         let item = first_row_items
-            .iter()
-            .find(|item| item.participates_in_baseline_group(AlignItemsKeyword::Baseline))
-            .unwrap_or(&first_row_items[0]);
+            .clone()
+            .filter(|item| item.participates_in_baseline_group(AlignItemsKeyword::Baseline))
+            .min_by_key(column_order_key)
+            .or_else(|| first_row_items.min_by_key(column_order_key))
+            .unwrap();
 
         Some(item.y_position + item.baseline.unwrap_or(item.height))
     };
 
-    // Determine the grid container's last baseline, generated from the last row containing items
+    // Determine the grid container's last baseline, generated from the last row containing items.
+    // Items participate in the last row's baseline-sharing group if their grid area *ends* in that
+    // row, so the last row is the one with the maximum row end index and membership is determined
+    // by row end rather than row start.
     let grid_container_last_baseline: Option<f32> = if contain.suppresses_baseline() {
         None
     } else {
-        // Sort items by row start position so that we can iterate items in groups which are in the same row
-        items.sort_by_key(|item| item.row_indexes.start);
+        // Get the row end index of the last row containing items
+        let last_row_end = items.iter().map(|item| item.row_indexes.end).max().unwrap();
+        let last_row_items = items.iter().filter(|item| item.row_indexes.end == last_row_end);
 
-        // Get the row index of the last row containing items
-        let last_row = items[items.len() - 1].row_indexes.start;
-
-        // Create a slice of all of the items that start in this row (taking advantage of the fact that the array is sorted)
-        let last_row_items = &items[0..].rsplit(|item| item.row_indexes.start != last_row).next().unwrap();
-
-        // Prefer the first item in *this row* which participates in last-baseline alignment,
-        // falling back to the row's first item
+        // Prefer the first item (in grid order) ending in this row which participates in
+        // last-baseline alignment, falling back to the first item ending in this row
         let item = last_row_items
-            .iter()
-            .find(|item| item.align_self.keyword == AlignItemsKeyword::LastBaseline)
-            .unwrap_or(&last_row_items[0]);
+            .clone()
+            .filter(|item| item.participates_in_baseline_group(AlignItemsKeyword::LastBaseline))
+            .min_by_key(column_order_key)
+            .or_else(|| last_row_items.min_by_key(column_order_key))
+            .unwrap();
+
         Some(item.y_position + item.last_baseline.unwrap_or(item.height))
     };
 

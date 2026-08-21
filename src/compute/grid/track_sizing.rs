@@ -3,7 +3,6 @@
 use super::types::{GridItem, GridTrack, TrackCounts};
 use crate::geometry::{AbstractAxis, Line, Size};
 use crate::style::{AlignContent, AlignContentKeyword, AlignItemsKeyword, AvailableSpace};
-use crate::style_helpers::TaffyMinContent;
 use crate::tree::{LayoutPartialTree, LayoutPartialTreeExt, SizingMode};
 use crate::util::sys::{f32_max, f32_min, Vec};
 use crate::util::{MaybeMath, ResolveOrZero};
@@ -291,8 +290,10 @@ pub(super) fn track_sizing_algorithm<Tree: LayoutPartialTree>(
     initialize_track_sizes(tree, axis_tracks, percentage_basis);
 
     // 11.5.1 Shim item baselines
-    if has_baseline_aligned_item {
-        resolve_item_baselines(tree, axis, items, inner_node_size);
+    // Baseline shims apply in the block axis, and are resolved once the inline axis (column) tracks
+    // have been sized so that percentage-sized and aspect-ratio-dependent items measure correctly.
+    if has_baseline_aligned_item && axis == AbstractAxis::Block {
+        resolve_item_baselines(tree, items, inner_node_size, other_axis_tracks);
     }
 
     // If all tracks have a fixed min track sizing function and base_size = growth_limit,
@@ -457,30 +458,61 @@ fn initialize_track_sizes(
 /// 11.5.1 Shim baseline-aligned items so their intrinsic size contributions reflect their baseline alignment.
 fn resolve_item_baselines(
     tree: &mut impl LayoutPartialTree,
-    axis: AbstractAxis,
     items: &mut [GridItem],
     inner_node_size: Size<Option<f32>>,
+    columns: &[GridTrack],
 ) {
-    // Sort items by track in the other axis (row) start position so that we can iterate items in groups which
-    // are in the same track in the other axis (row)
-    let other_axis = axis.other();
-    items.sort_by_key(|item| item.placement(other_axis).start);
+    // First-baseline aligned items participate in the baseline-sharing group of their start-most
+    // row, while last-baseline aligned items participate in that of their end-most row.
+    // See https://www.w3.org/TR/css-align-3/#baseline-sharing-group
+    resolve_item_baselines_for_group(tree, items, inner_node_size, columns, AlignItemsKeyword::Baseline);
+    resolve_item_baselines_for_group(tree, items, inner_node_size, columns, AlignItemsKeyword::LastBaseline);
+}
+
+/// Resolve baselines and shims for either the first-baseline or last-baseline alignment group.
+fn resolve_item_baselines_for_group(
+    tree: &mut impl LayoutPartialTree,
+    items: &mut [GridItem],
+    inner_node_size: Size<Option<f32>>,
+    columns: &[GridTrack],
+    group_keyword: AlignItemsKeyword,
+) {
+    // If fewer than two items participate in this kind of baseline alignment then no row can
+    // contain a multi-item baseline-sharing group, so skip sorting and grouping entirely
+    if items.iter().filter(|item| item.align_self.keyword == group_keyword).count() <= 1 {
+        return;
+    }
+
+    let is_first_baseline = group_keyword == AlignItemsKeyword::Baseline;
+
+    // The grid row line at which an item participates in baseline alignment: the start of its
+    // start-most row for first-baseline alignment, the end of its end-most row for last-baseline
+    let participation_line = |item: &GridItem| {
+        let placement = item.placement(AbstractAxis::Block);
+        if is_first_baseline {
+            placement.start
+        } else {
+            placement.end
+        }
+    };
+
+    // Sort items by their participation line so that we can iterate items in groups which share a row edge
+    items.sort_by_key(participation_line);
 
     // Iterate over grid rows
     let mut remaining_items = &mut items[0..];
     while !remaining_items.is_empty() {
-        // Get the row index of the current row
-        let current_row = remaining_items[0].placement(other_axis).start;
+        // Get the row line of the current group
+        let current_line = participation_line(&remaining_items[0]);
 
-        // Find the item index of the first item that is in a different row (or None if we've reached the end of the list)
-        let next_row_first_item =
-            remaining_items.iter().position(|item| item.placement(other_axis).start != current_row);
+        // Find the item index of the first item that is in a different group (or None if we've reached the end of the list)
+        let next_group_first_item = remaining_items.iter().position(|item| participation_line(item) != current_line);
 
         // Use this index to split the `remaining_items` slice in two slices:
-        //    - A `row_items` slice containing the items (that start) in the current row
+        //    - A `row_items` slice containing the items that participate at the current row line
         //    - A new `remaining_items` consisting of the remainder of the `remaining_items` slice
-        //      that hasn't been split off into `row_items
-        let row_items = if let Some(index) = next_row_first_item {
+        //      that hasn't been split off into `row_items`
+        let row_items = if let Some(index) = next_group_first_item {
             let (row_items, tail) = remaining_items.split_at_mut(index);
             remaining_items = tail;
             row_items
@@ -490,35 +522,34 @@ fn resolve_item_baselines(
             row_items
         };
 
-        // Count how many items in *this row* participate in each baseline alignment group
+        // Count how many items in *this row* participate in the baseline alignment group
         // (items with an auto block-axis margin do not participate).
-        // If a group has one or zero items then baseline alignment is a no-op for those items
-        // and we skip further computations for that group
-        let row_first_baseline_item_count =
-            row_items.iter().filter(|item| item.participates_in_baseline_group(AlignItemsKeyword::Baseline)).count();
-        let row_last_baseline_item_count = row_items
-            .iter()
-            .filter(|item| item.participates_in_baseline_group(AlignItemsKeyword::LastBaseline))
-            .count();
-        if row_first_baseline_item_count <= 1 && row_last_baseline_item_count <= 1 {
+        // If the group has one or zero items then baseline alignment is a no-op for those items
+        // and we skip further computations for the group
+        let baseline_item_count =
+            row_items.iter().filter(|item| item.participates_in_baseline_group(group_keyword)).count();
+        if baseline_item_count <= 1 {
             continue;
         }
 
-        // Compute the baselines of all items in the row participating in baseline alignment
+        // Compute the baselines of all items in the group
         for item in row_items.iter_mut() {
-            let is_first_baseline = item.participates_in_baseline_group(AlignItemsKeyword::Baseline);
-            let is_last_baseline = item.participates_in_baseline_group(AlignItemsKeyword::LastBaseline);
-            let should_measure = (is_first_baseline && row_first_baseline_item_count > 1)
-                || (is_last_baseline && row_last_baseline_item_count > 1);
-            if !should_measure {
+            if !item.participates_in_baseline_group(group_keyword) {
                 continue;
             }
 
+            // Measure the item using its grid area width (including any spanned gutters) as the
+            // containing block width so that percentage sizes and aspect ratios resolve correctly
+            let grid_area_width: f32 =
+                item.track_range_excluding_lines(AbstractAxis::Inline).map(|index| columns[index].base_size).sum();
+            let grid_area_size = Size { width: Some(grid_area_width), height: None };
+            let known_dimensions = item.known_dimensions(tree, grid_area_size);
+
             let measured_size_and_baselines = tree.perform_child_layout(
                 item.node,
-                Size::NONE,
-                inner_node_size,
-                Size::MIN_CONTENT,
+                known_dimensions,
+                grid_area_size,
+                Size { width: AvailableSpace::Definite(grid_area_width), height: AvailableSpace::MinContent },
                 SizingMode::InherentSize,
                 Line::FALSE,
             );
@@ -553,8 +584,8 @@ fn resolve_item_baselines(
             }
         }
 
-        // Compute the max first-baseline ascent and shim each item in the first-baseline group
-        if row_first_baseline_item_count > 1 {
+        if is_first_baseline {
+            // Compute the max first-baseline ascent and shim each item in the first-baseline group
             let row_max_baseline = row_items
                 .iter()
                 .filter(|item| item.participates_in_baseline_group(AlignItemsKeyword::Baseline))
@@ -566,10 +597,8 @@ fn resolve_item_baselines(
             {
                 item.baseline_shims.start = row_max_baseline - item.baseline.unwrap_or(0.0);
             }
-        }
-
-        // Compute the max last-baseline descent and shim each item in the last-baseline group
-        if row_last_baseline_item_count > 1 {
+        } else {
+            // Compute the max last-baseline descent and shim each item in the last-baseline group
             let row_max_descent = row_items
                 .iter()
                 .filter(|item| item.participates_in_baseline_group(AlignItemsKeyword::LastBaseline))

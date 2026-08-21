@@ -1,0 +1,21 @@
+<test name="grid_align_items_baseline_synthesized_and_natural__border_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" direction="ltr" align-items="baseline" width="200px" grid-template-columns="60px 60px 60px">
+      <div direction="ltr" height="40px">
+        <div direction="ltr" width="20px" height="10px"/>
+      </div>
+      <div direction="ltr" height="40px"/>
+      <div direction="ltr" height="25px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="200" height="70">
+      <node x="0" y="30" width="60" height="40">
+        <node x="0" y="0" width="20" height="10"/>
+      </node>
+      <node x="60" y="0" width="60" height="40"/>
+      <node x="120" y="15" width="60" height="25"/>
+    </node>
+  </expectations>
+</test>
