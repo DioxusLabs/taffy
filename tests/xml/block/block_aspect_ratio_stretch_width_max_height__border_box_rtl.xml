@@ -1,9 +1,9 @@
 <test name="block_aspect_ratio_stretch_width_max_height__border_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="block" direction="rtl" width="100px" height="200px">
-      <div display="block" direction="rtl" max-height="40px" aspect-ratio="1">
-        <div display="block" direction="rtl"/>
+    <div display="block" direction="rtl" position="absolute" width="100px" height="200px">
+      <div display="block" direction="rtl" position="relative" max-height="40px" aspect-ratio="1">
+        <div display="block" direction="rtl" position="relative"/>
       </div>
     </div>
   </input>

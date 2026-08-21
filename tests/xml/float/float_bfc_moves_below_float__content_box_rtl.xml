@@ -1,9 +1,9 @@
 <test name="float_bfc_moves_below_float__content_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="block" box-sizing="content-box" direction="rtl" width="300px">
-      <div box-sizing="content-box" direction="rtl" float="left" width="150px" height="150px"/>
-      <div display="block" box-sizing="content-box" direction="rtl" overflow-x="hidden" overflow-y="hidden" scrollbar-width="15" width="200px" height="150px"/>
+    <div display="block" box-sizing="content-box" direction="rtl" position="absolute" width="300px">
+      <div box-sizing="content-box" direction="rtl" position="relative" float="left" width="150px" height="150px"/>
+      <div display="block" box-sizing="content-box" direction="rtl" position="relative" overflow-x="hidden" overflow-y="hidden" scrollbar-width="15" width="200px" height="150px"/>
     </div>
   </input>
   <expectations>

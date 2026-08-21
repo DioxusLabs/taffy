@@ -1,8 +1,8 @@
 <test name="align_items_stretch_min_cross__border_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div direction="ltr" flex-direction="column" min-width="400px" min-height="50px">
-      <div direction="ltr" flex-shrink="0" height="36px"/>
+    <div direction="ltr" position="absolute" flex-direction="column" min-width="400px" min-height="50px">
+      <div direction="ltr" position="relative" flex-shrink="0" height="36px"/>
     </div>
   </input>
   <expectations>

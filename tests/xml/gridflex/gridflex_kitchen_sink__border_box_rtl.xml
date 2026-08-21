@@ -1,26 +1,26 @@
 <test name="gridflex_kitchen_sink__border_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div direction="rtl">
-      <div display="grid" direction="rtl" grid-template-rows="1fr 1fr" grid-template-columns="1fr 1fr">
-        <div direction="rtl">
-          <div direction="rtl" width="20px"/>
-          <div direction="rtl" flex-grow="1" width="50px">
-            <div display="grid" direction="rtl" grid-template-rows="30% 10%" grid-template-columns="auto 10%">
-              <div direction="rtl" width="20px"/>
-              <div direction="rtl"/>
-              <div direction="rtl"/>
-              <div direction="rtl"/>
+    <div direction="rtl" position="absolute">
+      <div display="grid" direction="rtl" position="relative" grid-template-rows="1fr 1fr" grid-template-columns="1fr 1fr">
+        <div direction="rtl" position="relative">
+          <div direction="rtl" position="relative" width="20px"/>
+          <div direction="rtl" position="relative" flex-grow="1" width="50px">
+            <div display="grid" direction="rtl" position="relative" grid-template-rows="30% 10%" grid-template-columns="auto 10%">
+              <div direction="rtl" position="relative" width="20px"/>
+              <div direction="rtl" position="relative"/>
+              <div direction="rtl" position="relative"/>
+              <div direction="rtl" position="relative"/>
             </div>
           </div>
         </div>
-        <text direction="rtl">
+        <text direction="rtl" position="relative">
           HH
         </text>
-        <text direction="rtl">
+        <text direction="rtl" position="relative">
           HH
         </text>
-        <text direction="rtl">
+        <text direction="rtl" position="relative">
           HH
         </text>
       </div>

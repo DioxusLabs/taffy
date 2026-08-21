@@ -1,7 +1,7 @@
 <test name="block_display_none_with_position_absolute__content_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="block" box-sizing="content-box" direction="ltr" width="100px" height="100px">
+    <div display="block" box-sizing="content-box" direction="ltr" position="absolute" width="100px" height="100px">
       <div display="none" box-sizing="content-box" direction="ltr" position="absolute" width="100px" height="100px"/>
     </div>
   </input>

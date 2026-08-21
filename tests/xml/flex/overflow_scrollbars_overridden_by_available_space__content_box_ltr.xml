@@ -1,9 +1,9 @@
 <test name="overflow_scrollbars_overridden_by_available_space__content_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div box-sizing="content-box" direction="ltr" width="2px" height="4px">
-      <div box-sizing="content-box" direction="ltr" overflow-x="scroll" overflow-y="scroll" scrollbar-width="15" flex-grow="1">
-        <div box-sizing="content-box" direction="ltr" flex-grow="1"/>
+    <div box-sizing="content-box" direction="ltr" position="absolute" width="2px" height="4px">
+      <div box-sizing="content-box" direction="ltr" position="relative" overflow-x="scroll" overflow-y="scroll" scrollbar-width="15" flex-grow="1">
+        <div box-sizing="content-box" direction="ltr" position="relative" flex-grow="1"/>
       </div>
     </div>
   </input>

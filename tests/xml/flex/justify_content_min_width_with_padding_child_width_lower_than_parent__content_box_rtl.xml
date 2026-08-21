@@ -1,10 +1,10 @@
 <test name="justify_content_min_width_with_padding_child_width_lower_than_parent__content_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div box-sizing="content-box" direction="rtl" flex-direction="column" align-content="stretch" width="1080px" height="1584px">
-      <div box-sizing="content-box" direction="rtl" align-content="stretch">
-        <div box-sizing="content-box" direction="rtl" align-content="stretch" justify-content="center" min-width="400px" padding-left="100px" padding-right="100px">
-          <div box-sizing="content-box" direction="rtl" align-content="stretch" width="199px" height="100px"/>
+    <div box-sizing="content-box" direction="rtl" position="absolute" flex-direction="column" align-content="stretch" width="1080px" height="1584px">
+      <div box-sizing="content-box" direction="rtl" position="relative" align-content="stretch">
+        <div box-sizing="content-box" direction="rtl" position="relative" align-content="stretch" justify-content="center" min-width="400px" padding-left="100px" padding-right="100px">
+          <div box-sizing="content-box" direction="rtl" position="relative" align-content="stretch" width="199px" height="100px"/>
         </div>
       </div>
     </div>

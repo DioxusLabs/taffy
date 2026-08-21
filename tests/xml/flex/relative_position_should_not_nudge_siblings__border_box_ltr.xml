@@ -1,7 +1,7 @@
 <test name="relative_position_should_not_nudge_siblings__border_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div direction="ltr" flex-direction="column" width="100px" height="100px">
+    <div direction="ltr" position="absolute" flex-direction="column" width="100px" height="100px">
       <div direction="ltr" position="relative" height="10px" top="15px"/>
       <div direction="ltr" position="relative" height="10px" top="15px"/>
     </div>

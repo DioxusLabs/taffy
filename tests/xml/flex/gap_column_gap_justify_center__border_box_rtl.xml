@@ -1,10 +1,10 @@
 <test name="gap_column_gap_justify_center__border_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div direction="rtl" justify-content="center" width="100px" height="100px" column-gap="10px">
-      <div direction="rtl" width="20px"/>
-      <div direction="rtl" width="20px"/>
-      <div direction="rtl" width="20px"/>
+    <div direction="rtl" position="absolute" justify-content="center" width="100px" height="100px" column-gap="10px">
+      <div direction="rtl" position="relative" width="20px"/>
+      <div direction="rtl" position="relative" width="20px"/>
+      <div direction="rtl" position="relative" width="20px"/>
     </div>
   </input>
   <expectations>

@@ -1,12 +1,12 @@
 <test name="grid_flex_track_intrinsic_sizes_003_fixedmin_span2_0point5fr_auto__border_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="grid" direction="ltr" width="60px" height="60px" border-top="3px" border-left="3px" border-bottom="3px" border-right="3px" grid-template-rows="0.5fr auto" grid-template-columns="0.5fr auto">
-      <div direction="ltr" min-width="50px" min-height="50px" grid-row-start="1" grid-row-end="span 2" grid-column-start="1" grid-column-end="span 2">
-        <div direction="ltr" width="100px" height="100px"/>
+    <div display="grid" direction="ltr" position="absolute" width="60px" height="60px" border-top="3px" border-left="3px" border-bottom="3px" border-right="3px" grid-template-rows="0.5fr auto" grid-template-columns="0.5fr auto">
+      <div direction="ltr" position="relative" min-width="50px" min-height="50px" grid-row-start="1" grid-row-end="span 2" grid-column-start="1" grid-column-end="span 2">
+        <div direction="ltr" position="relative" width="100px" height="100px"/>
       </div>
-      <div direction="ltr" grid-row-start="1" grid-column-start="1"/>
-      <div direction="ltr" grid-row-start="2" grid-column-start="2"/>
+      <div direction="ltr" position="relative" grid-row-start="1" grid-column-start="1"/>
+      <div direction="ltr" position="relative" grid-row-start="2" grid-column-start="2"/>
     </div>
   </input>
   <expectations>

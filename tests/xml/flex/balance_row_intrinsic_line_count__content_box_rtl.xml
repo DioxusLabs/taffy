@@ -1,11 +1,11 @@
 <test name="balance_row_intrinsic_line_count__content_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div box-sizing="content-box" direction="rtl" flex-wrap="balance" flex-line-count="2">
-      <div box-sizing="content-box" direction="rtl" width="30px" height="30px"/>
-      <div box-sizing="content-box" direction="rtl" width="30px" height="30px"/>
-      <div box-sizing="content-box" direction="rtl" width="30px" height="30px"/>
-      <div box-sizing="content-box" direction="rtl" width="30px" height="30px"/>
+    <div box-sizing="content-box" direction="rtl" position="absolute" flex-wrap="balance" flex-line-count="2">
+      <div box-sizing="content-box" direction="rtl" position="relative" width="30px" height="30px"/>
+      <div box-sizing="content-box" direction="rtl" position="relative" width="30px" height="30px"/>
+      <div box-sizing="content-box" direction="rtl" position="relative" width="30px" height="30px"/>
+      <div box-sizing="content-box" direction="rtl" position="relative" width="30px" height="30px"/>
     </div>
   </input>
   <expectations>

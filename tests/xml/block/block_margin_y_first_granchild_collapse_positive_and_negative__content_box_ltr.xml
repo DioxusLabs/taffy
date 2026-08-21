@@ -1,25 +1,25 @@
 <test name="block_margin_y_first_granchild_collapse_positive_and_negative__content_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="block" box-sizing="content-box" direction="ltr" width="50px">
-      <div display="block" box-sizing="content-box" direction="ltr" margin-top="-10px">
-        <div display="block" box-sizing="content-box" direction="ltr" margin-top="10px">
-          <div display="block" box-sizing="content-box" direction="ltr" margin-top="-10px">
-            <div box-sizing="content-box" direction="ltr" height="10px"/>
+    <div display="block" box-sizing="content-box" direction="ltr" position="absolute" width="50px">
+      <div display="block" box-sizing="content-box" direction="ltr" position="relative" margin-top="-10px">
+        <div display="block" box-sizing="content-box" direction="ltr" position="relative" margin-top="10px">
+          <div display="block" box-sizing="content-box" direction="ltr" position="relative" margin-top="-10px">
+            <div box-sizing="content-box" direction="ltr" position="relative" height="10px"/>
           </div>
         </div>
       </div>
-      <div display="block" box-sizing="content-box" direction="ltr" margin-top="-10px">
-        <div display="block" box-sizing="content-box" direction="ltr" margin-top="5px">
-          <div display="block" box-sizing="content-box" direction="ltr" margin-top="-2px">
-            <div box-sizing="content-box" direction="ltr" height="10px"/>
+      <div display="block" box-sizing="content-box" direction="ltr" position="relative" margin-top="-10px">
+        <div display="block" box-sizing="content-box" direction="ltr" position="relative" margin-top="5px">
+          <div display="block" box-sizing="content-box" direction="ltr" position="relative" margin-top="-2px">
+            <div box-sizing="content-box" direction="ltr" position="relative" height="10px"/>
           </div>
         </div>
       </div>
-      <div display="block" box-sizing="content-box" direction="ltr" margin-top="-10px">
-        <div display="block" box-sizing="content-box" direction="ltr" margin-top="5px">
-          <div display="block" box-sizing="content-box" direction="ltr" margin-top="15px">
-            <div box-sizing="content-box" direction="ltr" height="10px"/>
+      <div display="block" box-sizing="content-box" direction="ltr" position="relative" margin-top="-10px">
+        <div display="block" box-sizing="content-box" direction="ltr" position="relative" margin-top="5px">
+          <div display="block" box-sizing="content-box" direction="ltr" position="relative" margin-top="15px">
+            <div box-sizing="content-box" direction="ltr" position="relative" height="10px"/>
           </div>
         </div>
       </div>

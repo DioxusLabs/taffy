@@ -1,7 +1,7 @@
 <test name="block_relative_inset_percentage_auto_height__content_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="block" box-sizing="content-box" direction="ltr" width="100px">
+    <div display="block" box-sizing="content-box" direction="ltr" position="absolute" width="100px">
       <div display="block" box-sizing="content-box" direction="ltr" position="relative" width="20px" height="20px" top="50%"/>
     </div>
   </input>

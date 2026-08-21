@@ -1,8 +1,8 @@
 <test name="margin_fix_left_auto_right_child_bigger_than_parent__border_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div direction="ltr" justify-content="center" width="52px" height="52px">
-      <div direction="ltr" width="72px" height="72px" margin-left="10px" margin-right="auto"/>
+    <div direction="ltr" position="absolute" justify-content="center" width="52px" height="52px">
+      <div direction="ltr" position="relative" width="72px" height="72px" margin-left="10px" margin-right="auto"/>
     </div>
   </input>
   <expectations>

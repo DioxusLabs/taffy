@@ -1,10 +1,10 @@
 <test name="balance_row_line_count_exceeds_items__content_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div box-sizing="content-box" direction="ltr" flex-wrap="balance" flex-line-count="10" width="100px">
-      <div box-sizing="content-box" direction="ltr" width="31px" height="30px"/>
-      <div box-sizing="content-box" direction="ltr" width="32px" height="30px"/>
-      <div box-sizing="content-box" direction="ltr" width="33px" height="30px"/>
+    <div box-sizing="content-box" direction="ltr" position="absolute" flex-wrap="balance" flex-line-count="10" width="100px">
+      <div box-sizing="content-box" direction="ltr" position="relative" width="31px" height="30px"/>
+      <div box-sizing="content-box" direction="ltr" position="relative" width="32px" height="30px"/>
+      <div box-sizing="content-box" direction="ltr" position="relative" width="33px" height="30px"/>
     </div>
   </input>
   <expectations>

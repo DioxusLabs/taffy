@@ -1,12 +1,12 @@
 <test name="block_margin_y_collapse_through_blocked_by_line_box_with_max_height_zero__border_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="block" direction="ltr" width="50px">
-      <div display="block" direction="ltr" height="10px" margin-bottom="10px"/>
-      <text display="block" direction="ltr" max-height="0px" margin-top="10px" margin-bottom="10px">
+    <div display="block" direction="ltr" position="absolute" width="50px">
+      <div display="block" direction="ltr" position="relative" height="10px" margin-bottom="10px"/>
+      <text display="block" direction="ltr" position="relative" max-height="0px" margin-top="10px" margin-bottom="10px">
         HH
       </text>
-      <div display="block" direction="ltr" height="10px" margin-top="10px"/>
+      <div display="block" direction="ltr" position="relative" height="10px" margin-top="10px"/>
     </div>
   </input>
   <expectations>

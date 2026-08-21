@@ -1,10 +1,10 @@
 <test name="blockflex_margin_y_first_child_collapse_blocked_by_flex__border_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="block" direction="rtl" width="50px">
-      <div display="flex" direction="rtl" margin-top="10px">
-        <div display="block" direction="rtl" margin-top="10px">
-          <div direction="rtl" height="10px"/>
+    <div display="block" direction="rtl" position="absolute" width="50px">
+      <div display="flex" direction="rtl" position="relative" margin-top="10px">
+        <div display="block" direction="rtl" position="relative" margin-top="10px">
+          <div direction="rtl" position="relative" height="10px"/>
         </div>
       </div>
     </div>

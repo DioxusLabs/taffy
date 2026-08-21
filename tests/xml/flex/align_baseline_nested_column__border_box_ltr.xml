@@ -1,12 +1,12 @@
 <test name="align_baseline_nested_column__border_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div direction="ltr" align-items="baseline" width="100px" height="100px">
-      <div direction="ltr" width="50px" height="60px"/>
-      <div direction="ltr" flex-direction="column">
-        <div direction="ltr" flex-direction="column" width="50px" height="80px">
-          <div direction="ltr" flex-direction="column" width="50px" height="30px"/>
-          <div direction="ltr" flex-direction="column" width="50px" height="40px"/>
+    <div direction="ltr" position="absolute" align-items="baseline" width="100px" height="100px">
+      <div direction="ltr" position="relative" width="50px" height="60px"/>
+      <div direction="ltr" position="relative" flex-direction="column">
+        <div direction="ltr" position="relative" flex-direction="column" width="50px" height="80px">
+          <div direction="ltr" position="relative" flex-direction="column" width="50px" height="30px"/>
+          <div direction="ltr" position="relative" flex-direction="column" width="50px" height="40px"/>
         </div>
       </div>
     </div>

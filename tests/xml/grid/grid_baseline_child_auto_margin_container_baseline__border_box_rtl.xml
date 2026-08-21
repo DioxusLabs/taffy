@@ -1,11 +1,11 @@
 <test name="grid_baseline_child_auto_margin_container_baseline__border_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="grid" direction="rtl" align-items="baseline" width="120px" height="80px" grid-template-columns="60px 60px">
-      <div display="grid" direction="rtl" width="50px" height="30px"/>
-      <div display="grid" direction="rtl" width="50px" grid-auto-flow="column" grid-auto-rows="40px" grid-auto-columns="25px">
-        <div display="grid" direction="rtl" height="20px"/>
-        <div display="grid" direction="rtl" align-self="baseline" height="10px" margin-top="auto"/>
+    <div display="grid" direction="rtl" position="absolute" align-items="baseline" width="120px" height="80px" grid-template-columns="60px 60px">
+      <div display="grid" direction="rtl" position="relative" width="50px" height="30px"/>
+      <div display="grid" direction="rtl" position="relative" width="50px" grid-auto-flow="column" grid-auto-rows="40px" grid-auto-columns="25px">
+        <div display="grid" direction="rtl" position="relative" height="20px"/>
+        <div display="grid" direction="rtl" position="relative" align-self="baseline" height="10px" margin-top="auto"/>
       </div>
     </div>
   </input>

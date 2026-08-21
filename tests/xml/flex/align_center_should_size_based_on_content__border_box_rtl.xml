@@ -1,10 +1,10 @@
 <test name="align_center_should_size_based_on_content__border_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div direction="rtl" align-items="center" width="100px" height="100px">
-      <div direction="rtl" justify-content="center">
-        <div direction="rtl" flex-grow="1">
-          <div direction="rtl" width="20px" height="20px"/>
+    <div direction="rtl" position="absolute" align-items="center" width="100px" height="100px">
+      <div direction="rtl" position="relative" justify-content="center">
+        <div direction="rtl" position="relative" flex-grow="1">
+          <div direction="rtl" position="relative" width="20px" height="20px"/>
         </div>
       </div>
     </div>

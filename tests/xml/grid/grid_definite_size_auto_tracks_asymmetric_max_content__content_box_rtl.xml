@@ -1,11 +1,11 @@
 <test name="grid_definite_size_auto_tracks_asymmetric_max_content__content_box_rtl" use-rounding="true">
   <viewport width="100px" height="max-content"/>
   <input>
-    <div display="grid" box-sizing="content-box" direction="rtl" width="100px" grid-template-columns="auto auto">
-      <text box-sizing="content-box" direction="rtl">
+    <div display="grid" box-sizing="content-box" direction="rtl" position="relative" width="100px" grid-template-columns="auto auto">
+      <text box-sizing="content-box" direction="rtl" position="relative">
         XX​XX
       </text>
-      <text box-sizing="content-box" direction="rtl">
+      <text box-sizing="content-box" direction="rtl" position="relative">
         XX​XX​XX​XX
       </text>
     </div>

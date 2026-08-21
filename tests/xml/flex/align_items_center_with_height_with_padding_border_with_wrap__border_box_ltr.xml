@@ -1,14 +1,14 @@
 <test name="align_items_center_with_height_with_padding_border_with_wrap__border_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div direction="ltr">
-      <div display="flex" direction="ltr" flex-wrap="wrap" align-items="center" align-content="flex-start" width="100px" height="100px">
-        <div direction="ltr" width="10px" height="10px"/>
-        <div direction="ltr" width="10px" height="20px"/>
+    <div direction="ltr" position="absolute">
+      <div display="flex" direction="ltr" position="relative" flex-wrap="wrap" align-items="center" align-content="flex-start" width="100px" height="100px">
+        <div direction="ltr" position="relative" width="10px" height="10px"/>
+        <div direction="ltr" position="relative" width="10px" height="20px"/>
       </div>
-      <div display="flex" direction="ltr" flex-wrap="wrap" align-items="center" width="100px" height="100px">
-        <div direction="ltr" width="10px" height="10px"/>
-        <div direction="ltr" width="10px" height="20px"/>
+      <div display="flex" direction="ltr" position="relative" flex-wrap="wrap" align-items="center" width="100px" height="100px">
+        <div direction="ltr" position="relative" width="10px" height="10px"/>
+        <div direction="ltr" position="relative" width="10px" height="20px"/>
       </div>
     </div>
   </input>

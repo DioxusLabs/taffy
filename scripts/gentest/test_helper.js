@@ -203,11 +203,29 @@ function parseGridPosition(input) {
   return undefined;
 }
 
+// Find the element whose border box the given element's layout position is measured against.
+// Out-of-flow (absolute/fixed) elements are positioned relative to their containing block:
+// the nearest positioned ancestor, or the test root (which acts as the initial containing
+// block) when there is none. All other elements are positioned relative to their parent.
+function positionReferenceElement(e) {
+  const position = getComputedStyle(e).position;
+  if (e.id !== "test-root" && (position === "absolute" || position === "fixed")) {
+    let ancestor = e.parentElement;
+    while (ancestor.id !== "test-root") {
+      if (position !== "fixed" && getComputedStyle(ancestor).position !== "static") return ancestor;
+      ancestor = ancestor.parentElement;
+    }
+    return ancestor;
+  }
+  return e.parentNode;
+}
+
 function describeElement(e) {
 
-  // Get precise, unrounded dimensions for the current element and it's parent
+  // Get precise, unrounded dimensions for the current element and its position reference
+  // (parent for in-flow elements, containing block for out-of-flow elements)
   let boundingRect = e.getBoundingClientRect();
-  let parentBoundingRect = e.parentNode.getBoundingClientRect();
+  let parentBoundingRect = positionReferenceElement(e).getBoundingClientRect();
 
   const computedStyle = getComputedStyle(e);
 
@@ -216,7 +234,10 @@ function describeElement(e) {
       display: parseEnum(e.style.display),
       boxSizing: parseEnum(computedStyle.boxSizing),
 
-      position: parseEnum(e.style.position),
+      // The computed position, not the inline style: the test base stylesheet sets
+      // `position: relative` on all divs/spans/imgs, which is what Chrome lays out with,
+      // and which no longer matches Taffy's default (`static`).
+      position: parseEnum(computedStyle.position),
       direction: parseEnum(computedStyle.direction),
 
       writingMode: parseEnum(e.style.writingMode),

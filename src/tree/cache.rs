@@ -129,7 +129,7 @@ impl From<&LayoutInput> for CacheKey {
 }
 
 /// Cached intermediate layout results
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize))]
 pub(crate) struct CacheEntry<T> {
     /// The key for the cache entry
@@ -159,7 +159,9 @@ impl Default for Cache {
 impl Cache {
     /// Create a new empty cache
     pub const fn new() -> Self {
-        Self { final_layout_entry: None, measure_entries: [None; CACHE_SIZE], is_empty: true }
+        /// Workaround for `Option<CacheEntry<_>>` not being `Copy` (required for array repeat expressions)
+        const NONE_MEASURE_ENTRY: Option<CacheEntry<Size<f32>>> = None;
+        Self { final_layout_entry: None, measure_entries: [NONE_MEASURE_ENTRY; CACHE_SIZE], is_empty: true }
     }
 
     /// Return the cache slot to cache the current computed result in
@@ -231,7 +233,9 @@ impl Cache {
     pub fn get(&self, input: &LayoutInput) -> Option<LayoutOutput> {
         let key = CacheKey::from(input);
         match input.run_mode {
-            RunMode::PerformLayout => self.final_layout_entry.filter(|entry| entry.key == key).map(|e| e.content),
+            RunMode::PerformLayout => {
+                self.final_layout_entry.as_ref().filter(|entry| entry.key == key).map(|e| e.content.clone())
+            }
             RunMode::ComputeSize => {
                 for entry in self.measure_entries.iter().flatten() {
                     if entry.key.kd_available_space == key.kd_available_space
@@ -272,7 +276,9 @@ impl Cache {
         }
         self.is_empty = true;
         self.final_layout_entry = None;
-        self.measure_entries = [None; CACHE_SIZE];
+        /// Workaround for `Option<CacheEntry<_>>` not being `Copy` (required for array repeat expressions)
+        const NONE_MEASURE_ENTRY: Option<CacheEntry<Size<f32>>> = None;
+        self.measure_entries = [NONE_MEASURE_ENTRY; CACHE_SIZE];
         ClearState::Cleared
     }
 

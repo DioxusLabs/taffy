@@ -1,10 +1,10 @@
 <test name="flex_grow_root_minimized__content_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div box-sizing="content-box" direction="ltr" flex-direction="column" width="100px" min-height="100px" max-height="500px">
-      <div box-sizing="content-box" direction="ltr" flex-direction="column" flex-grow="1" min-height="100px" max-height="500px">
-        <div box-sizing="content-box" direction="ltr" flex-grow="1" flex-basis="200px"/>
-        <div box-sizing="content-box" direction="ltr" height="100px"/>
+    <div box-sizing="content-box" direction="ltr" position="absolute" flex-direction="column" width="100px" min-height="100px" max-height="500px">
+      <div box-sizing="content-box" direction="ltr" position="relative" flex-direction="column" flex-grow="1" min-height="100px" max-height="500px">
+        <div box-sizing="content-box" direction="ltr" position="relative" flex-grow="1" flex-basis="200px"/>
+        <div box-sizing="content-box" direction="ltr" position="relative" height="100px"/>
       </div>
     </div>
   </input>

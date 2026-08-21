@@ -1,8 +1,8 @@
 <test name="grid_fit_content_percent_indefinite_argument__border_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="grid" direction="ltr" grid-template-rows="40px" grid-template-columns="fit-content(50%)">
-      <text direction="ltr">
+    <div display="grid" direction="ltr" position="absolute" grid-template-rows="40px" grid-template-columns="fit-content(50%)">
+      <text direction="ltr" position="relative">
         HH​HH​HH
       </text>
     </div>

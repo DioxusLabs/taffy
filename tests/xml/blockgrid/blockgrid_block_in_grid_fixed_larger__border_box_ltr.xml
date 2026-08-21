@@ -1,11 +1,11 @@
 <test name="blockgrid_block_in_grid_fixed_larger__border_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="grid" direction="ltr" grid-template-columns="50px">
-      <text display="block" direction="ltr">
+    <div display="grid" direction="ltr" position="absolute" grid-template-columns="50px">
+      <text display="block" direction="ltr" position="relative">
         HH​HH
       </text>
-      <div display="block" direction="ltr"/>
+      <div display="block" direction="ltr" position="relative"/>
     </div>
   </input>
   <expectations>

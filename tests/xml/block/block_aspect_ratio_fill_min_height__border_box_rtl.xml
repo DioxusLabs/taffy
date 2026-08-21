@@ -1,8 +1,8 @@
 <test name="block_aspect_ratio_fill_min_height__border_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="block" direction="rtl" width="100px" height="100px">
-      <div display="block" direction="rtl" min-width="40px" aspect-ratio="2"/>
+    <div display="block" direction="rtl" position="absolute" width="100px" height="100px">
+      <div display="block" direction="rtl" position="relative" min-width="40px" aspect-ratio="2"/>
     </div>
   </input>
   <expectations>
