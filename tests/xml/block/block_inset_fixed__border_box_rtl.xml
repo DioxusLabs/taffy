@@ -2,9 +2,9 @@
   <viewport width="max-content" height="max-content"/>
   <input>
     <div display="block" direction="rtl" width="50px">
-      <div direction="rtl" height="10px" top="4px" left="2px"/>
-      <div direction="rtl" height="10px" bottom="8px" right="6px"/>
-      <div direction="rtl" height="10px" top="4px" left="2px" bottom="8px" right="6px"/>
+      <div direction="rtl" position="relative" height="10px" top="4px" left="2px"/>
+      <div direction="rtl" position="relative" height="10px" bottom="8px" right="6px"/>
+      <div direction="rtl" position="relative" height="10px" top="4px" left="2px" bottom="8px" right="6px"/>
     </div>
   </input>
   <expectations>
