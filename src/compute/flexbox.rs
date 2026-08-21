@@ -117,11 +117,20 @@ impl FlexItem {
         self.overflow.x.is_scroll_container() | self.overflow.y.is_scroll_container()
     }
 
-    /// Returns true if the item participates in baseline alignment: it has `align-self: baseline`
-    /// and neither of its cross-axis margins are `auto`.
+    /// Returns true if the item participates in first-baseline alignment: it has
+    /// `align-self: baseline` and neither of its cross-axis margins are `auto`.
     /// See <https://www.w3.org/TR/css-flexbox-1/#baseline-participation>
     fn participates_in_baseline_alignment(&self, dir: FlexDirection) -> bool {
-        self.align_self == AlignSelf::BASELINE
+        self.align_self.keyword == AlignItemsKeyword::Baseline
+            && !self.margin_is_auto.cross_start(dir)
+            && !self.margin_is_auto.cross_end(dir)
+    }
+
+    /// Returns true if the item participates in last-baseline alignment: it has
+    /// `align-self: last baseline` and neither of its cross-axis margins are `auto`.
+    /// See <https://www.w3.org/TR/css-flexbox-1/#baseline-participation>
+    fn participates_in_last_baseline_alignment(&self, dir: FlexDirection) -> bool {
+        self.align_self.keyword == AlignItemsKeyword::LastBaseline
             && !self.margin_is_auto.cross_start(dir)
             && !self.margin_is_auto.cross_end(dir)
     }
@@ -526,10 +535,20 @@ fn compute_preliminary(tree: &mut impl LayoutFlexboxContainer, node: NodeId, inp
     });
 
     // The container's last baseline is generated from the cross-end-most line (the first line for
-    // wrap-reverse containers). As no items ever participate in last-baseline alignment (which is not
-    // yet supported), it is always generated from the line's last flex item.
+    // wrap-reverse containers), preferring items which participate in last-baseline alignment and
+    // falling back to the line's last flex item.
     let last_line = if constants.is_wrap_reverse { flex_lines.first() } else { flex_lines.last() };
-    let last_vertical_baseline = last_line.and_then(|line| line.items.last().map(|child| child.last_baseline));
+    let last_vertical_baseline = last_line.and_then(|line| {
+        if constants.is_column {
+            line.items.last().map(|child| child.last_baseline)
+        } else {
+            line.items
+                .iter()
+                .find(|item| item.participates_in_last_baseline_alignment(constants.dir))
+                .or_else(|| line.items.last())
+                .map(|child| child.last_baseline)
+        }
+    });
 
     LayoutOutput::from_sizes_and_baselines(
         constants.container_size,
@@ -1838,16 +1857,23 @@ fn calculate_children_base_lines(
     }
 
     for line in flex_lines {
-        // If a flex line has one or zero items participating in baseline alignment then baseline alignment is a no-op so we skip
-        let line_baseline_child_count =
+        // If a baseline alignment group has one or zero items then baseline alignment is a no-op
+        // for those items so we skip measuring them
+        let line_first_baseline_child_count =
             line.items.iter().filter(|child| child.participates_in_baseline_alignment(constants.dir)).count();
-        if line_baseline_child_count <= 1 {
+        let line_last_baseline_child_count =
+            line.items.iter().filter(|child| child.participates_in_last_baseline_alignment(constants.dir)).count();
+        if line_first_baseline_child_count <= 1 && line_last_baseline_child_count <= 1 {
             continue;
         }
 
         for child in line.items.iter_mut() {
             // Only calculate baselines for children participating in baseline alignment
-            if !child.participates_in_baseline_alignment(constants.dir) {
+            let is_first_baseline = child.participates_in_baseline_alignment(constants.dir);
+            let is_last_baseline = child.participates_in_last_baseline_alignment(constants.dir);
+            let should_measure = (is_first_baseline && line_first_baseline_child_count > 1)
+                || (is_last_baseline && line_last_baseline_child_count > 1);
+            if !should_measure {
                 continue;
             }
 
@@ -1887,19 +1913,26 @@ fn calculate_children_base_lines(
                 },
             );
 
-            let baseline = measured_size_and_baselines.baselines.first;
             let height = measured_size_and_baselines.size.height;
 
             // Scroll containers' baselines are determined from their content as if scrolled to the
             // initial position, but are additionally clamped to their border box.
             // See https://github.com/w3c/csswg-drafts/issues/7660
-            let baseline = if child.overflow.y.is_scroll_container() {
-                baseline.unwrap_or(height).min(height).max(0.0)
-            } else {
-                baseline.unwrap_or(height)
+            let clamp_to_border_box = |baseline: f32| {
+                if child.overflow.y.is_scroll_container() {
+                    baseline.min(height).max(0.0)
+                } else {
+                    baseline
+                }
             };
 
-            child.baseline = baseline + child.margin.top;
+            if is_first_baseline {
+                let baseline = clamp_to_border_box(measured_size_and_baselines.baselines.first.unwrap_or(height));
+                child.baseline = baseline + child.margin.top;
+            } else {
+                let baseline = clamp_to_border_box(measured_size_and_baselines.baselines.last.unwrap_or(height));
+                child.last_baseline = baseline + child.margin.top;
+            }
         }
     }
 }
@@ -1939,12 +1972,20 @@ fn calculate_cross_size(flex_lines: &mut [FlexLine], node_size: Size<Option<f32>
         //       previous two steps and zero.
         for line in flex_lines.iter_mut() {
             let max_baseline: f32 = line.items.iter().map(|child| child.baseline).fold(0.0, |acc, x| acc.max(x));
+            let max_last_baseline_descent: f32 = line
+                .items
+                .iter()
+                .filter(|child| child.participates_in_last_baseline_alignment(constants.dir))
+                .map(|child| child.hypothetical_outer_size.cross(constants.dir) - child.last_baseline)
+                .fold(0.0, |acc, x| acc.max(x));
             line.cross_size = line
                 .items
                 .iter()
                 .map(|child| {
                     if child.participates_in_baseline_alignment(constants.dir) {
                         max_baseline - child.baseline + child.hypothetical_outer_size.cross(constants.dir)
+                    } else if child.participates_in_last_baseline_alignment(constants.dir) {
+                        child.last_baseline + max_last_baseline_descent
                     } else {
                         child.hypothetical_outer_size.cross(constants.dir)
                     }
@@ -2160,6 +2201,14 @@ fn resolve_cross_axis_auto_margins(flex_lines: &mut [FlexLine], constants: &Algo
             .filter(|child| child.participates_in_baseline_alignment(constants.dir))
             .map(|child| child.outer_target_size.cross(constants.dir) - child.baseline)
             .fold(0.0, |acc, x| acc.max(x));
+        let max_last_baseline: f32 =
+            line.items.iter_mut().map(|child| child.last_baseline).fold(0.0, |acc, x| acc.max(x));
+        let max_last_baseline_descent: f32 = line
+            .items
+            .iter_mut()
+            .filter(|child| child.participates_in_last_baseline_alignment(constants.dir))
+            .map(|child| child.outer_target_size.cross(constants.dir) - child.last_baseline)
+            .fold(0.0, |acc, x| acc.max(x));
 
         for child in line.items.iter_mut() {
             let free_space = line_cross_size - child.outer_target_size.cross(constants.dir);
@@ -2191,6 +2240,8 @@ fn resolve_cross_axis_auto_margins(flex_lines: &mut [FlexLine], constants: &Algo
                     free_space,
                     max_baseline,
                     max_baseline_to_bottom_distance,
+                    max_last_baseline,
+                    max_last_baseline_descent,
                     constants,
                 );
             }
@@ -2205,11 +2256,14 @@ fn resolve_cross_axis_auto_margins(flex_lines: &mut [FlexLine], constants: &Algo
 /// - [**Align all flex items along the cross-axis**](https://www.w3.org/TR/css-flexbox-1/#algo-cross-align) per `align-self`,
 ///   if neither of the item's cross-axis margins are `auto`.
 #[inline]
+#[allow(clippy::too_many_arguments)]
 fn align_flex_items_along_cross_axis(
     child: &FlexItem,
     free_space: f32,
     max_baseline: f32,
     max_baseline_to_bottom_distance: f32,
+    max_last_baseline: f32,
+    max_last_baseline_descent: f32,
     constants: &AlgoConstants,
 ) -> f32 {
     let cross_axis_should_reverse = constants.is_column && matches!(constants.layout_direction, Direction::Rtl);
@@ -2272,6 +2326,30 @@ fn align_flex_items_along_cross_axis(
                     free_space
                 } else {
                     0.0
+                }
+            }
+        }
+        AlignItemsKeyword::LastBaseline => {
+            if constants.is_row {
+                if constants.is_wrap_reverse {
+                    // In a wrap-reverse container the cross axis is flipped, so the last-baseline-aligned
+                    // group of items is aligned to the cross-end edge, which is the top of the line.
+                    max_last_baseline - child.last_baseline
+                } else {
+                    let line_cross_size = free_space + child.outer_target_size.cross(constants.dir);
+                    line_cross_size - max_last_baseline_descent - child.last_baseline
+                }
+            } else {
+                // Until we support vertical writing modes, baselines cannot be determined in
+                // columns, so items synthesize their baselines from their border boxes: their
+                // left edges are aligned, with the group anchored to the cross-end edge of the
+                // line (the fallback alignment for last-baseline groups).
+                let baseline_column_should_reverse = cross_axis_should_reverse && !constants.is_wrap;
+                let child_cross_size = child.outer_target_size.cross(constants.dir);
+                if constants.is_wrap_reverse ^ baseline_column_should_reverse {
+                    0.0
+                } else {
+                    free_space + child_cross_size - max_last_baseline_descent
                 }
             }
         }
@@ -2929,14 +3007,20 @@ fn perform_absolute_layout_on_absolute_children(
             // `flex-start`/`flex-end` and the `stretch` fallback are flex-relative.
             let start_position = match cross_keyword {
                 AlignItemsKeyword::Start | AlignItemsKeyword::Baseline => !cross_is_rtl,
-                AlignItemsKeyword::End => cross_is_rtl,
+                AlignItemsKeyword::End | AlignItemsKeyword::LastBaseline => cross_is_rtl,
                 _ => true,
             };
             match (cross_keyword, cross_axis_flex_start_reversed) {
                 // Stretch alignment does not apply to absolutely positioned items
                 // See "Example 3" at https://www.w3.org/TR/css-flexbox-1/#abspos-items
                 // Note: Stretch should be FlexStart not Start when we support both
-                (AlignItemsKeyword::Start | AlignItemsKeyword::End | AlignItemsKeyword::Baseline, _) => {
+                (
+                    AlignItemsKeyword::Start
+                    | AlignItemsKeyword::End
+                    | AlignItemsKeyword::Baseline
+                    | AlignItemsKeyword::LastBaseline,
+                    _,
+                ) => {
                     if start_position {
                         constants.content_box_inset.cross_start(constants.dir)
                             + resolved_margin.cross_start(constants.dir)

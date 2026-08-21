@@ -2,7 +2,7 @@
 //! <https://www.w3.org/TR/css-grid-1/#layout-algorithm>
 use super::types::{GridItem, GridTrack, TrackCounts};
 use crate::geometry::{AbstractAxis, Line, Size};
-use crate::style::{AlignContent, AlignContentKeyword, AvailableSpace};
+use crate::style::{AlignContent, AlignContentKeyword, AlignItemsKeyword, AvailableSpace};
 use crate::style_helpers::TaffyMinContent;
 use crate::tree::{LayoutPartialTree, LayoutPartialTreeExt, SizingMode};
 use crate::util::sys::{f32_max, f32_min, Vec};
@@ -490,17 +490,27 @@ fn resolve_item_baselines(
             row_items
         };
 
-        // Count how many items in *this row* are baseline aligned
-        // If a row has one or zero items participating in baseline alignment then baseline alignment is a no-op
-        // for those items and we skip further computations for that row
-        let row_baseline_item_count = row_items.iter().filter(|item| item.participates_in_baseline_alignment()).count();
-        if row_baseline_item_count <= 1 {
+        // Count how many items in *this row* participate in each baseline alignment group
+        // (items with an auto block-axis margin do not participate).
+        // If a group has one or zero items then baseline alignment is a no-op for those items
+        // and we skip further computations for that group
+        let row_first_baseline_item_count =
+            row_items.iter().filter(|item| item.participates_in_baseline_group(AlignItemsKeyword::Baseline)).count();
+        let row_last_baseline_item_count = row_items
+            .iter()
+            .filter(|item| item.participates_in_baseline_group(AlignItemsKeyword::LastBaseline))
+            .count();
+        if row_first_baseline_item_count <= 1 && row_last_baseline_item_count <= 1 {
             continue;
         }
 
         // Compute the baselines of all items in the row participating in baseline alignment
         for item in row_items.iter_mut() {
-            if !item.participates_in_baseline_alignment() {
+            let is_first_baseline = item.participates_in_baseline_group(AlignItemsKeyword::Baseline);
+            let is_last_baseline = item.participates_in_baseline_group(AlignItemsKeyword::LastBaseline);
+            let should_measure = (is_first_baseline && row_first_baseline_item_count > 1)
+                || (is_last_baseline && row_last_baseline_item_count > 1);
+            if !should_measure {
                 continue;
             }
 
@@ -513,35 +523,63 @@ fn resolve_item_baselines(
                 Line::FALSE,
             );
 
-            let baseline = measured_size_and_baselines.baselines.first;
             let height = measured_size_and_baselines.size.height;
 
             // Scroll containers' baselines are determined from their content as if scrolled to the
             // initial position, but are additionally clamped to their border box.
             // See https://github.com/w3c/csswg-drafts/issues/7660
-            let baseline = if item.overflow.y.is_scroll_container() {
-                baseline.unwrap_or(height).min(height).max(0.0)
-            } else {
-                baseline.unwrap_or(height)
+            let clamp_to_border_box = |baseline: f32| {
+                if item.overflow.y.is_scroll_container() {
+                    baseline.min(height).max(0.0)
+                } else {
+                    baseline
+                }
             };
 
-            item.baseline = Some(
-                baseline + item.margin.top.resolve_or_zero(inner_node_size.width, |val, basis| tree.calc(val, basis)),
-            );
+            if is_first_baseline {
+                let baseline = clamp_to_border_box(measured_size_and_baselines.baselines.first.unwrap_or(height));
+                item.baseline = Some(
+                    baseline
+                        + item.margin.top.resolve_or_zero(inner_node_size.width, |val, basis| tree.calc(val, basis)),
+                );
+            } else {
+                let baseline = clamp_to_border_box(measured_size_and_baselines.baselines.last.unwrap_or(height));
+                // Store the item's last-baseline *descent*: the distance from its last baseline
+                // to the bottom of its margin box
+                item.last_baseline = Some(
+                    (height - baseline)
+                        + item.margin.bottom.resolve_or_zero(inner_node_size.width, |val, basis| tree.calc(val, basis)),
+                );
+            }
         }
 
-        // Compute the max baseline of all items in the row participating in baseline alignment
-        let row_max_baseline = row_items
-            .iter()
-            .filter(|item| item.participates_in_baseline_alignment())
-            .map(|item| item.baseline.unwrap_or(0.0))
-            .max_by(|a, b| a.total_cmp(b))
-            .unwrap();
+        // Compute the max first-baseline ascent and shim each item in the first-baseline group
+        if row_first_baseline_item_count > 1 {
+            let row_max_baseline = row_items
+                .iter()
+                .filter(|item| item.participates_in_baseline_group(AlignItemsKeyword::Baseline))
+                .map(|item| item.baseline.unwrap_or(0.0))
+                .max_by(|a, b| a.total_cmp(b))
+                .unwrap();
+            for item in
+                row_items.iter_mut().filter(|item| item.participates_in_baseline_group(AlignItemsKeyword::Baseline))
+            {
+                item.baseline_shims.start = row_max_baseline - item.baseline.unwrap_or(0.0);
+            }
+        }
 
-        // Compute the baseline shim for each item in the row participating in baseline alignment
-        for item in row_items.iter_mut() {
-            if item.participates_in_baseline_alignment() {
-                item.baseline_shim = row_max_baseline - item.baseline.unwrap_or(0.0);
+        // Compute the max last-baseline descent and shim each item in the last-baseline group
+        if row_last_baseline_item_count > 1 {
+            let row_max_descent = row_items
+                .iter()
+                .filter(|item| item.participates_in_baseline_group(AlignItemsKeyword::LastBaseline))
+                .map(|item| item.last_baseline.unwrap_or(0.0))
+                .max_by(|a, b| a.total_cmp(b))
+                .unwrap();
+            for item in
+                row_items.iter_mut().filter(|item| item.participates_in_baseline_group(AlignItemsKeyword::LastBaseline))
+            {
+                item.baseline_shims.end = row_max_descent - item.last_baseline.unwrap_or(0.0);
             }
         }
     }
