@@ -1,18 +1,18 @@
 <test name="gridflex_row_integration__content_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div box-sizing="content-box" direction="rtl">
-      <div display="grid" box-sizing="content-box" direction="rtl" grid-template-rows="1fr 1fr" grid-template-columns="1fr 1fr">
-        <text box-sizing="content-box" direction="rtl">
+    <div box-sizing="content-box" direction="rtl" position="absolute">
+      <div display="grid" box-sizing="content-box" direction="rtl" position="relative" grid-template-rows="1fr 1fr" grid-template-columns="1fr 1fr">
+        <text box-sizing="content-box" direction="rtl" position="relative">
           HH
         </text>
-        <text box-sizing="content-box" direction="rtl">
+        <text box-sizing="content-box" direction="rtl" position="relative">
           HH
         </text>
-        <text box-sizing="content-box" direction="rtl">
+        <text box-sizing="content-box" direction="rtl" position="relative">
           HH
         </text>
-        <text box-sizing="content-box" direction="rtl">
+        <text box-sizing="content-box" direction="rtl" position="relative">
           HH
         </text>
       </div>

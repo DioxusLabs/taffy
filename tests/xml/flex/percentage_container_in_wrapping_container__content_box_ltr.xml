@@ -1,11 +1,11 @@
 <test name="percentage_container_in_wrapping_container__content_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div box-sizing="content-box" direction="ltr" flex-direction="column" align-items="center" justify-content="center" width="200px" height="200px">
-      <div box-sizing="content-box" direction="ltr" flex-direction="column">
-        <div box-sizing="content-box" direction="ltr" justify-content="center" width="100%">
-          <div box-sizing="content-box" direction="ltr" width="50px" height="50px"/>
-          <div box-sizing="content-box" direction="ltr" width="50px" height="50px"/>
+    <div box-sizing="content-box" direction="ltr" position="absolute" flex-direction="column" align-items="center" justify-content="center" width="200px" height="200px">
+      <div box-sizing="content-box" direction="ltr" position="relative" flex-direction="column">
+        <div box-sizing="content-box" direction="ltr" position="relative" justify-content="center" width="100%">
+          <div box-sizing="content-box" direction="ltr" position="relative" width="50px" height="50px"/>
+          <div box-sizing="content-box" direction="ltr" position="relative" width="50px" height="50px"/>
         </div>
       </div>
     </div>

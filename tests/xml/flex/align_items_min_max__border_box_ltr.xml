@@ -1,8 +1,8 @@
 <test name="align_items_min_max__border_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div direction="ltr" flex-direction="column" align-items="center" height="100px" min-width="100px" max-width="200px">
-      <div direction="ltr" width="60px" height="60px"/>
+    <div direction="ltr" position="absolute" flex-direction="column" align-items="center" height="100px" min-width="100px" max-width="200px">
+      <div direction="ltr" position="relative" width="60px" height="60px"/>
     </div>
   </input>
   <expectations>

@@ -1,7 +1,7 @@
 <test name="absolute_layout_in_wrap_reverse_row_container_flex_end__border_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div direction="ltr" flex-wrap="wrap-reverse" width="100px" height="100px">
+    <div direction="ltr" position="absolute" flex-wrap="wrap-reverse" width="100px" height="100px">
       <div direction="ltr" position="absolute" align-self="flex-end" width="20px" height="20px"/>
     </div>
   </input>

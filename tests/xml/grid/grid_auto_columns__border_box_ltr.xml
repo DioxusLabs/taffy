@@ -1,15 +1,15 @@
 <test name="grid_auto_columns__border_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="grid" direction="ltr" grid-auto-flow="column" grid-template-rows="100px" grid-template-columns="40px" grid-auto-columns="10px 20px 30px">
-      <div direction="ltr" grid-column-start="-3"/>
-      <div direction="ltr"/>
-      <div direction="ltr"/>
-      <div direction="ltr"/>
-      <div direction="ltr"/>
-      <div direction="ltr"/>
-      <div direction="ltr"/>
-      <div direction="ltr"/>
+    <div display="grid" direction="ltr" position="absolute" grid-auto-flow="column" grid-template-rows="100px" grid-template-columns="40px" grid-auto-columns="10px 20px 30px">
+      <div direction="ltr" position="relative" grid-column-start="-3"/>
+      <div direction="ltr" position="relative"/>
+      <div direction="ltr" position="relative"/>
+      <div direction="ltr" position="relative"/>
+      <div direction="ltr" position="relative"/>
+      <div direction="ltr" position="relative"/>
+      <div direction="ltr" position="relative"/>
+      <div direction="ltr" position="relative"/>
     </div>
   </input>
   <expectations>

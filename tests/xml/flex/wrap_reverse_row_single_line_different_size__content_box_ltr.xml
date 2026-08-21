@@ -1,12 +1,12 @@
 <test name="wrap_reverse_row_single_line_different_size__content_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div box-sizing="content-box" direction="ltr" flex-wrap="wrap-reverse" align-content="flex-start" width="300px">
-      <div box-sizing="content-box" direction="ltr" width="30px" height="10px"/>
-      <div box-sizing="content-box" direction="ltr" width="30px" height="20px"/>
-      <div box-sizing="content-box" direction="ltr" width="30px" height="30px"/>
-      <div box-sizing="content-box" direction="ltr" width="30px" height="40px"/>
-      <div box-sizing="content-box" direction="ltr" width="30px" height="50px"/>
+    <div box-sizing="content-box" direction="ltr" position="absolute" flex-wrap="wrap-reverse" align-content="flex-start" width="300px">
+      <div box-sizing="content-box" direction="ltr" position="relative" width="30px" height="10px"/>
+      <div box-sizing="content-box" direction="ltr" position="relative" width="30px" height="20px"/>
+      <div box-sizing="content-box" direction="ltr" position="relative" width="30px" height="30px"/>
+      <div box-sizing="content-box" direction="ltr" position="relative" width="30px" height="40px"/>
+      <div box-sizing="content-box" direction="ltr" position="relative" width="30px" height="50px"/>
     </div>
   </input>
   <expectations>

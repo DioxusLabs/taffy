@@ -1,28 +1,28 @@
 <test name="android_news_feed__content_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div box-sizing="content-box" direction="ltr" flex-direction="column" align-content="stretch" flex-shrink="0" width="1080px">
-      <div box-sizing="content-box" direction="ltr" flex-direction="column" flex-shrink="0">
-        <div box-sizing="content-box" direction="ltr" flex-direction="column" align-content="stretch">
-          <div box-sizing="content-box" direction="ltr" flex-direction="column" align-content="stretch">
-            <div box-sizing="content-box" direction="ltr" align-items="flex-start" align-content="stretch" margin-top="24px" margin-left="36px">
-              <div box-sizing="content-box" direction="ltr" align-content="stretch" flex-shrink="0">
-                <div box-sizing="content-box" direction="ltr" align-content="stretch" flex-shrink="0" width="120px" height="120px"/>
+    <div box-sizing="content-box" direction="ltr" position="absolute" flex-direction="column" align-content="stretch" flex-shrink="0" width="1080px">
+      <div box-sizing="content-box" direction="ltr" position="relative" flex-direction="column" flex-shrink="0">
+        <div box-sizing="content-box" direction="ltr" position="relative" flex-direction="column" align-content="stretch">
+          <div box-sizing="content-box" direction="ltr" position="relative" flex-direction="column" align-content="stretch">
+            <div box-sizing="content-box" direction="ltr" position="relative" align-items="flex-start" align-content="stretch" margin-top="24px" margin-left="36px">
+              <div box-sizing="content-box" direction="ltr" position="relative" align-content="stretch" flex-shrink="0">
+                <div box-sizing="content-box" direction="ltr" position="relative" align-content="stretch" flex-shrink="0" width="120px" height="120px"/>
               </div>
-              <div box-sizing="content-box" direction="ltr" flex-direction="column" align-content="stretch" margin-right="36px" padding-top="21px" padding-left="36px" padding-bottom="18px" padding-right="36px">
-                <div box-sizing="content-box" direction="ltr" align-content="stretch"/>
-                <div box-sizing="content-box" direction="ltr" align-content="stretch"/>
+              <div box-sizing="content-box" direction="ltr" position="relative" flex-direction="column" align-content="stretch" margin-right="36px" padding-top="21px" padding-left="36px" padding-bottom="18px" padding-right="36px">
+                <div box-sizing="content-box" direction="ltr" position="relative" align-content="stretch"/>
+                <div box-sizing="content-box" direction="ltr" position="relative" align-content="stretch"/>
               </div>
             </div>
           </div>
-          <div box-sizing="content-box" direction="ltr" flex-direction="column" align-content="stretch">
-            <div box-sizing="content-box" direction="ltr" align-items="flex-start" align-content="stretch" margin-top="24px" margin-left="174px">
-              <div box-sizing="content-box" direction="ltr" align-content="stretch" flex-shrink="0">
-                <div box-sizing="content-box" direction="ltr" align-content="stretch" flex-shrink="0" width="72px" height="72px"/>
+          <div box-sizing="content-box" direction="ltr" position="relative" flex-direction="column" align-content="stretch">
+            <div box-sizing="content-box" direction="ltr" position="relative" align-items="flex-start" align-content="stretch" margin-top="24px" margin-left="174px">
+              <div box-sizing="content-box" direction="ltr" position="relative" align-content="stretch" flex-shrink="0">
+                <div box-sizing="content-box" direction="ltr" position="relative" align-content="stretch" flex-shrink="0" width="72px" height="72px"/>
               </div>
-              <div box-sizing="content-box" direction="ltr" flex-direction="column" align-content="stretch" margin-right="36px" padding-top="21px" padding-left="36px" padding-bottom="18px" padding-right="36px">
-                <div box-sizing="content-box" direction="ltr" align-content="stretch"/>
-                <div box-sizing="content-box" direction="ltr" align-content="stretch"/>
+              <div box-sizing="content-box" direction="ltr" position="relative" flex-direction="column" align-content="stretch" margin-right="36px" padding-top="21px" padding-left="36px" padding-bottom="18px" padding-right="36px">
+                <div box-sizing="content-box" direction="ltr" position="relative" align-content="stretch"/>
+                <div box-sizing="content-box" direction="ltr" position="relative" align-content="stretch"/>
               </div>
             </div>
           </div>

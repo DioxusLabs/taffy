@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    The static position of an absolutely positioned child of a flex container that is *not* its
+    containing block is resolved as if it were the sole flex item in the container's content box
+    (inset by border and padding), for start, center and end alignment
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="flex-direction: column; width: 100px; height: 300px;">
+  <div style="position: static; width: 100px; height: 100px; border: 5px solid black; padding: 10px; justify-content: start;">
+    <div style="position: absolute; width: 30px; height: 30px; align-self: start;"></div>
+  </div>
+  <div style="position: static; width: 100px; height: 100px; border: 5px solid black; padding: 10px; justify-content: center;">
+    <div style="position: absolute; width: 30px; height: 30px; align-self: center;"></div>
+  </div>
+  <div style="position: static; width: 100px; height: 100px; border: 5px solid black; padding: 10px; justify-content: end;">
+    <div style="position: absolute; width: 30px; height: 30px; align-self: end;"></div>
+  </div>
+</div>
+
+</body>
+</html>

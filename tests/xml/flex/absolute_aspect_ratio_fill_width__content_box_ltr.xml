@@ -1,7 +1,7 @@
 <test name="absolute_aspect_ratio_fill_width__content_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="flex" box-sizing="content-box" direction="ltr" width="400px" height="300px">
+    <div display="flex" box-sizing="content-box" direction="ltr" position="absolute" width="400px" height="300px">
       <div box-sizing="content-box" direction="ltr" position="absolute" height="20%" aspect-ratio="3" top="5%" left="5%"/>
     </div>
   </input>

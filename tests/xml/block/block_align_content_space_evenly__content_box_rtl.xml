@@ -1,10 +1,10 @@
 <test name="block_align_content_space_evenly__content_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="block" box-sizing="content-box" direction="rtl" align-content="space-evenly" width="100px" height="120px">
-      <div box-sizing="content-box" direction="rtl" width="50px" height="20px"/>
-      <div box-sizing="content-box" direction="rtl" width="50px" height="20px"/>
-      <div box-sizing="content-box" direction="rtl" width="50px" height="20px"/>
+    <div display="block" box-sizing="content-box" direction="rtl" position="absolute" align-content="space-evenly" width="100px" height="120px">
+      <div box-sizing="content-box" direction="rtl" position="relative" width="50px" height="20px"/>
+      <div box-sizing="content-box" direction="rtl" position="relative" width="50px" height="20px"/>
+      <div box-sizing="content-box" direction="rtl" position="relative" width="50px" height="20px"/>
     </div>
   </input>
   <expectations>

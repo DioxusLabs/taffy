@@ -1,10 +1,10 @@
 <test name="flex_grow_within_constrained_max_row__border_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div direction="rtl" flex-direction="column" width="200px">
-      <div direction="rtl" height="100px" max-width="100px">
-        <div direction="rtl" flex-basis="100px"/>
-        <div direction="rtl" width="50px"/>
+    <div direction="rtl" position="absolute" flex-direction="column" width="200px">
+      <div direction="rtl" position="relative" height="100px" max-width="100px">
+        <div direction="rtl" position="relative" flex-basis="100px"/>
+        <div direction="rtl" position="relative" width="50px"/>
       </div>
     </div>
   </input>

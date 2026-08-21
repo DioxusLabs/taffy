@@ -2,7 +2,7 @@
   <viewport width="max-content" height="max-content"/>
   <input>
     <div display="block" direction="rtl" position="relative" align-content="end" width="100px" height="120px">
-      <div direction="rtl" width="50px" height="20px"/>
+      <div direction="rtl" position="relative" width="50px" height="20px"/>
       <div direction="rtl" position="absolute" width="30px" height="30px" top="5px" left="10px"/>
     </div>
   </input>

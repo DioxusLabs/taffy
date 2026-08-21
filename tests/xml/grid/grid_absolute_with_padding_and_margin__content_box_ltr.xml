@@ -1,16 +1,16 @@
 <test name="grid_absolute_with_padding_and_margin__content_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="grid" box-sizing="content-box" direction="ltr" padding-top="10px" padding-left="40px" padding-bottom="30px" padding-right="20px" grid-template-rows="40px 40px 40px" grid-template-columns="40px 40px 40px">
+    <div display="grid" box-sizing="content-box" direction="ltr" position="absolute" padding-top="10px" padding-left="40px" padding-bottom="30px" padding-right="20px" grid-template-rows="40px 40px 40px" grid-template-columns="40px 40px 40px">
       <div box-sizing="content-box" direction="ltr" position="absolute" margin-top="1px" margin-left="4px" margin-bottom="3px" margin-right="2px" top="0px" right="0px"/>
       <div box-sizing="content-box" direction="ltr" position="absolute" margin-top="1px" margin-left="4px" margin-bottom="3px" margin-right="2px" left="10px" bottom="10px"/>
-      <div box-sizing="content-box" direction="ltr"/>
-      <div box-sizing="content-box" direction="ltr"/>
-      <div box-sizing="content-box" direction="ltr"/>
-      <div box-sizing="content-box" direction="ltr"/>
-      <div box-sizing="content-box" direction="ltr"/>
-      <div box-sizing="content-box" direction="ltr"/>
-      <div box-sizing="content-box" direction="ltr"/>
+      <div box-sizing="content-box" direction="ltr" position="relative"/>
+      <div box-sizing="content-box" direction="ltr" position="relative"/>
+      <div box-sizing="content-box" direction="ltr" position="relative"/>
+      <div box-sizing="content-box" direction="ltr" position="relative"/>
+      <div box-sizing="content-box" direction="ltr" position="relative"/>
+      <div box-sizing="content-box" direction="ltr" position="relative"/>
+      <div box-sizing="content-box" direction="ltr" position="relative"/>
     </div>
   </input>
   <expectations>

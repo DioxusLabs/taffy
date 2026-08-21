@@ -1,9 +1,9 @@
 <test name="percentage_padding_should_calculate_based_only_on_width__border_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div direction="rtl" flex-direction="column" width="200px" height="100px">
-      <div direction="rtl" flex-direction="column" flex-grow="1" padding-top="10%" padding-left="10%" padding-bottom="10%" padding-right="10%">
-        <div direction="rtl" width="10px" height="10px"/>
+    <div direction="rtl" position="absolute" flex-direction="column" width="200px" height="100px">
+      <div direction="rtl" position="relative" flex-direction="column" flex-grow="1" padding-top="10%" padding-left="10%" padding-bottom="10%" padding-right="10%">
+        <div direction="rtl" position="relative" width="10px" height="10px"/>
       </div>
     </div>
   </input>

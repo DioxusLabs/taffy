@@ -1,10 +1,10 @@
 <test name="block_align_baseline_child_margin_percent__content_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div box-sizing="content-box" direction="ltr" align-items="baseline" width="100px" height="100px">
-      <div display="block" box-sizing="content-box" direction="ltr" width="50px" height="50px" margin-top="5%" margin-left="5%" margin-bottom="5%" margin-right="5%"/>
-      <div display="block" box-sizing="content-box" direction="ltr" width="50px" height="20px">
-        <div display="block" box-sizing="content-box" direction="ltr" width="50px" height="10px" margin-top="1%" margin-left="1%" margin-bottom="1%" margin-right="1%"/>
+    <div box-sizing="content-box" direction="ltr" position="absolute" align-items="baseline" width="100px" height="100px">
+      <div display="block" box-sizing="content-box" direction="ltr" position="relative" width="50px" height="50px" margin-top="5%" margin-left="5%" margin-bottom="5%" margin-right="5%"/>
+      <div display="block" box-sizing="content-box" direction="ltr" position="relative" width="50px" height="20px">
+        <div display="block" box-sizing="content-box" direction="ltr" position="relative" width="50px" height="10px" margin-top="1%" margin-left="1%" margin-bottom="1%" margin-right="1%"/>
       </div>
     </div>
   </input>

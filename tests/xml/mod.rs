@@ -6650,6 +6650,26 @@ mod flex {
     }
 
     #[test]
+    fn absolute_layout_static_container_static_position_content_box__border_box_ltr() {
+        crate::run_xml_test("flex", "absolute_layout_static_container_static_position_content_box__border_box_ltr");
+    }
+
+    #[test]
+    fn absolute_layout_static_container_static_position_content_box__content_box_ltr() {
+        crate::run_xml_test("flex", "absolute_layout_static_container_static_position_content_box__content_box_ltr");
+    }
+
+    #[test]
+    fn absolute_layout_static_container_static_position_content_box__border_box_rtl() {
+        crate::run_xml_test("flex", "absolute_layout_static_container_static_position_content_box__border_box_rtl");
+    }
+
+    #[test]
+    fn absolute_layout_static_container_static_position_content_box__content_box_rtl() {
+        crate::run_xml_test("flex", "absolute_layout_static_container_static_position_content_box__content_box_rtl");
+    }
+
+    #[test]
     fn absolute_layout_width_height_end_bottom__border_box_ltr() {
         crate::run_xml_test("flex", "absolute_layout_width_height_end_bottom__border_box_ltr");
     }
@@ -20657,6 +20677,30 @@ mod grid {
     #[test]
     fn grid_absolute_row_start__content_box_rtl() {
         crate::run_xml_test("grid", "grid_absolute_row_start__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_absolute_static_container_static_position_content_box__border_box_ltr() {
+        crate::run_xml_test("grid", "grid_absolute_static_container_static_position_content_box__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_absolute_static_container_static_position_content_box__content_box_ltr() {
+        crate::run_xml_test("grid", "grid_absolute_static_container_static_position_content_box__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_absolute_static_container_static_position_content_box__border_box_rtl() {
+        crate::run_xml_test("grid", "grid_absolute_static_container_static_position_content_box__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_absolute_static_container_static_position_content_box__content_box_rtl() {
+        crate::run_xml_test("grid", "grid_absolute_static_container_static_position_content_box__content_box_rtl");
     }
 
     #[cfg(feature = "grid")]

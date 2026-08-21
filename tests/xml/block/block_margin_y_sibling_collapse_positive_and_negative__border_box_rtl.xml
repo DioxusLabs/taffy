@@ -1,14 +1,14 @@
 <test name="block_margin_y_sibling_collapse_positive_and_negative__border_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="block" direction="rtl" width="50px">
-      <div direction="rtl" height="10px" margin-top="10px" margin-bottom="10px"/>
-      <div direction="rtl" height="10px" margin-top="-10px" margin-bottom="10px"/>
-      <div direction="rtl" height="10px" margin-top="-5px" margin-bottom="5px"/>
-      <div direction="rtl" height="10px" margin-top="-10px" margin-bottom="-10px"/>
-      <div direction="rtl" height="10px" margin-top="10px" margin-bottom="-10px"/>
-      <div direction="rtl" height="10px" margin-top="5px" margin-bottom="-5px"/>
-      <div direction="rtl" height="10px" margin-top="10px" margin-bottom="10px"/>
+    <div display="block" direction="rtl" position="absolute" width="50px">
+      <div direction="rtl" position="relative" height="10px" margin-top="10px" margin-bottom="10px"/>
+      <div direction="rtl" position="relative" height="10px" margin-top="-10px" margin-bottom="10px"/>
+      <div direction="rtl" position="relative" height="10px" margin-top="-5px" margin-bottom="5px"/>
+      <div direction="rtl" position="relative" height="10px" margin-top="-10px" margin-bottom="-10px"/>
+      <div direction="rtl" position="relative" height="10px" margin-top="10px" margin-bottom="-10px"/>
+      <div direction="rtl" position="relative" height="10px" margin-top="5px" margin-bottom="-5px"/>
+      <div direction="rtl" position="relative" height="10px" margin-top="10px" margin-bottom="10px"/>
     </div>
   </input>
   <expectations>

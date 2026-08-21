@@ -1,7 +1,7 @@
 <test name="block_absolute_margin_auto_left_without_inset__border_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="block" direction="ltr" width="200px" height="200px">
+    <div display="block" direction="ltr" position="absolute" width="200px" height="200px">
       <div direction="ltr" position="absolute" width="50px" height="50px" margin-left="auto"/>
     </div>
   </input>

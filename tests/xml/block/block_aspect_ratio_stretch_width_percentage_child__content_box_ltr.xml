@@ -1,9 +1,9 @@
 <test name="block_aspect_ratio_stretch_width_percentage_child__content_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="block" box-sizing="content-box" direction="ltr" width="100px" height="200px">
-      <div display="block" box-sizing="content-box" direction="ltr" aspect-ratio="2">
-        <div display="block" box-sizing="content-box" direction="ltr" height="100%"/>
+    <div display="block" box-sizing="content-box" direction="ltr" position="absolute" width="100px" height="200px">
+      <div display="block" box-sizing="content-box" direction="ltr" position="relative" aspect-ratio="2">
+        <div display="block" box-sizing="content-box" direction="ltr" position="relative" height="100%"/>
       </div>
     </div>
   </input>

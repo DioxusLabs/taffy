@@ -1,28 +1,28 @@
 <test name="android_news_feed__border_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div direction="rtl" flex-direction="column" align-content="stretch" flex-shrink="0" width="1080px">
-      <div direction="rtl" flex-direction="column" flex-shrink="0">
-        <div direction="rtl" flex-direction="column" align-content="stretch">
-          <div direction="rtl" flex-direction="column" align-content="stretch">
-            <div direction="rtl" align-items="flex-start" align-content="stretch" margin-top="24px" margin-left="36px">
-              <div direction="rtl" align-content="stretch" flex-shrink="0">
-                <div direction="rtl" align-content="stretch" flex-shrink="0" width="120px" height="120px"/>
+    <div direction="rtl" position="absolute" flex-direction="column" align-content="stretch" flex-shrink="0" width="1080px">
+      <div direction="rtl" position="relative" flex-direction="column" flex-shrink="0">
+        <div direction="rtl" position="relative" flex-direction="column" align-content="stretch">
+          <div direction="rtl" position="relative" flex-direction="column" align-content="stretch">
+            <div direction="rtl" position="relative" align-items="flex-start" align-content="stretch" margin-top="24px" margin-left="36px">
+              <div direction="rtl" position="relative" align-content="stretch" flex-shrink="0">
+                <div direction="rtl" position="relative" align-content="stretch" flex-shrink="0" width="120px" height="120px"/>
               </div>
-              <div direction="rtl" flex-direction="column" align-content="stretch" margin-right="36px" padding-top="21px" padding-left="36px" padding-bottom="18px" padding-right="36px">
-                <div direction="rtl" align-content="stretch"/>
-                <div direction="rtl" align-content="stretch"/>
+              <div direction="rtl" position="relative" flex-direction="column" align-content="stretch" margin-right="36px" padding-top="21px" padding-left="36px" padding-bottom="18px" padding-right="36px">
+                <div direction="rtl" position="relative" align-content="stretch"/>
+                <div direction="rtl" position="relative" align-content="stretch"/>
               </div>
             </div>
           </div>
-          <div direction="rtl" flex-direction="column" align-content="stretch">
-            <div direction="rtl" align-items="flex-start" align-content="stretch" margin-top="24px" margin-left="174px">
-              <div direction="rtl" align-content="stretch" flex-shrink="0">
-                <div direction="rtl" align-content="stretch" flex-shrink="0" width="72px" height="72px"/>
+          <div direction="rtl" position="relative" flex-direction="column" align-content="stretch">
+            <div direction="rtl" position="relative" align-items="flex-start" align-content="stretch" margin-top="24px" margin-left="174px">
+              <div direction="rtl" position="relative" align-content="stretch" flex-shrink="0">
+                <div direction="rtl" position="relative" align-content="stretch" flex-shrink="0" width="72px" height="72px"/>
               </div>
-              <div direction="rtl" flex-direction="column" align-content="stretch" margin-right="36px" padding-top="21px" padding-left="36px" padding-bottom="18px" padding-right="36px">
-                <div direction="rtl" align-content="stretch"/>
-                <div direction="rtl" align-content="stretch"/>
+              <div direction="rtl" position="relative" flex-direction="column" align-content="stretch" margin-right="36px" padding-top="21px" padding-left="36px" padding-bottom="18px" padding-right="36px">
+                <div direction="rtl" position="relative" align-content="stretch"/>
+                <div direction="rtl" position="relative" align-content="stretch"/>
               </div>
             </div>
           </div>
