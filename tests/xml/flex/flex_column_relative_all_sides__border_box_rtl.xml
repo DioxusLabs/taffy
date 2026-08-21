@@ -2,7 +2,7 @@
   <viewport width="max-content" height="max-content"/>
   <input>
     <div direction="rtl" flex-direction="column" width="100px" height="100px">
-      <div direction="rtl" width="40px" top="10px" left="10px" bottom="10px" right="10px"/>
+      <div direction="rtl" position="relative" width="40px" top="10px" left="10px" bottom="10px" right="10px"/>
     </div>
   </input>
   <expectations>

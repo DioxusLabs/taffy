@@ -1,7 +1,7 @@
 <test name="block_absolute_width_stretch_inset_margin__border_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="block" direction="rtl" width="120px" height="120px">
+    <div display="block" direction="rtl" position="relative" width="120px" height="120px">
       <text direction="rtl" position="absolute" width="stretch" margin-right="5px" top="0px" left="10px">
         HH​HH
       </text>
