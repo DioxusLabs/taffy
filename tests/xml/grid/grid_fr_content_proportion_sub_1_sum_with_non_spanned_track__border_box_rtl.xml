@@ -1,0 +1,25 @@
+<test name="grid_fr_content_proportion_sub_1_sum_with_non_spanned_track__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="flex" direction="rtl" align-items="start" width="150px" height="100px">
+      <div display="grid" direction="rtl" grid-template-rows="40px 40px" grid-template-columns="0.2fr 0.3fr 0.5fr">
+        <div direction="rtl" width="60px" grid-column-start="span 2"/>
+        <div direction="rtl"/>
+        <div direction="rtl"/>
+        <div direction="rtl"/>
+        <div direction="rtl"/>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="150" height="100">
+      <node x="72" y="0" width="78" height="80">
+        <node x="18" y="0" width="60" height="40"/>
+        <node x="9" y="0" width="9" height="40"/>
+        <node x="54" y="40" width="24" height="40"/>
+        <node x="18" y="40" width="36" height="40"/>
+        <node x="9" y="40" width="9" height="40"/>
+      </node>
+    </node>
+  </expectations>
+</test>

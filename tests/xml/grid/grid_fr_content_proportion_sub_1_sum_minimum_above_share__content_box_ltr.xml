@@ -1,0 +1,17 @@
+<test name="grid_fr_content_proportion_sub_1_sum_minimum_above_share__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" box-sizing="content-box" direction="ltr" grid-template-rows="0.5fr" grid-template-columns="20px">
+      <div box-sizing="content-box" direction="ltr" min-height="80px">
+        <div box-sizing="content-box" direction="ltr" width="20px" height="100px"/>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="20" height="80">
+      <node x="0" y="0" width="20" height="80">
+        <node x="0" y="0" width="20" height="100"/>
+      </node>
+    </node>
+  </expectations>
+</test>

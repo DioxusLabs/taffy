@@ -729,7 +729,29 @@ fn resolve_intrinsic_track_sizes<Tree: LayoutPartialTree>(
                     let limit = item.spanned_track_limit(axis, axis_tracks, axis_inner_node_size, &|val, basis| {
                         item_sizer.calc(val, basis)
                     });
-                    axis_min_content_size.maybe_min(limit).max(axis_minimum_size)
+                    let limited_min_content = axis_min_content_size.maybe_min(limit).max(axis_minimum_size);
+
+                    // For items crossing flexible tracks, browsers hand the content-derived contribution to
+                    // the flexible tracks only in proportion to the crossed flex factor sum, clamped at one
+                    // (CSS Grid 2, 12.5: "if the sum is less than one, distribute that proportion of
+                    // space"). The proportion applies to the space left after covering the spanned
+                    // inflexible tracks, and the item's minimum contribution acts as a floor on the result:
+                    // a definite size still spreads over `0fr` tracks in full. This is what lets a `0fr`
+                    // track holding a `min-height: 0` item collapse to zero, which the
+                    // `grid-template-rows: 0fr` to `1fr` collapse animation pattern relies on.
+                    if is_flex {
+                        let spanned_tracks = &axis_tracks[item.track_range_excluding_lines(axis)];
+                        let inflexible_sizes: f32 = spanned_tracks
+                            .iter()
+                            .filter(|track| !track.is_flexible())
+                            .map(|track| track.base_size)
+                            .sum();
+                        let scale = f32_min(crossed_flex_factor_sum(spanned_tracks), 1.0);
+                        let excess = f32_max(limited_min_content - inflexible_sizes, 0.0);
+                        f32_max(axis_minimum_size, inflexible_sizes + excess * scale)
+                    } else {
+                        limited_min_content
+                    }
                 }
                 _ => item_sizer.minimum_contribution(item, axis_tracks),
             };
@@ -838,7 +860,19 @@ fn resolve_intrinsic_track_sizes<Tree: LayoutPartialTree>(
                 let limit = item.spanned_track_limit(axis, axis_tracks, axis_inner_node_size, &|val, basis| {
                     item_sizer.calc(val, basis)
                 });
-                let space = axis_max_content_size.maybe_min(limit);
+                let mut space = axis_max_content_size.maybe_min(limit);
+
+                // As for the intrinsic minimums above: scale the space beyond the spanned inflexible
+                // tracks by the crossed flex factor sum, clamped at one. Anchoring at the inflexible
+                // track sizes rather than the current base sizes keeps this pass from compounding with
+                // the scaling already applied to the min-content contribution.
+                if is_flex {
+                    let spanned_tracks = &axis_tracks[item.track_range_excluding_lines(axis)];
+                    let inflexible_sizes: f32 =
+                        spanned_tracks.iter().filter(|track| !track.is_flexible()).map(|track| track.base_size).sum();
+                    let scale = f32_min(crossed_flex_factor_sum(spanned_tracks), 1.0);
+                    space = inflexible_sizes + f32_max(space - inflexible_sizes, 0.0) * scale;
+                }
                 let tracks = &mut axis_tracks[item.track_range_excluding_lines(axis)];
                 if space > 0.0 {
                     // If any of the tracks spanned by the item have a MaxContent min track sizing function then
@@ -963,6 +997,12 @@ fn resolve_intrinsic_track_sizes<Tree: LayoutPartialTree>(
         .iter_mut()
         .filter(|track| track.growth_limit == f32::INFINITY)
         .for_each(|track| track.growth_limit = track.base_size);
+}
+
+/// The sum of the flex factors of the flexible tracks in an item's spanned track range
+#[inline(always)]
+fn crossed_flex_factor_sum(tracks: &[GridTrack]) -> f32 {
+    tracks.iter().filter(|track| track.is_flexible()).map(|track| track.flex_factor()).sum()
 }
 
 /// 11.5.1. Distributing Extra Space Across Spanned Tracks

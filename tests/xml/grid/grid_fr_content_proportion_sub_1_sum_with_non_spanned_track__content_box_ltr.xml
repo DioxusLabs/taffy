@@ -1,0 +1,25 @@
+<test name="grid_fr_content_proportion_sub_1_sum_with_non_spanned_track__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="flex" box-sizing="content-box" direction="ltr" align-items="start" width="150px" height="100px">
+      <div display="grid" box-sizing="content-box" direction="ltr" grid-template-rows="40px 40px" grid-template-columns="0.2fr 0.3fr 0.5fr">
+        <div box-sizing="content-box" direction="ltr" width="60px" grid-column-start="span 2"/>
+        <div box-sizing="content-box" direction="ltr"/>
+        <div box-sizing="content-box" direction="ltr"/>
+        <div box-sizing="content-box" direction="ltr"/>
+        <div box-sizing="content-box" direction="ltr"/>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="150" height="100">
+      <node x="0" y="0" width="78" height="80">
+        <node x="0" y="0" width="60" height="40"/>
+        <node x="60" y="0" width="9" height="40"/>
+        <node x="0" y="40" width="24" height="40"/>
+        <node x="24" y="40" width="36" height="40"/>
+        <node x="60" y="40" width="9" height="40"/>
+      </node>
+    </node>
+  </expectations>
+</test>
