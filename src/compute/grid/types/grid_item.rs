@@ -7,7 +7,7 @@ use crate::geometry::{Line, Point, Rect, Size};
 use crate::style::{AlignItems, AlignSelf, AvailableSpace, Dimension, LengthPercentageAuto, Overflow};
 use crate::tree::{LayoutPartialTree, LayoutPartialTreeExt, NodeId, SizingMode};
 use crate::util::{MaybeMath, MaybeResolve, ResolveOrZero};
-use crate::{BoxSizing, GridItemStyle, LengthPercentage};
+use crate::{AlignItemsKeyword, BoxSizing, GridItemStyle, LengthPercentage};
 use core::ops::Range;
 
 /// Represents a single grid item
@@ -137,12 +137,29 @@ impl GridItem {
         }
     }
 
+    /// Whether the item has an auto margin in the block axis
+    #[inline(always)]
+    pub fn has_auto_block_margin(&self) -> bool {
+        self.margin.top.is_auto() || self.margin.bottom.is_auto()
+    }
+
+    /// Whether the item's block size depends on the size of its row(s), creating a cyclic
+    /// dependency with baseline alignment (which affects row sizing). Per
+    /// <https://www.w3.org/TR/css-grid-1/#row-align> such items do not participate in baseline
+    /// alignment and are aligned using their fallback alignment instead.
+    #[inline(always)]
+    pub fn has_cyclic_block_size_dependency(&self) -> bool {
+        self.size.height.0.uses_percentage() && (self.crosses_intrinsic_row || self.crosses_flexible_row)
+    }
+
     /// Returns true if the item participates in baseline alignment: it has `align-self: baseline`
     /// and neither of its block-axis margins are `auto`.
     /// See <https://www.w3.org/TR/css-align-3/#baseline-align-self>
     #[inline(always)]
     pub fn participates_in_baseline_alignment(&self) -> bool {
-        self.align_self == AlignSelf::BASELINE && !self.margin.top.is_auto() && !self.margin.bottom.is_auto()
+        self.align_self.keyword == AlignItemsKeyword::Baseline
+            && !self.has_auto_block_margin()
+            && !self.has_cyclic_block_size_dependency()
     }
 
     /// This item's placement in the specified axis in OriginZero coordinates
