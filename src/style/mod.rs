@@ -19,7 +19,10 @@ pub use self::alignment::{
 };
 pub use self::available_space::AvailableSpace;
 pub use self::compact_length::CompactLength;
-pub use self::dimension::{Dimension, LengthPercentage, LengthPercentageAuto};
+pub use self::dimension::{
+    Dimension, ExpandedDimension, ExpandedLengthPercentage, ExpandedLengthPercentageAuto, LengthPercentage,
+    LengthPercentageAuto,
+};
 use crate::sys::DefaultCheapStr;
 
 #[cfg(feature = "block_layout")]
@@ -30,9 +33,10 @@ pub use self::flex::{FlexDirection, FlexWrap, FlexboxContainerStyle, FlexboxItem
 pub use self::float::{Clear, Float, FloatDirection};
 #[cfg(feature = "grid")]
 pub use self::grid::{
-    GenericGridPlacement, GenericGridTemplateComponent, GenericRepetition, GridAutoFlow, GridAutoTracks,
-    GridContainerStyle, GridItemStyle, GridPlacement, GridTemplateComponent, GridTemplateRepetition,
-    GridTemplateTracks, MaxTrackSizingFunction, MinTrackSizingFunction, RepetitionCount, TrackSizingFunction,
+    ExpandedMaxTrackSizingFunction, ExpandedMinTrackSizingFunction, GenericGridPlacement, GenericGridTemplateComponent,
+    GenericRepetition, GridAutoFlow, GridAutoTracks, GridContainerStyle, GridItemStyle, GridPlacement,
+    GridTemplateComponent, GridTemplateRepetition, GridTemplateTracks, MaxTrackSizingFunction, MinTrackSizingFunction,
+    RepetitionCount, TrackSizingFunction,
 };
 #[cfg(feature = "grid")]
 pub(crate) use self::grid::{GridAreaAxis, GridAreaEnd};

@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    A 0.5fr row takes half of a min-height:0 item's 100px content: the grid is 50px tall
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="display: flex; align-items: start; width: 20px; height: 150px;">
+  <div style="display: grid; grid-template-rows: 0.5fr; grid-template-columns: 20px;">
+    <div style="min-height: 0;"><div style="width: 20px; height: 100px;"></div></div>
+  </div>
+</div>
+
+</body>
+</html>

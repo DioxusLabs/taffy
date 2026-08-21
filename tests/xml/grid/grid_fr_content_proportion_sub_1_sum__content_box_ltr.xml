@@ -1,0 +1,21 @@
+<test name="grid_fr_content_proportion_sub_1_sum__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="flex" box-sizing="content-box" direction="ltr" align-items="start" width="20px" height="150px">
+      <div display="grid" box-sizing="content-box" direction="ltr" grid-template-rows="0.5fr" grid-template-columns="20px">
+        <div box-sizing="content-box" direction="ltr" min-height="0px">
+          <div box-sizing="content-box" direction="ltr" width="20px" height="100px"/>
+        </div>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="20" height="150">
+      <node x="0" y="0" width="20" height="50">
+        <node x="0" y="0" width="20" height="25">
+          <node x="0" y="0" width="20" height="100"/>
+        </node>
+      </node>
+    </node>
+  </expectations>
+</test>
