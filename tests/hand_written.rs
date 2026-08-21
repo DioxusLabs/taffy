@@ -8,6 +8,8 @@ mod hand_written {
     #[cfg(feature = "flexbox_balance")]
     mod flex_line_count;
     mod floats;
+    #[cfg(all(feature = "flexbox", feature = "grid", feature = "block_layout"))]
+    mod last_baseline;
     mod measure;
     mod min_max_overrides;
     mod relayout;

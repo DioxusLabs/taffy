@@ -15,6 +15,8 @@
 
   In contexts where a keyword cannot be resolved it behaves as `auto`
 
+- All built-in layout algorithms (flexbox, grid and block) now compute and output the *last baseline* of a container (`LayoutOutput::baselines.last`) in addition to its first baseline. A flex container's last baseline is generated from the last item of its cross-end-most line, a grid container's from the last row containing items, and a block container's from its last in-flow child with a baseline. Last baselines reported by children (e.g. by measure functions) are propagated up the tree, with scroll containers' baselines clamped to their border box. Note that last-baseline *alignment* (`align-items: last baseline`) is not yet supported
+
 - `Dimension` also supports the `content` keyword (`Dimension::content()`, CSS `content`), which indicates an automatic size based on the box's content. This keyword is only valid for `flex-basis`, where it sizes the item based on its content (ignoring its main size property) when computing its flex base size. In any other context (e.g. `width`/`height`) it behaves as `auto`
 
 - Support for the layout-affecting parts of the `layout` and `paint` values of the CSS `contain` property via a new `Contain` bitflags style type, a new `Style::contain` field and a new (defaulted) `CoreStyle::contain` trait method:
