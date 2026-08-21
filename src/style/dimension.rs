@@ -76,6 +76,54 @@ impl LengthPercentage {
     pub const fn into_raw(self) -> CompactLength {
         self.0
     }
+
+    /// Expand the compact representation into an [`ExpandedLengthPercentage`] enum.
+    ///
+    /// This is useful when integrating with other libraries (e.g. for style inspection or
+    /// serialization) as it allows the value to be pattern-matched without having to work
+    /// with the raw [`CompactLength`] tagged-pointer representation directly.
+    pub fn expand(self) -> ExpandedLengthPercentage {
+        match self.0.tag() {
+            CompactLength::LENGTH_TAG => ExpandedLengthPercentage::Length(self.0.value()),
+            CompactLength::PERCENT_TAG => ExpandedLengthPercentage::Percent(self.0.value()),
+            #[cfg(feature = "calc")]
+            _ if self.0.is_calc() => ExpandedLengthPercentage::Calc(self.0.calc_value()),
+            _ => unreachable!("LengthPercentage contains a value with an invalid tag"),
+        }
+    }
+}
+
+/// The expanded, non-compact representation of a [`LengthPercentage`].
+///
+/// Obtained via [`LengthPercentage::expand`]. Can be converted back into a [`LengthPercentage`]
+/// using the [`From`] implementation.
+#[derive(Copy, Clone, PartialEq, Debug)]
+pub enum ExpandedLengthPercentage {
+    /// An absolute length (see [`LengthPercentage::length`])
+    Length(f32),
+    /// A percentage length (see [`LengthPercentage::percent`])
+    Percent(f32),
+    /// A `calc()` value (see [`LengthPercentage::calc`]). The pointer is an opaque handle to the
+    /// calc representation, exactly as passed to the constructor.
+    #[cfg(feature = "calc")]
+    Calc(*const ()),
+}
+
+impl From<LengthPercentage> for ExpandedLengthPercentage {
+    fn from(value: LengthPercentage) -> Self {
+        value.expand()
+    }
+}
+
+impl From<ExpandedLengthPercentage> for LengthPercentage {
+    fn from(value: ExpandedLengthPercentage) -> Self {
+        match value {
+            ExpandedLengthPercentage::Length(val) => Self::length(val),
+            ExpandedLengthPercentage::Percent(val) => Self::percent(val),
+            #[cfg(feature = "calc")]
+            ExpandedLengthPercentage::Calc(ptr) => Self::calc(ptr),
+        }
+    }
 }
 
 #[cfg(feature = "serde")]
@@ -202,6 +250,58 @@ impl LengthPercentageAuto {
     #[inline(always)]
     pub fn is_auto(self) -> bool {
         self.0.is_auto()
+    }
+
+    /// Expand the compact representation into an [`ExpandedLengthPercentageAuto`] enum.
+    ///
+    /// This is useful when integrating with other libraries (e.g. for style inspection or
+    /// serialization) as it allows the value to be pattern-matched without having to work
+    /// with the raw [`CompactLength`] tagged-pointer representation directly.
+    pub fn expand(self) -> ExpandedLengthPercentageAuto {
+        match self.0.tag() {
+            CompactLength::LENGTH_TAG => ExpandedLengthPercentageAuto::Length(self.0.value()),
+            CompactLength::PERCENT_TAG => ExpandedLengthPercentageAuto::Percent(self.0.value()),
+            CompactLength::AUTO_TAG => ExpandedLengthPercentageAuto::Auto,
+            #[cfg(feature = "calc")]
+            _ if self.0.is_calc() => ExpandedLengthPercentageAuto::Calc(self.0.calc_value()),
+            _ => unreachable!("LengthPercentageAuto contains a value with an invalid tag"),
+        }
+    }
+}
+
+/// The expanded, non-compact representation of a [`LengthPercentageAuto`].
+///
+/// Obtained via [`LengthPercentageAuto::expand`]. Can be converted back into a
+/// [`LengthPercentageAuto`] using the [`From`] implementation.
+#[derive(Copy, Clone, PartialEq, Debug)]
+pub enum ExpandedLengthPercentageAuto {
+    /// An absolute length (see [`LengthPercentageAuto::length`])
+    Length(f32),
+    /// A percentage length (see [`LengthPercentageAuto::percent`])
+    Percent(f32),
+    /// The automatic keyword (see [`LengthPercentageAuto::auto`])
+    Auto,
+    /// A `calc()` value (see [`LengthPercentageAuto::calc`]). The pointer is an opaque handle to
+    /// the calc representation, exactly as passed to the constructor.
+    #[cfg(feature = "calc")]
+    Calc(*const ()),
+}
+
+impl From<LengthPercentageAuto> for ExpandedLengthPercentageAuto {
+    fn from(value: LengthPercentageAuto) -> Self {
+        value.expand()
+    }
+}
+
+impl From<ExpandedLengthPercentageAuto> for LengthPercentageAuto {
+    fn from(value: ExpandedLengthPercentageAuto) -> Self {
+        match value {
+            ExpandedLengthPercentageAuto::Length(val) => Self::length(val),
+            ExpandedLengthPercentageAuto::Percent(val) => Self::percent(val),
+            ExpandedLengthPercentageAuto::Auto => Self::auto(),
+            #[cfg(feature = "calc")]
+            ExpandedLengthPercentageAuto::Calc(ptr) => Self::calc(ptr),
+        }
     }
 }
 
@@ -427,6 +527,86 @@ impl Dimension {
     pub fn value(self) -> f32 {
         self.0.value()
     }
+
+    /// Expand the compact representation into an [`ExpandedDimension`] enum.
+    ///
+    /// This is useful when integrating with other libraries (e.g. for style inspection or
+    /// serialization) as it allows the value to be pattern-matched without having to work
+    /// with the raw [`CompactLength`] tagged-pointer representation directly.
+    pub fn expand(self) -> ExpandedDimension {
+        match self.0.tag() {
+            CompactLength::LENGTH_TAG => ExpandedDimension::Length(self.0.value()),
+            CompactLength::PERCENT_TAG => ExpandedDimension::Percent(self.0.value()),
+            CompactLength::AUTO_TAG => ExpandedDimension::Auto,
+            CompactLength::MIN_CONTENT_TAG => ExpandedDimension::MinContent,
+            CompactLength::MAX_CONTENT_TAG => ExpandedDimension::MaxContent,
+            CompactLength::FIT_CONTENT_PX_TAG => ExpandedDimension::FitContentPx(self.0.value()),
+            CompactLength::FIT_CONTENT_PERCENT_TAG => ExpandedDimension::FitContentPercent(self.0.value()),
+            CompactLength::FIT_CONTENT_KEYWORD_TAG => ExpandedDimension::FitContent,
+            CompactLength::STRETCH_TAG => ExpandedDimension::Stretch,
+            CompactLength::CONTENT_TAG => ExpandedDimension::Content,
+            #[cfg(feature = "calc")]
+            _ if self.0.is_calc() => ExpandedDimension::Calc(self.0.calc_value()),
+            _ => unreachable!("Dimension contains a value with an invalid tag"),
+        }
+    }
+}
+
+/// The expanded, non-compact representation of a [`Dimension`].
+///
+/// Obtained via [`Dimension::expand`]. Can be converted back into a [`Dimension`] using the
+/// [`From`] implementation.
+#[derive(Copy, Clone, PartialEq, Debug)]
+pub enum ExpandedDimension {
+    /// An absolute length (see [`Dimension::length`])
+    Length(f32),
+    /// A percentage length (see [`Dimension::percent`])
+    Percent(f32),
+    /// The automatic keyword (see [`Dimension::auto`])
+    Auto,
+    /// The `min-content` keyword (see [`Dimension::min_content`])
+    MinContent,
+    /// The `max-content` keyword (see [`Dimension::max_content`])
+    MaxContent,
+    /// A `fit-content(...)` value with a length limit (see [`Dimension::fit_content_px`])
+    FitContentPx(f32),
+    /// A `fit-content(...)` value with a percentage limit (see [`Dimension::fit_content_percent`])
+    FitContentPercent(f32),
+    /// The `fit-content` keyword with no limit (see [`Dimension::fit_content`])
+    FitContent,
+    /// The `stretch` keyword (see [`Dimension::stretch`])
+    Stretch,
+    /// The `content` keyword (see [`Dimension::content`])
+    Content,
+    /// A `calc()` value (see [`Dimension::calc`]). The pointer is an opaque handle to the calc
+    /// representation, exactly as passed to the constructor.
+    #[cfg(feature = "calc")]
+    Calc(*const ()),
+}
+
+impl From<Dimension> for ExpandedDimension {
+    fn from(value: Dimension) -> Self {
+        value.expand()
+    }
+}
+
+impl From<ExpandedDimension> for Dimension {
+    fn from(value: ExpandedDimension) -> Self {
+        match value {
+            ExpandedDimension::Length(val) => Self::length(val),
+            ExpandedDimension::Percent(val) => Self::percent(val),
+            ExpandedDimension::Auto => Self::auto(),
+            ExpandedDimension::MinContent => Self::min_content(),
+            ExpandedDimension::MaxContent => Self::max_content(),
+            ExpandedDimension::FitContentPx(val) => Self::fit_content_px(val),
+            ExpandedDimension::FitContentPercent(val) => Self::fit_content_percent(val),
+            ExpandedDimension::FitContent => Self::fit_content(),
+            ExpandedDimension::Stretch => Self::stretch(),
+            ExpandedDimension::Content => Self::content(),
+            #[cfg(feature = "calc")]
+            ExpandedDimension::Calc(ptr) => Self::calc(ptr),
+        }
+    }
 }
 
 #[cfg(feature = "serde")]
@@ -478,5 +658,73 @@ impl Rect<Dimension> {
             top: Dimension(CompactLength::percent(top)),
             bottom: Dimension(CompactLength::percent(bottom)),
         }
+    }
+}
+
+#[cfg(test)]
+mod expand_tests {
+    use super::*;
+
+    /// A helper that produces a valid `calc()` handle for tests: a non-null pointer whose low
+    /// three bits are zero (as required by `CompactLength::calc`).
+    #[cfg(feature = "calc")]
+    fn calc_handle() -> *const () {
+        #[allow(dead_code)]
+        #[repr(align(8))]
+        struct Aligned(u64);
+        static HANDLE: Aligned = Aligned(0);
+        &HANDLE as *const Aligned as *const ()
+    }
+
+    #[test]
+    fn length_percentage_round_trips() {
+        let cases = [LengthPercentage::length(12.0), LengthPercentage::percent(0.5), LengthPercentage::ZERO];
+        for value in cases {
+            assert_eq!(LengthPercentage::from(value.expand()), value);
+            assert_eq!(ExpandedLengthPercentage::from(value), value.expand());
+        }
+        assert_eq!(LengthPercentage::length(3.0).expand(), ExpandedLengthPercentage::Length(3.0));
+        assert_eq!(LengthPercentage::percent(0.25).expand(), ExpandedLengthPercentage::Percent(0.25));
+    }
+
+    #[test]
+    fn length_percentage_auto_round_trips() {
+        let cases =
+            [LengthPercentageAuto::length(12.0), LengthPercentageAuto::percent(0.5), LengthPercentageAuto::auto()];
+        for value in cases {
+            assert_eq!(LengthPercentageAuto::from(value.expand()), value);
+        }
+        assert_eq!(LengthPercentageAuto::auto().expand(), ExpandedLengthPercentageAuto::Auto);
+    }
+
+    #[test]
+    fn dimension_round_trips_all_keywords() {
+        let cases = [
+            Dimension::length(12.0),
+            Dimension::percent(0.5),
+            Dimension::auto(),
+            Dimension::min_content(),
+            Dimension::max_content(),
+            Dimension::fit_content_px(30.0),
+            Dimension::fit_content_percent(0.75),
+            Dimension::fit_content(),
+            Dimension::stretch(),
+            Dimension::content(),
+        ];
+        for value in cases {
+            assert_eq!(Dimension::from(value.expand()), value);
+        }
+        assert_eq!(Dimension::fit_content_px(30.0).expand(), ExpandedDimension::FitContentPx(30.0));
+        assert_eq!(Dimension::content().expand(), ExpandedDimension::Content);
+    }
+
+    #[cfg(feature = "calc")]
+    #[test]
+    fn calc_round_trips() {
+        let handle = calc_handle();
+        assert_eq!(LengthPercentage::calc(handle).expand(), ExpandedLengthPercentage::Calc(handle));
+        assert_eq!(LengthPercentage::from(ExpandedLengthPercentage::Calc(handle)), LengthPercentage::calc(handle));
+        assert_eq!(Dimension::calc(handle).expand(), ExpandedDimension::Calc(handle));
+        assert_eq!(LengthPercentageAuto::calc(handle).expand(), ExpandedLengthPercentageAuto::Calc(handle));
     }
 }
