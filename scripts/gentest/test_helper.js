@@ -247,8 +247,10 @@ function describeElement(e) {
       flexShrink: parseNumber(e.style.flexShrink),
       flexBasis: parseDimension(e.style.flexBasis),
 
-      gridTemplateRows: parseGridTrackDefinitions(e.style.gridTemplateRows),
-      gridTemplateColumns: parseGridTrackDefinitions(e.style.gridTemplateColumns),
+      // Passed through verbatim (Taffy's test harness parses the CSS syntax directly),
+      // which preserves line names that TrackSizingParser does not handle
+      gridTemplateRows: e.style.gridTemplateRows || undefined,
+      gridTemplateColumns: e.style.gridTemplateColumns || undefined,
       gridAutoRows: parseGridTrackDefinitions(e.style.gridAutoRows),
       gridAutoColumns: parseGridTrackDefinitions(e.style.gridAutoColumns),
       gridAutoFlow: parseGridAutoFlow(e.style.gridAutoFlow),
@@ -293,6 +295,20 @@ function describeElement(e) {
         bottom: e.style.bottom,
       }),
     },
+
+    // The resolved value of the grid-template-rows/grid-template-columns properties
+    // (https://www.w3.org/TR/css-grid-1/#resolved-track-list): the used track sizes and line
+    // names of the grid, which Taffy exposes through DetailedGridInfo. Fixtures can opt out
+    // with data-test-resolved-track-lists="false" (e.g. overlarge grids, where Taffy's
+    // MAX_GRID_TRACKS clamp intentionally differs from Chrome's track limit)
+    resolvedGridTemplateRows:
+      computedStyle.display === "grid" && e.getAttribute("data-test-resolved-track-lists") !== "false"
+        ? computedStyle.gridTemplateRows
+        : undefined,
+    resolvedGridTemplateColumns:
+      computedStyle.display === "grid" && e.getAttribute("data-test-resolved-track-lists") !== "false"
+        ? computedStyle.gridTemplateColumns
+        : undefined,
 
     // The textContent is used for generating intrinsic sizing measure funcs
     // So we're only interested in the text content of leaf nodes

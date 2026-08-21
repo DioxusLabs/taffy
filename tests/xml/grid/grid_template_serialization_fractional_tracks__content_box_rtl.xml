@@ -1,0 +1,17 @@
+<test name="grid_template_serialization_fractional_tracks__content_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" box-sizing="content-box" direction="rtl" width="100px" height="50px" grid-template-rows="minmax(10px, 1fr) 2fr" grid-template-columns="1fr 1fr 1fr">
+      <div box-sizing="content-box" direction="rtl"/>
+      <div box-sizing="content-box" direction="rtl"/>
+      <div box-sizing="content-box" direction="rtl"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="100" height="50" resolved-rows="16.6562px 33.3438px" resolved-columns="33.3281px 33.3281px 33.3281px">
+      <node x="67" y="0" width="33" height="17"/>
+      <node x="33" y="0" width="34" height="17"/>
+      <node x="0" y="0" width="33" height="17"/>
+    </node>
+  </expectations>
+</test>

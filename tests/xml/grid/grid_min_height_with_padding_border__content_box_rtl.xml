@@ -6,7 +6,7 @@
     </div>
   </input>
   <expectations>
-    <node x="0" y="0" width="46" height="144">
+    <node x="0" y="0" width="46" height="144" resolved-rows="100px" resolved-columns="0px">
       <node x="23" y="22" width="0" height="100"/>
     </node>
   </expectations>

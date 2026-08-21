@@ -1,0 +1,19 @@
+<test name="grid_template_serialization_named_lines__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" box-sizing="content-box" direction="ltr" grid-template-rows="[row1] 20px [row2] 30px" grid-template-columns="[first] 40px [col-start col2-start] 60px [last]">
+      <div box-sizing="content-box" direction="ltr"/>
+      <div box-sizing="content-box" direction="ltr"/>
+      <div box-sizing="content-box" direction="ltr"/>
+      <div box-sizing="content-box" direction="ltr"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="100" height="50" resolved-rows="[row1] 20px [row2] 30px" resolved-columns="[first] 40px [col-start col2-start] 60px [last]">
+      <node x="0" y="0" width="40" height="20"/>
+      <node x="40" y="0" width="60" height="20"/>
+      <node x="0" y="20" width="40" height="30"/>
+      <node x="40" y="20" width="60" height="30"/>
+    </node>
+  </expectations>
+</test>

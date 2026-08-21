@@ -11,7 +11,7 @@
     </div>
   </input>
   <expectations>
-    <node x="0" y="0" width="120" height="60">
+    <node x="0" y="0" width="120" height="60" resolved-rows="30px 48px" resolved-columns="48px 48px 48px">
       <node x="0" y="0" width="48" height="30"/>
       <node x="48" y="0" width="48" height="30"/>
       <node x="96" y="0" width="48" height="30"/>

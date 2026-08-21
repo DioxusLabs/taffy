@@ -1,7 +1,7 @@
 <test name="grid_flex_track_intrinsic_sizes_003_fixedmin_span1_minmax_0_1fr__content_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="grid" box-sizing="content-box" direction="ltr" width="60px" height="60px" border-top="3px" border-left="3px" border-bottom="3px" border-right="3px" grid-template-rows="minmax(0px,1fr)" grid-template-columns="minmax(0px,1fr)">
+    <div display="grid" box-sizing="content-box" direction="ltr" width="60px" height="60px" border-top="3px" border-left="3px" border-bottom="3px" border-right="3px" grid-template-rows="minmax(0px, 1fr)" grid-template-columns="minmax(0px, 1fr)">
       <div box-sizing="content-box" direction="ltr" min-width="50px" min-height="50px" grid-row-start="1" grid-row-end="span 1" grid-column-start="1" grid-column-end="span 1">
         <div box-sizing="content-box" direction="ltr" width="100px" height="100px"/>
       </div>
@@ -9,7 +9,7 @@
     </div>
   </input>
   <expectations>
-    <node x="0" y="0" width="66" height="66">
+    <node x="0" y="0" width="66" height="66" resolved-rows="60px" resolved-columns="60px">
       <node x="3" y="3" width="60" height="60">
         <node x="0" y="0" width="60" height="100"/>
       </node>

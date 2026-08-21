@@ -8,7 +8,7 @@
     </div>
   </input>
   <expectations>
-    <node x="0" y="0" width="50" height="50">
+    <node x="0" y="0" width="50" height="50" resolved-rows="50px" resolved-columns="50px">
       <node x="0" y="0" width="50" height="50" scroll_width="50" scroll_height="0"/>
     </node>
   </expectations>

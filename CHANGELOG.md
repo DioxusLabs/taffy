@@ -42,6 +42,8 @@
 
 ### Fixed
 
+- CSS parser (`parse` feature): `GridTemplateTracks::from_css` (used to parse `grid-template-rows`/`grid-template-columns` values) now emits one line-name group per grid line, pushing an empty group for lines with no `[...]` in the source. Previously groups were only emitted for lines that had names, which is ambiguous (name groups are positional) and caused line names in templates such as `repeat(auto-fill, [col] 40px)` to be silently dropped when the parsed value was applied to a style
+
 - Block/float: the height of overflowing in-flow content of a nested block no longer contributes to the height of the block formatting context root as if it were floated content. Previously an auto-height BFC root containing a block whose in-flow content overflowed it (e.g. a fixed-height block with taller content) was incorrectly extended to contain that overflowing content
 
 - Block: the baselines contributed by in-flow children that are scroll containers are now clamped to the child's border box, and a scroll-container child with no natural baseline synthesizes one at its border-box bottom edge, matching the existing flexbox/grid behaviour per the [CSSWG resolution](https://github.com/w3c/csswg-drafts/issues/7660). Previously baselines of clipped content could leak outside an `overflow: hidden` child, and an empty scroll-container child contributed no baseline

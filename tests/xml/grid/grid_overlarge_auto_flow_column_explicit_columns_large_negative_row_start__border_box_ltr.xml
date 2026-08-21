@@ -1,7 +1,7 @@
 <test name="grid_overlarge_auto_flow_column_explicit_columns_large_negative_row_start__border_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="grid" direction="ltr" grid-auto-flow="column" grid-template-rows="auto" grid-template-columns="fit-content(80px) fit-content(80px) minmax(max-content,auto)">
+    <div display="grid" direction="ltr" grid-auto-flow="column" grid-template-rows="auto" grid-template-columns="fit-content(80px) fit-content(80px) minmax(max-content, auto)">
       <div direction="ltr" width="20px" height="20px" grid-column-start="7"/>
       <div direction="ltr" width="20px" height="20px" grid-column-start="7"/>
       <div direction="ltr" width="20px" height="20px" grid-column-start="7"/>

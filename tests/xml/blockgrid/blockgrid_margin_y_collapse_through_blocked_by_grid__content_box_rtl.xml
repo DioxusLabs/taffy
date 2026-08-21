@@ -10,7 +10,7 @@
   <expectations>
     <node x="0" y="0" width="50" height="40">
       <node x="0" y="0" width="50" height="10"/>
-      <node x="0" y="20" width="50" height="0"/>
+      <node x="0" y="20" width="50" height="0" resolved-rows="none" resolved-columns="none"/>
       <node x="0" y="30" width="50" height="10"/>
     </node>
   </expectations>

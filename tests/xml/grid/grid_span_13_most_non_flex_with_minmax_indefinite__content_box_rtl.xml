@@ -1,7 +1,7 @@
 <test name="grid_span_13_most_non_flex_with_minmax_indefinite__content_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="grid" box-sizing="content-box" direction="rtl" grid-template-rows="40px 40px" grid-template-columns="min-content max-content fit-content(20px) auto 10px 20% minmax(2px,auto) minmax(2px,4px) minmax(2px,min-content) minmax(2px,max-content) minmax(min-content,max-content) minmax(min-content,auto) minmax(max-content,auto)">
+    <div display="grid" box-sizing="content-box" direction="rtl" grid-template-rows="40px 40px" grid-template-columns="min-content max-content fit-content(20px) auto 10px 20% minmax(2px, auto) minmax(2px, 4px) minmax(2px, min-content) minmax(2px, max-content) minmax(min-content, max-content) minmax(min-content, auto) minmax(max-content, auto)">
       <text box-sizing="content-box" direction="rtl" grid-column-start="1" grid-column-end="span 13">
         HHHHHHHHHHHHHHHH​HHHHHHHHHHHHHHHH
       </text>
@@ -21,7 +21,7 @@
     </div>
   </input>
   <expectations>
-    <node x="0" y="0" width="322" height="80">
+    <node x="0" y="0" width="322" height="80" resolved-rows="40px 40px" resolved-columns="11.0781px 91.0781px 11.0781px 11.0938px 10px 64.3906px 2px 4px 2px 2px 11.0938px 11.0938px 91.0938px">
       <node x="0" y="0" width="322" height="40"/>
       <node x="311" y="40" width="11" height="40"/>
       <node x="220" y="40" width="91" height="40"/>

@@ -1,0 +1,15 @@
+<test name="grid_template_serialization_implicit_tracks__border_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" direction="ltr" grid-template-rows="[r1] 20px [r2]" grid-template-columns="[a] 40px [b] 60px [c]" grid-auto-rows="25px" grid-auto-columns="15px">
+      <div direction="ltr" grid-row-start="1" grid-column-start="-5"/>
+      <div direction="ltr" grid-row-start="3" grid-column-start="4"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="160" height="70" resolved-rows="[r1] 20px [r2] 25px 25px" resolved-columns="15px 15px [a] 40px [b] 60px [c] 15px 15px">
+      <node x="0" y="0" width="15" height="20"/>
+      <node x="145" y="45" width="15" height="25"/>
+    </node>
+  </expectations>
+</test>
