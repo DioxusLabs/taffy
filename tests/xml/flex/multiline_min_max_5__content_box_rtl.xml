@@ -1,7 +1,7 @@
 <test name="multiline_min_max_5__content_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="flex" box-sizing="content-box" direction="rtl" flex-wrap="wrap" width="600px" height="20px" border-top="5px" border-left="5px" border-bottom="5px" border-right="5px">
+    <div display="flex" box-sizing="content-box" direction="rtl" position="relative" flex-wrap="wrap" width="600px" height="20px" border-top="5px" border-left="5px" border-bottom="5px" border-right="5px">
       <div box-sizing="content-box" direction="rtl" flex-grow="1" flex-basis="600px" height="10px" max-width="300px"/>
       <div box-sizing="content-box" direction="rtl" flex-grow="1" width="100px" height="10px"/>
       <div box-sizing="content-box" direction="rtl" flex-grow="1" width="100px" height="10px"/>

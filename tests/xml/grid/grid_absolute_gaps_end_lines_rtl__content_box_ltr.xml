@@ -1,7 +1,7 @@
 <test name="grid_absolute_gaps_end_lines_rtl__content_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="grid" direction="rtl" width="440px" height="240px" row-gap="25px" column-gap="50px" padding-top="15px" padding-left="15px" padding-bottom="15px" padding-right="15px" border-top="5px" border-left="5px" border-bottom="5px" border-right="5px" grid-template-rows="40px 40px" grid-template-columns="40px 40px 40px 40px">
+    <div display="grid" direction="rtl" position="relative" width="440px" height="240px" row-gap="25px" column-gap="50px" padding-top="15px" padding-left="15px" padding-bottom="15px" padding-right="15px" border-top="5px" border-left="5px" border-bottom="5px" border-right="5px" grid-template-rows="40px 40px" grid-template-columns="40px 40px 40px 40px">
       <div box-sizing="content-box" direction="ltr" position="absolute" grid-row-end="2" grid-column-end="2"/>
     </div>
   </input>

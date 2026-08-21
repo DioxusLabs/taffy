@@ -3,8 +3,8 @@
   <input>
     <div box-sizing="content-box" direction="ltr" flex-direction="column" width="87.4px" height="113.4px">
       <div box-sizing="content-box" direction="ltr" flex-direction="column" flex-grow="0.7" flex-basis="50.3px" height="20.3px">
-        <div box-sizing="content-box" direction="ltr" flex-grow="1" flex-basis="0.3px" height="9.9px" bottom="13.3px"/>
-        <div box-sizing="content-box" direction="ltr" flex-grow="4" flex-basis="0.3px" height="1.1px" top="13.3px"/>
+        <div box-sizing="content-box" direction="ltr" position="relative" flex-grow="1" flex-basis="0.3px" height="9.9px" bottom="13.3px"/>
+        <div box-sizing="content-box" direction="ltr" position="relative" flex-grow="4" flex-basis="0.3px" height="1.1px" top="13.3px"/>
       </div>
       <div box-sizing="content-box" direction="ltr" flex-grow="1.6" height="10px"/>
       <div box-sizing="content-box" direction="ltr" flex-grow="1.1" height="10.7px"/>

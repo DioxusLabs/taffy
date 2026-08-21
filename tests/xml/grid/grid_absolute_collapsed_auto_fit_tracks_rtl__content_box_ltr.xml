@@ -1,7 +1,7 @@
 <test name="grid_absolute_collapsed_auto_fit_tracks_rtl__content_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="grid" direction="rtl" width="530px" height="330px" row-gap="10px" column-gap="10px" padding-top="15px" padding-left="15px" padding-bottom="15px" padding-right="15px" grid-template-rows="repeat(auto-fit, 100px)" grid-template-columns="repeat(auto-fit, 100px)">
+    <div display="grid" direction="rtl" position="relative" width="530px" height="330px" row-gap="10px" column-gap="10px" padding-top="15px" padding-left="15px" padding-bottom="15px" padding-right="15px" grid-template-rows="repeat(auto-fit, 100px)" grid-template-columns="repeat(auto-fit, 100px)">
       <div box-sizing="content-box" direction="ltr" position="absolute" grid-row-end="1" grid-column-end="1"/>
       <div box-sizing="content-box" direction="ltr" position="absolute" grid-row-start="-1" grid-column-start="-1"/>
     </div>
