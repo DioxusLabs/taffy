@@ -7,6 +7,10 @@ use crate::{
 use core::{borrow::Borrow, cmp::Ordering, fmt::Debug};
 
 use super::{GridLine, MAX_GRID_TRACKS};
+#[cfg(feature = "detailed_layout_info")]
+use crate::geometry::AbsoluteAxis;
+#[cfg(feature = "detailed_layout_info")]
+use crate::sys::DefaultCheapStr;
 // use alloc::fmt::format;
 use crate::sys::{format, single_value_vec, Map, Vec};
 
@@ -63,6 +67,14 @@ pub(crate) struct NamedLineResolver<S: CheapCloneStr> {
     /// The number of explicit rows in the grid. This is an *input* to the `NamedLineResolver` and is
     /// used when computing the fallback line when a non-existent named line is specified.
     explicit_row_count: u16,
+    /// The (1-indexed line number, name) pairs of every named column line, in source order
+    /// (template names before `grid-template-areas`-generated names)
+    #[cfg(feature = "detailed_layout_info")]
+    column_line_name_pairs: Vec<(u32, S)>,
+    /// The (1-indexed line number, name) pairs of every named row line, in source order
+    /// (template names before `grid-template-areas`-generated names)
+    #[cfg(feature = "detailed_layout_info")]
+    row_line_name_pairs: Vec<(u32, S)>,
 }
 
 /// Utility function to create or update an entry in a line name map
@@ -81,28 +93,10 @@ impl<S: CheapCloneStr> NamedLineResolver<S> {
         let mut column_lines: Map<StrHasher<S>, Vec<u32>> = Map::new();
         let mut row_lines: Map<StrHasher<S>, Vec<u32>> = Map::new();
 
-        // The size of the area template may be larger than the extents of the named areas
-        // due to unnamed (`.`) cells, so it is taken from the style rather than being derived
-        // from the areas themselves.
-        let area_column_count = style.grid_template_area_column_count();
-        let area_row_count = style.grid_template_area_row_count();
-        if let Some(area_iter) = style.grid_template_areas() {
-            for area in area_iter.into_iter() {
-                // TODO: Investigate eliminating clones
-                areas.insert(StrHasher(area.name.clone()), area.clone());
-
-                let col_start_name = S::from(format!("{}-start", area.name.as_ref()));
-                upsert_line_name_map(&mut column_lines, col_start_name, area.column_start as u32);
-                let col_end_name = S::from(format!("{}-end", area.name.as_ref()));
-                upsert_line_name_map(&mut column_lines, col_end_name, area.column_end as u32);
-                let row_start_name = S::from(format!("{}-start", area.name.as_ref()));
-                upsert_line_name_map(&mut row_lines, row_start_name, area.row_start as u32);
-                let row_end_name = S::from(format!("{}-end", area.name.as_ref()));
-                upsert_line_name_map(&mut row_lines, row_end_name, area.row_end as u32);
-            }
-        }
-
-        // ---
+        #[cfg(feature = "detailed_layout_info")]
+        let mut column_line_name_pairs: Vec<(u32, S)> = Vec::new();
+        #[cfg(feature = "detailed_layout_info")]
+        let mut row_line_name_pairs: Vec<(u32, S)> = Vec::new();
 
         let mut current_line = 0;
         if let Some(mut column_tracks) = style.grid_template_columns() {
@@ -110,6 +104,8 @@ impl<S: CheapCloneStr> NamedLineResolver<S> {
                 for line_names in column_line_names_iter {
                     current_line += 1;
                     for line_name in line_names.into_iter() {
+                        #[cfg(feature = "detailed_layout_info")]
+                        column_line_name_pairs.push((current_line, line_name.clone()));
                         column_lines
                             .entry(StrHasher(line_name.clone()))
                             .and_modify(|lines: &mut Vec<u32>| lines.push(current_line))
@@ -139,6 +135,8 @@ impl<S: CheapCloneStr> NamedLineResolver<S> {
                         for _ in 0..repeat_count {
                             for (line, line_name_set) in (current_line..).zip(repeat.lines_names()) {
                                 for line_name in line_name_set {
+                                    #[cfg(feature = "detailed_layout_info")]
+                                    column_line_name_pairs.push((line, line_name.clone()));
                                     upsert_line_name_map(&mut column_lines, line_name.clone(), line);
                                 }
                             }
@@ -158,11 +156,6 @@ impl<S: CheapCloneStr> NamedLineResolver<S> {
                 }
             }
         }
-        // Sort and dedup lines for each column name
-        for lines in column_lines.values_mut() {
-            lines.sort_unstable();
-            lines.dedup();
-        }
 
         let mut current_line = 0;
         if let Some(mut row_tracks) = style.grid_template_rows() {
@@ -170,6 +163,8 @@ impl<S: CheapCloneStr> NamedLineResolver<S> {
                 for line_names in row_line_names_iter {
                     current_line += 1;
                     for line_name in line_names.into_iter() {
+                        #[cfg(feature = "detailed_layout_info")]
+                        row_line_name_pairs.push((current_line, line_name.clone()));
                         row_lines
                             .entry(StrHasher(line_name.clone()))
                             .and_modify(|lines: &mut Vec<u32>| lines.push(current_line))
@@ -199,6 +194,8 @@ impl<S: CheapCloneStr> NamedLineResolver<S> {
                         for _ in 0..repeat_count {
                             for (line, line_name_set) in (current_line..).zip(repeat.lines_names()) {
                                 for line_name in line_name_set {
+                                    #[cfg(feature = "detailed_layout_info")]
+                                    row_line_name_pairs.push((line, line_name.clone()));
                                     upsert_line_name_map(&mut row_lines, line_name.clone(), line);
                                 }
                             }
@@ -218,6 +215,40 @@ impl<S: CheapCloneStr> NamedLineResolver<S> {
                 }
             }
         }
+        // The size of the area template may be larger than the extents of the named areas
+        // due to unnamed (`.`) cells, so it is taken from the style rather than being derived
+        // from the areas themselves.
+        let area_column_count = style.grid_template_area_column_count();
+        let area_row_count = style.grid_template_area_row_count();
+        if let Some(area_iter) = style.grid_template_areas() {
+            for area in area_iter.into_iter() {
+                // TODO: Investigate eliminating clones
+                areas.insert(StrHasher(area.name.clone()), area.clone());
+
+                let col_start_name = S::from(format!("{}-start", area.name.as_ref()));
+                #[cfg(feature = "detailed_layout_info")]
+                column_line_name_pairs.push((area.column_start as u32, col_start_name.clone()));
+                upsert_line_name_map(&mut column_lines, col_start_name, area.column_start as u32);
+                let col_end_name = S::from(format!("{}-end", area.name.as_ref()));
+                #[cfg(feature = "detailed_layout_info")]
+                column_line_name_pairs.push((area.column_end as u32, col_end_name.clone()));
+                upsert_line_name_map(&mut column_lines, col_end_name, area.column_end as u32);
+                let row_start_name = S::from(format!("{}-start", area.name.as_ref()));
+                #[cfg(feature = "detailed_layout_info")]
+                row_line_name_pairs.push((area.row_start as u32, row_start_name.clone()));
+                upsert_line_name_map(&mut row_lines, row_start_name, area.row_start as u32);
+                let row_end_name = S::from(format!("{}-end", area.name.as_ref()));
+                #[cfg(feature = "detailed_layout_info")]
+                row_line_name_pairs.push((area.row_end as u32, row_end_name.clone()));
+                upsert_line_name_map(&mut row_lines, row_end_name, area.row_end as u32);
+            }
+        }
+
+        // Sort and dedup lines for each column name
+        for lines in column_lines.values_mut() {
+            lines.sort_unstable();
+            lines.dedup();
+        }
         // Sort and dedup lines for each row name
         for lines in row_lines.values_mut() {
             lines.sort_unstable();
@@ -232,7 +263,50 @@ impl<S: CheapCloneStr> NamedLineResolver<S> {
             areas,
             row_lines,
             column_lines,
+            #[cfg(feature = "detailed_layout_info")]
+            column_line_name_pairs,
+            #[cfg(feature = "detailed_layout_info")]
+            row_line_name_pairs,
         }
+    }
+
+    /// Build the per-line name groups of the explicit grid in the passed axis as a
+    /// [`GridLineNames`], with `repeat()`s expanded and including the implicit
+    /// `<name>-start`/`<name>-end` names generated by `grid-template-areas`.
+    ///
+    /// Line indices are relative to the explicit grid (line 0 = start of the first explicit track).
+    #[cfg(feature = "detailed_layout_info")]
+    pub(crate) fn detailed_line_names(&self, axis: AbsoluteAxis) -> GridLineNames<S> {
+        let (pairs, explicit_track_count) = match axis {
+            AbsoluteAxis::Horizontal => (&self.column_line_name_pairs, self.explicit_column_count),
+            AbsoluteAxis::Vertical => (&self.row_line_name_pairs, self.explicit_row_count),
+        };
+
+        if pairs.is_empty() {
+            return GridLineNames::default();
+        }
+
+        // Stable sort by line number preserves the source order of names within each line
+        // (template names before area-generated names)
+        let mut sorted_pairs: Vec<&(u32, S)> = pairs.iter().collect();
+        sorted_pairs.sort_by_key(|(line, _)| *line);
+
+        let line_count = explicit_track_count as usize + 1;
+        let mut line_names = GridLineNames::with_capacity(sorted_pairs.len(), line_count + 1);
+        let mut pair_iter = sorted_pairs.into_iter().peekable();
+        for line in 1..=(line_count as u32) {
+            line_names.start_line();
+            while let Some(&&(pair_line, ref name)) = pair_iter.peek() {
+                if pair_line != line {
+                    break;
+                }
+                pair_iter.next();
+                if !line_names.current_line_contains(name.as_ref()) {
+                    line_names.push_name(name.clone());
+                }
+            }
+        }
+        line_names
     }
 
     /// Resolve named lines for both the `start` and `end` of a row-axis grid placement
@@ -471,6 +545,136 @@ impl<S: CheapCloneStr> Debug for NamedLineResolver<S> {
         Ok(())
     }
 }
+
+/// The names of each explicit grid line in a single axis, stored in CSR (compressed sparse
+/// row) format: a single flat `Vec` of names plus a `Vec` of offsets into it (one more offset
+/// than there are lines). The names of line `i` (0-indexed) are `names[offsets[i]..offsets[i + 1]]`.
+///
+/// Line indices here are relative to the explicit grid;
+/// [`DetailedGridTracksInfo`](crate::DetailedGridTracksInfo) provides accessors with indices
+/// relative to the full grid (including implicit tracks).
+///
+/// Iterate over per-line name groups with [`GridLineNames::iter`], or access a single line's
+/// names with [`GridLineNames::line`]. A grid with no named lines is represented by two empty
+/// `Vec`s (see [`GridLineNames::is_empty`]).
+#[derive(Debug, Clone, PartialEq, Default)]
+#[cfg(feature = "detailed_layout_info")]
+pub struct GridLineNames<S: CheapCloneStr = DefaultCheapStr> {
+    /// The names of every grid line in the axis, concatenated in line order
+    names: Vec<S>,
+    /// Offsets into `names`: line `i`'s names are `names[offsets[i]..offsets[i + 1]]`.
+    /// Either empty (no named lines) or of length `line count + 1`.
+    offsets: Vec<u32>,
+}
+
+#[cfg(feature = "detailed_layout_info")]
+impl<S: CheapCloneStr> GridLineNames<S> {
+    /// Create an empty `GridLineNames` with pre-allocated capacity
+    pub(crate) fn with_capacity(name_capacity: usize, offset_capacity: usize) -> Self {
+        let mut offsets = Vec::with_capacity(offset_capacity);
+        offsets.push(0);
+        Self { names: Vec::with_capacity(name_capacity), offsets }
+    }
+
+    /// Start a new (initially empty) line
+    pub(crate) fn start_line(&mut self) {
+        self.offsets.push(self.names.len() as u32);
+    }
+
+    /// Append a name to the current (last) line
+    pub(crate) fn push_name(&mut self, name: S) {
+        self.names.push(name);
+        *self.offsets.last_mut().unwrap() = self.names.len() as u32;
+    }
+
+    /// Whether the current (last) line already contains the passed name
+    pub(crate) fn current_line_contains(&self, name: &str) -> bool {
+        self.line(self.line_count().wrapping_sub(1)).iter().any(|n| n.as_ref() == name)
+    }
+
+    /// Whether the axis has any named lines at all
+    pub fn is_empty(&self) -> bool {
+        self.names.is_empty()
+    }
+
+    /// The number of grid lines represented (zero if the grid has no named lines)
+    pub fn line_count(&self) -> usize {
+        self.offsets.len().saturating_sub(1)
+    }
+
+    /// The names of the line with the passed 0-indexed line index.
+    /// Returns an empty slice if the line has no names or the index is out of range.
+    pub fn line(&self, line_index: usize) -> &[S] {
+        match (self.offsets.get(line_index), self.offsets.get(line_index + 1)) {
+            (Some(&start), Some(&end)) => &self.names[start as usize..end as usize],
+            _ => &[],
+        }
+    }
+
+    /// Iterate over the name group (`&[S]`) of each grid line in line order
+    pub fn iter(&self) -> GridLineNamesIter<'_, S> {
+        self.iter_padded(0, 0)
+    }
+
+    /// Iterate over the name group (`&[S]`) of each grid line in line order, additionally
+    /// yielding `leading_empty` empty groups before the stored lines and `trailing_empty`
+    /// empty groups after them (representing unnamed implicit grid lines)
+    pub(crate) fn iter_padded(&self, leading_empty: usize, trailing_empty: usize) -> GridLineNamesIter<'_, S> {
+        GridLineNamesIter { names: &self.names, offsets: self.offsets.windows(2), leading_empty, trailing_empty }
+    }
+}
+
+#[cfg(feature = "detailed_layout_info")]
+impl<'a, S: CheapCloneStr> IntoIterator for &'a GridLineNames<S> {
+    type Item = &'a [S];
+    type IntoIter = GridLineNamesIter<'a, S>;
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter()
+    }
+}
+
+/// Iterator over the per-line name groups of a [`GridLineNames`]. Yields one `&[S]` per grid
+/// line (which is empty for unnamed lines)
+#[derive(Debug, Clone)]
+#[cfg(feature = "detailed_layout_info")]
+pub struct GridLineNamesIter<'a, S: CheapCloneStr> {
+    /// The flat name storage being iterated over
+    names: &'a [S],
+    /// Iterator over adjacent pairs of offsets into `names`
+    offsets: core::slice::Windows<'a, u32>,
+    /// Number of (unnamed, implicit) lines remaining before the stored lines
+    leading_empty: usize,
+    /// Number of (unnamed, implicit) lines remaining after the stored lines
+    trailing_empty: usize,
+}
+
+#[cfg(feature = "detailed_layout_info")]
+impl<'a, S: CheapCloneStr> Iterator for GridLineNamesIter<'a, S> {
+    type Item = &'a [S];
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.leading_empty > 0 {
+            self.leading_empty -= 1;
+            return Some(&[]);
+        }
+        if let Some(window) = self.offsets.next() {
+            return Some(&self.names[window[0] as usize..window[1] as usize]);
+        }
+        if self.trailing_empty > 0 {
+            self.trailing_empty -= 1;
+            return Some(&[]);
+        }
+        None
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let len = self.leading_empty + self.offsets.len() + self.trailing_empty;
+        (len, Some(len))
+    }
+}
+
+#[cfg(feature = "detailed_layout_info")]
+impl<S: CheapCloneStr> ExactSizeIterator for GridLineNamesIter<'_, S> {}
 
 #[cfg(test)]
 mod tests {

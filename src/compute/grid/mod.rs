@@ -22,9 +22,16 @@ use track_sizing::{
 use types::{CellOccupancyMatrix, GridTrack, NamedLineResolver};
 
 #[cfg(feature = "detailed_layout_info")]
+use crate::sys::{DefaultCheapStr, String};
+#[cfg(feature = "detailed_layout_info")]
+use crate::CheapCloneStr;
+#[cfg(feature = "detailed_layout_info")]
 use types::{GridItem, GridTrackKind, TrackCounts};
 
 pub(crate) use types::{GridCoordinate, GridLine, OriginZeroLine, MAX_GRID_TRACKS, MAX_OZ_LINE, MIN_OZ_LINE};
+
+#[cfg(feature = "detailed_layout_info")]
+pub use types::{GridLineNames, GridLineNamesIter};
 
 mod alignment;
 mod explicit_grid;
@@ -218,6 +225,12 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
 
     name_resolver.set_explicit_column_count(explicit_col_count);
     name_resolver.set_explicit_row_count(explicit_row_count);
+
+    // Build the per-line names of the explicit grid from the name resolver's collected pairs
+    #[cfg(feature = "detailed_layout_info")]
+    let detailed_column_line_names = name_resolver.detailed_line_names(AbsoluteAxis::Horizontal);
+    #[cfg(feature = "detailed_layout_info")]
+    let detailed_row_line_names = name_resolver.detailed_line_names(AbsoluteAxis::Vertical);
 
     // 3. Implicit Grid: Estimate Track Counts
     // Estimate the number of rows and columns in the implicit grid (= the entire grid)
@@ -783,8 +796,16 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     tree.set_detailed_grid_info(
         node,
         DetailedGridInfo {
-            rows: DetailedGridTracksInfo::from_grid_tracks_and_track_count(final_row_counts, rows),
-            columns: DetailedGridTracksInfo::from_grid_tracks_and_track_count(final_col_counts, columns),
+            rows: DetailedGridTracksInfo::from_grid_tracks_and_track_count(
+                final_row_counts,
+                rows,
+                detailed_row_line_names,
+            ),
+            columns: DetailedGridTracksInfo::from_grid_tracks_and_track_count(
+                final_col_counts,
+                columns,
+                detailed_column_line_names,
+            ),
             items: items.iter().map(DetailedGridItemsInfo::from_grid_item).collect(),
         },
     );
@@ -854,17 +875,43 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
 /// Information from the computation of grid
 #[derive(Debug, Clone, PartialEq)]
 #[cfg(feature = "detailed_layout_info")]
-pub struct DetailedGridInfo {
+pub struct DetailedGridInfo<S: CheapCloneStr = DefaultCheapStr> {
     /// <https://drafts.csswg.org/css-grid-1/#grid-row>
-    pub rows: DetailedGridTracksInfo,
+    pub rows: DetailedGridTracksInfo<S>,
     /// <https://drafts.csswg.org/css-grid-1/#grid-column>
-    pub columns: DetailedGridTracksInfo,
+    pub columns: DetailedGridTracksInfo<S>,
     /// <https://drafts.csswg.org/css-grid-1/#grid-items>
     pub items: Vec<DetailedGridItemsInfo>,
 }
 
 #[cfg(feature = "detailed_layout_info")]
-impl DetailedGridInfo {
+impl<S: CheapCloneStr> DetailedGridInfo<S> {
+    /// Write the used row track sizes and line names to the passed writer in the resolved value
+    /// format of the `grid-template-rows` property
+    /// (see <https://www.w3.org/TR/css-grid-1/#resolved-track-list>)
+    pub fn write_grid_template_rows(&self, out: &mut impl core::fmt::Write) -> core::fmt::Result {
+        self.rows.write_track_list(out)
+    }
+
+    /// Write the used column track sizes and line names to the passed writer in the resolved value
+    /// format of the `grid-template-columns` property
+    /// (see <https://www.w3.org/TR/css-grid-1/#resolved-track-list>)
+    pub fn write_grid_template_columns(&self, out: &mut impl core::fmt::Write) -> core::fmt::Result {
+        self.columns.write_track_list(out)
+    }
+
+    /// Serialize the used row track sizes and line names in the resolved value format of the
+    /// `grid-template-rows` property (see <https://www.w3.org/TR/css-grid-1/#resolved-track-list>)
+    pub fn grid_template_rows(&self) -> String {
+        self.rows.to_track_list_string()
+    }
+
+    /// Serialize the used column track sizes and line names in the resolved value format of the
+    /// `grid-template-columns` property (see <https://www.w3.org/TR/css-grid-1/#resolved-track-list>)
+    pub fn grid_template_columns(&self) -> String {
+        self.columns.to_track_list_string()
+    }
+
     /// Compute the location and size of the grid area occupied by the item at `item_index` (an
     /// index into [`DetailedGridInfo::items`]), relative to the grid container's border box.
     ///
@@ -888,7 +935,7 @@ impl DetailedGridInfo {
 /// Information from the computation of grids tracks
 #[derive(Debug, Clone, PartialEq)]
 #[cfg(feature = "detailed_layout_info")]
-pub struct DetailedGridTracksInfo {
+pub struct DetailedGridTracksInfo<S: CheapCloneStr = DefaultCheapStr> {
     /// Number of leading implicit grid tracks
     pub negative_implicit_tracks: u16,
     /// Number of explicit grid tracks
@@ -900,10 +947,16 @@ pub struct DetailedGridTracksInfo {
     /// These positions account for the container's border and padding, the `gap` property,
     /// content alignment (`align-content`/`justify-content`), and collapsed tracks.
     pub positions: Vec<Line<f32>>,
+
+    /// The names of each *explicit* grid line. Stored line `i` (0-indexed) bounds the start of
+    /// explicit track `i`; use [`DetailedGridTracksInfo::names_for_line`] or
+    /// [`DetailedGridTracksInfo::iter_line_names`] for indices relative to the full grid
+    /// (including implicit tracks). Empty if the grid has no named lines.
+    pub line_names: GridLineNames<S>,
 }
 
 #[cfg(feature = "detailed_layout_info")]
-impl DetailedGridTracksInfo {
+impl<S: CheapCloneStr> DetailedGridTracksInfo<S> {
     /// Get the start and end position of each track relative to the grid container's border box
     fn positions_from_grid_track_layout(grid_tracks: &[GridTrack]) -> Vec<Line<f32>> {
         grid_tracks
@@ -914,13 +967,94 @@ impl DetailedGridTracksInfo {
     }
 
     /// Construct DetailedGridTracksInfo from TrackCounts and GridTracks
-    fn from_grid_tracks_and_track_count(track_count: TrackCounts, grid_tracks: Vec<GridTrack>) -> Self {
+    fn from_grid_tracks_and_track_count(
+        track_count: TrackCounts,
+        grid_tracks: Vec<GridTrack>,
+        line_names: GridLineNames<S>,
+    ) -> Self {
         DetailedGridTracksInfo {
             negative_implicit_tracks: track_count.negative_implicit,
             explicit_tracks: track_count.explicit,
             positive_implicit_tracks: track_count.positive_implicit,
-            positions: DetailedGridTracksInfo::positions_from_grid_track_layout(&grid_tracks),
+            positions: DetailedGridTracksInfo::<S>::positions_from_grid_track_layout(&grid_tracks),
+            line_names,
         }
+    }
+
+    /// The names of the grid line with the passed 0-indexed line index, where line `i` bounds
+    /// the start of track `i` of the full grid (including implicit tracks).
+    /// Returns an empty slice if the line has no names or the index is out of range.
+    pub fn names_for_line(&self, line_index: usize) -> &[S] {
+        match line_index.checked_sub(self.negative_implicit_tracks as usize) {
+            Some(stored_index) => self.line_names.line(stored_index),
+            None => &[],
+        }
+    }
+
+    /// Iterate over the name group (`&[S]`) of each grid line of the full grid (including
+    /// implicit tracks) in line order, yielding empty groups for unnamed (implicit) lines.
+    /// Yields nothing if the grid has no named lines.
+    pub fn iter_line_names(&self) -> GridLineNamesIter<'_, S> {
+        if self.line_names.is_empty() {
+            return self.line_names.iter();
+        }
+        let total_line_count = self.positions.len() + 1;
+        let leading_empty = self.negative_implicit_tracks as usize;
+        let trailing_empty = total_line_count.saturating_sub(leading_empty + self.line_names.line_count());
+        self.line_names.iter_padded(leading_empty, trailing_empty)
+    }
+
+    /// Write the used track sizes and line names of this axis to the passed writer in the
+    /// resolved value format of the `grid-template-rows`/`grid-template-columns` properties
+    /// (see <https://www.w3.org/TR/css-grid-1/#resolved-track-list>)
+    pub fn write_track_list(&self, out: &mut impl core::fmt::Write) -> core::fmt::Result {
+        /// Write a bracketed line name group (e.g. `[foo bar]`)
+        fn write_line_names<S: CheapCloneStr>(out: &mut impl core::fmt::Write, names: &[S]) -> core::fmt::Result {
+            out.write_char('[')?;
+            for (i, name) in names.iter().enumerate() {
+                if i != 0 {
+                    out.write_char(' ')?;
+                }
+                out.write_str(name.as_ref())?;
+            }
+            out.write_char(']')
+        }
+
+        if self.positions.is_empty() {
+            return out.write_str("none");
+        }
+
+        let mut needs_space = false;
+        for (track_index, position) in self.positions.iter().enumerate() {
+            let names = self.names_for_line(track_index);
+            if !names.is_empty() {
+                if needs_space {
+                    out.write_char(' ')?;
+                }
+                write_line_names(out, names)?;
+                needs_space = true;
+            }
+            if needs_space {
+                out.write_char(' ')?;
+            }
+            write!(out, "{}px", position.end - position.start)?;
+            needs_space = true;
+        }
+        let trailing_names = self.names_for_line(self.positions.len());
+        if !trailing_names.is_empty() {
+            out.write_char(' ')?;
+            write_line_names(out, trailing_names)?;
+        }
+        Ok(())
+    }
+
+    /// Serialize the used track sizes and line names of this axis in the resolved value format of
+    /// the `grid-template-rows`/`grid-template-columns` properties
+    /// (see <https://www.w3.org/TR/css-grid-1/#resolved-track-list>)
+    pub fn to_track_list_string(&self) -> String {
+        let mut out = String::new();
+        self.write_track_list(&mut out).expect("writing to a String cannot fail");
+        out
     }
 }
 
