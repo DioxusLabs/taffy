@@ -208,6 +208,97 @@ mod detailed_grid_info {
         assert_eq!(info.item_grid_area(1), Some((Point { x: 5.0, y: 65.0 }, Size { width: 110.0, height: 30.0 })));
         // out of bounds index
         assert_eq!(info.item_grid_area(2), None);
+
+        assert_eq!(
+            info.resolve_absolute_grid_area(
+                Line { start: line(1), end: line(3) },
+                Line { start: line(1), end: line(3) },
+                taffy::style::Direction::Ltr,
+                Rect { left: 0.0, right: 120.0, top: 0.0, bottom: 100.0 },
+            ),
+            Rect { left: 5.0, right: 115.0, top: 5.0, bottom: 95.0 }
+        );
+        assert_eq!(
+            info.resolve_absolute_grid_area(
+                Line::AUTO,
+                Line { start: GridPlacement::Auto, end: line(2) },
+                taffy::style::Direction::Ltr,
+                Rect { left: 0.0, right: 120.0, top: 0.0, bottom: 100.0 },
+            ),
+            Rect { left: 0.0, right: 45.0, top: 0.0, bottom: 100.0 }
+        );
+        assert_eq!(
+            info.resolve_absolute_grid_area(
+                Line::AUTO,
+                Line { start: line(-1), end: GridPlacement::Auto },
+                taffy::style::Direction::Ltr,
+                Rect { left: 0.0, right: 120.0, top: 0.0, bottom: 100.0 },
+            ),
+            Rect { left: 115.0, right: 120.0, top: 0.0, bottom: 100.0 }
+        );
+        assert_eq!(
+            info.resolve_absolute_grid_area(
+                Line::AUTO,
+                Line { start: GridPlacement::NamedLine("missing".into(), 1), end: line(2) },
+                taffy::style::Direction::Ltr,
+                Rect { left: 0.0, right: 120.0, top: 0.0, bottom: 100.0 },
+            ),
+            Rect { left: 0.0, right: 45.0, top: 0.0, bottom: 100.0 }
+        );
+        assert_eq!(
+            info.resolve_absolute_grid_area(
+                Line::AUTO,
+                Line { start: GridPlacement::Span(2), end: GridPlacement::Span(3) },
+                taffy::style::Direction::Ltr,
+                Rect { left: 0.0, right: 120.0, top: 0.0, bottom: 100.0 },
+            ),
+            Rect { left: 0.0, right: 120.0, top: 0.0, bottom: 100.0 }
+        );
+    }
+
+    #[test]
+    fn absolute_grid_area_named_span() {
+        let mut tree = new_test_tree();
+        let child = tree.new_leaf(Style::default()).unwrap();
+        let root = tree
+            .new_with_children(
+                Style {
+                    display: Display::Grid,
+                    size: Size { width: Dimension::from_length(90.0), height: Dimension::from_length(50.0) },
+                    grid_template_columns: vec![length(30.0), length(30.0), length(30.0)],
+                    grid_template_column_names: vec![
+                        vec!["a".into()],
+                        vec!["b".into()],
+                        vec!["b".into()],
+                        vec!["c".into()],
+                    ],
+                    grid_template_rows: vec![length(50.0)],
+                    ..Default::default()
+                },
+                &[child],
+            )
+            .unwrap();
+        tree.compute_layout(root, definite(90.0, 50.0)).unwrap();
+
+        let info = get_detailed_grid_info(&tree, root);
+        assert_eq!(
+            info.resolve_absolute_grid_area(
+                Line::AUTO,
+                Line { start: GridPlacement::NamedLine("a".into(), 1), end: GridPlacement::NamedSpan("b".into(), 2) },
+                taffy::style::Direction::Ltr,
+                Rect { left: 0.0, right: 90.0, top: 0.0, bottom: 50.0 },
+            ),
+            Rect { left: 0.0, right: 60.0, top: 0.0, bottom: 50.0 }
+        );
+        assert_eq!(
+            info.resolve_absolute_grid_area(
+                Line::AUTO,
+                Line { start: GridPlacement::NamedLine("b".into(), 2), end: GridPlacement::NamedLine("c".into(), 1) },
+                taffy::style::Direction::Ltr,
+                Rect { left: 0.0, right: 90.0, top: 0.0, bottom: 50.0 },
+            ),
+            Rect { left: 60.0, right: 90.0, top: 0.0, bottom: 50.0 }
+        );
     }
 
     #[test]
@@ -243,5 +334,32 @@ mod detailed_grid_info {
         assert_eq!(info.columns.positions[1], Line { start: 0.0, end: 60.0 });
         // item_grid_area resolves the physical rectangle of the (auto-placed) item's grid area
         assert_eq!(info.item_grid_area(0), Some((Point { x: 60.0, y: 0.0 }, Size { width: 40.0, height: 50.0 })));
+        assert_eq!(
+            info.resolve_absolute_grid_area(
+                Line::AUTO,
+                Line { start: line(1), end: line(2) },
+                taffy::style::Direction::Rtl,
+                Rect { left: 0.0, right: 100.0, top: 0.0, bottom: 50.0 },
+            ),
+            Rect { left: 60.0, right: 100.0, top: 0.0, bottom: 50.0 }
+        );
+        assert_eq!(
+            info.resolve_absolute_grid_area(
+                Line::AUTO,
+                Line { start: GridPlacement::NamedLine("a".into(), 1), end: GridPlacement::NamedLine("b".into(), 1) },
+                taffy::style::Direction::Rtl,
+                Rect { left: 0.0, right: 100.0, top: 0.0, bottom: 50.0 },
+            ),
+            Rect { left: 60.0, right: 100.0, top: 0.0, bottom: 50.0 }
+        );
+        assert_eq!(
+            info.resolve_absolute_grid_area(
+                Line::AUTO,
+                Line { start: line(1), end: GridPlacement::Auto },
+                taffy::style::Direction::Rtl,
+                Rect { left: 0.0, right: 100.0, top: 0.0, bottom: 50.0 },
+            ),
+            Rect { left: 0.0, right: 100.0, top: 0.0, bottom: 50.0 }
+        );
     }
 }
