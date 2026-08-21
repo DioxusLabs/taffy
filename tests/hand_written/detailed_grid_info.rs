@@ -43,7 +43,7 @@ mod detailed_grid_info {
         let info = get_detailed_grid_info(&tree, root);
         assert!(info.columns.line_names.is_empty());
         assert!(info.rows.line_names.is_empty());
-        assert_eq!(info.columns.line_names.iter().count(), 0);
+        assert_eq!(info.columns.iter_line_names().count(), 0);
         assert_eq!(info.grid_template_columns(), "40px 60px");
         assert_eq!(info.grid_template_rows(), "50px");
     }
@@ -83,14 +83,14 @@ mod detailed_grid_info {
         tree.compute_layout(root, definite(100.0, 50.0)).unwrap();
 
         let info = get_detailed_grid_info(&tree, root);
-        let column_lines: Vec<&[String]> = info.columns.line_names.iter().collect();
+        let column_lines: Vec<&[String]> = info.columns.iter_line_names().collect();
         assert_eq!(column_lines.len(), 3);
         assert_eq!(column_lines[0], ["full-start".to_string(), "hero-start".to_string()]);
         assert_eq!(column_lines[1], ["main-start".to_string()]);
         assert_eq!(column_lines[2], ["main-end".to_string(), "full-end".to_string(), "hero-end".to_string()]);
-        assert_eq!(info.columns.line_names.line(1), ["main-start".to_string()]);
+        assert_eq!(info.columns.names_for_line(1), ["main-start".to_string()]);
 
-        let row_lines: Vec<&[String]> = info.rows.line_names.iter().collect();
+        let row_lines: Vec<&[String]> = info.rows.iter_line_names().collect();
         assert_eq!(row_lines, [&["hero-start".to_string()][..], &["hero-end".to_string()][..]]);
 
         assert_eq!(
@@ -124,7 +124,7 @@ mod detailed_grid_info {
         tree.compute_layout(root, definite(100.0, 50.0)).unwrap();
 
         let info = get_detailed_grid_info(&tree, root);
-        let column_lines: Vec<&[String]> = info.columns.line_names.iter().collect();
+        let column_lines: Vec<&[String]> = info.columns.iter_line_names().collect();
         assert_eq!(column_lines.len(), 3);
         // First repetition's end line collapses with the second repetition's start line,
         // and the last repetition's end line collapses with the following template name set
@@ -164,7 +164,7 @@ mod detailed_grid_info {
 
         let info = get_detailed_grid_info(&tree, root);
         assert_eq!(info.columns.negative_implicit_tracks, 1);
-        let column_lines: Vec<&[String]> = info.columns.line_names.iter().collect();
+        let column_lines: Vec<&[String]> = info.columns.iter_line_names().collect();
         // One leading implicit track: its lines are unnamed, explicit names shift by one
         assert_eq!(column_lines.len(), 3);
         assert!(column_lines[0].is_empty());
@@ -231,7 +231,7 @@ mod detailed_grid_info {
         tree.compute_layout(root, definite(100.0, 50.0)).unwrap();
 
         let info = get_detailed_grid_info(&tree, root);
-        let column_lines: Vec<&[String]> = info.columns.line_names.iter().collect();
+        let column_lines: Vec<&[String]> = info.columns.iter_line_names().collect();
         // Tracks and line names are in logical order regardless of direction
         assert_eq!(column_lines[0], ["a".to_string()]);
         assert_eq!(column_lines[1], ["b".to_string()]);
