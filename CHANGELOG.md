@@ -4,6 +4,8 @@
 
 ### Added
 
+- The tagged-pointer size types can now be inspected via a plain enum. `LengthPercentage`, `LengthPercentageAuto`, `Dimension`, `MinTrackSizingFunction` and `MaxTrackSizingFunction` each gain an `expand()` method returning a matching `Expanded*` enum (`ExpandedLengthPercentage`, `ExpandedDimension`, etc.) whose variants map one-to-one onto the type's constructors, along with `From` conversions in both directions. This makes it possible to read back the original value of a style property (for style inspection, serialization or integration with other libraries) without having to work with the raw `CompactLength` representation
+
 - Support for `flex-wrap: balance` and the `flex-line-count` property from [CSS Flexbox Level 2](https://drafts.csswg.org/css-flexbox-2/#balance-values), gated behind a new on-by-default `flexbox_balance` cargo feature (which depends on `flexbox`):
   - `FlexWrap` gains `Balance` and `BalanceReverse` variants, and its CSS parser accepts the multi-keyword grammar `nowrap | [ wrap | wrap-reverse ] || balance`. When balancing, items are collected into flex lines such that the largest line is as small as possible (minimising the sum of squares of each line's free space), rather than greedily filling each line
   - `Style::flex_line_count` (and a corresponding `FlexboxContainerStyle::flex_line_count` trait method) specifies the minimum number of lines to balance items into (default `1`). When it is greater than 1 on any multi-line container (`wrap`, `wrap-reverse`, `balance` or `balance-reverse`), definite cross-axis available space for measuring items is divided between the requested number of lines (after subtracting cross-axis gaps), per the [CSSWG resolution](https://github.com/w3c/csswg-drafts/issues/13414)
@@ -113,6 +115,8 @@
 - Flexbox: percentage heights of block descendants no longer resolve against a flex item's post-flexing main size when that size is indefinite (#950)
 
 - Flexbox: a wrapping container with an indefinite main size now wraps its items against its max main size (e.g. `max-width` for a row container) when the available space exceeds it. Previously items were collected into flex lines using the raw available space, so a fit-content sized container (such as a float) with a `max-width` smaller than the available space never wrapped
+
+- Grid: distribute only the crossed flex factor sum's proportion (clamped at one) of an item's content-derived contribution to the flexible tracks it spans, floored by the item's minimum contribution. A `0fr` track holding a `min-height: 0` item now collapses to zero under an intrinsic sizing constraint, as browsers do (#1084)
 
 ## 0.13.0
 

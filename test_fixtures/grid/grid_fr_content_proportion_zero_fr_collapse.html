@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    A 0fr row collapses under a min-height:0 item with 100px of content: the grid is 0px tall
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="display: grid; grid-template-rows: 0fr; grid-template-columns: 20px;">
+  <div style="min-height: 0;"><div style="width: 20px; height: 100px;"></div></div>
+</div>
+
+</body>
+</html>

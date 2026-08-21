@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    An 80px min-height above the 0.5fr share of the item's 100px content floors the row: the grid is 80px tall
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="display: grid; grid-template-rows: 0.5fr; grid-template-columns: 20px;">
+  <div style="min-height: 80px;"><div style="width: 20px; height: 100px;"></div></div>
+</div>
+
+</body>
+</html>

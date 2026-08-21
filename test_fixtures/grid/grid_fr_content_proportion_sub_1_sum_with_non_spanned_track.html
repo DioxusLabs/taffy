@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    A 60px item spanning 0.2fr and 0.3fr columns is scaled by those crossed factors alone, not by the non-spanned 0.5fr column
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="display: flex; align-items: start; width: 150px; height: 100px;">
+  <div style="display: grid; grid-template-rows: 40px 40px; grid-template-columns: 0.2fr 0.3fr 0.5fr;">
+    <div style="width: 60px; grid-column: span 2;"></div>
+    <div></div>
+    <div></div>
+    <div></div>
+    <div></div>
+  </div>
+</div>
+
+</body>
+</html>
