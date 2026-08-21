@@ -287,6 +287,11 @@ where
     }
 }
 
+impl Rect<Option<f32>> {
+    /// A [`Rect`] with `None` as all parameters
+    pub const NONE: Rect<Option<f32>> = Self { left: None, right: None, top: None, bottom: None };
+}
+
 impl Rect<f32> {
     /// Creates a new Rect with `0.0` as all parameters
     pub const ZERO: Rect<f32> = Self { left: 0.0, right: 0.0, top: 0.0, bottom: 0.0 };

@@ -655,7 +655,7 @@ fn generate_node(w: &mut XmlWriter, node: &Value) {
     maybe_write(w, "box-sizing", get_str_attr(&style["boxSizing"], Some("border-box")));
     maybe_write(w, "direction", get_str_attr(&style["direction"], None));
     maybe_write(w, "writing-mode", get_str_attr(&style["writingMode"], None));
-    maybe_write(w, "position", get_str_attr(&style["position"], Some("relative")));
+    maybe_write(w, "position", get_str_attr(&style["position"], Some("static")));
     maybe_write(w, "float", get_str_attr(&style["cssFloat"], None));
     maybe_write(w, "clear", get_str_attr(&style["clear"], None));
     maybe_write(w, "flex-direction", get_str_attr(&style["flexDirection"], Some("row")));

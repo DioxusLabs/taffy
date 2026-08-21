@@ -1,9 +1,9 @@
 <test name="block_inset_direction_rtl__border_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="block" direction="rtl" width="100px" height="100px">
-      <div direction="rtl" width="40px" height="20px" left="10px"/>
-      <div direction="rtl" width="40px" height="20px" right="10px"/>
+    <div display="block" direction="rtl" position="relative" width="100px" height="100px">
+      <div direction="rtl" position="relative" width="40px" height="20px" left="10px"/>
+      <div direction="rtl" position="relative" width="40px" height="20px" right="10px"/>
     </div>
   </input>
   <expectations>
