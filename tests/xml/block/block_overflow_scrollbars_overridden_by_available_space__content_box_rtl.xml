@@ -1,8 +1,8 @@
 <test name="block_overflow_scrollbars_overridden_by_available_space__content_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="block" box-sizing="content-box" direction="rtl" width="2px" height="4px">
-      <div display="block" box-sizing="content-box" direction="rtl" overflow-x="scroll" overflow-y="scroll" scrollbar-width="15">
+    <div display="block" box-sizing="content-box" direction="rtl" position="absolute" width="2px" height="4px">
+      <div display="block" box-sizing="content-box" direction="rtl" position="relative" overflow-x="scroll" overflow-y="scroll" scrollbar-width="15">
         <div box-sizing="content-box" direction="rtl" position="absolute" top="0px" left="0px" bottom="0px" right="0px"/>
       </div>
     </div>

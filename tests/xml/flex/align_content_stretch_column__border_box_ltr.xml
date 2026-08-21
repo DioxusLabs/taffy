@@ -1,14 +1,14 @@
 <test name="align_content_stretch_column__border_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div direction="ltr" flex-direction="column" flex-wrap="wrap" align-content="stretch" width="100px" height="150px">
-      <div direction="ltr" flex-direction="column" height="50px">
-        <div direction="ltr" flex-grow="1" flex-basis="0%"/>
+    <div direction="ltr" position="absolute" flex-direction="column" flex-wrap="wrap" align-content="stretch" width="100px" height="150px">
+      <div direction="ltr" position="relative" flex-direction="column" height="50px">
+        <div direction="ltr" position="relative" flex-grow="1" flex-basis="0%"/>
       </div>
-      <div direction="ltr" flex-grow="1" flex-basis="0%" height="50px"/>
-      <div direction="ltr" height="50px"/>
-      <div direction="ltr" height="50px"/>
-      <div direction="ltr" height="50px"/>
+      <div direction="ltr" position="relative" flex-grow="1" flex-basis="0%" height="50px"/>
+      <div direction="ltr" position="relative" height="50px"/>
+      <div direction="ltr" position="relative" height="50px"/>
+      <div direction="ltr" position="relative" height="50px"/>
     </div>
   </input>
   <expectations>

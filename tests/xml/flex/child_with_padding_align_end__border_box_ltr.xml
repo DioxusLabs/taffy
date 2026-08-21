@@ -1,8 +1,8 @@
 <test name="child_with_padding_align_end__border_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div direction="ltr" flex-direction="column" align-items="flex-end" justify-content="flex-end" width="200px" height="200px">
-      <div direction="ltr" width="100px" height="100px" padding-top="20px" padding-left="20px" padding-bottom="20px" padding-right="20px"/>
+    <div direction="ltr" position="absolute" flex-direction="column" align-items="flex-end" justify-content="flex-end" width="200px" height="200px">
+      <div direction="ltr" position="relative" width="100px" height="100px" padding-top="20px" padding-left="20px" padding-bottom="20px" padding-right="20px"/>
     </div>
   </input>
   <expectations>

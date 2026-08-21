@@ -1,8 +1,8 @@
 <test name="block_margin_auto_left_and_right_with_auto_width__border_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="block" direction="rtl" width="200px" height="200px">
-      <text direction="rtl" height="50px" max-width="100px" margin-left="auto" margin-right="auto">
+    <div display="block" direction="rtl" position="absolute" width="200px" height="200px">
+      <text direction="rtl" position="relative" height="50px" max-width="100px" margin-left="auto" margin-right="auto">
         
       </text>
     </div>

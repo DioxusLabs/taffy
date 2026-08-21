@@ -1,8 +1,8 @@
 <test name="block_aspect_ratio_fill_max_height__content_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="block" box-sizing="content-box" direction="rtl" width="100px" height="100px">
-      <text display="block" box-sizing="content-box" direction="rtl" max-width="40px" aspect-ratio="2">
+    <div display="block" box-sizing="content-box" direction="rtl" position="absolute" width="100px" height="100px">
+      <text display="block" box-sizing="content-box" direction="rtl" position="relative" max-width="40px" aspect-ratio="2">
         HH​HH​HH​HH​HH​HH​HH​HH​HH​HH​HH
       </text>
     </div>

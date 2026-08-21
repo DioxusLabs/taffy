@@ -1,8 +1,8 @@
 <test name="flex_basis_smaller_than_main_dimen_row__content_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div box-sizing="content-box" direction="ltr" width="100px">
-      <div box-sizing="content-box" direction="ltr" flex-basis="10px" width="50px" height="50px"/>
+    <div box-sizing="content-box" direction="ltr" position="absolute" width="100px">
+      <div box-sizing="content-box" direction="ltr" position="relative" flex-basis="10px" width="50px" height="50px"/>
     </div>
   </input>
   <expectations>

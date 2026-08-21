@@ -1,7 +1,7 @@
 <test name="block_inset_percentage__content_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="block" box-sizing="content-box" direction="rtl" width="50px">
+    <div display="block" box-sizing="content-box" direction="rtl" position="absolute" width="50px">
       <div box-sizing="content-box" direction="rtl" position="relative" height="10px" top="4%" left="2%"/>
       <div box-sizing="content-box" direction="rtl" position="relative" height="10px" bottom="8%" right="6%"/>
       <div box-sizing="content-box" direction="rtl" position="relative" height="10px" top="4%" left="2%" bottom="8%" right="6%"/>

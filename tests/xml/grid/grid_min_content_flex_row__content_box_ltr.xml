@@ -1,15 +1,15 @@
 <test name="grid_min_content_flex_row__content_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="grid" box-sizing="content-box" direction="ltr" grid-template-rows="40px" grid-template-columns="min-content">
-      <div display="flex" box-sizing="content-box" direction="ltr">
-        <text box-sizing="content-box" direction="ltr">
+    <div display="grid" box-sizing="content-box" direction="ltr" position="absolute" grid-template-rows="40px" grid-template-columns="min-content">
+      <div display="flex" box-sizing="content-box" direction="ltr" position="relative">
+        <text box-sizing="content-box" direction="ltr" position="relative">
           HH​HH
         </text>
-        <text box-sizing="content-box" direction="ltr">
+        <text box-sizing="content-box" direction="ltr" position="relative">
           HH​HH
         </text>
-        <text box-sizing="content-box" direction="ltr">
+        <text box-sizing="content-box" direction="ltr" position="relative">
           HH​HH
         </text>
       </div>

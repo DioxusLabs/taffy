@@ -1,7 +1,7 @@
 <test name="absolute_resolved_insets__border_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div direction="rtl">
+    <div direction="rtl" position="absolute">
       <div display="flex" direction="rtl" position="relative" width="200px" height="200px" padding-top="15px" padding-left="15px" padding-bottom="15px" padding-right="15px" border-top="20px" border-left="20px" border-bottom="20px" border-right="20px">
         <div direction="rtl" position="absolute" top="auto" left="auto"/>
         <div direction="rtl" position="absolute" top="0px" left="0px"/>

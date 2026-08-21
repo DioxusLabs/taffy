@@ -1,13 +1,13 @@
 <test name="wrap_nodes_with_content_sizing_overflowing_margin__border_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div direction="ltr" flex-direction="column" width="500px" height="500px">
-      <div direction="ltr" flex-wrap="wrap" width="85px">
-        <div direction="ltr" flex-direction="column">
-          <div direction="ltr" width="40px" height="40px"/>
+    <div direction="ltr" position="absolute" flex-direction="column" width="500px" height="500px">
+      <div direction="ltr" position="relative" flex-wrap="wrap" width="85px">
+        <div direction="ltr" position="relative" flex-direction="column">
+          <div direction="ltr" position="relative" width="40px" height="40px"/>
         </div>
-        <div direction="ltr" flex-direction="column" margin-right="10px">
-          <div direction="ltr" width="40px" height="40px"/>
+        <div direction="ltr" position="relative" flex-direction="column" margin-right="10px">
+          <div direction="ltr" position="relative" width="40px" height="40px"/>
         </div>
       </div>
     </div>

@@ -1,15 +1,15 @@
 <test name="blockflex_baseline_overflow_hidden_clamp__border_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="flex" direction="rtl" align-items="baseline" width="200px" height="120px">
-      <div display="block" direction="rtl" width="40px" padding-bottom="20px">
-        <div display="block" direction="rtl" overflow-x="hidden" overflow-y="hidden" scrollbar-width="15" width="30px" height="30px">
-          <div display="flex" direction="rtl" width="30px">
-            <div direction="rtl" width="10px" height="40px"/>
+    <div display="flex" direction="rtl" position="absolute" align-items="baseline" width="200px" height="120px">
+      <div display="block" direction="rtl" position="relative" width="40px" padding-bottom="20px">
+        <div display="block" direction="rtl" position="relative" overflow-x="hidden" overflow-y="hidden" scrollbar-width="15" width="30px" height="30px">
+          <div display="flex" direction="rtl" position="relative" width="30px">
+            <div direction="rtl" position="relative" width="10px" height="40px"/>
           </div>
         </div>
       </div>
-      <div display="block" direction="rtl" width="40px" height="80px"/>
+      <div display="block" direction="rtl" position="relative" width="40px" height="80px"/>
     </div>
   </input>
   <expectations>

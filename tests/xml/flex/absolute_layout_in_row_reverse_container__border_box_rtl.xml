@@ -1,7 +1,7 @@
 <test name="absolute_layout_in_row_reverse_container__border_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div direction="rtl" flex-direction="row-reverse" width="100px" height="100px">
+    <div direction="rtl" position="absolute" flex-direction="row-reverse" width="100px" height="100px">
       <div direction="rtl" position="absolute" width="20px" height="20px"/>
     </div>
   </input>

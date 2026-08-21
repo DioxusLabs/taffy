@@ -1,10 +1,10 @@
 <test name="gap_column_gap_justify_space_between__content_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div box-sizing="content-box" direction="rtl" justify-content="space-between" width="100px" height="100px" column-gap="10px">
-      <div box-sizing="content-box" direction="rtl" width="20px"/>
-      <div box-sizing="content-box" direction="rtl" width="20px"/>
-      <div box-sizing="content-box" direction="rtl" width="20px"/>
+    <div box-sizing="content-box" direction="rtl" position="absolute" justify-content="space-between" width="100px" height="100px" column-gap="10px">
+      <div box-sizing="content-box" direction="rtl" position="relative" width="20px"/>
+      <div box-sizing="content-box" direction="rtl" position="relative" width="20px"/>
+      <div box-sizing="content-box" direction="rtl" position="relative" width="20px"/>
     </div>
   </input>
   <expectations>

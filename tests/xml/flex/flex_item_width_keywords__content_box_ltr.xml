@@ -1,14 +1,14 @@
 <test name="flex_item_width_keywords__content_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="flex" box-sizing="content-box" direction="ltr" align-items="flex-start" width="200px">
-      <text box-sizing="content-box" direction="ltr" width="min-content">
+    <div display="flex" box-sizing="content-box" direction="ltr" position="absolute" align-items="flex-start" width="200px">
+      <text box-sizing="content-box" direction="ltr" position="relative" width="min-content">
         HH​HH
       </text>
-      <text box-sizing="content-box" direction="ltr" width="max-content">
+      <text box-sizing="content-box" direction="ltr" position="relative" width="max-content">
         HH​HH
       </text>
-      <text box-sizing="content-box" direction="ltr" width="fit-content">
+      <text box-sizing="content-box" direction="ltr" position="relative" width="fit-content">
         HH​HH
       </text>
     </div>

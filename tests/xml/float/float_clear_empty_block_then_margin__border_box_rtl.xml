@@ -1,10 +1,10 @@
 <test name="float_clear_empty_block_then_margin__border_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="block" direction="rtl" width="100px" border-top="1px">
-      <div display="block" direction="rtl" float="left" width="100px" height="20px"/>
-      <div display="block" direction="rtl" clear="both"/>
-      <div display="block" direction="rtl" clear="both" height="20px" margin-top="100px"/>
+    <div display="block" direction="rtl" position="absolute" width="100px" border-top="1px">
+      <div display="block" direction="rtl" position="relative" float="left" width="100px" height="20px"/>
+      <div display="block" direction="rtl" position="relative" clear="both"/>
+      <div display="block" direction="rtl" position="relative" clear="both" height="20px" margin-top="100px"/>
     </div>
   </input>
   <expectations>

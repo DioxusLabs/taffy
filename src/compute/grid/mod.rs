@@ -1,16 +1,20 @@
 //! This module is a partial implementation of the CSS Grid Level 1 specification
 //! <https://www.w3.org/TR/css-grid-1>
+use crate::compute::oof::perform_oof_layout;
 use crate::geometry::{AbsoluteAxis, AbstractAxis, InBothAbsAxis};
 use crate::geometry::{Line, Point, Rect, Size};
 use crate::style::{AlignItems, AvailableSpace, Overflow};
-use crate::tree::{Baselines, Layout, LayoutInput, LayoutOutput, LayoutPartialTreeExt, NodeId, RunMode, SizingMode};
+use crate::tree::{
+    Baselines, Layout, LayoutInput, LayoutOutput, LayoutPartialTreeExt, NodeId, OofCandidate, OofCandidates, RunMode,
+    SizingMode, StaticAlign, StaticEdge, StaticPosition,
+};
 use crate::util::debug::debug_log;
 use crate::util::sys::{f32_max, f32_min, GridTrackVec, Vec};
 use crate::util::MaybeMath;
 use crate::util::{MaybeResolve, ResolveOrZero};
 use crate::{
-    style_helpers::*, AlignContent, BoxGenerationMode, BoxSizing, CoreStyle, Direction, GridContainerStyle,
-    GridItemStyle, JustifyContent, LayoutGridContainer, RequestedAxis,
+    style_helpers::*, AlignContent, AlignItemsKeyword, AlignSelf, BoxGenerationMode, BoxSizing, CoreStyle, Direction,
+    GridContainerStyle, GridItemStyle, JustifyContent, LayoutGridContainer, RequestedAxis,
 };
 use alignment::{align_and_position_item, align_tracks};
 use explicit_grid::{compute_explicit_grid_size_in_axis, initialize_grid_tracks, AutoRepeatStrategy};
@@ -57,6 +61,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     let style = tree.get_grid_container_style(node);
     let direction = style.direction();
     let contain = style.contain();
+    let container_position = style.position();
 
     // 1. Compute "available grid space"
     // https://www.w3.org/TR/css-grid-1/#available-grid-space
@@ -598,6 +603,12 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     #[cfg_attr(not(feature = "content_size"), allow(unused_mut, unused))]
     let mut absolute_overflow_rect = Rect::ZERO;
 
+    // Out-of-flow candidates bubbled from in-flow children's subtrees, plus direct out-of-flow
+    // children of an unpositioned grid (which must be hoisted to an ancestor containing block)
+    let mut bubbled_candidates = OofCandidates::new();
+    let mut direct_oof_candidates = OofCandidates::new();
+    let mut hoisted: Vec<NodeId> = Vec::new();
+
     // Sort items back into original order to allow them to be matched up with styles
     items.sort_by_key(|item| item.source_order);
 
@@ -635,6 +646,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
             border,
             #[cfg(feature = "content_size")]
             is_scroll_container,
+            &mut bubbled_candidates,
         );
         item.y_position = y_position;
         item.height = height;
@@ -669,6 +681,87 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
 
         // Position absolutely positioned child
         if child_style.position().is_out_of_flow() {
+            // If this grid is not the child's containing block, emit an out-of-flow candidate
+            // (with a static position derived from the alignment styles resolved against the
+            // grid's padding box) which bubbles up to the containing block. Grid-placement
+            // properties do not apply when the grid is not the containing block.
+            if !container_position.is_positioned() {
+                let position = child_style.position();
+                let item_direction = child_style.direction();
+                let justify_self = child_style
+                    .justify_self()
+                    .map(|align| align.resolve_self_relative(item_direction, direction, true));
+                let align_self =
+                    child_style.align_self().map(|align| align.resolve_self_relative(item_direction, direction, false));
+                drop(child_style);
+
+                let x_alignment = justify_self
+                    .or(justify_items.map(|align| align.resolve_self_relative(item_direction, direction, true)))
+                    .unwrap_or(AlignSelf::START);
+                let y_alignment = align_self
+                    .or(align_items.map(|align| align.resolve_self_relative(item_direction, direction, false)))
+                    .unwrap_or(AlignSelf::START);
+
+                let area = Rect {
+                    left: border.left + if direction.is_rtl() { scrollbar_gutter.x } else { 0.0 },
+                    right: container_border_box.width
+                        - border.right
+                        - if direction.is_rtl() { 0.0 } else { scrollbar_gutter.x },
+                    top: border.top,
+                    bottom: container_border_box.height - border.bottom - scrollbar_gutter.y,
+                };
+
+                /// Compute the static position for a single axis
+                fn static_position_for_axis(
+                    alignment: AlignSelf,
+                    area: Line<f32>,
+                    axis_is_rtl: bool,
+                ) -> StaticPosition {
+                    let edge_for = |keyword: AlignItemsKeyword| {
+                        // Stretch does not apply to absolutely positioned items and falls
+                        // back to start-alignment for static-position purposes
+                        let start_position =
+                            !matches!(keyword, AlignItemsKeyword::End | AlignItemsKeyword::FlexEnd) ^ axis_is_rtl;
+                        match keyword {
+                            AlignItemsKeyword::Center => StaticEdge::Center,
+                            _ if start_position => StaticEdge::Start,
+                            _ => StaticEdge::End,
+                        }
+                    };
+                    StaticPosition {
+                        area,
+                        align: StaticAlign {
+                            keyword: edge_for(alignment.keyword),
+                            safety: alignment.safety,
+                            fallback: edge_for(crate::compute::common::alignment::resolve_self_alignment_safety(
+                                alignment, true,
+                            )),
+                        },
+                    }
+                }
+
+                direct_oof_candidates.push(OofCandidate {
+                    node: child,
+                    order,
+                    position,
+                    static_position: Point {
+                        x: static_position_for_axis(
+                            x_alignment,
+                            Line { start: area.left, end: area.right },
+                            direction.is_rtl(),
+                        ),
+                        y: static_position_for_axis(y_alignment, Line { start: area.top, end: area.bottom }, false),
+                    },
+                });
+
+                order += 1;
+                return;
+            }
+
+            // This grid is the child's containing block: resolve the grid area from the
+            // grid-placement properties and lay the child out in-algorithm.
+            hoisted.push(child);
+
             // Convert grid-col-{start/end} into Option's of indexes into the columns vector
             // The Option is None if the style property is Auto and an unresolvable Span
             let maybe_col_indexes = name_resolver
@@ -781,6 +874,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
                 border,
                 #[cfg(feature = "content_size")]
                 is_scroll_container,
+                &mut bubbled_candidates,
             );
             #[cfg(feature = "content_size")]
             {
@@ -790,6 +884,41 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
             order += 1;
         }
     });
+
+    // Lay out any out-of-flow candidates for which this node is the containing block (direct
+    // out-of-flow children of an unpositioned grid plus candidates bubbled from in-flow
+    // children's subtrees). The rest bubble up via `output.oof_candidates`.
+    direct_oof_candidates.append(&mut bubbled_candidates);
+    let absolute_position_inset = border
+        + Rect {
+            left: if direction.is_rtl() { scrollbar_gutter.x } else { 0.0 },
+            right: if direction.is_rtl() { 0.0 } else { scrollbar_gutter.x },
+            top: 0.0,
+            bottom: scrollbar_gutter.y,
+        };
+    let absolute_position_area = container_border_box - absolute_position_inset.sum_axes();
+    let absolute_position_offset = Point { x: absolute_position_inset.left, y: absolute_position_inset.top };
+    let mut unclaimed = OofCandidates::new();
+    let oof_overflow_rect = perform_oof_layout(
+        tree,
+        direct_oof_candidates,
+        absolute_position_area,
+        absolute_position_offset,
+        direction,
+        container_position.is_positioned(),
+        false,
+        #[cfg(feature = "content_size")]
+        is_scroll_container,
+        &mut hoisted,
+        &mut unclaimed,
+    );
+    tree.set_hoisted_children(node, &hoisted);
+    #[cfg(feature = "content_size")]
+    {
+        absolute_overflow_rect = absolute_overflow_rect.union(oof_overflow_rect);
+    }
+    #[cfg(not(feature = "content_size"))]
+    let _ = oof_overflow_rect;
 
     #[cfg(feature = "detailed_layout_info")]
     name_resolver.populate_detailed_line_resolvers(&mut detailed_row_line_names, &mut detailed_column_line_names);
@@ -817,16 +946,18 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     // contributed by absolutely positioned children (no baseline)
     if items.is_empty() {
         #[cfg(feature = "content_size")]
-        {
+        let mut output = {
             let mut overflow_rect = item_overflow_rect;
             if is_scroll_container {
                 overflow_rect.right += if direction.is_rtl() { padding.left } else { padding.right };
                 overflow_rect.bottom += padding.bottom;
             }
-            return LayoutOutput::from_sizes(container_border_box, overflow_rect.union(absolute_overflow_rect));
-        }
+            LayoutOutput::from_sizes(container_border_box, overflow_rect.union(absolute_overflow_rect))
+        };
         #[cfg(not(feature = "content_size"))]
-        return LayoutOutput::from_outer_size(container_border_box);
+        let mut output = LayoutOutput::from_outer_size(container_border_box);
+        output.oof_candidates = unclaimed;
+        return output;
     }
 
     // Determine the grid container baseline(s) (currently we only compute the first baseline)
@@ -868,11 +999,13 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     #[cfg(not(feature = "content_size"))]
     let scrollable_overflow_rect = item_overflow_rect;
 
-    LayoutOutput::from_sizes_and_baselines(
+    let mut output = LayoutOutput::from_sizes_and_baselines(
         container_border_box,
         scrollable_overflow_rect,
         Baselines::from_first(grid_container_baseline),
-    )
+    );
+    output.oof_candidates = unclaimed;
+    output
 }
 
 /// Information from the computation of grid

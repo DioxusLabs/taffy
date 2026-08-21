@@ -1,9 +1,9 @@
 <test name="balance_row_negative_margin__border_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div direction="rtl" flex-wrap="balance" width="100px" height="100px">
-      <div direction="rtl" flex-grow="1" width="150px" height="50px"/>
-      <div direction="rtl" flex-grow="1" width="0px" height="50px" margin-left="-50px" margin-right="-50px"/>
+    <div direction="rtl" position="absolute" flex-wrap="balance" width="100px" height="100px">
+      <div direction="rtl" position="relative" flex-grow="1" width="150px" height="50px"/>
+      <div direction="rtl" position="relative" flex-grow="1" width="0px" height="50px" margin-left="-50px" margin-right="-50px"/>
     </div>
   </input>
   <expectations>

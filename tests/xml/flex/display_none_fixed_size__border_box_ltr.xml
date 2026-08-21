@@ -1,9 +1,9 @@
 <test name="display_none_fixed_size__border_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div direction="ltr" width="100px" height="100px">
-      <div direction="ltr" flex-grow="1"/>
-      <div display="none" direction="ltr" width="20px" height="20px"/>
+    <div direction="ltr" position="absolute" width="100px" height="100px">
+      <div direction="ltr" position="relative" flex-grow="1"/>
+      <div display="none" direction="ltr" position="relative" width="20px" height="20px"/>
     </div>
   </input>
   <expectations>

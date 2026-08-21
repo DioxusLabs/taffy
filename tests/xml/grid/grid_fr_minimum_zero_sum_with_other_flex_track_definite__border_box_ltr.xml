@@ -1,9 +1,9 @@
 <test name="grid_fr_minimum_zero_sum_with_other_flex_track_definite__border_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="grid" direction="ltr" height="500px" grid-template-rows="0fr 1fr" grid-template-columns="20px">
-      <div direction="ltr" height="100px" grid-row-start="1" grid-row-end="2"/>
-      <div direction="ltr" grid-row-start="2" grid-row-end="3"/>
+    <div display="grid" direction="ltr" position="absolute" height="500px" grid-template-rows="0fr 1fr" grid-template-columns="20px">
+      <div direction="ltr" position="relative" height="100px" grid-row-start="1" grid-row-end="2"/>
+      <div direction="ltr" position="relative" grid-row-start="2" grid-row-end="3"/>
     </div>
   </input>
   <expectations>

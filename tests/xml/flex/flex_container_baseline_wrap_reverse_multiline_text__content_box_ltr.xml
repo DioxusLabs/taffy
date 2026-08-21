@@ -1,15 +1,15 @@
 <test name="flex_container_baseline_wrap_reverse_multiline_text__content_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div box-sizing="content-box" direction="ltr" align-items="baseline" width="300px" height="200px">
-      <div box-sizing="content-box" direction="ltr" width="50px" height="100px"/>
-      <div box-sizing="content-box" direction="ltr" flex-wrap="wrap-reverse" align-content="flex-start" width="100px" height="120px">
-        <text box-sizing="content-box" direction="ltr" align-self="baseline" width="60px">
+    <div box-sizing="content-box" direction="ltr" position="absolute" align-items="baseline" width="300px" height="200px">
+      <div box-sizing="content-box" direction="ltr" position="relative" width="50px" height="100px"/>
+      <div box-sizing="content-box" direction="ltr" position="relative" flex-wrap="wrap-reverse" align-content="flex-start" width="100px" height="120px">
+        <text box-sizing="content-box" direction="ltr" position="relative" align-self="baseline" width="60px">
           HH
         </text>
-        <div box-sizing="content-box" direction="ltr" width="40px" height="40px"/>
-        <div box-sizing="content-box" direction="ltr" width="60px" height="30px"/>
-        <div box-sizing="content-box" direction="ltr" width="40px" height="10px"/>
+        <div box-sizing="content-box" direction="ltr" position="relative" width="40px" height="40px"/>
+        <div box-sizing="content-box" direction="ltr" position="relative" width="60px" height="30px"/>
+        <div box-sizing="content-box" direction="ltr" position="relative" width="40px" height="10px"/>
       </div>
     </div>
   </input>

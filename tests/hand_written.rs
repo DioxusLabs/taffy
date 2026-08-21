@@ -10,6 +10,7 @@ mod hand_written {
     mod floats;
     mod measure;
     mod min_max_overrides;
+    mod oof_hoisting;
     mod relayout;
     mod root_constraints;
     mod rounding;

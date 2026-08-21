@@ -1,8 +1,8 @@
 <test name="min_max_percent_no_width_height__border_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div direction="ltr" flex-direction="column" align-items="flex-start" width="100px" height="100px">
-      <div direction="ltr" min-width="10%" min-height="10%" max-width="10%" max-height="10%"/>
+    <div direction="ltr" position="absolute" flex-direction="column" align-items="flex-start" width="100px" height="100px">
+      <div direction="ltr" position="relative" min-width="10%" min-height="10%" max-width="10%" max-height="10%"/>
     </div>
   </input>
   <expectations>

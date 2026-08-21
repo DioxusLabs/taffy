@@ -1,9 +1,9 @@
 <test name="flex_basis_zero_undefined_main_size__content_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div box-sizing="content-box" direction="rtl">
-      <div box-sizing="content-box" direction="rtl" flex-direction="column" flex-basis="0px">
-        <div box-sizing="content-box" direction="rtl" width="100px" height="50px"/>
+    <div box-sizing="content-box" direction="rtl" position="absolute">
+      <div box-sizing="content-box" direction="rtl" position="relative" flex-direction="column" flex-basis="0px">
+        <div box-sizing="content-box" direction="rtl" position="relative" width="100px" height="50px"/>
       </div>
     </div>
   </input>

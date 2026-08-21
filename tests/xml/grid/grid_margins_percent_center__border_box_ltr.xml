@@ -1,13 +1,13 @@
 <test name="grid_margins_percent_center__border_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="grid" direction="ltr" grid-template-rows="40px 40px 40px" grid-template-columns="20px 20px 20px">
-      <div direction="ltr" align-self="center" justify-self="center" width="20px" height="20px" margin-top="5%" margin-left="20%" margin-bottom="15%" margin-right="10%"/>
-      <div direction="ltr"/>
-      <div direction="ltr"/>
-      <div direction="ltr"/>
-      <div direction="ltr"/>
-      <div direction="ltr"/>
+    <div display="grid" direction="ltr" position="absolute" grid-template-rows="40px 40px 40px" grid-template-columns="20px 20px 20px">
+      <div direction="ltr" position="relative" align-self="center" justify-self="center" width="20px" height="20px" margin-top="5%" margin-left="20%" margin-bottom="15%" margin-right="10%"/>
+      <div direction="ltr" position="relative"/>
+      <div direction="ltr" position="relative"/>
+      <div direction="ltr" position="relative"/>
+      <div direction="ltr" position="relative"/>
+      <div direction="ltr" position="relative"/>
     </div>
   </input>
   <expectations>

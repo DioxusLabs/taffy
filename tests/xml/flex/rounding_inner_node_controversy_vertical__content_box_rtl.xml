@@ -1,12 +1,12 @@
 <test name="rounding_inner_node_controversy_vertical__content_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div box-sizing="content-box" direction="rtl" flex-direction="column" height="320px">
-      <div box-sizing="content-box" direction="rtl" flex-grow="1" width="10px"/>
-      <div box-sizing="content-box" direction="rtl" flex-direction="column" flex-grow="1" width="10px">
-        <div box-sizing="content-box" direction="rtl" flex-grow="1" width="10px"/>
+    <div box-sizing="content-box" direction="rtl" position="absolute" flex-direction="column" height="320px">
+      <div box-sizing="content-box" direction="rtl" position="relative" flex-grow="1" width="10px"/>
+      <div box-sizing="content-box" direction="rtl" position="relative" flex-direction="column" flex-grow="1" width="10px">
+        <div box-sizing="content-box" direction="rtl" position="relative" flex-grow="1" width="10px"/>
       </div>
-      <div box-sizing="content-box" direction="rtl" flex-grow="1" width="10px"/>
+      <div box-sizing="content-box" direction="rtl" position="relative" flex-grow="1" width="10px"/>
     </div>
   </input>
   <expectations>

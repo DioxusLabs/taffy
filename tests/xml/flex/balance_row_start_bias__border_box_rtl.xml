@@ -1,23 +1,23 @@
 <test name="balance_row_start_bias__border_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div direction="rtl" flex-wrap="balance" width="100px" column-gap="10px">
-      <div direction="rtl" width="25px" height="25px"/>
-      <div direction="rtl" width="25px" height="25px"/>
-      <div direction="rtl" width="25px" height="25px"/>
-      <div direction="rtl" width="25px" height="25px"/>
-      <div direction="rtl" width="25px" height="25px"/>
-      <div direction="rtl" width="25px" height="25px"/>
-      <div direction="rtl" width="25px" height="25px"/>
-      <div direction="rtl" width="100px" height="25px"/>
-      <div direction="rtl" width="25px" height="25px"/>
-      <div direction="rtl" width="25px" height="25px"/>
-      <div direction="rtl" width="25px" height="25px"/>
-      <div direction="rtl" width="25px" height="25px"/>
-      <div direction="rtl" width="25px" height="25px"/>
-      <div direction="rtl" width="25px" height="25px"/>
-      <div direction="rtl" width="25px" height="25px"/>
-      <div direction="rtl" width="25px" height="25px"/>
+    <div direction="rtl" position="absolute" flex-wrap="balance" width="100px" column-gap="10px">
+      <div direction="rtl" position="relative" width="25px" height="25px"/>
+      <div direction="rtl" position="relative" width="25px" height="25px"/>
+      <div direction="rtl" position="relative" width="25px" height="25px"/>
+      <div direction="rtl" position="relative" width="25px" height="25px"/>
+      <div direction="rtl" position="relative" width="25px" height="25px"/>
+      <div direction="rtl" position="relative" width="25px" height="25px"/>
+      <div direction="rtl" position="relative" width="25px" height="25px"/>
+      <div direction="rtl" position="relative" width="100px" height="25px"/>
+      <div direction="rtl" position="relative" width="25px" height="25px"/>
+      <div direction="rtl" position="relative" width="25px" height="25px"/>
+      <div direction="rtl" position="relative" width="25px" height="25px"/>
+      <div direction="rtl" position="relative" width="25px" height="25px"/>
+      <div direction="rtl" position="relative" width="25px" height="25px"/>
+      <div direction="rtl" position="relative" width="25px" height="25px"/>
+      <div direction="rtl" position="relative" width="25px" height="25px"/>
+      <div direction="rtl" position="relative" width="25px" height="25px"/>
     </div>
   </input>
   <expectations>

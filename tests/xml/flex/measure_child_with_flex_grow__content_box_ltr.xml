@@ -1,9 +1,9 @@
 <test name="measure_child_with_flex_grow__content_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div box-sizing="content-box" direction="ltr" width="100px">
-      <div box-sizing="content-box" direction="ltr" width="50px" height="50px"/>
-      <text box-sizing="content-box" direction="ltr">
+    <div box-sizing="content-box" direction="ltr" position="absolute" width="100px">
+      <div box-sizing="content-box" direction="ltr" position="relative" width="50px" height="50px"/>
+      <text box-sizing="content-box" direction="ltr" position="relative">
         H​H​H​H​H
       </text>
     </div>

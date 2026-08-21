@@ -1,8 +1,8 @@
 <test name="block_height_stretch__content_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="block" box-sizing="content-box" direction="ltr" width="100px" height="80px">
-      <text box-sizing="content-box" direction="ltr" height="stretch" margin-top="5px" margin-left="0px" margin-bottom="10px" margin-right="0px">
+    <div display="block" box-sizing="content-box" direction="ltr" position="absolute" width="100px" height="80px">
+      <text box-sizing="content-box" direction="ltr" position="relative" height="stretch" margin-top="5px" margin-left="0px" margin-bottom="10px" margin-right="0px">
         HH​HH
       </text>
     </div>

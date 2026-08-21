@@ -1,13 +1,13 @@
 <test name="bevy_issue_21240__content_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="grid" box-sizing="content-box" direction="rtl" row-gap="8px" column-gap="8px" padding-top="8px" padding-left="8px" padding-bottom="8px" padding-right="8px" grid-template-rows="40px 40px 40px" grid-template-columns="40px 40px 40px 40px">
-      <div box-sizing="content-box" direction="rtl"/>
-      <div box-sizing="content-box" direction="rtl"/>
-      <div box-sizing="content-box" direction="rtl"/>
-      <div box-sizing="content-box" direction="rtl"/>
-      <div box-sizing="content-box" direction="rtl" grid-column-start="1" grid-column-end="-1"/>
-      <div box-sizing="content-box" direction="rtl" grid-column-start="1" grid-column-end="span 4"/>
+    <div display="grid" box-sizing="content-box" direction="rtl" position="absolute" row-gap="8px" column-gap="8px" padding-top="8px" padding-left="8px" padding-bottom="8px" padding-right="8px" grid-template-rows="40px 40px 40px" grid-template-columns="40px 40px 40px 40px">
+      <div box-sizing="content-box" direction="rtl" position="relative"/>
+      <div box-sizing="content-box" direction="rtl" position="relative"/>
+      <div box-sizing="content-box" direction="rtl" position="relative"/>
+      <div box-sizing="content-box" direction="rtl" position="relative"/>
+      <div box-sizing="content-box" direction="rtl" position="relative" grid-column-start="1" grid-column-end="-1"/>
+      <div box-sizing="content-box" direction="rtl" position="relative" grid-column-start="1" grid-column-end="span 4"/>
     </div>
   </input>
   <expectations>

@@ -1,7 +1,7 @@
 <test name="block_absolute_aspect_ratio_fill_width_from_inset__content_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="block" box-sizing="content-box" direction="rtl" width="400px" height="300px">
+    <div display="block" box-sizing="content-box" direction="rtl" position="absolute" width="400px" height="300px">
       <div box-sizing="content-box" direction="rtl" position="absolute" aspect-ratio="3" top="30%" bottom="50%"/>
     </div>
   </input>

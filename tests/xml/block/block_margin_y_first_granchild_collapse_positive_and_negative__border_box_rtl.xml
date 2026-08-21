@@ -1,25 +1,25 @@
 <test name="block_margin_y_first_granchild_collapse_positive_and_negative__border_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="block" direction="rtl" width="50px">
-      <div display="block" direction="rtl" margin-top="-10px">
-        <div display="block" direction="rtl" margin-top="10px">
-          <div display="block" direction="rtl" margin-top="-10px">
-            <div direction="rtl" height="10px"/>
+    <div display="block" direction="rtl" position="absolute" width="50px">
+      <div display="block" direction="rtl" position="relative" margin-top="-10px">
+        <div display="block" direction="rtl" position="relative" margin-top="10px">
+          <div display="block" direction="rtl" position="relative" margin-top="-10px">
+            <div direction="rtl" position="relative" height="10px"/>
           </div>
         </div>
       </div>
-      <div display="block" direction="rtl" margin-top="-10px">
-        <div display="block" direction="rtl" margin-top="5px">
-          <div display="block" direction="rtl" margin-top="-2px">
-            <div direction="rtl" height="10px"/>
+      <div display="block" direction="rtl" position="relative" margin-top="-10px">
+        <div display="block" direction="rtl" position="relative" margin-top="5px">
+          <div display="block" direction="rtl" position="relative" margin-top="-2px">
+            <div direction="rtl" position="relative" height="10px"/>
           </div>
         </div>
       </div>
-      <div display="block" direction="rtl" margin-top="-10px">
-        <div display="block" direction="rtl" margin-top="5px">
-          <div display="block" direction="rtl" margin-top="15px">
-            <div direction="rtl" height="10px"/>
+      <div display="block" direction="rtl" position="relative" margin-top="-10px">
+        <div display="block" direction="rtl" position="relative" margin-top="5px">
+          <div display="block" direction="rtl" position="relative" margin-top="15px">
+            <div direction="rtl" position="relative" height="10px"/>
           </div>
         </div>
       </div>
