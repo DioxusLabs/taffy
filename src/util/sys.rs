@@ -35,6 +35,8 @@ mod std {
     pub(crate) type Map<K, V> = std::collections::HashMap<K, V, std::collections::hash_map::RandomState>;
     /// An allocation-backend agnostic vector type
     pub(crate) type Vec<A> = std::vec::Vec<A>;
+    /// An allocation-backend agnostic boxed pointer type
+    pub(crate) type Box<A> = std::boxed::Box<A>;
     /// A vector of child nodes
     pub(crate) type ChildrenVec<A> = std::vec::Vec<A>;
     #[cfg(feature = "grid")]
@@ -45,6 +47,12 @@ mod std {
     #[must_use]
     pub(crate) fn new_vec_with_capacity<A>(capacity: usize) -> Vec<A> {
         Vec::with_capacity(capacity)
+    }
+
+    /// Creates a new empty `ChildrenVec` in a const context
+    #[must_use]
+    pub(crate) const fn new_const_children_vec<A>() -> ChildrenVec<A> {
+        Vec::new()
     }
 
     /// Rounds to the nearest whole number
@@ -115,6 +123,8 @@ mod alloc {
     pub(crate) type Map<K, V> = alloc::collections::BTreeMap<K, V>;
     /// An allocation-backend agnostic vector type
     pub(crate) type Vec<A> = alloc::vec::Vec<A>;
+    /// An allocation-backend agnostic boxed pointer type
+    pub(crate) type Box<A> = alloc::boxed::Box<A>;
     /// A vector of child nodes
     pub(crate) type ChildrenVec<A> = alloc::vec::Vec<A>;
     #[cfg(feature = "grid")]
@@ -125,6 +135,12 @@ mod alloc {
     #[must_use]
     pub(crate) fn new_vec_with_capacity<A>(capacity: usize) -> Vec<A> {
         Vec::with_capacity(capacity)
+    }
+
+    /// Creates a new empty `ChildrenVec` in a const context
+    #[must_use]
+    pub(crate) const fn new_const_children_vec<A>() -> ChildrenVec<A> {
+        Vec::new()
     }
 
     /// Rounds to the nearest whole number
@@ -184,6 +200,12 @@ mod core {
     #[must_use]
     pub(crate) fn new_vec_with_capacity<A, const CAP: usize>(_capacity: usize) -> arrayvec::ArrayVec<A, CAP> {
         arrayvec::ArrayVec::new()
+    }
+
+    /// Creates a new empty `ChildrenVec` in a const context
+    #[must_use]
+    pub(crate) const fn new_const_children_vec<A>() -> ChildrenVec<A> {
+        arrayvec::ArrayVec::new_const()
     }
 
     /// Rounds to the nearest whole number
