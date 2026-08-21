@@ -8,9 +8,9 @@ use core::{borrow::Borrow, cmp::Ordering, fmt::Debug};
 
 use super::{GridLine, MAX_GRID_TRACKS};
 #[cfg(feature = "detailed_layout_info")]
-use crate::compute::grid::GridLineNames;
-#[cfg(feature = "detailed_layout_info")]
 use crate::geometry::AbsoluteAxis;
+#[cfg(feature = "detailed_layout_info")]
+use crate::sys::DefaultCheapStr;
 // use alloc::fmt::format;
 use crate::sys::{format, single_value_vec, Map, Vec};
 
@@ -545,6 +545,136 @@ impl<S: CheapCloneStr> Debug for NamedLineResolver<S> {
         Ok(())
     }
 }
+
+/// The names of each explicit grid line in a single axis, stored in CSR (compressed sparse
+/// row) format: a single flat `Vec` of names plus a `Vec` of offsets into it (one more offset
+/// than there are lines). The names of line `i` (0-indexed) are `names[offsets[i]..offsets[i + 1]]`.
+///
+/// Line indices here are relative to the explicit grid;
+/// [`DetailedGridTracksInfo`](crate::DetailedGridTracksInfo) provides accessors with indices
+/// relative to the full grid (including implicit tracks).
+///
+/// Iterate over per-line name groups with [`GridLineNames::iter`], or access a single line's
+/// names with [`GridLineNames::line`]. A grid with no named lines is represented by two empty
+/// `Vec`s (see [`GridLineNames::is_empty`]).
+#[derive(Debug, Clone, PartialEq, Default)]
+#[cfg(feature = "detailed_layout_info")]
+pub struct GridLineNames<S: CheapCloneStr = DefaultCheapStr> {
+    /// The names of every grid line in the axis, concatenated in line order
+    names: Vec<S>,
+    /// Offsets into `names`: line `i`'s names are `names[offsets[i]..offsets[i + 1]]`.
+    /// Either empty (no named lines) or of length `line count + 1`.
+    offsets: Vec<u32>,
+}
+
+#[cfg(feature = "detailed_layout_info")]
+impl<S: CheapCloneStr> GridLineNames<S> {
+    /// Create an empty `GridLineNames` with pre-allocated capacity
+    pub(crate) fn with_capacity(name_capacity: usize, offset_capacity: usize) -> Self {
+        let mut offsets = Vec::with_capacity(offset_capacity);
+        offsets.push(0);
+        Self { names: Vec::with_capacity(name_capacity), offsets }
+    }
+
+    /// Start a new (initially empty) line
+    pub(crate) fn start_line(&mut self) {
+        self.offsets.push(self.names.len() as u32);
+    }
+
+    /// Append a name to the current (last) line
+    pub(crate) fn push_name(&mut self, name: S) {
+        self.names.push(name);
+        *self.offsets.last_mut().unwrap() = self.names.len() as u32;
+    }
+
+    /// Whether the current (last) line already contains the passed name
+    pub(crate) fn current_line_contains(&self, name: &str) -> bool {
+        self.line(self.line_count().wrapping_sub(1)).iter().any(|n| n.as_ref() == name)
+    }
+
+    /// Whether the axis has any named lines at all
+    pub fn is_empty(&self) -> bool {
+        self.names.is_empty()
+    }
+
+    /// The number of grid lines represented (zero if the grid has no named lines)
+    pub fn line_count(&self) -> usize {
+        self.offsets.len().saturating_sub(1)
+    }
+
+    /// The names of the line with the passed 0-indexed line index.
+    /// Returns an empty slice if the line has no names or the index is out of range.
+    pub fn line(&self, line_index: usize) -> &[S] {
+        match (self.offsets.get(line_index), self.offsets.get(line_index + 1)) {
+            (Some(&start), Some(&end)) => &self.names[start as usize..end as usize],
+            _ => &[],
+        }
+    }
+
+    /// Iterate over the name group (`&[S]`) of each grid line in line order
+    pub fn iter(&self) -> GridLineNamesIter<'_, S> {
+        self.iter_padded(0, 0)
+    }
+
+    /// Iterate over the name group (`&[S]`) of each grid line in line order, additionally
+    /// yielding `leading_empty` empty groups before the stored lines and `trailing_empty`
+    /// empty groups after them (representing unnamed implicit grid lines)
+    pub(crate) fn iter_padded(&self, leading_empty: usize, trailing_empty: usize) -> GridLineNamesIter<'_, S> {
+        GridLineNamesIter { names: &self.names, offsets: self.offsets.windows(2), leading_empty, trailing_empty }
+    }
+}
+
+#[cfg(feature = "detailed_layout_info")]
+impl<'a, S: CheapCloneStr> IntoIterator for &'a GridLineNames<S> {
+    type Item = &'a [S];
+    type IntoIter = GridLineNamesIter<'a, S>;
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter()
+    }
+}
+
+/// Iterator over the per-line name groups of a [`GridLineNames`]. Yields one `&[S]` per grid
+/// line (which is empty for unnamed lines)
+#[derive(Debug, Clone)]
+#[cfg(feature = "detailed_layout_info")]
+pub struct GridLineNamesIter<'a, S: CheapCloneStr> {
+    /// The flat name storage being iterated over
+    names: &'a [S],
+    /// Iterator over adjacent pairs of offsets into `names`
+    offsets: core::slice::Windows<'a, u32>,
+    /// Number of (unnamed, implicit) lines remaining before the stored lines
+    leading_empty: usize,
+    /// Number of (unnamed, implicit) lines remaining after the stored lines
+    trailing_empty: usize,
+}
+
+#[cfg(feature = "detailed_layout_info")]
+impl<'a, S: CheapCloneStr> Iterator for GridLineNamesIter<'a, S> {
+    type Item = &'a [S];
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.leading_empty > 0 {
+            self.leading_empty -= 1;
+            return Some(&[]);
+        }
+        if let Some(window) = self.offsets.next() {
+            return Some(&self.names[window[0] as usize..window[1] as usize]);
+        }
+        if self.trailing_empty > 0 {
+            self.trailing_empty -= 1;
+            return Some(&[]);
+        }
+        None
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let len = self.leading_empty + self.offsets.len() + self.trailing_empty;
+        (len, Some(len))
+    }
+}
+
+#[cfg(feature = "detailed_layout_info")]
+impl<S: CheapCloneStr> ExactSizeIterator for GridLineNamesIter<'_, S> {}
 
 #[cfg(test)]
 mod tests {
