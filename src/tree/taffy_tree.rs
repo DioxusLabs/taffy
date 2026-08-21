@@ -587,7 +587,13 @@ impl<NodeContext> TaffyTree<NodeContext> {
         let id = NodeId::from(self.nodes.insert(NodeData::new(layout)));
 
         for child in children {
-            self.parents[(*child).into()] = Some(id);
+            let child_key = (*child).into();
+
+            if let Some(old_parent) = self.parents[child_key] {
+                self.remove_child(old_parent, *child)?;
+            }
+
+            self.parents[child_key] = Some(id);
         }
 
         let _ = self.children.insert(children.iter().copied().collect::<_>());
@@ -670,6 +676,11 @@ impl<NodeContext> TaffyTree<NodeContext> {
     pub fn add_child(&mut self, parent: NodeId, child: NodeId) -> TaffyResult<()> {
         let parent_key = parent.into();
         let child_key = child.into();
+
+        if let Some(old_parent) = self.parents[child_key] {
+            self.remove_child(old_parent, child)?;
+        }
+
         self.parents[child_key] = Some(parent);
         self.children[parent_key].push(child);
         self.mark_dirty(parent)?;
@@ -680,13 +691,18 @@ impl<NodeContext> TaffyTree<NodeContext> {
     /// Inserts a `child` node at the given `child_index` under the supplied `parent`, shifting all children after it to the right.
     pub fn insert_child_at_index(&mut self, parent: NodeId, child_index: usize, child: NodeId) -> TaffyResult<()> {
         let parent_key = parent.into();
+        let child_key = child.into();
+
+        if let Some(old_parent) = self.parents[child_key] {
+            self.remove_child(old_parent, child)?;
+        }
 
         let child_count = self.children[parent_key].len();
         if child_index > child_count {
             return Err(TaffyError::ChildIndexOutOfBounds { parent, child_index, child_count });
         }
 
-        self.parents[child.into()] = Some(parent);
+        self.parents[child_key] = Some(parent);
         self.children[parent_key].insert(child_index, child);
         self.mark_dirty(parent)?;
 
@@ -774,13 +790,18 @@ impl<NodeContext> TaffyTree<NodeContext> {
         new_child: NodeId,
     ) -> TaffyResult<NodeId> {
         let parent_key = parent.into();
+        let new_child_key = new_child.into();
+
+        if let Some(old_parent) = self.parents[new_child_key] {
+            self.remove_child(old_parent, new_child)?;
+        }
 
         let child_count = self.children[parent_key].len();
         if child_index >= child_count {
             return Err(TaffyError::ChildIndexOutOfBounds { parent, child_index, child_count });
         }
 
-        self.parents[new_child.into()] = Some(parent);
+        self.parents[new_child_key] = Some(parent);
         let old_child = core::mem::replace(&mut self.children[parent_key][child_index], new_child);
         self.parents[old_child.into()] = None;
 
