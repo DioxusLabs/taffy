@@ -1,8 +1,8 @@
 <test name="size_defined_by_child_with_padding__border_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div direction="ltr" padding-top="10px" padding-left="10px" padding-bottom="10px" padding-right="10px">
-      <div direction="ltr" width="10px" height="10px"/>
+    <div direction="ltr" position="absolute" padding-top="10px" padding-left="10px" padding-bottom="10px" padding-right="10px">
+      <div direction="ltr" position="relative" width="10px" height="10px"/>
     </div>
   </input>
   <expectations>

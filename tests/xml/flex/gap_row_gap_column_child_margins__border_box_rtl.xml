@@ -1,10 +1,10 @@
 <test name="gap_row_gap_column_child_margins__border_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div direction="rtl" flex-direction="column" width="100px" height="200px" row-gap="10px">
-      <div direction="rtl" flex-grow="1" flex-basis="0%" margin-top="2px" margin-bottom="2px"/>
-      <div direction="rtl" flex-grow="1" flex-basis="0%" margin-top="10px" margin-bottom="10px"/>
-      <div direction="rtl" flex-grow="1" flex-basis="0%" margin-top="15px" margin-bottom="15px"/>
+    <div direction="rtl" position="absolute" flex-direction="column" width="100px" height="200px" row-gap="10px">
+      <div direction="rtl" position="relative" flex-grow="1" flex-basis="0%" margin-top="2px" margin-bottom="2px"/>
+      <div direction="rtl" position="relative" flex-grow="1" flex-basis="0%" margin-top="10px" margin-bottom="10px"/>
+      <div direction="rtl" position="relative" flex-grow="1" flex-basis="0%" margin-top="15px" margin-bottom="15px"/>
     </div>
   </input>
   <expectations>

@@ -1,9 +1,9 @@
 <test name="balance_row_all_oversized_items__border_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div direction="ltr" flex-wrap="balance" width="100px">
-      <div direction="ltr" width="150px" height="20px"/>
-      <div direction="ltr" width="150px" height="20px"/>
+    <div direction="ltr" position="absolute" flex-wrap="balance" width="100px">
+      <div direction="ltr" position="relative" width="150px" height="20px"/>
+      <div direction="ltr" position="relative" width="150px" height="20px"/>
     </div>
   </input>
   <expectations>

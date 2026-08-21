@@ -1,8 +1,8 @@
 <test name="margin_should_not_be_part_of_max_height__content_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div box-sizing="content-box" direction="ltr" width="250px" height="250px">
-      <div box-sizing="content-box" direction="ltr" width="100px" height="100px" max-height="100px" margin-top="20px"/>
+    <div box-sizing="content-box" direction="ltr" position="absolute" width="250px" height="250px">
+      <div box-sizing="content-box" direction="ltr" position="relative" width="100px" height="100px" max-height="100px" margin-top="20px"/>
     </div>
   </input>
   <expectations>

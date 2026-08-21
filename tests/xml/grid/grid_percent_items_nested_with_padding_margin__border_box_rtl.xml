@@ -1,13 +1,13 @@
 <test name="grid_percent_items_nested_with_padding_margin__border_box_rtl" use-rounding="false">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="grid" direction="rtl" width="200px" height="200px" grid-template-rows="1fr 4fr">
-      <div display="grid" direction="rtl" min-width="60%" margin-top="5px" margin-left="5px" margin-bottom="5px" margin-right="5px" padding-top="3px" padding-left="3px" padding-bottom="3px" padding-right="3px">
-        <div display="grid" direction="rtl" width="50%" margin-top="5px" margin-left="5px" margin-bottom="5px" margin-right="5px" padding-top="3%" padding-left="3%" padding-bottom="3%" padding-right="3%">
-          <div direction="rtl" width="45%" margin-top="5%" margin-left="5%" margin-bottom="5%" margin-right="5%" padding-top="3px" padding-left="3px" padding-bottom="3px" padding-right="3px"/>
+    <div display="grid" direction="rtl" position="absolute" width="200px" height="200px" grid-template-rows="1fr 4fr">
+      <div display="grid" direction="rtl" position="relative" min-width="60%" margin-top="5px" margin-left="5px" margin-bottom="5px" margin-right="5px" padding-top="3px" padding-left="3px" padding-bottom="3px" padding-right="3px">
+        <div display="grid" direction="rtl" position="relative" width="50%" margin-top="5px" margin-left="5px" margin-bottom="5px" margin-right="5px" padding-top="3%" padding-left="3%" padding-bottom="3%" padding-right="3%">
+          <div direction="rtl" position="relative" width="45%" margin-top="5%" margin-left="5%" margin-bottom="5%" margin-right="5%" padding-top="3px" padding-left="3px" padding-bottom="3px" padding-right="3px"/>
         </div>
       </div>
-      <div direction="rtl"/>
+      <div direction="rtl" position="relative"/>
     </div>
   </input>
   <expectations>

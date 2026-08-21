@@ -1,7 +1,7 @@
 <test name="leaf_overflow_scrollbars_affect_available_space_y_axis__content_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <text box-sizing="content-box" direction="ltr" overflow-y="scroll" scrollbar-width="15" width="45px" height="45px">
+    <text box-sizing="content-box" direction="ltr" position="absolute" overflow-y="scroll" scrollbar-width="15" width="45px" height="45px">
       HHHHHHHHHHHHHHHHHHHHH
     </text>
   </input>

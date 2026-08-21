@@ -1,27 +1,27 @@
 <test name="multiline_column_max_height__border_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="flex" direction="rtl" flex-direction="column" flex-wrap="wrap" max-height="200px">
-      <div direction="rtl" flex-shrink="0" width="40px" height="20px"/>
-      <div direction="rtl" flex-shrink="0" width="40px" height="20px"/>
-      <div direction="rtl" flex-shrink="0" width="40px" height="20px"/>
-      <div direction="rtl" flex-shrink="0" width="40px" height="20px"/>
-      <div direction="rtl" flex-shrink="0" width="40px" height="20px"/>
-      <div direction="rtl" flex-shrink="0" width="40px" height="20px"/>
-      <div direction="rtl" flex-shrink="0" width="40px" height="20px"/>
-      <div direction="rtl" flex-shrink="0" width="40px" height="20px"/>
-      <div direction="rtl" flex-shrink="0" width="40px" height="20px"/>
-      <div direction="rtl" flex-shrink="0" width="40px" height="20px"/>
-      <div direction="rtl" flex-shrink="0" width="40px" height="20px"/>
-      <div direction="rtl" flex-shrink="0" width="40px" height="20px"/>
-      <div direction="rtl" flex-shrink="0" width="40px" height="20px"/>
-      <div direction="rtl" flex-shrink="0" width="40px" height="20px"/>
-      <div direction="rtl" flex-shrink="0" width="40px" height="20px"/>
-      <div direction="rtl" flex-shrink="0" width="40px" height="20px"/>
-      <div direction="rtl" flex-shrink="0" width="40px" height="20px"/>
-      <div direction="rtl" flex-shrink="0" width="40px" height="20px"/>
-      <div direction="rtl" flex-shrink="0" width="40px" height="20px"/>
-      <div direction="rtl" flex-shrink="0" width="40px" height="20px"/>
+    <div display="flex" direction="rtl" position="absolute" flex-direction="column" flex-wrap="wrap" max-height="200px">
+      <div direction="rtl" position="relative" flex-shrink="0" width="40px" height="20px"/>
+      <div direction="rtl" position="relative" flex-shrink="0" width="40px" height="20px"/>
+      <div direction="rtl" position="relative" flex-shrink="0" width="40px" height="20px"/>
+      <div direction="rtl" position="relative" flex-shrink="0" width="40px" height="20px"/>
+      <div direction="rtl" position="relative" flex-shrink="0" width="40px" height="20px"/>
+      <div direction="rtl" position="relative" flex-shrink="0" width="40px" height="20px"/>
+      <div direction="rtl" position="relative" flex-shrink="0" width="40px" height="20px"/>
+      <div direction="rtl" position="relative" flex-shrink="0" width="40px" height="20px"/>
+      <div direction="rtl" position="relative" flex-shrink="0" width="40px" height="20px"/>
+      <div direction="rtl" position="relative" flex-shrink="0" width="40px" height="20px"/>
+      <div direction="rtl" position="relative" flex-shrink="0" width="40px" height="20px"/>
+      <div direction="rtl" position="relative" flex-shrink="0" width="40px" height="20px"/>
+      <div direction="rtl" position="relative" flex-shrink="0" width="40px" height="20px"/>
+      <div direction="rtl" position="relative" flex-shrink="0" width="40px" height="20px"/>
+      <div direction="rtl" position="relative" flex-shrink="0" width="40px" height="20px"/>
+      <div direction="rtl" position="relative" flex-shrink="0" width="40px" height="20px"/>
+      <div direction="rtl" position="relative" flex-shrink="0" width="40px" height="20px"/>
+      <div direction="rtl" position="relative" flex-shrink="0" width="40px" height="20px"/>
+      <div direction="rtl" position="relative" flex-shrink="0" width="40px" height="20px"/>
+      <div direction="rtl" position="relative" flex-shrink="0" width="40px" height="20px"/>
     </div>
   </input>
   <expectations>

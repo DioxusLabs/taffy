@@ -1,8 +1,8 @@
 <test name="measure_width_overrides_measure__border_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div direction="ltr">
-      <text direction="ltr" width="50px">
+    <div direction="ltr" position="absolute">
+      <text direction="ltr" position="relative" width="50px">
         HHHHHHHHHH
       </text>
     </div>

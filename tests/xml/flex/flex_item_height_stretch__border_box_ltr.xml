@@ -1,11 +1,11 @@
 <test name="flex_item_height_stretch__border_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="flex" direction="ltr" align-items="flex-start" width="120px" height="60px">
-      <text direction="ltr" width="40px" height="stretch">
+    <div display="flex" direction="ltr" position="absolute" align-items="flex-start" width="120px" height="60px">
+      <text direction="ltr" position="relative" width="40px" height="stretch">
         HH​HH
       </text>
-      <text direction="ltr" width="40px" height="stretch" margin-top="5px" margin-left="0px" margin-bottom="10px" margin-right="0px">
+      <text direction="ltr" position="relative" width="40px" height="stretch" margin-top="5px" margin-left="0px" margin-bottom="10px" margin-right="0px">
         HH​HH
       </text>
     </div>

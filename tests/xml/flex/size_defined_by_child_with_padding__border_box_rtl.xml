@@ -1,8 +1,8 @@
 <test name="size_defined_by_child_with_padding__border_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div direction="rtl" padding-top="10px" padding-left="10px" padding-bottom="10px" padding-right="10px">
-      <div direction="rtl" width="10px" height="10px"/>
+    <div direction="rtl" position="absolute" padding-top="10px" padding-left="10px" padding-bottom="10px" padding-right="10px">
+      <div direction="rtl" position="relative" width="10px" height="10px"/>
     </div>
   </input>
   <expectations>

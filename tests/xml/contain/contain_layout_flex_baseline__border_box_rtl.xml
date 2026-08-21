@@ -1,12 +1,12 @@
 <test name="contain_layout_flex_baseline__border_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div direction="rtl" align-items="baseline" width="200px">
-      <div direction="rtl" width="50px" height="60px">
-        <div direction="rtl" width="50px" height="30px"/>
+    <div direction="rtl" position="absolute" align-items="baseline" width="200px">
+      <div direction="rtl" position="relative" width="50px" height="60px">
+        <div direction="rtl" position="relative" width="50px" height="30px"/>
       </div>
-      <div direction="rtl" contain="layout" width="50px" height="20px">
-        <div direction="rtl" width="50px" height="10px"/>
+      <div direction="rtl" position="relative" contain="layout" width="50px" height="20px">
+        <div direction="rtl" position="relative" width="50px" height="10px"/>
       </div>
     </div>
   </input>

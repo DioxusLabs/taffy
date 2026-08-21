@@ -1,18 +1,18 @@
 <test name="gridflex_column_integration__border_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div direction="ltr" flex-direction="column">
-      <div display="grid" direction="ltr" grid-template-rows="1fr 1fr" grid-template-columns="1fr 1fr">
-        <text direction="ltr">
+    <div direction="ltr" position="absolute" flex-direction="column">
+      <div display="grid" direction="ltr" position="relative" grid-template-rows="1fr 1fr" grid-template-columns="1fr 1fr">
+        <text direction="ltr" position="relative">
           HH
         </text>
-        <text direction="ltr">
+        <text direction="ltr" position="relative">
           HH
         </text>
-        <text direction="ltr">
+        <text direction="ltr" position="relative">
           HH
         </text>
-        <text direction="ltr">
+        <text direction="ltr" position="relative">
           HH
         </text>
       </div>

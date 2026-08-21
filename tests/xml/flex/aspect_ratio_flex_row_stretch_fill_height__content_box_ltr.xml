@@ -1,8 +1,8 @@
 <test name="aspect_ratio_flex_row_stretch_fill_height__content_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="flex" box-sizing="content-box" direction="ltr" width="100px" height="100px">
-      <div box-sizing="content-box" direction="ltr" width="40px" aspect-ratio="2"/>
+    <div display="flex" box-sizing="content-box" direction="ltr" position="absolute" width="100px" height="100px">
+      <div box-sizing="content-box" direction="ltr" position="relative" width="40px" aspect-ratio="2"/>
     </div>
   </input>
   <expectations>

@@ -1,10 +1,10 @@
 <test name="block_margin_y_last_child_collapse_blocked_by_padding_bottom__border_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="block" direction="rtl" width="50px">
-      <div display="block" direction="rtl" margin-bottom="10px" padding-bottom="1px">
-        <div display="block" direction="rtl" margin-bottom="10px">
-          <div direction="rtl" height="10px"/>
+    <div display="block" direction="rtl" position="absolute" width="50px">
+      <div display="block" direction="rtl" position="relative" margin-bottom="10px" padding-bottom="1px">
+        <div display="block" direction="rtl" position="relative" margin-bottom="10px">
+          <div direction="rtl" position="relative" height="10px"/>
         </div>
       </div>
     </div>

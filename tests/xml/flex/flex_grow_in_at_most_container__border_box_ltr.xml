@@ -1,9 +1,9 @@
 <test name="flex_grow_in_at_most_container__border_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div direction="ltr" align-items="flex-start" width="100px" height="100px">
-      <div direction="ltr">
-        <div direction="ltr" flex-grow="1" flex-basis="0px"/>
+    <div direction="ltr" position="absolute" align-items="flex-start" width="100px" height="100px">
+      <div direction="ltr" position="relative">
+        <div direction="ltr" position="relative" flex-grow="1" flex-basis="0px"/>
       </div>
     </div>
   </input>

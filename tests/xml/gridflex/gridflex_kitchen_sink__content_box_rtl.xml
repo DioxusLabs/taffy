@@ -1,26 +1,26 @@
 <test name="gridflex_kitchen_sink__content_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div box-sizing="content-box" direction="rtl">
-      <div display="grid" box-sizing="content-box" direction="rtl" grid-template-rows="1fr 1fr" grid-template-columns="1fr 1fr">
-        <div box-sizing="content-box" direction="rtl">
-          <div box-sizing="content-box" direction="rtl" width="20px"/>
-          <div box-sizing="content-box" direction="rtl" flex-grow="1" width="50px">
-            <div display="grid" box-sizing="content-box" direction="rtl" grid-template-rows="30% 10%" grid-template-columns="auto 10%">
-              <div box-sizing="content-box" direction="rtl" width="20px"/>
-              <div box-sizing="content-box" direction="rtl"/>
-              <div box-sizing="content-box" direction="rtl"/>
-              <div box-sizing="content-box" direction="rtl"/>
+    <div box-sizing="content-box" direction="rtl" position="absolute">
+      <div display="grid" box-sizing="content-box" direction="rtl" position="relative" grid-template-rows="1fr 1fr" grid-template-columns="1fr 1fr">
+        <div box-sizing="content-box" direction="rtl" position="relative">
+          <div box-sizing="content-box" direction="rtl" position="relative" width="20px"/>
+          <div box-sizing="content-box" direction="rtl" position="relative" flex-grow="1" width="50px">
+            <div display="grid" box-sizing="content-box" direction="rtl" position="relative" grid-template-rows="30% 10%" grid-template-columns="auto 10%">
+              <div box-sizing="content-box" direction="rtl" position="relative" width="20px"/>
+              <div box-sizing="content-box" direction="rtl" position="relative"/>
+              <div box-sizing="content-box" direction="rtl" position="relative"/>
+              <div box-sizing="content-box" direction="rtl" position="relative"/>
             </div>
           </div>
         </div>
-        <text box-sizing="content-box" direction="rtl">
+        <text box-sizing="content-box" direction="rtl" position="relative">
           HH
         </text>
-        <text box-sizing="content-box" direction="rtl">
+        <text box-sizing="content-box" direction="rtl" position="relative">
           HH
         </text>
-        <text box-sizing="content-box" direction="rtl">
+        <text box-sizing="content-box" direction="rtl" position="relative">
           HH
         </text>
       </div>

@@ -1,8 +1,8 @@
 <test name="bevy_issue_9530_reduced3__content_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div box-sizing="content-box" direction="ltr" flex-direction="column" width="80px">
-      <text box-sizing="content-box" direction="ltr" flex-grow="1" margin-top="0px" margin-left="20px" margin-bottom="0px" margin-right="20px">
+    <div box-sizing="content-box" direction="ltr" position="absolute" flex-direction="column" width="80px">
+      <text box-sizing="content-box" direction="ltr" position="relative" flex-grow="1" margin-top="0px" margin-left="20px" margin-bottom="0px" margin-right="20px">
         HH​HH​HH​HH​HH​HH​HH​HH
       </text>
     </div>

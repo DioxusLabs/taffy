@@ -1,9 +1,9 @@
 <test name="taffy_issue_696_min_height__border_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="flex" direction="rtl" flex-direction="column" width="200px">
-      <div display="flex" direction="rtl" flex-direction="column" flex-basis="0px" min-height="100px" padding-top="20px" padding-left="20px" padding-bottom="20px" padding-right="20px">
-        <div display="flex" direction="rtl" flex-shrink="0" height="200px"/>
+    <div display="flex" direction="rtl" position="absolute" flex-direction="column" width="200px">
+      <div display="flex" direction="rtl" position="relative" flex-direction="column" flex-basis="0px" min-height="100px" padding-top="20px" padding-left="20px" padding-bottom="20px" padding-right="20px">
+        <div display="flex" direction="rtl" position="relative" flex-shrink="0" height="200px"/>
       </div>
     </div>
   </input>

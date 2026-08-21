@@ -1,10 +1,10 @@
 <test name="grid_justify_self_self_start_child_rtl__border_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="grid" direction="rtl" width="120px" height="120px" grid-template-rows="40px 40px 40px" grid-template-columns="40px 40px 40px">
-      <div direction="rtl" justify-self="self-start" width="20px" height="20px" grid-row-start="1" grid-column-start="1"/>
-      <div direction="rtl" justify-self="self-end" width="20px" height="20px" grid-row-start="2" grid-column-start="2"/>
-      <div direction="ltr" justify-self="self-start" width="20px" height="20px" grid-row-start="3" grid-column-start="3"/>
+    <div display="grid" direction="rtl" position="absolute" width="120px" height="120px" grid-template-rows="40px 40px 40px" grid-template-columns="40px 40px 40px">
+      <div direction="rtl" position="relative" justify-self="self-start" width="20px" height="20px" grid-row-start="1" grid-column-start="1"/>
+      <div direction="rtl" position="relative" justify-self="self-end" width="20px" height="20px" grid-row-start="2" grid-column-start="2"/>
+      <div direction="ltr" position="relative" justify-self="self-start" width="20px" height="20px" grid-row-start="3" grid-column-start="3"/>
     </div>
   </input>
   <expectations>

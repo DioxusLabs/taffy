@@ -1,12 +1,12 @@
 <test name="flex_container_baseline_wrap_reverse_multiline_column__border_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div direction="rtl" align-items="baseline" width="200px" height="200px">
-      <div direction="rtl" width="50px" height="100px"/>
-      <div direction="rtl" flex-direction="column" flex-wrap="wrap-reverse" align-content="flex-start" width="120px" height="100px">
-        <div direction="rtl" width="40px" height="60px"/>
-        <div direction="rtl" width="40px" height="60px"/>
-        <div direction="rtl" width="40px" height="60px"/>
+    <div direction="rtl" position="absolute" align-items="baseline" width="200px" height="200px">
+      <div direction="rtl" position="relative" width="50px" height="100px"/>
+      <div direction="rtl" position="relative" flex-direction="column" flex-wrap="wrap-reverse" align-content="flex-start" width="120px" height="100px">
+        <div direction="rtl" position="relative" width="40px" height="60px"/>
+        <div direction="rtl" position="relative" width="40px" height="60px"/>
+        <div direction="rtl" position="relative" width="40px" height="60px"/>
       </div>
     </div>
   </input>

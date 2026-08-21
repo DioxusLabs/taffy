@@ -1,8 +1,8 @@
 <test name="undefined_height_with_min_max__border_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div direction="ltr" flex-direction="column" width="320px" min-height="0px">
-      <div direction="ltr" min-height="0px" max-height="100px"/>
+    <div direction="ltr" position="absolute" flex-direction="column" width="320px" min-height="0px">
+      <div direction="ltr" position="relative" min-height="0px" max-height="100px"/>
     </div>
   </input>
   <expectations>

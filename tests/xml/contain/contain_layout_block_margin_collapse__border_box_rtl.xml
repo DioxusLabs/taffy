@@ -1,12 +1,12 @@
 <test name="contain_layout_block_margin_collapse__border_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="block" direction="rtl" width="100px" border-top="2px" border-left="2px" border-bottom="2px" border-right="2px">
-      <div display="block" direction="rtl" height="10px" margin-bottom="10px"/>
-      <div display="block" direction="rtl" contain="layout">
-        <div display="block" direction="rtl" height="10px" margin-top="20px" margin-bottom="20px"/>
+    <div display="block" direction="rtl" position="absolute" width="100px" border-top="2px" border-left="2px" border-bottom="2px" border-right="2px">
+      <div display="block" direction="rtl" position="relative" height="10px" margin-bottom="10px"/>
+      <div display="block" direction="rtl" position="relative" contain="layout">
+        <div display="block" direction="rtl" position="relative" height="10px" margin-top="20px" margin-bottom="20px"/>
       </div>
-      <div display="block" direction="rtl" height="10px" margin-top="10px"/>
+      <div display="block" direction="rtl" position="relative" height="10px" margin-top="10px"/>
     </div>
   </input>
   <expectations>

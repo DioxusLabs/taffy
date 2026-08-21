@@ -1,23 +1,23 @@
 <test name="grid_span_13_most_non_flex_with_minmax_indefinite_hidden__border_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="grid" direction="ltr" grid-template-rows="40px 40px" grid-template-columns="min-content max-content fit-content(20px) auto 10px 20% minmax(2px, auto) minmax(2px, 4px) minmax(2px, min-content) minmax(2px, max-content) minmax(min-content, max-content) minmax(min-content, auto) minmax(max-content, auto)">
-      <text direction="ltr" overflow-x="hidden" overflow-y="hidden" scrollbar-width="15" grid-column-start="1" grid-column-end="span 13">
+    <div display="grid" direction="ltr" position="absolute" grid-template-rows="40px 40px" grid-template-columns="min-content max-content fit-content(20px) auto 10px 20% minmax(2px, auto) minmax(2px, 4px) minmax(2px, min-content) minmax(2px, max-content) minmax(min-content, max-content) minmax(min-content, auto) minmax(max-content, auto)">
+      <text direction="ltr" position="relative" overflow-x="hidden" overflow-y="hidden" scrollbar-width="15" grid-column-start="1" grid-column-end="span 13">
         HHHHHHHHHHHHHHHH​HHHHHHHHHHHHHHHH
       </text>
-      <div direction="ltr"/>
-      <div direction="ltr"/>
-      <div direction="ltr"/>
-      <div direction="ltr"/>
-      <div direction="ltr"/>
-      <div direction="ltr"/>
-      <div direction="ltr"/>
-      <div direction="ltr"/>
-      <div direction="ltr"/>
-      <div direction="ltr"/>
-      <div direction="ltr"/>
-      <div direction="ltr"/>
-      <div direction="ltr"/>
+      <div direction="ltr" position="relative"/>
+      <div direction="ltr" position="relative"/>
+      <div direction="ltr" position="relative"/>
+      <div direction="ltr" position="relative"/>
+      <div direction="ltr" position="relative"/>
+      <div direction="ltr" position="relative"/>
+      <div direction="ltr" position="relative"/>
+      <div direction="ltr" position="relative"/>
+      <div direction="ltr" position="relative"/>
+      <div direction="ltr" position="relative"/>
+      <div direction="ltr" position="relative"/>
+      <div direction="ltr" position="relative"/>
+      <div direction="ltr" position="relative"/>
     </div>
   </input>
   <expectations>
