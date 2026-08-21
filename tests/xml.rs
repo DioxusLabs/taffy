@@ -15,7 +15,62 @@ struct OutputNode {
     location: Point<f32>,
     size: Size<f32>,
     scroll_size: Option<Size<f32>>,
+    resolved_rows: Option<String>,
+    resolved_columns: Option<String>,
     children: Vec<OutputNode>,
+}
+
+/// A single token of a resolved track list string
+/// (see <https://www.w3.org/TR/css-grid-1/#resolved-track-list>)
+#[derive(Debug, PartialEq)]
+enum TrackListToken {
+    /// A bracketed line name group, e.g. `[foo bar]`
+    Names(Vec<String>),
+    /// A used track size in pixels, e.g. `10.5px`
+    Size(f32),
+}
+
+/// Parse a resolved track list string (e.g. `[foo] 10px 20.5px [bar baz]` or `none`) into tokens
+fn parse_track_list(input: &str) -> Vec<TrackListToken> {
+    let input = input.trim();
+    if input == "none" {
+        return Vec::new();
+    }
+    let mut tokens = Vec::new();
+    let mut rest = input;
+    while !rest.is_empty() {
+        rest = rest.trim_start();
+        if rest.is_empty() {
+            break;
+        }
+        if let Some(after_bracket) = rest.strip_prefix('[') {
+            let end = after_bracket.find(']').unwrap_or_else(|| panic!("unterminated line name group in {input:?}"));
+            let names = after_bracket[..end].split_whitespace().map(str::to_string).collect();
+            tokens.push(TrackListToken::Names(names));
+            rest = &after_bracket[end + 1..];
+        } else {
+            let end = rest.find(' ').unwrap_or(rest.len());
+            let size = rest[..end]
+                .strip_suffix("px")
+                .and_then(|size| size.parse::<f32>().ok())
+                .unwrap_or_else(|| panic!("invalid track size {:?} in {input:?}", &rest[..end]));
+            tokens.push(TrackListToken::Size(size));
+            rest = &rest[end..];
+        }
+    }
+    tokens
+}
+
+/// Compare two resolved track list strings, comparing line names exactly and track sizes with
+/// a tolerance (Chrome and Taffy format/round subpixel used sizes slightly differently)
+fn track_lists_match(expected: &str, actual: &str) -> bool {
+    let expected = parse_track_list(expected);
+    let actual = parse_track_list(actual);
+    expected.len() == actual.len()
+        && expected.iter().zip(actual.iter()).all(|(expected, actual)| match (expected, actual) {
+            (TrackListToken::Size(expected), TrackListToken::Size(actual)) => (expected - actual).abs() < 0.1,
+            (expected, actual) => expected == actual,
+        })
 }
 
 impl PartialEq for OutputNode {
@@ -27,12 +82,21 @@ impl PartialEq for OutputNode {
             // Only assert scroll sizes when both the expectation and the computed value are available
             _ => true,
         };
+        // Only assert resolved track lists when both the expectation and the computed value are available
+        let track_lists_match = |expected: &Option<String>, actual: &Option<String>| match (expected, actual) {
+            (Some(expected), Some(actual)) => track_lists_match(expected, actual),
+            _ => true,
+        };
+        let resolved_rows_match = track_lists_match(&self.resolved_rows, &other.resolved_rows);
+        let resolved_columns_match = track_lists_match(&self.resolved_columns, &other.resolved_columns);
         self.node_id == other.node_id
             && (self.location.x - other.location.x).abs() < 0.1
             && (self.location.y - other.location.y).abs() < 0.1
             && (self.size.width - other.size.width).abs() < 0.1
             && (self.size.height - other.size.height).abs() < 0.1
             && scroll_size_matches
+            && resolved_rows_match
+            && resolved_columns_match
             && self.children == other.children
     }
 }
@@ -47,6 +111,12 @@ impl OutputNode {
         .unwrap();
         if let Some(scroll_size) = self.scroll_size {
             write!(w, " [scroll_w: {:<4} scroll_h: {:<4}]", scroll_size.width, scroll_size.height).unwrap();
+        }
+        if let Some(resolved_rows) = &self.resolved_rows {
+            write!(w, " [rows: {resolved_rows}]").unwrap();
+        }
+        if let Some(resolved_columns) = &self.resolved_columns {
+            write!(w, " [columns: {resolved_columns}]").unwrap();
         }
     }
 
@@ -207,14 +277,37 @@ fn get_computed_expectations(tree: &TaffyTree<TestNodeContext>, node_id: NodeId)
     let scroll_size = Some(Size { width: layout.scroll_width(), height: layout.scroll_height() });
     #[cfg(not(feature = "content_size"))]
     let scroll_size = None;
-    let mut output =
-        OutputNode { node_id, location: layout.location, size: layout.size, scroll_size, children: Vec::new() };
+    let (resolved_rows, resolved_columns) = get_resolved_track_lists(tree, node_id);
+    let mut output = OutputNode {
+        node_id,
+        location: layout.location,
+        size: layout.size,
+        scroll_size,
+        resolved_rows,
+        resolved_columns,
+        children: Vec::new(),
+    };
 
     for child_id in tree.children(node_id).unwrap() {
         output.children.push(get_computed_expectations(tree, child_id));
     }
 
     output
+}
+
+/// Get the resolved value of the grid-template-rows/grid-template-columns properties for grid
+/// containers, as exposed through [`taffy::DetailedGridInfo`]
+#[cfg(all(feature = "grid", feature = "detailed_layout_info"))]
+fn get_resolved_track_lists(tree: &TaffyTree<TestNodeContext>, node_id: NodeId) -> (Option<String>, Option<String>) {
+    match tree.detailed_layout_info(node_id) {
+        taffy::DetailedLayoutInfo::Grid(info) => (Some(info.grid_template_rows()), Some(info.grid_template_columns())),
+        taffy::DetailedLayoutInfo::None => (None, None),
+    }
+}
+
+#[cfg(not(all(feature = "grid", feature = "detailed_layout_info")))]
+fn get_resolved_track_lists(_tree: &TaffyTree<TestNodeContext>, _node_id: NodeId) -> (Option<String>, Option<String>) {
+    (None, None)
 }
 
 fn build_expectations(xnode: roxmltree::Node, node_id: NodeId) -> OutputNode {
@@ -234,6 +327,8 @@ fn build_expectations(xnode: roxmltree::Node, node_id: NodeId) -> OutputNode {
             height: xnode.attribute("height").unwrap().parse().unwrap(),
         },
         scroll_size,
+        resolved_rows: xnode.attribute("resolved-rows").map(str::to_string),
+        resolved_columns: xnode.attribute("resolved-columns").map(str::to_string),
         children: Vec::new(),
     }
 }

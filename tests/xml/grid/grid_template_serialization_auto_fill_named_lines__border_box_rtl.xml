@@ -1,0 +1,15 @@
+<test name="grid_template_serialization_auto_fill_named_lines__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" direction="rtl" width="140px" grid-template-rows="20px" grid-template-columns="repeat(auto-fill, [col] 40px [col-end])">
+      <div direction="rtl"/>
+      <div direction="rtl"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="140" height="20" resolved-rows="20px" resolved-columns="[col] 40px [col-end col] 40px [col-end col] 40px [col-end]">
+      <node x="100" y="0" width="40" height="20"/>
+      <node x="60" y="0" width="40" height="20"/>
+    </node>
+  </expectations>
+</test>

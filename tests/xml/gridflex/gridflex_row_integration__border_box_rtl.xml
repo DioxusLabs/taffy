@@ -20,7 +20,7 @@
   </input>
   <expectations>
     <node x="0" y="0" width="40" height="20">
-      <node x="0" y="0" width="40" height="20">
+      <node x="0" y="0" width="40" height="20" resolved-rows="10px 10px" resolved-columns="20px 20px">
         <node x="20" y="0" width="20" height="10"/>
         <node x="0" y="0" width="20" height="10"/>
         <node x="20" y="10" width="20" height="10"/>

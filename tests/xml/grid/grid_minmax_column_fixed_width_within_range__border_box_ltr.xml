@@ -1,7 +1,7 @@
 <test name="grid_minmax_column_fixed_width_within_range__border_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="grid" direction="ltr" width="110px" grid-template-rows="40px 40px 40px" grid-template-columns="40px minmax(20px,40px) 40px">
+    <div display="grid" direction="ltr" width="110px" grid-template-rows="40px 40px 40px" grid-template-columns="40px minmax(20px, 40px) 40px">
       <div direction="ltr"/>
       <div direction="ltr"/>
       <div direction="ltr"/>
@@ -14,7 +14,7 @@
     </div>
   </input>
   <expectations>
-    <node x="0" y="0" width="110" height="120">
+    <node x="0" y="0" width="110" height="120" resolved-rows="40px 40px 40px" resolved-columns="40px 30px 40px">
       <node x="0" y="0" width="40" height="40"/>
       <node x="40" y="0" width="30" height="40"/>
       <node x="70" y="0" width="40" height="40"/>

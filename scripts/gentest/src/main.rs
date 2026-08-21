@@ -611,6 +611,13 @@ fn generate_assertions(w: &mut XmlWriter, node: &Value, use_rounding: bool) {
         w.write_attribute("scroll_height", &scroll_height);
     }
 
+    if let Some(resolved_rows) = node["resolvedGridTemplateRows"].as_str() {
+        w.write_attribute("resolved-rows", &resolved_rows);
+    }
+    if let Some(resolved_columns) = node["resolvedGridTemplateColumns"].as_str() {
+        w.write_attribute("resolved-columns", &resolved_columns);
+    }
+
     if let Value::Array(ref value) = node["children"] {
         for child in value {
             generate_assertions(w, child, use_rounding);
@@ -711,12 +718,8 @@ fn generate_node(w: &mut XmlWriter, node: &Value) {
     maybe_write(w, "right", get_dim_attr(&style["inset"]["right"], None));
 
     maybe_write(w, "grid-auto-flow", serialize_grid_auto_flow(&style["gridAutoFlow"]));
-    maybe_write(w, "grid-template-rows", serialize_array(&style["gridTemplateRows"], ' ', serialize_track_definition));
-    maybe_write(
-        w,
-        "grid-template-columns",
-        serialize_array(&style["gridTemplateColumns"], ' ', serialize_track_definition),
-    );
+    maybe_write(w, "grid-template-rows", get_str_attr(&style["gridTemplateRows"], None));
+    maybe_write(w, "grid-template-columns", get_str_attr(&style["gridTemplateColumns"], None));
     maybe_write(w, "grid-auto-rows", serialize_array(&style["gridAutoRows"], ' ', serialize_track_definition));
     maybe_write(w, "grid-auto-columns", serialize_array(&style["gridAutoColumns"], ' ', serialize_track_definition));
 

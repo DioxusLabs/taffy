@@ -11,9 +11,9 @@
     </div>
   </input>
   <expectations>
-    <node x="0" y="0" width="200" height="200">
-      <node x="5" y="5" width="190" height="42.21875">
-        <node x="78.96875" y="8" width="103.03125" height="26.21875">
+    <node x="0" y="0" width="200" height="200" resolved-rows="52.2188px 147.781px" resolved-columns="200px">
+      <node x="5" y="5" width="190" height="42.21875" resolved-rows="36.2188px" resolved-columns="184px">
+        <node x="78.96875" y="8" width="103.03125" height="26.21875" resolved-rows="15.1875px" resolved-columns="92px">
           <node x="45.53125" y="10.109375" width="47.390625" height="6"/>
         </node>
       </node>

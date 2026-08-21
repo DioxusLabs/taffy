@@ -1631,16 +1631,14 @@ impl<S: CheapCloneStr, Track: FromCss + Debug> FromCss for GridTemplateTracks<S,
             })
         }
 
+        // Line name groups are positional (group `i` names line `i`), so a group is pushed for
+        // every line, empty when the line has no `[...]` in the source
         let mut tracks = Self::default();
-        if let Ok(line_names) = try_parse_line_names(parser) {
-            tracks.line_names.push(line_names);
-        }
+        tracks.line_names.push(try_parse_line_names(parser).unwrap_or_default());
 
         while !parser.is_exhausted() {
             tracks.tracks.push(Track::from_css(parser)?);
-            if let Ok(line_names) = try_parse_line_names(parser) {
-                tracks.line_names.push(line_names);
-            }
+            tracks.line_names.push(try_parse_line_names(parser).unwrap_or_default());
         }
 
         if tracks.tracks.is_empty() {

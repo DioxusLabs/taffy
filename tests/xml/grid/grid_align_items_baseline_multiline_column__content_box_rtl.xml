@@ -13,15 +13,15 @@
     </div>
   </input>
   <expectations>
-    <node x="0" y="0" width="100" height="100">
-      <node x="50" y="0" width="50" height="50"/>
-      <node x="20" y="30" width="30" height="50">
-        <node x="10" y="0" width="20" height="20"/>
+    <node x="0" y="0" width="100" height="100" resolved-rows="80px 80px" resolved-columns="50px 50px">
+      <node x="50" y="0" width="50" height="50" resolved-rows="none" resolved-columns="none"/>
+      <node x="20" y="30" width="30" height="50" resolved-rows="50px" resolved-columns="30px">
+        <node x="10" y="0" width="20" height="20" resolved-rows="none" resolved-columns="none"/>
       </node>
-      <node x="60" y="90" width="40" height="70">
-        <node x="30" y="0" width="10" height="10"/>
+      <node x="60" y="90" width="40" height="70" resolved-rows="70px" resolved-columns="40px">
+        <node x="30" y="0" width="10" height="10" resolved-rows="none" resolved-columns="none"/>
       </node>
-      <node x="0" y="80" width="50" height="20"/>
+      <node x="0" y="80" width="50" height="20" resolved-rows="none" resolved-columns="none"/>
     </node>
   </expectations>
 </test>

@@ -32945,6 +32945,126 @@ mod grid {
 
     #[cfg(feature = "grid")]
     #[test]
+    fn grid_template_serialization_auto_fill_named_lines__border_box_ltr() {
+        crate::run_xml_test("grid", "grid_template_serialization_auto_fill_named_lines__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_template_serialization_auto_fill_named_lines__content_box_ltr() {
+        crate::run_xml_test("grid", "grid_template_serialization_auto_fill_named_lines__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_template_serialization_auto_fill_named_lines__border_box_rtl() {
+        crate::run_xml_test("grid", "grid_template_serialization_auto_fill_named_lines__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_template_serialization_auto_fill_named_lines__content_box_rtl() {
+        crate::run_xml_test("grid", "grid_template_serialization_auto_fill_named_lines__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_template_serialization_fractional_tracks__border_box_ltr() {
+        crate::run_xml_test("grid", "grid_template_serialization_fractional_tracks__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_template_serialization_fractional_tracks__content_box_ltr() {
+        crate::run_xml_test("grid", "grid_template_serialization_fractional_tracks__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_template_serialization_fractional_tracks__border_box_rtl() {
+        crate::run_xml_test("grid", "grid_template_serialization_fractional_tracks__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_template_serialization_fractional_tracks__content_box_rtl() {
+        crate::run_xml_test("grid", "grid_template_serialization_fractional_tracks__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_template_serialization_implicit_tracks__border_box_ltr() {
+        crate::run_xml_test("grid", "grid_template_serialization_implicit_tracks__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_template_serialization_implicit_tracks__content_box_ltr() {
+        crate::run_xml_test("grid", "grid_template_serialization_implicit_tracks__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_template_serialization_implicit_tracks__border_box_rtl() {
+        crate::run_xml_test("grid", "grid_template_serialization_implicit_tracks__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_template_serialization_implicit_tracks__content_box_rtl() {
+        crate::run_xml_test("grid", "grid_template_serialization_implicit_tracks__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_template_serialization_named_lines__border_box_ltr() {
+        crate::run_xml_test("grid", "grid_template_serialization_named_lines__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_template_serialization_named_lines__content_box_ltr() {
+        crate::run_xml_test("grid", "grid_template_serialization_named_lines__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_template_serialization_named_lines__border_box_rtl() {
+        crate::run_xml_test("grid", "grid_template_serialization_named_lines__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_template_serialization_named_lines__content_box_rtl() {
+        crate::run_xml_test("grid", "grid_template_serialization_named_lines__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_template_serialization_none__border_box_ltr() {
+        crate::run_xml_test("grid", "grid_template_serialization_none__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_template_serialization_none__content_box_ltr() {
+        crate::run_xml_test("grid", "grid_template_serialization_none__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_template_serialization_none__border_box_rtl() {
+        crate::run_xml_test("grid", "grid_template_serialization_none__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_template_serialization_none__content_box_rtl() {
+        crate::run_xml_test("grid", "grid_template_serialization_none__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
     fn grid_unsafe_align_self_end_overflow__border_box_ltr() {
         crate::run_xml_test("grid", "grid_unsafe_align_self_end_overflow__border_box_ltr");
     }

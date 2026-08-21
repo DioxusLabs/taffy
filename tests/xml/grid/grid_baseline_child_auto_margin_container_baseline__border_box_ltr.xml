@@ -10,11 +10,11 @@
     </div>
   </input>
   <expectations>
-    <node x="0" y="0" width="120" height="80">
-      <node x="0" y="0" width="50" height="30"/>
-      <node x="60" y="10" width="50" height="40">
-        <node x="0" y="0" width="25" height="20"/>
-        <node x="25" y="30" width="25" height="10"/>
+    <node x="0" y="0" width="120" height="80" resolved-rows="80px" resolved-columns="60px 60px">
+      <node x="0" y="0" width="50" height="30" resolved-rows="none" resolved-columns="none"/>
+      <node x="60" y="10" width="50" height="40" resolved-rows="40px" resolved-columns="25px 25px">
+        <node x="0" y="0" width="25" height="20" resolved-rows="none" resolved-columns="none"/>
+        <node x="25" y="30" width="25" height="10" resolved-rows="none" resolved-columns="none"/>
       </node>
     </node>
   </expectations>

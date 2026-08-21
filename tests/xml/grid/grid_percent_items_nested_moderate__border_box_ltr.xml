@@ -8,8 +8,8 @@
     </div>
   </input>
   <expectations>
-    <node x="0" y="0" width="200" height="42.15625">
-      <node x="8" y="8" width="97" height="26.15625">
+    <node x="0" y="0" width="200" height="42.15625" resolved-rows="36.1562px" resolved-columns="194px">
+      <node x="8" y="8" width="97" height="26.15625" resolved-rows="14.5312px" resolved-columns="85.375px">
         <node x="10.078125" y="10.078125" width="38.40625" height="6"/>
       </node>
     </node>

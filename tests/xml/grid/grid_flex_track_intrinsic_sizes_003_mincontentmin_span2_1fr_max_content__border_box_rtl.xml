@@ -10,7 +10,7 @@
     </div>
   </input>
   <expectations>
-    <node x="0" y="0" width="60" height="60">
+    <node x="0" y="0" width="60" height="60" resolved-rows="100px 0px" resolved-columns="100px 0px">
       <node x="-43" y="3" width="100" height="100">
         <node x="0" y="0" width="100" height="100"/>
       </node>

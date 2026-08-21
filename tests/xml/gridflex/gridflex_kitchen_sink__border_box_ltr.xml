@@ -28,11 +28,11 @@
   </input>
   <expectations>
     <node x="0" y="0" width="140" height="20">
-      <node x="0" y="0" width="140" height="20">
+      <node x="0" y="0" width="140" height="20" resolved-rows="10px 10px" resolved-columns="70px 70px">
         <node x="0" y="0" width="70" height="10">
           <node x="0" y="0" width="20" height="10"/>
           <node x="20" y="0" width="50" height="10">
-            <node x="0" y="0" width="20" height="10">
+            <node x="0" y="0" width="20" height="10" resolved-rows="3px 1px" resolved-columns="20px 2px">
               <node x="0" y="0" width="20" height="3"/>
               <node x="20" y="0" width="2" height="3"/>
               <node x="0" y="3" width="20" height="1"/>

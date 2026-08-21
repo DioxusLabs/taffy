@@ -9,10 +9,10 @@
     </div>
   </input>
   <expectations>
-    <node x="0" y="0" width="110" height="110">
-      <node x="55" y="5" width="50" height="50"/>
-      <node x="45" y="65" width="60" height="30">
-        <node x="5" y="5" width="50" height="10"/>
+    <node x="0" y="0" width="110" height="110" resolved-rows="60px 40px" resolved-columns="100px">
+      <node x="55" y="5" width="50" height="50" resolved-rows="none" resolved-columns="none"/>
+      <node x="45" y="65" width="60" height="30" resolved-rows="20px" resolved-columns="50px">
+        <node x="5" y="5" width="50" height="10" resolved-rows="none" resolved-columns="none"/>
       </node>
     </node>
   </expectations>
