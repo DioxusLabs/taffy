@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Breaking
+
+- `Position` gains `Static` and `Fixed` variants matching the CSS `position` property, and **`Position::Static` replaces `Position::Relative` as the default value** (matching CSS). Statically positioned items are laid out in normal flow like relatively positioned items, but their `inset` styles are ignored: code relying on the old default's inset behavior must explicitly set `position: Position::Relative`. `Position::Fixed` currently behaves identically to `Position::Absolute` (both are taken out of normal flow and positioned relative to their parent); a future release will hoist absolute/fixed boxes to their actual containing block (nearest positioned ancestor for `absolute`, root for `fixed`). `Position` also gains `is_out_of_flow()` and `is_positioned()` helper methods, and the CSS parser (`parse` feature) accepts `static` and `fixed` keywords
+
 ### Added
 
 - The tagged-pointer size types can now be inspected via a plain enum. `LengthPercentage`, `LengthPercentageAuto`, `Dimension`, `MinTrackSizingFunction` and `MaxTrackSizingFunction` each gain an `expand()` method returning a matching `Expanded*` enum (`ExpandedLengthPercentage`, `ExpandedDimension`, etc.) whose variants map one-to-one onto the type's constructors, along with `From` conversions in both directions. This makes it possible to read back the original value of a style property (for style inspection, serialization or integration with other libraries) without having to work with the raw `CompactLength` representation
