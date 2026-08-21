@@ -24,7 +24,7 @@ use types::{CellOccupancyMatrix, GridTrack, NamedLineResolver};
 #[cfg(feature = "detailed_layout_info")]
 use crate::sys::{DefaultCheapStr, String};
 #[cfg(feature = "detailed_layout_info")]
-use crate::CheapCloneStr;
+use crate::{CheapCloneStr, GridPlacement, OriginZeroGridPlacement};
 #[cfg(feature = "detailed_layout_info")]
 use types::{GridItem, GridTrackKind, TrackCounts};
 
@@ -228,9 +228,9 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
 
     // Build the per-line names of the explicit grid from the name resolver's collected pairs
     #[cfg(feature = "detailed_layout_info")]
-    let detailed_column_line_names = name_resolver.detailed_line_names(AbsoluteAxis::Horizontal);
+    let mut detailed_column_line_names = name_resolver.detailed_line_names(AbsoluteAxis::Horizontal);
     #[cfg(feature = "detailed_layout_info")]
-    let detailed_row_line_names = name_resolver.detailed_line_names(AbsoluteAxis::Vertical);
+    let mut detailed_row_line_names = name_resolver.detailed_line_names(AbsoluteAxis::Vertical);
 
     // 3. Implicit Grid: Estimate Track Counts
     // Estimate the number of rows and columns in the implicit grid (= the entire grid)
@@ -791,6 +791,9 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
         }
     });
 
+    #[cfg(feature = "detailed_layout_info")]
+    name_resolver.populate_detailed_line_resolvers(&mut detailed_row_line_names, &mut detailed_column_line_names);
+
     // Set detailed grid information
     #[cfg(feature = "detailed_layout_info")]
     tree.set_detailed_grid_info(
@@ -885,6 +888,58 @@ pub struct DetailedGridInfo<S: CheapCloneStr = DefaultCheapStr> {
 }
 
 #[cfg(feature = "detailed_layout_info")]
+impl<S: CheapCloneStr> DetailedGridTracksInfo<S> {
+    /// Resolve an absolute placement in this axis to physical start and end coordinates
+    fn resolve_absolute_grid_axis(
+        &self,
+        placement: Line<GridPlacement<S>>,
+        padding_start: f32,
+        padding_end: f32,
+        is_reversed: bool,
+    ) -> Line<f32> {
+        let track_counts = TrackCounts {
+            negative_implicit: self.negative_implicit_tracks,
+            explicit: self.explicit_tracks,
+            positive_implicit: self.positive_implicit_tracks,
+        };
+        let min_line = -(track_counts.negative_implicit as i16);
+        let max_line = (track_counts.explicit + track_counts.positive_implicit) as i16;
+        let placement = self
+            .line_names
+            .resolve_line_names(&placement, self.explicit_tracks)
+            .into_origin_zero(self.explicit_tracks)
+            .map(|placement| match placement {
+                OriginZeroGridPlacement::Line(line) if line.0 < min_line || line.0 > max_line => {
+                    OriginZeroGridPlacement::Auto
+                }
+                placement => placement,
+            })
+            .resolve_absolutely_positioned_grid_tracks()
+            .map(|line| line.and_then(|line| line.try_into_track_vec_index(track_counts).map(|index| index / 2)));
+        let start_position = placement
+            .start
+            .and_then(|line| {
+                self.positions
+                    .get(line)
+                    .map(|track| if is_reversed { track.end } else { track.start })
+                    .or_else(|| self.positions.last().map(|track| if is_reversed { track.start } else { track.end }))
+            })
+            .unwrap_or(if is_reversed { padding_end } else { padding_start });
+        let end_position = placement
+            .end
+            .and_then(|line| {
+                line.checked_sub(1)
+                    .and_then(|line| self.positions.get(line))
+                    .map(|track| if is_reversed { track.start } else { track.end })
+                    .or_else(|| self.positions.first().map(|track| if is_reversed { track.end } else { track.start }))
+            })
+            .unwrap_or(if is_reversed { padding_start } else { padding_end });
+
+        Line { start: f32_min(start_position, end_position), end: f32_max(start_position, end_position) }
+    }
+}
+
+#[cfg(feature = "detailed_layout_info")]
 impl<S: CheapCloneStr> DetailedGridInfo<S> {
     /// Write the used row track sizes and line names to the passed writer in the resolved value
     /// format of the `grid-template-rows` property
@@ -910,6 +965,25 @@ impl<S: CheapCloneStr> DetailedGridInfo<S> {
     /// `grid-template-columns` property (see <https://www.w3.org/TR/css-grid-1/#resolved-track-list>)
     pub fn grid_template_columns(&self) -> String {
         self.columns.to_track_list_string()
+    }
+
+    /// Resolve the physical grid area for an absolutely positioned box from its grid placement.
+    /// The padding box and returned area use coordinates relative to the grid container's border box.
+    pub fn resolve_absolute_grid_area(
+        &self,
+        grid_row: Line<GridPlacement<S>>,
+        grid_column: Line<GridPlacement<S>>,
+        direction: Direction,
+        padding_box: Rect<f32>,
+    ) -> Rect<f32> {
+        let columns = self.columns.resolve_absolute_grid_axis(
+            grid_column,
+            padding_box.left,
+            padding_box.right,
+            direction.is_rtl(),
+        );
+        let rows = self.rows.resolve_absolute_grid_axis(grid_row, padding_box.top, padding_box.bottom, false);
+        Rect { left: columns.start, right: columns.end, top: rows.start, bottom: rows.end }
     }
 
     /// Compute the location and size of the grid area occupied by the item at `item_index` (an
