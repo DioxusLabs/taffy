@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    justify-self overrides legacy text-align alignment of block-level boxes
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="display: block; width: 200px; text-align: -webkit-center;">
+  <div style="width: 100px; height: 20px; justify-self: end;"></div>
+  <div style="width: 100px; height: 20px; justify-self: normal;"></div>
+</div>
+
+</body>
+</html>

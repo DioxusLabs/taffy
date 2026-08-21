@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    justify-self aligns absolutely positioned children in an rtl container
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="display: block; width: 200px; height: 100px; position: relative; direction: rtl;">
+  <div style="width: 100px; height: 20px; position: absolute; justify-self: end;"></div>
+  <div style="width: 100px; height: 20px; position: absolute; top: 20px; justify-self: center;"></div>
+</div>
+
+</body>
+</html>

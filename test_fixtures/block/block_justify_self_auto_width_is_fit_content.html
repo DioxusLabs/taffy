@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    a positional justify-self makes an auto inline size fit-content sized
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="display: block; width: 200px;">
+  <div style="height: 20px; justify-self: center;">
+    <div style="width: 40px; height: 20px;"></div>
+  </div>
+  <div style="height: 20px; justify-self: end;">
+    <div style="width: 40px; height: 20px;"></div>
+  </div>
+  <div style="height: 20px; justify-self: normal;">
+    <div style="width: 40px; height: 20px;"></div>
+  </div>
+  <div style="height: 20px; justify-self: center; min-width: 150px;">
+    <div style="width: 40px; height: 20px;"></div>
+  </div>
+  <div style="height: 20px; justify-self: center; max-width: 20px;">
+    <div style="width: 40px; height: 20px;"></div>
+  </div>
+</div>
+
+</body>
+</html>

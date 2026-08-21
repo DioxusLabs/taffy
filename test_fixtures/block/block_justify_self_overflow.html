@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    safe justify-self falls back to start when the item overflows
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="display: block; width: 100px;">
+  <div style="width: 200px; height: 20px; justify-self: safe center;"></div>
+  <div style="width: 200px; height: 20px; justify-self: unsafe center;"></div>
+  <div style="width: 200px; height: 20px; justify-self: end;"></div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    justify-self aligns the margin box, and auto margins take precedence
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="display: block; width: 200px;">
+  <div style="width: 100px; height: 20px; justify-self: center; margin-left: 20px;"></div>
+  <div style="width: 100px; height: 20px; justify-self: end; margin-right: 30px;"></div>
+  <div style="width: 100px; height: 20px; justify-self: end; margin-left: auto; margin-right: 40px;"></div>
+  <div style="width: 100px; height: 20px; justify-self: start; margin-left: auto; margin-right: auto;"></div>
+</div>
+
+</body>
+</html>
