@@ -47,12 +47,6 @@ mod std {
         Vec::with_capacity(capacity)
     }
 
-    /// Creates a new vector with the capacity for the specified number of items before it must be resized
-    #[must_use]
-    pub(crate) fn single_value_vec<A>(value: A) -> Vec<A> {
-        vec![value]
-    }
-
     /// Rounds to the nearest whole number
     #[must_use]
     #[inline(always)]
@@ -133,14 +127,6 @@ mod alloc {
         Vec::with_capacity(capacity)
     }
 
-    /// Creates a new vector with the capacity for the specified number of items before it must be resized
-    #[must_use]
-    pub(crate) fn single_value_vec<A>(value: A) -> Vec<A> {
-        let mut vec = Vec::with_capacity(1);
-        vec.push(value);
-        vec
-    }
-
     /// Rounds to the nearest whole number
     pub(crate) use super::polyfill::round;
 
@@ -198,14 +184,6 @@ mod core {
     #[must_use]
     pub(crate) fn new_vec_with_capacity<A, const CAP: usize>(_capacity: usize) -> arrayvec::ArrayVec<A, CAP> {
         arrayvec::ArrayVec::new()
-    }
-
-    /// Creates a new vector with the capacity for the specified number of items before it must be resized
-    #[must_use]
-    pub(crate) fn single_value_vec<A, const CAP: usize>(value: A) -> arrayvec::ArrayVec<A, CAP> {
-        let mut vec = new_vec_with_capacity(1);
-        vec.push(value);
-        vec
     }
 
     /// Rounds to the nearest whole number

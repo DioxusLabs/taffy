@@ -12,7 +12,8 @@ use crate::geometry::AbsoluteAxis;
 #[cfg(feature = "detailed_layout_info")]
 use crate::sys::DefaultCheapStr;
 // use alloc::fmt::format;
-use crate::sys::{format, single_value_vec, Map, Vec};
+use crate::sys::{format, Map, Vec};
+use smallvec::{smallvec, SmallVec};
 
 /// Wrap an `AsRef<str>` type with a type which implements Hash by first
 /// deferring to the underlying `&str`'s implementation of Hash.
@@ -46,8 +47,13 @@ impl<T: CheapCloneStr> Borrow<str> for StrHasher<T> {
     }
 }
 
+/// The one-indexed line positions of a single grid line name. Inline capacity of 4 keeps the
+/// type the same size as `Vec<u32>` (24 bytes) while avoiding a heap allocation for names
+/// mapping to at most 4 lines (the common case)
+pub(crate) type LinePositions = SmallVec<[u32; 4]>;
+
 /// Map from a grid line name to its one-indexed line positions
-type NamedGridLinesMap<S> = Map<StrHasher<S>, Vec<u32>>;
+type NamedGridLinesMap<S> = Map<StrHasher<S>, LinePositions>;
 
 /// Resolver for named placements in one grid axis
 struct NamedLineResolverAxis<'a, S: CheapCloneStr> {
@@ -61,11 +67,11 @@ struct NamedLineResolverAxis<'a, S: CheapCloneStr> {
 /// resolve line names of grid placement properties into line numbers.
 pub(crate) struct NamedLineResolver<S: CheapCloneStr> {
     /// Map of row line names to line numbers. Each line name may correspond to multiple lines
-    /// so we store a `Vec`
-    row_lines: Map<StrHasher<S>, Vec<u32>>,
+    /// so we store a `SmallVec`
+    row_lines: NamedGridLinesMap<S>,
     /// Map of column line names to line numbers. Each line name may correspond to multiple lines
-    /// so we store a `Vec`
-    column_lines: Map<StrHasher<S>, Vec<u32>>,
+    /// so we store a `SmallVec`
+    column_lines: NamedGridLinesMap<S>,
     /// Map of area names to area definitions (start and end lines numbers in each axis)
     areas: Map<StrHasher<S>, GridTemplateArea<S>>,
     /// Number of columns implied by grid area definitions
@@ -89,8 +95,8 @@ pub(crate) struct NamedLineResolver<S: CheapCloneStr> {
 }
 
 /// Utility function to create or update an entry in a line name map
-fn upsert_line_name_map<S: CheapCloneStr>(map: &mut Map<StrHasher<S>, Vec<u32>>, key: S, value: u32) {
-    map.entry(StrHasher(key)).and_modify(|lines| lines.push(value)).or_insert_with(|| single_value_vec(value));
+fn upsert_line_name_map<S: CheapCloneStr>(map: &mut NamedGridLinesMap<S>, key: S, value: u32) {
+    map.entry(StrHasher(key)).and_modify(|lines| lines.push(value)).or_insert_with(|| smallvec![value]);
 }
 
 impl<S: CheapCloneStr> NamedLineResolverAxis<'_, S> {
@@ -238,8 +244,8 @@ impl<S: CheapCloneStr> NamedLineResolver<S> {
         row_auto_repetitions: u16,
     ) -> Self {
         let mut areas: Map<StrHasher<S>, GridTemplateArea<_>> = Map::new();
-        let mut column_lines: Map<StrHasher<S>, Vec<u32>> = Map::new();
-        let mut row_lines: Map<StrHasher<S>, Vec<u32>> = Map::new();
+        let mut column_lines: NamedGridLinesMap<S> = Map::new();
+        let mut row_lines: NamedGridLinesMap<S> = Map::new();
 
         #[cfg(feature = "detailed_layout_info")]
         let mut column_line_name_pairs: Vec<(u32, S)> = Vec::new();
@@ -254,10 +260,7 @@ impl<S: CheapCloneStr> NamedLineResolver<S> {
                     for line_name in line_names.into_iter() {
                         #[cfg(feature = "detailed_layout_info")]
                         column_line_name_pairs.push((current_line, line_name.clone()));
-                        column_lines
-                            .entry(StrHasher(line_name.clone()))
-                            .and_modify(|lines: &mut Vec<u32>| lines.push(current_line))
-                            .or_insert_with(|| single_value_vec(current_line));
+                        upsert_line_name_map(&mut column_lines, line_name.clone(), current_line);
                     }
 
                     if let Some(GenericGridTemplateComponent::Repeat(repeat)) = column_tracks.next() {
@@ -313,10 +316,7 @@ impl<S: CheapCloneStr> NamedLineResolver<S> {
                     for line_name in line_names.into_iter() {
                         #[cfg(feature = "detailed_layout_info")]
                         row_line_name_pairs.push((current_line, line_name.clone()));
-                        row_lines
-                            .entry(StrHasher(line_name.clone()))
-                            .and_modify(|lines: &mut Vec<u32>| lines.push(current_line))
-                            .or_insert_with(|| single_value_vec(current_line));
+                        upsert_line_name_map(&mut row_lines, line_name.clone(), current_line);
                     }
 
                     if let Some(GenericGridTemplateComponent::Repeat(repeat)) = row_tracks.next() {
