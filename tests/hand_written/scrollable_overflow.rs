@@ -37,6 +37,7 @@ fn container_with_absolute_child(
             Style {
                 display,
                 direction,
+                position: Position::Relative,
                 size: Size { width: length(CONTAINER), height: length(CONTAINER) },
                 overflow: Point { x: overflow, y: overflow },
                 ..Default::default()
@@ -112,6 +113,7 @@ fn absolute_only_containers_include_scroll_container_end_padding() {
             .new_with_children(
                 Style {
                     display,
+                    position: Position::Relative,
                     overflow: Point { x: Overflow::Scroll, y: Overflow::Scroll },
                     padding: Rect { left: length(0.0), right: length(20.0), top: length(0.0), bottom: length(30.0) },
                     size: Size { width: length(CONTAINER), height: length(CONTAINER) },
@@ -144,6 +146,7 @@ fn nested_overflow_layout(display: Display, child_overflow: Point<Overflow>) -> 
         .new_with_children(
             Style {
                 display,
+                position: Position::Relative,
                 size: Size { width: length(CONTAINER), height: length(CONTAINER) },
                 overflow: child_overflow,
                 ..Default::default()

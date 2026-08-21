@@ -1,0 +1,29 @@
+<test name="absolute_layout_static_container_static_position_content_box__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div box-sizing="content-box" direction="ltr" position="absolute" flex-direction="column" width="100px" height="300px">
+      <div box-sizing="content-box" direction="ltr" justify-content="start" width="100px" height="100px" padding-top="10px" padding-left="10px" padding-bottom="10px" padding-right="10px" border-top="5px" border-left="5px" border-bottom="5px" border-right="5px">
+        <div box-sizing="content-box" direction="ltr" position="absolute" align-self="start" width="30px" height="30px"/>
+      </div>
+      <div box-sizing="content-box" direction="ltr" justify-content="center" width="100px" height="100px" padding-top="10px" padding-left="10px" padding-bottom="10px" padding-right="10px" border-top="5px" border-left="5px" border-bottom="5px" border-right="5px">
+        <div box-sizing="content-box" direction="ltr" position="absolute" align-self="center" width="30px" height="30px"/>
+      </div>
+      <div box-sizing="content-box" direction="ltr" justify-content="end" width="100px" height="100px" padding-top="10px" padding-left="10px" padding-bottom="10px" padding-right="10px" border-top="5px" border-left="5px" border-bottom="5px" border-right="5px">
+        <div box-sizing="content-box" direction="ltr" position="absolute" align-self="end" width="30px" height="30px"/>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="100" height="300">
+      <node x="0" y="0" width="130" height="100">
+        <node x="15" y="15" width="30" height="30"/>
+      </node>
+      <node x="0" y="100" width="130" height="100">
+        <node x="50" y="135" width="30" height="30"/>
+      </node>
+      <node x="0" y="200" width="130" height="100">
+        <node x="85" y="255" width="30" height="30"/>
+      </node>
+    </node>
+  </expectations>
+</test>
