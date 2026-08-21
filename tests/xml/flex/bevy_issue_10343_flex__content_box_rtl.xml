@@ -1,10 +1,10 @@
 <test name="bevy_issue_10343_flex__content_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="flex" box-sizing="content-box" direction="rtl" flex-direction="column" justify-content="space-around" width="100px" height="100px">
-      <div display="flex" box-sizing="content-box" direction="rtl">
-        <div display="flex" box-sizing="content-box" direction="rtl" width="200px" height="200px" margin-top="5px" margin-left="5px" margin-bottom="5px" margin-right="5px">
-          <div box-sizing="content-box" direction="rtl"/>
+    <div display="flex" box-sizing="content-box" direction="rtl" position="absolute" flex-direction="column" justify-content="space-around" width="100px" height="100px">
+      <div display="flex" box-sizing="content-box" direction="rtl" position="relative">
+        <div display="flex" box-sizing="content-box" direction="rtl" position="relative" width="200px" height="200px" margin-top="5px" margin-left="5px" margin-bottom="5px" margin-right="5px">
+          <div box-sizing="content-box" direction="rtl" position="relative"/>
         </div>
       </div>
     </div>

@@ -1,10 +1,10 @@
 <test name="rounding_flex_basis_flex_shrink_row__content_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div box-sizing="content-box" direction="rtl" width="101px" height="100px">
-      <div box-sizing="content-box" direction="rtl" flex-basis="100px"/>
-      <div box-sizing="content-box" direction="rtl" flex-basis="25px"/>
-      <div box-sizing="content-box" direction="rtl" flex-basis="25px"/>
+    <div box-sizing="content-box" direction="rtl" position="absolute" width="101px" height="100px">
+      <div box-sizing="content-box" direction="rtl" position="relative" flex-basis="100px"/>
+      <div box-sizing="content-box" direction="rtl" position="relative" flex-basis="25px"/>
+      <div box-sizing="content-box" direction="rtl" position="relative" flex-basis="25px"/>
     </div>
   </input>
   <expectations>

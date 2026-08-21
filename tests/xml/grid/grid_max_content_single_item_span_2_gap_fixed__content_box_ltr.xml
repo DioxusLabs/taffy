@@ -1,18 +1,18 @@
 <test name="grid_max_content_single_item_span_2_gap_fixed__content_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="grid" box-sizing="content-box" direction="ltr" column-gap="20px" grid-template-rows="40px 40px 40px" grid-template-columns="40px max-content max-content">
-      <div box-sizing="content-box" direction="ltr"/>
-      <text box-sizing="content-box" direction="ltr" grid-column-start="span 2">
+    <div display="grid" box-sizing="content-box" direction="ltr" position="absolute" column-gap="20px" grid-template-rows="40px 40px 40px" grid-template-columns="40px max-content max-content">
+      <div box-sizing="content-box" direction="ltr" position="relative"/>
+      <text box-sizing="content-box" direction="ltr" position="relative" grid-column-start="span 2">
         HH​HH​HH
       </text>
-      <div box-sizing="content-box" direction="ltr"/>
-      <div box-sizing="content-box" direction="ltr"/>
-      <div box-sizing="content-box" direction="ltr"/>
-      <div box-sizing="content-box" direction="ltr"/>
-      <div box-sizing="content-box" direction="ltr"/>
-      <div box-sizing="content-box" direction="ltr"/>
-      <div box-sizing="content-box" direction="ltr"/>
+      <div box-sizing="content-box" direction="ltr" position="relative"/>
+      <div box-sizing="content-box" direction="ltr" position="relative"/>
+      <div box-sizing="content-box" direction="ltr" position="relative"/>
+      <div box-sizing="content-box" direction="ltr" position="relative"/>
+      <div box-sizing="content-box" direction="ltr" position="relative"/>
+      <div box-sizing="content-box" direction="ltr" position="relative"/>
+      <div box-sizing="content-box" direction="ltr" position="relative"/>
     </div>
   </input>
   <expectations>

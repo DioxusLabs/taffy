@@ -1,7 +1,7 @@
 <test name="block_absolute_layout_percentage_bottom_based_on_parent_height__content_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="block" box-sizing="content-box" direction="rtl" width="100px" height="200px">
+    <div display="block" box-sizing="content-box" direction="rtl" position="absolute" width="100px" height="200px">
       <div display="block" box-sizing="content-box" direction="rtl" position="absolute" width="10px" height="10px" top="50%"/>
       <div display="block" box-sizing="content-box" direction="rtl" position="absolute" width="10px" height="10px" bottom="50%"/>
       <div display="block" box-sizing="content-box" direction="rtl" position="absolute" width="10px" top="10%" bottom="10%"/>

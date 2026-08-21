@@ -1,12 +1,12 @@
 <test name="grid_flex_track_intrinsic_sizes_003_mincontentmin_span2_minmax_25px_1fr_auto__content_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="grid" box-sizing="content-box" direction="rtl" width="60px" height="60px" border-top="3px" border-left="3px" border-bottom="3px" border-right="3px" grid-template-rows="minmax(25px, 1fr) auto" grid-template-columns="minmax(25px, 1fr) auto">
-      <div box-sizing="content-box" direction="rtl" min-width="100px" min-height="100px" grid-row-start="1" grid-row-end="span 2" grid-column-start="1" grid-column-end="span 2">
-        <div box-sizing="content-box" direction="rtl" width="100px" height="100px"/>
+    <div display="grid" box-sizing="content-box" direction="rtl" position="absolute" width="60px" height="60px" border-top="3px" border-left="3px" border-bottom="3px" border-right="3px" grid-template-rows="minmax(25px, 1fr) auto" grid-template-columns="minmax(25px, 1fr) auto">
+      <div box-sizing="content-box" direction="rtl" position="relative" min-width="100px" min-height="100px" grid-row-start="1" grid-row-end="span 2" grid-column-start="1" grid-column-end="span 2">
+        <div box-sizing="content-box" direction="rtl" position="relative" width="100px" height="100px"/>
       </div>
-      <div box-sizing="content-box" direction="rtl" grid-row-start="1" grid-column-start="1"/>
-      <div box-sizing="content-box" direction="rtl" grid-row-start="2" grid-column-start="2"/>
+      <div box-sizing="content-box" direction="rtl" position="relative" grid-row-start="1" grid-column-start="1"/>
+      <div box-sizing="content-box" direction="rtl" position="relative" grid-row-start="2" grid-column-start="2"/>
     </div>
   </input>
   <expectations>

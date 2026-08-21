@@ -1,8 +1,8 @@
 <test name="grid_overlarge_explicit_tracks_just_over_limit__border_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="grid" direction="rtl" grid-template-columns="repeat(10001, 0px)">
-      <div direction="rtl" width="20px" height="20px" grid-column-start="10001" grid-column-end="10002"/>
+    <div display="grid" direction="rtl" position="absolute" grid-template-columns="repeat(10001, 0px)">
+      <div direction="rtl" position="relative" width="20px" height="20px" grid-column-start="10001" grid-column-end="10002"/>
     </div>
   </input>
   <expectations>

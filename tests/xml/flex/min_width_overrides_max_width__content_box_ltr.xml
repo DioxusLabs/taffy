@@ -1,8 +1,8 @@
 <test name="min_width_overrides_max_width__content_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div box-sizing="content-box" direction="ltr">
-      <div box-sizing="content-box" direction="ltr" min-width="100px" max-width="50px"/>
+    <div box-sizing="content-box" direction="ltr" position="absolute">
+      <div box-sizing="content-box" direction="ltr" position="relative" min-width="100px" max-width="50px"/>
     </div>
   </input>
   <expectations>

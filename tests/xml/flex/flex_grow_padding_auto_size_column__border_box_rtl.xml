@@ -1,9 +1,9 @@
 <test name="flex_grow_padding_auto_size_column__border_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="flex" direction="rtl" flex-direction="column" padding-top="100px" padding-left="100px" padding-bottom="100px" padding-right="100px">
-      <div direction="rtl" flex-grow="1" width="50px" height="10px"/>
-      <div direction="rtl" width="50px" height="10px"/>
+    <div display="flex" direction="rtl" position="absolute" flex-direction="column" padding-top="100px" padding-left="100px" padding-bottom="100px" padding-right="100px">
+      <div direction="rtl" position="relative" flex-grow="1" width="50px" height="10px"/>
+      <div direction="rtl" position="relative" width="50px" height="10px"/>
     </div>
   </input>
   <expectations>

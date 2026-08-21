@@ -1,9 +1,9 @@
 <test name="block_margin_x_percentage_intrinsic_size_other_negative__border_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="block" direction="ltr">
-      <div direction="ltr" height="10px" margin-left="-20%" margin-right="-10%"/>
-      <div direction="ltr" width="100px" height="10px"/>
+    <div display="block" direction="ltr" position="absolute">
+      <div direction="ltr" position="relative" height="10px" margin-left="-20%" margin-right="-10%"/>
+      <div direction="ltr" position="relative" width="100px" height="10px"/>
     </div>
   </input>
   <expectations>

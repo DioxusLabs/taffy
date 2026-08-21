@@ -1,11 +1,11 @@
 <test name="blockflex_flex_in_block__content_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="block" box-sizing="content-box" direction="rtl" width="200px">
-      <div display="flex" box-sizing="content-box" direction="rtl">
-        <div box-sizing="content-box" direction="rtl" width="50px" height="50px"/>
+    <div display="block" box-sizing="content-box" direction="rtl" position="absolute" width="200px">
+      <div display="flex" box-sizing="content-box" direction="rtl" position="relative">
+        <div box-sizing="content-box" direction="rtl" position="relative" width="50px" height="50px"/>
       </div>
-      <div display="block" box-sizing="content-box" direction="rtl" width="50px" height="20px"/>
+      <div display="block" box-sizing="content-box" direction="rtl" position="relative" width="50px" height="20px"/>
     </div>
   </input>
   <expectations>

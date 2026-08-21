@@ -1,13 +1,13 @@
 <test name="gap_row_gap_align_items_end__border_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div direction="rtl" flex-wrap="wrap" align-items="flex-end" width="100px" height="200px" row-gap="20px" column-gap="10px">
-      <div direction="rtl" width="20px"/>
-      <div direction="rtl" width="20px"/>
-      <div direction="rtl" width="20px"/>
-      <div direction="rtl" width="20px"/>
-      <div direction="rtl" width="20px"/>
-      <div direction="rtl" width="20px"/>
+    <div direction="rtl" position="absolute" flex-wrap="wrap" align-items="flex-end" width="100px" height="200px" row-gap="20px" column-gap="10px">
+      <div direction="rtl" position="relative" width="20px"/>
+      <div direction="rtl" position="relative" width="20px"/>
+      <div direction="rtl" position="relative" width="20px"/>
+      <div direction="rtl" position="relative" width="20px"/>
+      <div direction="rtl" position="relative" width="20px"/>
+      <div direction="rtl" position="relative" width="20px"/>
     </div>
   </input>
   <expectations>

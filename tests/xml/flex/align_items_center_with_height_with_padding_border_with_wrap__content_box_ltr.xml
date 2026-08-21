@@ -1,14 +1,14 @@
 <test name="align_items_center_with_height_with_padding_border_with_wrap__content_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div box-sizing="content-box" direction="ltr">
-      <div display="flex" box-sizing="content-box" direction="ltr" flex-wrap="wrap" align-items="center" align-content="flex-start" width="100px" height="100px">
-        <div box-sizing="content-box" direction="ltr" width="10px" height="10px"/>
-        <div box-sizing="content-box" direction="ltr" width="10px" height="20px"/>
+    <div box-sizing="content-box" direction="ltr" position="absolute">
+      <div display="flex" box-sizing="content-box" direction="ltr" position="relative" flex-wrap="wrap" align-items="center" align-content="flex-start" width="100px" height="100px">
+        <div box-sizing="content-box" direction="ltr" position="relative" width="10px" height="10px"/>
+        <div box-sizing="content-box" direction="ltr" position="relative" width="10px" height="20px"/>
       </div>
-      <div display="flex" box-sizing="content-box" direction="ltr" flex-wrap="wrap" align-items="center" width="100px" height="100px">
-        <div box-sizing="content-box" direction="ltr" width="10px" height="10px"/>
-        <div box-sizing="content-box" direction="ltr" width="10px" height="20px"/>
+      <div display="flex" box-sizing="content-box" direction="ltr" position="relative" flex-wrap="wrap" align-items="center" width="100px" height="100px">
+        <div box-sizing="content-box" direction="ltr" position="relative" width="10px" height="10px"/>
+        <div box-sizing="content-box" direction="ltr" position="relative" width="10px" height="20px"/>
       </div>
     </div>
   </input>

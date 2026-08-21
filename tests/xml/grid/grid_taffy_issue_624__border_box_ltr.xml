@@ -1,10 +1,10 @@
 <test name="grid_taffy_issue_624__border_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="grid" direction="ltr" justify-items="start" justify-content="start" width="320px" height="640px" grid-template-rows="auto auto auto 1fr" grid-template-columns="auto auto 1fr">
-      <div direction="ltr" width="100px" height="50px" grid-row-start="1" grid-row-end="span 2" grid-column-start="1"/>
-      <div direction="ltr" width="40px" height="30px" grid-row-start="1" grid-row-end="span 2" grid-column-start="2" grid-column-end="span 2"/>
-      <div direction="ltr" width="120px" height="20px" grid-row-start="3" grid-row-end="span 1" grid-column-start="1" grid-column-end="span 2"/>
+    <div display="grid" direction="ltr" position="absolute" justify-items="start" justify-content="start" width="320px" height="640px" grid-template-rows="auto auto auto 1fr" grid-template-columns="auto auto 1fr">
+      <div direction="ltr" position="relative" width="100px" height="50px" grid-row-start="1" grid-row-end="span 2" grid-column-start="1"/>
+      <div direction="ltr" position="relative" width="40px" height="30px" grid-row-start="1" grid-row-end="span 2" grid-column-start="2" grid-column-end="span 2"/>
+      <div direction="ltr" position="relative" width="120px" height="20px" grid-row-start="3" grid-row-end="span 1" grid-column-start="1" grid-column-end="span 2"/>
     </div>
   </input>
   <expectations>

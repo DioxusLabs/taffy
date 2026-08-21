@@ -1,11 +1,11 @@
 <test name="grid_overlarge_auto_flow_column_large_negative_row_start__border_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="grid" direction="ltr" grid-auto-flow="column">
-      <div direction="ltr" width="20px" height="20px" grid-column-start="7"/>
-      <div direction="ltr" width="20px" height="20px" grid-column-start="7"/>
-      <div direction="ltr" width="20px" height="20px" grid-column-start="7"/>
-      <div direction="ltr" width="20px" height="20px" grid-row-start="-19553"/>
+    <div display="grid" direction="ltr" position="absolute" grid-auto-flow="column">
+      <div direction="ltr" position="relative" width="20px" height="20px" grid-column-start="7"/>
+      <div direction="ltr" position="relative" width="20px" height="20px" grid-column-start="7"/>
+      <div direction="ltr" position="relative" width="20px" height="20px" grid-column-start="7"/>
+      <div direction="ltr" position="relative" width="20px" height="20px" grid-row-start="-19553"/>
     </div>
   </input>
   <expectations>

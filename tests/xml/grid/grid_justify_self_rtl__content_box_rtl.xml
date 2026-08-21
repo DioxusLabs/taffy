@@ -1,11 +1,11 @@
 <test name="grid_justify_self_rtl__content_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="grid" box-sizing="content-box" direction="rtl" width="100px" grid-template-columns="100px">
-      <div box-sizing="content-box" direction="rtl" justify-self="start" width="20px" height="10px"/>
-      <div box-sizing="content-box" direction="rtl" justify-self="end" width="20px" height="10px"/>
-      <div box-sizing="content-box" direction="rtl" justify-self="center" width="20px" height="10px"/>
-      <div box-sizing="content-box" direction="rtl" justify-self="stretch" width="20px" height="10px"/>
+    <div display="grid" box-sizing="content-box" direction="rtl" position="absolute" width="100px" grid-template-columns="100px">
+      <div box-sizing="content-box" direction="rtl" position="relative" justify-self="start" width="20px" height="10px"/>
+      <div box-sizing="content-box" direction="rtl" position="relative" justify-self="end" width="20px" height="10px"/>
+      <div box-sizing="content-box" direction="rtl" position="relative" justify-self="center" width="20px" height="10px"/>
+      <div box-sizing="content-box" direction="rtl" position="relative" justify-self="stretch" width="20px" height="10px"/>
     </div>
   </input>
   <expectations>

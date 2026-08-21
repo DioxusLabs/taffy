@@ -1,7 +1,7 @@
 <test name="block_absolute_aspect_ratio_fill_min_height__border_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="block" direction="ltr" width="400px" height="300px">
+    <div display="block" direction="ltr" position="absolute" width="400px" height="300px">
       <div direction="ltr" position="absolute" min-width="50px" aspect-ratio="3"/>
     </div>
   </input>

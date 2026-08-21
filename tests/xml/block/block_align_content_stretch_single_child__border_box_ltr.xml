@@ -1,8 +1,8 @@
 <test name="block_align_content_stretch_single_child__border_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="block" direction="ltr" align-content="stretch" width="100px" height="120px">
-      <div direction="ltr" width="50px" height="20px"/>
+    <div display="block" direction="ltr" position="absolute" align-content="stretch" width="100px" height="120px">
+      <div direction="ltr" position="relative" width="50px" height="20px"/>
     </div>
   </input>
   <expectations>

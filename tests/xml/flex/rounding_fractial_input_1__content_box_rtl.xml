@@ -1,10 +1,10 @@
 <test name="rounding_fractial_input_1__content_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div box-sizing="content-box" direction="rtl" flex-direction="column" width="100px" height="113.4px">
-      <div box-sizing="content-box" direction="rtl" flex-grow="1" flex-basis="50px" height="20px"/>
-      <div box-sizing="content-box" direction="rtl" flex-grow="1" height="10px"/>
-      <div box-sizing="content-box" direction="rtl" flex-grow="1" height="10px"/>
+    <div box-sizing="content-box" direction="rtl" position="absolute" flex-direction="column" width="100px" height="113.4px">
+      <div box-sizing="content-box" direction="rtl" position="relative" flex-grow="1" flex-basis="50px" height="20px"/>
+      <div box-sizing="content-box" direction="rtl" position="relative" flex-grow="1" height="10px"/>
+      <div box-sizing="content-box" direction="rtl" position="relative" flex-grow="1" height="10px"/>
     </div>
   </input>
   <expectations>

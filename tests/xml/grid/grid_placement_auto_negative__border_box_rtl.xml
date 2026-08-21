@@ -1,10 +1,10 @@
 <test name="grid_placement_auto_negative__border_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="grid" direction="rtl" width="120px" height="120px" grid-template-rows="40px 40px" grid-template-columns="40px 40px">
-      <div direction="rtl" grid-row-start="1" grid-column-start="-5"/>
-      <div direction="rtl"/>
-      <div direction="rtl" grid-row-start="2"/>
+    <div display="grid" direction="rtl" position="absolute" width="120px" height="120px" grid-template-rows="40px 40px" grid-template-columns="40px 40px">
+      <div direction="rtl" position="relative" grid-row-start="1" grid-column-start="-5"/>
+      <div direction="rtl" position="relative"/>
+      <div direction="rtl" position="relative" grid-row-start="2"/>
     </div>
   </input>
   <expectations>

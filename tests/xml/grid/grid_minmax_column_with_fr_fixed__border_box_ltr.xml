@@ -1,9 +1,9 @@
 <test name="grid_minmax_column_with_fr_fixed__border_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="grid" direction="ltr" width="60px" grid-template-rows="40px" grid-template-columns="minmax(20px, 40px) 1fr">
-      <div direction="ltr"/>
-      <div direction="ltr"/>
+    <div display="grid" direction="ltr" position="absolute" width="60px" grid-template-rows="40px" grid-template-columns="minmax(20px, 40px) 1fr">
+      <div direction="ltr" position="relative"/>
+      <div direction="ltr" position="relative"/>
     </div>
   </input>
   <expectations>

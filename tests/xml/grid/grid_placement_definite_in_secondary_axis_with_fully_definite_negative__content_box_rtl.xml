@@ -1,10 +1,10 @@
 <test name="grid_placement_definite_in_secondary_axis_with_fully_definite_negative__content_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="grid" box-sizing="content-box" direction="rtl" width="120px" height="120px" grid-template-rows="40px 40px" grid-template-columns="40px 40px">
-      <div box-sizing="content-box" direction="rtl" grid-row-start="2"/>
-      <div box-sizing="content-box" direction="rtl" grid-row-start="2" grid-column-start="-4"/>
-      <div box-sizing="content-box" direction="rtl" grid-row-start="1"/>
+    <div display="grid" box-sizing="content-box" direction="rtl" position="absolute" width="120px" height="120px" grid-template-rows="40px 40px" grid-template-columns="40px 40px">
+      <div box-sizing="content-box" direction="rtl" position="relative" grid-row-start="2"/>
+      <div box-sizing="content-box" direction="rtl" position="relative" grid-row-start="2" grid-column-start="-4"/>
+      <div box-sizing="content-box" direction="rtl" position="relative" grid-row-start="1"/>
     </div>
   </input>
   <expectations>

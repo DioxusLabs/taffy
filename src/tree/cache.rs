@@ -142,7 +142,7 @@ impl From<&LayoutInput> for CacheKey {
 }
 
 /// Cached intermediate layout results
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize))]
 pub(crate) struct CacheEntry<T> {
     /// The key for the cache entry
@@ -176,9 +176,11 @@ impl Default for Cache {
 impl Cache {
     /// Create a new empty cache
     pub const fn new() -> Self {
+        /// Workaround for `Option<CacheEntry<_>>` not being `Copy` (required for array repeat expressions)
+        const NONE_MEASURE_ENTRY: Option<CacheEntry<Size<f32>>> = None;
         Self {
             final_layout_entry: None,
-            measure_entries: [None; CACHE_SIZE],
+            measure_entries: [NONE_MEASURE_ENTRY; CACHE_SIZE],
             recently_used_entries: 0,
             next_measure_entry: 0,
             is_empty: true,
@@ -190,7 +192,9 @@ impl Cache {
     pub fn get(&mut self, input: &LayoutInput) -> Option<LayoutOutput> {
         let key = CacheKey::from(input);
         match input.run_mode {
-            RunMode::PerformLayout => self.final_layout_entry.filter(|entry| entry.key == key).map(|e| e.content),
+            RunMode::PerformLayout => {
+                self.final_layout_entry.as_ref().filter(|entry| entry.key == key).map(|e| e.content.clone())
+            }
             RunMode::ComputeSize => {
                 for (index, entry) in self.measure_entries.iter().enumerate() {
                     let Some(entry) = entry else { continue };
@@ -231,7 +235,7 @@ impl Cache {
                 }
                 self.is_empty = false;
                 if let Some(index) =
-                    self.measure_entries.iter().position(|entry| entry.is_some_and(|entry| entry.key == key))
+                    self.measure_entries.iter().position(|entry| entry.as_ref().is_some_and(|entry| entry.key == key))
                 {
                     self.measure_entries[index].as_mut().unwrap().content = layout_output.size;
                     self.recently_used_entries |= 1 << index;
@@ -263,7 +267,9 @@ impl Cache {
         }
         self.is_empty = true;
         self.final_layout_entry = None;
-        self.measure_entries = [None; CACHE_SIZE];
+        /// Workaround for `Option<CacheEntry<_>>` not being `Copy` (required for array repeat expressions)
+        const NONE_MEASURE_ENTRY: Option<CacheEntry<Size<f32>>> = None;
+        self.measure_entries = [NONE_MEASURE_ENTRY; CACHE_SIZE];
         self.recently_used_entries = 0;
         self.next_measure_entry = 0;
         ClearState::Cleared

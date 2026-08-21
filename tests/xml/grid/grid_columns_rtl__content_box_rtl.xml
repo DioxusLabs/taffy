@@ -1,10 +1,10 @@
 <test name="grid_columns_rtl__content_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="grid" box-sizing="content-box" direction="rtl" width="100px" grid-template-columns="20px 40px 10px">
-      <div box-sizing="content-box" direction="rtl" height="10px"/>
-      <div box-sizing="content-box" direction="rtl" height="10px"/>
-      <div box-sizing="content-box" direction="rtl" height="10px"/>
+    <div display="grid" box-sizing="content-box" direction="rtl" position="absolute" width="100px" grid-template-columns="20px 40px 10px">
+      <div box-sizing="content-box" direction="rtl" position="relative" height="10px"/>
+      <div box-sizing="content-box" direction="rtl" position="relative" height="10px"/>
+      <div box-sizing="content-box" direction="rtl" position="relative" height="10px"/>
     </div>
   </input>
   <expectations>

@@ -1,9 +1,9 @@
 <test name="flex_basis_flex_shrink_row__border_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div direction="ltr" width="100px" height="100px">
-      <div direction="ltr" flex-basis="100px"/>
-      <div direction="ltr" flex-basis="50px"/>
+    <div direction="ltr" position="absolute" width="100px" height="100px">
+      <div direction="ltr" position="relative" flex-basis="100px"/>
+      <div direction="ltr" position="relative" flex-basis="50px"/>
     </div>
   </input>
   <expectations>

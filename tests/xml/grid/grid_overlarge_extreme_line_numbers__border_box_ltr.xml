@@ -1,9 +1,9 @@
 <test name="grid_overlarge_extreme_line_numbers__border_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="grid" direction="ltr">
-      <div direction="ltr" width="20px" height="20px" grid-row-start="-32768" grid-column-start="32767"/>
-      <div direction="ltr" width="20px" height="20px" grid-row-start="32767" grid-row-end="span 10000" grid-column-start="span 10000" grid-column-end="-32768"/>
+    <div display="grid" direction="ltr" position="absolute">
+      <div direction="ltr" position="relative" width="20px" height="20px" grid-row-start="-32768" grid-column-start="32767"/>
+      <div direction="ltr" position="relative" width="20px" height="20px" grid-row-start="32767" grid-row-end="span 10000" grid-column-start="span 10000" grid-column-end="-32768"/>
     </div>
   </input>
   <expectations>

@@ -1,8 +1,8 @@
 <test name="margin_and_stretch_row__border_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div direction="rtl" width="100px" height="100px">
-      <div direction="rtl" flex-grow="1" margin-top="10px" margin-bottom="10px"/>
+    <div direction="rtl" position="absolute" width="100px" height="100px">
+      <div direction="rtl" position="relative" flex-grow="1" margin-top="10px" margin-bottom="10px"/>
     </div>
   </input>
   <expectations>

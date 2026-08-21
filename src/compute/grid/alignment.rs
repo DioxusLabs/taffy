@@ -8,7 +8,7 @@ use crate::style::{
     AlignContent, AlignItems, AlignItemsKeyword, AlignSelf, AvailableSpace, CoreStyle, GridItemStyle, Overflow,
     Position,
 };
-use crate::tree::{Layout, LayoutPartialTreeExt, NodeId, SizingMode};
+use crate::tree::{Layout, LayoutPartialTreeExt, NodeId, OofCandidates, SizingMode};
 use crate::util::sys::f32_max;
 use crate::util::{MaybeMath, MaybeResolve, ResolveOrZero};
 
@@ -95,6 +95,7 @@ pub(super) fn align_and_position_item(
     container_border_box_width: f32,
     container_border: Rect<f32>,
     #[cfg(feature = "content_size")] container_is_scroll_container: bool,
+    bubbled_candidates: &mut OofCandidates,
 ) -> (Rect<f32>, f32, f32) {
     let grid_area_size = Size { width: grid_area.right - grid_area.left, height: grid_area.bottom - grid_area.top };
 
@@ -340,7 +341,7 @@ pub(super) fn align_and_position_item(
         Size { width, height }
     };
 
-    let layout_output = tree.perform_child_layout(
+    let mut layout_output = tree.perform_child_layout(
         node,
         size,
         grid_area_size.map(Option::Some),
@@ -379,6 +380,14 @@ pub(super) fn align_and_position_item(
     };
 
     let resolved_margin = Rect { left: x_margin.start, right: x_margin.end, top: y_margin.start, bottom: y_margin.end };
+
+    // Bubble out-of-flow candidates from the item's subtree, translating anchors from
+    // item-relative to container-relative coordinates
+    let mut item_candidates = layout_output.oof_candidates.take();
+    if !item_candidates.is_empty() {
+        item_candidates.translate(Point { x, y });
+        bubbled_candidates.append(&mut item_candidates);
+    }
 
     tree.set_unrounded_layout(
         node,

@@ -1,10 +1,10 @@
 <test name="block_margin_y_first_child_collapse_blocked_by_overflow_x_hidden__border_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="block" direction="ltr" width="50px">
-      <div display="block" direction="ltr" overflow-x="hidden" scrollbar-width="15" margin-top="10px">
-        <div display="block" direction="ltr" margin-top="10px">
-          <div direction="ltr" height="10px"/>
+    <div display="block" direction="ltr" position="absolute" width="50px">
+      <div display="block" direction="ltr" position="relative" overflow-x="hidden" scrollbar-width="15" margin-top="10px">
+        <div display="block" direction="ltr" position="relative" margin-top="10px">
+          <div direction="ltr" position="relative" height="10px"/>
         </div>
       </div>
     </div>

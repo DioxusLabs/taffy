@@ -1,9 +1,9 @@
 <test name="float_clear_no_preceding_float__border_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="block" direction="rtl" width="500px">
-      <div display="block" direction="rtl" float="right" width="96px" height="96px"/>
-      <div display="block" direction="rtl" float="right" clear="right" width="96px" height="96px"/>
+    <div display="block" direction="rtl" position="absolute" width="500px">
+      <div display="block" direction="rtl" position="relative" float="right" width="96px" height="96px"/>
+      <div display="block" direction="rtl" position="relative" float="right" clear="right" width="96px" height="96px"/>
     </div>
   </input>
   <expectations>

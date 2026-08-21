@@ -1,10 +1,10 @@
 <test name="balance_row_percent__content_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div box-sizing="content-box" direction="ltr" flex-wrap="balance" width="100px">
-      <div box-sizing="content-box" direction="ltr" width="45%" height="30px"/>
-      <div box-sizing="content-box" direction="ltr" width="45%" height="30px"/>
-      <div box-sizing="content-box" direction="ltr" width="45%" height="30px"/>
+    <div box-sizing="content-box" direction="ltr" position="absolute" flex-wrap="balance" width="100px">
+      <div box-sizing="content-box" direction="ltr" position="relative" width="45%" height="30px"/>
+      <div box-sizing="content-box" direction="ltr" position="relative" width="45%" height="30px"/>
+      <div box-sizing="content-box" direction="ltr" position="relative" width="45%" height="30px"/>
     </div>
   </input>
   <expectations>

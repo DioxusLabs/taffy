@@ -1,9 +1,9 @@
 <test name="grid_overlarge_placement_just_past_limit__content_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="grid" box-sizing="content-box" direction="rtl" grid-auto-rows="0px" grid-auto-columns="0px">
-      <div box-sizing="content-box" direction="rtl" width="20px" height="20px" grid-row-start="10001" grid-column-start="10001"/>
-      <div box-sizing="content-box" direction="rtl" width="20px" height="20px"/>
+    <div display="grid" box-sizing="content-box" direction="rtl" position="absolute" grid-auto-rows="0px" grid-auto-columns="0px">
+      <div box-sizing="content-box" direction="rtl" position="relative" width="20px" height="20px" grid-row-start="10001" grid-column-start="10001"/>
+      <div box-sizing="content-box" direction="rtl" position="relative" width="20px" height="20px"/>
     </div>
   </input>
   <expectations>

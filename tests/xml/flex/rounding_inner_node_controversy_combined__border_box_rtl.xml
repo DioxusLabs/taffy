@@ -1,16 +1,16 @@
 <test name="rounding_inner_node_controversy_combined__border_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div direction="rtl" width="640px" height="320px">
-      <div direction="rtl" flex-grow="1" height="100%"/>
-      <div direction="rtl" flex-direction="column" flex-grow="1" height="100%">
-        <div direction="rtl" flex-grow="1" width="100%"/>
-        <div direction="rtl" flex-direction="column" flex-grow="1" width="100%">
-          <div direction="rtl" flex-grow="1" width="100%"/>
+    <div direction="rtl" position="absolute" width="640px" height="320px">
+      <div direction="rtl" position="relative" flex-grow="1" height="100%"/>
+      <div direction="rtl" position="relative" flex-direction="column" flex-grow="1" height="100%">
+        <div direction="rtl" position="relative" flex-grow="1" width="100%"/>
+        <div direction="rtl" position="relative" flex-direction="column" flex-grow="1" width="100%">
+          <div direction="rtl" position="relative" flex-grow="1" width="100%"/>
         </div>
-        <div direction="rtl" flex-grow="1" width="100%"/>
+        <div direction="rtl" position="relative" flex-grow="1" width="100%"/>
       </div>
-      <div direction="rtl" flex-grow="1" height="100%"/>
+      <div direction="rtl" position="relative" flex-grow="1" height="100%"/>
     </div>
   </input>
   <expectations>

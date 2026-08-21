@@ -1,9 +1,9 @@
 <test name="align_self_center_undefined_max_height__content_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div box-sizing="content-box" direction="rtl" width="280px" min-height="52px">
-      <div box-sizing="content-box" direction="rtl" width="240px" height="44px"/>
-      <div box-sizing="content-box" direction="rtl" align-self="center" width="40px" height="56px"/>
+    <div box-sizing="content-box" direction="rtl" position="absolute" width="280px" min-height="52px">
+      <div box-sizing="content-box" direction="rtl" position="relative" width="240px" height="44px"/>
+      <div box-sizing="content-box" direction="rtl" position="relative" align-self="center" width="40px" height="56px"/>
     </div>
   </input>
   <expectations>

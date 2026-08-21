@@ -1,8 +1,8 @@
 <test name="overflow_scrollbars_overridden_by_max_size__border_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div direction="ltr" overflow-x="scroll" overflow-y="scroll" scrollbar-width="15" max-width="2px" max-height="4px">
-      <div direction="ltr" flex-grow="1"/>
+    <div direction="ltr" position="absolute" overflow-x="scroll" overflow-y="scroll" scrollbar-width="15" max-width="2px" max-height="4px">
+      <div direction="ltr" position="relative" flex-grow="1"/>
     </div>
   </input>
   <expectations>

@@ -33,6 +33,7 @@ struct Node {
     cache: Cache,
     layout: Layout,
     children: Vec<Node>,
+    hoisted_children: Vec<NodeId>,
 }
 
 impl Default for Node {
@@ -45,6 +46,7 @@ impl Default for Node {
             cache: Cache::new(),
             layout: Layout::with_order(0),
             children: Vec::new(),
+            hoisted_children: Vec::new(),
         }
     }
 }
@@ -146,6 +148,16 @@ impl taffy::LayoutPartialTree for Node {
 
     fn set_unrounded_layout(&mut self, node_id: NodeId, layout: &Layout) {
         self.node_from_id_mut(node_id).layout = *layout
+    }
+
+    fn set_hoisted_children(&mut self, node_id: NodeId, hoisted: &[NodeId]) {
+        let vec = &mut self.node_from_id_mut(node_id).hoisted_children;
+        vec.clear();
+        vec.extend_from_slice(hoisted);
+    }
+
+    fn add_hoisted_children(&mut self, node_id: NodeId, hoisted: &[NodeId]) {
+        self.node_from_id_mut(node_id).hoisted_children.extend_from_slice(hoisted);
     }
 
     fn resolve_calc_value(&self, _val: *const (), _basis: f32) -> f32 {

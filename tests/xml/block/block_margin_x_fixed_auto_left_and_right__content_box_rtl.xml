@@ -1,9 +1,9 @@
 <test name="block_margin_x_fixed_auto_left_and_right__content_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="block" box-sizing="content-box" direction="rtl" width="50px">
-      <div box-sizing="content-box" direction="rtl" width="20px" height="10px" margin-left="auto" margin-right="auto"/>
-      <div box-sizing="content-box" direction="rtl" height="10px"/>
+    <div display="block" box-sizing="content-box" direction="rtl" position="absolute" width="50px">
+      <div box-sizing="content-box" direction="rtl" position="relative" width="20px" height="10px" margin-left="auto" margin-right="auto"/>
+      <div box-sizing="content-box" direction="rtl" position="relative" height="10px"/>
     </div>
   </input>
   <expectations>
