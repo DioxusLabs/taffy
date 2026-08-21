@@ -98,6 +98,8 @@
 
 ### Fixed
 
+- Grid: a grid container's automatic height is now transferred from its used width via `aspect_ratio` (and clamped by the height min/max sizes) instead of being derived from the sum of its row sizes. Previously a grid container with an `aspect_ratio` and an auto height was sized to its rows, ignoring the aspect ratio
+
 - `TaffyTree::remove` now marks the removed node's former parent as dirty, like `remove_child`, `remove_child_at_index` and `remove_children_range` already did. Previously the parent and its ancestors kept their stale cached layout, so recomputing the layout of an ancestor did not account for the removed node (#998)
 
 - Grid: fixed a subtract-with-overflow panic (in debug builds) when resolving named lines for a template containing a repetition with fewer line name sets than tracks. Any template combining line names with a repetition created by the `repeat()` style helper (or parsed from CSS such as `[a] repeat(2, 10px) [c] 10px`) could trigger this. In release builds the same bug silently mis-numbered the lines following the repetition. The length of `GridTemplateRepetition::line_names` is now part of the API contract: it must either be empty (all lines unnamed) or contain exactly `tracks.len() + 1` line name sets, and any other length panics (in all builds) during layout
