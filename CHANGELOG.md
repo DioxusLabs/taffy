@@ -4,7 +4,14 @@
 
 ### Breaking
 
-- `Position` gains `Static` and `Fixed` variants matching the CSS `position` property, and **`Position::Static` replaces `Position::Relative` as the default value** (matching CSS). Statically positioned items are laid out in normal flow like relatively positioned items, but their `inset` styles are ignored: code relying on the old default's inset behavior must explicitly set `position: Position::Relative`. `Position::Fixed` currently behaves identically to `Position::Absolute` (both are taken out of normal flow and positioned relative to their parent); a future release will hoist absolute/fixed boxes to their actual containing block (nearest positioned ancestor for `absolute`, root for `fixed`). `Position` also gains `is_out_of_flow()` and `is_positioned()` helper methods, and the CSS parser (`parse` feature) accepts `static` and `fixed` keywords
+- `Position` gains `Static` and `Fixed` variants matching the CSS `position` property, and **`Position::Static` replaces `Position::Relative` as the default value** (matching CSS). Statically positioned items are laid out in normal flow like relatively positioned items, but their `inset` styles are ignored: code relying on the old default's inset behavior must explicitly set `position: Position::Relative`. `Position` also gains `is_out_of_flow()` and `is_positioned()` helper methods, and the CSS parser (`parse` feature) accepts `static` and `fixed` keywords
+
+- Out-of-flow (absolute/fixed) boxes are now hoisted to and laid out by their **containing block** — the nearest positioned (non-`static`) ancestor for `position: absolute`, or the root for `position: fixed` — rather than always by their DOM parent, matching CSS. Consequences:
+  - `Layout.location` for an out-of-flow box is now relative to its containing block's border box, not its parent. Consumers accumulating offsets through the DOM tree must accumulate hoisted boxes' offsets through their containing block instead
+  - An out-of-flow box's insets and percentage sizes resolve against its containing block's padding box, and with `auto` insets it falls back to its *static position*: where it would have been placed in its DOM parent's normal flow (including flex/grid alignment), expressed relative to the containing block
+  - Out-of-flow boxes contribute to the *scrollable overflow* of their containing block rather than their DOM parent
+  - `LayoutOutput` is no longer `Copy` (it now carries the list of out-of-flow candidates bubbling towards their containing block, which is also preserved in the layout cache so cache hits at intermediate nodes still re-propagate hoisted descendants)
+  - `LayoutPartialTree` gains `set_hoisted_children`/`add_hoisted_children` methods and `RoundTree` gains `is_hoisted`/`hoisted_child_count`/`get_hoisted_child_id` methods, which custom tree implementations must implement: each containing block records the out-of-flow boxes it laid out, and `round_layout` skips hoisted boxes when recursing through DOM children and instead visits them via their containing block (so rounding is applied against the containing block's cumulative unrounded position)
 
 ### Fixed
 

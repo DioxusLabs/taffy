@@ -1,9 +1,9 @@
 <test name="nested_overflowing_child_in_constraint_parent__content_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div box-sizing="content-box" direction="rtl" width="100px" height="100px">
-      <div box-sizing="content-box" direction="rtl" width="100px" height="100px">
-        <div box-sizing="content-box" direction="rtl" width="200px" height="200px"/>
+    <div box-sizing="content-box" direction="rtl" position="absolute" width="100px" height="100px">
+      <div box-sizing="content-box" direction="rtl" position="relative" width="100px" height="100px">
+        <div box-sizing="content-box" direction="rtl" position="relative" width="200px" height="200px"/>
       </div>
     </div>
   </input>

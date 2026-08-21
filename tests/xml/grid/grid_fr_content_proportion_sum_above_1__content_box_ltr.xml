@@ -1,9 +1,9 @@
 <test name="grid_fr_content_proportion_sum_above_1__content_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="grid" box-sizing="content-box" direction="ltr" grid-template-rows="2fr" grid-template-columns="20px">
-      <div box-sizing="content-box" direction="ltr" min-height="0px">
-        <div box-sizing="content-box" direction="ltr" width="20px" height="100px"/>
+    <div display="grid" box-sizing="content-box" direction="ltr" position="absolute" grid-template-rows="2fr" grid-template-columns="20px">
+      <div box-sizing="content-box" direction="ltr" position="relative" min-height="0px">
+        <div box-sizing="content-box" direction="ltr" position="relative" width="20px" height="100px"/>
       </div>
     </div>
   </input>

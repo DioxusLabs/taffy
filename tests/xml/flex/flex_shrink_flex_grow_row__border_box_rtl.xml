@@ -1,9 +1,9 @@
 <test name="flex_shrink_flex_grow_row__border_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div direction="rtl" width="500px" height="500px">
-      <div direction="rtl" width="500px" height="100px"/>
-      <div direction="rtl" width="500px" height="100px"/>
+    <div direction="rtl" position="absolute" width="500px" height="500px">
+      <div direction="rtl" position="relative" width="500px" height="100px"/>
+      <div direction="rtl" position="relative" width="500px" height="100px"/>
     </div>
   </input>
   <expectations>

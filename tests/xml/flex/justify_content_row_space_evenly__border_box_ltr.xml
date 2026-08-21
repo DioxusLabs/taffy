@@ -1,10 +1,10 @@
 <test name="justify_content_row_space_evenly__border_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div direction="ltr" justify-content="space-evenly" width="100px" height="100px">
-      <div direction="ltr" height="10px"/>
-      <div direction="ltr" height="10px"/>
-      <div direction="ltr" height="10px"/>
+    <div direction="ltr" position="absolute" justify-content="space-evenly" width="100px" height="100px">
+      <div direction="ltr" position="relative" height="10px"/>
+      <div direction="ltr" position="relative" height="10px"/>
+      <div direction="ltr" position="relative" height="10px"/>
     </div>
   </input>
   <expectations>

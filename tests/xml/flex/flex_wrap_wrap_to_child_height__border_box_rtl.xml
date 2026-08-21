@@ -1,13 +1,13 @@
 <test name="flex_wrap_wrap_to_child_height__border_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div direction="rtl" flex-direction="column">
-      <div direction="rtl" flex-wrap="wrap" align-items="flex-start">
-        <div direction="rtl" flex-direction="column" width="100px">
-          <div direction="rtl" width="100px" height="100px"/>
+    <div direction="rtl" position="absolute" flex-direction="column">
+      <div direction="rtl" position="relative" flex-wrap="wrap" align-items="flex-start">
+        <div direction="rtl" position="relative" flex-direction="column" width="100px">
+          <div direction="rtl" position="relative" width="100px" height="100px"/>
         </div>
       </div>
-      <div direction="rtl" width="100px" height="100px"/>
+      <div direction="rtl" position="relative" width="100px" height="100px"/>
     </div>
   </input>
   <expectations>

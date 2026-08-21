@@ -1,7 +1,7 @@
 <test name="grid_absolute_align_self_self_end__content_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="grid" box-sizing="content-box" direction="rtl" width="120px" height="120px" grid-template-rows="40px 40px 40px" grid-template-columns="40px 40px 40px">
+    <div display="grid" box-sizing="content-box" direction="rtl" position="absolute" width="120px" height="120px" grid-template-rows="40px 40px 40px" grid-template-columns="40px 40px 40px">
       <div box-sizing="content-box" direction="rtl" position="absolute" align-self="self-end" width="20px" height="20px"/>
       <div box-sizing="content-box" direction="rtl" position="absolute" align-self="self-end" width="20px" height="20px"/>
     </div>

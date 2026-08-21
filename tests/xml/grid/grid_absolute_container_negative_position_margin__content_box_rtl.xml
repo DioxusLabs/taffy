@@ -1,16 +1,16 @@
 <test name="grid_absolute_container_negative_position_margin__content_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="grid" box-sizing="content-box" direction="rtl" padding-top="10px" padding-left="40px" padding-bottom="30px" padding-right="20px" grid-template-rows="40px 40px 40px" grid-template-columns="40px 40px 40px">
+    <div display="grid" box-sizing="content-box" direction="rtl" position="absolute" padding-top="10px" padding-left="40px" padding-bottom="30px" padding-right="20px" grid-template-rows="40px 40px 40px" grid-template-columns="40px 40px 40px">
       <div box-sizing="content-box" direction="rtl" position="absolute" margin-top="1px" margin-left="4px" margin-bottom="3px" margin-right="2px" top="-5px" right="-15px"/>
       <div box-sizing="content-box" direction="rtl" position="absolute" margin-top="1px" margin-left="4px" margin-bottom="3px" margin-right="2px" left="-35px" bottom="-25px"/>
-      <div box-sizing="content-box" direction="rtl"/>
-      <div box-sizing="content-box" direction="rtl"/>
-      <div box-sizing="content-box" direction="rtl"/>
-      <div box-sizing="content-box" direction="rtl"/>
-      <div box-sizing="content-box" direction="rtl"/>
-      <div box-sizing="content-box" direction="rtl"/>
-      <div box-sizing="content-box" direction="rtl"/>
+      <div box-sizing="content-box" direction="rtl" position="relative"/>
+      <div box-sizing="content-box" direction="rtl" position="relative"/>
+      <div box-sizing="content-box" direction="rtl" position="relative"/>
+      <div box-sizing="content-box" direction="rtl" position="relative"/>
+      <div box-sizing="content-box" direction="rtl" position="relative"/>
+      <div box-sizing="content-box" direction="rtl" position="relative"/>
+      <div box-sizing="content-box" direction="rtl" position="relative"/>
     </div>
   </input>
   <expectations>

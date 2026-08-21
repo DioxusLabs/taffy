@@ -1,9 +1,9 @@
 <test name="block_padding_fixed_size__border_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="block" direction="rtl" width="50px" height="50px" padding-top="2px" padding-left="8px" padding-bottom="6px" padding-right="4px">
-      <div direction="rtl" height="10px"/>
-      <div direction="rtl" height="10px"/>
+    <div display="block" direction="rtl" position="absolute" width="50px" height="50px" padding-top="2px" padding-left="8px" padding-bottom="6px" padding-right="4px">
+      <div direction="rtl" position="relative" height="10px"/>
+      <div direction="rtl" position="relative" height="10px"/>
     </div>
   </input>
   <expectations>

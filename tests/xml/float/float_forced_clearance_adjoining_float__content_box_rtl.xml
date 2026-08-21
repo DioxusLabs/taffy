@@ -1,12 +1,12 @@
 <test name="float_forced_clearance_adjoining_float__content_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="block" box-sizing="content-box" direction="rtl" width="100px">
-      <div display="block" box-sizing="content-box" direction="rtl">
-        <div display="block" box-sizing="content-box" direction="rtl">
-          <div display="block" box-sizing="content-box" direction="rtl" float="left" width="100px" height="50px"/>
+    <div display="block" box-sizing="content-box" direction="rtl" position="absolute" width="100px">
+      <div display="block" box-sizing="content-box" direction="rtl" position="relative">
+        <div display="block" box-sizing="content-box" direction="rtl" position="relative">
+          <div display="block" box-sizing="content-box" direction="rtl" position="relative" float="left" width="100px" height="50px"/>
         </div>
-        <div display="block" box-sizing="content-box" direction="rtl" clear="left" height="50px" margin-top="400px"/>
+        <div display="block" box-sizing="content-box" direction="rtl" position="relative" clear="left" height="50px" margin-top="400px"/>
       </div>
     </div>
   </input>

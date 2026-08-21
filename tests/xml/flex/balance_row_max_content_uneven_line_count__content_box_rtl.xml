@@ -1,10 +1,10 @@
 <test name="balance_row_max_content_uneven_line_count__content_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div box-sizing="content-box" direction="rtl" flex-wrap="balance" flex-line-count="2" column-gap="20px">
-      <div box-sizing="content-box" direction="rtl" width="100px" height="50px"/>
-      <div box-sizing="content-box" direction="rtl" width="30px" height="50px"/>
-      <div box-sizing="content-box" direction="rtl" width="30px" height="50px"/>
+    <div box-sizing="content-box" direction="rtl" position="absolute" flex-wrap="balance" flex-line-count="2" column-gap="20px">
+      <div box-sizing="content-box" direction="rtl" position="relative" width="100px" height="50px"/>
+      <div box-sizing="content-box" direction="rtl" position="relative" width="30px" height="50px"/>
+      <div box-sizing="content-box" direction="rtl" position="relative" width="30px" height="50px"/>
     </div>
   </input>
   <expectations>

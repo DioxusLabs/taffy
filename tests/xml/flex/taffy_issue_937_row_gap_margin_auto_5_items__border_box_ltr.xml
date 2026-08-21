@@ -1,12 +1,12 @@
 <test name="taffy_issue_937_row_gap_margin_auto_5_items__border_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="flex" direction="ltr" width="200px" height="200px" row-gap="10px" column-gap="10px">
-      <div direction="ltr" width="50px" height="50px" margin-bottom="auto"/>
-      <div direction="ltr" width="50px" height="50px"/>
-      <div direction="ltr" width="50px" height="50px"/>
-      <div direction="ltr" width="50px" height="50px"/>
-      <div direction="ltr" width="50px" height="50px"/>
+    <div display="flex" direction="ltr" position="absolute" width="200px" height="200px" row-gap="10px" column-gap="10px">
+      <div direction="ltr" position="relative" width="50px" height="50px" margin-bottom="auto"/>
+      <div direction="ltr" position="relative" width="50px" height="50px"/>
+      <div direction="ltr" position="relative" width="50px" height="50px"/>
+      <div direction="ltr" position="relative" width="50px" height="50px"/>
+      <div direction="ltr" position="relative" width="50px" height="50px"/>
     </div>
   </input>
   <expectations>

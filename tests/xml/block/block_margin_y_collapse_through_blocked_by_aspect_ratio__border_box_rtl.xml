@@ -1,10 +1,10 @@
 <test name="block_margin_y_collapse_through_blocked_by_aspect_ratio__border_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="block" direction="rtl" width="50px">
-      <div display="block" direction="rtl" height="10px" margin-bottom="10px"/>
-      <div display="block" direction="rtl" aspect-ratio="2" margin-top="10px" margin-bottom="10px"/>
-      <div display="block" direction="rtl" height="10px" margin-top="10px"/>
+    <div display="block" direction="rtl" position="absolute" width="50px">
+      <div display="block" direction="rtl" position="relative" height="10px" margin-bottom="10px"/>
+      <div display="block" direction="rtl" position="relative" aspect-ratio="2" margin-top="10px" margin-bottom="10px"/>
+      <div display="block" direction="rtl" position="relative" height="10px" margin-top="10px"/>
     </div>
   </input>
   <expectations>

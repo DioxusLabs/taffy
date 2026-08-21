@@ -1,10 +1,10 @@
 <test name="rounding_flex_basis_overrides_main_size__border_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div direction="rtl" flex-direction="column" width="100px" height="113px">
-      <div direction="rtl" flex-grow="1" flex-basis="50px" height="20px"/>
-      <div direction="rtl" flex-grow="1" height="10px"/>
-      <div direction="rtl" flex-grow="1" height="10px"/>
+    <div direction="rtl" position="absolute" flex-direction="column" width="100px" height="113px">
+      <div direction="rtl" position="relative" flex-grow="1" flex-basis="50px" height="20px"/>
+      <div direction="rtl" position="relative" flex-grow="1" height="10px"/>
+      <div direction="rtl" position="relative" flex-grow="1" height="10px"/>
     </div>
   </input>
   <expectations>

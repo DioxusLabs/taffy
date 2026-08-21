@@ -1,17 +1,17 @@
 <test name="flex_grow_0_min_size__border_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="flex" direction="ltr" width="400px" height="100px" border-top="1px" border-left="1px" border-bottom="1px" border-right="1px">
-      <text direction="ltr" flex-shrink="0" flex-basis="0%">
+    <div display="flex" direction="ltr" position="absolute" width="400px" height="100px" border-top="1px" border-left="1px" border-bottom="1px" border-right="1px">
+      <text direction="ltr" position="relative" flex-shrink="0" flex-basis="0%">
         one
       </text>
-      <text direction="ltr" flex-shrink="0" flex-basis="0%">
+      <text direction="ltr" position="relative" flex-shrink="0" flex-basis="0%">
         two
       </text>
-      <text direction="ltr" flex-shrink="0" flex-basis="0%">
+      <text direction="ltr" position="relative" flex-shrink="0" flex-basis="0%">
         three
       </text>
-      <text direction="ltr" flex-shrink="0" flex-basis="0%">
+      <text direction="ltr" position="relative" flex-shrink="0" flex-basis="0%">
         four
       </text>
     </div>

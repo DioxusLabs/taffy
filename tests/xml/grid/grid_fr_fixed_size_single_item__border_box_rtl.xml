@@ -1,16 +1,16 @@
 <test name="grid_fr_fixed_size_single_item__border_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="grid" direction="rtl" width="200px" height="200px" grid-template-rows="40px 1fr 1fr" grid-template-columns="40px 1fr 1fr">
-      <div direction="rtl"/>
-      <div direction="rtl"/>
-      <div direction="rtl"/>
-      <div direction="rtl"/>
-      <div direction="rtl" width="100px"/>
-      <div direction="rtl"/>
-      <div direction="rtl"/>
-      <div direction="rtl"/>
-      <div direction="rtl"/>
+    <div display="grid" direction="rtl" position="absolute" width="200px" height="200px" grid-template-rows="40px 1fr 1fr" grid-template-columns="40px 1fr 1fr">
+      <div direction="rtl" position="relative"/>
+      <div direction="rtl" position="relative"/>
+      <div direction="rtl" position="relative"/>
+      <div direction="rtl" position="relative"/>
+      <div direction="rtl" position="relative" width="100px"/>
+      <div direction="rtl" position="relative"/>
+      <div direction="rtl" position="relative"/>
+      <div direction="rtl" position="relative"/>
+      <div direction="rtl" position="relative"/>
     </div>
   </input>
   <expectations>

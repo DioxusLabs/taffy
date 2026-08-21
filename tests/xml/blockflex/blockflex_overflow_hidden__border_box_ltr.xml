@@ -1,11 +1,11 @@
 <test name="blockflex_overflow_hidden__border_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="flex" direction="ltr" width="20px" height="50px">
-      <text display="block" direction="ltr" overflow-x="hidden" overflow-y="hidden" scrollbar-width="15" flex-grow="1">
+    <div display="flex" direction="ltr" position="absolute" width="20px" height="50px">
+      <text display="block" direction="ltr" position="relative" overflow-x="hidden" overflow-y="hidden" scrollbar-width="15" flex-grow="1">
         HHHH​HH
       </text>
-      <text display="block" direction="ltr" flex-grow="1">
+      <text display="block" direction="ltr" position="relative" flex-grow="1">
         HHHH​HH
       </text>
     </div>

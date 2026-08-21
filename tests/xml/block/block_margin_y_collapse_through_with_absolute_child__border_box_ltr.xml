@@ -1,14 +1,14 @@
 <test name="block_margin_y_collapse_through_with_absolute_child__border_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="block" direction="ltr" width="50px">
-      <div display="block" direction="ltr" height="10px" margin-bottom="10px"/>
-      <div display="block" direction="ltr" margin-top="10px" margin-bottom="10px">
+    <div display="block" direction="ltr" position="absolute" width="50px">
+      <div display="block" direction="ltr" position="relative" height="10px" margin-bottom="10px"/>
+      <div display="block" direction="ltr" position="relative" margin-top="10px" margin-bottom="10px">
         <text direction="ltr" position="absolute">
           HH
         </text>
       </div>
-      <div display="block" direction="ltr" height="10px" margin-top="10px"/>
+      <div display="block" direction="ltr" position="relative" height="10px" margin-top="10px"/>
     </div>
   </input>
   <expectations>

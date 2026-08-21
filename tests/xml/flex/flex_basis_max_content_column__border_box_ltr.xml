@@ -1,8 +1,8 @@
 <test name="flex_basis_max_content_column__border_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div direction="ltr" flex-direction="column" width="50px" height="200px">
-      <text direction="ltr" flex-shrink="0" flex-basis="max-content">
+    <div direction="ltr" position="absolute" flex-direction="column" width="50px" height="200px">
+      <text direction="ltr" position="relative" flex-shrink="0" flex-basis="max-content">
         XXXX​XXXX
       </text>
     </div>

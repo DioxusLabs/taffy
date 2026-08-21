@@ -1,33 +1,33 @@
 <test name="balance_row_complex__border_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div direction="ltr" flex-wrap="balance" width="250px" column-gap="10px">
-      <div direction="ltr" width="100px" height="20px"/>
-      <div direction="ltr" width="20px" height="20px"/>
-      <div direction="ltr" width="40px" height="20px"/>
-      <div direction="ltr" width="70px" height="20px"/>
-      <div direction="ltr" width="20px" height="20px"/>
-      <div direction="ltr" width="10px" height="20px"/>
-      <div direction="ltr" width="250px" height="20px"/>
-      <div direction="ltr" width="20px" height="20px"/>
-      <div direction="ltr" width="50px" height="20px"/>
-      <div direction="ltr" width="65px" height="20px"/>
-      <div direction="ltr" width="50px" height="20px"/>
-      <div direction="ltr" width="55px" height="20px"/>
-      <div direction="ltr" width="50px" height="20px"/>
-      <div direction="ltr" width="50px" height="20px"/>
-      <div direction="ltr" width="90px" height="20px"/>
-      <div direction="ltr" width="50px" height="20px"/>
-      <div direction="ltr" width="20px" height="20px"/>
-      <div direction="ltr" width="20px" height="20px"/>
-      <div direction="ltr" width="50px" height="20px"/>
-      <div direction="ltr" width="50px" height="20px"/>
-      <div direction="ltr" width="65px" height="20px"/>
-      <div direction="ltr" width="65px" height="20px"/>
-      <div direction="ltr" width="50px" height="20px"/>
-      <div direction="ltr" width="150px" height="20px"/>
-      <div direction="ltr" width="50px" height="20px"/>
-      <div direction="ltr" width="50px" height="20px"/>
+    <div direction="ltr" position="absolute" flex-wrap="balance" width="250px" column-gap="10px">
+      <div direction="ltr" position="relative" width="100px" height="20px"/>
+      <div direction="ltr" position="relative" width="20px" height="20px"/>
+      <div direction="ltr" position="relative" width="40px" height="20px"/>
+      <div direction="ltr" position="relative" width="70px" height="20px"/>
+      <div direction="ltr" position="relative" width="20px" height="20px"/>
+      <div direction="ltr" position="relative" width="10px" height="20px"/>
+      <div direction="ltr" position="relative" width="250px" height="20px"/>
+      <div direction="ltr" position="relative" width="20px" height="20px"/>
+      <div direction="ltr" position="relative" width="50px" height="20px"/>
+      <div direction="ltr" position="relative" width="65px" height="20px"/>
+      <div direction="ltr" position="relative" width="50px" height="20px"/>
+      <div direction="ltr" position="relative" width="55px" height="20px"/>
+      <div direction="ltr" position="relative" width="50px" height="20px"/>
+      <div direction="ltr" position="relative" width="50px" height="20px"/>
+      <div direction="ltr" position="relative" width="90px" height="20px"/>
+      <div direction="ltr" position="relative" width="50px" height="20px"/>
+      <div direction="ltr" position="relative" width="20px" height="20px"/>
+      <div direction="ltr" position="relative" width="20px" height="20px"/>
+      <div direction="ltr" position="relative" width="50px" height="20px"/>
+      <div direction="ltr" position="relative" width="50px" height="20px"/>
+      <div direction="ltr" position="relative" width="65px" height="20px"/>
+      <div direction="ltr" position="relative" width="65px" height="20px"/>
+      <div direction="ltr" position="relative" width="50px" height="20px"/>
+      <div direction="ltr" position="relative" width="150px" height="20px"/>
+      <div direction="ltr" position="relative" width="50px" height="20px"/>
+      <div direction="ltr" position="relative" width="50px" height="20px"/>
     </div>
   </input>
   <expectations>

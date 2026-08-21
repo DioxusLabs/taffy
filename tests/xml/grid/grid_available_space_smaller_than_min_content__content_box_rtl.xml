@@ -1,11 +1,11 @@
 <test name="grid_available_space_smaller_than_min_content__content_box_rtl" use-rounding="true">
   <viewport width="60px" height="max-content"/>
   <input>
-    <div display="grid" box-sizing="content-box" direction="rtl" grid-template-columns="auto auto">
-      <text box-sizing="content-box" direction="rtl">
+    <div display="grid" box-sizing="content-box" direction="rtl" position="relative" grid-template-columns="auto auto">
+      <text box-sizing="content-box" direction="rtl" position="relative">
         HHHH​HHHH
       </text>
-      <text box-sizing="content-box" direction="rtl">
+      <text box-sizing="content-box" direction="rtl" position="relative">
         HHHH​HHHH
       </text>
     </div>
