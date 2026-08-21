@@ -46,10 +46,14 @@ impl<T: CheapCloneStr> Borrow<str> for StrHasher<T> {
     }
 }
 
+/// Map from a grid line name to its one-indexed line positions
 type NamedGridLinesMap<S> = Map<StrHasher<S>, Vec<u32>>;
 
+/// Resolver for named placements in one grid axis
 struct NamedLineResolverAxis<'a, S: CheapCloneStr> {
+    /// Named lines and their one-indexed positions
     lines: &'a NamedGridLinesMap<S>,
+    /// Number of explicit tracks in this axis
     explicit_track_count: u16,
 }
 
@@ -90,6 +94,7 @@ fn upsert_line_name_map<S: CheapCloneStr>(map: &mut Map<StrHasher<S>, Vec<u32>>,
 }
 
 impl<S: CheapCloneStr> NamedLineResolverAxis<'_, S> {
+    /// Resolve named lines and spans into numeric placements
     fn resolve_line_names(&self, line: &Line<GridPlacement<S>>) -> Line<NonNamedGridPlacement> {
         let start_holder;
         let start_line_resolved = if let GridPlacement::NamedLine(name, idx) = &line.start {
@@ -482,6 +487,7 @@ impl<S: CheapCloneStr> NamedLineResolver<S> {
         .resolve_line_names(line)
     }
 
+    /// Move the row and column line-name maps into the detailed grid information
     #[cfg(feature = "detailed_layout_info")]
     pub(crate) fn populate_detailed_line_resolvers(self, rows: &mut GridLineNames<S>, columns: &mut GridLineNames<S>) {
         rows.resolver = self.row_lines;
@@ -565,6 +571,7 @@ pub struct GridLineNames<S: CheapCloneStr = DefaultCheapStr> {
     /// Offsets into `names`: line `i`'s names are `names[offsets[i]..offsets[i + 1]]`.
     /// Either empty (no named lines) or of length `line count + 1`.
     offsets: Vec<u32>,
+    /// Named line lookup used to resolve arbitrary grid placements
     resolver: NamedGridLinesMap<S>,
 }
 
@@ -593,6 +600,7 @@ impl<S: CheapCloneStr> GridLineNames<S> {
         self.line(self.line_count().wrapping_sub(1)).iter().any(|n| n.as_ref() == name)
     }
 
+    /// Resolve named lines and spans using the retained line-name map
     pub(crate) fn resolve_line_names(
         &self,
         line: &Line<GridPlacement<S>>,

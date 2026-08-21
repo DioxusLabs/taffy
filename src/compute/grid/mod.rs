@@ -889,6 +889,7 @@ pub struct DetailedGridInfo<S: CheapCloneStr = DefaultCheapStr> {
 
 #[cfg(feature = "detailed_layout_info")]
 impl<S: CheapCloneStr> DetailedGridTracksInfo<S> {
+    /// Resolve an absolute placement in this axis to physical start and end coordinates
     fn resolve_absolute_grid_axis(
         &self,
         placement: Line<GridPlacement<S>>,
