@@ -834,9 +834,8 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     // "Grid order" key: row-major order of the grid areas items occupy, with ties resolved by
     // document order (`items` is sorted by document order at this point, and `min_by_key` returns
     // the first of equally-minimum elements, so ties fall back to document order for free)
-    // (column indexes are visually reversed for RTL, so negate them to recover logical column order)
-    let column_dir_factor: i32 = if direction.is_rtl() { -1 } else { 1 };
-    let column_order_key = |item: &&GridItem| column_dir_factor * item.column_indexes.start as i32;
+    // (column indexes are stored in logical order, including for RTL)
+    let column_order_key = |item: &&GridItem| item.column_indexes.start;
 
     // Determine the grid container's first baseline, generated from the first row containing items.
     // Layout containment suppresses the box's baseline for baseline-alignment purposes
