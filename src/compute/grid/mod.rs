@@ -225,9 +225,9 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
 
     // Build the per-line names of the explicit grid from the name resolver's collected pairs
     #[cfg(feature = "detailed_layout_info")]
-    let detailed_column_line_names = name_resolver.detailed_line_names(AbsoluteAxis::Horizontal);
+    let mut detailed_column_line_names = name_resolver.detailed_line_names(AbsoluteAxis::Horizontal);
     #[cfg(feature = "detailed_layout_info")]
-    let detailed_row_line_names = name_resolver.detailed_line_names(AbsoluteAxis::Vertical);
+    let mut detailed_row_line_names = name_resolver.detailed_line_names(AbsoluteAxis::Vertical);
 
     // 3. Implicit Grid: Estimate Track Counts
     // Estimate the number of rows and columns in the implicit grid (= the entire grid)
@@ -790,18 +790,25 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
 
     // Set detailed grid information
     #[cfg(feature = "detailed_layout_info")]
+    {
+        detailed_row_line_names
+            .set_implicit_line_counts(final_row_counts.negative_implicit, final_row_counts.len() + 1);
+        detailed_column_line_names
+            .set_implicit_line_counts(final_col_counts.negative_implicit, final_col_counts.len() + 1);
+    }
+    #[cfg(feature = "detailed_layout_info")]
     tree.set_detailed_grid_info(
         node,
         DetailedGridInfo {
             rows: DetailedGridTracksInfo::from_grid_tracks_and_track_count(
                 final_row_counts,
                 rows,
-                finalize_line_names(detailed_row_line_names, final_row_counts),
+                detailed_row_line_names,
             ),
             columns: DetailedGridTracksInfo::from_grid_tracks_and_track_count(
                 final_col_counts,
                 columns,
-                finalize_line_names(detailed_column_line_names, final_col_counts),
+                detailed_column_line_names,
             ),
             items: items.iter().map(DetailedGridItemsInfo::from_grid_item).collect(),
         },
@@ -1042,9 +1049,15 @@ impl<S: CheapCloneStr> DetailedGridTracksInfo<S> {
 pub struct GridLineNames<S: CheapCloneStr = DefaultCheapStr> {
     /// The names of every grid line in the axis, concatenated in line order
     names: Vec<S>,
-    /// Offsets into `names`: line `i`'s names are `names[offsets[i]..offsets[i + 1]]`.
-    /// Either empty (no named lines) or of length `line count + 1`.
+    /// Offsets into `names` for the stored (explicit-grid) lines: stored line `i`'s names are
+    /// `names[offsets[i]..offsets[i + 1]]`. Either empty (no named lines) or of length
+    /// `stored line count + 1`.
     offsets: Vec<u32>,
+    /// The number of (unnamed, implicit) grid lines preceding the first stored line
+    leading_implicit_lines: u32,
+    /// The total number of grid lines represented, including unnamed implicit lines before and
+    /// after the stored lines
+    total_line_count: u32,
 }
 
 #[cfg(feature = "detailed_layout_info")]
@@ -1053,12 +1066,25 @@ impl<S: CheapCloneStr> GridLineNames<S> {
     pub(crate) fn with_capacity(name_capacity: usize, offset_capacity: usize) -> Self {
         let mut offsets = Vec::with_capacity(offset_capacity);
         offsets.push(0);
-        Self { names: Vec::with_capacity(name_capacity), offsets }
+        Self { names: Vec::with_capacity(name_capacity), offsets, leading_implicit_lines: 0, total_line_count: 0 }
     }
 
     /// Start a new (initially empty) line
     pub(crate) fn start_line(&mut self) {
         self.offsets.push(self.names.len() as u32);
+        self.total_line_count += 1;
+    }
+
+    /// Record the implicit grid lines surrounding the stored (explicit-grid) lines: the stored
+    /// lines are preceded by `leading_implicit_lines` unnamed lines and the total line count is
+    /// padded up to `total_line_count`. This makes indices match the logical track order used by
+    /// [`DetailedGridTracksInfo::positions`] without copying the stored names.
+    pub(crate) fn set_implicit_line_counts(&mut self, leading_implicit_lines: u16, total_line_count: usize) {
+        if self.is_empty() {
+            return;
+        }
+        self.leading_implicit_lines = leading_implicit_lines as u32;
+        self.total_line_count = total_line_count as u32;
     }
 
     /// Append a name to the current (last) line
@@ -1069,7 +1095,10 @@ impl<S: CheapCloneStr> GridLineNames<S> {
 
     /// Whether the current (last) line already contains the passed name
     pub(crate) fn current_line_contains(&self, name: &str) -> bool {
-        self.line(self.line_count().wrapping_sub(1)).iter().any(|n| n.as_ref() == name)
+        let Some(&start) = self.offsets.len().checked_sub(2).and_then(|idx| self.offsets.get(idx)) else {
+            return false;
+        };
+        self.names[start as usize..].iter().any(|n| n.as_ref() == name)
     }
 
     /// Whether the axis has any named lines at all
@@ -1079,13 +1108,16 @@ impl<S: CheapCloneStr> GridLineNames<S> {
 
     /// The number of grid lines represented (zero if the grid has no named lines)
     pub fn line_count(&self) -> usize {
-        self.offsets.len().saturating_sub(1)
+        self.total_line_count as usize
     }
 
     /// The names of the line with the passed 0-indexed line index.
     /// Returns an empty slice if the line has no names or the index is out of range.
     pub fn line(&self, line_index: usize) -> &[S] {
-        match (self.offsets.get(line_index), self.offsets.get(line_index + 1)) {
+        let Some(stored_index) = line_index.checked_sub(self.leading_implicit_lines as usize) else {
+            return &[];
+        };
+        match (self.offsets.get(stored_index), self.offsets.get(stored_index + 1)) {
             (Some(&start), Some(&end)) => &self.names[start as usize..end as usize],
             _ => &[],
         }
@@ -1093,7 +1125,14 @@ impl<S: CheapCloneStr> GridLineNames<S> {
 
     /// Iterate over the name group (`&[S]`) of each grid line in line order
     pub fn iter(&self) -> GridLineNamesIter<'_, S> {
-        GridLineNamesIter { names: &self.names, offsets: self.offsets.windows(2) }
+        let stored_line_count = self.offsets.len().saturating_sub(1);
+        GridLineNamesIter {
+            names: &self.names,
+            offsets: self.offsets.windows(2),
+            leading_empty: self.leading_implicit_lines as usize,
+            trailing_empty: (self.total_line_count as usize)
+                .saturating_sub(self.leading_implicit_lines as usize + stored_line_count),
+        }
     }
 }
 
@@ -1115,6 +1154,10 @@ pub struct GridLineNamesIter<'a, S: CheapCloneStr> {
     names: &'a [S],
     /// Iterator over adjacent pairs of offsets into `names`
     offsets: core::slice::Windows<'a, u32>,
+    /// Number of (unnamed, implicit) lines remaining before the stored lines
+    leading_empty: usize,
+    /// Number of (unnamed, implicit) lines remaining after the stored lines
+    trailing_empty: usize,
 }
 
 #[cfg(feature = "detailed_layout_info")]
@@ -1122,49 +1165,28 @@ impl<'a, S: CheapCloneStr> Iterator for GridLineNamesIter<'a, S> {
     type Item = &'a [S];
 
     fn next(&mut self) -> Option<Self::Item> {
-        let window = self.offsets.next()?;
-        Some(&self.names[window[0] as usize..window[1] as usize])
+        if self.leading_empty > 0 {
+            self.leading_empty -= 1;
+            return Some(&[]);
+        }
+        if let Some(window) = self.offsets.next() {
+            return Some(&self.names[window[0] as usize..window[1] as usize]);
+        }
+        if self.trailing_empty > 0 {
+            self.trailing_empty -= 1;
+            return Some(&[]);
+        }
+        None
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
-        self.offsets.size_hint()
+        let len = self.leading_empty + self.offsets.len() + self.trailing_empty;
+        (len, Some(len))
     }
 }
 
 #[cfg(feature = "detailed_layout_info")]
 impl<S: CheapCloneStr> ExactSizeIterator for GridLineNamesIter<'_, S> {}
-
-/// Convert explicit-grid-relative line names into final-grid line names by padding with
-/// (unnamed) implicit grid lines, so indices match the logical track order used by
-/// [`DetailedGridTracksInfo::positions`]
-#[cfg(feature = "detailed_layout_info")]
-fn finalize_line_names<S: CheapCloneStr>(
-    explicit_line_names: GridLineNames<S>,
-    track_counts: TrackCounts,
-) -> GridLineNames<S> {
-    if explicit_line_names.is_empty() {
-        return GridLineNames::default();
-    }
-
-    let total_line_count = track_counts.len() + 1;
-    let negative_implicit = track_counts.negative_implicit as usize;
-    let explicit_line_count = track_counts.explicit as usize + 1;
-
-    if negative_implicit == 0 && explicit_line_names.line_count() == total_line_count {
-        return explicit_line_names;
-    }
-
-    let mut line_names = GridLineNames::with_capacity(explicit_line_names.names.len(), total_line_count + 1);
-    for line_index in 0..total_line_count {
-        line_names.start_line();
-        if line_index >= negative_implicit && line_index < negative_implicit + explicit_line_count {
-            for name in explicit_line_names.line(line_index - negative_implicit) {
-                line_names.push_name(name.clone());
-            }
-        }
-    }
-    line_names
-}
 
 /// Grid area information from the placement algorithm
 ///
