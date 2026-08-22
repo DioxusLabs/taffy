@@ -65,7 +65,7 @@ use crate::{CacheTree, MaybeMath, MaybeResolve};
 
 /// Compute layout for the root node in the tree
 pub fn compute_root_layout(
-    tree: &mut (impl LayoutPartialTree + CacheTree),
+    tree: &mut (impl crate::tree::LayoutContainingBlock + CacheTree),
     root: NodeId,
     available_space: Size<AvailableSpace>,
 ) {
