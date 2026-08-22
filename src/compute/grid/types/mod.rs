@@ -13,7 +13,6 @@ pub(super) use grid_item::GridItem;
 pub(super) use grid_track::GridTrack;
 pub(super) use grid_track_counts::TrackCounts;
 pub(super) use named::NamedLineResolver;
-#[cfg(feature = "detailed_layout_info")]
 pub use named::{GridLineNames, GridLineNamesIter};
 
 #[allow(unused_imports)]
