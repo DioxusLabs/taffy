@@ -11,12 +11,14 @@ pub mod traits;
 
 pub use cache::{Cache, ClearState};
 pub use layout::{
-    Baselines, CollapsibleMarginSet, Layout, LayoutInput, LayoutOutput, OofCandidate, OofCandidates, RequestedAxis,
-    RunMode, SizingMode, StaticEdge, StaticPosition,
+    Baselines, CollapsibleMarginSet, Layout, LayoutInput, LayoutOutput, OofCandidate, OofCandidates,
+    OofPositioningArea, RequestedAxis, RunMode, SizingMode, StaticEdge, StaticPosition,
 };
 pub use node::NodeId;
 pub(crate) use traits::LayoutPartialTreeExt;
-pub use traits::{LayoutContainingBlock, LayoutPartialTree, PrintTree, RoundTree, TraversePartialTree, TraverseTree};
+pub use traits::{
+    LayoutContainingBlock, LayoutPartialTree, OofClaims, PrintTree, RoundTree, TraversePartialTree, TraverseTree,
+};
 
 #[cfg(feature = "flexbox")]
 pub use traits::LayoutFlexboxContainer;

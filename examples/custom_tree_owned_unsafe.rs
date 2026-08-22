@@ -8,8 +8,8 @@ use common::text::{text_measure_function, FontMetrics, TextContext, WritingMode,
 use taffy::tree::Cache;
 use taffy::util::print_tree;
 use taffy::{
-    compute_cached_layout, compute_flexbox_layout, compute_grid_layout, compute_leaf_layout, compute_root_layout,
-    prelude::*, round_layout, CacheTree, LayoutContainingBlock,
+    compute_cached_layout, compute_flexbox_layout, compute_grid_layout, compute_leaf_layout, compute_oof_layout,
+    compute_root_layout, prelude::*, round_layout, CacheTree, LayoutContainingBlock,
 };
 
 #[derive(Debug, Copy, Clone)]
@@ -157,7 +157,7 @@ impl LayoutPartialTree for StatelessLayoutTree {
             let node = unsafe { node_from_id_mut(node_id) };
             let font_metrics = FontMetrics { char_width: 10.0, char_height: 10.0 };
 
-            match node.kind {
+            let mut output = match node.kind {
                 NodeKind::Flexbox => compute_flexbox_layout(tree, node_id, inputs),
                 NodeKind::Grid => compute_grid_layout(tree, node_id, inputs),
                 NodeKind::Text => compute_leaf_layout(
@@ -181,7 +181,12 @@ impl LayoutPartialTree for StatelessLayoutTree {
                         image_measure_function(known_dimensions, node.image_data.as_ref().unwrap())
                     },
                 ),
-            }
+            };
+
+            // Lay out any out-of-flow (absolute/fixed) boxes for which this node is the containing block
+            compute_oof_layout(tree, node_id, &mut output);
+
+            output
         })
     }
 }
