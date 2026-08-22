@@ -504,6 +504,7 @@ fn compute_preliminary(tree: &mut impl LayoutFlexboxContainer, node: NodeId, inp
     let mut unclaimed = OofCandidates::new();
     let absolute_overflow_rect = perform_oof_layout(
         tree,
+        node,
         candidates,
         absolute_position_area,
         absolute_position_offset,

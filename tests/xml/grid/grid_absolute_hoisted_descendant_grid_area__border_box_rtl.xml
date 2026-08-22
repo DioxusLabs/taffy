@@ -1,0 +1,17 @@
+<test name="grid_absolute_hoisted_descendant_grid_area__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" direction="rtl" position="absolute" padding-top="10px" padding-left="40px" padding-bottom="30px" padding-right="20px" grid-template-rows="40px 40px 40px" grid-template-columns="40px 40px 40px">
+      <div direction="rtl">
+        <div direction="rtl" position="absolute" top="1px" left="3px" bottom="2px" right="4px" grid-row-start="2" grid-row-end="3" grid-column-start="2" grid-column-end="4"/>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="180" height="160" resolved-rows="40px 40px 40px" resolved-columns="40px 40px 40px">
+      <node x="120" y="10" width="40" height="40">
+        <node x="43" y="51" width="73" height="37"/>
+      </node>
+    </node>
+  </expectations>
+</test>
