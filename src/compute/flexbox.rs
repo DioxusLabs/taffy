@@ -8,7 +8,9 @@ use crate::style::{
 use crate::style::{CoreStyle, FlexDirection, FlexboxContainerStyle, FlexboxItemStyle};
 use crate::style_helpers::{TaffyMaxContent, TaffyMinContent};
 use crate::tree::{Baselines, Layout, LayoutInput, LayoutOutput, OofCandidate, OofCandidates, RunMode, SizingMode};
-use crate::tree::{LayoutFlexboxContainer, LayoutPartialTreeExt, NodeId, StaticAlign, StaticEdge, StaticPosition};
+use crate::tree::{
+    LayoutFlexboxContainer, LayoutPartialTreeExt, NodeId, OofPositioningArea, StaticAlign, StaticEdge, StaticPosition,
+};
 use crate::util::debug::debug_log;
 use crate::util::sys::{f32_max, f32_min, new_vec_with_capacity, Vec};
 use crate::util::MaybeMath;
@@ -19,7 +21,6 @@ use super::common::alignment::apply_alignment_fallback;
 #[cfg(feature = "content_size")]
 use super::common::scrollable_overflow::compute_scrollable_overflow_contribution;
 use super::common::sizing_keyword::{resolve_sizing_keyword, SizingKeywordResolution};
-use super::oof::perform_oof_layout;
 
 /// The intermediate results of a flexbox calculation for a single item
 struct FlexItem {
@@ -227,7 +228,7 @@ impl AlgoConstants {
 
 /// Computes the layout of a box according to the flexbox algorithm
 pub fn compute_flexbox_layout(
-    tree: &mut (impl LayoutFlexboxContainer + crate::tree::LayoutContainingBlock),
+    tree: &mut impl LayoutFlexboxContainer,
     node: NodeId,
     inputs: LayoutInput,
 ) -> LayoutOutput {
@@ -321,15 +322,10 @@ pub fn compute_flexbox_layout(
 }
 
 /// Compute a preliminary size for an item
-fn compute_preliminary(
-    tree: &mut (impl LayoutFlexboxContainer + crate::tree::LayoutContainingBlock),
-    node: NodeId,
-    inputs: LayoutInput,
-) -> LayoutOutput {
+fn compute_preliminary(tree: &mut impl LayoutFlexboxContainer, node: NodeId, inputs: LayoutInput) -> LayoutOutput {
     let LayoutInput { known_dimensions, parent_size, available_space, run_mode, .. } = inputs;
 
     // Define some general constants we will need for the remainder of the algorithm.
-    let container_position = tree.get_flexbox_container_style(node).position();
     let mut constants = compute_constants(
         tree,
         tree.get_flexbox_container_style(node),
@@ -488,9 +484,8 @@ fn compute_preliminary(
     let inflow_overflow_rect = final_layout_pass(tree, &mut flex_lines, &constants, &mut bubbled_candidates);
 
     // Collect out-of-flow candidates (direct out-of-flow children in document order, then
-    // candidates bubbled from in-flow children) and lay out those for which this node is the
-    // containing block. The rest bubble up via `output.oof_candidates`.
-    debug_log!("perform_oof_layout");
+    // candidates bubbled from in-flow children). These are laid out by the out-of-flow
+    // positioning pass (`compute_oof_layout`), which runs after this algorithm.
     let mut candidates = OofCandidates::new();
     collect_oof_candidates(tree, node, &constants, &mut candidates);
     candidates.append(&mut bubbled_candidates);
@@ -504,23 +499,6 @@ fn compute_preliminary(
         };
     let absolute_position_area = constants.container_size - absolute_position_inset.sum_axes();
     let absolute_position_offset = Point { x: absolute_position_inset.left, y: absolute_position_inset.top };
-    let mut hoisted: Vec<NodeId> = Vec::new();
-    let mut unclaimed = OofCandidates::new();
-    let absolute_overflow_rect = perform_oof_layout(
-        tree,
-        node,
-        candidates,
-        absolute_position_area,
-        absolute_position_offset,
-        constants.layout_direction,
-        container_position.is_positioned(),
-        false,
-        #[cfg(feature = "content_size")]
-        constants.is_scroll_container,
-        &mut hoisted,
-        &mut unclaimed,
-    );
-    tree.set_hoisted_children(node, &hoisted);
 
     debug_log!("hidden_layout");
     let len = tree.child_count(node);
@@ -562,10 +540,12 @@ fn compute_preliminary(
 
     let mut output = LayoutOutput::from_sizes_and_baselines(
         constants.container_size,
-        inflow_overflow_rect.union(absolute_overflow_rect),
+        inflow_overflow_rect,
         Baselines::from_first(first_vertical_baseline),
     );
-    output.oof_candidates = unclaimed;
+    output.oof_candidates = candidates;
+    output.oof_positioning_area =
+        Some(OofPositioningArea { size: absolute_position_area, offset: absolute_position_offset });
     output
 }
 
