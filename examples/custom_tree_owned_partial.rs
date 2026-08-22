@@ -186,7 +186,9 @@ impl taffy::LayoutPartialTree for Node {
             };
 
             // Lay out any out-of-flow (absolute/fixed) boxes for which this node is the containing block
-            compute_oof_layout(node, node_id, &mut output);
+            if inputs.run_mode == taffy::RunMode::PerformLayout {
+                compute_oof_layout(node, node_id, &mut output);
+            }
 
             output
         })
