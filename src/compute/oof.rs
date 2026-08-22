@@ -5,10 +5,14 @@
 //! via [`LayoutOutput::oof_candidates`](crate::LayoutOutput) until they reach the box's containing
 //! block, which lays the box out using the routine in this module.
 use crate::geometry::{Line, Point, Rect, Size};
+#[cfg(feature = "grid")]
+use crate::style::OofItemStyle;
 use crate::style::{AvailableSpace, ContainingBlockClaims, CoreStyle};
 #[cfg(feature = "grid")]
 use crate::tree::DetailedLayoutInfo;
-use crate::tree::{Layout, LayoutPartialTree, LayoutPartialTreeExt, NodeId, OofCandidate, OofCandidates, SizingMode};
+use crate::tree::{
+    Layout, LayoutContainingBlock, LayoutPartialTreeExt, NodeId, OofCandidate, OofCandidates, SizingMode,
+};
 use crate::util::sys::{f32_max, Vec};
 use crate::util::{MaybeMath, MaybeResolve, ResolveOrZero};
 use crate::{BoxSizing, Direction, StaticEdge};
@@ -51,7 +55,7 @@ pub fn resolve_static_offset(
 /// containing block, and collect the remainder into `unclaimed` for further bubbling.
 ///
 /// - `node_id` is the current node. If its detailed layout info (as returned by
-///   [`LayoutPartialTree::get_detailed_layout_info`]) indicates that it is a grid container,
+///   [`LayoutContainingBlock::get_detailed_layout_info`]) indicates that it is a grid container,
 ///   each claimed box is positioned relative to the grid area determined by its grid-placement
 ///   properties rather than the passed inset-resolution area.
 /// - `candidates` is the merged, document-ordered list of candidates held by the current node
@@ -70,7 +74,7 @@ pub fn resolve_static_offset(
 /// contribution of the claimed boxes.
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn perform_oof_layout(
-    tree: &mut impl LayoutPartialTree,
+    tree: &mut impl LayoutContainingBlock,
     node_id: NodeId,
     candidates: OofCandidates,
     area_size: Size<f32>,
@@ -116,7 +120,7 @@ pub(crate) fn perform_oof_layout(
         index += 1;
         hoisted.push(candidate.node);
 
-        let child_style = tree.get_core_container_style(candidate.node);
+        let child_style = tree.get_oof_item_style(candidate.node);
 
         // If the current node is a grid container then the box is positioned relative to the
         // grid area determined by its grid-placement properties (which falls back to the passed

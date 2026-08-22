@@ -64,7 +64,11 @@ use crate::util::ResolveOrZero;
 use crate::{CacheTree, MaybeMath, MaybeResolve};
 
 /// Compute layout for the root node in the tree
-pub fn compute_root_layout(tree: &mut impl LayoutPartialTree, root: NodeId, available_space: Size<AvailableSpace>) {
+pub fn compute_root_layout(
+    tree: &mut impl crate::tree::LayoutContainingBlock,
+    root: NodeId,
+    available_space: Size<AvailableSpace>,
+) {
     let mut known_dimensions = Size::NONE;
 
     #[cfg(feature = "block_layout")]

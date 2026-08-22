@@ -204,6 +204,17 @@ impl taffy::LayoutPartialTree for Tree {
     }
 }
 
+impl taffy::LayoutContainingBlock for Tree {
+    type OofItemStyle<'a>
+        = &'a Style
+    where
+        Self: 'a;
+
+    fn get_oof_item_style(&self, node_id: NodeId) -> Self::OofItemStyle<'_> {
+        &self.node_from_id(node_id).style
+    }
+}
+
 impl CacheTree for Tree {
     fn cache_get(&mut self, node_id: NodeId, inputs: &taffy::LayoutInput) -> Option<taffy::LayoutOutput> {
         self.node_from_id_mut(node_id).cache.get(inputs)
