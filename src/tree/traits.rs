@@ -219,12 +219,21 @@ pub trait LayoutPartialTree: TraversePartialTree {
     fn compute_child_layout(&mut self, node_id: NodeId, inputs: LayoutInput) -> LayoutOutput;
 }
 
-/// Extends [`LayoutPartialTree`] with the operations needed by the out-of-flow positioning pass,
-/// which lays out the absolute/fixed boxes for which a node acts as the containing block.
+/// Which out-of-flow positions a node acts as a containing block for
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+pub struct OofClaims {
+    /// Whether the node is a containing block for `position: absolute` boxes
+    pub absolute: bool,
+    /// Whether the node is a containing block for `position: fixed` boxes
+    pub fixed: bool,
+}
+
+/// Extends [`LayoutPartialTree`] with the operations needed by the out-of-flow positioning pass
+/// ([`compute_oof_layout`](crate::compute_oof_layout)), which lays out the absolute/fixed boxes
+/// for which a node acts as the containing block.
 ///
-/// This trait is required by all of Taffy's container layout algorithms (block, flexbox, grid and
-/// [`compute_root_layout`](crate::compute_root_layout)), as any container may be the containing
-/// block of out-of-flow boxes hoisted out of its subtree.
+/// This trait is required by [`compute_oof_layout`](crate::compute_oof_layout) and
+/// [`compute_root_layout`](crate::compute_root_layout).
 pub trait LayoutContainingBlock: LayoutPartialTree {
     /// The style type representing the styles of an out-of-flow (absolute/fixed) box being
     /// positioned by its containing block
@@ -234,6 +243,17 @@ pub trait LayoutContainingBlock: LayoutPartialTree {
 
     /// Get the style of an out-of-flow box being positioned by its containing block
     fn get_oof_item_style(&self, node_id: NodeId) -> Self::OofItemStyle<'_>;
+
+    /// Which out-of-flow positions `node_id` acts as a containing block for.
+    ///
+    /// The default implementation claims `position: absolute` boxes when the node's own position
+    /// style is not `static`, and never claims `position: fixed` boxes (which are claimed by the
+    /// final root positioning pass). Implementations may override this to make style properties
+    /// such as `transform` or `filter` establish a containing block for fixed boxes.
+    #[inline(always)]
+    fn oof_claims(&self, node_id: NodeId) -> OofClaims {
+        OofClaims { absolute: self.get_core_container_style(node_id).position().is_positioned(), fixed: false }
+    }
 
     /// Read back the detailed layout information most recently recorded for `node_id`
     /// (as stored by [`LayoutGridContainer::set_detailed_grid_info`]).
