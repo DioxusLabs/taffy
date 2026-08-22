@@ -227,7 +227,7 @@ impl AlgoConstants {
 
 /// Computes the layout of a box according to the flexbox algorithm
 pub fn compute_flexbox_layout(
-    tree: &mut impl LayoutFlexboxContainer,
+    tree: &mut (impl LayoutFlexboxContainer + crate::tree::LayoutContainingBlock),
     node: NodeId,
     inputs: LayoutInput,
 ) -> LayoutOutput {
@@ -321,7 +321,11 @@ pub fn compute_flexbox_layout(
 }
 
 /// Compute a preliminary size for an item
-fn compute_preliminary(tree: &mut impl LayoutFlexboxContainer, node: NodeId, inputs: LayoutInput) -> LayoutOutput {
+fn compute_preliminary(
+    tree: &mut (impl LayoutFlexboxContainer + crate::tree::LayoutContainingBlock),
+    node: NodeId,
+    inputs: LayoutInput,
+) -> LayoutOutput {
     let LayoutInput { known_dimensions, parent_size, available_space, run_mode, .. } = inputs;
 
     // Define some general constants we will need for the remainder of the algorithm.
