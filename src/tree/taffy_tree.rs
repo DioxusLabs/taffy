@@ -18,7 +18,8 @@ use crate::util::debug::{debug_log, debug_log_node};
 use crate::util::sys::{new_const_children_vec, new_vec_with_capacity, Box, ChildrenVec, Vec};
 
 use crate::compute::{
-    compute_cached_layout, compute_hidden_layout, compute_leaf_layout, compute_root_layout, round_layout,
+    compute_cached_layout, compute_hidden_layout, compute_leaf_layout, compute_oof_layout, compute_root_layout,
+    round_layout,
 };
 use crate::CacheTree;
 
@@ -309,7 +310,7 @@ where
             debug_log_node!(inputs);
 
             // Dispatch to a layout algorithm based on the node's display style and whether the node has children or not.
-            match (display_mode, has_children) {
+            let mut output = match (display_mode, has_children) {
                 (Display::None, _) => compute_hidden_layout(tree, node_id),
                 #[cfg(feature = "block_layout")]
                 (Display::Block, true) => compute_block_layout(tree, node_id, inputs, block_ctx),
@@ -326,7 +327,14 @@ where
                     let node_context = has_context.then(|| tree.taffy.node_context_data.get_mut(node_key)).flatten();
                     (tree.measure_function)(inputs, node_id, node_context, style)
                 }
-            }
+            };
+
+            // Lay out any out-of-flow candidates for which this node is the containing block.
+            // The rest bubble up via `output.oof_candidates`. This runs inside the cache-miss
+            // closure so that cached outputs already contain the processed candidate list.
+            compute_oof_layout(tree, node_id, &mut output);
+
+            output
         })
     }
 }

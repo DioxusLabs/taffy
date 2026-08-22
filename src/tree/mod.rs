@@ -11,8 +11,8 @@ pub mod traits;
 
 pub use cache::{Cache, ClearState};
 pub use layout::{
-    Baselines, CollapsibleMarginSet, Layout, LayoutInput, LayoutOutput, OofCandidate, OofCandidates, RequestedAxis,
-    RunMode, SizingMode, StaticAlign, StaticEdge, StaticPosition,
+    Baselines, CollapsibleMarginSet, Layout, LayoutInput, LayoutOutput, OofCandidate, OofCandidates,
+    OofPositioningArea, RequestedAxis, RunMode, SizingMode, StaticAlign, StaticEdge, StaticPosition,
 };
 pub use node::NodeId;
 pub(crate) use traits::LayoutPartialTreeExt;

@@ -11,7 +11,7 @@ use crate::style::{AvailableSpace, ContainingBlockClaims, CoreStyle};
 #[cfg(feature = "grid")]
 use crate::tree::DetailedLayoutInfo;
 use crate::tree::{
-    Layout, LayoutContainingBlock, LayoutPartialTreeExt, NodeId, OofCandidate, OofCandidates, SizingMode,
+    Layout, LayoutContainingBlock, LayoutOutput, LayoutPartialTreeExt, NodeId, OofCandidate, OofCandidates, SizingMode,
 };
 use crate::util::sys::{f32_max, Vec};
 use crate::util::{MaybeMath, MaybeResolve, ResolveOrZero};
@@ -48,6 +48,58 @@ pub fn resolve_static_offset(
     Point {
         x: resolve_axis(static_position.x, final_size.width, resolved_margin.left, resolved_margin.right),
         y: resolve_axis(static_position.y, final_size.height, resolved_margin.top, resolved_margin.bottom),
+    }
+}
+
+/// Run the out-of-flow positioning pass for `node_id` after its layout algorithm has produced
+/// `output`: lay out the out-of-flow candidates in `output.oof_candidates` for which the node is
+/// the containing block, record them as the node's hoisted children, and replace
+/// `output.oof_candidates` with the unclaimed remainder (which bubble further up the tree).
+/// The scrollable overflow contributed by the claimed boxes is merged into
+/// `output.scrollable_overflow_rect`.
+///
+/// This should be called once per `RunMode::PerformLayout` container layout, after the layout
+/// algorithm (block/flexbox/grid) has run, and *inside* any layout caching wrapper (such as
+/// [`compute_cached_layout`](crate::compute_cached_layout)) so that cache hits do not re-run the
+/// pass. It is a no-op when `output.oof_positioning_area` is `None` (leaf and size-only outputs).
+///
+/// Which candidates the node claims is determined by the node's style via
+/// [`CoreStyle::is_containing_block`]. `position: fixed` boxes unclaimed by every ancestor are
+/// claimed by the final root positioning pass in [`compute_root_layout`](crate::compute_root_layout).
+pub fn compute_oof_layout(tree: &mut impl LayoutContainingBlock, node_id: NodeId, output: &mut LayoutOutput) {
+    let Some(area) = output.oof_positioning_area else { return };
+
+    let style = tree.get_core_container_style(node_id);
+    let direction = style.direction();
+    #[cfg(feature = "content_size")]
+    let is_scroll_container = style.overflow().x.is_scroll_container() || style.overflow().y.is_scroll_container();
+    let claims = style.is_containing_block();
+    drop(style);
+
+    let candidates = output.oof_candidates.take();
+    let mut hoisted: Vec<NodeId> = Vec::new();
+    let mut unclaimed = OofCandidates::new();
+    #[cfg_attr(not(feature = "content_size"), allow(unused_variables))]
+    let oof_overflow_rect = perform_oof_layout(
+        tree,
+        node_id,
+        candidates,
+        area.size,
+        area.offset,
+        direction,
+        claims,
+        #[cfg(feature = "content_size")]
+        is_scroll_container,
+        &mut hoisted,
+        &mut unclaimed,
+    );
+    // Always record the hoisted child list (even when empty) so that lists recorded by previous
+    // layout runs do not persist
+    tree.set_hoisted_children(node_id, &hoisted);
+    output.oof_candidates = unclaimed;
+    #[cfg(feature = "content_size")]
+    {
+        output.scrollable_overflow_rect = output.scrollable_overflow_rect.union(oof_overflow_rect);
     }
 }
 
