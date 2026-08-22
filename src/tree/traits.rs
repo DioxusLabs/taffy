@@ -129,7 +129,7 @@
 use super::{DetailedLayoutInfo, Layout, LayoutInput, LayoutOutput, NodeId, RequestedAxis, RunMode, SizingMode};
 use crate::debug::debug_log;
 use crate::geometry::{AbsoluteAxis, Line, Size};
-use crate::style::{AvailableSpace, CoreStyle};
+use crate::style::{AvailableSpace, CoreStyle, OofItemStyle};
 #[cfg(feature = "flexbox")]
 use crate::style::{FlexboxContainerStyle, FlexboxItemStyle};
 #[cfg(feature = "grid")]
@@ -217,6 +217,23 @@ pub trait LayoutPartialTree: TraversePartialTree {
 
     /// Compute the specified node's size or full layout given the specified constraints
     fn compute_child_layout(&mut self, node_id: NodeId, inputs: LayoutInput) -> LayoutOutput;
+}
+
+/// Extends [`LayoutPartialTree`] with the operations needed by the out-of-flow positioning pass,
+/// which lays out the absolute/fixed boxes for which a node acts as the containing block.
+///
+/// This trait is required by all of Taffy's container layout algorithms (block, flexbox, grid and
+/// [`compute_root_layout`](crate::compute_root_layout)), as any container may be the containing
+/// block of out-of-flow boxes hoisted out of its subtree.
+pub trait LayoutContainingBlock: LayoutPartialTree {
+    /// The style type representing the styles of an out-of-flow (absolute/fixed) box being
+    /// positioned by its containing block
+    type OofItemStyle<'a>: OofItemStyle<CustomIdent = Self::CustomIdent>
+    where
+        Self: 'a;
+
+    /// Get the style of an out-of-flow box being positioned by its containing block
+    fn get_oof_item_style(&self, node_id: NodeId) -> Self::OofItemStyle<'_>;
 
     /// Read back the detailed layout information most recently recorded for `node_id`
     /// (as stored by [`LayoutGridContainer::set_detailed_grid_info`]).
