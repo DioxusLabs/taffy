@@ -38,7 +38,7 @@ pub(crate) mod flexbox;
 pub(crate) mod grid;
 
 pub use leaf::compute_leaf_layout;
-pub use oof::resolve_static_offset;
+pub use oof::{compute_oof_layout, resolve_static_offset};
 
 #[cfg(feature = "block_layout")]
 pub use self::block::{compute_block_layout, BlockContext, BlockFormattingContext};

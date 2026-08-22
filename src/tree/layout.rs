@@ -401,6 +401,23 @@ impl<'a> IntoIterator for &'a OofCandidates {
     }
 }
 
+/// The area of a container against which the insets of its out-of-flow (absolute/fixed) boxes
+/// are resolved: the container's border box minus its borders and scrollbar gutters.
+///
+/// Container layout algorithms record this on [`LayoutOutput`] (for `RunMode::PerformLayout` runs)
+/// so that the out-of-flow positioning pass ([`compute_oof_layout`](crate::compute_oof_layout))
+/// can run after the algorithm has finished. When the container is a grid, per-box grid areas are
+/// resolved within this area by the positioning pass itself (from the container's detailed grid
+/// info).
+#[derive(Debug, Copy, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize))]
+pub struct OofPositioningArea {
+    /// The size of the area
+    pub size: Size<f32>,
+    /// The offset of the area from the container's border box origin
+    pub offset: Point<f32>,
+}
+
 /// A struct containing the result of laying a single node, which is returned up to the parent node
 ///
 /// A baseline is the line on which text sits. Your node likely has a baseline if it is a text node, or contains
@@ -432,8 +449,18 @@ pub struct LayoutOutput {
     /// lays them out. Empty (allocation-free) when there are no such descendants (the common case).
     ///
     /// Candidates are only produced by `RunMode::PerformLayout` passes.
+    ///
+    /// Container layout algorithms place the *full* document-ordered candidate list here (direct
+    /// out-of-flow children plus candidates bubbled from in-flow children). The out-of-flow
+    /// positioning pass ([`compute_oof_layout`](crate::compute_oof_layout)) then lays out those
+    /// for which the node is the containing block and replaces this list with the unclaimed
+    /// remainder.
     #[cfg_attr(feature = "serde", serde(skip_serializing))]
     pub oof_candidates: OofCandidates,
+    /// The node's inset-resolution area for out-of-flow boxes. Set by container layout
+    /// algorithms for `RunMode::PerformLayout` runs; `None` for leaves and size-only runs
+    /// (in which case the out-of-flow positioning pass is a no-op).
+    pub oof_positioning_area: Option<OofPositioningArea>,
 }
 
 impl LayoutOutput {
@@ -447,6 +474,7 @@ impl LayoutOutput {
         bottom_margin: CollapsibleMarginSet::ZERO,
         margins_can_collapse_through: false,
         oof_candidates: OofCandidates::NONE,
+        oof_positioning_area: None,
     };
 
     /// A blank layout output
@@ -467,6 +495,7 @@ impl LayoutOutput {
             bottom_margin: CollapsibleMarginSet::ZERO,
             margins_can_collapse_through: false,
             oof_candidates: OofCandidates::NONE,
+            oof_positioning_area: None,
         }
     }
 
