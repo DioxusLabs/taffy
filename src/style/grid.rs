@@ -271,17 +271,6 @@ pub trait GridContainerStyle: CoreStyle {
 
 /// The set of styles required for a CSS Grid item (child of a CSS Grid container)
 pub trait GridItemStyle: CoreStyle {
-    /// Defines which row in the grid the item should start and end at
-    #[inline(always)]
-    fn grid_row(&self) -> Line<GridPlacement<Self::CustomIdent>> {
-        Default::default()
-    }
-    /// Defines which column in the grid the item should start and end at
-    #[inline(always)]
-    fn grid_column(&self) -> Line<GridPlacement<Self::CustomIdent>> {
-        Default::default()
-    }
-
     /// How this node should be aligned in the cross/block axis
     /// Falls back to the parents [`AlignItems`] if not set
     #[inline(always)]
