@@ -7,9 +7,7 @@ use crate::{
 use core::{borrow::Borrow, cmp::Ordering, fmt::Debug};
 
 use super::{GridLine, MAX_GRID_TRACKS};
-#[cfg(feature = "detailed_layout_info")]
 use crate::geometry::AbsoluteAxis;
-#[cfg(feature = "detailed_layout_info")]
 use crate::sys::DefaultCheapStr;
 // use alloc::fmt::format;
 use crate::sys::{format, Map, Vec};
@@ -86,11 +84,9 @@ pub(crate) struct NamedLineResolver<S: CheapCloneStr> {
     explicit_row_count: u16,
     /// The (1-indexed line number, name) pairs of every named column line, in source order
     /// (template names before `grid-template-areas`-generated names)
-    #[cfg(feature = "detailed_layout_info")]
     column_line_name_pairs: Vec<(u32, S)>,
     /// The (1-indexed line number, name) pairs of every named row line, in source order
     /// (template names before `grid-template-areas`-generated names)
-    #[cfg(feature = "detailed_layout_info")]
     row_line_name_pairs: Vec<(u32, S)>,
 }
 
@@ -247,9 +243,7 @@ impl<S: CheapCloneStr> NamedLineResolver<S> {
         let mut column_lines: NamedGridLinesMap<S> = Map::new();
         let mut row_lines: NamedGridLinesMap<S> = Map::new();
 
-        #[cfg(feature = "detailed_layout_info")]
         let mut column_line_name_pairs: Vec<(u32, S)> = Vec::new();
-        #[cfg(feature = "detailed_layout_info")]
         let mut row_line_name_pairs: Vec<(u32, S)> = Vec::new();
 
         let mut current_line = 0;
@@ -258,7 +252,6 @@ impl<S: CheapCloneStr> NamedLineResolver<S> {
                 for line_names in column_line_names_iter {
                     current_line += 1;
                     for line_name in line_names.into_iter() {
-                        #[cfg(feature = "detailed_layout_info")]
                         column_line_name_pairs.push((current_line, line_name.clone()));
                         upsert_line_name_map(&mut column_lines, line_name.clone(), current_line);
                     }
@@ -286,7 +279,6 @@ impl<S: CheapCloneStr> NamedLineResolver<S> {
                         for _ in 0..repeat_count {
                             for (line, line_name_set) in (current_line..).zip(repeat.lines_names()) {
                                 for line_name in line_name_set {
-                                    #[cfg(feature = "detailed_layout_info")]
                                     column_line_name_pairs.push((line, line_name.clone()));
                                     upsert_line_name_map(&mut column_lines, line_name.clone(), line);
                                 }
@@ -314,7 +306,6 @@ impl<S: CheapCloneStr> NamedLineResolver<S> {
                 for line_names in row_line_names_iter {
                     current_line += 1;
                     for line_name in line_names.into_iter() {
-                        #[cfg(feature = "detailed_layout_info")]
                         row_line_name_pairs.push((current_line, line_name.clone()));
                         upsert_line_name_map(&mut row_lines, line_name.clone(), current_line);
                     }
@@ -342,7 +333,6 @@ impl<S: CheapCloneStr> NamedLineResolver<S> {
                         for _ in 0..repeat_count {
                             for (line, line_name_set) in (current_line..).zip(repeat.lines_names()) {
                                 for line_name in line_name_set {
-                                    #[cfg(feature = "detailed_layout_info")]
                                     row_line_name_pairs.push((line, line_name.clone()));
                                     upsert_line_name_map(&mut row_lines, line_name.clone(), line);
                                 }
@@ -374,19 +364,15 @@ impl<S: CheapCloneStr> NamedLineResolver<S> {
                 areas.insert(StrHasher(area.name.clone()), area.clone());
 
                 let col_start_name = S::from(format!("{}-start", area.name.as_ref()));
-                #[cfg(feature = "detailed_layout_info")]
                 column_line_name_pairs.push((area.column_start as u32, col_start_name.clone()));
                 upsert_line_name_map(&mut column_lines, col_start_name, area.column_start as u32);
                 let col_end_name = S::from(format!("{}-end", area.name.as_ref()));
-                #[cfg(feature = "detailed_layout_info")]
                 column_line_name_pairs.push((area.column_end as u32, col_end_name.clone()));
                 upsert_line_name_map(&mut column_lines, col_end_name, area.column_end as u32);
                 let row_start_name = S::from(format!("{}-start", area.name.as_ref()));
-                #[cfg(feature = "detailed_layout_info")]
                 row_line_name_pairs.push((area.row_start as u32, row_start_name.clone()));
                 upsert_line_name_map(&mut row_lines, row_start_name, area.row_start as u32);
                 let row_end_name = S::from(format!("{}-end", area.name.as_ref()));
-                #[cfg(feature = "detailed_layout_info")]
                 row_line_name_pairs.push((area.row_end as u32, row_end_name.clone()));
                 upsert_line_name_map(&mut row_lines, row_end_name, area.row_end as u32);
             }
@@ -411,9 +397,7 @@ impl<S: CheapCloneStr> NamedLineResolver<S> {
             areas,
             row_lines,
             column_lines,
-            #[cfg(feature = "detailed_layout_info")]
             column_line_name_pairs,
-            #[cfg(feature = "detailed_layout_info")]
             row_line_name_pairs,
         }
     }
@@ -423,7 +407,6 @@ impl<S: CheapCloneStr> NamedLineResolver<S> {
     /// `<name>-start`/`<name>-end` names generated by `grid-template-areas`.
     ///
     /// Line indices are relative to the explicit grid (line 0 = start of the first explicit track).
-    #[cfg(feature = "detailed_layout_info")]
     pub(crate) fn detailed_line_names(&self, axis: AbsoluteAxis) -> GridLineNames<S> {
         let (pairs, explicit_track_count) = match axis {
             AbsoluteAxis::Horizontal => (&self.column_line_name_pairs, self.explicit_column_count),
@@ -488,7 +471,6 @@ impl<S: CheapCloneStr> NamedLineResolver<S> {
     }
 
     /// Move the row and column line-name maps into the detailed grid information
-    #[cfg(feature = "detailed_layout_info")]
     pub(crate) fn populate_detailed_line_resolvers(self, rows: &mut GridLineNames<S>, columns: &mut GridLineNames<S>) {
         rows.resolver = self.row_lines;
         columns.resolver = self.column_lines;
@@ -564,7 +546,6 @@ impl<S: CheapCloneStr> Debug for NamedLineResolver<S> {
 /// names with [`GridLineNames::line`]. A grid with no named lines is represented by two empty
 /// `Vec`s (see [`GridLineNames::is_empty`]).
 #[derive(Debug, Clone, PartialEq, Default)]
-#[cfg(feature = "detailed_layout_info")]
 pub struct GridLineNames<S: CheapCloneStr = DefaultCheapStr> {
     /// The names of every grid line in the axis, concatenated in line order
     names: Vec<S>,
@@ -575,7 +556,6 @@ pub struct GridLineNames<S: CheapCloneStr = DefaultCheapStr> {
     resolver: NamedGridLinesMap<S>,
 }
 
-#[cfg(feature = "detailed_layout_info")]
 impl<S: CheapCloneStr> GridLineNames<S> {
     /// Create an empty `GridLineNames` with pre-allocated capacity
     pub(crate) fn with_capacity(name_capacity: usize, offset_capacity: usize) -> Self {
@@ -641,7 +621,6 @@ impl<S: CheapCloneStr> GridLineNames<S> {
     }
 }
 
-#[cfg(feature = "detailed_layout_info")]
 impl<'a, S: CheapCloneStr> IntoIterator for &'a GridLineNames<S> {
     type Item = &'a [S];
     type IntoIter = GridLineNamesIter<'a, S>;
@@ -653,7 +632,6 @@ impl<'a, S: CheapCloneStr> IntoIterator for &'a GridLineNames<S> {
 /// Iterator over the per-line name groups of a [`GridLineNames`]. Yields one `&[S]` per grid
 /// line (which is empty for unnamed lines)
 #[derive(Debug, Clone)]
-#[cfg(feature = "detailed_layout_info")]
 pub struct GridLineNamesIter<'a, S: CheapCloneStr> {
     /// The flat name storage being iterated over
     names: &'a [S],
@@ -665,7 +643,6 @@ pub struct GridLineNamesIter<'a, S: CheapCloneStr> {
     trailing_empty: usize,
 }
 
-#[cfg(feature = "detailed_layout_info")]
 impl<'a, S: CheapCloneStr> Iterator for GridLineNamesIter<'a, S> {
     type Item = &'a [S];
 
@@ -690,7 +667,6 @@ impl<'a, S: CheapCloneStr> Iterator for GridLineNamesIter<'a, S> {
     }
 }
 
-#[cfg(feature = "detailed_layout_info")]
 impl<S: CheapCloneStr> ExactSizeIterator for GridLineNamesIter<'_, S> {}
 
 #[cfg(test)]

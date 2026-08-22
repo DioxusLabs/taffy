@@ -1,7 +1,8 @@
 //! Final data structures that represent the high-level UI layout
 use crate::geometry::{AbsoluteAxis, Line, Point, Rect, Size};
-use crate::style::{AvailableSpace, Position};
+use crate::style::{AvailableSpace, CheapCloneStr, Position};
 use crate::style_helpers::TaffyMaxContent;
+use crate::sys::DefaultCheapStr;
 use crate::tree::NodeId;
 use crate::util::sys::{f32_max, f32_min};
 
@@ -597,12 +598,16 @@ impl Layout {
 }
 
 /// The additional information from layout algorithm
-#[cfg(feature = "detailed_layout_info")]
 #[derive(Debug, Clone, PartialEq)]
-pub enum DetailedLayoutInfo {
+pub enum DetailedLayoutInfo<S: CheapCloneStr = DefaultCheapStr> {
     /// Enum variant for [`DetailedGridInfo`](crate::compute::grid::DetailedGridInfo)
     #[cfg(feature = "grid")]
-    Grid(Box<crate::compute::grid::DetailedGridInfo>),
+    Grid(crate::util::sys::Box<crate::compute::grid::DetailedGridInfo<S>>),
     /// For node that hasn't had any detailed information yet
     None,
+    /// Unused variant which exists only to consume the `S` type parameter when no variant
+    /// carrying detailed layout info is enabled
+    #[cfg(not(feature = "grid"))]
+    #[doc(hidden)]
+    Phantom(core::convert::Infallible, core::marker::PhantomData<S>),
 }

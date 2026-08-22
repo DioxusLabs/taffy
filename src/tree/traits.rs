@@ -126,8 +126,7 @@
 //! }
 //! ```
 //!
-use super::{Layout, LayoutInput, LayoutOutput, NodeId, RequestedAxis, RunMode, SizingMode};
-#[cfg(feature = "detailed_layout_info")]
+use super::{DetailedLayoutInfo, Layout, LayoutInput, LayoutOutput, NodeId, RequestedAxis, RunMode, SizingMode};
 use crate::debug::debug_log;
 use crate::geometry::{AbsoluteAxis, Line, Size};
 use crate::style::{AvailableSpace, CoreStyle};
@@ -139,7 +138,7 @@ use crate::CheapCloneStr;
 #[cfg(feature = "block_layout")]
 use crate::{BlockContainerStyle, BlockContext, BlockItemStyle};
 
-#[cfg(all(feature = "grid", feature = "detailed_layout_info"))]
+#[cfg(feature = "grid")]
 use crate::compute::grid::DetailedGridInfo;
 
 /// Taffy's abstraction for downward tree traversal.
@@ -218,6 +217,20 @@ pub trait LayoutPartialTree: TraversePartialTree {
 
     /// Compute the specified node's size or full layout given the specified constraints
     fn compute_child_layout(&mut self, node_id: NodeId, inputs: LayoutInput) -> LayoutOutput;
+
+    /// Read back the detailed layout information most recently recorded for `node_id`
+    /// (as stored by [`LayoutGridContainer::set_detailed_grid_info`]).
+    ///
+    /// This is used by the out-of-flow positioning pass to resolve the grid area of absolutely
+    /// positioned boxes whose containing block is a grid container. Implementing this method is
+    /// optional: the default implementation returns [`DetailedLayoutInfo::None`], in which case
+    /// such boxes are positioned relative to the grid container's padding box instead of their
+    /// grid area.
+    #[inline(always)]
+    fn get_detailed_layout_info(&self, node_id: NodeId) -> &DetailedLayoutInfo<Self::CustomIdent> {
+        let _ = node_id;
+        &DetailedLayoutInfo::None
+    }
 }
 
 /// Trait used by the `compute_cached_layout` method which allows cached layout results to be stored and retrieved.
@@ -310,7 +323,6 @@ pub trait LayoutGridContainer: LayoutPartialTree {
     ///
     /// Implementing this method is optional. Doing so allows you to access details about the the grid such as
     /// the computed size of each grid track and the computed placement of each grid item.
-    #[cfg(feature = "detailed_layout_info")]
     fn set_detailed_grid_info(&mut self, _node_id: NodeId, _detailed_grid_info: DetailedGridInfo<Self::CustomIdent>) {
         debug_log!("LayoutGridContainer::set_detailed_grid_info called");
     }
