@@ -25,7 +25,7 @@ use track_sizing::{
 use types::{CellOccupancyMatrix, GridTrack, NamedLineResolver};
 
 use crate::sys::{DefaultCheapStr, String};
-use crate::{CheapCloneStr, GridPlacement, OriginZeroGridPlacement};
+use crate::{CheapCloneStr, GridPlacement};
 use types::{GridItem, GridTrackKind, TrackCounts};
 
 pub(crate) use types::{GridCoordinate, GridLine, OriginZeroLine, MAX_GRID_TRACKS, MAX_OZ_LINE, MIN_OZ_LINE};
@@ -1008,17 +1008,17 @@ impl<S: CheapCloneStr> DetailedGridTracksInfo<S> {
         };
         let min_line = -(track_counts.negative_implicit as i16);
         let max_line = (track_counts.explicit + track_counts.positive_implicit) as i16;
+        // Resolve the placement to a pair of (sorted) lines first, and only then treat lines
+        // that fall outside the grid as `auto`. A placement whose lines end up swapped (e.g.
+        // `grid-column: 3 / 1`, or a non-existent named line which resolves past the end of the
+        // explicit grid) is normalized before the out-of-grid check, so e.g. `foo / 3` on a
+        // 2-column grid resolves to the area between line 3 and the end padding edge.
         let placement = self
             .line_names
             .resolve_line_names(&placement, self.explicit_tracks)
             .into_origin_zero(self.explicit_tracks)
-            .map(|placement| match placement {
-                OriginZeroGridPlacement::Line(line) if line.0 < min_line || line.0 > max_line => {
-                    OriginZeroGridPlacement::Auto
-                }
-                placement => placement,
-            })
             .resolve_absolutely_positioned_grid_tracks()
+            .map(|line| line.filter(|line| line.0 >= min_line && line.0 <= max_line))
             .map(|line| line.and_then(|line| line.try_into_track_vec_index(track_counts).map(|index| index / 2)));
         let start_position = placement
             .start
@@ -1027,6 +1027,7 @@ impl<S: CheapCloneStr> DetailedGridTracksInfo<S> {
                     .get(line)
                     .map(|track| if is_reversed { track.end } else { track.start })
                     .or_else(|| self.positions.last().map(|track| if is_reversed { track.start } else { track.end }))
+                    .or(self.empty_axis_line)
             })
             .unwrap_or(if is_reversed { padding_end } else { padding_start });
         let end_position = placement
@@ -1036,6 +1037,7 @@ impl<S: CheapCloneStr> DetailedGridTracksInfo<S> {
                     .and_then(|line| self.positions.get(line))
                     .map(|track| if is_reversed { track.start } else { track.end })
                     .or_else(|| self.positions.first().map(|track| if is_reversed { track.end } else { track.start }))
+                    .or(self.empty_axis_line)
             })
             .unwrap_or(if is_reversed { padding_start } else { padding_end });
 
@@ -1124,6 +1126,11 @@ pub struct DetailedGridTracksInfo<S: CheapCloneStr = DefaultCheapStr> {
     /// content alignment (`align-content`/`justify-content`), and collapsed tracks.
     pub positions: Vec<Line<f32>>,
 
+    /// The position of the axis' single grid line relative to the grid container's border box
+    /// when the axis has no tracks (an empty grid still contains one grid line in each axis,
+    /// positioned by content alignment). `None` when the axis has tracks.
+    pub empty_axis_line: Option<f32>,
+
     /// The names of each *explicit* grid line. Stored line `i` (0-indexed) bounds the start of
     /// explicit track `i`; use [`DetailedGridTracksInfo::names_for_line`] or
     /// [`DetailedGridTracksInfo::iter_line_names`] for indices relative to the full grid
@@ -1147,11 +1154,16 @@ impl<S: CheapCloneStr> DetailedGridTracksInfo<S> {
         grid_tracks: Vec<GridTrack>,
         line_names: GridLineNames<S>,
     ) -> Self {
+        let positions = DetailedGridTracksInfo::<S>::positions_from_grid_track_layout(&grid_tracks);
+        // An axis with no tracks consists of a single gutter whose offset is where the axis'
+        // single grid line was positioned by content alignment
+        let empty_axis_line = if positions.is_empty() { grid_tracks.first().map(|track| track.offset) } else { None };
         DetailedGridTracksInfo {
             negative_implicit_tracks: track_count.negative_implicit,
             explicit_tracks: track_count.explicit,
             positive_implicit_tracks: track_count.positive_implicit,
-            positions: DetailedGridTracksInfo::<S>::positions_from_grid_track_layout(&grid_tracks),
+            positions,
+            empty_axis_line,
             line_names,
         }
     }

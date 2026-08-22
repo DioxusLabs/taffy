@@ -243,7 +243,10 @@ mod detailed_grid_info {
                 taffy::style::Direction::Ltr,
                 Rect { left: 0.0, right: 120.0, top: 0.0, bottom: 100.0 },
             ),
-            Rect { left: 0.0, right: 45.0, top: 0.0, bottom: 100.0 }
+            // An unknown named line resolves to the first implicit line past the explicit grid,
+            // which (being outside the grid) falls back to the padding edge. The resulting
+            // start/end pair is swapped, so this is equivalent to `2 / <padding-end>`.
+            Rect { left: 55.0, right: 120.0, top: 0.0, bottom: 100.0 }
         );
         assert_eq!(
             info.resolve_absolute_grid_area(
