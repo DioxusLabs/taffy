@@ -25,16 +25,12 @@ use track_sizing::{
 };
 use types::{CellOccupancyMatrix, GridTrack, NamedLineResolver};
 
-#[cfg(feature = "detailed_layout_info")]
 use crate::sys::{DefaultCheapStr, String};
-#[cfg(feature = "detailed_layout_info")]
 use crate::{CheapCloneStr, GridPlacement};
-#[cfg(feature = "detailed_layout_info")]
 use types::{GridItem, GridTrackKind, TrackCounts};
 
 pub(crate) use types::{GridCoordinate, GridLine, OriginZeroLine, MAX_GRID_TRACKS, MAX_OZ_LINE, MIN_OZ_LINE};
 
-#[cfg(feature = "detailed_layout_info")]
 pub use types::{GridLineNames, GridLineNamesIter};
 
 mod alignment;
@@ -232,9 +228,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     name_resolver.set_explicit_row_count(explicit_row_count);
 
     // Build the per-line names of the explicit grid from the name resolver's collected pairs
-    #[cfg(feature = "detailed_layout_info")]
     let mut detailed_column_line_names = name_resolver.detailed_line_names(AbsoluteAxis::Horizontal);
-    #[cfg(feature = "detailed_layout_info")]
     let mut detailed_row_line_names = name_resolver.detailed_line_names(AbsoluteAxis::Vertical);
 
     // 3. Implicit Grid: Estimate Track Counts
@@ -902,9 +896,30 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
         };
     let absolute_position_area = container_border_box - absolute_position_inset.sum_axes();
     let absolute_position_offset = Point { x: absolute_position_inset.left, y: absolute_position_inset.top };
+    // Store the detailed grid info before the out-of-flow positioning pass so that the pass can
+    // resolve the grid areas of out-of-flow boxes whose containing block is this grid
+    name_resolver.populate_detailed_line_resolvers(&mut detailed_row_line_names, &mut detailed_column_line_names);
+    tree.set_detailed_grid_info(
+        node,
+        DetailedGridInfo {
+            rows: DetailedGridTracksInfo::from_grid_tracks_and_track_count(
+                final_row_counts,
+                rows,
+                detailed_row_line_names,
+            ),
+            columns: DetailedGridTracksInfo::from_grid_tracks_and_track_count(
+                final_col_counts,
+                columns,
+                detailed_column_line_names,
+            ),
+            items: items.iter().map(DetailedGridItemsInfo::from_grid_item).collect(),
+        },
+    );
+
     let mut unclaimed = OofCandidates::new();
     let oof_overflow_rect = perform_oof_layout(
         tree,
+        node,
         direct_oof_candidates,
         absolute_position_area,
         absolute_position_offset,
@@ -922,28 +937,6 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     }
     #[cfg(not(feature = "content_size"))]
     let _ = oof_overflow_rect;
-
-    #[cfg(feature = "detailed_layout_info")]
-    name_resolver.populate_detailed_line_resolvers(&mut detailed_row_line_names, &mut detailed_column_line_names);
-
-    // Set detailed grid information
-    #[cfg(feature = "detailed_layout_info")]
-    tree.set_detailed_grid_info(
-        node,
-        DetailedGridInfo {
-            rows: DetailedGridTracksInfo::from_grid_tracks_and_track_count(
-                final_row_counts,
-                rows,
-                detailed_row_line_names,
-            ),
-            columns: DetailedGridTracksInfo::from_grid_tracks_and_track_count(
-                final_col_counts,
-                columns,
-                detailed_column_line_names,
-            ),
-            items: items.iter().map(DetailedGridItemsInfo::from_grid_item).collect(),
-        },
-    );
 
     // If there are no in-flow items then return the container size and the overflow
     // contributed by absolutely positioned children (no baseline)
@@ -1013,7 +1006,6 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
 
 /// Information from the computation of grid
 #[derive(Debug, Clone, PartialEq)]
-#[cfg(feature = "detailed_layout_info")]
 pub struct DetailedGridInfo<S: CheapCloneStr = DefaultCheapStr> {
     /// <https://drafts.csswg.org/css-grid-1/#grid-row>
     pub rows: DetailedGridTracksInfo<S>,
@@ -1023,7 +1015,6 @@ pub struct DetailedGridInfo<S: CheapCloneStr = DefaultCheapStr> {
     pub items: Vec<DetailedGridItemsInfo>,
 }
 
-#[cfg(feature = "detailed_layout_info")]
 impl<S: CheapCloneStr> DetailedGridTracksInfo<S> {
     /// Resolve an absolute placement in this axis to physical start and end coordinates
     fn resolve_absolute_grid_axis(
@@ -1077,7 +1068,6 @@ impl<S: CheapCloneStr> DetailedGridTracksInfo<S> {
     }
 }
 
-#[cfg(feature = "detailed_layout_info")]
 impl<S: CheapCloneStr> DetailedGridInfo<S> {
     /// Write the used row track sizes and line names to the passed writer in the resolved value
     /// format of the `grid-template-rows` property
@@ -1146,7 +1136,6 @@ impl<S: CheapCloneStr> DetailedGridInfo<S> {
 
 /// Information from the computation of grids tracks
 #[derive(Debug, Clone, PartialEq)]
-#[cfg(feature = "detailed_layout_info")]
 pub struct DetailedGridTracksInfo<S: CheapCloneStr = DefaultCheapStr> {
     /// Number of leading implicit grid tracks
     pub negative_implicit_tracks: u16,
@@ -1172,7 +1161,6 @@ pub struct DetailedGridTracksInfo<S: CheapCloneStr = DefaultCheapStr> {
     pub line_names: GridLineNames<S>,
 }
 
-#[cfg(feature = "detailed_layout_info")]
 impl<S: CheapCloneStr> DetailedGridTracksInfo<S> {
     /// Get the start and end position of each track relative to the grid container's border box
     fn positions_from_grid_track_layout(grid_tracks: &[GridTrack]) -> Vec<Line<f32>> {
@@ -1285,7 +1273,6 @@ impl<S: CheapCloneStr> DetailedGridTracksInfo<S> {
 /// The values is 1-indexed grid line numbers bounding the area.
 /// This matches the Chrome and Firefox's format as of 2nd Jan 2024.
 #[derive(Debug, Clone, PartialEq)]
-#[cfg(feature = "detailed_layout_info")]
 pub struct DetailedGridItemsInfo {
     /// row-start with 1-indexed grid line numbers
     pub row_start: u16,
@@ -1298,7 +1285,6 @@ pub struct DetailedGridItemsInfo {
 }
 
 /// Grid area information from the placement algorithm
-#[cfg(feature = "detailed_layout_info")]
 impl DetailedGridItemsInfo {
     /// Construct from GridItems
     #[inline(always)]

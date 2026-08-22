@@ -6,6 +6,8 @@
 //! block, which lays the box out using the routine in this module.
 use crate::geometry::{Line, Point, Rect, Size};
 use crate::style::{AvailableSpace, ContainingBlockClaims, CoreStyle};
+#[cfg(feature = "grid")]
+use crate::tree::DetailedLayoutInfo;
 use crate::tree::{Layout, LayoutPartialTree, LayoutPartialTreeExt, NodeId, OofCandidate, OofCandidates, SizingMode};
 use crate::util::sys::{f32_max, Vec};
 use crate::util::{MaybeMath, MaybeResolve, ResolveOrZero};
@@ -48,6 +50,10 @@ pub fn resolve_static_offset(
 /// Perform final layout on the out-of-flow candidates for which the current node is the
 /// containing block, and collect the remainder into `unclaimed` for further bubbling.
 ///
+/// - `node_id` is the current node. If its detailed layout info (as returned by
+///   [`LayoutPartialTree::get_detailed_layout_info`]) indicates that it is a grid container,
+///   each claimed box is positioned relative to the grid area determined by its grid-placement
+///   properties rather than the passed inset-resolution area.
 /// - `candidates` is the merged, document-ordered list of candidates held by the current node
 ///   (direct out-of-flow children plus candidates bubbled from in-flow children). Anchors must be
 ///   relative to the current node's border box.
@@ -65,6 +71,7 @@ pub fn resolve_static_offset(
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn perform_oof_layout(
     tree: &mut impl LayoutPartialTree,
+    node_id: NodeId,
     candidates: OofCandidates,
     area_size: Size<f32>,
     area_offset: Point<f32>,
@@ -93,8 +100,15 @@ pub(crate) fn perform_oof_layout(
         }
     }
 
-    let area_width = area_size.width;
-    let area_height = area_size.height;
+    #[cfg(feature = "grid")]
+    let area_rect = Rect {
+        left: area_offset.x,
+        right: area_offset.x + area_size.width,
+        top: area_offset.y,
+        bottom: area_offset.y + area_size.height,
+    };
+    #[cfg(not(feature = "grid"))]
+    let _ = node_id;
 
     let mut index = 0;
     while index < worklist.len() {
@@ -103,6 +117,28 @@ pub(crate) fn perform_oof_layout(
         hoisted.push(candidate.node);
 
         let child_style = tree.get_core_container_style(candidate.node);
+
+        // If the current node is a grid container then the box is positioned relative to the
+        // grid area determined by its grid-placement properties (which falls back to the passed
+        // area for `auto` placement)
+        #[cfg(feature = "grid")]
+        let (area_size, area_offset) = match tree.get_detailed_layout_info(node_id) {
+            DetailedLayoutInfo::Grid(grid_info) => {
+                let grid_area = grid_info.resolve_absolute_grid_area(
+                    child_style.grid_row(),
+                    child_style.grid_column(),
+                    direction,
+                    area_rect,
+                );
+                (
+                    Size { width: grid_area.right - grid_area.left, height: grid_area.bottom - grid_area.top },
+                    Point { x: grid_area.left, y: grid_area.top },
+                )
+            }
+            _ => (area_size, area_offset),
+        };
+        let area_width = area_size.width;
+        let area_height = area_size.height;
 
         let aspect_ratio = child_style.aspect_ratio();
         let margin =
