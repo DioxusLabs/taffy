@@ -188,6 +188,24 @@ pub trait CoreStyle {
     fn contain(&self) -> Contain {
         Contain::NONE
     }
+
+    // Grid placement properties
+    //
+    // These live on `CoreStyle` (rather than `GridItemStyle`) because they are read at
+    // out-of-flow positioning time for any absolutely positioned box whose containing block
+    // is a grid container, regardless of the box's parent.
+    /// Defines which row in the grid the item should start and end at
+    #[cfg(feature = "grid")]
+    #[inline(always)]
+    fn grid_row(&self) -> Line<GridPlacement<Self::CustomIdent>> {
+        Default::default()
+    }
+    /// Defines which column in the grid the item should start and end at
+    #[cfg(feature = "grid")]
+    #[inline(always)]
+    fn grid_column(&self) -> Line<GridPlacement<Self::CustomIdent>> {
+        Default::default()
+    }
 }
 
 /// Sets the layout used for the children of this node
@@ -944,6 +962,18 @@ impl<S: CheapCloneStr> CoreStyle for Style<S> {
     fn contain(&self) -> Contain {
         self.contain
     }
+    #[cfg(feature = "grid")]
+    #[inline(always)]
+    fn grid_row(&self) -> Line<GridPlacement<S>> {
+        // TODO: Investigate eliminating clone
+        self.grid_row.clone()
+    }
+    #[cfg(feature = "grid")]
+    #[inline(always)]
+    fn grid_column(&self) -> Line<GridPlacement<S>> {
+        // TODO: Investigate eliminating clone
+        self.grid_column.clone()
+    }
 }
 
 impl<T: CoreStyle> CoreStyle for &'_ T {
@@ -1016,6 +1046,16 @@ impl<T: CoreStyle> CoreStyle for &'_ T {
     #[inline(always)]
     fn contain(&self) -> Contain {
         (*self).contain()
+    }
+    #[cfg(feature = "grid")]
+    #[inline(always)]
+    fn grid_row(&self) -> Line<GridPlacement<Self::CustomIdent>> {
+        (*self).grid_row()
+    }
+    #[cfg(feature = "grid")]
+    #[inline(always)]
+    fn grid_column(&self) -> Line<GridPlacement<Self::CustomIdent>> {
+        (*self).grid_column()
     }
 }
 
@@ -1389,16 +1429,6 @@ impl<T: GridContainerStyle> GridContainerStyle for &'_ T {
 #[cfg(feature = "grid")]
 impl<S: CheapCloneStr> GridItemStyle for Style<S> {
     #[inline(always)]
-    fn grid_row(&self) -> Line<GridPlacement<S>> {
-        // TODO: Investigate eliminating clone
-        self.grid_row.clone()
-    }
-    #[inline(always)]
-    fn grid_column(&self) -> Line<GridPlacement<S>> {
-        // TODO: Investigate eliminating clone
-        self.grid_column.clone()
-    }
-    #[inline(always)]
     fn align_self(&self) -> Option<AlignSelf> {
         self.align_self
     }
@@ -1410,14 +1440,6 @@ impl<S: CheapCloneStr> GridItemStyle for Style<S> {
 
 #[cfg(feature = "grid")]
 impl<T: GridItemStyle> GridItemStyle for &'_ T {
-    #[inline(always)]
-    fn grid_row(&self) -> Line<GridPlacement<Self::CustomIdent>> {
-        (*self).grid_row()
-    }
-    #[inline(always)]
-    fn grid_column(&self) -> Line<GridPlacement<Self::CustomIdent>> {
-        (*self).grid_column()
-    }
     #[inline(always)]
     fn align_self(&self) -> Option<AlignSelf> {
         (*self).align_self()

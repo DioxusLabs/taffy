@@ -20401,6 +20401,54 @@ mod grid {
 
     #[cfg(feature = "grid")]
     #[test]
+    fn grid_absolute_hoisted_descendant_auto_placement__border_box_ltr() {
+        crate::run_xml_test("grid", "grid_absolute_hoisted_descendant_auto_placement__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_absolute_hoisted_descendant_auto_placement__content_box_ltr() {
+        crate::run_xml_test("grid", "grid_absolute_hoisted_descendant_auto_placement__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_absolute_hoisted_descendant_auto_placement__border_box_rtl() {
+        crate::run_xml_test("grid", "grid_absolute_hoisted_descendant_auto_placement__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_absolute_hoisted_descendant_auto_placement__content_box_rtl() {
+        crate::run_xml_test("grid", "grid_absolute_hoisted_descendant_auto_placement__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_absolute_hoisted_descendant_grid_area__border_box_ltr() {
+        crate::run_xml_test("grid", "grid_absolute_hoisted_descendant_grid_area__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_absolute_hoisted_descendant_grid_area__content_box_ltr() {
+        crate::run_xml_test("grid", "grid_absolute_hoisted_descendant_grid_area__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_absolute_hoisted_descendant_grid_area__border_box_rtl() {
+        crate::run_xml_test("grid", "grid_absolute_hoisted_descendant_grid_area__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_absolute_hoisted_descendant_grid_area__content_box_rtl() {
+        crate::run_xml_test("grid", "grid_absolute_hoisted_descendant_grid_area__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
     fn grid_absolute_justify_self_self_start_child_rtl__border_box_ltr() {
         crate::run_xml_test("grid", "grid_absolute_justify_self_self_start_child_rtl__border_box_ltr");
     }
