@@ -332,7 +332,11 @@ where
             // Lay out any out-of-flow candidates for which this node is the containing block.
             // The rest bubble up via `output.oof_candidates`. This runs inside the cache-miss
             // closure so that cached outputs already contain the processed candidate list.
-            compute_oof_layout(tree, node_id, &mut output);
+            // Only full layout passes run it: measure passes must not write hoisted box layouts
+            // (which would not be rewritten if the final layout pass is a cache hit).
+            if inputs.run_mode == RunMode::PerformLayout {
+                compute_oof_layout(tree, node_id, &mut output);
+            }
 
             output
         })
