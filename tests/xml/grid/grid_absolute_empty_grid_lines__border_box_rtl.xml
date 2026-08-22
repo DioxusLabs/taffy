@@ -1,0 +1,15 @@
+<test name="grid_absolute_empty_grid_lines__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" direction="rtl" position="relative" width="100px" height="100px" padding-top="5px" padding-left="5px" padding-bottom="5px" padding-right="5px">
+      <div direction="rtl" position="absolute" top="0px" left="0px" bottom="0px" right="0px" grid-row-start="1" grid-column-start="1"/>
+      <div direction="rtl" position="absolute" top="0px" left="0px" bottom="0px" right="0px" grid-row-end="1" grid-column-end="1"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="100" height="100" resolved-rows="none" resolved-columns="none">
+      <node x="0" y="5" width="95" height="95"/>
+      <node x="95" y="0" width="5" height="5"/>
+    </node>
+  </expectations>
+</test>

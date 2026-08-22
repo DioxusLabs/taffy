@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    Absolutely positioned children of an empty grid (no explicit or implicit tracks) with
+    grid-placement properties referencing line 1
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="display: grid; position: relative; width: 100px; height: 100px; padding: 5px;">
+  <div style="position: absolute; grid-row: 1 / auto; grid-column: 1 / auto; top: 0; left: 0; right: 0; bottom: 0;"></div>
+  <div style="position: absolute; grid-row: auto / 1; grid-column: auto / 1; top: 0; left: 0; right: 0; bottom: 0;"></div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    Absolutely positioned grid children with grid-placement lines outside the explicit grid
+    or span placements (both treated as auto)
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="display: grid; position: relative; grid-template-columns: 40px 60px; grid-template-rows: 20px 50px; width: 200px; height: 150px; padding: 10px;">
+  <div style="position: absolute; grid-column: -5 / 1; grid-row: -5 / 1; top: 0; left: 0; right: 0; bottom: 0;"></div>
+  <div style="position: absolute; grid-column: 3 / 5; grid-row: 3 / 5; top: 0; left: 0; right: 0; bottom: 0;"></div>
+  <div style="position: absolute; grid-column: span 2 / 1; grid-row: span 2 / 1; top: 0; left: 0; right: 0; bottom: 0;"></div>
+</div>
+
+</body>
+</html>
