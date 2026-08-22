@@ -199,12 +199,12 @@ pub trait LayoutPartialTree: TraversePartialTree {
     fn compute_child_layout(&mut self, node_id: NodeId, inputs: LayoutInput) -> LayoutOutput;
 }
 
-/// Extends [`LayoutPartialTree`] with the operations needed by the out-of-flow positioning pass,
-/// which lays out the absolute/fixed boxes for which a node acts as the containing block.
+/// Extends [`LayoutPartialTree`] with the operations needed by the out-of-flow positioning pass
+/// ([`compute_oof_layout`](crate::compute_oof_layout)), which lays out the absolute/fixed boxes
+/// for which a node acts as the containing block.
 ///
-/// This trait is required by all of Taffy's container layout algorithms (block, flexbox, grid and
-/// [`compute_root_layout`](crate::compute_root_layout)), as any container may be the containing
-/// block of out-of-flow boxes hoisted out of its subtree.
+/// This trait is required by [`compute_oof_layout`](crate::compute_oof_layout) and
+/// [`compute_root_layout`](crate::compute_root_layout).
 pub trait LayoutContainingBlock: LayoutPartialTree {
     /// The style type representing the styles of an out-of-flow (absolute/fixed) box being
     /// positioned by its containing block
