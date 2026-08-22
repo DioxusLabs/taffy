@@ -12,8 +12,8 @@ mod common {
 use common::image::{image_measure_function, ImageContext};
 use common::text::{text_measure_function, FontMetrics, TextContext, WritingMode, LOREM_IPSUM};
 use taffy::{
-    compute_cached_layout, compute_flexbox_layout, compute_grid_layout, compute_leaf_layout, compute_root_layout,
-    prelude::*, Cache, CacheTree, Layout, Style,
+    compute_cached_layout, compute_flexbox_layout, compute_grid_layout, compute_leaf_layout, compute_oof_layout,
+    compute_root_layout, prelude::*, Cache, CacheTree, Layout, Style,
 };
 
 #[derive(Debug, Copy, Clone)]
@@ -169,7 +169,7 @@ impl taffy::LayoutPartialTree for Node {
             let node = parent.node_from_id_mut(node_id);
             let font_metrics = FontMetrics { char_width: 10.0, char_height: 10.0 };
 
-            match node.kind {
+            let mut output = match node.kind {
                 NodeKind::Flexbox => compute_flexbox_layout(node, node_id, inputs),
                 NodeKind::Grid => compute_grid_layout(node, node_id, inputs),
                 NodeKind::Text => compute_leaf_layout(
@@ -193,7 +193,12 @@ impl taffy::LayoutPartialTree for Node {
                         image_measure_function(known_dimensions, node.image_data.as_ref().unwrap())
                     },
                 ),
-            }
+            };
+
+            // Lay out any out-of-flow (absolute/fixed) boxes for which this node is the containing block
+            compute_oof_layout(node, node_id, &mut output);
+
+            output
         })
     }
 }

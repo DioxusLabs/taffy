@@ -107,6 +107,7 @@ where
                 bottom_margin: CollapsibleMarginSet::ZERO,
                 margins_can_collapse_through: false,
                 oof_candidates: crate::tree::OofCandidates::NONE,
+                oof_positioning_area: None,
             };
         };
     }
@@ -182,5 +183,6 @@ where
             && size.height == 0.0
             && measured_size.height == 0.0,
         oof_candidates: crate::tree::OofCandidates::NONE,
+        oof_positioning_area: None,
     }
 }
