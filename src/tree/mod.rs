@@ -16,7 +16,7 @@ pub use layout::{
 };
 pub use node::NodeId;
 pub(crate) use traits::LayoutPartialTreeExt;
-pub use traits::{LayoutPartialTree, PrintTree, RoundTree, TraversePartialTree, TraverseTree};
+pub use traits::{LayoutContainingBlock, LayoutPartialTree, PrintTree, RoundTree, TraversePartialTree, TraverseTree};
 
 #[cfg(feature = "flexbox")]
 pub use traits::LayoutFlexboxContainer;
