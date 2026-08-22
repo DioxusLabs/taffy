@@ -190,6 +190,25 @@ pub trait CoreStyle {
     }
 }
 
+/// The styles of an out-of-flow (`position: absolute` / `position: fixed`) box that are read by
+/// its containing block's out-of-flow positioning pass
+pub trait OofItemStyle: CoreStyle {
+    /// Defines which row in the grid the box should start and end at, when the box's containing
+    /// block is a grid container
+    #[cfg(feature = "grid")]
+    #[inline(always)]
+    fn grid_row(&self) -> Line<GridPlacement<Self::CustomIdent>> {
+        Default::default()
+    }
+    /// Defines which column in the grid the box should start and end at, when the box's
+    /// containing block is a grid container
+    #[cfg(feature = "grid")]
+    #[inline(always)]
+    fn grid_column(&self) -> Line<GridPlacement<Self::CustomIdent>> {
+        Default::default()
+    }
+}
+
 /// Sets the layout used for the children of this node
 ///
 /// The default values depends on on which feature flags are enabled. The order of precedence is: Flex, Grid, Block, None.
@@ -946,6 +965,21 @@ impl<S: CheapCloneStr> CoreStyle for Style<S> {
     }
 }
 
+impl<S: CheapCloneStr> OofItemStyle for Style<S> {
+    #[cfg(feature = "grid")]
+    #[inline(always)]
+    fn grid_row(&self) -> Line<GridPlacement<S>> {
+        // TODO: Investigate eliminating clone
+        self.grid_row.clone()
+    }
+    #[cfg(feature = "grid")]
+    #[inline(always)]
+    fn grid_column(&self) -> Line<GridPlacement<S>> {
+        // TODO: Investigate eliminating clone
+        self.grid_column.clone()
+    }
+}
+
 impl<T: CoreStyle> CoreStyle for &'_ T {
     type CustomIdent = T::CustomIdent;
 
@@ -1016,6 +1050,19 @@ impl<T: CoreStyle> CoreStyle for &'_ T {
     #[inline(always)]
     fn contain(&self) -> Contain {
         (*self).contain()
+    }
+}
+
+impl<T: OofItemStyle> OofItemStyle for &'_ T {
+    #[cfg(feature = "grid")]
+    #[inline(always)]
+    fn grid_row(&self) -> Line<GridPlacement<Self::CustomIdent>> {
+        (*self).grid_row()
+    }
+    #[cfg(feature = "grid")]
+    #[inline(always)]
+    fn grid_column(&self) -> Line<GridPlacement<Self::CustomIdent>> {
+        (*self).grid_column()
     }
 }
 
