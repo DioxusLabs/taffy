@@ -9,7 +9,7 @@ use taffy::tree::Cache;
 use taffy::util::print_tree;
 use taffy::{
     compute_cached_layout, compute_flexbox_layout, compute_grid_layout, compute_leaf_layout, compute_root_layout,
-    prelude::*, round_layout, CacheTree,
+    prelude::*, round_layout, CacheTree, LayoutContainingBlock,
 };
 
 #[derive(Debug, Copy, Clone)]
@@ -193,6 +193,17 @@ impl LayoutPartialTree for StatelessLayoutTree {
                 ),
             }
         })
+    }
+}
+
+impl LayoutContainingBlock for StatelessLayoutTree {
+    type OofItemStyle<'a>
+        = &'a Style
+    where
+        Self: 'a;
+
+    fn get_oof_item_style(&self, node_id: NodeId) -> Self::OofItemStyle<'_> {
+        unsafe { &node_from_id(node_id).style }
     }
 }
 
