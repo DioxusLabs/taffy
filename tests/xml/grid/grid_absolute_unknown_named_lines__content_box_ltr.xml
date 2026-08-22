@@ -1,0 +1,19 @@
+<test name="grid_absolute_unknown_named_lines__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" box-sizing="content-box" direction="ltr" position="relative" width="200px" height="150px" padding-top="10px" padding-left="10px" padding-bottom="10px" padding-right="10px" grid-template-rows="20px 50px" grid-template-columns="40px 60px">
+      <div box-sizing="content-box" direction="ltr" position="absolute" top="0px" left="0px" bottom="0px" right="0px" grid-row-start="foo" grid-row-end="bar" grid-column-start="foo" grid-column-end="bar"/>
+      <div box-sizing="content-box" direction="ltr" position="absolute" top="0px" left="0px" bottom="0px" right="0px" grid-row-start="1" grid-row-end="bar" grid-column-start="1" grid-column-end="foo"/>
+      <div box-sizing="content-box" direction="ltr" position="absolute" top="0px" left="0px" bottom="0px" right="0px" grid-row-start="bar" grid-row-end="3" grid-column-start="foo" grid-column-end="3"/>
+      <div box-sizing="content-box" direction="ltr" position="absolute" top="0px" left="0px" bottom="0px" right="0px" grid-row-start="bar" grid-row-end="1" grid-column-start="foo" grid-column-end="1"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="220" height="170" resolved-rows="20px 50px" resolved-columns="40px 60px">
+      <node x="0" y="0" width="220" height="170"/>
+      <node x="10" y="10" width="210" height="160"/>
+      <node x="110" y="80" width="110" height="90"/>
+      <node x="10" y="10" width="210" height="160"/>
+    </node>
+  </expectations>
+</test>
