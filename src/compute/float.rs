@@ -740,6 +740,8 @@ impl FloatContext {
 pub struct FloatIntrinsicWidthCalculator {
     /// The available width of the container
     available_width: AvailableSpace,
+    /// The running sums of the widths of adjacent uncleared floats on each side (left, right)
+    side_sums: [f32; 2],
     /// The running total intrinsic width contribution
     contribution: f32,
     /// The widest single float (the floats' min-content contribution)
@@ -749,16 +751,27 @@ pub struct FloatIntrinsicWidthCalculator {
 impl FloatIntrinsicWidthCalculator {
     /// Create a new `FloatIntrinsicWidthCalculator`
     pub fn new(available_width: AvailableSpace) -> Self {
-        Self { available_width, contribution: 0.0, widest: 0.0 }
+        Self { available_width, side_sums: [0.0; 2], contribution: 0.0, widest: 0.0 }
     }
 
     /// Add a float to the computation
-    pub fn add_float(&mut self, width: f32, _direction: FloatDirection, _clear: Clear) {
+    pub fn add_float(&mut self, width: f32, direction: FloatDirection, clear: Clear) {
         match self.available_width {
             // Definite available width means the container is being fit-content sized
             // (e.g. it is itself a float being shrink-to-fit sized). The floats' max-content
             // contribution (widths summed) is clamped by the available width in `result`.
-            AvailableSpace::Definite(_) | AvailableSpace::MaxContent => self.contribution += width,
+            AvailableSpace::Definite(_) | AvailableSpace::MaxContent => {
+                // A float that clears a side is placed below the floats on that side, so its
+                // width does not accumulate with theirs.
+                if matches!(clear, Clear::Left | Clear::Both) {
+                    self.side_sums[0] = 0.0;
+                }
+                if matches!(clear, Clear::Right | Clear::Both) {
+                    self.side_sums[1] = 0.0;
+                }
+                self.side_sums[direction as usize] += width;
+                self.contribution = self.contribution.max(self.side_sums[0] + self.side_sums[1]);
+            }
             AvailableSpace::MinContent => self.contribution = self.contribution.max(width),
         };
         self.widest = self.widest.max(width);
