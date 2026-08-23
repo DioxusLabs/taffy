@@ -1,0 +1,29 @@
+<test name="float_shrink_to_fit_cleared_floats__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="block" box-sizing="content-box" direction="ltr" width="400px" height="200px">
+      <div display="block" box-sizing="content-box" direction="ltr" float="right">
+        <div display="block" box-sizing="content-box" direction="ltr" float="right" width="100px" height="20px"/>
+        <div display="block" box-sizing="content-box" direction="ltr" float="right" clear="right" width="120px" height="20px"/>
+      </div>
+      <div display="block" box-sizing="content-box" direction="ltr" float="left">
+        <div display="block" box-sizing="content-box" direction="ltr" float="left" width="50px" height="20px"/>
+        <div display="block" box-sizing="content-box" direction="ltr" float="left" clear="left" width="60px" height="20px"/>
+        <div display="block" box-sizing="content-box" direction="ltr" float="left" width="30px" height="20px"/>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="400" height="200">
+      <node x="280" y="0" width="120" height="40">
+        <node x="20" y="0" width="100" height="20"/>
+        <node x="0" y="20" width="120" height="20"/>
+      </node>
+      <node x="0" y="0" width="90" height="40">
+        <node x="0" y="0" width="50" height="20"/>
+        <node x="0" y="20" width="60" height="20"/>
+        <node x="60" y="20" width="30" height="20"/>
+      </node>
+    </node>
+  </expectations>
+</test>
