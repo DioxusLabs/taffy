@@ -1,0 +1,13 @@
+<test name="intrinsic_sizing_main_size_aspect_ratio_stretched_row__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div direction="rtl" height="100px">
+      <div direction="rtl" aspect-ratio="2"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="200" height="100">
+      <node x="0" y="0" width="200" height="100"/>
+    </node>
+  </expectations>
+</test>

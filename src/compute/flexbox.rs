@@ -496,7 +496,7 @@ fn compute_preliminary(tree: &mut impl LayoutFlexboxContainer, node: NodeId, inp
                 Size::NONE,
                 Size::NONE,
                 Size::MAX_CONTENT,
-                SizingMode::InherentSize,
+                SizingMode::ContentSize,
                 Line::FALSE,
             );
         }
@@ -965,13 +965,13 @@ fn determine_flex_base_size(
             // TODO if/when vertical writing modes are supported
 
             // If the item has an aspect ratio and a definite cross size then the flex base size
-            // is derived from that cross size via the aspect ratio (case B above, as applied by
-            // the child's own layout below), and is therefore definite.
-            if child.aspect_ratio.is_some()
-                && child_cross_size_is_definite
-                && child_known_dimensions.cross(dir).is_some()
-            {
-                child.flex_basis_is_definite = true;
+            // is calculated by transferring that cross size through the aspect ratio (case B
+            // above), and is therefore definite.
+            if child_cross_size_is_definite {
+                if let (Some(ratio), Some(cross)) = (child.aspect_ratio, child_known_dimensions.cross(dir)) {
+                    child.flex_basis_is_definite = true;
+                    break 'flex_basis if dir.is_row() { cross * ratio } else { cross / ratio };
+                }
             }
 
             // E. Otherwise, size the item into the available space using its used flex basis
@@ -1397,6 +1397,23 @@ fn determine_container_main_size(
                             _ if item.is_scroll_container() => {
                                 item.flex_basis + item.margin.main_axis_sum(constants.dir)
                             }
+
+                            // If the item has a definite preferred main size then that is its content
+                            // contribution (an inherent-size measure of the item would return it), floored
+                            // by the item's main-axis padding+border, so measuring the item can be skipped.
+                            // Min/max clamping is applied in the same way as for measured contributions.
+                            (_, Some(pref), _) => {
+                                let item_pb_main = item.padding.main_axis_sum(constants.dir)
+                                    + item.border.main_axis_sum(constants.dir);
+                                let content_main_size =
+                                    pref.max(item_pb_main) + item.margin.main_axis_sum(constants.dir);
+                                if constants.is_row {
+                                    content_main_size.maybe_clamp(style_min, style_max)
+                                } else {
+                                    content_main_size.max(item.flex_basis).maybe_clamp(style_min, style_max)
+                                }
+                            }
+
                             _ => {
                                 // Parent size for child sizing
                                 let cross_axis_parent_size = constants.node_inner_size.cross(dir);
@@ -1431,15 +1448,25 @@ fn determine_container_main_size(
                                 // Either the min- or max- content size depending on which constraint we are sizing under.
                                 // TODO: Optimise by using already computed values where available
                                 debug_log!("COMPUTE CHILD BASE SIZE (for intrinsic main size):");
-                                let content_main_size = tree.measure_child_size(
+                                let measured_main_size = tree.measure_child_size(
                                     item.node,
                                     child_known_dimensions,
                                     constants.node_inner_size,
                                     child_available_space,
-                                    SizingMode::InherentSize,
+                                    SizingMode::ContentSize,
                                     dir.main_axis(),
                                     Line::FALSE,
-                                ) + item.margin.main_axis_sum(constants.dir);
+                                );
+
+                                // A known cross size is transferred through the item's aspect-ratio
+                                // and floors the measured content size
+                                let transferred_main_size = item
+                                    .aspect_ratio
+                                    .zip(child_known_dimensions.cross(dir))
+                                    .map(|(ratio, cross)| if constants.is_row { cross * ratio } else { cross / ratio });
+
+                                let content_main_size = measured_main_size.maybe_max(transferred_main_size)
+                                    + item.margin.main_axis_sum(constants.dir);
 
                                 // This is somewhat bizarre in that it's asymmetrical depending whether the flex container is a column or a row.
                                 //
@@ -2691,7 +2718,7 @@ fn perform_absolute_layout_on_absolute_children(
                 inset_relative_size,
                 Rect { left, right, top, bottom },
                 margin,
-                SizingMode::InherentSize,
+                SizingMode::ContentSize,
             );
             known_dimensions = known_dimensions.maybe_apply_aspect_ratio(aspect_ratio).maybe_clamp(min_size, max_size);
         }
@@ -2727,7 +2754,7 @@ fn perform_absolute_layout_on_absolute_children(
                             container_height.maybe_clamp(min_size.height, max_size.height),
                         ),
                     },
-                    SizingMode::InherentSize,
+                    SizingMode::ContentSize,
                     Line::FALSE,
                 );
                 known_dimensions.unwrap_or(measured_size)
@@ -2743,7 +2770,7 @@ fn perform_absolute_layout_on_absolute_children(
                 width: AvailableSpace::Definite(container_width.maybe_clamp(min_size.width, max_size.width)),
                 height: AvailableSpace::Definite(container_height.maybe_clamp(min_size.height, max_size.height)),
             },
-            SizingMode::InherentSize,
+            SizingMode::ContentSize,
             Line::FALSE,
         );
 
