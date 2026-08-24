@@ -1,186 +1,114 @@
 # Changelog
 
-## Unreleased
+## 0.14.0
 
-### Added
+The MSRV for this release is 1.71.
 
-- The tagged-pointer size types can now be inspected via a plain enum. `LengthPercentage`, `LengthPercentageAuto`, `Dimension`, `MinTrackSizingFunction` and `MaxTrackSizingFunction` each gain an `expand()` method returning a matching `Expanded*` enum (`ExpandedLengthPercentage`, `ExpandedDimension`, etc.) whose variants map one-to-one onto the type's constructors, along with `From` conversions in both directions. This makes it possible to read back the original value of a style property (for style inspection, serialization or integration with other libraries) without having to work with the raw `CompactLength` representation
+### Support for CSS sizing keywords (#1099, #1103)
 
-- Support for `flex-wrap: balance` and the `flex-line-count` property from [CSS Flexbox Level 2](https://drafts.csswg.org/css-flexbox-2/#balance-values), gated behind a new on-by-default `flexbox_balance` cargo feature (which depends on `flexbox`):
-  - `FlexWrap` gains `Balance` and `BalanceReverse` variants, and its CSS parser accepts the multi-keyword grammar `nowrap | [ wrap | wrap-reverse ] || balance`. When balancing, items are collected into flex lines such that the largest line is as small as possible (minimising the sum of squares of each line's free space), rather than greedily filling each line
-  - `Style::flex_line_count` (and a corresponding `FlexboxContainerStyle::flex_line_count` trait method) specifies the minimum number of lines to balance items into (default `1`). When it is greater than 1 on any multi-line container (`wrap`, `wrap-reverse`, `balance` or `balance-reverse`), definite cross-axis available space for measuring items is divided between the requested number of lines (after subtracting cross-axis gaps), per the [CSSWG resolution](https://github.com/w3c/csswg-drafts/issues/13414)
+The `width`, `height` and `flex-basis` properties now support `min-content`, `max-content`, `fit-content`, `fit-content()`, and `stretch` keywords.
+`flex-basis` additionally supports the `content` keyword. The `min-width`/`max-width` (and height) properties have been switched to use `LengthPercentageAuto`
+rather than `Dimension`, as they do not yet support these keywords.
 
-- `Dimension` (used for `size`) now supports the sizing keywords `min-content`, `max-content`, `fit-content`, `fit-content(<length-percentage>)` and `stretch` via new constructors (`Dimension::min_content()`, `Dimension::max_content()`, `Dimension::fit_content()`, `Dimension::fit_content_px()`, `Dimension::fit_content_percent()`, `Dimension::stretch()`), new `CompactLength::FIT_CONTENT_KEYWORD_TAG`/`CompactLength::STRETCH_TAG` representations, and CSS parsing support. These keywords are resolved:
-  - In block layout: for the widths of in-flow children and floats
-  - In flexbox layout: for the main-axis size when determining an item's flex base size, for the cross-axis size when determining an item's hypothetical cross size, and for `flex-basis` (where `stretch` resolves to the stretch-fit main size and the other keywords determine the sizing constraint the item is measured under when computing its flex base size)
-  - In grid layout: for the width/height of grid items, both during track sizing (content contributions) and during final item sizing/alignment. A keyword-sized axis is treated as non-`auto`, so the default `normal` self-alignment resolves to `start` rather than `stretch` in that axis
+### Support for `flex-wrap: balance` (#1105)
 
-  In contexts where a keyword cannot be resolved it behaves as `auto`
+Taffy now supports `flex-wrap: balance` and `flex-line-count` from CSS Flexbox Level 2, behind the default `flexbox_balance` feature.
 
-- `Dimension` also supports the `content` keyword (`Dimension::content()`, CSS `content`), which indicates an automatic size based on the box's content. This keyword is only valid for `flex-basis`, where it sizes the item based on its content (ignoring its main size property) when computing its flex base size. In any other context (e.g. `width`/`height`) it behaves as `auto`
+See [Balancing Text in CSS: The Flex-Wrap Last Row Problem](https://www.equero.dev/posts/css-flex-wrap-balance-last-row-problem) for an explainer.
 
-- Support for the layout-affecting parts of the `layout` and `paint` values of the CSS `contain` property via a new `Contain` bitflags style type, a new `Style::contain` field and a new (defaulted) `CoreStyle::contain` trait method:
-  - `Contain::LAYOUT` (layout containment): the box establishes an independent formatting context (its margins do not collapse with those of its children, it contains its own floats, and it avoids external floats) and its baseline is suppressed (boxes requiring a baseline synthesize one from its border box)
-  - `Contain::PAINT` (paint containment): the box establishes an independent formatting context like layout containment, but its baseline is not suppressed. Paint containment's other effects (clipping, containing absolutely-positioned descendants, stacking context) do not affect layout and are not implemented
-  - Layout and paint containment also prevent the box's overflowing content from contributing to its ancestors' scrollable overflow regions: layout containment treats such overflow as ink overflow, and paint containment clips it. The contained box's own `scrollable_overflow_rect` still includes its overflowing content
+### Partial support for CSS containment (#1128)
 
-  The CSS parser (`parse` feature) accepts `none | content | [ layout || style || paint ]` for the `contain` property: `content` maps to `LAYOUT | PAINT`, and the `style` keyword is accepted but ignored as it does not affect layout. The `strict`, `size` and `inline-size` values are not supported as size containment is not implemented
+The layout effects of `contain: layout`, `contain: paint`, and `contain: content` are now supported, including independent formatting contexts, baseline suppression, and overflow containment. `contain: size` is not yet supported.
 
-- `DetailedGridTracksInfo` (behind the `detailed_layout_info` feature) gains a `line_names: GridLineNames` field containing the names of each grid line in the axis, index-aligned with `positions` (line `i` bounds the start of track `i`, in logical order). Names include those from `grid-template-rows`/`grid-template-columns` (with `repeat()`s expanded using the resolved auto-repetition count) and the implicit `<name>-start`/`<name>-end` names generated by `grid-template-areas`. The new `GridLineNames` type stores names in a compact CSR representation (one flat `Vec` of names plus a `Vec` of offsets) and exposes them via `iter()` (yielding one `&[S]` name group per line) and `line(index)`. Both detailed-info structs are now generic over the custom identifier string type (defaulting to the default string type), and `LayoutGridContainer::set_detailed_grid_info` now takes `DetailedGridInfo<Self::CustomIdent>`
+### Expanded detailed grid information (#1131, #1134, #1135, #1136, #1137)
 
-- `DetailedGridInfo` (behind the `detailed_layout_info` feature) gains `write_grid_template_rows()`/`write_grid_template_columns()` methods generic over any `core::fmt::Write` writer (plus allocating `grid_template_rows()`/`grid_template_columns()` conveniences, and per-axis `DetailedGridTracksInfo::write_track_list()`/`to_track_list_string()`) which serialize the used track sizes and line names in the [resolved value format](https://www.w3.org/TR/css-grid-1/#resolved-track-list) of the corresponding CSS properties, e.g. `[full-start main-start] 120px [main-end] 480px [full-end]`
+- `DetailedGridTracksInfo`'s `gutters` and `sizes` fields are replaced by a single `positions` vec. `positions` contains the offset of every grid line in the
+  implicit grid. This allows it to account for offsets introduce by content-alignment. And also allows for O(1) access to grid area sizes.
+- All data in `DetailedGridTracksInfo` is now stored in logical order (so right-to-left for `direction: rtl` grids)
+- Added `DetailedGridInfo::resolve_absolute_grid_area` which can resolve a grid area for an item given it's position styles. This is useful for positioning
+  hoisted absolutely positioned boxes relative to a grid containing block.
+- Added `grid_template_rows` and `grid_template_columns` methods which serialize those properties into a string according to the CSS standard.
 
-- `DetailedGridInfo` (behind the `detailed_layout_info` feature) gains an `item_grid_area(item_index)` method returning the location and size (`(Point<f32>, Size<f32>)`) of the grid area occupied by an item, relative to the grid container's border box
+### Caching changes
 
-### Changed
-
-- `DetailedGridTracksInfo` (behind the `detailed_layout_info` feature) now exposes a single `positions: Vec<Line<f32>>` field containing the start and end position of each track relative to the grid container's border box, replacing the previous `gutters` and `sizes` fields. Unlike the previous fields, these positions account for content alignment (`align-content`/`justify-content`). Collapsed tracks are included as zero-width entries, so indices remain 1:1 with track numbers. Track sizes and gutters can be derived from the positions (`size = end - start`; gutter = distance between adjacent tracks)
-
-- Grid: for `direction: rtl` grid containers, all internal grid data structures and the `detailed_layout_info` output (`DetailedGridInfo`) are now in *logical* order (line 1 = inline-start = the right-hand side in RTL), matching LTR. Previously RTL grids were internally mirrored into visual order, so `DetailedGridTracksInfo` column track positions and `DetailedGridItemsInfo` column line numbers were reported in visual (left-to-right) order. RTL is now applied purely when assigning physical geometry, and the rendered layout is unchanged
-
-- Flexbox/Block: absolutely positioned children are no longer measured when both of their dimensions are already known (e.g. from explicit sizes or insets), matching the existing grid behaviour
-
-- `CacheTree::cache_get` (and `Cache::get`) now take `&mut self`. The measure cache now uses second-chance (clock) eviction across its entries instead of a fixed slot-assignment scheme, which requires recently-used bookkeeping on reads. Implementors of `CacheTree` must update their `cache_get` implementations to take `&mut self`
-
-### Fixed
-
-- Cache: a node's size measured for one axis is no longer returned from the cache when the other axis is queried. The cache key now records which axis (or both) a measure result was computed for, and only serves entries valid for the requested axis. Previously e.g. a width-only measure of a block container (which computes no height) could later be served for a height query, returning a garbage height
-
-- Cache: measure results whose `LayoutOutput` carries margin-collapse metadata (`margins_can_collapse_through`, or non-zero `top_margin`/`bottom_margin`) are no longer cached, as measure cache entries only store the size and cache hits would return that metadata zeroed, breaking margin collapsing in block layout
-
-- Flexbox: intrinsic main sizing now applies negative main-axis margins as lengths for non-shrinking items, and zero-basis items no longer collapse the intrinsic container size (#1151)
-
-- Flexbox: the algorithm no longer measures children with `SizingMode::InherentSize`, instead applying the item's own style sizes on top of `SizingMode::ContentSize` measures. This prevents `ComputeSize` cache entries computed under `ContentSize` (which ignore the node's own size styles) from being served for inherent-size measures, which could ignore an item's specified size (#1149)
-
-- Flexbox: a flex item with an aspect ratio, a content flex basis, and a definite cross size derived from stretching now has its flex base size (and its intrinsic main-size contribution) calculated by transferring the stretched cross size through the aspect ratio, per case B of the flex base size determination algorithm. Previously the transferred size was ignored and such items were sized as if they had no aspect ratio
-
-- CSS parser (`parse` feature): `GridTemplateTracks::from_css` (used to parse `grid-template-rows`/`grid-template-columns` values) now emits one line-name group per grid line, pushing an empty group for lines with no `[...]` in the source. Previously groups were only emitted for lines that had names, which is ambiguous (name groups are positional) and caused line names in templates such as `repeat(auto-fill, [col] 40px)` to be silently dropped when the parsed value was applied to a style
-
-- Block/float: the height of overflowing in-flow content of a nested block no longer contributes to the height of the block formatting context root as if it were floated content. Previously an auto-height BFC root containing a block whose in-flow content overflowed it (e.g. a fixed-height block with taller content) was incorrectly extended to contain that overflowing content
-
-- Block: the baselines contributed by in-flow children that are scroll containers are now clamped to the child's border box, and a scroll-container child with no natural baseline synthesizes one at its border-box bottom edge, matching the existing flexbox/grid behaviour per the [CSSWG resolution](https://github.com/w3c/csswg-drafts/issues/7660). Previously baselines of clipped content could leak outside an `overflow: hidden` child, and an empty scroll-container child contributed no baseline
-
-- Grid: items with an `auto` block-axis margin no longer participate in baseline alignment, per [CSS Align §9.5](https://www.w3.org/TR/css-align-3/#baseline-align-self). Such items are no longer baseline-shimmed (their auto margin aligns them instead), and they are no longer selected as the item the grid container's own first baseline is generated from, matching the existing flexbox behaviour
-
-- Flexbox: a flex item's cross-axis size is now only treated as definite (for resolving percentage sizes of its descendants) when the item is stretched or its cross size style resolves to a definite size, per [CSS Flexbox §4.5](https://www.w3.org/TR/css-flexbox-1/#definite-sizes). Previously content-derived cross sizes of non-stretched items were incorrectly used as percentage resolution bases
-
-- Block: a container's `min-height` alone no longer acts as the resolution basis for the percentage heights of its children when the container's own height is indefinite. Per [CSS 2 §10.5](https://www.w3.org/TR/CSS22/visudet.html#the-height-property), such percentages resolve as `auto`
-
-- Block: percentage vertical insets (`top`/`bottom`) of relatively positioned children now resolve against the containing block's height when it is definite. Previously they always resolved against a zero basis, so e.g. `top: 50%` had no effect
-
-- Flexbox: skip the automatic min-content measurement when an item's minimum main size is already resolved from its style or overflow. Previously this fallback was evaluated eagerly and could cause nested flex layouts with explicit minimum sizes to perform unnecessary recursive measurements
-
-- Block/Flexbox/Grid: content overflowing a box past its scroll origin (the inline-start/block-start edge, e.g. an absolutely positioned child with a negative position) no longer inflates the box's `content_size`. Per the [CSS Overflow spec](https://www.w3.org/TR/css-overflow-3/#scrollable), the scrollable overflow region only extends from the scroll origin towards the inline-end/block-end directions, so such content is unreachable and does not contribute to scrollable overflow. Additionally, block layout now correctly measures absolutely positioned children from the inline-end edge in RTL when computing their `content_size` contribution, matching the existing flexbox and grid behaviour
-
-- Flexbox: free space absorbed by main-axis `auto` margins is no longer also distributed by `justify-content`. Previously an item with e.g. `margin: 0 auto` inside a `justify-content: center` container was pushed past the centre by an extra half of the free space, as the same free space was counted twice (once by the auto margins and once by the alignment step). Per [CSS Flexbox §9.5](https://www.w3.org/TR/css-flexbox-1/#algo-main-align), auto margins consume all of the positive free space, leaving none for `justify-content`
-
-- Block/Flexbox/Grid: a container's own end-side padding (right padding for LTR, left padding for RTL, and bottom padding) is now only included in its `content_size` when the container is a scroll container (i.e. has `overflow` other than `visible`/`clip` in either axis). Per the [CSS Overflow spec](https://www.w3.org/TR/css-overflow-3/#scrollable), boxes that are not scroll containers do not extend their scrollable overflow region by their own padding, so overflowing content within an ordinary padded box no longer propagates spuriously enlarged content sizes to ancestor scroll containers
-
-- Leaf: `compute_leaf_layout` now follows the same convention as block/flexbox/grid for its `content_size`: the node's own end-side padding (right padding for LTR, left padding for RTL, and bottom padding) is only included when the node is a scroll container. Previously both the start and end padding were included unconditionally, over-reporting the content size of ordinary padded leaves whose measured content overflows
-
-- Grid: the first baselines of grid items which are scroll containers are now clamped to the item's border box (matching the existing flexbox behaviour, per the [CSSWG resolution](https://github.com/w3c/csswg-drafts/issues/7660))
-
-- Flexbox: items with `align-self: baseline` and an `auto` cross-axis margin no longer participate in baseline alignment, per [CSS Flexbox §8.3](https://www.w3.org/TR/css-flexbox-1/#baseline-participation). Previously such items were still counted when deciding whether a line performs baseline alignment, had their baselines measured, and could affect the container's own first baseline
+Caching logic is now more correct (#1010, #1155)
 
 ### Changed
 
-- The `content_size: Size<f32>` field of `Layout` and `LayoutOutput` (behind the `content_size` cargo feature) has been replaced with `scrollable_overflow_rect: Rect<f32>`, representing the CSS [scrollable overflow rectangle](https://www.w3.org/TR/css-overflow-3/#scrollable) (excluding the effect of transforms, which Taffy has no knowledge of). Coordinates are measured from the node's scroll origin (the inline-start/block-start corner of its padding box — the top-*right* corner in RTL — with `left`/`right` measuring along the inline axis in the direction of reachable scrolling), so the rectangle always contains the origin: negative `left`/`top` values capture start-side overflow that is unreachable by scrolling, while `right`/`bottom` give the reachable extent of the content (equivalent to the old `content_size`). Boxes wholly in the unreachable scrollable overflow region of a scroll container are excluded from its scrollable overflow rectangle entirely, while boxes only partially in the unreachable region contribute their whole border box. `Layout::scroll_width()`/`Layout::scroll_height()` are unchanged
-
-  Migration: replace reads of `layout.content_size.width`/`layout.content_size.height` with `layout.scrollable_overflow_rect.right`/`layout.scrollable_overflow_rect.bottom`, and `LayoutOutput::from_sizes(size, content_size)` with `LayoutOutput::from_sizes(size, Rect { left: 0.0, right: content_size.width, top: 0.0, bottom: content_size.height })`
-
-- `LayoutOutput`'s `first_baselines: Point<Option<f32>>` field has been replaced with `baselines: Baselines`, where the new `Baselines` struct has `first: Option<f32>` and `last: Option<f32>` fields (both horizontal baselines, measured from the top edge of the node). The never-read vertical (x) baseline slot has been dropped in favour of a last-baseline slot. Last baselines are not yet computed by any of the built-in layout algorithms (this is purely a representational change), but custom tree implementations and measure functions can now report them
-
-  Migration: replace `first_baselines: Point { x: None, y: baseline }` with `baselines: Baselines::from_first(baseline)`, and reads of `first_baselines.y` with `baselines.first`
-
-- `Style::min_size` and `Style::max_size` (and the corresponding `CoreStyle::min_size`/`CoreStyle::max_size` trait methods) are now `Size<LengthPercentageAuto>` rather than `Size<Dimension>`, as the min/max sizing properties do not support the new sizing keywords that `Dimension` now supports
-
-- `TaffyTree::compute_layout_with_measure`'s measure function now takes the full `LayoutInput` (plus `NodeId`, `Option<&mut NodeContext>` and `&Style`) and returns a `LayoutOutput` directly instead of a `Size<f32>`, allowing measure functions to set baselines (and other `LayoutOutput` fields) on leaf nodes. `compute_leaf_layout` is no longer called implicitly (#953)
-
-  Migration: to retain the previous behaviour, wrap your existing measure logic in an explicit call to `compute_leaf_layout` within the new-style measure function:
-
-  ```rust
-  // Before
-  tree.compute_layout_with_measure(node, available_space, |known_dimensions, available_space, node_id, node_context, style| {
-      my_measure_logic(known_dimensions, available_space, node_id, node_context, style)
-  })?;
-
-  // After
-  tree.compute_layout_with_measure(node, available_space, |inputs, node_id, node_context, style| {
-      taffy::compute_leaf_layout(inputs, style, |_, _| 0.0, |known_dimensions, available_space| {
-          my_measure_logic(known_dimensions, available_space, node_id, node_context, style)
-      })
-  })?;
-  ```
+- Tagged-pointer style types now have `expand()` methods that expose their values as plain enums (#1129).
+- `Layout::content_size` is now `scrollable_overflow_rect: Rect<f32>`. Its `right` and `bottom` fields replace the old width and height values; `scroll_width()` and `scroll_height()` are unchanged (#1118).
+- `LayoutOutput::first_baselines` is now `baselines: Baselines`, with `first` and `last` baseline fields (#1107).
+- `Style::min_size` and `max_size` now use `LengthPercentageAuto` rather than `Dimension` (#1099).
+- `compute_layout_with_measure` now passes a `LayoutInput` and returns `LayoutOutput`; call `compute_leaf_layout` explicitly to preserve the old leaf-measurement behaviour (#1091).
+- Block and Flexbox no longer measure absolutely positioned children whose dimensions are already known (#1120).
+- `CacheTree::cache_get` and `Cache::get` now take `&mut self`, and the measure cache uses second-chance (clock) eviction (#1010).
 
 ### Fixed
 
-- `TaffyTree::remove` now marks the removed node's former parent as dirty, like `remove_child`, `remove_child_at_index` and `remove_children_range` already did. Previously the parent and its ancestors kept their stale cached layout, so recomputing the layout of an ancestor did not account for the removed node (#998)
-
-- Grid: fixed a subtract-with-overflow panic (in debug builds) when resolving named lines for a template containing a repetition with fewer line name sets than tracks. Any template combining line names with a repetition created by the `repeat()` style helper (or parsed from CSS such as `[a] repeat(2, 10px) [c] 10px`) could trigger this. In release builds the same bug silently mis-numbered the lines following the repetition. The length of `GridTemplateRepetition::line_names` is now part of the API contract: it must either be empty (all lines unnamed) or contain exactly `tracks.len() + 1` line name sets, and any other length panics (in all builds) during layout
-
-- Grid: the track sizing algorithm no longer loops forever when styles contain non-finite values (e.g. `NaN` flex factors or non-finite lengths). The "find the size of an fr" and "distribute space up to limits" loops are now bounded by the track count
-
-- Grid: fixed an infinite loop in auto-placement when an item's placement resolved to a span larger than the implicit grid size estimate (e.g. a zero span — an invalid value which is now normalized to 1 — combined with an unresolvable named span). The auto-placement search now bails out (and clamps the placement into the limited grid) when a span cannot fit even at the start of the grid
-
-- Flexbox: the definiteness of known dimensions is now tracked through nested layouts via a new `known_dimensions_are_definite` field on `LayoutInput`. A flex item's post-flexing main size is only treated as definite (for resolving percentage sizes of its children and for collecting its children into flex lines) when the container's main size is definite or the item's used flex basis is definite. Previously a wrapping flex container nested in a container with an indefinite main size could incorrectly wrap its items into multiple lines based on its own content-derived size (#999)
-
-- Flexbox: percentage heights of block descendants no longer resolve against a flex item's post-flexing main size when that size is indefinite (#950)
-
-- Flexbox: a wrapping container with an indefinite main size now wraps its items against its max main size (e.g. `max-width` for a row container) when the available space exceeds it. Previously items were collected into flex lines using the raw available space, so a fit-content sized container (such as a float) with a `max-width` smaller than the available space never wrapped
-
-- Grid: distribute only the crossed flex factor sum's proportion (clamped at one) of an item's content-derived contribution to the flexible tracks it spans, floored by the item's minimum contribution. A `0fr` track holding a `min-height: 0` item now collapses to zero under an intrinsic sizing constraint, as browsers do (#1084)
+- Cache: prevent axis-specific measurements from being reused for the wrong axis and avoid caching margin-collapse metadata (#1010).
+- Flexbox: fix intrinsic sizing with negative margins and zero flex bases (#1152).
+- Flexbox: apply inherent style sizing on top of content-size measurements (#1155).
+- Flexbox: transfer definite stretched cross sizes through aspect ratios when calculating flex base sizes (#1155).
+- Block/float: account for `clear` when computing the intrinsic width of floats (#1150).
+- Flexbox: generate container baselines from the visually startmost line or item in reverse layouts (#1127).
+- Block/Grid: clamp scroll-container baselines to the border box and synthesize missing Block baselines (#1108, #1126).
+- Flexbox/Grid: exclude items with auto cross-axis margins from baseline alignment (#1109, #1125).
+- Grid: exclude items with cyclic percentage block sizes from baseline alignment (3dbf2e46b).
+- CSS parser: preserve unnamed grid lines when parsing `grid-template-rows` and `grid-template-columns` (#1138).
+- Block/float: don't include overflowing in-flow content in the float contribution to a BFC's height (#1128).
+- Block: resolve percentage heights and relative vertical insets against the correct definite height (#1122).
+- Block: prevent bottom-margin collapsing when `min-height` determines the used height (#1082).
+- Block: resolve percentage padding and borders against the containing block's width (#1083).
+- Block: resolve absolutely positioned auto margins against the clamped used size (#1096).
+- Block/float: apply non-`normal` `align-content` to formatting contexts and floated children (#1087, #1089).
+- Flexbox: correctly track definite sizes through nested layouts and percentage-sized descendants (#1003, #1123).
+- Flexbox: don't distribute free space through `justify-content` after auto margins consume it (#1115).
+- Flexbox: skip unnecessary automatic min-content measurements (#1119).
+- Block/Flexbox/Grid: correct scrollable overflow handling for start-side overflow, RTL, and end padding (#1114, #1116, #1117).
+- `TaffyTree::remove` now marks the former parent dirty (#1085).
+- Grid: fix named-line numbering for repetitions and validate their line-name counts (#1035).
+- Grid: prevent infinite loops during track sizing and auto-placement (#1036, #1037).
+- Flexbox: wrap indefinite containers against their maximum main size (#1101).
+- Grid: don't skip intrinsic sizing for tracks with an intrinsic minimum and fixed maximum (#1097).
+- Grid: correctly distribute content contributions across flexible tracks (#1084).
 
 ## 0.13.0
 
 The MSRV for this release is 1.71.
 
-### Added
+### Support for self-relative alignment (#1077)
 
-- Support for the `self-start` and `self-end` alignment keywords (`AlignItems::SELF_START`/`SELF_END` and safe variants). These resolve against the `direction` of the item itself rather than that of its container, so they only differ from `start`/`end` when the item's direction differs from its container's. Supported for `align-self`/`align-items` and `justify-self`/`justify-items` on both in-flow and absolutely positioned Flexbox and Grid items (#1074)
+Taffy now supports `self-start` and `self-end` alignment for in-flow and absolutely positioned Flexbox and Grid items. Unlike `start` and `end`, these values resolve against the item's own writing direction rather than its container's.
 
-- Support for `display: flow-root`. The new `Display::FlowRoot` variant lays out children using the block layout algorithm but always establishes a new block formatting context (its margins do not collapse with those of its children, it contains its own floats, and it avoids external floats)
+### Support for `display: flow-root` (#997)
+
+[`display: flow-root`](https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Values/display-inside) uses Block layout while always establishing an independent formatting context.
 
 ### Changed
 
-- Numeric style helpers (`length`, `percent`, `fr`, `flex`) now accept `Input: Into<f64>` instead of `Input: Into<f32>`. This allows bare float literals such as `length(800.0)` to be used without triggering the `float_literal_f32_fallback` future-compatibility lint, while widening the set of accepted numeric input types (#974)
-- Grid: `grid_template_areas` is now `Option<GridTemplateAreas<S>>`, where the new `GridTemplateAreas` struct includes `row_count`/`column_count` fields. This allows templates containing unnamed (`.`) cells beyond the extents of the named areas (e.g. `grid-template-areas: "a ."`) to be represented.
-- Block/float: `BlockContext::place_floated_box` takes an additional `adjoins_unresolved_strut: bool` parameter indicating whether the float is being placed while the position of the current margin-collapse strut is still unresolved
+- Numeric style helpers now accept `Into<f64>` rather than `Into<f32>` (#983).
+- Grid: `grid_template_areas` is now `Option<GridTemplateAreas<S>>`, where the new `GridTemplateAreas` struct includes `row_count`/`column_count` fields. This allows templates containing unnamed (`.`) cells beyond the extents of the named areas (e.g. `grid-template-areas: "a ."`) to be represented (#1024).
+- `BlockContext::place_floated_box` now indicates whether it adjoins an unresolved margin-collapse strut (#1046).
+- Grid dimensions are clamped to 10,000 tracks in each direction to prevent integer overflow (#986).
 
 ### Fixed
 
-A large number of miscelaneous bug fixes are included in this release:
-
-- Flexbox: clamp the flex base size, automatic minimum size and hypothetical main/cross sizes with min/max sizes transferred through the aspect ratio, instead of baking them into the item's used min/max sizes (#989)
-- Flexbox: resolve `justify-content: start`/`end` and `align-self: start`/`end`/`self-start`/`self-end` as writing-mode relative (rather than flex-relative) in the static position of absolutely positioned children; use the flex-relative start for `justify-content: space-between`/`normal`, and a fallback of `start` for `align-self: baseline` (#1072)
-- Flexbox: only let `auto` margins on absolutely positioned children absorb free space when the box is inset-constrained in that axis; otherwise they resolve to zero per CSS2 §10.3.7/§10.6.4 (#1072)
-- Grid: jump the auto-placement search past entire colliding occupied intervals rather than advancing one track at a time (#1038)
-- Grid: resolve the grid lines used by absolutely positioned items to the edges of the adjacent tracks, so that free space distributed by `align-content`/`justify-content` is not included in the abspos grid area (#1071)
-- Grid: exclude absolutely positioned children from the implicit grid size estimate, as they do not take part in grid placement and must not create implicit tracks. Previously their out-of-range lines resolved to phantom implicit tracks instead of being treated as `auto` (#1075)
-- Grid: align an empty grid (one whose tracks have all collapsed) within its container, rather than always placing it at the start (#1078)
-- Grid: only distribute space "beyond limits" to tracks whose *max* track sizing function is `max-content` (or `fit-content()`) (#1033)
-- Grid: don't clamp an explicitly specified preferred or minimum size by the spanned tracks' fixed max track sizing functions when computing an item's minimum contribution (#1022)
-- Grid: ignore the tracks' growth limits when distributing an item's intrinsic size contribution "beyond limits" (#1022)
-- Grid: convert the container's min/max size to a content-box size before using it in the track sizing algorithm (#1023)
-- Grid: compute the flex factor sum over only the spanned tracks eligible to receive space when distributing intrinsic size contributions to flexible tracks (#1019)
-- Grid: don't grow tracks past their growth limits when distributing free space to multiple tracks with asymmetric limits (#1001)
-- Block/Grid: measure `Layout::content_size` from the container's padding-box origin and include the container's own end-side padding, matching Flexbox and browser `scrollWidth`/`scrollHeight` semantics. Grid items in tracks that overflow the container now also contribute their position within the container, not just their own size (#1051)
-- Block: don't stretch-size replaced elements; an auto width now resolves to the intrinsic size (#1002)
-- Block: don't let boxes that establish an independent formatting context overlap floats: they narrow to fit beside the float, or move down below it if they don't fit (#991)
-- Block: detect floats placed by the subtree of a preceding in-flow sibling, not just floats among direct siblings, when placing a box that establishes an independent formatting context (#1049)
-- Block: apply a negative margin as usual on a BFC root's float-free side, instead of clamping it to the containing block edge (#1061)
-- Block: compute clearance from the hypothetical position of the cleared element (including its collapsed top margin), supporting negative clearance (#1042)
-- Block: prevent the cleared element's top margin from collapsing with preceding margins and with the parent's top margin (#1043)
-- Block: force clearance for floats placed while the position of the enclosing margin-collapse strut is unresolved, and position such floats including the pending collapsible margins (#1046)
-- Block: collapse the top and bottom margins of a self-collapsing element with clearance with each other and apply them inside the parent, rather than collapsing them with the parent's bottom margin (#1044)
-- Block/float: treat `clear` as a no-op when no float has been placed on the relevant side(s) (#1041)
-- Block: allow elements containing only floated children to be collapsed through (#1040)
-- Block/float: record zero-width floats in the float context, so their edge acts as an obstacle for boxes establishing an independent formatting context (#1062)
-- Block/float: a float establishes a new block formatting context, so its margins no longer collapse with the margins of its children (#1065)
-- Block/float: honour CSS2 §9.5.1 rules 3 & 7 when placing floats: a float unconstrained by other floats may overflow its containing block, but one placed beside another float may not (#1064)
-- Block/float: apply CSS2 §9.5.1 rule 5 (float ceiling) and `clear` past zero-sized floats, which occupy no float segment and so were previously ignored when positioning later floats and cleared elements (#1056)
-- Block/float: sum float contributions when computing a float container's intrinsic width under definite available space (clamped between the widest single float and the available width), instead of dropping them entirely (#1055)
-- Block: a block container with a non-`normal` `align-content` establishes an independent formatting context (its margins do not collapse with its children's, it cannot be collapsed through, and it contains its own floats)
-- Block/float: `align-content` shifts a block container's floated children along with its in-flow content
+- Flexbox: correctly apply aspect-ratio-transferred min/max sizes (#989).
+- Flexbox: correct intrinsic contributions for items with container padding or borders (#1018).
+- Flexbox: correct baseline synthesis, propagation, clamping, and `wrap-reverse` alignment (#987, #995, #996).
+- Flexbox: correct static alignment and auto margins for absolutely positioned children (#1072).
+- Block/Flexbox/Grid: make scroll width and height independent of which edge has a border (#1007).
+- Grid: skip occupied intervals during auto-placement rather than advancing one track at a time (#1038).
+- Grid: correct absolutely positioned item line resolution and implicit grid sizing (#1071, #1075).
+- Grid: apply content alignment when all tracks are collapsed (#1078).
+- Grid: correct intrinsic track sizing, growth limits, and flexible-track distribution (#1001, #1019, #1022, #1023, #1033).
+- Block/Grid: calculate scrollable content size from the padding-box origin and include overflowing grid-item positions (#1051).
+- Block: don't stretch replaced elements with an automatic width (#1002).
+- Block: correctly place independent formatting contexts around floats, including nested floats and negative margins (#991, #1049, #1061).
+- Block: correct clearance, percentage margins, and margin collapsing around floats (#990, #1040, #1041, #1042, #1043, #1044, #1046).
+- Block/float: correct placement and margin behavior for zero-width, overflowing, and formatting-context-establishing floats (#988, #1056, #1062, #1064, #1065).
+- Block/float: use definite available widths when laying out floats (#994).
+- Block/float: include floats when calculating intrinsic width under definite available space (#1055).
 
 ## 0.12.2
 
