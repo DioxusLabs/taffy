@@ -3,7 +3,7 @@
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
 use std::hint::black_box;
 use taffy::prelude::*;
-use taffy::{Cache, LayoutInput, LayoutOutput, Line, RequestedAxis, RunMode, SizingMode};
+use taffy::{Cache, LayoutInput, LayoutOutput, Line, OptF32, RequestedAxis, RunMode, SizingMode};
 
 /// The layout modes that the containers of a benchmark tree cycle through, by depth
 #[derive(Clone, Copy)]
@@ -104,9 +104,9 @@ fn measure_input(width: f32) -> LayoutInput {
         run_mode: RunMode::ComputeSize,
         sizing_mode: SizingMode::InherentSize,
         axis: RequestedAxis::Both,
-        known_dimensions: Size { width: Some(width), height: None },
+        known_dimensions: Size { width: OptF32::some(width), height: OptF32::NONE },
         known_dimensions_are_definite: Size { width: true, height: true },
-        parent_size: Size { width: Some(1000.0), height: None },
+        parent_size: Size { width: OptF32::some(1000.0), height: OptF32::NONE },
         available_space: Size { width: AvailableSpace::MaxContent, height: AvailableSpace::MaxContent },
         vertical_margins_are_collapsible: Line::FALSE,
     }
