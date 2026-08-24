@@ -1397,6 +1397,23 @@ fn determine_container_main_size(
                             _ if item.is_scroll_container() => {
                                 item.flex_basis + item.margin.main_axis_sum(constants.dir)
                             }
+
+                            // If the item has a definite preferred main size then that is its content
+                            // contribution (an inherent-size measure of the item would return it), floored
+                            // by the item's main-axis padding+border, so measuring the item can be skipped.
+                            // Min/max clamping is applied in the same way as for measured contributions.
+                            (_, Some(pref), _) => {
+                                let item_pb_main = item.padding.main_axis_sum(constants.dir)
+                                    + item.border.main_axis_sum(constants.dir);
+                                let content_main_size =
+                                    pref.max(item_pb_main) + item.margin.main_axis_sum(constants.dir);
+                                if constants.is_row {
+                                    content_main_size.maybe_clamp(style_min, style_max)
+                                } else {
+                                    content_main_size.max(item.flex_basis).maybe_clamp(style_min, style_max)
+                                }
+                            }
+
                             _ => {
                                 // Parent size for child sizing
                                 let cross_axis_parent_size = constants.node_inner_size.cross(dir);
@@ -1431,7 +1448,7 @@ fn determine_container_main_size(
                                 // Either the min- or max- content size depending on which constraint we are sizing under.
                                 // TODO: Optimise by using already computed values where available
                                 debug_log!("COMPUTE CHILD BASE SIZE (for intrinsic main size):");
-                                let measured_main_size = tree.measure_child_size(
+                                let content_main_size = tree.measure_child_size(
                                     item.node,
                                     child_known_dimensions,
                                     constants.node_inner_size,
@@ -1439,16 +1456,7 @@ fn determine_container_main_size(
                                     SizingMode::ContentSize,
                                     dir.main_axis(),
                                     Line::FALSE,
-                                );
-                                // The item's own preferred main size (if definite) is used in place
-                                // of the measured content size (it would otherwise be applied by an
-                                // inherent-size measure of the item itself), floored by the item's
-                                // main-axis padding+border.
-                                let item_pb_main = item.padding.main_axis_sum(constants.dir)
-                                    + item.border.main_axis_sum(constants.dir);
-                                let content_main_size =
-                                    style_preferred.map(|pref| pref.max(item_pb_main)).unwrap_or(measured_main_size)
-                                        + item.margin.main_axis_sum(constants.dir);
+                                ) + item.margin.main_axis_sum(constants.dir);
 
                                 // This is somewhat bizarre in that it's asymmetrical depending whether the flex container is a column or a row.
                                 //
