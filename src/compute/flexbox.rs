@@ -1059,7 +1059,7 @@ fn determine_flex_base_size(
             // https://www.w3.org/TR/css-flexbox-1/#min-size-auto
             let clamped_min_content_size =
                 min_content_main_size.maybe_min(child.size.main(dir)).maybe_min(transferred_max_size.main(dir));
-            clamped_min_content_size.maybe_max(padding_border_axes_sums.main(dir).into())
+            clamped_min_content_size.maybe_max(padding_border_axes_sums.main(dir))
         });
 
         // Sizes transferred through the aspect ratio clamp the hypothetical main size,
@@ -1068,7 +1068,7 @@ fn determine_flex_base_size(
         let hypothetical_inner_min_main = child
             .resolved_minimum_main_size
             .maybe_max(transferred_min_size.main(constants.dir))
-            .maybe_max(padding_border_axes_sums.main(constants.dir).into());
+            .maybe_max(padding_border_axes_sums.main(constants.dir));
         let hypothetical_inner_size = child
             .flex_basis
             .maybe_clamp(OptFloat::some(hypothetical_inner_min_main), transferred_max_size.main(constants.dir));

@@ -1,7 +1,7 @@
 //! A typed representation of [CSS style properties](https://css-tricks.com/snippets/css/a-guide-to-flexbox/) in Rust. Used as input to layout computation.
 mod alignment;
 mod available_space;
-mod compact_length;
+pub(crate) mod compact_length;
 mod dimension;
 
 #[cfg(feature = "block_layout")]

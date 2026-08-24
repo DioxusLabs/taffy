@@ -1352,10 +1352,8 @@ fn perform_final_layout_on_in_flow_children(
             };
 
             // Resolve item inset
-            let inset_percentage_basis = Size {
-                width: OptFloat::some(container_inner_width),
-                height: container_percentage_resolution_height.into(),
-            };
+            let inset_percentage_basis =
+                Size { width: OptFloat::some(container_inner_width), height: container_percentage_resolution_height };
             let inset = item
                 .inset
                 .zip_size(inset_percentage_basis, |p, s| p.maybe_resolve(s, |val, basis| tree.calc(val, basis)));

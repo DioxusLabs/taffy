@@ -9,7 +9,7 @@ use crate::util::OptFloat;
 /// Note: these two functions are copied directly from the std (core) library. But by duplicating them
 /// here we can reduce MSRV from 1.84 all the way down to 1.65 while retaining const constructors and
 /// strict pointer provenance
-mod compat {
+pub(crate) mod compat {
     #![allow(unsafe_code)]
     #![allow(unknown_lints)]
     #![allow(unnecessary_transmutes)]

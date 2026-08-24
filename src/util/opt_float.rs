@@ -1,4 +1,5 @@
 //! A compact 4-byte replacement for `Option<f32>`
+use crate::style::compact_length::compat::{f32_from_bits, f32_to_bits};
 use core::fmt;
 
 /// A 4-byte equivalent of `Option<f32>` that uses a single sentinel NaN bit pattern
@@ -15,7 +16,7 @@ impl OptFloat {
     const NONE_BITS: u32 = 0x7FC0_F32A;
 
     /// The `None` value
-    pub const NONE: Self = Self(f32::from_bits(Self::NONE_BITS));
+    pub const NONE: Self = Self(f32_from_bits(Self::NONE_BITS));
 
     /// Creates a "some" value
     #[inline(always)]
@@ -26,7 +27,7 @@ impl OptFloat {
     /// Returns `true` if the value is `None`
     #[inline(always)]
     pub const fn is_none(self) -> bool {
-        self.0.to_bits() == Self::NONE_BITS
+        self.to_bits() == Self::NONE_BITS
     }
 
     /// Returns `true` if the value is not `None`
@@ -55,7 +56,7 @@ impl OptFloat {
     /// Returns the raw bit representation
     #[inline(always)]
     pub const fn to_bits(self) -> u32 {
-        self.0.to_bits()
+        f32_to_bits(self.0)
     }
 
     /// Returns the contained value, panicking if it is `None`
@@ -199,7 +200,7 @@ impl PartialEq for OptFloat {
     fn eq(&self, other: &Self) -> bool {
         // Values compare like f32, except that `NONE == NONE` (which the float
         // comparison alone would report as false as the sentinel is a NaN)
-        (self.0 == other.0) | (self.0.to_bits() == other.0.to_bits())
+        (self.0 == other.0) | (self.to_bits() == other.to_bits())
     }
 }
 
