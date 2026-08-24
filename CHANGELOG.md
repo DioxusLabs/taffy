@@ -1,6 +1,8 @@
 # Changelog
 
-## Unreleased
+## 0.14.0
+
+The MSRV for this release is 1.71.
 
 ### Added
 
@@ -53,6 +55,12 @@
 - Flexbox: the algorithm no longer measures children with `SizingMode::InherentSize`, instead applying the item's own style sizes on top of `SizingMode::ContentSize` measures. This prevents `ComputeSize` cache entries computed under `ContentSize` (which ignore the node's own size styles) from being served for inherent-size measures, which could ignore an item's specified size (#1149)
 
 - Flexbox: a flex item with an aspect ratio, a content flex basis, and a definite cross size derived from stretching now has its flex base size (and its intrinsic main-size contribution) calculated by transferring the stretched cross size through the aspect ratio, per case B of the flex base size determination algorithm. Previously the transferred size was ignored and such items were sized as if they had no aspect ratio
+
+- Block/float: intrinsic width calculation now accounts for `clear` when summing adjacent float widths. A float that clears one side is placed below floats on that side, so its width no longer accumulates with theirs (#1150)
+
+- Grid: items whose percentage block size depends on an intrinsic or flexible row no longer participate in baseline alignment, avoiding a cyclic dependency between the item's size and row sizing
+
+- Flexbox: reverse-direction column containers and `wrap-reverse` containers now generate their first baseline from the visually startmost item and line, respectively (#1127)
 
 - CSS parser (`parse` feature): `GridTemplateTracks::from_css` (used to parse `grid-template-rows`/`grid-template-columns` values) now emits one line-name group per grid line, pushing an empty group for lines with no `[...]` in the source. Previously groups were only emitted for lines that had names, which is ambiguous (name groups are positional) and caused line names in templates such as `repeat(auto-fill, [col] 40px)` to be silently dropped when the parsed value was applied to a style
 
