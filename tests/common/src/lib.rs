@@ -39,6 +39,12 @@ impl TestNodeContext {
         Self::new(TestMeasureData::AspectRatio(data))
     }
 
+    /// Create a `TestNodeContext` for an image with the given natural size
+    pub const fn image(width: f32, height: f32) -> Self {
+        let data = ImageMeasureData { natural_size: Size { width, height } };
+        Self::new(TestMeasureData::Image(data))
+    }
+
     /// Create a `TestNodeContext` for a node with text using the Ahem font
     pub const fn ahem_text(text_content: String, writing_mode: WritingMode) -> Self {
         let data = AhemTextMeasureData { text_content, writing_mode };
@@ -55,6 +61,8 @@ pub enum TestMeasureData {
     Fixed(Size<f32>),
     /// A node with a fixed size
     AspectRatio(AspectRatioMeasureData),
+    /// An image (replaced element) with a natural size and hence an intrinsic aspect ratio
+    Image(ImageMeasureData),
     /// A node with text using the Ahem font
     AhemText(AhemTextMeasureData),
 }
@@ -84,6 +92,7 @@ pub fn test_measure_function(
                 TestMeasureData::Zero => Size::ZERO,
                 TestMeasureData::Fixed(size) => *size,
                 TestMeasureData::AspectRatio(data) => data.measure(known_dimensions),
+                TestMeasureData::Image(data) => data.measure(known_dimensions),
                 TestMeasureData::AhemText(data) => data.measure(known_dimensions, available_space),
             };
 
@@ -106,6 +115,24 @@ impl AspectRatioMeasureData {
         let width = known_dimensions.width.unwrap_or(self.width);
         let height = known_dimensions.height.unwrap_or(width * self.height_ratio);
         Size { width, height }
+    }
+}
+
+/// Measure data for image nodes: sizes to the natural size, maintaining the intrinsic
+/// aspect ratio when exactly one dimension is known
+#[derive(Debug, Copy, Clone)]
+pub struct ImageMeasureData {
+    /// The natural size of the image
+    pub natural_size: Size<f32>,
+}
+impl ImageMeasureData {
+    fn measure(&self, known_dimensions: Size<Option<f32>>) -> Size<f32> {
+        let ratio = self.natural_size.width / self.natural_size.height;
+        match (known_dimensions.width, known_dimensions.height) {
+            (Some(width), _) => Size { width, height: width / ratio },
+            (None, Some(height)) => Size { width: height * ratio, height },
+            (None, None) => self.natural_size,
+        }
     }
 }
 

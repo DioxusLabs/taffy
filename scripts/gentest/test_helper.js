@@ -314,6 +314,10 @@ function describeElement(e) {
     // So we're only interested in the text content of leaf nodes
     textContent: e.childElementCount === 0 && e.textContent.length && e.textContent !== "\n" ? e.textContent : undefined,
 
+    // The natural size of replaced elements (images) is used for generating
+    // intrinsic sizing measure funcs with an intrinsic aspect ratio
+    imageData: e.tagName === "IMG" ? { width: e.naturalWidth, height: e.naturalHeight } : undefined,
+
     // The layout of the node in full precision (floating-point)
     unroundedLayout: {
       width: boundingRect.width,

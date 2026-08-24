@@ -243,13 +243,21 @@ fn construct_tree(
         let text_content = input.text().map(|text| text.trim());
         // let aspect_ratio = input.attribute("aspect-ratio");
         let writing_mode = parse_or_default(input.attribute("writing-mode"));
+        let is_image = input.has_tag_name("img");
 
-        let tnode = tree.new_leaf(build_style(input)).unwrap();
-        tree.set_node_context(
-            tnode,
-            text_content.map(|text_content| TestNodeContext::ahem_text(text_content.to_string(), writing_mode)),
-        )
-        .unwrap();
+        let mut style: taffy::Style = build_style(input);
+        style.item_is_replaced = is_image;
+
+        let context = if is_image {
+            let intrinsic_width = input.attribute("intrinsic-width").unwrap().parse().unwrap();
+            let intrinsic_height = input.attribute("intrinsic-height").unwrap().parse().unwrap();
+            Some(TestNodeContext::image(intrinsic_width, intrinsic_height))
+        } else {
+            text_content.map(|text_content| TestNodeContext::ahem_text(text_content.to_string(), writing_mode))
+        };
+
+        let tnode = tree.new_leaf(style).unwrap();
+        tree.set_node_context(tnode, context).unwrap();
 
         if let Some(parent) = parent {
             tree.add_child(parent, tnode).unwrap();
