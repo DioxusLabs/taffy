@@ -21733,6 +21733,54 @@ mod grid {
 
     #[cfg(feature = "grid")]
     #[test]
+    fn grid_aspect_ratio_container_height_from_width__border_box_ltr() {
+        crate::run_xml_test("grid", "grid_aspect_ratio_container_height_from_width__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_aspect_ratio_container_height_from_width__content_box_ltr() {
+        crate::run_xml_test("grid", "grid_aspect_ratio_container_height_from_width__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_aspect_ratio_container_height_from_width__border_box_rtl() {
+        crate::run_xml_test("grid", "grid_aspect_ratio_container_height_from_width__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_aspect_ratio_container_height_from_width__content_box_rtl() {
+        crate::run_xml_test("grid", "grid_aspect_ratio_container_height_from_width__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_aspect_ratio_container_height_from_width_auto_repeat__border_box_ltr() {
+        crate::run_xml_test("grid", "grid_aspect_ratio_container_height_from_width_auto_repeat__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_aspect_ratio_container_height_from_width_auto_repeat__content_box_ltr() {
+        crate::run_xml_test("grid", "grid_aspect_ratio_container_height_from_width_auto_repeat__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_aspect_ratio_container_height_from_width_auto_repeat__border_box_rtl() {
+        crate::run_xml_test("grid", "grid_aspect_ratio_container_height_from_width_auto_repeat__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_aspect_ratio_container_height_from_width_auto_repeat__content_box_rtl() {
+        crate::run_xml_test("grid", "grid_aspect_ratio_container_height_from_width_auto_repeat__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
     fn grid_aspect_ratio_fill_child_height__border_box_ltr() {
         crate::run_xml_test("grid", "grid_aspect_ratio_fill_child_height__border_box_ltr");
     }
