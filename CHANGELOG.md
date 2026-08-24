@@ -44,6 +44,8 @@
 
 ### Fixed
 
+- Grid: replaced grid items (`item_is_replaced: true`) now default to `start` self-alignment instead of `stretch` when neither the item's `align-self`/`justify-self` nor the container's `align-items`/`justify-items` is set, per [css-align-3](https://www.w3.org/TR/css-align-3/#valdef-justify-self-normal). This affects both final item sizing (a lone image in a larger grid area keeps its natural size rather than being stretched to fill it) and track sizing (an image's content contribution to an auto track is no longer stretch-sized to the opposite-axis track, which previously inflated auto tracks via the item's intrinsic aspect ratio)
+
 - Leaf: replaced elements (`item_is_replaced: true`) are now passed their resolved size styles as the `known_dimensions` input to their measure function (clamped by min/max size), so that a measure function implementing intrinsic aspect-ratio behaviour can compute the transferred size when only one dimension is specified (e.g. an image with a natural size of 100x50 and `width: 60px` now measures 60x30 rather than 60x50). Non-replaced leaves are unaffected
 
 - Cache: a node's size measured for one axis is no longer returned from the cache when the other axis is queried. The cache key now records which axis (or both) a measure result was computed for, and only serves entries valid for the requested axis. Previously e.g. a width-only measure of a block container (which computes no height) could later be served for a height query, returning a garbage height

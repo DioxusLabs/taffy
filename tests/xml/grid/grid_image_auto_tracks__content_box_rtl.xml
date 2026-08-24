@@ -1,0 +1,15 @@
+<test name="grid_image_auto_tracks__content_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" box-sizing="content-box" direction="rtl" grid-template-rows="auto" grid-template-columns="auto auto">
+      <img intrinsic-width="100" intrinsic-height="50" box-sizing="content-box" direction="rtl"/>
+      <img intrinsic-width="50" intrinsic-height="100" box-sizing="content-box" direction="rtl"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="150" height="100" resolved-rows="100px" resolved-columns="100px 50px">
+      <node x="50" y="0" width="100" height="50"/>
+      <node x="0" y="0" width="50" height="100"/>
+    </node>
+  </expectations>
+</test>
