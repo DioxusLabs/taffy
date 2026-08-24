@@ -29,6 +29,10 @@ The layout effects of `contain: layout`, `contain: paint`, and `contain: content
   hoisted absolutely positioned boxes relative to a grid containing block.
 - Added `grid_template_rows` and `grid_template_columns` methods which serialize those properties into a string according to the CSS standard.
 
+### Caching changes
+
+Caching logic is now more correct (#1010, #1155)
+
 ### Changed
 
 - Tagged-pointer style types now have `expand()` methods that expose their values as plain enums (#1129).
@@ -37,7 +41,6 @@ The layout effects of `contain: layout`, `contain: paint`, and `contain: content
 - `Style::min_size` and `max_size` now use `LengthPercentageAuto` rather than `Dimension` (#1099).
 - `compute_layout_with_measure` now passes a `LayoutInput` and returns `LayoutOutput`; call `compute_leaf_layout` explicitly to preserve the old leaf-measurement behaviour (#1091).
 - Block and Flexbox no longer measure absolutely positioned children whose dimensions are already known (#1120).
-
 - `CacheTree::cache_get` and `Cache::get` now take `&mut self`, and the measure cache uses second-chance (clock) eviction (#1010).
 
 ### Fixed
