@@ -5,7 +5,7 @@ Why did you make this PR?
 If you're fixing a specific issue, say "Fixes #X" and the linked issue will be automatically closed when this PR is merged.
 If it's not obvious, describe how this changes made addressed the objectives.
 
-**Changes that will affect external library users must update RELEASES.md before they will be merged.**
+**Changes that will affect external library users must update CHANGELOG.md before they will be merged.**
 
 ## Context
 

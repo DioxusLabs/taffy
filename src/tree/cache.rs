@@ -4,7 +4,7 @@
 
 use crate::geometry::Size;
 use crate::style::AvailableSpace;
-use crate::tree::{LayoutInput, LayoutOutput, RunMode};
+use crate::tree::{CollapsibleMarginSet, LayoutInput, LayoutOutput, RunMode};
 use crate::RequestedAxis;
 
 /// The number of cache entries for each node in the tree
@@ -107,6 +107,19 @@ impl CacheKey {
     fn x_axis_parent_size(&self) -> u64 {
         self.parent_size & (X_AXIS_VALUE_MASK & NON_SIGN_BITS_MASK)
     }
+
+    /// Return the bits that encode the requested axis
+    fn requested_axis_bits(&self) -> u64 {
+        self.parent_size & BOTH_SIGN_BITS_MASK
+    }
+
+    /// Whether a cached entry with this key contains a valid size for the axis requested by `other`.
+    /// Sizes computed for a single axis may contain garbage values in the other axis, so an entry
+    /// is only usable if it was computed for the same axis (or for both axes).
+    fn size_is_valid_for(&self, other: &CacheKey) -> bool {
+        let entry_axis = self.requested_axis_bits();
+        entry_axis == BOTH_SIGN_BITS_MASK || entry_axis == other.requested_axis_bits()
+    }
 }
 
 impl From<&LayoutInput> for CacheKey {
@@ -146,6 +159,10 @@ pub struct Cache {
     final_layout_entry: Option<CacheEntry<LayoutOutput>>,
     /// The cache entries for the node's preliminary size measurements
     measure_entries: [Option<CacheEntry<Size<f32>>>; CACHE_SIZE],
+    /// Tracks which measure entries have been used since the eviction cursor last passed them
+    recently_used_entries: u16,
+    /// The next measure entry to consider replacing
+    next_measure_entry: u8,
     /// Tracks if all cache entries are empty
     is_empty: bool,
 }
@@ -159,85 +176,30 @@ impl Default for Cache {
 impl Cache {
     /// Create a new empty cache
     pub const fn new() -> Self {
-        Self { final_layout_entry: None, measure_entries: [None; CACHE_SIZE], is_empty: true }
-    }
-
-    /// Return the cache slot to cache the current computed result in
-    ///
-    /// ## Caching Strategy
-    ///
-    /// We need multiple cache slots, because a node's size is often queried by it's parent multiple times in the course of the layout
-    /// process, and we don't want later results to clobber earlier ones.
-    ///
-    /// The two variables that we care about when determining cache slot are:
-    ///
-    ///   - How many "known_dimensions" are set. In the worst case, a node may be called first with neither dimension known, then with one
-    ///     dimension known (either width of height - which doesn't matter for our purposes here), and then with both dimensions known.
-    ///   - Whether unknown dimensions are being sized under a min-content or a max-content available space constraint (definite available space
-    ///     shares a cache slot with max-content because a node will generally be sized under one or the other but not both).
-    ///
-    /// ## Cache slots:
-    ///
-    /// - Slot 0: Both known_dimensions were set
-    /// - Slots 1-4: 1 of 2 known_dimensions were set and:
-    ///   - Slot 1: width but not height known_dimension was set and the other dimension was either a MaxContent or Definite available space constraintraint
-    ///   - Slot 2: width but not height known_dimension was set and the other dimension was a MinContent constraint
-    ///   - Slot 3: height but not width known_dimension was set and the other dimension was either a MaxContent or Definite available space constraintable space constraint
-    ///   - Slot 4: height but not width known_dimension was set and the other dimension was a MinContent constraint
-    /// - Slots 5-8: Neither known_dimensions were set and:
-    ///   - Slot 5: x-axis available space is MaxContent or Definite and y-axis available space is MaxContent or Definite
-    ///   - Slot 6: x-axis available space is MaxContent or Definite and y-axis available space is MinContent
-    ///   - Slot 7: x-axis available space is MinContent and y-axis available space is MaxContent or Definite
-    ///   - Slot 8: x-axis available space is MinContent and y-axis available space is MinContent
-    #[inline]
-    fn compute_cache_slot(known_dimensions: Size<Option<f32>>, available_space: Size<AvailableSpace>) -> usize {
-        use AvailableSpace::{Definite, MaxContent, MinContent};
-
-        let has_known_width = known_dimensions.width.is_some();
-        let has_known_height = known_dimensions.height.is_some();
-
-        // Slot 0: Both known_dimensions were set
-        if has_known_width && has_known_height {
-            return 0;
-        }
-
-        // Slot 1: width but not height known_dimension was set and the other dimension was either a MaxContent or Definite available space constraint
-        // Slot 2: width but not height known_dimension was set and the other dimension was a MinContent constraint
-        if has_known_width && !has_known_height {
-            return 1 + (available_space.height == MinContent) as usize;
-        }
-
-        // Slot 3: height but not width known_dimension was set and the other dimension was either a MaxContent or Definite available space constraint
-        // Slot 4: height but not width known_dimension was set and the other dimension was a MinContent constraint
-        if has_known_height && !has_known_width {
-            return 3 + (available_space.width == MinContent) as usize;
-        }
-
-        // Slots 5-8: Neither known_dimensions were set and:
-        match (available_space.width, available_space.height) {
-            // Slot 5: x-axis available space is MaxContent or Definite and y-axis available space is MaxContent or Definite
-            (MaxContent | Definite(_), MaxContent | Definite(_)) => 5,
-            // Slot 6: x-axis available space is MaxContent or Definite and y-axis available space is MinContent
-            (MaxContent | Definite(_), MinContent) => 6,
-            // Slot 7: x-axis available space is MinContent and y-axis available space is MaxContent or Definite
-            (MinContent, MaxContent | Definite(_)) => 7,
-            // Slot 8: x-axis available space is MinContent and y-axis available space is MinContent
-            (MinContent, MinContent) => 8,
+        Self {
+            final_layout_entry: None,
+            measure_entries: [None; CACHE_SIZE],
+            recently_used_entries: 0,
+            next_measure_entry: 0,
+            is_empty: true,
         }
     }
 
     /// Try to retrieve a cached result from the cache
     #[inline]
-    pub fn get(&self, input: &LayoutInput) -> Option<LayoutOutput> {
+    pub fn get(&mut self, input: &LayoutInput) -> Option<LayoutOutput> {
         let key = CacheKey::from(input);
         match input.run_mode {
             RunMode::PerformLayout => self.final_layout_entry.filter(|entry| entry.key == key).map(|e| e.content),
             RunMode::ComputeSize => {
-                for entry in self.measure_entries.iter().flatten() {
+                for (index, entry) in self.measure_entries.iter().enumerate() {
+                    let Some(entry) = entry else { continue };
                     if entry.key.kd_available_space == key.kd_available_space
                         && entry.key.known_dimensions_are_definite == key.known_dimensions_are_definite
                         && (entry.key.x_axis_parent_size() == key.x_axis_parent_size())
+                        && entry.key.size_is_valid_for(&key)
                     {
+                        self.recently_used_entries |= 1 << index;
                         return Some(LayoutOutput::from_outer_size(entry.content));
                     }
                 }
@@ -257,9 +219,38 @@ impl Cache {
                 self.final_layout_entry = Some(CacheEntry { key, content: layout_output })
             }
             RunMode::ComputeSize => {
+                // Measure entries only store the size, and cache hits are reconstructed with
+                // `LayoutOutput::from_outer_size`, which resets the margin-collapse metadata
+                // (`top_margin`, `bottom_margin`, `margins_can_collapse_through`). Results that
+                // carry such metadata cannot be reconstructed from their size, so don't cache them.
+                if layout_output.margins_can_collapse_through
+                    || layout_output.top_margin != CollapsibleMarginSet::ZERO
+                    || layout_output.bottom_margin != CollapsibleMarginSet::ZERO
+                {
+                    return;
+                }
                 self.is_empty = false;
-                let cache_slot = Self::compute_cache_slot(input.known_dimensions, input.available_space);
-                self.measure_entries[cache_slot] = Some(CacheEntry { key, content: layout_output.size });
+                if let Some(index) =
+                    self.measure_entries.iter().position(|entry| entry.is_some_and(|entry| entry.key == key))
+                {
+                    self.measure_entries[index].as_mut().unwrap().content = layout_output.size;
+                    self.recently_used_entries |= 1 << index;
+                    return;
+                }
+                while self.recently_used_entries & (1 << self.next_measure_entry) != 0 {
+                    self.recently_used_entries &= !(1 << self.next_measure_entry);
+                    self.next_measure_entry += 1;
+                    if self.next_measure_entry == CACHE_SIZE as u8 {
+                        self.next_measure_entry = 0;
+                    }
+                }
+                let entry_index = self.next_measure_entry as usize;
+                self.measure_entries[entry_index] = Some(CacheEntry { key, content: layout_output.size });
+                self.recently_used_entries |= 1 << entry_index;
+                self.next_measure_entry += 1;
+                if self.next_measure_entry == CACHE_SIZE as u8 {
+                    self.next_measure_entry = 0;
+                }
             }
             RunMode::PerformHiddenLayout => {}
         }
@@ -273,6 +264,8 @@ impl Cache {
         self.is_empty = true;
         self.final_layout_entry = None;
         self.measure_entries = [None; CACHE_SIZE];
+        self.recently_used_entries = 0;
+        self.next_measure_entry = 0;
         ClearState::Cleared
     }
 
@@ -288,4 +281,82 @@ pub enum ClearState {
     Cleared,
     /// Everything was already cleared
     AlreadyEmpty,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::geometry::Line;
+    use crate::tree::SizingMode;
+
+    fn input(width: f32) -> LayoutInput {
+        LayoutInput {
+            run_mode: RunMode::ComputeSize,
+            sizing_mode: SizingMode::InherentSize,
+            axis: RequestedAxis::Both,
+            known_dimensions: Size { width: Some(width), height: None },
+            known_dimensions_are_definite: Size { width: true, height: true },
+            parent_size: Size::NONE,
+            available_space: Size { width: AvailableSpace::MaxContent, height: AvailableSpace::MaxContent },
+            vertical_margins_are_collapsible: Line::FALSE,
+        }
+    }
+
+    fn output(width: f32) -> LayoutOutput {
+        LayoutOutput::from_outer_size(Size { width, height: width })
+    }
+
+    #[test]
+    fn recently_used_measure_entries_get_a_second_chance() {
+        let mut cache = Cache::new();
+        for width in 0..CACHE_SIZE {
+            cache.store(&input(width as f32), output(width as f32));
+        }
+        cache.store(&input(CACHE_SIZE as f32), output(CACHE_SIZE as f32));
+
+        assert_eq!(cache.get(&input(1.0)), Some(output(1.0)));
+        cache.store(&input((CACHE_SIZE + 1) as f32), output((CACHE_SIZE + 1) as f32));
+
+        assert_eq!(cache.get(&input(1.0)), Some(output(1.0)));
+        assert_eq!(cache.get(&input(2.0)), None);
+    }
+
+    #[test]
+    fn storing_an_existing_measurement_updates_it_in_place() {
+        let mut cache = Cache::new();
+        cache.store(&input(1.0), output(1.0));
+        cache.store(&input(2.0), output(2.0));
+        cache.store(&input(1.0), output(3.0));
+
+        assert_eq!(cache.measure_entries.iter().flatten().count(), 2);
+        assert_eq!(cache.get(&input(1.0)), Some(output(3.0)));
+    }
+
+    #[test]
+    fn measurements_with_margin_collapse_metadata_are_not_cached() {
+        let mut cache = Cache::new();
+
+        let mut collapse_through = output(1.0);
+        collapse_through.margins_can_collapse_through = true;
+        cache.store(&input(1.0), collapse_through);
+        assert_eq!(cache.get(&input(1.0)), None);
+
+        let mut carried_margin = output(2.0);
+        carried_margin.top_margin = CollapsibleMarginSet::from_margin(10.0);
+        cache.store(&input(2.0), carried_margin);
+        assert_eq!(cache.get(&input(2.0)), None);
+    }
+
+    #[test]
+    fn retrieving_a_measurement_only_marks_its_slot_as_used() {
+        let mut cache = Cache::new();
+        cache.store(&input(1.0), output(1.0));
+        cache.store(&input(2.0), output(2.0));
+        cache.recently_used_entries = 0;
+        let entries = cache.measure_entries;
+
+        assert_eq!(cache.get(&input(1.0)), Some(output(1.0)));
+        assert_eq!(cache.measure_entries, entries);
+        assert_ne!(cache.recently_used_entries, 0);
+    }
 }

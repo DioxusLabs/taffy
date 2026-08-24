@@ -193,8 +193,8 @@ impl taffy::LayoutPartialTree for Tree {
 }
 
 impl CacheTree for Tree {
-    fn cache_get(&self, node_id: NodeId, inputs: &taffy::LayoutInput) -> Option<taffy::LayoutOutput> {
-        self.node_from_id(node_id).cache.get(inputs)
+    fn cache_get(&mut self, node_id: NodeId, inputs: &taffy::LayoutInput) -> Option<taffy::LayoutOutput> {
+        self.node_from_id_mut(node_id).cache.get(inputs)
     }
 
     fn cache_store(&mut self, node_id: NodeId, inputs: &taffy::LayoutInput, layout_output: taffy::LayoutOutput) {

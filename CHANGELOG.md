@@ -40,7 +40,13 @@
 
 - Flexbox/Block: absolutely positioned children are no longer measured when both of their dimensions are already known (e.g. from explicit sizes or insets), matching the existing grid behaviour
 
+- `CacheTree::cache_get` (and `Cache::get`) now take `&mut self`. The measure cache now uses second-chance (clock) eviction across its entries instead of a fixed slot-assignment scheme, which requires recently-used bookkeeping on reads. Implementors of `CacheTree` must update their `cache_get` implementations to take `&mut self`
+
 ### Fixed
+
+- Cache: a node's size measured for one axis is no longer returned from the cache when the other axis is queried. The cache key now records which axis (or both) a measure result was computed for, and only serves entries valid for the requested axis. Previously e.g. a width-only measure of a block container (which computes no height) could later be served for a height query, returning a garbage height
+
+- Cache: measure results whose `LayoutOutput` carries margin-collapse metadata (`margins_can_collapse_through`, or non-zero `top_margin`/`bottom_margin`) are no longer cached, as measure cache entries only store the size and cache hits would return that metadata zeroed, breaking margin collapsing in block layout
 
 - Flexbox: intrinsic main sizing now applies negative main-axis margins as lengths for non-shrinking items, and zero-basis items no longer collapse the intrinsic container size (#1151)
 
