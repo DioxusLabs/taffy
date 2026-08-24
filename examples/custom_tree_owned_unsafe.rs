@@ -185,8 +185,8 @@ impl LayoutPartialTree for StatelessLayoutTree {
 }
 
 impl CacheTree for StatelessLayoutTree {
-    fn cache_get(&self, node_id: NodeId, inputs: &taffy::LayoutInput) -> Option<taffy::LayoutOutput> {
-        unsafe { node_from_id(node_id) }.cache.get(inputs)
+    fn cache_get(&mut self, node_id: NodeId, inputs: &taffy::LayoutInput) -> Option<taffy::LayoutOutput> {
+        unsafe { node_from_id_mut(node_id) }.cache.get(inputs)
     }
 
     fn cache_store(&mut self, node_id: NodeId, inputs: &taffy::LayoutInput, layout_output: taffy::LayoutOutput) {

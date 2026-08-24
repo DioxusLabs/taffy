@@ -159,6 +159,8 @@ pub struct Cache {
     final_layout_entry: Option<CacheEntry<LayoutOutput>>,
     /// The cache entries for the node's preliminary size measurements
     measure_entries: [Option<CacheEntry<Size<f32>>>; CACHE_SIZE],
+    /// The indices of the measure entries, ordered from most to least recently used
+    measure_entry_order: [u8; CACHE_SIZE],
     /// Tracks if all cache entries are empty
     is_empty: bool,
 }
@@ -172,91 +174,33 @@ impl Default for Cache {
 impl Cache {
     /// Create a new empty cache
     pub const fn new() -> Self {
-        Self { final_layout_entry: None, measure_entries: [None; CACHE_SIZE], is_empty: true }
-    }
-
-    /// Return the cache slot to cache the current computed result in
-    ///
-    /// ## Caching Strategy
-    ///
-    /// We need multiple cache slots, because a node's size is often queried by it's parent multiple times in the course of the layout
-    /// process, and we don't want later results to clobber earlier ones.
-    ///
-    /// The two variables that we care about when determining cache slot are:
-    ///
-    ///   - How many "known_dimensions" are set. In the worst case, a node may be called first with neither dimension known, then with one
-    ///     dimension known (either width of height - which doesn't matter for our purposes here), and then with both dimensions known.
-    ///   - Whether unknown dimensions are being sized under a min-content or a max-content available space constraint (definite available space
-    ///     shares a cache slot with max-content because a node will generally be sized under one or the other but not both).
-    ///
-    /// ## Cache slots:
-    ///
-    /// - Slot 0: Both known_dimensions were set
-    /// - Slots 1-4: 1 of 2 known_dimensions were set and:
-    ///   - Slot 1: width but not height known_dimension was set and the other dimension was either a MaxContent or Definite available space constraintraint
-    ///   - Slot 2: width but not height known_dimension was set and the other dimension was a MinContent constraint
-    ///   - Slot 3: height but not width known_dimension was set and the other dimension was either a MaxContent or Definite available space constraintable space constraint
-    ///   - Slot 4: height but not width known_dimension was set and the other dimension was a MinContent constraint
-    /// - Slots 5-8: Neither known_dimensions were set and:
-    ///   - Slot 5: x-axis available space is MaxContent or Definite and y-axis available space is MaxContent or Definite
-    ///   - Slot 6: x-axis available space is MaxContent or Definite and y-axis available space is MinContent
-    ///   - Slot 7: x-axis available space is MinContent and y-axis available space is MaxContent or Definite
-    ///   - Slot 8: x-axis available space is MinContent and y-axis available space is MinContent
-    #[inline]
-    fn compute_cache_slot(known_dimensions: Size<Option<f32>>, available_space: Size<AvailableSpace>) -> usize {
-        use AvailableSpace::{Definite, MaxContent, MinContent};
-
-        let has_known_width = known_dimensions.width.is_some();
-        let has_known_height = known_dimensions.height.is_some();
-
-        // Slot 0: Both known_dimensions were set
-        if has_known_width && has_known_height {
-            return 0;
-        }
-
-        // Slot 1: width but not height known_dimension was set and the other dimension was either a MaxContent or Definite available space constraint
-        // Slot 2: width but not height known_dimension was set and the other dimension was a MinContent constraint
-        if has_known_width && !has_known_height {
-            return 1 + (available_space.height == MinContent) as usize;
-        }
-
-        // Slot 3: height but not width known_dimension was set and the other dimension was either a MaxContent or Definite available space constraint
-        // Slot 4: height but not width known_dimension was set and the other dimension was a MinContent constraint
-        if has_known_height && !has_known_width {
-            return 3 + (available_space.width == MinContent) as usize;
-        }
-
-        // Slots 5-8: Neither known_dimensions were set and:
-        match (available_space.width, available_space.height) {
-            // Slot 5: x-axis available space is MaxContent or Definite and y-axis available space is MaxContent or Definite
-            (MaxContent | Definite(_), MaxContent | Definite(_)) => 5,
-            // Slot 6: x-axis available space is MaxContent or Definite and y-axis available space is MinContent
-            (MaxContent | Definite(_), MinContent) => 6,
-            // Slot 7: x-axis available space is MinContent and y-axis available space is MaxContent or Definite
-            (MinContent, MaxContent | Definite(_)) => 7,
-            // Slot 8: x-axis available space is MinContent and y-axis available space is MinContent
-            (MinContent, MinContent) => 8,
+        Self {
+            final_layout_entry: None,
+            measure_entries: [None; CACHE_SIZE],
+            measure_entry_order: [0, 1, 2, 3, 4, 5, 6, 7, 8],
+            is_empty: true,
         }
     }
 
     /// Try to retrieve a cached result from the cache
     #[inline]
-    pub fn get(&self, input: &LayoutInput) -> Option<LayoutOutput> {
+    pub fn get(&mut self, input: &LayoutInput) -> Option<LayoutOutput> {
         let key = CacheKey::from(input);
         match input.run_mode {
             RunMode::PerformLayout => self.final_layout_entry.filter(|entry| entry.key == key).map(|e| e.content),
             RunMode::ComputeSize => {
-                for entry in self.measure_entries.iter().flatten() {
-                    if entry.key.kd_available_space == key.kd_available_space
-                        && entry.key.known_dimensions_are_definite == key.known_dimensions_are_definite
-                        && (entry.key.x_axis_parent_size() == key.x_axis_parent_size())
-                        && entry.key.size_is_valid_for(&key)
-                    {
-                        return Some(LayoutOutput::from_outer_size(entry.content));
-                    }
-                }
-
-                None
+                let order_index = self.measure_entry_order.iter().position(|&entry_index| {
+                    self.measure_entries[entry_index as usize].is_some_and(|entry| {
+                        entry.key.kd_available_space == key.kd_available_space
+                            && entry.key.known_dimensions_are_definite == key.known_dimensions_are_definite
+                            && (entry.key.x_axis_parent_size() == key.x_axis_parent_size())
+                            && entry.key.size_is_valid_for(&key)
+                    })
+                })?;
+                let entry_index = self.measure_entry_order[order_index] as usize;
+                let content = self.measure_entries[entry_index].unwrap().content;
+                self.measure_entry_order[..=order_index].rotate_right(1);
+                Some(LayoutOutput::from_outer_size(content))
             }
             RunMode::PerformHiddenLayout => None,
         }
@@ -272,8 +216,16 @@ impl Cache {
             }
             RunMode::ComputeSize => {
                 self.is_empty = false;
-                let cache_slot = Self::compute_cache_slot(input.known_dimensions, input.available_space);
-                self.measure_entries[cache_slot] = Some(CacheEntry { key, content: layout_output.size });
+                let order_index = self
+                    .measure_entry_order
+                    .iter()
+                    .position(|&entry_index| {
+                        self.measure_entries[entry_index as usize].is_some_and(|entry| entry.key == key)
+                    })
+                    .unwrap_or(CACHE_SIZE - 1);
+                let entry_index = self.measure_entry_order[order_index] as usize;
+                self.measure_entry_order[..=order_index].rotate_right(1);
+                self.measure_entries[entry_index] = Some(CacheEntry { key, content: layout_output.size });
             }
             RunMode::PerformHiddenLayout => {}
         }
@@ -287,6 +239,7 @@ impl Cache {
         self.is_empty = true;
         self.final_layout_entry = None;
         self.measure_entries = [None; CACHE_SIZE];
+        self.measure_entry_order = [0, 1, 2, 3, 4, 5, 6, 7, 8];
         ClearState::Cleared
     }
 
@@ -302,4 +255,66 @@ pub enum ClearState {
     Cleared,
     /// Everything was already cleared
     AlreadyEmpty,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::geometry::Line;
+    use crate::tree::SizingMode;
+
+    fn input(width: f32) -> LayoutInput {
+        LayoutInput {
+            run_mode: RunMode::ComputeSize,
+            sizing_mode: SizingMode::InherentSize,
+            axis: RequestedAxis::Both,
+            known_dimensions: Size { width: Some(width), height: None },
+            known_dimensions_are_definite: Size { width: true, height: true },
+            parent_size: Size::NONE,
+            available_space: Size { width: AvailableSpace::MaxContent, height: AvailableSpace::MaxContent },
+            vertical_margins_are_collapsible: Line::FALSE,
+        }
+    }
+
+    fn output(width: f32) -> LayoutOutput {
+        LayoutOutput::from_outer_size(Size { width, height: width })
+    }
+
+    #[test]
+    fn measure_entries_are_evicted_in_least_recently_used_order() {
+        let mut cache = Cache::new();
+        for width in 0..CACHE_SIZE {
+            cache.store(&input(width as f32), output(width as f32));
+        }
+
+        assert_eq!(cache.get(&input(0.0)), Some(output(0.0)));
+        cache.store(&input(CACHE_SIZE as f32), output(CACHE_SIZE as f32));
+
+        assert_eq!(cache.get(&input(1.0)), None);
+        assert_eq!(cache.get(&input(0.0)), Some(output(0.0)));
+    }
+
+    #[test]
+    fn storing_an_existing_measurement_updates_and_promotes_it() {
+        let mut cache = Cache::new();
+        cache.store(&input(1.0), output(1.0));
+        cache.store(&input(2.0), output(2.0));
+        cache.store(&input(1.0), output(3.0));
+
+        assert_eq!(cache.measure_entries.iter().flatten().count(), 2);
+        assert_eq!(cache.get(&input(1.0)), Some(output(3.0)));
+    }
+
+    #[test]
+    fn retrieving_a_measurement_only_reorders_slot_indices() {
+        let mut cache = Cache::new();
+        cache.store(&input(1.0), output(1.0));
+        cache.store(&input(2.0), output(2.0));
+        let entries = cache.measure_entries;
+        let order = cache.measure_entry_order;
+
+        assert_eq!(cache.get(&input(1.0)), Some(output(1.0)));
+        assert_eq!(cache.measure_entries, entries);
+        assert_ne!(cache.measure_entry_order, order);
+    }
 }
