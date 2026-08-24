@@ -1,0 +1,9 @@
+<test name="leaf_image_fixed_height__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <img intrinsic-width="50" intrinsic-height="100" direction="rtl" height="60px"/>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="30" height="60"/>
+  </expectations>
+</test>
