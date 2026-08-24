@@ -18260,6 +18260,26 @@ mod flex {
     }
 
     #[test]
+    fn taffy_issue_1151_negative_margin__border_box_ltr() {
+        crate::run_xml_test("flex", "taffy_issue_1151_negative_margin__border_box_ltr");
+    }
+
+    #[test]
+    fn taffy_issue_1151_negative_margin__content_box_ltr() {
+        crate::run_xml_test("flex", "taffy_issue_1151_negative_margin__content_box_ltr");
+    }
+
+    #[test]
+    fn taffy_issue_1151_negative_margin__border_box_rtl() {
+        crate::run_xml_test("flex", "taffy_issue_1151_negative_margin__border_box_rtl");
+    }
+
+    #[test]
+    fn taffy_issue_1151_negative_margin__content_box_rtl() {
+        crate::run_xml_test("flex", "taffy_issue_1151_negative_margin__content_box_rtl");
+    }
+
+    #[test]
     fn taffy_issue_696__border_box_ltr() {
         crate::run_xml_test("flex", "taffy_issue_696__border_box_ltr");
     }

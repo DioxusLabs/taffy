@@ -42,6 +42,8 @@
 
 ### Fixed
 
+- Flexbox: intrinsic main sizing now applies negative main-axis margins as lengths for non-shrinking items, and zero-basis items no longer collapse the intrinsic container size (#1151)
+
 - CSS parser (`parse` feature): `GridTemplateTracks::from_css` (used to parse `grid-template-rows`/`grid-template-columns` values) now emits one line-name group per grid line, pushing an empty group for lines with no `[...]` in the source. Previously groups were only emitted for lines that had names, which is ambiguous (name groups are positional) and caused line names in templates such as `repeat(auto-fill, [col] 40px)` to be silently dropped when the parsed value was applied to a style
 
 - Block/float: the height of overflowing in-flow content of a nested block no longer contributes to the height of the block formatting context root as if it were floated content. Previously an auto-height BFC root containing a block whose in-flow content overflowed it (e.g. a fixed-height block with taller content) was incorrectly extended to contain that overflowing content
