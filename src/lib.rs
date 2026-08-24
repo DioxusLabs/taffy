@@ -38,7 +38,7 @@
 //!   - [flexbox_gap](https://github.com/DioxusLabs/taffy/blob/main/examples/flexbox_gap.rs)
 //!   - [grid_holy_grail](https://github.com/DioxusLabs/taffy/blob/main/examples/grid_holy_grail.rs)
 //!   - [measure](https://github.com/DioxusLabs/taffy/blob/main/examples/measure.rs)
-//!   - [cosmic_text](https://github.com/DioxusLabs/taffy/blob/main/examples/cosmic_text.rs)
+//!   - [parley](https://github.com/DioxusLabs/taffy/blob/main/examples/parley/src/main.rs)
 //!
 //! In particular, the "measure" example shows how to integrate Taffy layout with other layout modalities such as text or image layout when using the high level API.
 //!

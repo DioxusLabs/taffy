@@ -120,6 +120,6 @@ members = [
     "scripts/import-yoga-tests",
     "tests/common",
 ]
-# The cosmic_text example and benches are excluded from the workspace as including them breaks compilation
-# of all crates in the workspace with our MSRV compiler
-exclude = ["examples/cosmic_text", "benches"]
+# The Parley example and benches are excluded from the workspace as their dependencies require a newer
+# Rust version than Taffy's MSRV
+exclude = ["examples/parley", "benches"]
