@@ -160,16 +160,23 @@ pub(super) fn align_and_position_item(
     // Note: if the child has a preferred aspect ratio but neither width or height are set, then the width is stretched
     // and the then height is calculated from the width according the aspect ratio
     // See: https://www.w3.org/TR/css-grid-1/#grid-item-sizing
+    // Replaced items default to start alignment rather than stretch
+    // See: https://www.w3.org/TR/css-align-3/#valdef-justify-self-normal
+    let is_replaced = style.is_compressible_replaced();
     let alignment_styles = InBothAbsAxis {
         horizontal: justify_self.or(container_alignment_styles.horizontal).unwrap_or_else(|| {
-            if inherent_size.width.is_some() || size_style.width.is_sizing_keyword() {
+            if inherent_size.width.is_some() || size_style.width.is_sizing_keyword() || is_replaced {
                 AlignSelf::START
             } else {
                 AlignSelf::STRETCH
             }
         }),
         vertical: align_self.or(container_alignment_styles.vertical).unwrap_or_else(|| {
-            if inherent_size.height.is_some() || size_style.height.is_sizing_keyword() || aspect_ratio.is_some() {
+            if inherent_size.height.is_some()
+                || size_style.height.is_sizing_keyword()
+                || aspect_ratio.is_some()
+                || is_replaced
+            {
                 AlignSelf::START
             } else {
                 AlignSelf::STRETCH

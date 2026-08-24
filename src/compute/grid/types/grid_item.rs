@@ -99,10 +99,14 @@ impl GridItem {
         col_span: Line<OriginZeroLine>,
         row_span: Line<OriginZeroLine>,
         style: S,
-        parent_align_items: AlignItems,
-        parent_justify_items: AlignItems,
+        parent_align_items: Option<AlignItems>,
+        parent_justify_items: Option<AlignItems>,
         source_order: u16,
     ) -> Self {
+        // If alignment is not specified on either the item or the container then the default
+        // ("normal") alignment behaves as stretch for non-replaced items but as start for
+        // replaced items <https://www.w3.org/TR/css-align-3/#valdef-justify-self-normal>
+        let default_alignment = if style.is_compressible_replaced() { AlignSelf::START } else { AlignSelf::STRETCH };
         GridItem {
             node,
             source_order,
@@ -118,8 +122,8 @@ impl GridItem {
             padding: style.padding(),
             border: style.border(),
             margin: style.margin(),
-            align_self: style.align_self().unwrap_or(parent_align_items),
-            justify_self: style.justify_self().unwrap_or(parent_justify_items),
+            align_self: style.align_self().or(parent_align_items).unwrap_or(default_alignment),
+            justify_self: style.justify_self().or(parent_justify_items).unwrap_or(default_alignment),
             baseline: None,
             baseline_shim: 0.0,
             row_indexes: Line { start: 0, end: 0 }, // Properly initialised later
