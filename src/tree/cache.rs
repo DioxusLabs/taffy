@@ -159,8 +159,10 @@ pub struct Cache {
     final_layout_entry: Option<CacheEntry<LayoutOutput>>,
     /// The cache entries for the node's preliminary size measurements
     measure_entries: [Option<CacheEntry<Size<f32>>>; CACHE_SIZE],
-    /// The indices of the measure entries, ordered from most to least recently used
-    measure_entry_order: [u8; CACHE_SIZE],
+    /// Tracks which measure entries have been used since the eviction cursor last passed them
+    recently_used_entries: u16,
+    /// The next measure entry to consider replacing
+    next_measure_entry: u8,
     /// Tracks if all cache entries are empty
     is_empty: bool,
 }
@@ -177,7 +179,8 @@ impl Cache {
         Self {
             final_layout_entry: None,
             measure_entries: [None; CACHE_SIZE],
-            measure_entry_order: [0, 1, 2, 3, 4, 5, 6, 7, 8],
+            recently_used_entries: 0,
+            next_measure_entry: 0,
             is_empty: true,
         }
     }
@@ -189,18 +192,19 @@ impl Cache {
         match input.run_mode {
             RunMode::PerformLayout => self.final_layout_entry.filter(|entry| entry.key == key).map(|e| e.content),
             RunMode::ComputeSize => {
-                let order_index = self.measure_entry_order.iter().position(|&entry_index| {
-                    self.measure_entries[entry_index as usize].is_some_and(|entry| {
-                        entry.key.kd_available_space == key.kd_available_space
-                            && entry.key.known_dimensions_are_definite == key.known_dimensions_are_definite
-                            && (entry.key.x_axis_parent_size() == key.x_axis_parent_size())
-                            && entry.key.size_is_valid_for(&key)
-                    })
-                })?;
-                let entry_index = self.measure_entry_order[order_index] as usize;
-                let content = self.measure_entries[entry_index].unwrap().content;
-                self.measure_entry_order[..=order_index].rotate_right(1);
-                Some(LayoutOutput::from_outer_size(content))
+                for (index, entry) in self.measure_entries.iter().enumerate() {
+                    let Some(entry) = entry else { continue };
+                    if entry.key.kd_available_space == key.kd_available_space
+                        && entry.key.known_dimensions_are_definite == key.known_dimensions_are_definite
+                        && (entry.key.x_axis_parent_size() == key.x_axis_parent_size())
+                        && entry.key.size_is_valid_for(&key)
+                    {
+                        self.recently_used_entries |= 1 << index;
+                        return Some(LayoutOutput::from_outer_size(entry.content));
+                    }
+                }
+
+                None
             }
             RunMode::PerformHiddenLayout => None,
         }
@@ -216,16 +220,27 @@ impl Cache {
             }
             RunMode::ComputeSize => {
                 self.is_empty = false;
-                let order_index = self
-                    .measure_entry_order
-                    .iter()
-                    .position(|&entry_index| {
-                        self.measure_entries[entry_index as usize].is_some_and(|entry| entry.key == key)
-                    })
-                    .unwrap_or(CACHE_SIZE - 1);
-                let entry_index = self.measure_entry_order[order_index] as usize;
-                self.measure_entry_order[..=order_index].rotate_right(1);
+                if let Some(index) =
+                    self.measure_entries.iter().position(|entry| entry.is_some_and(|entry| entry.key == key))
+                {
+                    self.measure_entries[index].as_mut().unwrap().content = layout_output.size;
+                    self.recently_used_entries |= 1 << index;
+                    return;
+                }
+                while self.recently_used_entries & (1 << self.next_measure_entry) != 0 {
+                    self.recently_used_entries &= !(1 << self.next_measure_entry);
+                    self.next_measure_entry += 1;
+                    if self.next_measure_entry == CACHE_SIZE as u8 {
+                        self.next_measure_entry = 0;
+                    }
+                }
+                let entry_index = self.next_measure_entry as usize;
                 self.measure_entries[entry_index] = Some(CacheEntry { key, content: layout_output.size });
+                self.recently_used_entries |= 1 << entry_index;
+                self.next_measure_entry += 1;
+                if self.next_measure_entry == CACHE_SIZE as u8 {
+                    self.next_measure_entry = 0;
+                }
             }
             RunMode::PerformHiddenLayout => {}
         }
@@ -239,7 +254,8 @@ impl Cache {
         self.is_empty = true;
         self.final_layout_entry = None;
         self.measure_entries = [None; CACHE_SIZE];
-        self.measure_entry_order = [0, 1, 2, 3, 4, 5, 6, 7, 8];
+        self.recently_used_entries = 0;
+        self.next_measure_entry = 0;
         ClearState::Cleared
     }
 
@@ -281,21 +297,22 @@ mod tests {
     }
 
     #[test]
-    fn measure_entries_are_evicted_in_least_recently_used_order() {
+    fn recently_used_measure_entries_get_a_second_chance() {
         let mut cache = Cache::new();
         for width in 0..CACHE_SIZE {
             cache.store(&input(width as f32), output(width as f32));
         }
-
-        assert_eq!(cache.get(&input(0.0)), Some(output(0.0)));
         cache.store(&input(CACHE_SIZE as f32), output(CACHE_SIZE as f32));
 
-        assert_eq!(cache.get(&input(1.0)), None);
-        assert_eq!(cache.get(&input(0.0)), Some(output(0.0)));
+        assert_eq!(cache.get(&input(1.0)), Some(output(1.0)));
+        cache.store(&input((CACHE_SIZE + 1) as f32), output((CACHE_SIZE + 1) as f32));
+
+        assert_eq!(cache.get(&input(1.0)), Some(output(1.0)));
+        assert_eq!(cache.get(&input(2.0)), None);
     }
 
     #[test]
-    fn storing_an_existing_measurement_updates_and_promotes_it() {
+    fn storing_an_existing_measurement_updates_it_in_place() {
         let mut cache = Cache::new();
         cache.store(&input(1.0), output(1.0));
         cache.store(&input(2.0), output(2.0));
@@ -306,15 +323,15 @@ mod tests {
     }
 
     #[test]
-    fn retrieving_a_measurement_only_reorders_slot_indices() {
+    fn retrieving_a_measurement_only_marks_its_slot_as_used() {
         let mut cache = Cache::new();
         cache.store(&input(1.0), output(1.0));
         cache.store(&input(2.0), output(2.0));
+        cache.recently_used_entries = 0;
         let entries = cache.measure_entries;
-        let order = cache.measure_entry_order;
 
         assert_eq!(cache.get(&input(1.0)), Some(output(1.0)));
         assert_eq!(cache.measure_entries, entries);
-        assert_ne!(cache.measure_entry_order, order);
+        assert_ne!(cache.recently_used_entries, 0);
     }
 }
