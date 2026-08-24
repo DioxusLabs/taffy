@@ -53,6 +53,8 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
+      - name: Install fontconfig
+        run: sudo apt-get update && sudo apt-get install libfontconfig-dev
       - run: cd examples/parley && cargo build
 
   # No features
