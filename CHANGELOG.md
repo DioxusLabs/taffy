@@ -54,6 +54,7 @@ The layout effects of `contain: layout`, `contain: paint`, and `contain: content
 - CSS parser: preserve unnamed grid lines when parsing `grid-template-rows` and `grid-template-columns` (#1138).
 - Block/float: don't include overflowing in-flow content in the float contribution to a BFC's height (#1128).
 - Block: resolve percentage heights and relative vertical insets against the correct definite height (#1122).
+- Block/float: apply non-`normal` `align-content` to formatting contexts and floated children (#1087, #1089).
 - Flexbox: correctly track definite sizes through nested layouts and percentage-sized descendants (#1003, #1123).
 - Flexbox: don't distribute free space through `justify-content` after auto margins consume it (#1115).
 - Flexbox: skip unnecessary automatic min-content measurements (#1119).
@@ -68,53 +69,34 @@ The layout effects of `contain: layout`, `contain: paint`, and `contain: content
 
 The MSRV for this release is 1.71.
 
-### Added
+### Support for self-relative alignment (#1077)
 
-- Support for the `self-start` and `self-end` alignment keywords (`AlignItems::SELF_START`/`SELF_END` and safe variants). These resolve against the `direction` of the item itself rather than that of its container, so they only differ from `start`/`end` when the item's direction differs from its container's. Supported for `align-self`/`align-items` and `justify-self`/`justify-items` on both in-flow and absolutely positioned Flexbox and Grid items (#1074)
+Taffy now supports `self-start` and `self-end` alignment for in-flow and absolutely positioned Flexbox and Grid items. Unlike `start` and `end`, these values resolve against the item's own writing direction rather than its container's.
 
-- Support for `display: flow-root`. The new `Display::FlowRoot` variant lays out children using the block layout algorithm but always establishes a new block formatting context (its margins do not collapse with those of its children, it contains its own floats, and it avoids external floats)
+### Support for `display: flow-root` (#997)
+
+[`display: flow-root`](https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Values/display-inside) uses Block layout while always establishing an independent formatting context.
 
 ### Changed
 
-- Numeric style helpers (`length`, `percent`, `fr`, `flex`) now accept `Input: Into<f64>` instead of `Input: Into<f32>`. This allows bare float literals such as `length(800.0)` to be used without triggering the `float_literal_f32_fallback` future-compatibility lint, while widening the set of accepted numeric input types (#974)
-- Grid: `grid_template_areas` is now `Option<GridTemplateAreas<S>>`, where the new `GridTemplateAreas` struct includes `row_count`/`column_count` fields. This allows templates containing unnamed (`.`) cells beyond the extents of the named areas (e.g. `grid-template-areas: "a ."`) to be represented.
-- Block/float: `BlockContext::place_floated_box` takes an additional `adjoins_unresolved_strut: bool` parameter indicating whether the float is being placed while the position of the current margin-collapse strut is still unresolved
+- Numeric style helpers now accept `Into<f64>` rather than `Into<f32>` (#983).
+- Grid: `grid_template_areas` is now `Option<GridTemplateAreas<S>>`, where the new `GridTemplateAreas` struct includes `row_count`/`column_count` fields. This allows templates containing unnamed (`.`) cells beyond the extents of the named areas (e.g. `grid-template-areas: "a ."`) to be represented (#1024).
+- `BlockContext::place_floated_box` now indicates whether it adjoins an unresolved margin-collapse strut (#1046).
 
 ### Fixed
 
-A large number of miscelaneous bug fixes are included in this release:
-
-- Flexbox: clamp the flex base size, automatic minimum size and hypothetical main/cross sizes with min/max sizes transferred through the aspect ratio, instead of baking them into the item's used min/max sizes (#989)
-- Flexbox: resolve `justify-content: start`/`end` and `align-self: start`/`end`/`self-start`/`self-end` as writing-mode relative (rather than flex-relative) in the static position of absolutely positioned children; use the flex-relative start for `justify-content: space-between`/`normal`, and a fallback of `start` for `align-self: baseline` (#1072)
-- Flexbox: only let `auto` margins on absolutely positioned children absorb free space when the box is inset-constrained in that axis; otherwise they resolve to zero per CSS2 §10.3.7/§10.6.4 (#1072)
-- Grid: jump the auto-placement search past entire colliding occupied intervals rather than advancing one track at a time (#1038)
-- Grid: resolve the grid lines used by absolutely positioned items to the edges of the adjacent tracks, so that free space distributed by `align-content`/`justify-content` is not included in the abspos grid area (#1071)
-- Grid: exclude absolutely positioned children from the implicit grid size estimate, as they do not take part in grid placement and must not create implicit tracks. Previously their out-of-range lines resolved to phantom implicit tracks instead of being treated as `auto` (#1075)
-- Grid: align an empty grid (one whose tracks have all collapsed) within its container, rather than always placing it at the start (#1078)
-- Grid: only distribute space "beyond limits" to tracks whose *max* track sizing function is `max-content` (or `fit-content()`) (#1033)
-- Grid: don't clamp an explicitly specified preferred or minimum size by the spanned tracks' fixed max track sizing functions when computing an item's minimum contribution (#1022)
-- Grid: ignore the tracks' growth limits when distributing an item's intrinsic size contribution "beyond limits" (#1022)
-- Grid: convert the container's min/max size to a content-box size before using it in the track sizing algorithm (#1023)
-- Grid: compute the flex factor sum over only the spanned tracks eligible to receive space when distributing intrinsic size contributions to flexible tracks (#1019)
-- Grid: don't grow tracks past their growth limits when distributing free space to multiple tracks with asymmetric limits (#1001)
-- Block/Grid: measure `Layout::content_size` from the container's padding-box origin and include the container's own end-side padding, matching Flexbox and browser `scrollWidth`/`scrollHeight` semantics. Grid items in tracks that overflow the container now also contribute their position within the container, not just their own size (#1051)
-- Block: don't stretch-size replaced elements; an auto width now resolves to the intrinsic size (#1002)
-- Block: don't let boxes that establish an independent formatting context overlap floats: they narrow to fit beside the float, or move down below it if they don't fit (#991)
-- Block: detect floats placed by the subtree of a preceding in-flow sibling, not just floats among direct siblings, when placing a box that establishes an independent formatting context (#1049)
-- Block: apply a negative margin as usual on a BFC root's float-free side, instead of clamping it to the containing block edge (#1061)
-- Block: compute clearance from the hypothetical position of the cleared element (including its collapsed top margin), supporting negative clearance (#1042)
-- Block: prevent the cleared element's top margin from collapsing with preceding margins and with the parent's top margin (#1043)
-- Block: force clearance for floats placed while the position of the enclosing margin-collapse strut is unresolved, and position such floats including the pending collapsible margins (#1046)
-- Block: collapse the top and bottom margins of a self-collapsing element with clearance with each other and apply them inside the parent, rather than collapsing them with the parent's bottom margin (#1044)
-- Block/float: treat `clear` as a no-op when no float has been placed on the relevant side(s) (#1041)
-- Block: allow elements containing only floated children to be collapsed through (#1040)
-- Block/float: record zero-width floats in the float context, so their edge acts as an obstacle for boxes establishing an independent formatting context (#1062)
-- Block/float: a float establishes a new block formatting context, so its margins no longer collapse with the margins of its children (#1065)
-- Block/float: honour CSS2 §9.5.1 rules 3 & 7 when placing floats: a float unconstrained by other floats may overflow its containing block, but one placed beside another float may not (#1064)
-- Block/float: apply CSS2 §9.5.1 rule 5 (float ceiling) and `clear` past zero-sized floats, which occupy no float segment and so were previously ignored when positioning later floats and cleared elements (#1056)
-- Block/float: sum float contributions when computing a float container's intrinsic width under definite available space (clamped between the widest single float and the available width), instead of dropping them entirely (#1055)
-- Block: a block container with a non-`normal` `align-content` establishes an independent formatting context (its margins do not collapse with its children's, it cannot be collapsed through, and it contains its own floats)
-- Block/float: `align-content` shifts a block container's floated children along with its in-flow content
+- Flexbox: correctly apply aspect-ratio-transferred min/max sizes (#989).
+- Flexbox: correct static alignment and auto margins for absolutely positioned children (#1072).
+- Grid: skip occupied intervals during auto-placement rather than advancing one track at a time (#1038).
+- Grid: correct absolutely positioned item line resolution and implicit grid sizing (#1071, #1075).
+- Grid: apply content alignment when all tracks are collapsed (#1078).
+- Grid: correct intrinsic track sizing, growth limits, and flexible-track distribution (#1001, #1019, #1022, #1023, #1033).
+- Block/Grid: calculate scrollable content size from the padding-box origin and include overflowing grid-item positions (#1051).
+- Block: don't stretch replaced elements with an automatic width (#1002).
+- Block: correctly place independent formatting contexts around floats, including nested floats and negative margins (#991, #1049, #1061).
+- Block: correct clearance and margin collapsing around floats (#1040, #1041, #1042, #1043, #1044, #1046).
+- Block/float: correct placement and margin behavior for zero-width, overflowing, and formatting-context-establishing floats (#1056, #1062, #1064, #1065).
+- Block/float: include floats when calculating intrinsic width under definite available space (#1055).
 
 ## 0.12.2
 
