@@ -496,7 +496,7 @@ fn compute_preliminary(tree: &mut impl LayoutFlexboxContainer, node: NodeId, inp
                 Size::NONE,
                 Size::NONE,
                 Size::MAX_CONTENT,
-                SizingMode::InherentSize,
+                SizingMode::ContentSize,
                 Line::FALSE,
             );
         }
@@ -1431,15 +1431,24 @@ fn determine_container_main_size(
                                 // Either the min- or max- content size depending on which constraint we are sizing under.
                                 // TODO: Optimise by using already computed values where available
                                 debug_log!("COMPUTE CHILD BASE SIZE (for intrinsic main size):");
-                                let content_main_size = tree.measure_child_size(
+                                let measured_main_size = tree.measure_child_size(
                                     item.node,
                                     child_known_dimensions,
                                     constants.node_inner_size,
                                     child_available_space,
-                                    SizingMode::InherentSize,
+                                    SizingMode::ContentSize,
                                     dir.main_axis(),
                                     Line::FALSE,
-                                ) + item.margin.main_axis_sum(constants.dir);
+                                );
+                                // The item's own preferred main size (if definite) is used in place
+                                // of the measured content size (it would otherwise be applied by an
+                                // inherent-size measure of the item itself), floored by the item's
+                                // main-axis padding+border.
+                                let item_pb_main = item.padding.main_axis_sum(constants.dir)
+                                    + item.border.main_axis_sum(constants.dir);
+                                let content_main_size =
+                                    style_preferred.map(|pref| pref.max(item_pb_main)).unwrap_or(measured_main_size)
+                                        + item.margin.main_axis_sum(constants.dir);
 
                                 // This is somewhat bizarre in that it's asymmetrical depending whether the flex container is a column or a row.
                                 //
@@ -2691,7 +2700,7 @@ fn perform_absolute_layout_on_absolute_children(
                 inset_relative_size,
                 Rect { left, right, top, bottom },
                 margin,
-                SizingMode::InherentSize,
+                SizingMode::ContentSize,
             );
             known_dimensions = known_dimensions.maybe_apply_aspect_ratio(aspect_ratio).maybe_clamp(min_size, max_size);
         }
@@ -2727,7 +2736,7 @@ fn perform_absolute_layout_on_absolute_children(
                             container_height.maybe_clamp(min_size.height, max_size.height),
                         ),
                     },
-                    SizingMode::InherentSize,
+                    SizingMode::ContentSize,
                     Line::FALSE,
                 );
                 known_dimensions.unwrap_or(measured_size)
@@ -2743,7 +2752,7 @@ fn perform_absolute_layout_on_absolute_children(
                 width: AvailableSpace::Definite(container_width.maybe_clamp(min_size.width, max_size.width)),
                 height: AvailableSpace::Definite(container_height.maybe_clamp(min_size.height, max_size.height)),
             },
-            SizingMode::InherentSize,
+            SizingMode::ContentSize,
             Line::FALSE,
         );
 
