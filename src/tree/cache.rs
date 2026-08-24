@@ -359,7 +359,7 @@ mod tests {
         cache.store(&input(1.0), output(1.0));
         cache.store(&input(2.0), output(2.0));
         cache.recently_used_entries = 0;
-        let entries = cache.measure_entries;
+        let entries = cache.measure_entries.clone();
 
         assert_eq!(cache.get(&input(1.0)), Some(output(1.0)));
         assert_eq!(cache.measure_entries, entries);
