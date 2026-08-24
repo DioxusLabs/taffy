@@ -153,6 +153,15 @@ impl From<OptFloat> for AvailableSpace {
     }
 }
 
+impl From<Option<f32>> for AvailableSpace {
+    fn from(option: Option<f32>) -> Self {
+        match option {
+            Some(value) => Self::Definite(value),
+            None => Self::MaxContent,
+        }
+    }
+}
+
 impl Size<AvailableSpace> {
     /// Convert `Size<AvailableSpace>` into `Size<OptFloat>`
     pub fn into_options(self) -> Size<OptFloat> {
