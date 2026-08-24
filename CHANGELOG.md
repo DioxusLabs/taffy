@@ -54,6 +54,9 @@ The layout effects of `contain: layout`, `contain: paint`, and `contain: content
 - CSS parser: preserve unnamed grid lines when parsing `grid-template-rows` and `grid-template-columns` (#1138).
 - Block/float: don't include overflowing in-flow content in the float contribution to a BFC's height (#1128).
 - Block: resolve percentage heights and relative vertical insets against the correct definite height (#1122).
+- Block: prevent bottom-margin collapsing when `min-height` determines the used height (#1082).
+- Block: resolve percentage padding and borders against the containing block's width (#1083).
+- Block: resolve absolutely positioned auto margins against the clamped used size (#1096).
 - Block/float: apply non-`normal` `align-content` to formatting contexts and floated children (#1087, #1089).
 - Flexbox: correctly track definite sizes through nested layouts and percentage-sized descendants (#1003, #1123).
 - Flexbox: don't distribute free space through `justify-content` after auto margins consume it (#1115).
@@ -63,6 +66,7 @@ The layout effects of `contain: layout`, `contain: paint`, and `contain: content
 - Grid: fix named-line numbering for repetitions and validate their line-name counts (#1035).
 - Grid: prevent infinite loops during track sizing and auto-placement (#1036, #1037).
 - Flexbox: wrap indefinite containers against their maximum main size (#1101).
+- Grid: don't skip intrinsic sizing for tracks with an intrinsic minimum and fixed maximum (#1097).
 - Grid: correctly distribute content contributions across flexible tracks (#1084).
 
 ## 0.13.0
@@ -82,11 +86,15 @@ Taffy now supports `self-start` and `self-end` alignment for in-flow and absolut
 - Numeric style helpers now accept `Into<f64>` rather than `Into<f32>` (#983).
 - Grid: `grid_template_areas` is now `Option<GridTemplateAreas<S>>`, where the new `GridTemplateAreas` struct includes `row_count`/`column_count` fields. This allows templates containing unnamed (`.`) cells beyond the extents of the named areas (e.g. `grid-template-areas: "a ."`) to be represented (#1024).
 - `BlockContext::place_floated_box` now indicates whether it adjoins an unresolved margin-collapse strut (#1046).
+- Grid dimensions are clamped to 10,000 tracks in each direction to prevent integer overflow (#986).
 
 ### Fixed
 
 - Flexbox: correctly apply aspect-ratio-transferred min/max sizes (#989).
+- Flexbox: correct intrinsic contributions for items with container padding or borders (#1018).
+- Flexbox: correct baseline synthesis, propagation, clamping, and `wrap-reverse` alignment (#987, #995, #996).
 - Flexbox: correct static alignment and auto margins for absolutely positioned children (#1072).
+- Block/Flexbox/Grid: make scroll width and height independent of which edge has a border (#1007).
 - Grid: skip occupied intervals during auto-placement rather than advancing one track at a time (#1038).
 - Grid: correct absolutely positioned item line resolution and implicit grid sizing (#1071, #1075).
 - Grid: apply content alignment when all tracks are collapsed (#1078).
@@ -94,8 +102,9 @@ Taffy now supports `self-start` and `self-end` alignment for in-flow and absolut
 - Block/Grid: calculate scrollable content size from the padding-box origin and include overflowing grid-item positions (#1051).
 - Block: don't stretch replaced elements with an automatic width (#1002).
 - Block: correctly place independent formatting contexts around floats, including nested floats and negative margins (#991, #1049, #1061).
-- Block: correct clearance and margin collapsing around floats (#1040, #1041, #1042, #1043, #1044, #1046).
-- Block/float: correct placement and margin behavior for zero-width, overflowing, and formatting-context-establishing floats (#1056, #1062, #1064, #1065).
+- Block: correct clearance, percentage margins, and margin collapsing around floats (#990, #1040, #1041, #1042, #1043, #1044, #1046).
+- Block/float: correct placement and margin behavior for zero-width, overflowing, and formatting-context-establishing floats (#988, #1056, #1062, #1064, #1065).
+- Block/float: use definite available widths when laying out floats (#994).
 - Block/float: include floats when calculating intrinsic width under definite available space (#1055).
 
 ## 0.12.2
