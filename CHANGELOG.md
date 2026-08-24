@@ -35,33 +35,33 @@ The layout effects of `contain: layout`, `contain: paint`, and `contain: content
 - `Layout::content_size` is now `scrollable_overflow_rect: Rect<f32>`. Its `right` and `bottom` fields replace the old width and height values; `scroll_width()` and `scroll_height()` are unchanged (#1118).
 - `LayoutOutput::first_baselines` is now `baselines: Baselines`, with `first` and `last` baseline fields (#1107).
 - `Style::min_size` and `max_size` now use `LengthPercentageAuto` rather than `Dimension` (#1099).
-- `compute_layout_with_measure` now passes a `LayoutInput` and returns `LayoutOutput`; call `compute_leaf_layout` explicitly to preserve the old leaf-measurement behaviour (#953).
+- `compute_layout_with_measure` now passes a `LayoutInput` and returns `LayoutOutput`; call `compute_leaf_layout` explicitly to preserve the old leaf-measurement behaviour (#1091).
 - Block and Flexbox no longer measure absolutely positioned children whose dimensions are already known (#1120).
 
-- `CacheTree::cache_get` and `Cache::get` now take `&mut self`, and the measure cache uses second-chance (clock) eviction.
+- `CacheTree::cache_get` and `Cache::get` now take `&mut self`, and the measure cache uses second-chance (clock) eviction (#1010).
 
 ### Fixed
 
-- Cache: prevent axis-specific measurements from being reused for the wrong axis and avoid caching margin-collapse metadata.
-- Flexbox: fix intrinsic sizing with negative margins and zero flex bases (#1151).
-- Flexbox: apply inherent style sizing on top of content-size measurements (#1149).
-- Flexbox: transfer definite stretched cross sizes through aspect ratios when calculating flex base sizes.
+- Cache: prevent axis-specific measurements from being reused for the wrong axis and avoid caching margin-collapse metadata (#1010).
+- Flexbox: fix intrinsic sizing with negative margins and zero flex bases (#1152).
+- Flexbox: apply inherent style sizing on top of content-size measurements (#1155).
+- Flexbox: transfer definite stretched cross sizes through aspect ratios when calculating flex base sizes (#1155).
 - Block/float: account for `clear` when computing the intrinsic width of floats (#1150).
 - Flexbox: generate container baselines from the visually startmost line or item in reverse layouts (#1127).
-- Block/Grid: clamp scroll-container baselines to the border box and synthesize missing Block baselines.
-- Flexbox/Grid: exclude items with auto cross-axis margins from baseline alignment.
-- Grid: exclude items with cyclic percentage block sizes from baseline alignment.
-- CSS parser: preserve unnamed grid lines when parsing `grid-template-rows` and `grid-template-columns`.
-- Block/float: don't include overflowing in-flow content in the float contribution to a BFC's height.
-- Block: resolve percentage heights and relative vertical insets against the correct definite height.
-- Flexbox: correctly track definite sizes through nested layouts and percentage-sized descendants (#950, #999).
-- Flexbox: don't distribute free space through `justify-content` after auto margins consume it.
-- Flexbox: skip unnecessary automatic min-content measurements.
-- Block/Flexbox/Grid: correct scrollable overflow handling for start-side overflow, RTL, and end padding.
-- `TaffyTree::remove` now marks the former parent dirty (#998).
-- Grid: fix named-line numbering for repetitions and validate their line-name counts.
-- Grid: prevent infinite loops during track sizing and auto-placement.
-- Flexbox: wrap indefinite containers against their maximum main size.
+- Block/Grid: clamp scroll-container baselines to the border box and synthesize missing Block baselines (#1108, #1126).
+- Flexbox/Grid: exclude items with auto cross-axis margins from baseline alignment (#1109, #1125).
+- Grid: exclude items with cyclic percentage block sizes from baseline alignment (3dbf2e46b).
+- CSS parser: preserve unnamed grid lines when parsing `grid-template-rows` and `grid-template-columns` (#1138).
+- Block/float: don't include overflowing in-flow content in the float contribution to a BFC's height (#1128).
+- Block: resolve percentage heights and relative vertical insets against the correct definite height (#1122).
+- Flexbox: correctly track definite sizes through nested layouts and percentage-sized descendants (#1003, #1123).
+- Flexbox: don't distribute free space through `justify-content` after auto margins consume it (#1115).
+- Flexbox: skip unnecessary automatic min-content measurements (#1119).
+- Block/Flexbox/Grid: correct scrollable overflow handling for start-side overflow, RTL, and end padding (#1114, #1116, #1117).
+- `TaffyTree::remove` now marks the former parent dirty (#1085).
+- Grid: fix named-line numbering for repetitions and validate their line-name counts (#1035).
+- Grid: prevent infinite loops during track sizing and auto-placement (#1036, #1037).
+- Flexbox: wrap indefinite containers against their maximum main size (#1101).
 - Grid: correctly distribute content contributions across flexible tracks (#1084).
 
 ## 0.13.0
