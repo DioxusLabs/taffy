@@ -135,6 +135,7 @@ use crate::style::{AvailableSpace, CoreStyle};
 use crate::style::{FlexboxContainerStyle, FlexboxItemStyle};
 #[cfg(feature = "grid")]
 use crate::style::{GridContainerStyle, GridItemStyle};
+use crate::util::OptFloat;
 use crate::CheapCloneStr;
 #[cfg(feature = "block_layout")]
 use crate::{BlockContainerStyle, BlockContext, BlockItemStyle};
@@ -325,8 +326,8 @@ pub(crate) trait LayoutPartialTreeExt: LayoutPartialTree {
     fn measure_child_size(
         &mut self,
         node_id: NodeId,
-        known_dimensions: Size<Option<f32>>,
-        parent_size: Size<Option<f32>>,
+        known_dimensions: Size<OptFloat>,
+        parent_size: Size<OptFloat>,
         available_space: Size<AvailableSpace>,
         sizing_mode: SizingMode,
         axis: AbsoluteAxis,
@@ -355,8 +356,8 @@ pub(crate) trait LayoutPartialTreeExt: LayoutPartialTree {
     fn measure_child_size_both(
         &mut self,
         node_id: NodeId,
-        known_dimensions: Size<Option<f32>>,
-        parent_size: Size<Option<f32>>,
+        known_dimensions: Size<OptFloat>,
+        parent_size: Size<OptFloat>,
         available_space: Size<AvailableSpace>,
         sizing_mode: SizingMode,
         vertical_margins_are_collapsible: Line<bool>,
@@ -382,8 +383,8 @@ pub(crate) trait LayoutPartialTreeExt: LayoutPartialTree {
     fn perform_child_layout(
         &mut self,
         node_id: NodeId,
-        known_dimensions: Size<Option<f32>>,
-        parent_size: Size<Option<f32>>,
+        known_dimensions: Size<OptFloat>,
+        parent_size: Size<OptFloat>,
         available_space: Size<AvailableSpace>,
         sizing_mode: SizingMode,
         vertical_margins_are_collapsible: Line<bool>,

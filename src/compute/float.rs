@@ -26,6 +26,7 @@
 //!
 //! <https://www.w3.org/TR/CSS22/visuren.html#floats>
 
+use crate::util::OptFloat;
 use core::ops::Range;
 
 use crate::{debug::debug_log, sys::Vec, AvailableSpace, Clear, Direction, FloatDirection, Point, Size};
@@ -219,10 +220,10 @@ pub struct FloatContext {
     last_placed_floats: [Range<usize>; 2],
     /// The bottom (y + height) of the lowest float placed on each side, including
     /// zero-sized floats (which occupy no segment). Left in slot 0, right in slot 1.
-    clear_bottoms: [Option<f32>; 2],
+    clear_bottoms: [OptFloat; 2],
     /// The topmost y position allowed for a new float (CSS2 float rule 5), including
     /// the tops of zero-sized floats (which occupy no segment)
-    float_ceiling: Option<f32>,
+    float_ceiling: OptFloat,
     // Left hwm in slot 0. Right hwm in slot 1.
     // high_water_marks: [usize; 2],
     // left_float_high_water_mark: usize,
@@ -238,8 +239,8 @@ impl Default for FloatContext {
             right_floats: Vec::new(),
             segments: Vec::new(),
             last_placed_floats: [0..0, 0..0], // high_water_marks: [0, 0],
-            clear_bottoms: [None, None],
-            float_ceiling: None,
+            clear_bottoms: [OptFloat::NONE, OptFloat::NONE],
+            float_ceiling: OptFloat::NONE,
         }
     }
 }
@@ -316,9 +317,9 @@ impl FloatContext {
 
         let slot = direction as usize;
         let bottom = placed_floated_box.y + placed_floated_box.height;
-        self.clear_bottoms[slot] = Some(self.clear_bottoms[slot].map_or(bottom, |b| b.max(bottom)));
+        self.clear_bottoms[slot] = OptFloat::some(self.clear_bottoms[slot].map_or(bottom, |b| b.max(bottom)));
         let y = placed_floated_box.y;
-        self.float_ceiling = Some(self.float_ceiling.map_or(y, |ceiling| ceiling.max(y)));
+        self.float_ceiling = OptFloat::some(self.float_ceiling.map_or(y, |ceiling| ceiling.max(y)));
 
         let x_inset = placed_floated_box.x_inset;
         let y = placed_floated_box.y;
@@ -571,15 +572,18 @@ impl FloatContext {
     }
 
     /// Get the bottom of lowest relevant float for the specific clear property
-    pub fn cleared_threshold(&self, clear: Clear) -> Option<f32> {
+    pub fn cleared_threshold(&self, clear: Clear) -> OptFloat {
         match clear {
             Clear::Left => self.clear_bottoms[0],
             Clear::Right => self.clear_bottoms[1],
-            Clear::Both => match self.clear_bottoms {
-                [Some(l), Some(r)] => Some(l.max(r)),
-                [l, r] => l.or(r),
-            },
-            Clear::None => None,
+            Clear::Both => {
+                let [l, r] = self.clear_bottoms;
+                match (l.into_option(), r.into_option()) {
+                    (Some(l), Some(r)) => OptFloat::some(l.max(r)),
+                    _ => l.or(r),
+                }
+            }
+            Clear::None => OptFloat::NONE,
         }
     }
 

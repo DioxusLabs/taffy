@@ -3,6 +3,7 @@
 use crate::geometry::{Rect, Size};
 use crate::style::{Dimension, LengthPercentage, LengthPercentageAuto};
 use crate::style_helpers::TaffyZero;
+use crate::util::OptFloat;
 use crate::CompactLength;
 
 /// Trait to encapsulate behaviour where we need to resolve from a
@@ -25,12 +26,12 @@ pub trait ResolveOrZero<TContext, TOutput: TaffyZero> {
     fn resolve_or_zero(self, context: TContext, calc: impl Fn(*const (), f32) -> f32) -> TOutput;
 }
 
-impl MaybeResolve<Option<f32>, Option<f32>> for LengthPercentage {
+impl MaybeResolve<OptFloat, OptFloat> for LengthPercentage {
     /// Converts the given [`LengthPercentage`] into an absolute length
     /// Can return `None`
-    fn maybe_resolve(self, context: Option<f32>, calc: impl Fn(*const (), f32) -> f32) -> Option<f32> {
+    fn maybe_resolve(self, context: OptFloat, calc: impl Fn(*const (), f32) -> f32) -> OptFloat {
         match self.0.tag() {
-            CompactLength::LENGTH_TAG => Some(self.0.value()),
+            CompactLength::LENGTH_TAG => OptFloat::some(self.0.value()),
             CompactLength::PERCENT_TAG => context.map(|dim| dim * self.0.value()),
             #[cfg(feature = "calc")]
             _ if self.0.is_calc() => context.map(|dim| calc(self.0.calc_value(), dim)),
@@ -39,13 +40,13 @@ impl MaybeResolve<Option<f32>, Option<f32>> for LengthPercentage {
     }
 }
 
-impl MaybeResolve<Option<f32>, Option<f32>> for LengthPercentageAuto {
+impl MaybeResolve<OptFloat, OptFloat> for LengthPercentageAuto {
     /// Converts the given [`LengthPercentageAuto`] into an absolute length
     /// Can return `None`
-    fn maybe_resolve(self, context: Option<f32>, calc: impl Fn(*const (), f32) -> f32) -> Option<f32> {
+    fn maybe_resolve(self, context: OptFloat, calc: impl Fn(*const (), f32) -> f32) -> OptFloat {
         match self.0.tag() {
-            CompactLength::AUTO_TAG => None,
-            CompactLength::LENGTH_TAG => Some(self.0.value()),
+            CompactLength::AUTO_TAG => OptFloat::NONE,
+            CompactLength::LENGTH_TAG => OptFloat::some(self.0.value()),
             CompactLength::PERCENT_TAG => context.map(|dim| dim * self.0.value()),
             #[cfg(feature = "calc")]
             _ if self.0.is_calc() => context.map(|dim| calc(self.0.calc_value(), dim)),
@@ -54,34 +55,34 @@ impl MaybeResolve<Option<f32>, Option<f32>> for LengthPercentageAuto {
     }
 }
 
-impl MaybeResolve<Option<f32>, Option<f32>> for Dimension {
+impl MaybeResolve<OptFloat, OptFloat> for Dimension {
     /// Converts the given [`Dimension`] into an absolute length
     ///
     /// Can return `None`
-    fn maybe_resolve(self, context: Option<f32>, calc: impl Fn(*const (), f32) -> f32) -> Option<f32> {
+    fn maybe_resolve(self, context: OptFloat, calc: impl Fn(*const (), f32) -> f32) -> OptFloat {
         match self.0.tag() {
-            CompactLength::AUTO_TAG => None,
+            CompactLength::AUTO_TAG => OptFloat::NONE,
             // The content keyword is only valid for flex-basis. In any other context it behaves as auto.
-            CompactLength::CONTENT_TAG => None,
-            CompactLength::LENGTH_TAG => Some(self.0.value()),
+            CompactLength::CONTENT_TAG => OptFloat::NONE,
+            CompactLength::LENGTH_TAG => OptFloat::some(self.0.value()),
             CompactLength::PERCENT_TAG => context.map(|dim| dim * self.0.value()),
             #[cfg(feature = "calc")]
             _ if self.0.is_calc() => context.map(|dim| calc(self.0.calc_value(), dim)),
             // Intrinsic sizing keywords cannot be resolved to a definite size out of context.
             // Layout algorithms that support them must handle them explicitly.
-            _ if self.0.is_sizing_keyword() => None,
+            _ if self.0.is_sizing_keyword() => OptFloat::NONE,
             _ => unreachable!(),
         }
     }
 }
 
 // Generic implementation of MaybeResolve for f32 context where MaybeResolve is implemented
-// for Option<f32> context
-impl<T: MaybeResolve<Option<f32>, Option<f32>>> MaybeResolve<f32, Option<f32>> for T {
+// for OptFloat context
+impl<T: MaybeResolve<OptFloat, OptFloat>> MaybeResolve<f32, OptFloat> for T {
     /// Converts the given MaybeResolve value into an absolute length
     /// Can return `None`
-    fn maybe_resolve(self, context: f32, calc: impl Fn(*const (), f32) -> f32) -> Option<f32> {
-        self.maybe_resolve(Some(context), calc)
+    fn maybe_resolve(self, context: f32, calc: impl Fn(*const (), f32) -> f32) -> OptFloat {
+        self.maybe_resolve(OptFloat::some(context), calc)
     }
 }
 
@@ -96,23 +97,23 @@ impl<In, Out, T: MaybeResolve<In, Out>> MaybeResolve<Size<In>, Size<Out>> for Si
     }
 }
 
-impl ResolveOrZero<Option<f32>, f32> for LengthPercentage {
+impl ResolveOrZero<OptFloat, f32> for LengthPercentage {
     /// Will return a default value of result is evaluated to `None`
-    fn resolve_or_zero(self, context: Option<f32>, calc: impl Fn(*const (), f32) -> f32) -> f32 {
+    fn resolve_or_zero(self, context: OptFloat, calc: impl Fn(*const (), f32) -> f32) -> f32 {
         self.maybe_resolve(context, calc).unwrap_or(0.0)
     }
 }
 
-impl ResolveOrZero<Option<f32>, f32> for LengthPercentageAuto {
+impl ResolveOrZero<OptFloat, f32> for LengthPercentageAuto {
     /// Will return a default value of result is evaluated to `None`
-    fn resolve_or_zero(self, context: Option<f32>, calc: impl Fn(*const (), f32) -> f32) -> f32 {
+    fn resolve_or_zero(self, context: OptFloat, calc: impl Fn(*const (), f32) -> f32) -> f32 {
         self.maybe_resolve(context, calc).unwrap_or(0.0)
     }
 }
 
-impl ResolveOrZero<Option<f32>, f32> for Dimension {
+impl ResolveOrZero<OptFloat, f32> for Dimension {
     /// Will return a default value of result is evaluated to `None`
-    fn resolve_or_zero(self, context: Option<f32>, calc: impl Fn(*const (), f32) -> f32) -> f32 {
+    fn resolve_or_zero(self, context: OptFloat, calc: impl Fn(*const (), f32) -> f32) -> f32 {
         self.maybe_resolve(context, calc).unwrap_or(0.0)
     }
 }
@@ -142,9 +143,9 @@ impl<In: Copy, Out: TaffyZero, T: ResolveOrZero<In, Out>> ResolveOrZero<Size<In>
 }
 
 // Generic ResolveOrZero for resolving Rect against Option
-impl<Out: TaffyZero, T: ResolveOrZero<Option<f32>, Out>> ResolveOrZero<Option<f32>, Rect<Out>> for Rect<T> {
+impl<Out: TaffyZero, T: ResolveOrZero<OptFloat, Out>> ResolveOrZero<OptFloat, Rect<Out>> for Rect<T> {
     /// Converts any `parent`-relative values for Rect into an absolute Rect
-    fn resolve_or_zero(self, context: Option<f32>, calc: impl Fn(*const (), f32) -> f32) -> Rect<Out> {
+    fn resolve_or_zero(self, context: OptFloat, calc: impl Fn(*const (), f32) -> f32) -> Rect<Out> {
         Rect {
             left: self.left.resolve_or_zero(context, &calc),
             right: self.right.resolve_or_zero(context, &calc),
@@ -195,16 +196,17 @@ mod tests {
         use super::mr_case;
         use crate::style::Dimension;
         use crate::style_helpers::*;
+        use crate::util::OptFloat;
 
         /// `Dimension::Auto` should always return `None`
         ///
         /// The parent / context should not affect the outcome.
         #[test]
         fn resolve_auto() {
-            mr_case(Dimension::AUTO, None, None);
-            mr_case(Dimension::AUTO, Some(5.0), None);
-            mr_case(Dimension::AUTO, Some(-5.0), None);
-            mr_case(Dimension::AUTO, Some(0.), None);
+            mr_case(Dimension::AUTO, OptFloat::NONE, OptFloat::NONE);
+            mr_case(Dimension::AUTO, OptFloat::some(5.0), OptFloat::NONE);
+            mr_case(Dimension::AUTO, OptFloat::some(-5.0), OptFloat::NONE);
+            mr_case(Dimension::AUTO, OptFloat::some(0.), OptFloat::NONE);
         }
 
         /// `Dimension::Length` should always return `Some(f32)`
@@ -213,10 +215,10 @@ mod tests {
         /// The parent / context should not affect the outcome.
         #[test]
         fn resolve_length() {
-            mr_case(Dimension::from_length(1.0), None, Some(1.0));
-            mr_case(Dimension::from_length(1.0), Some(5.0), Some(1.0));
-            mr_case(Dimension::from_length(1.0), Some(-5.0), Some(1.0));
-            mr_case(Dimension::from_length(1.0), Some(0.), Some(1.0));
+            mr_case(Dimension::from_length(1.0), OptFloat::NONE, OptFloat::some(1.0));
+            mr_case(Dimension::from_length(1.0), OptFloat::some(5.0), OptFloat::some(1.0));
+            mr_case(Dimension::from_length(1.0), OptFloat::some(-5.0), OptFloat::some(1.0));
+            mr_case(Dimension::from_length(1.0), OptFloat::some(0.), OptFloat::some(1.0));
         }
 
         /// `Dimension::Percent` should return `None` if context is  `None`.
@@ -226,10 +228,10 @@ mod tests {
         /// The parent / context __should__ affect the outcome.
         #[test]
         fn resolve_percent() {
-            mr_case(Dimension::from_percent(1.0), None, None);
-            mr_case(Dimension::from_percent(1.0), Some(5.0), Some(5.0));
-            mr_case(Dimension::from_percent(1.0), Some(-5.0), Some(-5.0));
-            mr_case(Dimension::from_percent(1.0), Some(50.0), Some(50.0));
+            mr_case(Dimension::from_percent(1.0), OptFloat::NONE, OptFloat::NONE);
+            mr_case(Dimension::from_percent(1.0), OptFloat::some(5.0), OptFloat::some(5.0));
+            mr_case(Dimension::from_percent(1.0), OptFloat::some(-5.0), OptFloat::some(-5.0));
+            mr_case(Dimension::from_percent(1.0), OptFloat::some(50.0), OptFloat::some(50.0));
         }
     }
 
@@ -279,27 +281,28 @@ mod tests {
         use super::roz_case;
         use crate::style::Dimension;
         use crate::style_helpers::*;
+        use crate::util::OptFloat;
 
         #[test]
         fn resolve_or_zero_auto() {
-            roz_case(Dimension::AUTO, None, 0.0);
-            roz_case(Dimension::AUTO, Some(5.0), 0.0);
-            roz_case(Dimension::AUTO, Some(-5.0), 0.0);
-            roz_case(Dimension::AUTO, Some(0.0), 0.0);
+            roz_case(Dimension::AUTO, OptFloat::NONE, 0.0);
+            roz_case(Dimension::AUTO, OptFloat::some(5.0), 0.0);
+            roz_case(Dimension::AUTO, OptFloat::some(-5.0), 0.0);
+            roz_case(Dimension::AUTO, OptFloat::some(0.0), 0.0);
         }
         #[test]
         fn resolve_or_zero_length() {
-            roz_case(Dimension::from_length(5.0), None, 5.0);
-            roz_case(Dimension::from_length(5.0), Some(5.0), 5.0);
-            roz_case(Dimension::from_length(5.0), Some(-5.0), 5.0);
-            roz_case(Dimension::from_length(5.0), Some(0.0), 5.0);
+            roz_case(Dimension::from_length(5.0), OptFloat::NONE, 5.0);
+            roz_case(Dimension::from_length(5.0), OptFloat::some(5.0), 5.0);
+            roz_case(Dimension::from_length(5.0), OptFloat::some(-5.0), 5.0);
+            roz_case(Dimension::from_length(5.0), OptFloat::some(0.0), 5.0);
         }
         #[test]
         fn resolve_or_zero_percent() {
-            roz_case(Dimension::from_percent(5.0), None, 0.0);
-            roz_case(Dimension::from_percent(5.0), Some(5.0), 25.0);
-            roz_case(Dimension::from_percent(5.0), Some(-5.0), -25.0);
-            roz_case(Dimension::from_percent(5.0), Some(0.0), 0.0);
+            roz_case(Dimension::from_percent(5.0), OptFloat::NONE, 0.0);
+            roz_case(Dimension::from_percent(5.0), OptFloat::some(5.0), 25.0);
+            roz_case(Dimension::from_percent(5.0), OptFloat::some(-5.0), -25.0);
+            roz_case(Dimension::from_percent(5.0), OptFloat::some(0.0), 0.0);
         }
     }
 
@@ -341,29 +344,34 @@ mod tests {
         use super::roz_case;
         use crate::geometry::Rect;
         use crate::style::Dimension;
+        use crate::util::OptFloat;
 
         #[test]
         fn resolve_or_zero_auto() {
-            roz_case(Rect::<Dimension>::auto(), None, Rect::zero());
-            roz_case(Rect::<Dimension>::auto(), Some(5.0), Rect::zero());
-            roz_case(Rect::<Dimension>::auto(), Some(-5.0), Rect::zero());
-            roz_case(Rect::<Dimension>::auto(), Some(0.0), Rect::zero());
+            roz_case(Rect::<Dimension>::auto(), OptFloat::NONE, Rect::zero());
+            roz_case(Rect::<Dimension>::auto(), OptFloat::some(5.0), Rect::zero());
+            roz_case(Rect::<Dimension>::auto(), OptFloat::some(-5.0), Rect::zero());
+            roz_case(Rect::<Dimension>::auto(), OptFloat::some(0.0), Rect::zero());
         }
 
         #[test]
         fn resolve_or_zero_length() {
-            roz_case(Rect::from_length(5.0, 5.0, 5.0, 5.0), None, Rect::new(5.0, 5.0, 5.0, 5.0));
-            roz_case(Rect::from_length(5.0, 5.0, 5.0, 5.0), Some(5.0), Rect::new(5.0, 5.0, 5.0, 5.0));
-            roz_case(Rect::from_length(5.0, 5.0, 5.0, 5.0), Some(-5.0), Rect::new(5.0, 5.0, 5.0, 5.0));
-            roz_case(Rect::from_length(5.0, 5.0, 5.0, 5.0), Some(0.0), Rect::new(5.0, 5.0, 5.0, 5.0));
+            roz_case(Rect::from_length(5.0, 5.0, 5.0, 5.0), OptFloat::NONE, Rect::new(5.0, 5.0, 5.0, 5.0));
+            roz_case(Rect::from_length(5.0, 5.0, 5.0, 5.0), OptFloat::some(5.0), Rect::new(5.0, 5.0, 5.0, 5.0));
+            roz_case(Rect::from_length(5.0, 5.0, 5.0, 5.0), OptFloat::some(-5.0), Rect::new(5.0, 5.0, 5.0, 5.0));
+            roz_case(Rect::from_length(5.0, 5.0, 5.0, 5.0), OptFloat::some(0.0), Rect::new(5.0, 5.0, 5.0, 5.0));
         }
 
         #[test]
         fn resolve_or_zero_percent() {
-            roz_case(Rect::from_percent(5.0, 5.0, 5.0, 5.0), None, Rect::zero());
-            roz_case(Rect::from_percent(5.0, 5.0, 5.0, 5.0), Some(5.0), Rect::new(25.0, 25.0, 25.0, 25.0));
-            roz_case(Rect::from_percent(5.0, 5.0, 5.0, 5.0), Some(-5.0), Rect::new(-25.0, -25.0, -25.0, -25.0));
-            roz_case(Rect::from_percent(5.0, 5.0, 5.0, 5.0), Some(0.0), Rect::zero());
+            roz_case(Rect::from_percent(5.0, 5.0, 5.0, 5.0), OptFloat::NONE, Rect::zero());
+            roz_case(Rect::from_percent(5.0, 5.0, 5.0, 5.0), OptFloat::some(5.0), Rect::new(25.0, 25.0, 25.0, 25.0));
+            roz_case(
+                Rect::from_percent(5.0, 5.0, 5.0, 5.0),
+                OptFloat::some(-5.0),
+                Rect::new(-25.0, -25.0, -25.0, -25.0),
+            );
+            roz_case(Rect::from_percent(5.0, 5.0, 5.0, 5.0), OptFloat::some(0.0), Rect::zero());
         }
     }
 }

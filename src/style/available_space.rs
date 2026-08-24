@@ -1,4 +1,5 @@
 //! Style type for representing available space as a sizing constraint
+use crate::util::OptFloat;
 use crate::{
     prelude::{FromLength, TaffyMaxContent, TaffyMinContent, TaffyZero},
     sys::abs,
@@ -58,10 +59,10 @@ impl AvailableSpace {
 
     /// Convert to Option
     /// Definite values become Some(value). Constraints become None.
-    pub const fn into_option(self) -> Option<f32> {
+    pub const fn into_option(self) -> OptFloat {
         match self {
-            AvailableSpace::Definite(value) => Some(value),
-            _ => None,
+            AvailableSpace::Definite(value) => OptFloat::some(value),
+            _ => OptFloat::NONE,
         }
     }
 
@@ -98,10 +99,11 @@ impl AvailableSpace {
     }
 
     /// If passed value is Some then return AvailableSpace::Definite containing that value, else return self
-    pub fn maybe_set(self, value: Option<f32>) -> AvailableSpace {
-        match value {
-            Some(value) => AvailableSpace::Definite(value),
-            None => self,
+    pub fn maybe_set(self, value: OptFloat) -> AvailableSpace {
+        if value.is_none() {
+            self
+        } else {
+            AvailableSpace::Definite(value.unchecked_value())
         }
     }
 
@@ -141,23 +143,24 @@ impl From<f32> for AvailableSpace {
     }
 }
 
-impl From<Option<f32>> for AvailableSpace {
-    fn from(option: Option<f32>) -> Self {
-        match option {
-            Some(value) => Self::Definite(value),
-            None => Self::MaxContent,
+impl From<OptFloat> for AvailableSpace {
+    fn from(option: OptFloat) -> Self {
+        if option.is_none() {
+            Self::MaxContent
+        } else {
+            Self::Definite(option.unchecked_value())
         }
     }
 }
 
 impl Size<AvailableSpace> {
-    /// Convert `Size<AvailableSpace>` into `Size<Option<f32>>`
-    pub fn into_options(self) -> Size<Option<f32>> {
+    /// Convert `Size<AvailableSpace>` into `Size<OptFloat>`
+    pub fn into_options(self) -> Size<OptFloat> {
         Size { width: self.width.into_option(), height: self.height.into_option() }
     }
 
     /// If passed value is Some then return AvailableSpace::Definite containing that value, else return self
-    pub fn maybe_set(self, value: Size<Option<f32>>) -> Size<AvailableSpace> {
+    pub fn maybe_set(self, value: Size<OptFloat>) -> Size<AvailableSpace> {
         Size { width: self.width.maybe_set(value.width), height: self.height.maybe_set(value.height) }
     }
 }

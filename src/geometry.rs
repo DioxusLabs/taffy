@@ -1,6 +1,7 @@
 //! Geometric primitives useful for layout
 
 use crate::util::sys::f32_max;
+use crate::util::OptFloat;
 use crate::CompactLength;
 use crate::{style::Dimension, util::sys::f32_min};
 use core::ops::{Add, Sub};
@@ -574,19 +575,19 @@ impl Size<f32> {
     }
 }
 
-impl Size<Option<f32>> {
+impl Size<OptFloat> {
     /// A [`Size`] with `None` width and height
-    pub const NONE: Size<Option<f32>> = Self { width: None, height: None };
+    pub const NONE: Size<OptFloat> = Self { width: OptFloat::NONE, height: OptFloat::NONE };
 
-    /// A [`Size<Option<f32>>`] with `Some(width)` and `Some(height)` as parameters
+    /// A [`Size<OptFloat>`] with "some" `width` and `height` as parameters
     #[must_use]
     pub const fn new(width: f32, height: f32) -> Self {
-        Size { width: Some(width), height: Some(height) }
+        Size { width: OptFloat::some(width), height: OptFloat::some(height) }
     }
 
-    /// Creates a new [`Size<Option<f32>>`] with either the width or height set based on the provided `direction`
+    /// Creates a new [`Size<OptFloat>`] with either the width or height set based on the provided `direction`
     #[cfg(feature = "flexbox")]
-    pub const fn from_cross(direction: FlexDirection, value: Option<f32>) -> Self {
+    pub const fn from_cross(direction: FlexDirection, value: OptFloat) -> Self {
         let mut new = Self::NONE;
         if direction.is_row() {
             new.height = value
@@ -597,19 +598,59 @@ impl Size<Option<f32>> {
     }
 
     /// Applies aspect_ratio (if one is supplied) to the Size:
-    ///   - If width is `Some` but height is `None`, then height is computed from width and aspect_ratio
-    ///   - If height is `Some` but width is `None`, then width is computed from height and aspect_ratio
+    ///   - If width is "some" but height is `None`, then height is computed from width and aspect_ratio
+    ///   - If height is "some" but width is `None`, then width is computed from height and aspect_ratio
     ///
     /// If aspect_ratio is `None` then this function simply returns self.
-    pub fn maybe_apply_aspect_ratio(self, aspect_ratio: Option<f32>) -> Size<Option<f32>> {
+    pub fn maybe_apply_aspect_ratio(self, aspect_ratio: Option<f32>) -> Size<OptFloat> {
         match aspect_ratio {
-            Some(ratio) => match (self.width, self.height) {
-                (Some(width), None) => Size { width: Some(width), height: Some(width / ratio) },
-                (None, Some(height)) => Size { width: Some(height * ratio), height: Some(height) },
+            Some(ratio) => match (self.width.is_some(), self.height.is_some()) {
+                (true, false) => {
+                    Size { width: self.width, height: OptFloat::some(self.width.unchecked_value() / ratio) }
+                }
+                (false, true) => {
+                    Size { width: OptFloat::some(self.height.unchecked_value() * ratio), height: self.height }
+                }
                 _ => self,
             },
             None => self,
         }
+    }
+
+    /// Performs `OptFloat::unwrap_or` on each component separately
+    pub fn unwrap_or(self, alt: Size<f32>) -> Size<f32> {
+        Size { width: self.width.unwrap_or(alt.width), height: self.height.unwrap_or(alt.height) }
+    }
+
+    /// Performs `OptFloat::or` on each component separately
+    pub fn or(self, alt: Size<OptFloat>) -> Size<OptFloat> {
+        Size { width: self.width.or(alt.width), height: self.height.or(alt.height) }
+    }
+
+    /// Return true if both components are "some", else false.
+    #[inline(always)]
+    pub fn both_axis_defined(&self) -> bool {
+        self.width.is_some() && self.height.is_some()
+    }
+
+    /// Converts to a `Size<Option<f32>>`
+    #[inline(always)]
+    pub fn into_options(self) -> Size<Option<f32>> {
+        Size { width: self.width.into_option(), height: self.height.into_option() }
+    }
+}
+
+impl From<Size<Option<f32>>> for Size<OptFloat> {
+    #[inline(always)]
+    fn from(size: Size<Option<f32>>) -> Self {
+        Size { width: size.width.into(), height: size.height.into() }
+    }
+}
+
+impl From<Size<OptFloat>> for Size<Option<f32>> {
+    #[inline(always)]
+    fn from(size: Size<OptFloat>) -> Self {
+        size.into_options()
     }
 }
 
@@ -622,12 +663,6 @@ impl<T> Size<Option<T>> {
     /// Performs Option::or on each component separately
     pub fn or(self, alt: Size<Option<T>>) -> Size<Option<T>> {
         Size { width: self.width.or(alt.width), height: self.height.or(alt.height) }
-    }
-
-    /// Return true if both components are Some, else false.
-    #[inline(always)]
-    pub fn both_axis_defined(&self) -> bool {
-        self.width.is_some() && self.height.is_some()
     }
 }
 
@@ -662,9 +697,9 @@ impl Point<f32> {
     pub const ZERO: Self = Self { x: 0.0, y: 0.0 };
 }
 
-impl Point<Option<f32>> {
+impl Point<OptFloat> {
     /// A [`Point`] with values (None, None)
-    pub const NONE: Self = Self { x: None, y: None };
+    pub const NONE: Self = Self { x: OptFloat::NONE, y: OptFloat::NONE };
 }
 
 // Generic Add impl for Point<T> + Point<U> where T + U has an Add impl

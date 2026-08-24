@@ -6,6 +6,7 @@ use crate::style::{AlignContent, AlignContentKeyword, AvailableSpace};
 use crate::style_helpers::TaffyMinContent;
 use crate::tree::{LayoutPartialTree, LayoutPartialTreeExt, SizingMode};
 use crate::util::sys::{f32_max, f32_min, Vec};
+use crate::util::OptFloat;
 use crate::util::{MaybeMath, ResolveOrZero};
 use crate::CompactLength;
 use core::cmp::Ordering;
@@ -67,7 +68,7 @@ impl ItemBatcher {
 struct IntrinsicSizeMeasurer<'tree, 'oat, Tree, EstimateFunction>
 where
     Tree: LayoutPartialTree,
-    EstimateFunction: Fn(&GridTrack, Option<f32>, &Tree) -> Option<f32>,
+    EstimateFunction: Fn(&GridTrack, OptFloat, &Tree) -> OptFloat,
 {
     /// The layout tree
     tree: &'tree mut Tree,
@@ -79,20 +80,20 @@ where
     /// The axis we are currently sizing
     axis: AbstractAxis,
     /// The available grid space
-    inner_node_size: Size<Option<f32>>,
+    inner_node_size: Size<OptFloat>,
 }
 
 impl<Tree, EstimateFunction> IntrinsicSizeMeasurer<'_, '_, Tree, EstimateFunction>
 where
     Tree: LayoutPartialTree,
-    EstimateFunction: Fn(&GridTrack, Option<f32>, &Tree) -> Option<f32>,
+    EstimateFunction: Fn(&GridTrack, OptFloat, &Tree) -> OptFloat,
 {
     /// Compute the available_space to be passed to the child sizing functions
     /// These are estimates based on either the max track sizing function or the provisional base size in the opposite
     /// axis to the one currently being sized.
     /// https://www.w3.org/TR/css-grid-1/#algo-overview
     #[inline(always)]
-    fn grid_area_size(&self, item: &mut GridItem, axis_tracks: &[GridTrack]) -> Size<Option<f32>> {
+    fn grid_area_size(&self, item: &mut GridItem, axis_tracks: &[GridTrack]) -> Size<OptFloat> {
         item.grid_area_size_cached(
             self.axis,
             axis_tracks,
@@ -106,7 +107,7 @@ where
     /// Compute the item's resolved margins for size contributions. Horizontal percentage margins always resolve
     /// to zero if the container size is indefinite as otherwise this would introduce a cyclic dependency.
     #[inline(always)]
-    fn margins_axis_sums_with_baseline_shims(&self, item: &GridItem, percentage_basis: Option<f32>) -> Size<f32> {
+    fn margins_axis_sums_with_baseline_shims(&self, item: &GridItem, percentage_basis: OptFloat) -> Size<f32> {
         item.margins_axis_sums_with_baseline_shims(percentage_basis, self.tree)
     }
 
@@ -120,7 +121,7 @@ where
     #[inline(always)]
     fn min_content_contribution(&mut self, item: &mut GridItem, axis_tracks: &[GridTrack]) -> f32 {
         let grid_area_size = self.grid_area_size(item, axis_tracks);
-        let available_space = grid_area_size.with(self.axis, None);
+        let available_space = grid_area_size.with(self.axis, OptFloat::NONE);
         let margin_axis_sums = self.margins_axis_sums_with_baseline_shims(item, available_space.width);
         let contribution = item.min_content_contribution_cached(self.axis, self.tree, grid_area_size, available_space);
         contribution + margin_axis_sums.get(self.axis)
@@ -130,7 +131,7 @@ where
     #[inline(always)]
     fn max_content_contribution(&mut self, item: &mut GridItem, axis_tracks: &[GridTrack]) -> f32 {
         let grid_area_size = self.grid_area_size(item, axis_tracks);
-        let available_space = grid_area_size.with(self.axis, None);
+        let available_space = grid_area_size.with(self.axis, OptFloat::NONE);
         let margin_axis_sums = self.margins_axis_sums_with_baseline_shims(item, available_space.width);
         let contribution = item.max_content_contribution_cached(self.axis, self.tree, grid_area_size, available_space);
         contribution + margin_axis_sums.get(self.axis)
@@ -146,7 +147,7 @@ where
     #[inline(always)]
     fn minimum_contribution(&mut self, item: &mut GridItem, axis_tracks: &[GridTrack]) -> f32 {
         let grid_area_size = self.grid_area_size(item, axis_tracks);
-        let available_space = grid_area_size.with(self.axis, None);
+        let available_space = grid_area_size.with(self.axis, OptFloat::NONE);
         let margin_axis_sums = self.margins_axis_sums_with_baseline_shims(item, available_space.width);
         let contribution =
             item.minimum_contribution_cached(self.tree, self.axis, axis_tracks, grid_area_size, self.inner_node_size);
@@ -183,8 +184,8 @@ pub(super) fn cmp_by_cross_flex_then_span_then_start(
 #[inline(always)]
 pub(super) fn compute_alignment_gutter_adjustment(
     alignment: AlignContent,
-    axis_inner_node_size: Option<f32>,
-    get_track_size_estimate: impl Fn(&GridTrack, Option<f32>) -> Option<f32>,
+    axis_inner_node_size: OptFloat,
+    get_track_size_estimate: impl Fn(&GridTrack, OptFloat) -> OptFloat,
     tracks: &[GridTrack],
 ) -> f32 {
     if tracks.len() <= 1 {
@@ -222,11 +223,11 @@ pub(super) fn compute_alignment_gutter_adjustment(
         return 0.0;
     }
 
-    if let Some(axis_inner_node_size) = axis_inner_node_size {
+    if let Some(axis_inner_node_size) = axis_inner_node_size.into_option() {
         let free_space = tracks
             .iter()
-            .map(|track| get_track_size_estimate(track, Some(axis_inner_node_size)))
-            .sum::<Option<f32>>()
+            .map(|track| get_track_size_estimate(track, OptFloat::some(axis_inner_node_size)))
+            .sum::<OptFloat>()
             .map(|track_size_sum| f32_max(0.0, axis_inner_node_size - track_size_sum))
             .unwrap_or(0.0);
 
@@ -273,16 +274,16 @@ pub(super) fn determine_if_item_crosses_flexible_or_intrinsic_tracks(
 pub(super) fn track_sizing_algorithm<Tree: LayoutPartialTree>(
     tree: &mut Tree,
     axis: AbstractAxis,
-    axis_min_size: Option<f32>,
-    axis_max_size: Option<f32>,
+    axis_min_size: OptFloat,
+    axis_max_size: OptFloat,
     axis_alignment: AlignContent,
     other_axis_alignment: AlignContent,
     available_grid_space: Size<AvailableSpace>,
-    inner_node_size: Size<Option<f32>>,
+    inner_node_size: Size<OptFloat>,
     axis_tracks: &mut [GridTrack],
     other_axis_tracks: &mut [GridTrack],
     items: &mut [GridItem],
-    get_track_size_estimate: fn(&GridTrack, Option<f32>, &Tree) -> Option<f32>,
+    get_track_size_estimate: fn(&GridTrack, OptFloat, &Tree) -> OptFloat,
     has_baseline_aligned_item: bool,
 ) {
     // 11.4 Initialise Track sizes
@@ -347,7 +348,7 @@ pub(super) fn track_sizing_algorithm<Tree: LayoutPartialTree>(
     // into space generated by the grid container's size (as defined by either it's preferred size style or by it's parent node through
     // something like stretch alignment), not just any available space. To do this we map definite available space to AvailableSpace::MaxContent
     // in the case that inner_node_size is None
-    let axis_available_space_for_expansion = if let Some(available_space) = inner_node_size.get(axis) {
+    let axis_available_space_for_expansion = if let Some(available_space) = inner_node_size.get(axis).into_option() {
         AvailableSpace::Definite(available_space)
     } else {
         match available_grid_space.get(axis) {
@@ -421,7 +422,7 @@ fn flush_planned_growth_limit_increases(tracks: &mut [GridTrack], set_infinitely
 fn initialize_track_sizes(
     tree: &impl LayoutPartialTree,
     axis_tracks: &mut [GridTrack],
-    axis_inner_node_size: Option<f32>,
+    axis_inner_node_size: OptFloat,
 ) {
     for track in axis_tracks.iter_mut() {
         // For each track, if the track’s min track sizing function is:
@@ -459,7 +460,7 @@ fn resolve_item_baselines(
     tree: &mut impl LayoutPartialTree,
     axis: AbstractAxis,
     items: &mut [GridItem],
-    inner_node_size: Size<Option<f32>>,
+    inner_node_size: Size<OptFloat>,
 ) {
     // Sort items by track in the other axis (row) start position so that we can iterate items in groups which
     // are in the same track in the other axis (row)
@@ -525,7 +526,7 @@ fn resolve_item_baselines(
                 baseline.unwrap_or(height)
             };
 
-            item.baseline = Some(
+            item.baseline = OptFloat::some(
                 baseline + item.margin.top.resolve_or_zero(inner_node_size.width, |val, basis| tree.calc(val, basis)),
             );
         }
@@ -556,8 +557,8 @@ fn resolve_intrinsic_track_sizes<Tree: LayoutPartialTree>(
     other_axis_tracks: &[GridTrack],
     items: &mut [GridItem],
     axis_available_grid_space: AvailableSpace,
-    inner_node_size: Size<Option<f32>>,
-    get_track_size_estimate: impl Fn(&GridTrack, Option<f32>, &Tree) -> Option<f32>,
+    inner_node_size: Size<OptFloat>,
+    get_track_size_estimate: impl Fn(&GridTrack, OptFloat, &Tree) -> OptFloat,
 ) {
     // Step 1. Shim baseline-aligned items so their intrinsic size contributions reflect their baseline alignment.
 
@@ -1015,7 +1016,7 @@ fn distribute_item_space_to_base_size(
     track_is_affected: impl Fn(&GridTrack) -> bool,
     track_limit: impl Fn(&GridTrack) -> f32,
     intrinsic_contribution_type: IntrinsicContributionType,
-    axis_inner_node_size: Option<f32>,
+    axis_inner_node_size: OptFloat,
 ) {
     if is_flex {
         let filter = |track: &GridTrack| track.is_flexible() && track_is_affected(track);
@@ -1070,7 +1071,7 @@ fn distribute_item_space_to_base_size(
         track_distribution_proportion: impl Fn(&GridTrack) -> f32,
         track_limit: impl Fn(&GridTrack) -> f32,
         intrinsic_contribution_type: IntrinsicContributionType,
-        axis_inner_node_size: Option<f32>,
+        axis_inner_node_size: OptFloat,
     ) {
         // Skip this distribution if there is either
         //   - no space to distribute
@@ -1160,7 +1161,7 @@ fn distribute_item_space_to_growth_limit(
     space: f32,
     tracks: &mut [GridTrack],
     track_is_affected: impl Fn(&GridTrack) -> bool,
-    axis_inner_node_size: Option<f32>,
+    axis_inner_node_size: OptFloat,
 ) {
     // Skip this distribution if there is either
     //   - no space to distribute
@@ -1225,7 +1226,7 @@ fn distribute_item_space_to_growth_limit(
 #[inline(always)]
 fn maximise_tracks(
     axis_tracks: &mut [GridTrack],
-    axis_inner_node_size: Option<f32>,
+    axis_inner_node_size: OptFloat,
     axis_available_grid_space: AvailableSpace,
 ) {
     let used_space: f32 = axis_tracks.iter().map(|track| track.base_size).sum();
@@ -1257,8 +1258,8 @@ fn expand_flexible_tracks(
     axis: AbstractAxis,
     axis_tracks: &mut [GridTrack],
     items: &mut [GridItem],
-    axis_min_size: Option<f32>,
-    axis_max_size: Option<f32>,
+    axis_min_size: OptFloat,
+    axis_max_size: OptFloat,
     axis_available_space_for_expansion: AvailableSpace,
 ) {
     // First, find the grid’s used flex fraction:
@@ -1420,7 +1421,7 @@ fn find_size_of_fr(tracks: &[GridTrack], space_to_fill: f32) -> f32 {
 #[inline(always)]
 fn stretch_auto_tracks(
     axis_tracks: &mut [GridTrack],
-    axis_min_size: Option<f32>,
+    axis_min_size: OptFloat,
     axis_available_space_for_expansion: AvailableSpace,
 ) {
     let num_auto_tracks = axis_tracks.iter().filter(|track| track.max_track_sizing_function.is_auto()).count();
@@ -1432,7 +1433,7 @@ fn stretch_auto_tracks(
         let free_space = if axis_available_space_for_expansion.is_definite() {
             axis_available_space_for_expansion.compute_free_space(used_space)
         } else {
-            match axis_min_size {
+            match axis_min_size.into_option() {
                 Some(size) => size - used_space,
                 None => 0.0,
             }

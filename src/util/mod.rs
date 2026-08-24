@@ -1,9 +1,11 @@
 //! Helpful misc. utilities such as a function to debug print a tree
 mod math;
+mod opt_float;
 mod resolve;
 pub(crate) mod sys;
 
 pub use math::MaybeMath;
+pub use opt_float::OptFloat;
 pub use resolve::{MaybeResolve, ResolveOrZero};
 
 #[doc(hidden)]

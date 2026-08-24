@@ -5,6 +5,7 @@
 use crate::geometry::Size;
 use crate::style::AvailableSpace;
 use crate::tree::{CollapsibleMarginSet, LayoutInput, LayoutOutput, RunMode};
+use crate::util::OptFloat;
 use crate::RequestedAxis;
 
 /// The number of cache entries for each node in the tree
@@ -35,18 +36,19 @@ const NON_SIGN_BITS_MASK: u64 = !BOTH_SIGN_BITS_MASK;
 /// y-axis value when comparing a cache key.
 const X_AXIS_VALUE_MASK: u64 = (u32::MAX as u64) << 32;
 
-/// Pack `Option<f32>` into `u32`
+/// Pack `OptFloat` into `u32`
 #[inline(always)]
-fn option_cache_key(input: Option<f32>) -> u32 {
-    match input {
-        Some(value) => value.to_bits(),
-        None => INFINITY_BITS,
+fn option_cache_key(input: OptFloat) -> u32 {
+    if input.is_none() {
+        INFINITY_BITS
+    } else {
+        input.to_bits()
     }
 }
 
-/// Pack `Size<Option<f32>>` into `u64`
+/// Pack `Size<OptFloat>` into `u64`
 #[inline(always)]
-fn size_option_cache_key(input: Size<Option<f32>>) -> u64 {
+fn size_option_cache_key(input: Size<OptFloat>) -> u64 {
     (option_cache_key(input.width) as u64) << 32 | option_cache_key(input.height) as u64
 }
 
@@ -67,17 +69,21 @@ fn size_available_space_cache_key(input: Size<AvailableSpace>) -> u64 {
     (available_space_cache_key(input.width) as u64) << 32 | available_space_cache_key(input.height) as u64
 }
 
-/// Encodes combination of a `known_dimension` (Option<f32>) and `AvailableSpace` in
+/// Encodes combination of a `known_dimension` (OptFloat) and `AvailableSpace` in
 /// a single dimension into a cache key in a single dimension.
 #[inline(always)]
-fn mixed_cache_key(kd: Option<f32>, avs: AvailableSpace) -> u32 {
-    kd.map(|kd| kd.to_bits()).unwrap_or_else(|| available_space_cache_key(avs))
+fn mixed_cache_key(kd: OptFloat, avs: AvailableSpace) -> u32 {
+    if kd.is_none() {
+        available_space_cache_key(avs)
+    } else {
+        kd.to_bits()
+    }
 }
 
-/// Encodes combination of a `known_dimension` (Option<f32>) and `AvailableSpace` in
+/// Encodes combination of a `known_dimension` (OptFloat) and `AvailableSpace` in
 /// two dimensions into a cache key in a single dimension.
 #[inline(always)]
-fn size_mixed_cache_key(kd: Size<Option<f32>>, avs: Size<AvailableSpace>) -> u64 {
+fn size_mixed_cache_key(kd: Size<OptFloat>, avs: Size<AvailableSpace>) -> u64 {
     (mixed_cache_key(kd.width, avs.width) as u64) << 32 | mixed_cache_key(kd.height, avs.height) as u64
 }
 
@@ -294,7 +300,7 @@ mod tests {
             run_mode: RunMode::ComputeSize,
             sizing_mode: SizingMode::InherentSize,
             axis: RequestedAxis::Both,
-            known_dimensions: Size { width: Some(width), height: None },
+            known_dimensions: Size { width: OptFloat::some(width), height: OptFloat::NONE },
             known_dimensions_are_definite: Size { width: true, height: true },
             parent_size: Size::NONE,
             available_space: Size { width: AvailableSpace::MaxContent, height: AvailableSpace::MaxContent },

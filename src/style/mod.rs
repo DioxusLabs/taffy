@@ -24,6 +24,7 @@ pub use self::dimension::{
     LengthPercentageAuto,
 };
 use crate::sys::DefaultCheapStr;
+use crate::util::OptFloat;
 
 #[cfg(feature = "block_layout")]
 pub use self::block::{BlockContainerStyle, BlockItemStyle, TextAlign};
@@ -392,10 +393,10 @@ impl Overflow {
     /// Returns `Some(0.0)` if the overflow mode would cause the automatic minimum size of a Flexbox or CSS Grid item
     /// to be `0`. Else returns None.
     #[inline(always)]
-    pub(crate) fn maybe_into_automatic_min_size(self) -> Option<f32> {
+    pub(crate) fn maybe_into_automatic_min_size(self) -> OptFloat {
         match self.is_scroll_container() {
-            true => Some(0.0),
-            false => None,
+            true => OptFloat::some(0.0),
+            false => OptFloat::NONE,
         }
     }
 }

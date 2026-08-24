@@ -5,12 +5,13 @@ use crate::compute::common::alignment::{
 };
 use crate::geometry::{InBothAbsAxis, Line, Point, Rect, Size};
 use crate::style::{
-    AlignContent, AlignItems, AlignItemsKeyword, AlignSelf, AvailableSpace, CoreStyle, GridItemStyle, Overflow,
-    Position,
+    AlignContent, AlignItems, AlignItemsKeyword, AlignSelf, CoreStyle, GridItemStyle, Overflow, Position,
 };
 use crate::tree::{Layout, LayoutPartialTreeExt, NodeId, SizingMode};
 use crate::util::sys::f32_max;
+use crate::util::OptFloat;
 use crate::util::{MaybeMath, MaybeResolve, ResolveOrZero};
+use crate::AvailableSpace;
 
 #[cfg(feature = "content_size")]
 use crate::compute::common::scrollable_overflow::compute_scrollable_overflow_contribution;
@@ -129,10 +130,12 @@ pub(super) fn align_and_position_item(
         .inset()
         .vertical_components()
         .map(|size| size.resolve_to_option(grid_area_size.height, |val, basis| tree.calc(val, basis)));
-    let padding =
-        style.padding().map(|p| p.resolve_or_zero(Some(grid_area_size.width), |val, basis| tree.calc(val, basis)));
-    let border =
-        style.border().map(|p| p.resolve_or_zero(Some(grid_area_size.width), |val, basis| tree.calc(val, basis)));
+    let padding = style
+        .padding()
+        .map(|p| p.resolve_or_zero(OptFloat::some(grid_area_size.width), |val, basis| tree.calc(val, basis)));
+    let border = style
+        .border()
+        .map(|p| p.resolve_or_zero(OptFloat::some(grid_area_size.width), |val, basis| tree.calc(val, basis)));
     let padding_border_size = (padding + border).sum_axes();
 
     let box_sizing_adjustment =
@@ -147,7 +150,7 @@ pub(super) fn align_and_position_item(
         .min_size()
         .maybe_resolve(grid_area_size, |val, basis| tree.calc(val, basis))
         .maybe_add(box_sizing_adjustment)
-        .or(padding_border_size.map(Some))
+        .or(padding_border_size.map(OptFloat::some))
         .maybe_max(padding_border_size)
         .maybe_apply_aspect_ratio(aspect_ratio);
     let max_size = style
@@ -195,20 +198,20 @@ pub(super) fn align_and_position_item(
     let keyword_width = inherent_size.width.is_none().then(|| {
         resolve_sizing_keyword(
             size_style.width,
-            Some(grid_area_minus_item_margins_size.width),
-            Some(grid_area_size.width),
+            OptFloat::some(grid_area_minus_item_margins_size.width),
+            OptFloat::some(grid_area_size.width),
         )
     });
     let keyword_height = inherent_size.height.is_none().then(|| {
         resolve_sizing_keyword(
             size_style.height,
-            Some(grid_area_minus_item_margins_size.height),
-            Some(grid_area_size.height),
+            OptFloat::some(grid_area_minus_item_margins_size.height),
+            OptFloat::some(grid_area_size.height),
         )
     });
 
     // If both axes need to be measured then resolve them with a single measure call
-    let keyword_measured_size: Size<Option<f32>> = match (&keyword_width, &keyword_height) {
+    let keyword_measured_size: Size<OptFloat> = match (&keyword_width, &keyword_height) {
         (
             Some(Some(SizingKeywordResolution::Measure(available_width))),
             Some(Some(SizingKeywordResolution::Measure(available_height))),
@@ -216,12 +219,12 @@ pub(super) fn align_and_position_item(
             .measure_child_size_both(
                 node,
                 Size::NONE,
-                grid_area_size.map(Option::Some),
+                grid_area_size.map(OptFloat::some),
                 Size { width: *available_width, height: *available_height },
                 SizingMode::InherentSize,
                 Line::FALSE,
             )
-            .map(Option::Some),
+            .map(OptFloat::some),
         _ => Size::NONE,
     };
 
@@ -231,19 +234,21 @@ pub(super) fn align_and_position_item(
         // Apply width derived from both the left and right properties of an absolutely
         // positioned element being set
         if position == Position::Absolute {
-            if let (Some(left), Some(right)) = (inset_horizontal.start, inset_horizontal.end) {
-                return Some(f32_max(grid_area_minus_item_margins_size.width - left - right, 0.0));
+            if let (Some(left), Some(right)) =
+                (inset_horizontal.start.into_option(), inset_horizontal.end.into_option())
+            {
+                return OptFloat::some(f32_max(grid_area_minus_item_margins_size.width - left - right, 0.0));
             }
         }
 
         if let Some(Some(resolution)) = keyword_width {
-            return Some(match resolution {
+            return OptFloat::some(match resolution {
                 SizingKeywordResolution::Exact(width) => width,
                 SizingKeywordResolution::Measure(available_width) => keyword_measured_size.width.unwrap_or_else(|| {
                     tree.measure_child_size(
                         node,
                         Size::NONE,
-                        grid_area_size.map(Option::Some),
+                        grid_area_size.map(OptFloat::some),
                         Size {
                             width: available_width,
                             height: AvailableSpace::Definite(grid_area_minus_item_margins_size.height),
@@ -265,10 +270,10 @@ pub(super) fn align_and_position_item(
             && alignment_styles.horizontal == AlignSelf::STRETCH
             && position != Position::Absolute
         {
-            return Some(grid_area_minus_item_margins_size.width);
+            return OptFloat::some(grid_area_minus_item_margins_size.width);
         }
 
-        None
+        OptFloat::NONE
     });
 
     // Reapply aspect ratio after stretch and absolute position width adjustments
@@ -276,24 +281,25 @@ pub(super) fn align_and_position_item(
 
     let height = height.or_else(|| {
         if position == Position::Absolute {
-            if let (Some(top), Some(bottom)) = (inset_vertical.start, inset_vertical.end) {
-                return Some(f32_max(grid_area_minus_item_margins_size.height - top - bottom, 0.0));
+            if let (Some(top), Some(bottom)) = (inset_vertical.start.into_option(), inset_vertical.end.into_option()) {
+                return OptFloat::some(f32_max(grid_area_minus_item_margins_size.height - top - bottom, 0.0));
             }
         }
 
         if let Some(Some(resolution)) = keyword_height {
-            return Some(match resolution {
+            return OptFloat::some(match resolution {
                 SizingKeywordResolution::Exact(height) => height,
                 SizingKeywordResolution::Measure(available_height) => {
                     keyword_measured_size.height.unwrap_or_else(|| {
                         tree.measure_child_size(
                             node,
-                            Size { width, height: None },
-                            grid_area_size.map(Option::Some),
+                            Size { width, height: OptFloat::NONE },
+                            grid_area_size.map(OptFloat::some),
                             Size {
-                                width: width
-                                    .map(AvailableSpace::Definite)
-                                    .unwrap_or(AvailableSpace::Definite(grid_area_minus_item_margins_size.width)),
+                                width: width.map_or(
+                                    AvailableSpace::Definite(grid_area_minus_item_margins_size.width),
+                                    AvailableSpace::Definite,
+                                ),
                                 height: available_height,
                             },
                             SizingMode::InherentSize,
@@ -314,10 +320,10 @@ pub(super) fn align_and_position_item(
             && alignment_styles.vertical == AlignSelf::STRETCH
             && position != Position::Absolute
         {
-            return Some(grid_area_minus_item_margins_size.height);
+            return OptFloat::some(grid_area_minus_item_margins_size.height);
         }
 
-        None
+        OptFloat::NONE
     });
     // Reapply aspect ratio after stretch and absolute position height adjustments
     let Size { width, height } = Size { width, height }.maybe_apply_aspect_ratio(aspect_ratio);
@@ -330,12 +336,12 @@ pub(super) fn align_and_position_item(
         tree.measure_child_size_both(
             node,
             Size { width, height },
-            grid_area_size.map(Option::Some),
+            grid_area_size.map(OptFloat::some),
             grid_area_minus_item_margins_size.map(AvailableSpace::Definite),
             SizingMode::InherentSize,
             Line::FALSE,
         )
-        .map(Some)
+        .map(OptFloat::some)
     } else {
         Size { width, height }
     };
@@ -343,7 +349,7 @@ pub(super) fn align_and_position_item(
     let layout_output = tree.perform_child_layout(
         node,
         size,
-        grid_area_size.map(Option::Some),
+        grid_area_size.map(Option::Some).into(),
         grid_area_minus_item_margins_size.map(AvailableSpace::Definite),
         SizingMode::InherentSize,
         Line::FALSE,
@@ -426,8 +432,8 @@ pub(super) fn align_item_within_area(
     alignment_style: AlignSelf,
     resolved_size: f32,
     position: Position,
-    inset: Line<Option<f32>>,
-    margin: Line<Option<f32>>,
+    inset: Line<OptFloat>,
+    margin: Line<OptFloat>,
     baseline_shim: f32,
     direction: Direction,
 ) -> (f32, Line<f32>) {
@@ -476,7 +482,7 @@ pub(super) fn align_item_within_area(
     };
 
     let offset_within_area = if position == Position::Absolute {
-        match (inset.start, inset.end) {
+        match (inset.start.into_option(), inset.end.into_option()) {
             (Some(start), Some(end)) => {
                 if direction.is_rtl() {
                     grid_area_size - end - resolved_size - non_auto_margin.end

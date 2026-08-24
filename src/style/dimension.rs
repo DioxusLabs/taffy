@@ -4,6 +4,7 @@ use crate::geometry::Rect;
 use crate::style_helpers::{FromLength, FromPercent, TaffyAuto, TaffyZero};
 #[cfg(feature = "parse")]
 use crate::util::parse::{from_str_from_css, CssParseResult, FromCss, Parser, Token};
+use crate::util::OptFloat;
 
 /// A unit of linear measurement
 ///
@@ -235,13 +236,13 @@ impl LengthPercentageAuto {
     ///   - Some(resolved) using the provided context for Percent variants
     ///   - None for Auto variants
     #[inline(always)]
-    pub fn resolve_to_option(self, context: f32, calc_resolver: impl Fn(*const (), f32) -> f32) -> Option<f32> {
+    pub fn resolve_to_option(self, context: f32, calc_resolver: impl Fn(*const (), f32) -> f32) -> OptFloat {
         match self.0.tag() {
-            CompactLength::LENGTH_TAG => Some(self.0.value()),
-            CompactLength::PERCENT_TAG => Some(context * self.0.value()),
-            CompactLength::AUTO_TAG => None,
+            CompactLength::LENGTH_TAG => OptFloat::some(self.0.value()),
+            CompactLength::PERCENT_TAG => OptFloat::some(context * self.0.value()),
+            CompactLength::AUTO_TAG => OptFloat::NONE,
             #[cfg(feature = "calc")]
-            _ if self.0.is_calc() => Some(calc_resolver(self.0.calc_value(), context)),
+            _ if self.0.is_calc() => OptFloat::some(calc_resolver(self.0.calc_value(), context)),
             _ => unreachable!("LengthPercentageAuto values cannot be constructed with other tags"),
         }
     }
@@ -488,10 +489,10 @@ impl Dimension {
 
     /// Get Length value if value is Length variant
     #[cfg(feature = "grid")]
-    pub fn into_option(self) -> Option<f32> {
+    pub fn into_option(self) -> OptFloat {
         match self.0.tag() {
-            CompactLength::LENGTH_TAG => Some(self.0.value()),
-            _ => None,
+            CompactLength::LENGTH_TAG => OptFloat::some(self.0.value()),
+            _ => OptFloat::NONE,
         }
     }
     /// Returns true if value is Auto
