@@ -4,7 +4,7 @@
 
 use crate::geometry::Size;
 use crate::style::AvailableSpace;
-use crate::tree::{LayoutInput, LayoutOutput, RunMode};
+use crate::tree::{CollapsibleMarginSet, LayoutInput, LayoutOutput, RunMode};
 use crate::RequestedAxis;
 
 /// The number of cache entries for each node in the tree
@@ -219,6 +219,16 @@ impl Cache {
                 self.final_layout_entry = Some(CacheEntry { key, content: layout_output })
             }
             RunMode::ComputeSize => {
+                // Measure entries only store the size, and cache hits are reconstructed with
+                // `LayoutOutput::from_outer_size`, which resets the margin-collapse metadata
+                // (`top_margin`, `bottom_margin`, `margins_can_collapse_through`). Results that
+                // carry such metadata cannot be reconstructed from their size, so don't cache them.
+                if layout_output.margins_can_collapse_through
+                    || layout_output.top_margin != CollapsibleMarginSet::ZERO
+                    || layout_output.bottom_margin != CollapsibleMarginSet::ZERO
+                {
+                    return;
+                }
                 self.is_empty = false;
                 if let Some(index) =
                     self.measure_entries.iter().position(|entry| entry.is_some_and(|entry| entry.key == key))
@@ -320,6 +330,21 @@ mod tests {
 
         assert_eq!(cache.measure_entries.iter().flatten().count(), 2);
         assert_eq!(cache.get(&input(1.0)), Some(output(3.0)));
+    }
+
+    #[test]
+    fn measurements_with_margin_collapse_metadata_are_not_cached() {
+        let mut cache = Cache::new();
+
+        let mut collapse_through = output(1.0);
+        collapse_through.margins_can_collapse_through = true;
+        cache.store(&input(1.0), collapse_through);
+        assert_eq!(cache.get(&input(1.0)), None);
+
+        let mut carried_margin = output(2.0);
+        carried_margin.top_margin = CollapsibleMarginSet::from_margin(10.0);
+        cache.store(&input(2.0), carried_margin);
+        assert_eq!(cache.get(&input(2.0)), None);
     }
 
     #[test]
