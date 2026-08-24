@@ -1,0 +1,15 @@
+<test name="flex_image_stretch_column__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="flex" direction="rtl" flex-direction="column" width="100px" height="300px">
+      <img intrinsic-width="100" intrinsic-height="50" direction="rtl"/>
+      <img intrinsic-width="50" intrinsic-height="100" direction="rtl"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="100" height="300">
+      <node x="0" y="0" width="100" height="50"/>
+      <node x="0" y="50" width="100" height="200"/>
+    </node>
+  </expectations>
+</test>
