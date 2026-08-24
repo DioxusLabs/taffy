@@ -8,7 +8,7 @@ use crate::style::{
     AlignContent, AlignItems, AlignItemsKeyword, AlignSelf, AvailableSpace, CoreStyle, GridItemStyle, Overflow,
     Position,
 };
-use crate::tree::{Layout, LayoutPartialTreeExt, NodeId, SizingMode};
+use crate::tree::{Baselines, Layout, LayoutPartialTreeExt, NodeId, SizingMode};
 use crate::util::sys::f32_max;
 use crate::util::{MaybeMath, MaybeResolve, ResolveOrZero};
 
@@ -95,7 +95,7 @@ pub(super) fn align_and_position_item(
     container_border_box_width: f32,
     container_border: Rect<f32>,
     #[cfg(feature = "content_size")] container_is_scroll_container: bool,
-) -> (Rect<f32>, f32, f32) {
+) -> (Rect<f32>, f32, f32, Baselines) {
     let grid_area_size = Size { width: grid_area.right - grid_area.left, height: grid_area.bottom - grid_area.top };
 
     let style = tree.get_grid_child_style(node);
@@ -416,7 +416,17 @@ pub(super) fn align_and_position_item(
     #[cfg(not(feature = "content_size"))]
     let contribution = Rect::ZERO;
 
-    (contribution, y, height)
+    // Scroll containers' baselines are determined from their content as if scrolled to the
+    // initial position, but are additionally clamped to their border box.
+    // See https://github.com/w3c/csswg-drafts/issues/7660
+    let baselines = if overflow.y.is_scroll_container() {
+        let clamp = |baseline: Option<f32>| baseline.map(|baseline| baseline.min(height).max(0.0));
+        Baselines { first: clamp(layout_output.baselines.first), last: clamp(layout_output.baselines.last) }
+    } else {
+        layout_output.baselines
+    };
+
+    (contribution, y, height, baselines)
 }
 
 /// Align and size a grid item along a single axis
