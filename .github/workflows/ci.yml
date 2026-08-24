@@ -45,15 +45,15 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - run: cargo build --examples
 
-  # cosmic_text example is excluded from the workspace as it breaks compilation of all crates
-  # in the workspace with our MSRV compiler
-  build-cosmic-text-example:
-    name: "Build cosmic-text example"
+  # The Parley example is excluded from the workspace as its dependencies require a newer Rust version
+  # than Taffy's MSRV
+  build-parley-example:
+    name: "Build Parley example"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
-      - run: cd examples/cosmic_text && cargo build
+      - run: cd examples/parley && cargo build
 
   # No features
   test-features-none:
@@ -304,8 +304,7 @@ jobs:
             exit 1
           fi
 
-  # benches is excluded from the workspace as it depends on cosmic-text which breaks compilation
-  # of all crates in the workspace with our MSRV compiler
+  # benches is excluded from the workspace as Parley requires a newer Rust version than Taffy's MSRV
   benchmarks:
     name: Build Benchmarks
     runs-on: ubuntu-latest
