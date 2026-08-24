@@ -965,13 +965,13 @@ fn determine_flex_base_size(
             // TODO if/when vertical writing modes are supported
 
             // If the item has an aspect ratio and a definite cross size then the flex base size
-            // is derived from that cross size via the aspect ratio (case B above, as applied by
-            // the child's own layout below), and is therefore definite.
-            if child.aspect_ratio.is_some()
-                && child_cross_size_is_definite
-                && child_known_dimensions.cross(dir).is_some()
-            {
-                child.flex_basis_is_definite = true;
+            // is calculated by transferring that cross size through the aspect ratio (case B
+            // above), and is therefore definite.
+            if child_cross_size_is_definite {
+                if let (Some(ratio), Some(cross)) = (child.aspect_ratio, child_known_dimensions.cross(dir)) {
+                    child.flex_basis_is_definite = true;
+                    break 'flex_basis if dir.is_row() { cross * ratio } else { cross / ratio };
+                }
             }
 
             // E. Otherwise, size the item into the available space using its used flex basis
@@ -1448,7 +1448,7 @@ fn determine_container_main_size(
                                 // Either the min- or max- content size depending on which constraint we are sizing under.
                                 // TODO: Optimise by using already computed values where available
                                 debug_log!("COMPUTE CHILD BASE SIZE (for intrinsic main size):");
-                                let content_main_size = tree.measure_child_size(
+                                let measured_main_size = tree.measure_child_size(
                                     item.node,
                                     child_known_dimensions,
                                     constants.node_inner_size,
@@ -1456,7 +1456,17 @@ fn determine_container_main_size(
                                     SizingMode::ContentSize,
                                     dir.main_axis(),
                                     Line::FALSE,
-                                ) + item.margin.main_axis_sum(constants.dir);
+                                );
+
+                                // A known cross size is transferred through the item's aspect-ratio
+                                // and floors the measured content size
+                                let transferred_main_size = item
+                                    .aspect_ratio
+                                    .zip(child_known_dimensions.cross(dir))
+                                    .map(|(ratio, cross)| if constants.is_row { cross * ratio } else { cross / ratio });
+
+                                let content_main_size = measured_main_size.maybe_max(transferred_main_size)
+                                    + item.margin.main_axis_sum(constants.dir);
 
                                 // This is somewhat bizarre in that it's asymmetrical depending whether the flex container is a column or a row.
                                 //
