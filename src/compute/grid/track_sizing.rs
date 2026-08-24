@@ -6,6 +6,7 @@ use crate::style::{AlignContent, AlignContentKeyword, AvailableSpace};
 use crate::style_helpers::TaffyMinContent;
 use crate::tree::{LayoutPartialTree, LayoutPartialTreeExt, SizingMode};
 use crate::util::sys::{f32_max, f32_min, Vec};
+use crate::util::OptF32;
 use crate::util::{FrontBackVecBuilder, MaybeMath, ResolveOrZero};
 use crate::CompactLength;
 
@@ -72,7 +73,7 @@ impl ItemBatcher {
 struct IntrinsicSizeMeasurer<'tree, 'oat, Tree, EstimateFunction>
 where
     Tree: LayoutPartialTree,
-    EstimateFunction: Fn(&GridTrack, Option<f32>, &Tree) -> Option<f32>,
+    EstimateFunction: Fn(&GridTrack, OptF32, &Tree) -> OptF32,
 {
     /// The layout tree
     tree: &'tree mut Tree,
@@ -84,20 +85,20 @@ where
     /// The axis we are currently sizing
     axis: AbstractAxis,
     /// The available grid space
-    inner_node_size: Size<Option<f32>>,
+    inner_node_size: Size<OptF32>,
 }
 
 impl<Tree, EstimateFunction> IntrinsicSizeMeasurer<'_, '_, Tree, EstimateFunction>
 where
     Tree: LayoutPartialTree,
-    EstimateFunction: Fn(&GridTrack, Option<f32>, &Tree) -> Option<f32>,
+    EstimateFunction: Fn(&GridTrack, OptF32, &Tree) -> OptF32,
 {
     /// Compute the available_space to be passed to the child sizing functions
     /// These are estimates based on either the max track sizing function or the provisional base size in the opposite
     /// axis to the one currently being sized.
     /// https://www.w3.org/TR/css-grid-1/#algo-overview
     #[inline(always)]
-    fn grid_area_size(&self, item: &mut GridItem, axis_tracks: &[GridTrack]) -> Size<Option<f32>> {
+    fn grid_area_size(&self, item: &mut GridItem, axis_tracks: &[GridTrack]) -> Size<OptF32> {
         item.grid_area_size_cached(
             self.axis,
             axis_tracks,
@@ -111,7 +112,7 @@ where
     /// Compute the item's resolved margins for size contributions. Horizontal percentage margins always resolve
     /// to zero if the container size is indefinite as otherwise this would introduce a cyclic dependency.
     #[inline(always)]
-    fn margins_axis_sums_with_baseline_shims(&self, item: &GridItem, percentage_basis: Option<f32>) -> Size<f32> {
+    fn margins_axis_sums_with_baseline_shims(&self, item: &GridItem, percentage_basis: OptF32) -> Size<f32> {
         item.margins_axis_sums_with_baseline_shims(percentage_basis, self.tree)
     }
 
@@ -125,7 +126,7 @@ where
     #[inline(always)]
     fn min_content_contribution(&mut self, item: &mut GridItem, axis_tracks: &[GridTrack]) -> f32 {
         let grid_area_size = self.grid_area_size(item, axis_tracks);
-        let available_space = grid_area_size.with(self.axis, None);
+        let available_space = grid_area_size.with(self.axis, OptF32::NONE);
         let margin_axis_sums = self.margins_axis_sums_with_baseline_shims(item, available_space.width);
         let contribution = item.min_content_contribution_cached(self.axis, self.tree, grid_area_size, available_space);
         contribution + margin_axis_sums.get(self.axis)
@@ -135,7 +136,7 @@ where
     #[inline(always)]
     fn max_content_contribution(&mut self, item: &mut GridItem, axis_tracks: &[GridTrack]) -> f32 {
         let grid_area_size = self.grid_area_size(item, axis_tracks);
-        let available_space = grid_area_size.with(self.axis, None);
+        let available_space = grid_area_size.with(self.axis, OptF32::NONE);
         let margin_axis_sums = self.margins_axis_sums_with_baseline_shims(item, available_space.width);
         let contribution = item.max_content_contribution_cached(self.axis, self.tree, grid_area_size, available_space);
         contribution + margin_axis_sums.get(self.axis)
@@ -151,7 +152,7 @@ where
     #[inline(always)]
     fn minimum_contribution(&mut self, item: &mut GridItem, axis_tracks: &[GridTrack]) -> f32 {
         let grid_area_size = self.grid_area_size(item, axis_tracks);
-        let available_space = grid_area_size.with(self.axis, None);
+        let available_space = grid_area_size.with(self.axis, OptF32::NONE);
         let margin_axis_sums = self.margins_axis_sums_with_baseline_shims(item, available_space.width);
         let contribution =
             item.minimum_contribution_cached(self.tree, self.axis, axis_tracks, grid_area_size, self.inner_node_size);
@@ -165,8 +166,8 @@ where
 #[inline(always)]
 pub(super) fn compute_alignment_gutter_adjustment(
     alignment: AlignContent,
-    axis_inner_node_size: Option<f32>,
-    get_track_size_estimate: impl Fn(&GridTrack, Option<f32>) -> Option<f32>,
+    axis_inner_node_size: OptF32,
+    get_track_size_estimate: impl Fn(&GridTrack, OptF32) -> OptF32,
     tracks: &[GridTrack],
 ) -> f32 {
     if tracks.len() <= 1 {
@@ -206,11 +207,11 @@ pub(super) fn compute_alignment_gutter_adjustment(
         return 0.0;
     }
 
-    if let Some(axis_inner_node_size) = axis_inner_node_size {
+    if let Some(axis_inner_node_size) = axis_inner_node_size.into_option() {
         let free_space = tracks
             .iter()
-            .map(|track| get_track_size_estimate(track, Some(axis_inner_node_size)))
-            .sum::<Option<f32>>()
+            .map(|track| get_track_size_estimate(track, OptF32::some(axis_inner_node_size)))
+            .sum::<OptF32>()
             .map(|track_size_sum| f32_max(0.0, axis_inner_node_size - track_size_sum))
             .unwrap_or(0.0);
 
@@ -257,16 +258,16 @@ pub(super) fn determine_if_item_crosses_flexible_or_intrinsic_tracks(
 pub(super) fn track_sizing_algorithm<Tree: LayoutPartialTree>(
     tree: &mut Tree,
     axis: AbstractAxis,
-    axis_min_size: Option<f32>,
-    axis_max_size: Option<f32>,
+    axis_min_size: OptF32,
+    axis_max_size: OptF32,
     axis_alignment: AlignContent,
     other_axis_alignment: AlignContent,
     available_grid_space: Size<AvailableSpace>,
-    inner_node_size: Size<Option<f32>>,
+    inner_node_size: Size<OptF32>,
     axis_tracks: &mut [GridTrack],
     other_axis_tracks: &mut [GridTrack],
     items: &mut [GridItem],
-    get_track_size_estimate: fn(&GridTrack, Option<f32>, &Tree) -> Option<f32>,
+    get_track_size_estimate: fn(&GridTrack, OptF32, &Tree) -> OptF32,
     has_baseline_aligned_item: bool,
 ) {
     // 11.4 Initialise Track sizes
@@ -338,7 +339,7 @@ pub(super) fn track_sizing_algorithm<Tree: LayoutPartialTree>(
     // something like stretch alignment), not just any available space. To do this we map definite available space to AvailableSpace::MaxContent
     // in the case that inner_node_size is None. A min-content constraint in the block axis is also mapped to AvailableSpace::MaxContent,
     // as the min-content block size of a grid container is its max-content block size.
-    let axis_available_space_for_expansion = if let Some(available_space) = inner_node_size.get(axis) {
+    let axis_available_space_for_expansion = if let Some(available_space) = inner_node_size.get(axis).into_option() {
         AvailableSpace::Definite(available_space)
     } else {
         match available_grid_space.get(axis) {
@@ -412,11 +413,7 @@ fn flush_planned_growth_limit_increases(tracks: &mut [GridTrack], set_infinitely
 /// 11.4 Initialise Track sizes
 /// Initialize each track’s base size and growth limit.
 #[inline(always)]
-fn initialize_track_sizes(
-    tree: &impl LayoutPartialTree,
-    axis_tracks: &mut [GridTrack],
-    axis_inner_node_size: Option<f32>,
-) {
+fn initialize_track_sizes(tree: &impl LayoutPartialTree, axis_tracks: &mut [GridTrack], axis_inner_node_size: OptF32) {
     for track in axis_tracks.iter_mut() {
         // For each track, if the track’s min track sizing function is:
         // - A fixed sizing function
@@ -453,7 +450,7 @@ fn resolve_item_baselines(
     tree: &mut impl LayoutPartialTree,
     axis: AbstractAxis,
     items: &mut [GridItem],
-    inner_node_size: Size<Option<f32>>,
+    inner_node_size: Size<OptF32>,
 ) {
     // Sort items by track in the other axis (row) start position so that we can iterate items in groups which
     // are in the same track in the other axis (row)
@@ -520,7 +517,7 @@ fn resolve_item_baselines(
                 baseline.unwrap_or(height)
             };
 
-            item.baseline = Some(
+            item.baseline = OptF32::some(
                 baseline + item.margin.top.resolve_or_zero(inner_node_size.width, |val, basis| tree.calc(val, basis)),
             );
         }
@@ -552,8 +549,8 @@ fn resolve_intrinsic_track_sizes<Tree: LayoutPartialTree>(
     other_axis_tracks: &[GridTrack],
     items: &mut [GridItem],
     axis_available_grid_space: AvailableSpace,
-    inner_node_size: Size<Option<f32>>,
-    get_track_size_estimate: impl Fn(&GridTrack, Option<f32>, &Tree) -> Option<f32>,
+    inner_node_size: Size<OptF32>,
+    get_track_size_estimate: impl Fn(&GridTrack, OptF32, &Tree) -> OptF32,
 ) {
     // Step 1. Shim baseline-aligned items so their intrinsic size contributions reflect their baseline alignment.
 
@@ -1248,11 +1245,11 @@ fn expand_flexible_tracks<Tree: LayoutPartialTree>(
     axis_tracks: &mut [GridTrack],
     other_axis_tracks: &[GridTrack],
     items: &mut [GridItem],
-    axis_min_size: Option<f32>,
-    axis_max_size: Option<f32>,
+    axis_min_size: OptF32,
+    axis_max_size: OptF32,
     axis_available_space_for_expansion: AvailableSpace,
-    inner_node_size: Size<Option<f32>>,
-    get_track_size_estimate: impl Fn(&GridTrack, Option<f32>, &Tree) -> Option<f32>,
+    inner_node_size: Size<OptF32>,
+    get_track_size_estimate: impl Fn(&GridTrack, OptF32, &Tree) -> OptF32,
 ) {
     let mut item_sizer =
         IntrinsicSizeMeasurer { tree, other_axis_tracks, axis, inner_node_size, get_track_size_estimate };
@@ -1414,7 +1411,7 @@ fn find_size_of_fr(tracks: &[GridTrack], space_to_fill: f32) -> f32 {
 #[inline(always)]
 fn stretch_auto_tracks(
     axis_tracks: &mut [GridTrack],
-    axis_min_size: Option<f32>,
+    axis_min_size: OptF32,
     axis_available_space_for_expansion: AvailableSpace,
 ) {
     let num_auto_tracks = axis_tracks.iter().filter(|track| track.max_track_sizing_function.is_auto()).count();
@@ -1426,7 +1423,7 @@ fn stretch_auto_tracks(
         let free_space = if axis_available_space_for_expansion.is_definite() {
             axis_available_space_for_expansion.compute_free_space(used_space)
         } else {
-            match axis_min_size {
+            match axis_min_size.into_option() {
                 Some(size) => size - used_space,
                 None => 0.0,
             }

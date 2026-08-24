@@ -10,6 +10,7 @@ use crate::tree::{
 use crate::util::debug::debug_log;
 use crate::util::sys::{f32_max, f32_min, GridTrackVec, Vec};
 use crate::util::MaybeMath;
+use crate::util::OptF32;
 use crate::util::{MaybeResolve, ResolveOrZero};
 use crate::{
     style_helpers::*, BoxGenerationMode, BoxSizing, CoreStyle, Direction, GridContainerStyle, GridItemStyle,
@@ -57,11 +58,11 @@ struct GridContainerConstants {
     /// The sum of padding and border in each axis
     padding_border_size: Size<f32>,
     /// The container's border-box min size, if definite
-    min_size: Size<Option<f32>>,
+    min_size: Size<OptF32>,
     /// The container's border-box max size, if definite
-    max_size: Size<Option<f32>>,
+    max_size: Size<OptF32>,
     /// The container's border-box preferred size, if definite
-    preferred_size: Size<Option<f32>>,
+    preferred_size: Size<OptF32>,
     /// The space reserved for scrollbars in each axis
     scrollbar_gutter: Point<f32>,
     /// Whether the container's overflow makes it a scroll container
@@ -80,13 +81,13 @@ struct GridContainerConstants {
     /// The space available to size the grid tracks in each axis
     available_grid_space: Size<AvailableSpace>,
     /// The container's border-box size, if definite
-    outer_node_size: Size<Option<f32>>,
+    outer_node_size: Size<OptF32>,
     /// The container's content-box min size, if definite
-    inner_min_size: Size<Option<f32>>,
+    inner_min_size: Size<OptF32>,
     /// The container's content-box max size, if definite
-    inner_max_size: Size<Option<f32>>,
+    inner_max_size: Size<OptF32>,
     /// The container's content-box size, if definite
-    inner_node_size: Size<Option<f32>>,
+    inner_node_size: Size<OptF32>,
 }
 
 /// Resolve the grid container's style against the layout inputs (step 1 of `compute_grid_layout`)
@@ -158,8 +159,7 @@ fn compute_container_constants<Tree: LayoutGridContainer>(
     let justify_items = style.justify_items();
     let constrained_available_space = known_dimensions
         .or(preferred_size)
-        .map(|size| size.map(AvailableSpace::Definite))
-        .unwrap_or(available_space)
+        .zip_map(available_space, |opt, avs| opt.map_or(avs, AvailableSpace::Definite))
         .maybe_clamp(min_size, max_size)
         .maybe_max(padding_border_size);
 
@@ -264,13 +264,13 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     // Short-circuit layout if the container's size is fully determined by the container's size and the run mode
     // is ComputeSize (and thus the container's size is all that we're interested in)
     if run_mode == RunMode::ComputeSize {
-        if let Size { width: Some(width), height: Some(height) } = outer_node_size {
+        if let Size { width: Some(width), height: Some(height) } = outer_node_size.into_options() {
             return LayoutOutput::from_outer_size(Size { width, height });
         }
 
         // We can also short-circuit if the width is known and only the width has been requested.
         if inputs.axis == RequestedAxis::Horizontal {
-            if let Some(width) = outer_node_size.width {
+            if let Some(width) = outer_node_size.width.into_option() {
                 return LayoutOutput::from_outer_size(Size { width, height: 0.0 });
             }
         }
@@ -293,9 +293,12 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     // Otherwise, if the grid container has a definite min size in the relevant axis:
     //   - then the number of repetitions is the smallest possible positive integer that fulfills that minimum requirement
     // Otherwise, the specified track list repeats only once.
-    let auto_repeat_fit_strategy = outer_node_size.or(max_size).map(|val| match val {
-        Some(_) => AutoRepeatStrategy::MaxRepetitionsThatDoNotOverflow,
-        None => AutoRepeatStrategy::MinRepetitionsThatDoOverflow,
+    let auto_repeat_fit_strategy = outer_node_size.or(max_size).map(|val| {
+        if val.is_some() {
+            AutoRepeatStrategy::MaxRepetitionsThatDoNotOverflow
+        } else {
+            AutoRepeatStrategy::MinRepetitionsThatDoOverflow
+        }
     });
 
     // Compute the number of rows and columns in the explicit grid *template*
@@ -428,7 +431,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
         &mut columns,
         &mut rows,
         &mut items,
-        |track: &GridTrack, parent_size: Option<f32>, tree: &Tree| {
+        |track: &GridTrack, parent_size: OptF32, tree: &Tree| {
             track.max_track_sizing_function.definite_value(parent_size, |val, basis| tree.calc(val, basis))
         },
         has_baseline_aligned_item,
@@ -461,7 +464,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
         &mut rows,
         &mut columns,
         &mut items,
-        |track: &GridTrack, _, _| Some(track.base_size),
+        |track: &GridTrack, _, _| OptF32::some(track.base_size),
         false, // TODO: Support baseline alignment in the vertical axis
     );
     let initial_row_sum = rows.iter().map(|track| track.base_size).sum::<f32>();
@@ -497,7 +500,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
 
     // The container's size is now determined, so percentages resolve against its content box when re-running track sizing.
     // This may be a no-op if the container's size was known upfront (in which case it already equals `inner_node_size`).
-    inner_node_size = container_content_box.map(Some);
+    inner_node_size = container_content_box.map(OptF32::some);
 
     // Column sizing must be re-run (once) if:
     //   - The grid container's width was initially indefinite and there are any columns with percentage track sizing functions
@@ -520,19 +523,20 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
                     &columns,
                     &rows,
                     inner_node_size,
-                    |track: &GridTrack, _| Some(track.base_size),
+                    |track: &GridTrack, _| OptF32::some(track.base_size),
                     &|val, basis| tree.calc(val, basis),
                 );
-                let available_space = grid_area_size.with(AbstractAxis::Inline, None);
+                let available_space = grid_area_size.with(AbstractAxis::Inline, OptF32::NONE);
                 let new_min_content_contribution =
                     item.min_content_contribution(AbstractAxis::Inline, tree, grid_area_size, available_space);
 
-                let has_changed = Some(new_min_content_contribution) != item.min_content_contribution_cache.width;
+                let has_changed =
+                    Some(new_min_content_contribution) != item.min_content_contribution_cache.width.into();
 
                 item.grid_area_size_cache = Some(grid_area_size);
-                item.min_content_contribution_cache.width = Some(new_min_content_contribution);
-                item.max_content_contribution_cache.width = None;
-                item.minimum_contribution_cache.width = None;
+                item.min_content_contribution_cache.width = OptF32::some(new_min_content_contribution);
+                item.max_content_contribution_cache.width = OptF32::NONE;
+                item.minimum_contribution_cache.width = OptF32::NONE;
 
                 any_changed | has_changed
             });
@@ -541,9 +545,9 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
         // Clear intrinsic width caches
         items.iter_mut().for_each(|item| {
             item.grid_area_size_cache = None;
-            item.min_content_contribution_cache.width = None;
-            item.max_content_contribution_cache.width = None;
-            item.minimum_contribution_cache.width = None;
+            item.min_content_contribution_cache.width = OptF32::NONE;
+            item.max_content_contribution_cache.width = OptF32::NONE;
+            item.minimum_contribution_cache.width = OptF32::NONE;
         });
     }
 
@@ -559,9 +563,9 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
         // Clear intrinsic height caches
         items.iter_mut().for_each(|item| {
             item.grid_area_size_cache = None;
-            item.min_content_contribution_cache.height = None;
-            item.max_content_contribution_cache.height = None;
-            item.minimum_contribution_cache.height = None;
+            item.min_content_contribution_cache.height = OptF32::NONE;
+            item.max_content_contribution_cache.height = OptF32::NONE;
+            item.minimum_contribution_cache.height = OptF32::NONE;
         });
     }
 
@@ -579,7 +583,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
             &mut columns,
             &mut rows,
             &mut items,
-            |track: &GridTrack, _, _| Some(track.base_size),
+            |track: &GridTrack, _, _| OptF32::some(track.base_size),
             has_baseline_aligned_item,
         );
 
@@ -594,19 +598,20 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
                         &rows,
                         &columns,
                         inner_node_size,
-                        |track: &GridTrack, _| Some(track.base_size),
+                        |track: &GridTrack, _| OptF32::some(track.base_size),
                         &|val, basis| tree.calc(val, basis),
                     );
-                    let available_space = grid_area_size.with(AbstractAxis::Block, None);
+                    let available_space = grid_area_size.with(AbstractAxis::Block, OptF32::NONE);
                     let new_min_content_contribution =
                         item.min_content_contribution(AbstractAxis::Block, tree, grid_area_size, available_space);
 
-                    let has_changed = Some(new_min_content_contribution) != item.min_content_contribution_cache.height;
+                    let has_changed =
+                        Some(new_min_content_contribution) != item.min_content_contribution_cache.height.into();
 
                     item.grid_area_size_cache = Some(grid_area_size);
-                    item.min_content_contribution_cache.height = Some(new_min_content_contribution);
-                    item.max_content_contribution_cache.height = None;
-                    item.minimum_contribution_cache.height = None;
+                    item.min_content_contribution_cache.height = OptF32::some(new_min_content_contribution);
+                    item.max_content_contribution_cache.height = OptF32::NONE;
+                    item.minimum_contribution_cache.height = OptF32::NONE;
 
                     any_changed | has_changed
                 });
@@ -628,7 +633,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
             &mut rows,
             &mut columns,
             &mut items,
-            |track: &GridTrack, _, _| Some(track.base_size),
+            |track: &GridTrack, _, _| OptF32::some(track.base_size),
             false, // TODO: Support baseline alignment in the vertical axis
         );
     }
@@ -899,8 +904,8 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
 
     // Determine the grid container baseline(s) (currently we only compute the first baseline)
     // Layout containment suppresses the box's baseline for baseline-alignment purposes
-    let grid_container_baseline: Option<f32> = if contain.suppresses_baseline() {
-        None
+    let grid_container_baseline: OptF32 = if contain.suppresses_baseline() {
+        OptF32::NONE
     } else {
         // Get the row index of the first row containing items
         let first_row = items.iter().map(|item| item.row_indexes.start).min().unwrap();
@@ -915,7 +920,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
             first_row_items.find(|item| item.participates_in_baseline_alignment()).unwrap_or(first_item)
         };
 
-        Some(item.y_position + item.baseline.unwrap_or(item.height))
+        OptF32::some(item.y_position + item.baseline.unwrap_or(item.height))
     };
 
     // A scroll container's own padding at the end of the content is part of its scrollable

@@ -5,6 +5,7 @@ use crate::style_helpers::TaffyMaxContent;
 use crate::sys::DefaultCheapStr;
 use crate::tree::NodeId;
 use crate::util::sys::{f32_max, f32_min};
+use crate::util::OptF32;
 
 /// Whether we are performing a full layout, or we merely need to size the node
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
@@ -139,7 +140,7 @@ pub struct LayoutInput {
     ///
     ///   "The exact size of this node is WIDTHxHEIGHT. Please lay out your children"
     ///
-    pub known_dimensions: Size<Option<f32>>,
+    pub known_dimensions: Size<OptF32>,
     /// Whether each known dimension should be treated as a *definite* size when laying out the node's
     /// own content (resolving percentage sizes of children, and collecting flex items into flex lines).
     ///
@@ -152,7 +153,7 @@ pub struct LayoutInput {
     /// This flag is ignored (treated as `true`) for axes where the corresponding known dimension is `None`.
     pub known_dimensions_are_definite: Size<bool>,
     /// Parent size dimensions are intended to be used for percentage resolution.
-    pub parent_size: Size<Option<f32>>,
+    pub parent_size: Size<OptF32>,
     /// Available space represents an amount of space to layout into, and is used as a soft constraint
     /// for the purpose of wrapping.
     ///
@@ -207,18 +208,18 @@ impl LayoutInput {
 #[cfg_attr(feature = "serde", derive(Serialize))]
 pub struct Baselines {
     /// The first baseline of the node, if any
-    pub first: Option<f32>,
+    pub first: OptF32,
     /// The last baseline of the node, if any
-    pub last: Option<f32>,
+    pub last: OptF32,
 }
 
 impl Baselines {
     /// A `Baselines` with neither a first nor a last baseline
-    pub const NONE: Self = Self { first: None, last: None };
+    pub const NONE: Self = Self { first: OptF32::NONE, last: OptF32::NONE };
 
     /// Create a `Baselines` from just a first baseline
-    pub const fn from_first(first: Option<f32>) -> Self {
-        Self { first, last: None }
+    pub const fn from_first(first: OptF32) -> Self {
+        Self { first, last: OptF32::NONE }
     }
 }
 
