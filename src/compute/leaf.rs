@@ -135,14 +135,20 @@ where
     };
 
     // Measure node
-    let measured_size = measure_function(
+    // Replaced elements are passed the node's resolved size (known dimensions or style size) so
+    // that their measure functions can derive the other dimension from their intrinsic aspect
+    // ratio when only one dimension is specified
+    // <https://www.w3.org/TR/CSS22/visudet.html#inline-replaced-height>
+    let measure_function_known_dimensions = if style.is_compressible_replaced() {
+        node_size.maybe_clamp(node_min_size, node_max_size)
+    } else {
         match run_mode {
             RunMode::ComputeSize => known_dimensions,
             RunMode::PerformLayout => Size::NONE,
             RunMode::PerformHiddenLayout => unreachable!(),
-        },
-        available_space,
-    );
+        }
+    };
+    let measured_size = measure_function(measure_function_known_dimensions, available_space);
     let clamped_size = known_dimensions
         .or(node_size)
         .unwrap_or(measured_size + content_box_inset.sum_axes())

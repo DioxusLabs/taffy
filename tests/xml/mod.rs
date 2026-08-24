@@ -33620,6 +33620,46 @@ mod gridflex {
 
 mod leaf {
     #[test]
+    fn leaf_image_fixed_height__border_box_ltr() {
+        crate::run_xml_test("leaf", "leaf_image_fixed_height__border_box_ltr");
+    }
+
+    #[test]
+    fn leaf_image_fixed_height__content_box_ltr() {
+        crate::run_xml_test("leaf", "leaf_image_fixed_height__content_box_ltr");
+    }
+
+    #[test]
+    fn leaf_image_fixed_height__border_box_rtl() {
+        crate::run_xml_test("leaf", "leaf_image_fixed_height__border_box_rtl");
+    }
+
+    #[test]
+    fn leaf_image_fixed_height__content_box_rtl() {
+        crate::run_xml_test("leaf", "leaf_image_fixed_height__content_box_rtl");
+    }
+
+    #[test]
+    fn leaf_image_fixed_width__border_box_ltr() {
+        crate::run_xml_test("leaf", "leaf_image_fixed_width__border_box_ltr");
+    }
+
+    #[test]
+    fn leaf_image_fixed_width__content_box_ltr() {
+        crate::run_xml_test("leaf", "leaf_image_fixed_width__content_box_ltr");
+    }
+
+    #[test]
+    fn leaf_image_fixed_width__border_box_rtl() {
+        crate::run_xml_test("leaf", "leaf_image_fixed_width__border_box_rtl");
+    }
+
+    #[test]
+    fn leaf_image_fixed_width__content_box_rtl() {
+        crate::run_xml_test("leaf", "leaf_image_fixed_width__content_box_rtl");
+    }
+
+    #[test]
     fn leaf_image_intrinsic_square__border_box_ltr() {
         crate::run_xml_test("leaf", "leaf_image_intrinsic_square__border_box_ltr");
     }
