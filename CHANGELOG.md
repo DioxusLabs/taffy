@@ -14,7 +14,7 @@ rather than `Dimension`, as they do not yet support these keywords.
 
 Taffy now supports `flex-wrap: balance` and `flex-line-count` from CSS Flexbox Level 2, behind the default `flexbox_balance` feature.
 
-See https://www.equero.dev/posts/css-flex-wrap-balance-last-row-problem for an explainer.
+See [Balancing Text in CSS: The Flex-Wrap Last Row Problem](https://www.equero.dev/posts/css-flex-wrap-balance-last-row-problem) for an explainer.
 
 ### Partial support for CSS containment (#1128)
 
