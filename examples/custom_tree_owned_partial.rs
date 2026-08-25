@@ -150,14 +150,6 @@ impl taffy::LayoutPartialTree for Node {
         self.node_from_id_mut(node_id).layout = *layout
     }
 
-    fn clear_hoisted_children(&mut self, node_id: NodeId) {
-        self.node_from_id_mut(node_id).hoisted_children.clear();
-    }
-
-    fn add_hoisted_children(&mut self, node_id: NodeId, hoisted: &[NodeId]) {
-        self.node_from_id_mut(node_id).hoisted_children.extend_from_slice(hoisted);
-    }
-
     fn resolve_calc_value(&self, _val: *const (), _basis: f32) -> f32 {
         0.0
     }
@@ -204,6 +196,14 @@ impl taffy::LayoutContainingBlock for Node {
 
     fn get_oof_item_style(&self, node_id: NodeId) -> Self::OofItemStyle<'_> {
         &self.node_from_id(node_id).style
+    }
+
+    fn clear_hoisted_children(&mut self, node_id: NodeId) {
+        self.node_from_id_mut(node_id).hoisted_children.clear();
+    }
+
+    fn add_hoisted_children(&mut self, node_id: NodeId, hoisted: &[NodeId]) {
+        self.node_from_id_mut(node_id).hoisted_children.extend_from_slice(hoisted);
     }
 }
 

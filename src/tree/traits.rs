@@ -195,24 +195,6 @@ pub trait LayoutPartialTree: TraversePartialTree {
     /// Set the node's unrounded layout
     fn set_unrounded_layout(&mut self, node_id: NodeId, layout: &Layout);
 
-    /// Clear the list of out-of-flow (absolute/fixed) boxes whose containing block is `node_id`.
-    ///
-    /// This is called (exactly once) for each node laid out with `RunMode::PerformLayout`, before
-    /// the boxes it lays out are recorded with [`add_hoisted_children`](Self::add_hoisted_children),
-    /// so that lists recorded by previous layout runs do not persist.
-    fn clear_hoisted_children(&mut self, node_id: NodeId);
-
-    /// Append to the list of out-of-flow boxes whose containing block is `node_id`.
-    ///
-    /// This is called by each containing block for the boxes it lays out, and by
-    /// [`compute_root_layout`](crate::compute_root_layout) to record boxes (e.g. `position: fixed`
-    /// boxes) which are positioned by the final root positioning pass, which runs after the root
-    /// node's own layout algorithm has already recorded its list. The recorded lists are consumed
-    /// by [`round_layout`](crate::round_layout) (out-of-flow boxes are rounded via their
-    /// containing block rather than via their parent), and are also useful for consumers
-    /// implementing paint/hit-testing traversals.
-    fn add_hoisted_children(&mut self, node_id: NodeId, hoisted: &[NodeId]);
-
     /// Compute the specified node's size or full layout given the specified constraints
     fn compute_child_layout(&mut self, node_id: NodeId, inputs: LayoutInput) -> LayoutOutput;
 }
@@ -232,6 +214,24 @@ pub trait LayoutContainingBlock: LayoutPartialTree {
 
     /// Get the style of an out-of-flow box being positioned by its containing block
     fn get_oof_item_style(&self, node_id: NodeId) -> Self::OofItemStyle<'_>;
+
+    /// Clear the list of out-of-flow (absolute/fixed) boxes whose containing block is `node_id`.
+    ///
+    /// This is called (exactly once) for each node laid out with `RunMode::PerformLayout`, before
+    /// the boxes it lays out are recorded with [`add_hoisted_children`](Self::add_hoisted_children),
+    /// so that lists recorded by previous layout runs do not persist.
+    fn clear_hoisted_children(&mut self, node_id: NodeId);
+
+    /// Append to the list of out-of-flow boxes whose containing block is `node_id`.
+    ///
+    /// This is called by each containing block for the boxes it lays out, and by
+    /// [`compute_root_layout`](crate::compute_root_layout) to record boxes (e.g. `position: fixed`
+    /// boxes) which are positioned by the final root positioning pass, which runs after the root
+    /// node's own layout algorithm has already recorded its list. The recorded lists are consumed
+    /// by [`round_layout`](crate::round_layout) (out-of-flow boxes are rounded via their
+    /// containing block rather than via their parent), and are also useful for consumers
+    /// implementing paint/hit-testing traversals.
+    fn add_hoisted_children(&mut self, node_id: NodeId, hoisted: &[NodeId]);
 
     /// Read back the detailed layout information most recently recorded for `node_id`
     /// (as stored by [`LayoutGridContainer::set_detailed_grid_info`]).
@@ -279,10 +279,10 @@ pub trait RoundTree: TraverseTree {
     /// `fixed`, and `false` otherwise (including for `display: none` nodes).
     fn is_out_of_flow(&self, node_id: NodeId) -> bool;
     /// The number of out-of-flow boxes whose containing block is `node_id`
-    /// (as recorded by [`LayoutPartialTree::add_hoisted_children`])
+    /// (as recorded by [`LayoutContainingBlock::add_hoisted_children`])
     fn hoisted_child_count(&self, node_id: NodeId) -> usize;
     /// Get the nth out-of-flow box whose containing block is `node_id`
-    /// (as recorded by [`LayoutPartialTree::add_hoisted_children`])
+    /// (as recorded by [`LayoutContainingBlock::add_hoisted_children`])
     fn get_hoisted_child_id(&self, node_id: NodeId, index: usize) -> NodeId;
 }
 
