@@ -12,7 +12,7 @@ enum NodeContext {
 }
 
 fn measure_function(
-    known_dimensions: taffy::geometry::Size<taffy::OptFloat>,
+    known_dimensions: taffy::geometry::Size<taffy::OptF32>,
     available_space: taffy::geometry::Size<taffy::style::AvailableSpace>,
     node_context: Option<&mut NodeContext>,
     font_metrics: &FontMetrics,

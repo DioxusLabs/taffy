@@ -6,7 +6,7 @@ pub struct ImageContext {
 }
 
 pub fn image_measure_function(
-    known_dimensions: taffy::geometry::Size<taffy::OptFloat>,
+    known_dimensions: taffy::geometry::Size<taffy::OptF32>,
     image_context: &ImageContext,
 ) -> taffy::geometry::Size<f32> {
     match (known_dimensions.width.into_option(), known_dimensions.height.into_option()) {

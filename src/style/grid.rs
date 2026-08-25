@@ -7,7 +7,7 @@ use crate::compute::grid::{GridCoordinate, GridLine, OriginZeroLine, MAX_GRID_TR
 use crate::geometry::{AbsoluteAxis, AbstractAxis, Line, MinMax, Size};
 use crate::style_helpers::*;
 use crate::sys::{DefaultCheapStr, Vec};
-use crate::util::OptFloat;
+use crate::util::OptF32;
 use core::cmp::{max, min};
 use core::fmt::Debug;
 
@@ -990,7 +990,7 @@ impl MaxTrackSizingFunction {
 
     /// Returns whether the value can be resolved using `Self::definite_value`
     #[inline(always)]
-    pub fn has_definite_value(self, parent_size: OptFloat) -> bool {
+    pub fn has_definite_value(self, parent_size: OptF32) -> bool {
         match self.0.tag() {
             CompactLength::LENGTH_TAG => true,
             CompactLength::PERCENT_TAG => parent_size.is_some(),
@@ -1004,13 +1004,13 @@ impl MaxTrackSizingFunction {
     /// the passed available_space and returns if this results in a concrete value (which it
     /// will if the available_space is `Some`). Otherwise returns None.
     #[inline(always)]
-    pub fn definite_value(self, parent_size: OptFloat, calc_resolver: impl Fn(*const (), f32) -> f32) -> OptFloat {
+    pub fn definite_value(self, parent_size: OptF32, calc_resolver: impl Fn(*const (), f32) -> f32) -> OptF32 {
         match self.0.tag() {
-            CompactLength::LENGTH_TAG => OptFloat::some(self.0.value()),
+            CompactLength::LENGTH_TAG => OptF32::some(self.0.value()),
             CompactLength::PERCENT_TAG => parent_size.map(|size| self.0.value() * size),
             #[cfg(feature = "calc")]
             _ if self.0.is_calc() => parent_size.map(|size| calc_resolver(self.0.calc_value(), size)),
-            _ => OptFloat::NONE,
+            _ => OptF32::NONE,
         }
     }
 
@@ -1021,9 +1021,9 @@ impl MaxTrackSizingFunction {
     ///     - A fit-content sizing function with percentage argument (with definite available space)
     /// All other kinds of track sizing function return None.
     #[inline(always)]
-    pub fn definite_limit(self, parent_size: OptFloat, calc_resolver: impl Fn(*const (), f32) -> f32) -> OptFloat {
+    pub fn definite_limit(self, parent_size: OptF32, calc_resolver: impl Fn(*const (), f32) -> f32) -> OptF32 {
         match self.0.tag() {
-            CompactLength::FIT_CONTENT_PX_TAG => OptFloat::some(self.0.value()),
+            CompactLength::FIT_CONTENT_PX_TAG => OptF32::some(self.0.value()),
             CompactLength::FIT_CONTENT_PERCENT_TAG => parent_size.map(|size| self.0.value() * size),
             _ => self.definite_value(parent_size, calc_resolver),
         }
@@ -1032,7 +1032,7 @@ impl MaxTrackSizingFunction {
     /// Resolve percentage values against the passed parent_size, returning Some(value)
     /// Non-percentage values always return None.
     #[inline(always)]
-    pub fn resolved_percentage_size(self, parent_size: f32, calc_resolver: impl Fn(*const (), f32) -> f32) -> OptFloat {
+    pub fn resolved_percentage_size(self, parent_size: f32, calc_resolver: impl Fn(*const (), f32) -> f32) -> OptF32 {
         self.0.resolved_percentage_size(parent_size, calc_resolver)
     }
 
@@ -1325,20 +1325,20 @@ impl MinTrackSizingFunction {
     /// the passed available_space and returns if this results in a concrete value (which it
     /// will if the available_space is `Some`). Otherwise returns `None`.
     #[inline(always)]
-    pub fn definite_value(self, parent_size: OptFloat, calc_resolver: impl Fn(*const (), f32) -> f32) -> OptFloat {
+    pub fn definite_value(self, parent_size: OptF32, calc_resolver: impl Fn(*const (), f32) -> f32) -> OptF32 {
         match self.0.tag() {
-            CompactLength::LENGTH_TAG => OptFloat::some(self.0.value()),
+            CompactLength::LENGTH_TAG => OptF32::some(self.0.value()),
             CompactLength::PERCENT_TAG => parent_size.map(|size| self.0.value() * size),
             #[cfg(feature = "calc")]
             _ if self.0.is_calc() => parent_size.map(|size| calc_resolver(self.0.calc_value(), size)),
-            _ => OptFloat::NONE,
+            _ => OptF32::NONE,
         }
     }
 
     /// Resolve percentage values against the passed parent_size, returning Some(value)
     /// Non-percentage values always return None.
     #[inline(always)]
-    pub fn resolved_percentage_size(self, parent_size: f32, calc_resolver: impl Fn(*const (), f32) -> f32) -> OptFloat {
+    pub fn resolved_percentage_size(self, parent_size: f32, calc_resolver: impl Fn(*const (), f32) -> f32) -> OptF32 {
         self.0.resolved_percentage_size(parent_size, calc_resolver)
     }
 

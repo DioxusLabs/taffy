@@ -1,7 +1,7 @@
 //! Geometric primitives useful for layout
 
 use crate::util::sys::f32_max;
-use crate::util::OptFloat;
+use crate::util::OptF32;
 use crate::CompactLength;
 use crate::{style::Dimension, util::sys::f32_min};
 use core::ops::{Add, Sub};
@@ -575,19 +575,19 @@ impl Size<f32> {
     }
 }
 
-impl Size<OptFloat> {
+impl Size<OptF32> {
     /// A [`Size`] with `None` width and height
-    pub const NONE: Size<OptFloat> = Self { width: OptFloat::NONE, height: OptFloat::NONE };
+    pub const NONE: Size<OptF32> = Self { width: OptF32::NONE, height: OptF32::NONE };
 
-    /// A [`Size<OptFloat>`] with "some" `width` and `height` as parameters
+    /// A [`Size<OptF32>`] with "some" `width` and `height` as parameters
     #[must_use]
     pub const fn new(width: f32, height: f32) -> Self {
-        Size { width: OptFloat::some(width), height: OptFloat::some(height) }
+        Size { width: OptF32::some(width), height: OptF32::some(height) }
     }
 
-    /// Creates a new [`Size<OptFloat>`] with either the width or height set based on the provided `direction`
+    /// Creates a new [`Size<OptF32>`] with either the width or height set based on the provided `direction`
     #[cfg(feature = "flexbox")]
-    pub const fn from_cross(direction: FlexDirection, value: OptFloat) -> Self {
+    pub const fn from_cross(direction: FlexDirection, value: OptF32) -> Self {
         let mut new = Self::NONE;
         if direction.is_row() {
             new.height = value
@@ -602,14 +602,12 @@ impl Size<OptFloat> {
     ///   - If height is "some" but width is `None`, then width is computed from height and aspect_ratio
     ///
     /// If aspect_ratio is `None` then this function simply returns self.
-    pub fn maybe_apply_aspect_ratio(self, aspect_ratio: Option<f32>) -> Size<OptFloat> {
+    pub fn maybe_apply_aspect_ratio(self, aspect_ratio: Option<f32>) -> Size<OptF32> {
         match aspect_ratio {
             Some(ratio) => match (self.width.is_some(), self.height.is_some()) {
-                (true, false) => {
-                    Size { width: self.width, height: OptFloat::some(self.width.unchecked_value() / ratio) }
-                }
+                (true, false) => Size { width: self.width, height: OptF32::some(self.width.unchecked_value() / ratio) },
                 (false, true) => {
-                    Size { width: OptFloat::some(self.height.unchecked_value() * ratio), height: self.height }
+                    Size { width: OptF32::some(self.height.unchecked_value() * ratio), height: self.height }
                 }
                 _ => self,
             },
@@ -617,13 +615,13 @@ impl Size<OptFloat> {
         }
     }
 
-    /// Performs `OptFloat::unwrap_or` on each component separately
+    /// Performs `OptF32::unwrap_or` on each component separately
     pub fn unwrap_or(self, alt: Size<f32>) -> Size<f32> {
         Size { width: self.width.unwrap_or(alt.width), height: self.height.unwrap_or(alt.height) }
     }
 
-    /// Performs `OptFloat::or` on each component separately
-    pub fn or(self, alt: Size<OptFloat>) -> Size<OptFloat> {
+    /// Performs `OptF32::or` on each component separately
+    pub fn or(self, alt: Size<OptF32>) -> Size<OptF32> {
         Size { width: self.width.or(alt.width), height: self.height.or(alt.height) }
     }
 
@@ -640,16 +638,16 @@ impl Size<OptFloat> {
     }
 }
 
-impl From<Size<Option<f32>>> for Size<OptFloat> {
+impl From<Size<Option<f32>>> for Size<OptF32> {
     #[inline(always)]
     fn from(size: Size<Option<f32>>) -> Self {
         Size { width: size.width.into(), height: size.height.into() }
     }
 }
 
-impl From<Size<OptFloat>> for Size<Option<f32>> {
+impl From<Size<OptF32>> for Size<Option<f32>> {
     #[inline(always)]
-    fn from(size: Size<OptFloat>) -> Self {
+    fn from(size: Size<OptF32>) -> Self {
         size.into_options()
     }
 }
@@ -697,9 +695,9 @@ impl Point<f32> {
     pub const ZERO: Self = Self { x: 0.0, y: 0.0 };
 }
 
-impl Point<OptFloat> {
+impl Point<OptF32> {
     /// A [`Point`] with values (None, None)
-    pub const NONE: Self = Self { x: OptFloat::NONE, y: OptFloat::NONE };
+    pub const NONE: Self = Self { x: OptF32::NONE, y: OptF32::NONE };
 }
 
 // Generic Add impl for Point<T> + Point<U> where T + U has an Add impl

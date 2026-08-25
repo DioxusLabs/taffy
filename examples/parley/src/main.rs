@@ -71,7 +71,7 @@ impl NodeContext {
 }
 
 fn measure_function(
-    known_dimensions: taffy::Size<taffy::OptFloat>,
+    known_dimensions: taffy::Size<taffy::OptF32>,
     available_space: taffy::Size<taffy::AvailableSpace>,
     node_context: Option<&mut NodeContext>,
 ) -> Size<f32> {

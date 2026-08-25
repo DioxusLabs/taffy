@@ -7,7 +7,7 @@ use crate::tree::{Baselines, Layout, LayoutInput, LayoutOutput, LayoutPartialTre
 use crate::util::debug::debug_log;
 use crate::util::sys::{f32_max, f32_min, GridTrackVec, Vec};
 use crate::util::MaybeMath;
-use crate::util::OptFloat;
+use crate::util::OptF32;
 use crate::util::{MaybeResolve, ResolveOrZero};
 use crate::{
     style_helpers::*, AlignContent, BoxGenerationMode, BoxSizing, CoreStyle, Direction, GridContainerStyle,
@@ -321,7 +321,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
         &mut columns,
         &mut rows,
         &mut items,
-        |track: &GridTrack, parent_size: OptFloat, tree: &Tree| {
+        |track: &GridTrack, parent_size: OptF32, tree: &Tree| {
             track.max_track_sizing_function.definite_value(parent_size, |val, basis| tree.calc(val, basis))
         },
         has_baseline_aligned_item,
@@ -344,7 +344,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
         &mut rows,
         &mut columns,
         &mut items,
-        |track: &GridTrack, _, _| OptFloat::some(track.base_size),
+        |track: &GridTrack, _, _| OptF32::some(track.base_size),
         false, // TODO: Support baseline alignment in the vertical axis
     );
     let initial_row_sum = rows.iter().map(|track| track.base_size).sum::<f32>();
@@ -384,10 +384,10 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     // and therefore need to be re-resolved here based on the content-sized content box of the container
     if !available_grid_space.width.is_definite() {
         for column in &mut columns {
-            let min: OptFloat = column
+            let min: OptF32 = column
                 .min_track_sizing_function
                 .resolved_percentage_size(container_content_box.width, |val, basis| tree.calc(val, basis));
-            let max: OptFloat = column
+            let max: OptF32 = column
                 .max_track_sizing_function
                 .resolved_percentage_size(container_content_box.width, |val, basis| tree.calc(val, basis));
             column.base_size = column.base_size.maybe_clamp(min, max);
@@ -395,10 +395,10 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     }
     if !available_grid_space.height.is_definite() {
         for row in &mut rows {
-            let min: OptFloat = row
+            let min: OptF32 = row
                 .min_track_sizing_function
                 .resolved_percentage_size(container_content_box.height, |val, basis| tree.calc(val, basis));
-            let max: OptFloat = row
+            let max: OptF32 = row
                 .max_track_sizing_function
                 .resolved_percentage_size(container_content_box.height, |val, basis| tree.calc(val, basis));
             row.base_size = row.base_size.maybe_clamp(min, max);
@@ -425,10 +425,10 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
                     &columns,
                     &rows,
                     inner_node_size,
-                    |track: &GridTrack, _| OptFloat::some(track.base_size),
+                    |track: &GridTrack, _| OptF32::some(track.base_size),
                     &|val, basis| tree.calc(val, basis),
                 );
-                let available_space = grid_area_size.with(AbstractAxis::Inline, OptFloat::NONE);
+                let available_space = grid_area_size.with(AbstractAxis::Inline, OptF32::NONE);
                 let new_min_content_contribution =
                     item.min_content_contribution(AbstractAxis::Inline, tree, grid_area_size, available_space);
 
@@ -436,9 +436,9 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
                     Some(new_min_content_contribution) != item.min_content_contribution_cache.width.into();
 
                 item.grid_area_size_cache = Some(grid_area_size);
-                item.min_content_contribution_cache.width = OptFloat::some(new_min_content_contribution);
-                item.max_content_contribution_cache.width = OptFloat::NONE;
-                item.minimum_contribution_cache.width = OptFloat::NONE;
+                item.min_content_contribution_cache.width = OptF32::some(new_min_content_contribution);
+                item.max_content_contribution_cache.width = OptF32::NONE;
+                item.minimum_contribution_cache.width = OptF32::NONE;
 
                 has_changed
             });
@@ -447,9 +447,9 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
         // Clear intrinsic width caches
         items.iter_mut().for_each(|item| {
             item.grid_area_size_cache = None;
-            item.min_content_contribution_cache.width = OptFloat::NONE;
-            item.max_content_contribution_cache.width = OptFloat::NONE;
-            item.minimum_contribution_cache.width = OptFloat::NONE;
+            item.min_content_contribution_cache.width = OptF32::NONE;
+            item.max_content_contribution_cache.width = OptF32::NONE;
+            item.minimum_contribution_cache.width = OptF32::NONE;
         });
     }
 
@@ -469,7 +469,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
             &mut columns,
             &mut rows,
             &mut items,
-            |track: &GridTrack, _, _| OptFloat::some(track.base_size),
+            |track: &GridTrack, _, _| OptF32::some(track.base_size),
             has_baseline_aligned_item,
         );
 
@@ -490,10 +490,10 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
                         &rows,
                         &columns,
                         inner_node_size,
-                        |track: &GridTrack, _| OptFloat::some(track.base_size),
+                        |track: &GridTrack, _| OptF32::some(track.base_size),
                         &|val, basis| tree.calc(val, basis),
                     );
-                    let available_space = grid_area_size.with(AbstractAxis::Block, OptFloat::NONE);
+                    let available_space = grid_area_size.with(AbstractAxis::Block, OptF32::NONE);
                     let new_min_content_contribution =
                         item.min_content_contribution(AbstractAxis::Block, tree, grid_area_size, available_space);
 
@@ -501,9 +501,9 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
                         Some(new_min_content_contribution) != item.min_content_contribution_cache.height.into();
 
                     item.grid_area_size_cache = Some(grid_area_size);
-                    item.min_content_contribution_cache.height = OptFloat::some(new_min_content_contribution);
-                    item.max_content_contribution_cache.height = OptFloat::NONE;
-                    item.minimum_contribution_cache.height = OptFloat::NONE;
+                    item.min_content_contribution_cache.height = OptF32::some(new_min_content_contribution);
+                    item.max_content_contribution_cache.height = OptF32::NONE;
+                    item.minimum_contribution_cache.height = OptF32::NONE;
 
                     has_changed
                 });
@@ -512,9 +512,9 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
             items.iter_mut().for_each(|item| {
                 // Clear intrinsic height caches
                 item.grid_area_size_cache = None;
-                item.min_content_contribution_cache.height = OptFloat::NONE;
-                item.max_content_contribution_cache.height = OptFloat::NONE;
-                item.minimum_contribution_cache.height = OptFloat::NONE;
+                item.min_content_contribution_cache.height = OptF32::NONE;
+                item.max_content_contribution_cache.height = OptF32::NONE;
+                item.minimum_contribution_cache.height = OptF32::NONE;
             });
         }
 
@@ -532,7 +532,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
                 &mut rows,
                 &mut columns,
                 &mut items,
-                |track: &GridTrack, _, _| OptFloat::some(track.base_size),
+                |track: &GridTrack, _, _| OptF32::some(track.base_size),
                 false, // TODO: Support baseline alignment in the vertical axis
             );
         }
@@ -836,8 +836,8 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
 
     // Determine the grid container baseline(s) (currently we only compute the first baseline)
     // Layout containment suppresses the box's baseline for baseline-alignment purposes
-    let grid_container_baseline: OptFloat = if contain.suppresses_baseline() {
-        OptFloat::NONE
+    let grid_container_baseline: OptF32 = if contain.suppresses_baseline() {
+        OptF32::NONE
     } else {
         // Sort items by row start position so that we can iterate items in groups which are in the same row
         items.sort_by_key(|item| item.row_indexes.start);
@@ -855,7 +855,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
             .find(|item| item.participates_in_baseline_alignment())
             .unwrap_or(&first_row_items[0]);
 
-        OptFloat::some(item.y_position + item.baseline.unwrap_or(item.height))
+        OptF32::some(item.y_position + item.baseline.unwrap_or(item.height))
     };
 
     // A scroll container's own padding at the end of the content is part of its scrollable

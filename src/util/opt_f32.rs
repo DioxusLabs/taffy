@@ -9,9 +9,9 @@ use core::fmt;
 /// with a genuinely computed NaN is not a concern in practice.
 #[derive(Copy, Clone)]
 #[repr(transparent)]
-pub struct OptFloat(f32);
+pub struct OptF32(f32);
 
-impl OptFloat {
+impl OptF32 {
     /// The bit pattern used to represent `None`: a quiet NaN with a distinctive payload
     const NONE_BITS: u32 = 0x7FC0_F32A;
 
@@ -64,7 +64,7 @@ impl OptFloat {
     #[track_caller]
     pub fn unwrap(self) -> f32 {
         if self.is_none() {
-            panic!("called `OptFloat::unwrap()` on a `None` value");
+            panic!("called `OptF32::unwrap()` on a `None` value");
         }
         self.0
     }
@@ -119,7 +119,7 @@ impl OptFloat {
         }
     }
 
-    /// Sums an iterator of `OptFloat`s, returning `None` if any of the values are `None`
+    /// Sums an iterator of `OptF32`s, returning `None` if any of the values are `None`
     /// (matching the behaviour of `Option<f32>`)
     fn sum_impl(iter: impl Iterator<Item = Self>) -> Self {
         let mut total = 0.0;
@@ -163,7 +163,7 @@ impl OptFloat {
     }
 }
 
-impl core::iter::Sum for OptFloat {
+impl core::iter::Sum for OptF32 {
     /// Sums the values, returning `None` if any of the values are `None`
     /// (matching the behaviour of `Option<f32>`)
     fn sum<I: Iterator<Item = Self>>(iter: I) -> Self {
@@ -171,7 +171,7 @@ impl core::iter::Sum for OptFloat {
     }
 }
 
-impl From<Option<f32>> for OptFloat {
+impl From<Option<f32>> for OptF32 {
     #[inline(always)]
     fn from(value: Option<f32>) -> Self {
         match value {
@@ -181,21 +181,21 @@ impl From<Option<f32>> for OptFloat {
     }
 }
 
-impl From<OptFloat> for Option<f32> {
+impl From<OptF32> for Option<f32> {
     #[inline(always)]
-    fn from(value: OptFloat) -> Self {
+    fn from(value: OptF32) -> Self {
         value.into_option()
     }
 }
 
-impl From<f32> for OptFloat {
+impl From<f32> for OptF32 {
     #[inline(always)]
     fn from(value: f32) -> Self {
         Self::some(value)
     }
 }
 
-impl PartialEq for OptFloat {
+impl PartialEq for OptF32 {
     #[inline(always)]
     fn eq(&self, other: &Self) -> bool {
         // Values compare like f32, except that `NONE == NONE` (which the float
@@ -204,7 +204,7 @@ impl PartialEq for OptFloat {
     }
 }
 
-impl fmt::Debug for OptFloat {
+impl fmt::Debug for OptF32 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         // Format like Option<f32> for familiarity
         if self.is_none() {
@@ -216,14 +216,14 @@ impl fmt::Debug for OptFloat {
 }
 
 #[cfg(feature = "serde")]
-impl serde::Serialize for OptFloat {
+impl serde::Serialize for OptF32 {
     fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         self.into_option().serialize(serializer)
     }
 }
 
 #[cfg(feature = "serde")]
-impl<'de> serde::Deserialize<'de> for OptFloat {
+impl<'de> serde::Deserialize<'de> for OptF32 {
     fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         Option::<f32>::deserialize(deserializer).map(Self::from)
     }
@@ -231,40 +231,40 @@ impl<'de> serde::Deserialize<'de> for OptFloat {
 
 #[cfg(test)]
 mod tests {
-    use super::OptFloat;
+    use super::OptF32;
 
     #[test]
     fn size_is_4_bytes() {
-        assert_eq!(core::mem::size_of::<OptFloat>(), 4);
+        assert_eq!(core::mem::size_of::<OptF32>(), 4);
     }
 
     #[test]
     fn none_roundtrip() {
-        assert_eq!(OptFloat::NONE.into_option(), None);
-        assert!(OptFloat::NONE.is_none());
-        assert!(!OptFloat::NONE.is_some());
-        assert_eq!(OptFloat::from(None), OptFloat::NONE);
+        assert_eq!(OptF32::NONE.into_option(), None);
+        assert!(OptF32::NONE.is_none());
+        assert!(!OptF32::NONE.is_some());
+        assert_eq!(OptF32::from(None), OptF32::NONE);
     }
 
     #[test]
     fn some_roundtrip() {
-        assert_eq!(OptFloat::some(5.0).into_option(), Some(5.0));
-        assert_eq!(OptFloat::from(Some(-0.0)).into_option(), Some(-0.0));
-        assert!(OptFloat::some(0.0).is_some());
+        assert_eq!(OptF32::some(5.0).into_option(), Some(5.0));
+        assert_eq!(OptF32::from(Some(-0.0)).into_option(), Some(-0.0));
+        assert!(OptF32::some(0.0).is_some());
     }
 
     #[test]
     fn nan_is_some() {
         // A regular NaN is not the sentinel and so is a "some" value
-        assert!(OptFloat::some(f32::NAN).is_some());
+        assert!(OptF32::some(f32::NAN).is_some());
     }
 
     #[test]
     fn equality() {
-        assert_eq!(OptFloat::NONE, OptFloat::NONE);
-        assert_eq!(OptFloat::some(3.0), OptFloat::some(3.0));
-        assert_ne!(OptFloat::some(3.0), OptFloat::some(4.0));
-        assert_ne!(OptFloat::some(3.0), OptFloat::NONE);
-        assert_eq!(OptFloat::some(0.0), OptFloat::some(-0.0));
+        assert_eq!(OptF32::NONE, OptF32::NONE);
+        assert_eq!(OptF32::some(3.0), OptF32::some(3.0));
+        assert_ne!(OptF32::some(3.0), OptF32::some(4.0));
+        assert_ne!(OptF32::some(3.0), OptF32::NONE);
+        assert_eq!(OptF32::some(0.0), OptF32::some(-0.0));
     }
 }

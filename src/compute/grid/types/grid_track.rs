@@ -1,5 +1,5 @@
 //! Contains GridTrack used to represent a single grid track (row/column) during layout
-use crate::util::OptFloat;
+use crate::util::OptF32;
 use crate::{
     prelude::TaffyZero,
     style::{LengthPercentage, MaxTrackSizingFunction, MinTrackSizingFunction},
@@ -128,7 +128,7 @@ impl GridTrack {
 
     #[inline]
     /// Returns true if the track is flexible (has a Flex MaxTrackSizingFunction), else false.
-    pub fn fit_content_limit(&self, axis_available_grid_space: OptFloat) -> f32 {
+    pub fn fit_content_limit(&self, axis_available_grid_space: OptF32) -> f32 {
         match self.max_track_sizing_function.0.tag() {
             CompactLength::FIT_CONTENT_PX_TAG => self.max_track_sizing_function.0.value(),
             CompactLength::FIT_CONTENT_PERCENT_TAG => axis_available_grid_space
@@ -139,7 +139,7 @@ impl GridTrack {
 
     #[inline]
     /// Returns true if the track is flexible (has a Flex MaxTrackSizingFunction), else false.
-    pub fn fit_content_limited_growth_limit(&self, axis_available_grid_space: OptFloat) -> f32 {
+    pub fn fit_content_limited_growth_limit(&self, axis_available_grid_space: OptF32) -> f32 {
         f32_min(self.growth_limit, self.fit_content_limit(axis_available_grid_space))
     }
 

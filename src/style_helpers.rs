@@ -1,5 +1,5 @@
 //! Helper functions which it make it easier to create instances of types in the `style` and `geometry` modules.
-use crate::util::OptFloat;
+use crate::util::OptF32;
 use crate::{
     geometry::{Line, Point, Rect, Size},
     style::LengthPercentage,
@@ -108,8 +108,8 @@ impl TaffyZero for f32 {
 impl<T: TaffyZero> TaffyZero for Option<T> {
     const ZERO: Option<T> = Some(T::ZERO);
 }
-impl TaffyZero for crate::util::OptFloat {
-    const ZERO: crate::util::OptFloat = crate::util::OptFloat::some(0.0);
+impl TaffyZero for crate::util::OptF32 {
+    const ZERO: crate::util::OptF32 = crate::util::OptF32::some(0.0);
 }
 impl<T: TaffyZero> TaffyZero for Point<T> {
     const ZERO: Point<T> = Point { x: T::ZERO, y: T::ZERO };
@@ -426,10 +426,10 @@ impl FromLength for f32 {
         value.into() as f32
     }
 }
-impl FromLength for OptFloat {
+impl FromLength for OptF32 {
     #[inline(always)]
     fn from_length<Input: Into<f64> + Copy>(value: Input) -> Self {
-        OptFloat::some(value.into() as f32)
+        OptF32::some(value.into() as f32)
     }
 }
 impl<T: FromLength> FromLength for Point<T> {
@@ -507,10 +507,10 @@ impl FromPercent for f32 {
         percent.into() as f32
     }
 }
-impl FromPercent for OptFloat {
+impl FromPercent for OptF32 {
     #[inline(always)]
     fn from_percent<Input: Into<f64> + Copy>(percent: Input) -> Self {
-        OptFloat::some(percent.into() as f32)
+        OptF32::some(percent.into() as f32)
     }
 }
 impl<T: FromPercent> FromPercent for Point<T> {

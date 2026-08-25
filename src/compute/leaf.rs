@@ -8,7 +8,7 @@ use crate::tree::{LayoutInput, LayoutOutput, SizingMode};
 use crate::util::debug::debug_log;
 use crate::util::sys::f32_max;
 use crate::util::MaybeMath;
-use crate::util::OptFloat;
+use crate::util::OptF32;
 use crate::util::{MaybeResolve, ResolveOrZero};
 use crate::{BoxSizing, CoreStyle};
 use core::unreachable;
@@ -21,7 +21,7 @@ pub fn compute_leaf_layout<MeasureFunction>(
     measure_function: MeasureFunction,
 ) -> LayoutOutput
 where
-    MeasureFunction: FnOnce(Size<OptFloat>, Size<AvailableSpace>) -> Size<f32>,
+    MeasureFunction: FnOnce(Size<OptF32>, Size<AvailableSpace>) -> Size<f32>,
 {
     let LayoutInput { known_dimensions, parent_size, available_space, sizing_mode, run_mode, .. } = inputs;
 
@@ -97,7 +97,7 @@ where
         if let Size { width: Some(width), height: Some(height) } = node_size.into_options() {
             let size = Size { width, height }
                 .maybe_clamp(node_min_size, node_max_size)
-                .maybe_max(padding_border.sum_axes().map(OptFloat::some));
+                .maybe_max(padding_border.sum_axes().map(OptF32::some));
             return LayoutOutput {
                 size,
                 #[cfg(feature = "content_size")]
@@ -149,7 +149,7 @@ where
         width: clamped_size.width,
         height: f32_max(clamped_size.height, aspect_ratio.map(|ratio| clamped_size.width / ratio).unwrap_or(0.0)),
     };
-    let size = size.maybe_max(padding_border.sum_axes().map(OptFloat::some));
+    let size = size.maybe_max(padding_border.sum_axes().map(OptF32::some));
 
     // A scroll container's own padding at the end of the content is part of its scrollable
     // overflow region, so it is included in the overflow rect. Boxes that are not scroll

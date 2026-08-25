@@ -1,5 +1,5 @@
 //! Style type for representing available space as a sizing constraint
-use crate::util::OptFloat;
+use crate::util::OptF32;
 use crate::{
     prelude::{FromLength, TaffyMaxContent, TaffyMinContent, TaffyZero},
     sys::abs,
@@ -59,10 +59,10 @@ impl AvailableSpace {
 
     /// Convert to Option
     /// Definite values become Some(value). Constraints become None.
-    pub const fn into_option(self) -> OptFloat {
+    pub const fn into_option(self) -> OptF32 {
         match self {
-            AvailableSpace::Definite(value) => OptFloat::some(value),
-            _ => OptFloat::NONE,
+            AvailableSpace::Definite(value) => OptF32::some(value),
+            _ => OptF32::NONE,
         }
     }
 
@@ -99,7 +99,7 @@ impl AvailableSpace {
     }
 
     /// If passed value is Some then return AvailableSpace::Definite containing that value, else return self
-    pub fn maybe_set(self, value: OptFloat) -> AvailableSpace {
+    pub fn maybe_set(self, value: OptF32) -> AvailableSpace {
         if value.is_none() {
             self
         } else {
@@ -143,8 +143,8 @@ impl From<f32> for AvailableSpace {
     }
 }
 
-impl From<OptFloat> for AvailableSpace {
-    fn from(option: OptFloat) -> Self {
+impl From<OptF32> for AvailableSpace {
+    fn from(option: OptF32) -> Self {
         if option.is_none() {
             Self::MaxContent
         } else {
@@ -163,13 +163,13 @@ impl From<Option<f32>> for AvailableSpace {
 }
 
 impl Size<AvailableSpace> {
-    /// Convert `Size<AvailableSpace>` into `Size<OptFloat>`
-    pub fn into_options(self) -> Size<OptFloat> {
+    /// Convert `Size<AvailableSpace>` into `Size<OptF32>`
+    pub fn into_options(self) -> Size<OptF32> {
         Size { width: self.width.into_option(), height: self.height.into_option() }
     }
 
     /// If passed value is Some then return AvailableSpace::Definite containing that value, else return self
-    pub fn maybe_set(self, value: Size<OptFloat>) -> Size<AvailableSpace> {
+    pub fn maybe_set(self, value: Size<OptF32>) -> Size<AvailableSpace> {
         Size { width: self.width.maybe_set(value.width), height: self.height.maybe_set(value.height) }
     }
 }

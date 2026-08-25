@@ -3,7 +3,7 @@
 use crate::geometry::{AbsoluteAxis, Line, Rect, Size};
 use crate::tree::{LayoutPartialTree, LayoutPartialTreeExt, NodeId, SizingMode};
 use crate::util::sys::f32_max;
-use crate::util::OptFloat;
+use crate::util::OptF32;
 use crate::AvailableSpace;
 use crate::{CompactLength, Dimension};
 
@@ -28,8 +28,8 @@ pub(crate) enum SizingKeywordResolution {
 #[inline]
 pub(crate) fn resolve_sizing_keyword(
     style: Dimension,
-    stretch_size: OptFloat,
-    percent_resolution_basis: OptFloat,
+    stretch_size: OptF32,
+    percent_resolution_basis: OptF32,
 ) -> Option<SizingKeywordResolution> {
     match style.tag() {
         CompactLength::MIN_CONTENT_TAG => Some(SizingKeywordResolution::Measure(AvailableSpace::MinContent)),
@@ -60,11 +60,11 @@ pub(crate) fn resolve_sizing_keyword(
 pub(crate) fn resolve_absolute_sizing_keywords(
     tree: &mut impl LayoutPartialTree,
     node: NodeId,
-    known_dimensions: &mut Size<OptFloat>,
+    known_dimensions: &mut Size<OptF32>,
     size_style: Size<Dimension>,
     area_size: Size<f32>,
-    inset: Rect<OptFloat>,
-    margin: Rect<OptFloat>,
+    inset: Rect<OptF32>,
+    margin: Rect<OptF32>,
     sizing_mode: SizingMode,
 ) {
     let stretch_size = Size {
@@ -87,12 +87,12 @@ pub(crate) fn resolve_absolute_sizing_keywords(
     };
 
     let keyword_width = if known_dimensions.width.is_none() {
-        resolve_sizing_keyword(size_style.width, OptFloat::some(stretch_size.width), OptFloat::some(area_size.width))
+        resolve_sizing_keyword(size_style.width, OptF32::some(stretch_size.width), OptF32::some(area_size.width))
     } else {
         None
     };
     let keyword_height = if known_dimensions.height.is_none() {
-        resolve_sizing_keyword(size_style.height, OptFloat::some(stretch_size.height), OptFloat::some(area_size.height))
+        resolve_sizing_keyword(size_style.height, OptF32::some(stretch_size.height), OptF32::some(area_size.height))
     } else {
         None
     };
@@ -106,21 +106,21 @@ pub(crate) fn resolve_absolute_sizing_keywords(
             let measured_size = tree.measure_child_size_both(
                 node,
                 Size::NONE,
-                area_size.map(OptFloat::some),
+                area_size.map(OptF32::some),
                 Size { width: available_width, height: available_height },
                 sizing_mode,
                 Line::FALSE,
             );
-            *known_dimensions = measured_size.map(OptFloat::some);
+            *known_dimensions = measured_size.map(OptF32::some);
         }
         (keyword_width, keyword_height) => {
             if let Some(resolution) = keyword_width {
-                known_dimensions.width = OptFloat::some(match resolution {
+                known_dimensions.width = OptF32::some(match resolution {
                     SizingKeywordResolution::Exact(width) => width,
                     SizingKeywordResolution::Measure(available_width) => tree.measure_child_size(
                         node,
                         *known_dimensions,
-                        area_size.map(OptFloat::some),
+                        area_size.map(OptF32::some),
                         Size { width: available_width, height: AvailableSpace::Definite(stretch_size.height) },
                         sizing_mode,
                         AbsoluteAxis::Horizontal,
@@ -129,12 +129,12 @@ pub(crate) fn resolve_absolute_sizing_keywords(
                 });
             }
             if let Some(resolution) = keyword_height {
-                known_dimensions.height = OptFloat::some(match resolution {
+                known_dimensions.height = OptF32::some(match resolution {
                     SizingKeywordResolution::Exact(height) => height,
                     SizingKeywordResolution::Measure(available_height) => tree.measure_child_size(
                         node,
                         *known_dimensions,
-                        area_size.map(OptFloat::some),
+                        area_size.map(OptF32::some),
                         Size {
                             width: AvailableSpace::Definite(known_dimensions.width.unwrap_or(stretch_size.width)),
                             height: available_height,

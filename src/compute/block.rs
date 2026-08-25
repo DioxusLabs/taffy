@@ -8,7 +8,7 @@ use crate::util::debug::debug_log;
 use crate::util::sys::f32_max;
 use crate::util::sys::Vec;
 use crate::util::MaybeMath;
-use crate::util::OptFloat;
+use crate::util::OptF32;
 use crate::util::{MaybeResolve, ResolveOrZero};
 use crate::{
     BlockContainerStyle, BlockItemStyle, BoxGenerationMode, BoxSizing, Contain, Dimension, Direction,
@@ -206,7 +206,7 @@ impl BlockContext<'_> {
     }
 
     /// Get the bottom of lowest relevant float for the specific clear property
-    pub fn cleared_threshold(&self, clear: Clear) -> OptFloat {
+    pub fn cleared_threshold(&self, clear: Clear) -> OptF32 {
         self.bfc.float_context.cleared_threshold(clear).map(|threshold| threshold - self.y_offset)
     }
 
@@ -306,11 +306,11 @@ struct BlockItem {
     size_style: Size<Dimension>,
 
     /// The base size of this item
-    size: Size<OptFloat>,
+    size: Size<OptF32>,
     /// The minimum allowable size of this item
-    min_size: Size<OptFloat>,
+    min_size: Size<OptF32>,
     /// The maximum allowable size of this item
-    max_size: Size<OptFloat>,
+    max_size: Size<OptF32>,
 
     /// The overflow style of the item
     overflow: Point<Overflow>,
@@ -397,8 +397,8 @@ pub fn compute_block_layout(
 
     // If both min and max in a given axis are set and max <= min then this determines the size in that axis
     let min_max_definite_size = min_size.zip_map(max_size, |min, max| match (min.into_option(), max.into_option()) {
-        (Some(min), Some(max)) if max <= min => OptFloat::some(min),
-        _ => OptFloat::NONE,
+        (Some(min), Some(max)) if max <= min => OptF32::some(min),
+        _ => OptF32::NONE,
     });
 
     let styled_based_known_dimensions =
@@ -567,7 +567,7 @@ fn compute_inner(
         let available_width = available_space.width.maybe_sub(content_box_inset.horizontal_axis_sum());
         let intrinsic_width = determine_content_based_container_width(tree, &items, available_width)
             + content_box_inset.horizontal_axis_sum();
-        intrinsic_width.maybe_clamp(min_size.width, max_size.width).maybe_max(OptFloat::some(padding_border_size.width))
+        intrinsic_width.maybe_clamp(min_size.width, max_size.width).maybe_max(OptF32::some(padding_border_size.width))
     });
 
     // Short-circuit if computing size and both dimensions known
@@ -591,9 +591,9 @@ fn compute_inner(
     // unknown (e.g. at the root of the layout tree).
     let percentage_resolution_width = parent_size.width.unwrap_or(container_outer_width);
     let resolved_padding =
-        raw_padding.resolve_or_zero(OptFloat::some(percentage_resolution_width), |val, basis| tree.calc(val, basis));
+        raw_padding.resolve_or_zero(OptF32::some(percentage_resolution_width), |val, basis| tree.calc(val, basis));
     let resolved_border =
-        raw_border.resolve_or_zero(OptFloat::some(percentage_resolution_width), |val, basis| tree.calc(val, basis));
+        raw_border.resolve_or_zero(OptF32::some(percentage_resolution_width), |val, basis| tree.calc(val, basis));
     let resolved_content_box_inset = resolved_padding + resolved_border + scrollbar_gutter;
     #[cfg_attr(not(feature = "content_size"), allow(unused_mut))]
     let (
@@ -628,7 +628,7 @@ fn compute_inner(
     let container_outer_height = known_dimensions
         .height
         .unwrap_or(intrinsic_outer_height.maybe_clamp(min_size.height, max_size.height))
-        .maybe_max(OptFloat::some(padding_border_size.height));
+        .maybe_max(OptF32::some(padding_border_size.height));
     let final_outer_size = Size { width: container_outer_width, height: container_outer_height };
 
     // CSS2 §8.3.1: the bottom margin of a block with `height: auto` collapses with its last
@@ -794,11 +794,7 @@ fn compute_inner(
 
 /// Create a `Vec` of `BlockItem` structs where each item in the `Vec` represents a child of the current node
 #[inline]
-fn generate_item_list(
-    tree: &impl LayoutBlockContainer,
-    node: NodeId,
-    node_inner_size: Size<OptFloat>,
-) -> Vec<BlockItem> {
+fn generate_item_list(tree: &impl LayoutBlockContainer, node: NodeId, node_inner_size: Size<OptF32>) -> Vec<BlockItem> {
     tree.child_ids(node)
         .map(|child_node_id| (child_node_id, tree.get_block_child_style(child_node_id)))
         .filter(|(_, style)| style.box_generation_mode() != BoxGenerationMode::None)
@@ -886,18 +882,14 @@ fn generate_item_list(
 /// are all equal to the content size, which is what an auto height already resolves to, so
 /// only `stretch` requires explicit resolution.
 #[inline]
-fn resolve_stretch_height(
-    height_style: Dimension,
-    container_inner_height: OptFloat,
-    item_y_margin_sum: f32,
-) -> OptFloat {
+fn resolve_stretch_height(height_style: Dimension, container_inner_height: OptF32, item_y_margin_sum: f32) -> OptF32 {
     match resolve_sizing_keyword(
         height_style,
         container_inner_height.maybe_sub(item_y_margin_sum),
         container_inner_height,
     ) {
-        Some(SizingKeywordResolution::Exact(height)) => OptFloat::some(height),
-        _ => OptFloat::NONE,
+        Some(SizingKeywordResolution::Exact(height)) => OptF32::some(height),
+        _ => OptF32::NONE,
     }
 }
 
@@ -921,12 +913,11 @@ fn determine_content_based_container_width(
             .resolve_or_zero(available_space.width.into_option(), |val, basis| tree.calc(val, basis))
             .horizontal_axis_sum();
         let width = known_dimensions.width.unwrap_or_else(|| {
-            let item_available_width =
-                match resolve_sizing_keyword(item.size_style.width, OptFloat::NONE, OptFloat::NONE) {
-                    Some(SizingKeywordResolution::Measure(available_width)) => available_width,
-                    Some(SizingKeywordResolution::Exact(width)) => AvailableSpace::Definite(width),
-                    None => available_space.width.maybe_sub(item_x_margin_sum),
-                };
+            let item_available_width = match resolve_sizing_keyword(item.size_style.width, OptF32::NONE, OptF32::NONE) {
+                Some(SizingKeywordResolution::Measure(available_width)) => available_width,
+                Some(SizingKeywordResolution::Exact(width)) => AvailableSpace::Definite(width),
+                None => available_space.width.maybe_sub(item_x_margin_sum),
+            };
             tree.measure_child_size(
                 item.node_id,
                 known_dimensions,
@@ -965,7 +956,7 @@ fn perform_final_layout_on_in_flow_children(
     run_mode: RunMode,
     items: &mut [BlockItem],
     container_outer_width: f32,
-    container_percentage_resolution_height: OptFloat,
+    container_percentage_resolution_height: OptF32,
     content_box_inset: Rect<f32>,
     resolved_content_box_inset: Rect<f32>,
     resolved_border: Rect<f32>,
@@ -974,7 +965,7 @@ fn perform_final_layout_on_in_flow_children(
     own_margins_collapse_with_children: Line<bool>,
     #[cfg(feature = "content_size")] is_scroll_container: bool,
     block_ctx: &mut BlockContext<'_>,
-) -> (Rect<f32>, f32, CollapsibleMarginSet, CollapsibleMarginSet, OptFloat) {
+) -> (Rect<f32>, f32, CollapsibleMarginSet, CollapsibleMarginSet, OptF32) {
     // Resolve container_inner_width for sizing child nodes using initial content_box_inset
     let container_inner_width = container_outer_width - resolved_content_box_inset.horizontal_axis_sum();
     let container_percentage_resolution_height =
@@ -1013,7 +1004,7 @@ fn perform_final_layout_on_in_flow_children(
     let mut first_child_top_margin_set = CollapsibleMarginSet::ZERO;
     let mut active_collapsible_margin_set = CollapsibleMarginSet::ZERO;
     let mut is_collapsing_with_first_margin_set = true;
-    let mut first_baseline: OptFloat = OptFloat::NONE;
+    let mut first_baseline: OptF32 = OptF32::NONE;
     // Whether the active margin set contains the margins of a self-collapsing element with
     // clearance. Such margins collapse with the margins of following siblings but the resulting
     // margin does not collapse with the bottom margin of the parent block.
@@ -1053,8 +1044,8 @@ fn perform_final_layout_on_in_flow_children(
                 let available_width = container_inner_width - item_non_auto_x_margin_sum;
                 let (item_known_width, item_available_width) = match resolve_sizing_keyword(
                     item.size_style.width,
-                    OptFloat::some(available_width),
-                    OptFloat::some(container_inner_width),
+                    OptF32::some(available_width),
+                    OptF32::some(container_inner_width),
                 ) {
                     Some(SizingKeywordResolution::Measure(available)) => (None, available),
                     Some(SizingKeywordResolution::Exact(width)) => (Some(width), AvailableSpace::Definite(width)),
@@ -1242,8 +1233,8 @@ fn perform_final_layout_on_in_flow_children(
                 // the item under the corresponding available space constraint
                 let keyword_width = resolve_sizing_keyword(
                     item.size_style.width,
-                    OptFloat::some(stretch_width),
-                    OptFloat::some(container_inner_width),
+                    OptF32::some(stretch_width),
+                    OptF32::some(container_inner_width),
                 )
                 .map(|resolution| match resolution {
                     SizingKeywordResolution::Exact(width) => width,
@@ -1266,7 +1257,7 @@ fn perform_final_layout_on_in_flow_children(
 
                 item.size
                     .map_width(|width| {
-                        OptFloat::some(
+                        OptF32::some(
                             width
                                 .or(keyword_width.into())
                                 .unwrap_or(stretch_width)
@@ -1353,7 +1344,7 @@ fn perform_final_layout_on_in_flow_children(
 
             // Resolve item inset
             let inset_percentage_basis =
-                Size { width: OptFloat::some(container_inner_width), height: container_percentage_resolution_height };
+                Size { width: OptF32::some(container_inner_width), height: container_percentage_resolution_height };
             let inset = item
                 .inset
                 .zip_size(inset_percentage_basis, |p, s| p.maybe_resolve(s, |val, basis| tree.calc(val, basis)));
@@ -1506,7 +1497,7 @@ fn perform_final_layout_on_in_flow_children(
             // See https://github.com/w3c/csswg-drafts/issues/7660
             if first_baseline.is_none() {
                 let child_baseline = if item.overflow.y.is_scroll_container() {
-                    OptFloat::some(
+                    OptF32::some(
                         item_layout
                             .baselines
                             .first
@@ -1654,9 +1645,8 @@ fn perform_absolute_layout_on_absolute_children(
         let margin =
             child_style.margin().map(|margin| margin.resolve_to_option(area_width, |val, basis| tree.calc(val, basis)));
         let padding =
-            child_style.padding().resolve_or_zero(OptFloat::some(area_width), |val, basis| tree.calc(val, basis));
-        let border =
-            child_style.border().resolve_or_zero(OptFloat::some(area_width), |val, basis| tree.calc(val, basis));
+            child_style.padding().resolve_or_zero(OptF32::some(area_width), |val, basis| tree.calc(val, basis));
+        let border = child_style.border().resolve_or_zero(OptF32::some(area_width), |val, basis| tree.calc(val, basis));
         let padding_border_sum = (padding + border).sum_axes();
         let box_sizing_adjustment =
             if child_style.box_sizing() == BoxSizing::ContentBox { padding_border_sum } else { Size::ZERO };
@@ -1678,7 +1668,7 @@ fn perform_absolute_layout_on_absolute_children(
             .maybe_resolve(area_size, |val, basis| tree.calc(val, basis))
             .maybe_apply_aspect_ratio(aspect_ratio)
             .maybe_add(box_sizing_adjustment)
-            .or(padding_border_sum.map(OptFloat::some))
+            .or(padding_border_sum.map(OptF32::some))
             .maybe_max(padding_border_sum);
         let max_size = child_style
             .max_size()
@@ -1713,7 +1703,7 @@ fn perform_absolute_layout_on_absolute_children(
             (known_dimensions.width.into_option(), left.into_option(), right.into_option())
         {
             let new_width_raw = area_width.maybe_sub(margin.left).maybe_sub(margin.right) - left - right;
-            known_dimensions.width = OptFloat::some(f32_max(new_width_raw, 0.0));
+            known_dimensions.width = OptF32::some(f32_max(new_width_raw, 0.0));
             known_dimensions = known_dimensions.maybe_apply_aspect_ratio(aspect_ratio).maybe_clamp(min_size, max_size);
         }
 
@@ -1724,7 +1714,7 @@ fn perform_absolute_layout_on_absolute_children(
             (known_dimensions.height.into_option(), top.into_option(), bottom.into_option())
         {
             let new_height_raw = area_height.maybe_sub(margin.top).maybe_sub(margin.bottom) - top - bottom;
-            known_dimensions.height = OptFloat::some(f32_max(new_height_raw, 0.0));
+            known_dimensions.height = OptF32::some(f32_max(new_height_raw, 0.0));
             known_dimensions = known_dimensions.maybe_apply_aspect_ratio(aspect_ratio).maybe_clamp(min_size, max_size);
         }
 
@@ -1734,7 +1724,7 @@ fn perform_absolute_layout_on_absolute_children(
                 let measured_size = tree.measure_child_size_both(
                     item.node_id,
                     known_dimensions,
-                    area_size.map(OptFloat::some),
+                    area_size.map(OptF32::some),
                     Size {
                         width: AvailableSpace::Definite(area_width.maybe_clamp(min_size.width, max_size.width)),
                         height: AvailableSpace::Definite(area_height.maybe_clamp(min_size.height, max_size.height)),
@@ -1749,8 +1739,8 @@ fn perform_absolute_layout_on_absolute_children(
 
         let layout_output = tree.perform_child_layout(
             item.node_id,
-            final_size.map(OptFloat::some),
-            area_size.map(OptFloat::some),
+            final_size.map(OptF32::some),
+            area_size.map(OptF32::some),
             Size {
                 width: AvailableSpace::Definite(area_width.maybe_clamp(min_size.width, max_size.width)),
                 height: AvailableSpace::Definite(area_height.maybe_clamp(min_size.height, max_size.height)),
