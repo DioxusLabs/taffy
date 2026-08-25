@@ -391,16 +391,6 @@ where
     }
 
     #[inline(always)]
-    fn clear_hoisted_children(&mut self, node_id: NodeId) {
-        self.taffy.nodes[node_id.into()].hoisted_children.clear();
-    }
-
-    #[inline(always)]
-    fn add_hoisted_children(&mut self, node_id: NodeId, hoisted: &[NodeId]) {
-        self.taffy.nodes[node_id.into()].hoisted_children.extend_from_slice(hoisted);
-    }
-
-    #[inline(always)]
     fn compute_child_layout(&mut self, node_id: NodeId, inputs: LayoutInput) -> LayoutOutput {
         self.compute_child_layout(
             node_id,
@@ -423,6 +413,16 @@ where
     #[inline(always)]
     fn get_oof_item_style(&self, node_id: NodeId) -> Self::OofItemStyle<'_> {
         &self.taffy.nodes[node_id.into()].style
+    }
+
+    #[inline(always)]
+    fn clear_hoisted_children(&mut self, node_id: NodeId) {
+        self.taffy.nodes[node_id.into()].hoisted_children.clear();
+    }
+
+    #[inline(always)]
+    fn add_hoisted_children(&mut self, node_id: NodeId, hoisted: &[NodeId]) {
+        self.taffy.nodes[node_id.into()].hoisted_children.extend_from_slice(hoisted);
     }
 
     #[inline(always)]
