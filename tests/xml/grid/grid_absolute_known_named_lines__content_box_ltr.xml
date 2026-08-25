@@ -1,7 +1,7 @@
 <test name="grid_absolute_known_named_lines__content_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="grid" box-sizing="content-box" direction="ltr" position="relative" width="200px" height="150px" padding-top="10px" padding-left="10px" padding-bottom="10px" padding-right="10px" grid-template-rows="[a] 20px [b] 50px [c]" grid-template-columns="[a] 40px [b] 60px [c]">
+    <div display="grid" box-sizing="content-box" direction="ltr" width="200px" height="150px" padding-top="10px" padding-left="10px" padding-bottom="10px" padding-right="10px" grid-template-rows="[a] 20px [b] 50px [c]" grid-template-columns="[a] 40px [b] 60px [c]">
       <div box-sizing="content-box" direction="ltr" position="absolute" top="0px" left="0px" bottom="0px" right="0px" grid-row-start="a" grid-row-end="c" grid-column-start="a" grid-column-end="c"/>
       <div box-sizing="content-box" direction="ltr" position="absolute" top="0px" left="0px" bottom="0px" right="0px" grid-row-end="b" grid-column-start="b"/>
       <div box-sizing="content-box" direction="ltr" position="absolute" top="0px" left="0px" bottom="0px" right="0px" grid-row-start="c" grid-row-end="a" grid-column-start="c" grid-column-end="a"/>
