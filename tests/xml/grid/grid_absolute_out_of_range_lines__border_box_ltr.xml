@@ -1,0 +1,17 @@
+<test name="grid_absolute_out_of_range_lines__border_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" direction="ltr" width="200px" height="150px" padding-top="10px" padding-left="10px" padding-bottom="10px" padding-right="10px" grid-template-rows="20px 50px" grid-template-columns="40px 60px">
+      <div direction="ltr" position="absolute" top="0px" left="0px" bottom="0px" right="0px" grid-row-start="-5" grid-row-end="1" grid-column-start="-5" grid-column-end="1"/>
+      <div direction="ltr" position="absolute" top="0px" left="0px" bottom="0px" right="0px" grid-row-start="3" grid-row-end="5" grid-column-start="3" grid-column-end="5"/>
+      <div direction="ltr" position="absolute" top="0px" left="0px" bottom="0px" right="0px" grid-row-start="span 2" grid-row-end="1" grid-column-start="span 2" grid-column-end="1"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="200" height="150" resolved-rows="20px 50px" resolved-columns="40px 60px">
+      <node x="0" y="0" width="10" height="10"/>
+      <node x="110" y="80" width="90" height="70"/>
+      <node x="0" y="0" width="10" height="10"/>
+    </node>
+  </expectations>
+</test>
