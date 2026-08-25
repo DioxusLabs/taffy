@@ -1,10 +1,10 @@
 <test name="float_percentage_widths_and_margins_sum_to_container__content_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="block" box-sizing="content-box" direction="ltr" width="1628px">
-      <div box-sizing="content-box" direction="ltr" float="left" width="30%" height="50px"/>
-      <div box-sizing="content-box" direction="ltr" float="left" width="30%" height="50px" margin-left="5%"/>
-      <div box-sizing="content-box" direction="ltr" float="left" width="30%" height="50px" margin-left="5%"/>
+    <div display="block" box-sizing="content-box" direction="ltr" position="absolute" width="1628px">
+      <div box-sizing="content-box" direction="ltr" position="relative" float="left" width="30%" height="50px"/>
+      <div box-sizing="content-box" direction="ltr" position="relative" float="left" width="30%" height="50px" margin-left="5%"/>
+      <div box-sizing="content-box" direction="ltr" position="relative" float="left" width="30%" height="50px" margin-left="5%"/>
     </div>
   </input>
   <expectations>
