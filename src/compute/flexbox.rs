@@ -1405,12 +1405,13 @@ fn determine_container_main_size(
                             (_, Some(pref), _) => {
                                 let item_pb_main = item.padding.main_axis_sum(constants.dir)
                                     + item.border.main_axis_sum(constants.dir);
-                                let content_main_size =
-                                    pref.max(item_pb_main) + item.margin.main_axis_sum(constants.dir);
+                                let inner_main_size = pref.max(item_pb_main);
                                 if constants.is_row {
-                                    content_main_size.maybe_clamp(style_min, style_max)
+                                    (inner_main_size + item.margin.main_axis_sum(constants.dir))
+                                        .maybe_clamp(style_min, style_max)
                                 } else {
-                                    content_main_size.max(item.flex_basis).maybe_clamp(style_min, style_max)
+                                    (inner_main_size.max(item.flex_basis) + item.margin.main_axis_sum(constants.dir))
+                                        .maybe_clamp(style_min, style_max)
                                 }
                             }
 
@@ -1465,8 +1466,7 @@ fn determine_container_main_size(
                                     .zip(child_known_dimensions.cross(dir))
                                     .map(|(ratio, cross)| if constants.is_row { cross * ratio } else { cross / ratio });
 
-                                let content_main_size = measured_main_size.maybe_max(transferred_main_size)
-                                    + item.margin.main_axis_sum(constants.dir);
+                                let inner_main_size = measured_main_size.maybe_max(transferred_main_size);
 
                                 // This is somewhat bizarre in that it's asymmetrical depending whether the flex container is a column or a row.
                                 //
@@ -1481,9 +1481,11 @@ fn determine_container_main_size(
                                 // Ultimately, this was not found by reading the spec, but by trial and error fixing tests to align with Webkit/Firefox output.
                                 // (see the `flex_basis_unconstraint_row` and `flex_basis_uncontraint_column` generated tests which demonstrate this)
                                 if constants.is_row {
-                                    content_main_size.maybe_clamp(style_min, style_max)
+                                    (inner_main_size + item.margin.main_axis_sum(constants.dir))
+                                        .maybe_clamp(style_min, style_max)
                                 } else {
-                                    content_main_size.max(item.flex_basis).maybe_clamp(style_min, style_max)
+                                    (inner_main_size.max(item.flex_basis) + item.margin.main_axis_sum(constants.dir))
+                                        .maybe_clamp(style_min, style_max)
                                 }
                             }
                         };

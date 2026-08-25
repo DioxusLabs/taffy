@@ -12484,6 +12484,26 @@ mod flex {
     }
 
     #[test]
+    fn flex_grow_flex_shrink_negative_margin_intrinsic_column__border_box_ltr() {
+        crate::run_xml_test("flex", "flex_grow_flex_shrink_negative_margin_intrinsic_column__border_box_ltr");
+    }
+
+    #[test]
+    fn flex_grow_flex_shrink_negative_margin_intrinsic_column__content_box_ltr() {
+        crate::run_xml_test("flex", "flex_grow_flex_shrink_negative_margin_intrinsic_column__content_box_ltr");
+    }
+
+    #[test]
+    fn flex_grow_flex_shrink_negative_margin_intrinsic_column__border_box_rtl() {
+        crate::run_xml_test("flex", "flex_grow_flex_shrink_negative_margin_intrinsic_column__border_box_rtl");
+    }
+
+    #[test]
+    fn flex_grow_flex_shrink_negative_margin_intrinsic_column__content_box_rtl() {
+        crate::run_xml_test("flex", "flex_grow_flex_shrink_negative_margin_intrinsic_column__content_box_rtl");
+    }
+
+    #[test]
     fn flex_grow_height_maximized__border_box_ltr() {
         crate::run_xml_test("flex", "flex_grow_height_maximized__border_box_ltr");
     }
@@ -12541,6 +12561,26 @@ mod flex {
     #[test]
     fn flex_grow_less_than_factor_one__content_box_rtl() {
         crate::run_xml_test("flex", "flex_grow_less_than_factor_one__content_box_rtl");
+    }
+
+    #[test]
+    fn flex_grow_negative_margin_intrinsic_column__border_box_ltr() {
+        crate::run_xml_test("flex", "flex_grow_negative_margin_intrinsic_column__border_box_ltr");
+    }
+
+    #[test]
+    fn flex_grow_negative_margin_intrinsic_column__content_box_ltr() {
+        crate::run_xml_test("flex", "flex_grow_negative_margin_intrinsic_column__content_box_ltr");
+    }
+
+    #[test]
+    fn flex_grow_negative_margin_intrinsic_column__border_box_rtl() {
+        crate::run_xml_test("flex", "flex_grow_negative_margin_intrinsic_column__border_box_rtl");
+    }
+
+    #[test]
+    fn flex_grow_negative_margin_intrinsic_column__content_box_rtl() {
+        crate::run_xml_test("flex", "flex_grow_negative_margin_intrinsic_column__content_box_rtl");
     }
 
     #[test]
@@ -33547,6 +33587,30 @@ mod gridflex {
     #[test]
     fn gridflex_kitchen_sink_minimise3__content_box_rtl() {
         crate::run_xml_test("gridflex", "gridflex_kitchen_sink_minimise3__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn gridflex_negative_margin_hidden_grid_item_intrinsic_height__border_box_ltr() {
+        crate::run_xml_test("gridflex", "gridflex_negative_margin_hidden_grid_item_intrinsic_height__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn gridflex_negative_margin_hidden_grid_item_intrinsic_height__content_box_ltr() {
+        crate::run_xml_test("gridflex", "gridflex_negative_margin_hidden_grid_item_intrinsic_height__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn gridflex_negative_margin_hidden_grid_item_intrinsic_height__border_box_rtl() {
+        crate::run_xml_test("gridflex", "gridflex_negative_margin_hidden_grid_item_intrinsic_height__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn gridflex_negative_margin_hidden_grid_item_intrinsic_height__content_box_rtl() {
+        crate::run_xml_test("gridflex", "gridflex_negative_margin_hidden_grid_item_intrinsic_height__content_box_rtl");
     }
 
     #[cfg(feature = "grid")]

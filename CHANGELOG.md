@@ -5,6 +5,7 @@
 ### Fixed
 
 - Block/float: absorb `f32` rounding errors in horizontal fit checks, preventing floats from spuriously wrapping when percentage widths and margins sum to exactly 100% of the container (#1161).
+- Flexbox: main-axis margins are no longer dropped from an item's intrinsic main-size contribution when the contribution is floored by the item's flex basis (column containers). This fixes negative margins being ignored on flex items with `flex-grow` (#1162) and on descendants containing an `overflow: hidden` grid item (#1163).
 
 ## 0.14.0
 
