@@ -200,6 +200,7 @@ function parseGridPosition(input) {
   if (input === 'auto') return { kind: 'auto' };
   if (/^span +\d+$/.test(input)) return { kind: 'span', value: parseInt(input.replace(/[^\d]/g, ''), 10) };
   if (/^-?\d+$/.test(input)) return { kind: 'line', value: parseInt(input, 10) };
+  if (/^(-?\d+ +)?[a-zA-Z_][\w-]* *(-?\d+)?$/.test(input)) return { kind: 'named', value: input };
   return undefined;
 }
 

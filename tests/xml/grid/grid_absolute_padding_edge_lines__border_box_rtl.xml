@@ -1,0 +1,19 @@
+<test name="grid_absolute_padding_edge_lines__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" direction="rtl" width="200px" height="150px" padding-top="10px" padding-left="10px" padding-bottom="10px" padding-right="10px" grid-template-rows="20px 50px" grid-template-columns="40px 60px">
+      <div direction="rtl" position="absolute" top="0px" left="0px" bottom="0px" right="0px" grid-row-end="1" grid-column-end="1"/>
+      <div direction="rtl" position="absolute" top="0px" left="0px" bottom="0px" right="0px" grid-row-start="3" grid-column-start="3"/>
+      <div direction="rtl" position="absolute" top="0px" left="0px" bottom="0px" right="0px" grid-row-start="3" grid-column-start="1" grid-column-end="2"/>
+      <div direction="rtl" position="absolute" top="0px" left="0px" bottom="0px" right="0px" grid-row-start="2" grid-row-end="3" grid-column-start="3"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="200" height="150" resolved-rows="20px 50px" resolved-columns="40px 60px">
+      <node x="190" y="0" width="10" height="10"/>
+      <node x="0" y="80" width="90" height="70"/>
+      <node x="150" y="80" width="40" height="70"/>
+      <node x="0" y="30" width="90" height="50"/>
+    </node>
+  </expectations>
+</test>
