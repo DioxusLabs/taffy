@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    A column flex container's automatic height sums items' hypothetical main sizes: max-height caps an item's flex basis contribution
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="display: flex; flex-direction: column; width: 100px;">
+  <div style="flex-basis: 300px; flex-grow: 1; flex-shrink: 0; max-height: 100px; min-height: 0px;"></div>
+</div>
+
+</body>
+</html>
