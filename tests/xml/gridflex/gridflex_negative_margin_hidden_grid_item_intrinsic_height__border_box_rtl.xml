@@ -1,12 +1,12 @@
 <test name="gridflex_negative_margin_hidden_grid_item_intrinsic_height__border_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="flex" direction="rtl" flex-direction="column" width="400px">
-      <div display="flex" direction="rtl" flex-direction="column">
-        <div display="flex" direction="rtl" flex-direction="column" margin-top="-32px">
-          <div display="grid" direction="rtl" grid-template-columns="100px">
-            <div display="flex" direction="rtl" flex-direction="column" overflow-x="hidden" overflow-y="hidden" scrollbar-width="15">
-              <div direction="rtl" width="100px" height="100px"/>
+    <div display="flex" direction="rtl" position="absolute" flex-direction="column" width="400px">
+      <div display="flex" direction="rtl" position="relative" flex-direction="column">
+        <div display="flex" direction="rtl" position="relative" flex-direction="column" margin-top="-32px">
+          <div display="grid" direction="rtl" position="relative" grid-template-columns="100px">
+            <div display="flex" direction="rtl" position="relative" flex-direction="column" overflow-x="hidden" overflow-y="hidden" scrollbar-width="15">
+              <div direction="rtl" position="relative" width="100px" height="100px"/>
             </div>
           </div>
         </div>
