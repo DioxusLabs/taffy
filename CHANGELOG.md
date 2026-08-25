@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+
+- Block/float: absorb `f32` rounding errors in horizontal fit checks, preventing floats from spuriously wrapping when percentage widths and margins sum to exactly 100% of the container (#1161).
+
 ## 0.14.0
 
 The MSRV for this release is 1.71.
