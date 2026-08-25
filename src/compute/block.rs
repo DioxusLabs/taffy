@@ -15,7 +15,7 @@ use crate::{
 };
 
 #[cfg(feature = "float_layout")]
-use super::float::{BfcSlot, ContentSlot, FloatContext, FloatIntrinsicWidthCalculator};
+use super::float::{BfcSlot, ContentSlot, FloatContext, FloatIntrinsicWidthCalculator, FIT_TOLERANCE};
 #[cfg(feature = "float_layout")]
 use crate::{Clear, Float, FloatDirection};
 
@@ -1195,7 +1195,7 @@ fn perform_final_layout_on_in_flow_children(
                                 .width
                                 .unwrap_or(slot.stretch_width.max(min_auto_width))
                                 .maybe_clamp(item.min_size.width, item.max_size.width);
-                            if width <= slot.border_width + 0.001 {
+                            if width <= slot.border_width + FIT_TOLERANCE {
                                 break slot;
                             }
                             slot_segment = Some(segment_id);
