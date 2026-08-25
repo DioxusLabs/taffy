@@ -4,6 +4,9 @@
 
 ### Fixed
 
+- Flexbox: the min-content main size of a multi-line row flex container is now the largest of the items' min-content contributions (per <https://drafts.csswg.org/css-flexbox-1/#intrinsic-main-sizes-compat>) instead of being derived from the items' hypothetical main sizes, matching browsers.
+- Flexbox: an item's intrinsic main-size contribution in a row flex container is now capped/floored by its flex base size *before* being clamped by its min/max main sizes (per <https://drafts.csswg.org/css-flexbox-1/#intrinsic-item-contributions>), so min/max sizes now take precedence over the flex base size, matching browsers.
+- Flexbox: a wrapping flex container whose main size is determined from its contents now re-collects its items into flex lines against the resolved main size. Previously all items were kept on a single line, which diverged from browsers when the container's max-content size is smaller than the sum of the items' outer hypothetical main sizes.
 - Flexbox: the intrinsic main-size contribution of an item in a column flex container is now its outer hypothetical main size (flex base size clamped by min/max main sizes, including the automatic minimum size), matching the behavior browsers ship for the block axis. Previously the contribution was content-based and floored by the item's flex basis, which diverged from browsers when the automatic minimum size did not apply (e.g. with an explicit `min-height`).
 - Block/float: absorb `f32` rounding errors in horizontal fit checks, preventing floats from spuriously wrapping when percentage widths and margins sum to exactly 100% of the container (#1161).
 - Flexbox: main-axis margins are no longer dropped from an item's intrinsic main-size contribution when the contribution is floored by the item's flex basis (column containers). This fixes negative margins being ignored on flex items with `flex-grow` (#1162) and on descendants containing an `overflow: hidden` grid item (#1163).

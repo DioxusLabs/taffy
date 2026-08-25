@@ -1,0 +1,15 @@
+<test name="row_intrinsic_mincontent_basis75_minwidth150__content_box_rtl" use-rounding="true">
+  <viewport width="min-content" height="max-content"/>
+  <input>
+    <div display="flex" box-sizing="content-box" direction="rtl">
+      <text box-sizing="content-box" direction="rtl" flex-grow="1" flex-basis="75px" min-width="150px">
+        XX​XXX​XX​XXX
+      </text>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="150" height="10">
+      <node x="0" y="0" width="150" height="10"/>
+    </node>
+  </expectations>
+</test>
