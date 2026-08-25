@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    Floats whose percentage widths and margins sum to exactly 100% all fit on one row
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="display: block; width: 1628px;">
+  <div style="float: left; width: 30%; height: 50px;"></div>
+  <div style="float: left; width: 30%; height: 50px; margin-left: 5%;"></div>
+  <div style="float: left; width: 30%; height: 50px; margin-left: 5%;"></div>
+</div>
+
+</body>
+</html>

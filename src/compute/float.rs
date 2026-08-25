@@ -30,6 +30,11 @@ use core::ops::Range;
 
 use crate::{debug::debug_log, sys::Vec, AvailableSpace, Clear, Direction, FloatDirection, Point, Size};
 
+/// Tolerance used when checking whether a box fits in a horizontal space, to absorb `f32`
+/// rounding errors (e.g. percentage widths and margins that sum to exactly 100% may otherwise
+/// exceed the container width and spuriously wrap)
+pub(crate) const FIT_TOLERANCE: f32 = 0.001;
+
 /// An empty "slot" that avoids floats that is suitable for non-floated content
 /// to be laid out into
 #[derive(Debug, Clone, Copy, Default)]
@@ -136,8 +141,10 @@ fn float_fits_horizontally(
     let lead = direction as usize;
     let trail = 1 - lead;
     let x_inset = float_insets[lead].max(cb_insets[lead]);
-    let fits_opposite_floats = float_insets[trail] == 0.0 || x_inset + width <= bfc_width - float_insets[trail];
-    let fits_containing_block = float_insets[lead] == 0.0 || x_inset + width <= bfc_width - cb_insets[trail];
+    let fits_opposite_floats =
+        float_insets[trail] == 0.0 || x_inset + width <= bfc_width - float_insets[trail] + FIT_TOLERANCE;
+    let fits_containing_block =
+        float_insets[lead] == 0.0 || x_inset + width <= bfc_width - cb_insets[trail] + FIT_TOLERANCE;
     fits_opposite_floats && fits_containing_block
 }
 
