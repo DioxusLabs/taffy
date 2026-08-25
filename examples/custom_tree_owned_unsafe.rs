@@ -148,16 +148,6 @@ impl LayoutPartialTree for StatelessLayoutTree {
         unsafe { node_from_id_mut(node_id).unrounded_layout = *layout };
     }
 
-    fn set_hoisted_children(&mut self, node_id: NodeId, hoisted: &[NodeId]) {
-        let vec = unsafe { &mut node_from_id_mut(node_id).hoisted_children };
-        vec.clear();
-        vec.extend_from_slice(hoisted);
-    }
-
-    fn add_hoisted_children(&mut self, node_id: NodeId, hoisted: &[NodeId]) {
-        unsafe { node_from_id_mut(node_id).hoisted_children.extend_from_slice(hoisted) };
-    }
-
     fn resolve_calc_value(&self, _val: *const (), _basis: f32) -> f32 {
         0.0
     }
@@ -204,6 +194,16 @@ impl LayoutContainingBlock for StatelessLayoutTree {
 
     fn get_oof_item_style(&self, node_id: NodeId) -> Self::OofItemStyle<'_> {
         unsafe { &node_from_id(node_id).style }
+    }
+
+    fn set_hoisted_children(&mut self, node_id: NodeId, hoisted: &[NodeId]) {
+        let vec = unsafe { &mut node_from_id_mut(node_id).hoisted_children };
+        vec.clear();
+        vec.extend_from_slice(hoisted);
+    }
+
+    fn add_hoisted_children(&mut self, node_id: NodeId, hoisted: &[NodeId]) {
+        unsafe { node_from_id_mut(node_id).hoisted_children.extend_from_slice(hoisted) };
     }
 }
 

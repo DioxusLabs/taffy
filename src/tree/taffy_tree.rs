@@ -391,23 +391,6 @@ where
     }
 
     #[inline(always)]
-    fn set_hoisted_children(&mut self, node_id: NodeId, hoisted: &[NodeId]) {
-        let vec = &mut self.taffy.nodes[node_id.into()].hoisted_children;
-        vec.clear();
-        vec.extend(hoisted.iter().copied());
-    }
-
-    #[inline(always)]
-    fn add_hoisted_children(&mut self, node_id: NodeId, hoisted: &[NodeId]) {
-        let vec = &mut self.taffy.nodes[node_id.into()].hoisted_children;
-        for id in hoisted.iter().copied() {
-            if !vec.contains(&id) {
-                vec.push(id);
-            }
-        }
-    }
-
-    #[inline(always)]
     fn compute_child_layout(&mut self, node_id: NodeId, inputs: LayoutInput) -> LayoutOutput {
         self.compute_child_layout(
             node_id,
@@ -430,6 +413,23 @@ where
     #[inline(always)]
     fn get_oof_item_style(&self, node_id: NodeId) -> Self::OofItemStyle<'_> {
         &self.taffy.nodes[node_id.into()].style
+    }
+
+    #[inline(always)]
+    fn set_hoisted_children(&mut self, node_id: NodeId, hoisted: &[NodeId]) {
+        let vec = &mut self.taffy.nodes[node_id.into()].hoisted_children;
+        vec.clear();
+        vec.extend(hoisted.iter().copied());
+    }
+
+    #[inline(always)]
+    fn add_hoisted_children(&mut self, node_id: NodeId, hoisted: &[NodeId]) {
+        let vec = &mut self.taffy.nodes[node_id.into()].hoisted_children;
+        for id in hoisted.iter().copied() {
+            if !vec.contains(&id) {
+                vec.push(id);
+            }
+        }
     }
 
     #[inline(always)]
