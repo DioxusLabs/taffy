@@ -1,0 +1,15 @@
+<test name="row_intrinsic_maxcontent_basis200_maxwidth60__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="flex" box-sizing="content-box" direction="ltr">
+      <text box-sizing="content-box" direction="ltr" flex-shrink="0" flex-basis="200px" max-width="60px">
+        XX​XXX​XX​XXX
+      </text>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="60" height="20">
+      <node x="0" y="0" width="60" height="20"/>
+    </node>
+  </expectations>
+</test>

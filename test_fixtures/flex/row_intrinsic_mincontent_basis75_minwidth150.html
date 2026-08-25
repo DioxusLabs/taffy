@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    Row flex container mincontent size: min-width larger than basis and content
+  </title>
+</head>
+<body>
+
+<div class="viewport" style="width: min-content;">
+<div id="test-root" style="display: flex; flex-direction: row;">
+  <div style="flex-basis: 75px; flex-grow: 1; flex-shrink: 1; min-width: 150px;">XX&#8203;XXX&#8203;XX&#8203;XXX</div>
+</div>
+</div>
+
+</body>
+</html>
