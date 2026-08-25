@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    Negative main-axis margin on a flex-grow item is applied when the container's main size is automatic
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="display: flex; flex-direction: column; width: 300px;">
+  <div style="width: 100px; height: 100px; flex-grow: 1; flex-shrink: 0; margin-top: -24px;"></div>
+</div>
+
+</body>
+</html>

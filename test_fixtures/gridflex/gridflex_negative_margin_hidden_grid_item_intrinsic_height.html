@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    A negative margin on an ancestor of a grid container is applied to the intrinsic height even when a grid item has overflow hidden
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="display: flex; flex-direction: column; width: 400px;">
+  <div style="display: flex; flex-direction: column;">
+    <div style="display: flex; flex-direction: column; margin-top: -32px;">
+      <div style="display: grid; grid-template-columns: 100px;">
+        <div style="display: flex; flex-direction: column; overflow: hidden;">
+          <div style="width: 100px; height: 100px;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
