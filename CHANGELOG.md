@@ -24,6 +24,10 @@
   - `LayoutContainingBlock` gains a defaulted `oof_claims` method returning the new `OofClaims` struct, centralizing the policy of which out-of-flow positions a node acts as a containing block for. The default claims `position: absolute` boxes when the node's own `position` is not `static` and never claims `position: fixed` boxes; implementations may override it to make style properties such as `transform` or `filter` establish a containing block
   - The container layout algorithms no longer require the `LayoutContainingBlock` bound (only `compute_oof_layout` and `compute_root_layout` do)
 
+### Added
+
+- `compute_oof_layout_for_area` and `OofLayoutResult` allow integrations to lay out out-of-flow candidates against an explicit positioning area without immediately mutating a layout node's hoisted-child list. This supports containing blocks represented outside Taffy's layout tree.
+
 ### Fixed
 
 - Grid: items with an `auto` start line and a definite end line (e.g. `grid-column: auto / 1`) no longer cause a phantom zero-sized positive implicit track to be created. This previously caused `grid_template_columns()`/`grid_template_rows()` to serialize an extra `0px` track (e.g. `10px 0px` instead of `10px`)
