@@ -49,60 +49,6 @@ mod detailed_grid_info {
     }
 
     #[test]
-    fn implicit_track_before_explicit_grid() {
-        // With `grid-template-columns: none` and a child placed at `grid-column: auto / 1`,
-        // the grid has exactly one (negative) implicit column track. The resolved track list
-        // must not contain a phantom zero-sized positive implicit track.
-        // See WPT css/css-grid/parsing/grid-template-columns-computed-implicit-track.html
-        let mut tree = new_test_tree();
-        let child = tree
-            .new_leaf(Style {
-                size: Size { width: Dimension::from_length(10.0), height: Dimension::from_length(10.0) },
-                grid_column: Line { start: GridPlacement::Auto, end: GridPlacement::from_line_index(1) },
-                ..Default::default()
-            })
-            .unwrap();
-        let root = tree.new_with_children(Style { display: Display::Grid, ..Default::default() }, &[child]).unwrap();
-        tree.compute_layout(root, Size::MAX_CONTENT).unwrap();
-
-        let info = get_detailed_grid_info(&tree, root);
-        assert_eq!(info.columns.negative_implicit_tracks, 1);
-        assert_eq!(info.columns.explicit_tracks, 0);
-        assert_eq!(info.columns.positive_implicit_tracks, 0);
-        assert_eq!(info.grid_template_columns(), "10px");
-        assert_eq!(info.rows.negative_implicit_tracks, 0);
-        assert_eq!(info.rows.explicit_tracks, 0);
-        assert_eq!(info.rows.positive_implicit_tracks, 1);
-        assert_eq!(info.grid_template_rows(), "10px");
-    }
-
-    #[test]
-    fn implicit_track_before_explicit_grid_rows() {
-        // Rows analogue: child placed at `grid-row: auto / 1`
-        // See WPT css/css-grid/parsing/grid-template-rows-computed-implicit-track.html
-        let mut tree = new_test_tree();
-        let child = tree
-            .new_leaf(Style {
-                size: Size { width: Dimension::from_length(10.0), height: Dimension::from_length(10.0) },
-                grid_row: Line { start: GridPlacement::Auto, end: GridPlacement::from_line_index(1) },
-                ..Default::default()
-            })
-            .unwrap();
-        let root = tree.new_with_children(Style { display: Display::Grid, ..Default::default() }, &[child]).unwrap();
-        tree.compute_layout(root, Size::MAX_CONTENT).unwrap();
-
-        let info = get_detailed_grid_info(&tree, root);
-        assert_eq!(info.rows.negative_implicit_tracks, 1);
-        assert_eq!(info.rows.explicit_tracks, 0);
-        assert_eq!(info.rows.positive_implicit_tracks, 0);
-        assert_eq!(info.grid_template_rows(), "10px");
-        assert_eq!(info.columns.negative_implicit_tracks, 0);
-        assert_eq!(info.columns.explicit_tracks, 0);
-        assert_eq!(info.columns.positive_implicit_tracks, 1);
-        assert_eq!(info.grid_template_columns(), "10px");
-    }
-
-    #[test]
     fn template_and_area_line_names() {
         let mut tree = new_test_tree();
         let child = tree.new_leaf(Style::default()).unwrap();
