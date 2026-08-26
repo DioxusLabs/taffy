@@ -127,7 +127,8 @@ fn child_min_line_max_line_span<S: CheapCloneStr>(
         (Line(track), Span(_)) => track,
 
         // End track specified
-        (Auto, Line(track)) => track,
+        // An auto start with a definite end resolves to a span of 1 ending at that line
+        (Auto, Line(track)) => track - 1,
         (Span(span), Line(track)) => track - span,
 
         // Only spans or autos

@@ -33517,6 +33517,54 @@ mod grid {
 
     #[cfg(feature = "grid")]
     #[test]
+    fn grid_template_serialization_negative_implicit_column__border_box_ltr() {
+        crate::run_xml_test("grid", "grid_template_serialization_negative_implicit_column__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_template_serialization_negative_implicit_column__content_box_ltr() {
+        crate::run_xml_test("grid", "grid_template_serialization_negative_implicit_column__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_template_serialization_negative_implicit_column__border_box_rtl() {
+        crate::run_xml_test("grid", "grid_template_serialization_negative_implicit_column__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_template_serialization_negative_implicit_column__content_box_rtl() {
+        crate::run_xml_test("grid", "grid_template_serialization_negative_implicit_column__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_template_serialization_negative_implicit_row__border_box_ltr() {
+        crate::run_xml_test("grid", "grid_template_serialization_negative_implicit_row__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_template_serialization_negative_implicit_row__content_box_ltr() {
+        crate::run_xml_test("grid", "grid_template_serialization_negative_implicit_row__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_template_serialization_negative_implicit_row__border_box_rtl() {
+        crate::run_xml_test("grid", "grid_template_serialization_negative_implicit_row__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_template_serialization_negative_implicit_row__content_box_rtl() {
+        crate::run_xml_test("grid", "grid_template_serialization_negative_implicit_row__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
     fn grid_template_serialization_none__border_box_ltr() {
         crate::run_xml_test("grid", "grid_template_serialization_none__border_box_ltr");
     }
