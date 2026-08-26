@@ -11,7 +11,8 @@ use crate::style::{AvailableSpace, CoreStyle, Position};
 #[cfg(feature = "grid")]
 use crate::tree::DetailedLayoutInfo;
 use crate::tree::{
-    Layout, LayoutContainingBlock, LayoutOutput, LayoutPartialTreeExt, NodeId, OofCandidate, OofCandidates, SizingMode,
+    Layout, LayoutContainingBlock, LayoutOutput, LayoutPartialTreeExt, NodeId, OofCandidate, OofCandidates, OofClaims,
+    OofPositioningArea, SizingMode,
 };
 use crate::util::sys::{f32_max, Vec};
 use crate::util::{MaybeMath, MaybeResolve, ResolveOrZero};
@@ -71,18 +72,62 @@ pub fn compute_oof_layout(tree: &mut impl LayoutContainingBlock, node_id: NodeId
 
     let style = tree.get_core_container_style(node_id);
     let direction = style.direction();
-    #[cfg(feature = "content_size")]
-    let is_scroll_container = style.overflow().x.is_scroll_container() || style.overflow().y.is_scroll_container();
     drop(style);
     let claims = tree.oof_claims(node_id);
 
     let candidates = output.oof_candidates.take();
-    let mut hoisted: Vec<NodeId> = Vec::new();
+    let result = compute_oof_layout_for_area(tree, node_id, candidates, area, direction, claims);
+    // Always record the hoisted child list (even when empty) so that lists recorded by previous
+    // layout runs do not persist
+    tree.set_hoisted_children(node_id, &result.hoisted);
+    output.oof_candidates = result.unclaimed;
+    #[cfg(feature = "content_size")]
+    {
+        output.scrollable_overflow_rect = output.scrollable_overflow_rect.union(result.scrollable_overflow_rect);
+    }
+}
+
+/// The result of laying out out-of-flow candidates against an explicit positioning area.
+pub struct OofLayoutResult {
+    /// Candidates claimed and laid out by this pass, in document order.
+    pub hoisted: Vec<NodeId>,
+    /// Candidates not claimed by this pass, which must continue bubbling.
+    pub unclaimed: OofCandidates,
+    /// Scrollable overflow contributed by the claimed candidates, relative to the positioning
+    /// area's origin.
+    pub scrollable_overflow_rect: Rect<f32>,
+}
+
+/// Lay out out-of-flow candidates against an explicit positioning area.
+///
+/// Unlike [`compute_oof_layout`], this function does not update the geometry owner's hoisted
+/// children or merge overflow into a [`LayoutOutput`]. This is useful when the CSS containing
+/// block does not have its own layout node and another node owns the resulting geometry.
+///
+/// `geometry_owner` supplies the layout tree operations, detailed layout information, and
+/// scroll-container state used by the positioning pass. `direction` and `claims` describe the
+/// actual CSS containing block.
+pub fn compute_oof_layout_for_area(
+    tree: &mut impl LayoutContainingBlock,
+    geometry_owner: NodeId,
+    candidates: OofCandidates,
+    area: OofPositioningArea,
+    direction: Direction,
+    claims: OofClaims,
+) -> OofLayoutResult {
+    #[cfg(feature = "content_size")]
+    let is_scroll_container = {
+        let style = tree.get_core_container_style(geometry_owner);
+        let is_scroll_container = style.overflow().x.is_scroll_container() || style.overflow().y.is_scroll_container();
+        drop(style);
+        is_scroll_container
+    };
+
+    let mut hoisted = Vec::new();
     let mut unclaimed = OofCandidates::new();
-    #[cfg_attr(not(feature = "content_size"), allow(unused_variables))]
-    let oof_overflow_rect = perform_oof_layout(
+    let scrollable_overflow_rect = perform_oof_layout(
         tree,
-        node_id,
+        geometry_owner,
         candidates,
         area.size,
         area.offset,
@@ -94,14 +139,8 @@ pub fn compute_oof_layout(tree: &mut impl LayoutContainingBlock, node_id: NodeId
         &mut hoisted,
         &mut unclaimed,
     );
-    // Always record the hoisted child list (even when empty) so that lists recorded by previous
-    // layout runs do not persist
-    tree.set_hoisted_children(node_id, &hoisted);
-    output.oof_candidates = unclaimed;
-    #[cfg(feature = "content_size")]
-    {
-        output.scrollable_overflow_rect = output.scrollable_overflow_rect.union(oof_overflow_rect);
-    }
+
+    OofLayoutResult { hoisted, unclaimed, scrollable_overflow_rect }
 }
 
 /// Perform final layout on the out-of-flow candidates for which the current node is the
