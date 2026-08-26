@@ -1,0 +1,15 @@
+<test name="row_intrinsic_mincontent_basis0_grow0_shrink1__border_box_ltr" use-rounding="true">
+  <viewport width="min-content" height="max-content"/>
+  <input>
+    <div display="flex" direction="ltr">
+      <text direction="ltr" flex-basis="0px">
+        XX​XXX​XX​XXX
+      </text>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="30" height="40">
+      <node x="0" y="0" width="30" height="40"/>
+    </node>
+  </expectations>
+</test>
