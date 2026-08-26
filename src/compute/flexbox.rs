@@ -1167,8 +1167,8 @@ fn collect_flex_lines<'a>(
     }
 }
 
-/// Collect flex items into balanced flex lines (`flex-wrap: balance`), such that the largest
-/// line is as small as possible.
+/// Collect flex items into balanced flex lines (`flex-wrap: balance`), minimizing the sum of
+/// the squared differences between each line's size and the container's inner main size.
 ///
 /// See <https://drafts.csswg.org/css-flexbox-2/#balance-values>
 #[cfg(feature = "flexbox_balance")]
@@ -3092,8 +3092,13 @@ fn sum_axis_gaps(gap: f32, num_items: usize) -> f32 {
 ///
 /// The minimization is a dynamic program over (line count, first item of suffix) accelerated
 /// with the divide-and-conquer optimization, running in `O(line_count * item_count *
-/// log(item_count))` time; the naive `O(line_count * item_count²)` dynamic program is kept as
-/// a test oracle.
+/// log(item_count))` time and `O(item_count * sqrt(line_count))` transient memory (the chosen
+/// division is read back from checkpoints rather than a full table of choices); the naive
+/// `O(line_count * item_count²)` dynamic program is kept as a test oracle. Because both the
+/// line count and the item count are author-controlled, the exact minimization is limited to
+/// `EXACT_BUDGET` dynamic-programming states; pathological inputs beyond the budget fall
+/// back to `proportional_line_item_counts`, which keeps the line count and every line valid
+/// but not the exact minimization, so that layout time and memory stay bounded.
 #[cfg(feature = "flexbox_balance")]
 mod balance {
     use crate::util::sys::{new_vec_with_capacity, Vec};
@@ -3302,20 +3307,42 @@ mod balance {
         }
     }
 
-    /// Determine the number of items on each line that balances items across lines, such that
-    /// the largest line is as small as possible, with a minimum of `min_line_count` lines
-    /// (or one line per item if there are fewer items).
+    /// The maximum number of dynamic-programming states (`line_count * item_count`) that
+    /// [`balanced_line_item_counts`] may solve exactly. Inputs needing more states (which can
+    /// only be produced by pathological item/`flex-line-count` combinations) fall back to
+    /// [`proportional_line_item_counts`] so that layout cannot be made to request unbounded
+    /// work or memory. At this budget the exact algorithm's transient memory stays under a
+    /// few megabytes and its runtime well under a second.
+    const EXACT_BUDGET: usize = 1 << 22;
+
+    /// Determine the number of items on each line that balances items across lines, minimizing
+    /// the sum of the squared differences between each line's size and the line size limit,
+    /// with a minimum of `min_line_count` lines (or one line per item if there are fewer
+    /// items).
     ///
     /// `item_sizes` must be non-empty. The returned line item counts are all non-zero and sum to
     /// the number of items.
     ///
     /// Runs in `O(line_count * item_count * log(item_count))` time using
-    /// `O(line_count * item_count)` transient memory.
+    /// `O(item_count * sqrt(line_count))` transient memory, within a budget of [`EXACT_BUDGET`]
+    /// dynamic-programming states (beyond which a valid but inexact division is produced).
     pub(super) fn balanced_line_item_counts(
         item_sizes: impl ExactSizeIterator<Item = f32>,
         line_limit: f32,
         gap_between_items: f32,
         min_line_count: usize,
+    ) -> Vec<usize> {
+        balanced_line_item_counts_with_budget(item_sizes, line_limit, gap_between_items, min_line_count, EXACT_BUDGET)
+    }
+
+    /// [`balanced_line_item_counts`] with the budget on exact dynamic-programming states made
+    /// a parameter so that tests can exercise the fallback on small inputs
+    fn balanced_line_item_counts_with_budget(
+        item_sizes: impl ExactSizeIterator<Item = f32>,
+        line_limit: f32,
+        gap_between_items: f32,
+        min_line_count: usize,
+        exact_budget: usize,
     ) -> Vec<usize> {
         let item_count = item_sizes.len();
         debug_assert!(item_count > 0);
@@ -3344,6 +3371,14 @@ mod balance {
             return item_counts;
         }
 
+        // The exact minimization solves `line_count * item_count` dynamic-programming states;
+        // both are author-controlled, so pathological inputs beyond the budget get a valid but
+        // inexact division rather than unbounded work and memory
+        if line_count.checked_mul(item_count).map_or(true, |states| states > exact_budget) {
+            let fit_ends = sizes.fit_ends();
+            return proportional_line_item_counts(&sizes, &suffix_greedy, &fit_ends, line_count);
+        }
+
         let fit_ends = sizes.fit_ends();
         let mut nonzero_ends: Vec<u32> = new_vec_with_capacity(item_count - 1);
         for end in 0..item_count - 1 {
@@ -3351,44 +3386,157 @@ mod balance {
                 nonzero_ends.push(end as u32);
             }
         }
+        let dp = Dp { sizes: &sizes, suffix_greedy: &suffix_greedy, fit_ends: &fit_ends, nonzero_ends: &nonzero_ends };
 
         // `prev[start]` is the minimum total score of any valid division of items `start..`
         // into exactly `lines - 1` lines ([`INFEASIBLE`] if there is none), and `cur` is the
         // row being computed for `lines` lines: a division into `lines` lines is a first line
         // `start..=end` plus a division of `end + 1..` into `lines - 1` lines.
-        // `opts[(lines - 2) * item_count + start]` records the largest `end` achieving
-        // `cur[start]`, from which the chosen division is read back.
         let mut prev: Vec<f64> = new_vec_with_capacity(item_count);
         for start in 0..item_count {
             prev.push(sizes.line_cost(start, item_count - 1));
         }
         let mut cur: Vec<f64> = new_vec_with_capacity(item_count);
         cur.extend(core::iter::repeat(INFEASIBLE).take(item_count));
-        let mut opts: Vec<u32> = new_vec_with_capacity((line_count - 1) * item_count);
-        opts.extend(core::iter::repeat(0).take((line_count - 1) * item_count));
-        for lines in 2..=line_count {
+
+        // Each row also records the largest `end` achieving each of its minima, from which the
+        // chosen division is read back — but storing every row's choices would take
+        // `O(line_count * item_count)` memory. Instead, the rows (for 2..=line_count lines)
+        // are grouped into blocks of `block_len ~ sqrt(row_count)` rows; the forward pass
+        // keeps the row of scores *entering* each block as a checkpoint plus the choices of
+        // the current block only, and readback recomputes one block's choices at a time from
+        // its checkpoint. This bounds memory by `O(item_count * sqrt(line_count))` and at most
+        // doubles the forward-pass work.
+        let row_count = line_count - 1;
+        let mut block_len: usize = 1;
+        while block_len * block_len < row_count {
+            block_len += 1;
+        }
+        let block_count = (row_count + block_len - 1) / block_len;
+        // In-budget sizes cannot overflow (both factors are at most `line_count`), but size
+        // arithmetic for allocations is nevertheless checked
+        let checkpoints_size = block_count.checked_mul(item_count).expect("checkpoint allocation size overflow");
+        let opts_size = block_len.checked_mul(item_count).expect("choice allocation size overflow");
+        let mut checkpoints: Vec<f64> = new_vec_with_capacity(checkpoints_size);
+        let mut opts: Vec<u32> = new_vec_with_capacity(opts_size);
+        opts.extend(core::iter::repeat(0).take(opts_size));
+
+        for row_index in 0..row_count {
+            if row_index % block_len == 0 {
+                checkpoints.extend_from_slice(&prev);
+            }
+            let opts_row = &mut opts[(row_index % block_len) * item_count..][..item_count];
+            dp.compute_row(row_index + 2, &prev, &mut cur, opts_row);
+            core::mem::swap(&mut prev, &mut cur);
+        }
+        debug_assert!(prev[0].is_finite());
+
+        // Read the division back out front to back: the rows are consumed in reverse (the
+        // first line's end comes from the last row), so the blocks are recomputed in reverse.
+        // The choices of the final block are still in `opts` from the forward pass.
+        let mut start = 0;
+        for block in (0..block_count).rev() {
+            let row_lo = block * block_len;
+            let row_hi = (row_lo + block_len).min(row_count);
+            if block != block_count - 1 {
+                prev.clear();
+                prev.extend_from_slice(&checkpoints[block * item_count..(block + 1) * item_count]);
+                for row_index in row_lo..row_hi {
+                    let opts_row = &mut opts[(row_index - row_lo) * item_count..][..item_count];
+                    dp.compute_row(row_index + 2, &prev, &mut cur, opts_row);
+                    core::mem::swap(&mut prev, &mut cur);
+                }
+            }
+            for row_index in (row_lo..row_hi).rev() {
+                let end = opts[(row_index - row_lo) * item_count + start] as usize;
+                item_counts.push(end - start + 1);
+                start = end + 1;
+            }
+        }
+        item_counts.push(item_count - start);
+        item_counts
+    }
+
+    /// The dynamic program's inputs, bundled so that the forward pass and the readback phase
+    /// recompute rows identically
+    struct Dp<'a> {
+        /// The line sizing for the items being divided
+        sizes: &'a LineSizes,
+        /// See [`LineSizes::suffix_greedy_line_counts`]
+        suffix_greedy: &'a [u32],
+        /// See [`LineSizes::fit_ends`]
+        fit_ends: &'a [u32],
+        /// See [`Row::nonzero_ends`]
+        nonzero_ends: &'a [u32],
+    }
+
+    impl Dp<'_> {
+        /// Compute the row of minimum scores (into `cur`) and largest minimizing ends (into
+        /// `opts_row`) for divisions into exactly `lines` lines, from the previous row `prev`
+        fn compute_row(&self, lines: usize, prev: &[f64], cur: &mut [f64], opts_row: &mut [u32]) {
+            let item_count = self.sizes.item_count();
             // The remaining `lines - 1` lines need one item each, bounding this line's end
             let max_end = item_count - lines;
             // Starts whose suffix doesn't fit in `lines` lines even with greedy breaking are
             // infeasible; they form a prefix (a longer suffix never needs fewer lines), and
             // excluding them keeps every state `fill_row` solves feasible
             let mut first_start = 0;
-            while first_start < max_end && suffix_greedy[first_start] as usize > lines {
+            while first_start < max_end && self.suffix_greedy[first_start] as usize > lines {
                 cur[first_start] = INFEASIBLE;
                 first_start += 1;
             }
-            let col_hi = nonzero_ends.partition_point(|&end| (end as usize) <= max_end);
-            let row = Row { sizes: &sizes, fit_ends: &fit_ends, prev: &prev, nonzero_ends: &nonzero_ends, max_end };
-            let opts_row = &mut opts[(lines - 2) * item_count..(lines - 1) * item_count];
-            fill_row(&row, &mut cur, opts_row, first_start, max_end, 0, col_hi);
-            core::mem::swap(&mut prev, &mut cur);
+            let col_hi = self.nonzero_ends.partition_point(|&end| (end as usize) <= max_end);
+            let row =
+                Row { sizes: self.sizes, fit_ends: self.fit_ends, prev, nonzero_ends: self.nonzero_ends, max_end };
+            fill_row(&row, cur, opts_row, first_start, max_end, 0, col_hi);
         }
+    }
 
-        // Read the division back out front to back
-        debug_assert!(prev[0].is_finite());
+    /// Divide the items into exactly `line_count` valid lines, placing each line break at the
+    /// feasible position nearest to an equal division of the total size.
+    ///
+    /// This is the deterministic `O(item_count log item_count)` fallback for inputs whose
+    /// exact minimization would exceed the state budget: every line fits within the limit
+    /// (unless it holds a single overflowing item) and zero-sized items are glued to the
+    /// preceding line where the limit and the remaining lines allow, but the division is
+    /// merely near-balanced — it does not minimize the sum of squared errors nor apply the
+    /// exact algorithm's tie-breaking.
+    fn proportional_line_item_counts(
+        sizes: &LineSizes,
+        suffix_greedy: &[u32],
+        fit_ends: &[u32],
+        line_count: usize,
+    ) -> Vec<usize> {
+        let item_count = sizes.item_count();
+        let total = sizes.line_size(0, item_count - 1);
+        let mut item_counts: Vec<usize> = new_vec_with_capacity(line_count);
         let mut start = 0;
-        for lines in (2..=line_count).rev() {
-            let end = opts[(lines - 2) * item_count + start] as usize;
+        // The smallest feasible end only moves up as lines are placed
+        let mut min_end = 0;
+        for line in 1..line_count {
+            let remaining_lines = line_count - line;
+            // The largest end that fits within the limit (a lone item may overflow) and leaves
+            // an item for each remaining line
+            let max_end = (fit_ends[start] as usize).min(item_count - 1 - remaining_lines).max(start);
+            // The smallest end whose suffix still divides validly into the remaining lines
+            // (see [`LineSizes::suffix_greedy_line_counts`]: any end from there through
+            // `max_end` yields a feasible division, and capped greedy breaking shows the range
+            // is never empty)
+            if min_end < start {
+                min_end = start;
+            }
+            while suffix_greedy[min_end + 1] as usize > remaining_lines {
+                min_end += 1;
+            }
+            debug_assert!(min_end <= max_end);
+            // The end nearest to dividing the total size equally across the lines
+            let target = total * (line as f64) / (line_count as f64);
+            let ideal_end = sizes.sums.partition_point(|&(sum, _)| sum < target).min(item_count - 1);
+            let mut end = ideal_end.clamp(min_end, max_end);
+            // Glue zero-sized items to this line where the limit and remaining lines allow
+            while end < max_end && sizes.is_zero_item(end + 1) && sizes.line_size(start, end + 1) <= sizes.limit {
+                end += 1;
+            }
             item_counts.push(end - start + 1);
             start = end + 1;
         }
@@ -3582,6 +3730,146 @@ mod balance {
                     "case {case}: item_sizes={item_sizes:?} line_limit={line_limit} \
                      gap_between_items={gap_between_items} min_line_count={min_line_count}"
                 );
+            }
+        }
+
+        /// Check that `item_counts` is a valid division of `item_sizes` into exactly
+        /// `line_count` lines: every line holds at least one item, the counts sum to the item
+        /// count, and no line of more than one item exceeds the limit
+        fn assert_valid_division(
+            item_sizes: &[f32],
+            line_limit: f32,
+            gap_between_items: f32,
+            line_count: usize,
+            item_counts: &[usize],
+        ) {
+            assert_eq!(item_counts.len(), line_count);
+            assert_eq!(item_counts.iter().sum::<usize>(), item_sizes.len());
+            let mut start = 0;
+            for &count in item_counts {
+                assert!(count >= 1);
+                let line_size: f32 = item_sizes[start..start + count].iter().map(|size| size.max(0.0)).sum::<f32>()
+                    + gap_between_items * (count - 1) as f32;
+                assert!(count == 1 || line_size <= line_limit, "line of {count} items has size {line_size}");
+                start += count;
+            }
+        }
+
+        #[test]
+        fn matches_naive_dp_many_lines() {
+            // Larger item counts with near-equal line counts exercise the checkpointed
+            // readback across many block boundaries (including ties and zero-sized items
+            // whose chosen ends straddle recomputed blocks)
+            let mut state: u64 = 0x13198A2E03707344;
+            let mut rand = move |bound: u32| -> u32 {
+                state ^= state << 13;
+                state ^= state >> 7;
+                state ^= state << 17;
+                ((state >> 32) as u32) % bound
+            };
+
+            for case in 0..50 {
+                let item_count = (rand(80) + 80) as usize;
+                let mut item_sizes: Vec<f32> = new_vec_with_capacity(item_count);
+                for _ in 0..item_count {
+                    let size = match rand(8) {
+                        0 | 1 => 0.0,
+                        _ => rand(8) as f32 * 25.0,
+                    };
+                    item_sizes.push(size);
+                }
+                let line_limit = match rand(5) {
+                    0 => f32::INFINITY,
+                    _ => (rand(10) + 8) as f32 * 30.0,
+                };
+                let gap_between_items = rand(4) as f32 * 5.0;
+                // Line counts within a few lines of the item count maximize the row count
+                // relative to the block length
+                let min_line_count = item_count - 1 - rand(8).min(rand(8)) as usize;
+
+                let expected = naive_line_item_counts(&item_sizes, line_limit, gap_between_items, min_line_count);
+                let actual = balanced_line_item_counts(
+                    item_sizes.iter().copied(),
+                    line_limit,
+                    gap_between_items,
+                    min_line_count,
+                );
+                assert_eq!(
+                    actual, expected,
+                    "case {case}: item_sizes={item_sizes:?} line_limit={line_limit} \
+                     gap_between_items={gap_between_items} min_line_count={min_line_count}"
+                );
+            }
+        }
+
+        #[test]
+        fn exact_within_budget_matches_unbounded() {
+            // The budget guard must not change behavior for inputs within the budget
+            let item_sizes: Vec<f32> = (0..500).map(|i| ((i * 7) % 13) as f32 * 10.0).collect();
+            let unbounded =
+                balanced_line_item_counts_with_budget(item_sizes.iter().copied(), 300.0, 5.0, 450, usize::MAX);
+            let default_budget = balanced_line_item_counts(item_sizes.iter().copied(), 300.0, 5.0, 450);
+            assert_eq!(default_budget, unbounded);
+        }
+
+        #[test]
+        fn over_budget_fallback_is_valid() {
+            // Over the budget, the fallback must keep exactly the selected line count and only
+            // valid lines (though not the exact minimization)
+            let mut state: u64 = 0xA4093822299F31D0;
+            let mut rand = move |bound: u32| -> u32 {
+                state ^= state << 13;
+                state ^= state >> 7;
+                state ^= state << 17;
+                ((state >> 32) as u32) % bound
+            };
+
+            for _ in 0..200 {
+                let item_count = (rand(60) + 2) as usize;
+                let mut item_sizes: Vec<f32> = new_vec_with_capacity(item_count);
+                for _ in 0..item_count {
+                    let size = match rand(8) {
+                        0 | 1 => 0.0,
+                        _ => rand(8) as f32 * 25.0,
+                    };
+                    item_sizes.push(size);
+                }
+                let line_limit = match rand(5) {
+                    0 => f32::INFINITY,
+                    _ => rand(10) as f32 * 30.0,
+                };
+                let gap_between_items = rand(4) as f32 * 5.0;
+                let min_line_count = rand(item_count as u32 + 2) as usize;
+
+                // A budget of zero forces every input through the fallback
+                let exact = balanced_line_item_counts_with_budget(
+                    item_sizes.iter().copied(),
+                    line_limit,
+                    gap_between_items,
+                    min_line_count,
+                    usize::MAX,
+                );
+                let fallback = balanced_line_item_counts_with_budget(
+                    item_sizes.iter().copied(),
+                    line_limit,
+                    gap_between_items,
+                    min_line_count,
+                    0,
+                );
+                assert_valid_division(&item_sizes, line_limit, gap_between_items, exact.len(), &fallback);
+            }
+        }
+
+        #[test]
+        fn pathological_line_counts_stay_bounded() {
+            // Near-equal author-controlled item/line counts previously allocated
+            // `O(line_count * item_count)` breakpoints (hundreds of MiB); they must now
+            // complete quickly in bounded memory via the budget fallback
+            let item_count = 10_000;
+            let item_sizes: Vec<f32> = (0..item_count).map(|i| (i % 5) as f32 * 10.0).collect();
+            for min_line_count in [item_count / 2, item_count - 1] {
+                let counts = balanced_line_item_counts(item_sizes.iter().copied(), 100.0, 0.0, min_line_count);
+                assert_valid_division(&item_sizes, 100.0, 0.0, min_line_count, &counts);
             }
         }
     }
