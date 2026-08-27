@@ -16068,6 +16068,26 @@ mod flex {
     }
 
     #[test]
+    fn measure_child_with_fixed_width_clamped_by_max_width_intrinsic__border_box_ltr() {
+        crate::run_xml_test("flex", "measure_child_with_fixed_width_clamped_by_max_width_intrinsic__border_box_ltr");
+    }
+
+    #[test]
+    fn measure_child_with_fixed_width_clamped_by_max_width_intrinsic__content_box_ltr() {
+        crate::run_xml_test("flex", "measure_child_with_fixed_width_clamped_by_max_width_intrinsic__content_box_ltr");
+    }
+
+    #[test]
+    fn measure_child_with_fixed_width_clamped_by_max_width_intrinsic__border_box_rtl() {
+        crate::run_xml_test("flex", "measure_child_with_fixed_width_clamped_by_max_width_intrinsic__border_box_rtl");
+    }
+
+    #[test]
+    fn measure_child_with_fixed_width_clamped_by_max_width_intrinsic__content_box_rtl() {
+        crate::run_xml_test("flex", "measure_child_with_fixed_width_clamped_by_max_width_intrinsic__content_box_rtl");
+    }
+
+    #[test]
     fn measure_child_with_flex_grow__border_box_ltr() {
         crate::run_xml_test("flex", "measure_child_with_flex_grow__border_box_ltr");
     }
@@ -16145,6 +16165,26 @@ mod flex {
     #[test]
     fn measure_child_with_min_size_greater_than_available_space__content_box_rtl() {
         crate::run_xml_test("flex", "measure_child_with_min_size_greater_than_available_space__content_box_rtl");
+    }
+
+    #[test]
+    fn measure_child_with_percent_width_clamped_by_max_width__border_box_ltr() {
+        crate::run_xml_test("flex", "measure_child_with_percent_width_clamped_by_max_width__border_box_ltr");
+    }
+
+    #[test]
+    fn measure_child_with_percent_width_clamped_by_max_width__content_box_ltr() {
+        crate::run_xml_test("flex", "measure_child_with_percent_width_clamped_by_max_width__content_box_ltr");
+    }
+
+    #[test]
+    fn measure_child_with_percent_width_clamped_by_max_width__border_box_rtl() {
+        crate::run_xml_test("flex", "measure_child_with_percent_width_clamped_by_max_width__border_box_rtl");
+    }
+
+    #[test]
+    fn measure_child_with_percent_width_clamped_by_max_width__content_box_rtl() {
+        crate::run_xml_test("flex", "measure_child_with_percent_width_clamped_by_max_width__content_box_rtl");
     }
 
     #[test]
