@@ -101,6 +101,10 @@ struct Segment {
     /// The insets of a segment created for a float are seeded with the float's containing
     /// block insets on both sides, so a non-zero inset alone does not imply a float.
     has_float: [bool; 2],
+    /// Whether a zero-width float's edge lies at the left (slot 0) / right (slot 1) inset.
+    /// Such an edge does not constrain the width of adjacent boxes, but it does act as an
+    /// obstacle that a float-avoiding box may not be moved past by a negative margin.
+    zero_width_edge: [bool; 2],
 }
 
 impl Segment {
@@ -288,8 +292,12 @@ impl FloatContext {
     /// vertical start and end at exact segment boundaries
     fn subdivide_segment(&mut self, idx: usize, divide_at_y: f32) {
         let old_segment = &mut self.segments[idx];
-        let new_segment =
-            Segment { insets: old_segment.insets, has_float: old_segment.has_float, y: divide_at_y..old_segment.y.end };
+        let new_segment = Segment {
+            insets: old_segment.insets,
+            has_float: old_segment.has_float,
+            zero_width_edge: old_segment.zero_width_edge,
+            y: divide_at_y..old_segment.y.end,
+        };
         if !old_segment.y.contains(&divide_at_y) || old_segment.y.start == divide_at_y {
             debug_log!("old_segment", dbg:&mut *old_segment);
             debug_log!("divide_at_y", dbg:divide_at_y);
@@ -481,7 +489,12 @@ impl FloatContext {
         if start.is_none() {
             let last_y_end = self.segments.last().map(|seg| seg.y.end).unwrap_or(0.0);
             if start_y > last_y_end {
-                self.segments.push(Segment { y: last_y_end..start_y, insets: [0.0, 0.0], has_float: [false; 2] });
+                self.segments.push(Segment {
+                    y: last_y_end..start_y,
+                    insets: [0.0, 0.0],
+                    has_float: [false; 2],
+                    zero_width_edge: [false; 2],
+                });
             }
 
             let start_y = last_y_end.max(start_y);
@@ -489,8 +502,15 @@ impl FloatContext {
             let mut insets = containing_block_insets;
             insets[slot] += floated_box.width;
             let mut has_float = [false; 2];
-            has_float[slot] = true;
-            self.segments.push(Segment { y: start_y..(start_y + floated_box.height), insets, has_float });
+            has_float[slot] = floated_box.width > 0.0;
+            let mut zero_width_edge = [false; 2];
+            zero_width_edge[slot] = floated_box.width == 0.0;
+            self.segments.push(Segment {
+                y: start_y..(start_y + floated_box.height),
+                insets,
+                has_float,
+                zero_width_edge,
+            });
 
             // Update last_placed_float
             let start_idx = self.segments.len() - 1;
@@ -523,7 +543,12 @@ impl FloatContext {
             None => {
                 let last_y_end = self.segments.last().map(|seg| seg.y.end).unwrap_or(0.0);
                 if min_y > last_y_end {
-                    self.segments.push(Segment { y: last_y_end..min_y, insets: [0.0, 0.0], has_float: [false; 2] });
+                    self.segments.push(Segment {
+                        y: last_y_end..min_y,
+                        insets: [0.0, 0.0],
+                        has_float: [false; 2],
+                        zero_width_edge: [false; 2],
+                    });
                 }
                 self.segments.len() - 1
             }
@@ -554,7 +579,8 @@ impl FloatContext {
         let placed_inset_plus_width = placed_inset + floated_box.width;
         for segment in &mut self.segments[start_idx..=end_idx] {
             segment.insets[slot] = placed_inset_plus_width;
-            segment.has_float[slot] = true;
+            segment.has_float[slot] |= floated_box.width > 0.0;
+            segment.zero_width_edge[slot] |= floated_box.width == 0.0;
         }
 
         // Update last_placed_float
@@ -699,7 +725,34 @@ impl FloatContext {
             .segments
             .get(hwm..)
             .and_then(|segments| segments.iter().position(|segment| segment.y.end > min_y).map(|idx| idx + hwm));
-        let start_idx = start_idx.unwrap_or(self.segments.len());
+        let Some(first_idx) = start_idx else {
+            // Below all floats
+            return BfcSlot {
+                y: self.segments.last().map(|segment| segment.y.end).unwrap_or(min_y).max(min_y),
+                ..no_float_slot
+            };
+        };
+        // Segments without an actual float edge on either side (e.g. created by zero-width
+        // floats) don't constrain boxes horizontally: look below them for the constraining
+        // segment, but position the box at the original (unconstrained) y position. Any
+        // zero-width float edges passed over on the way act as obstacles that the box may
+        // not be moved past by a negative margin.
+        let slot_y = self.segments[first_idx].y.start.max(min_y);
+        let mut zero_width_edge = [false; 2];
+        let start_idx = self
+            .segments
+            .get(first_idx..)
+            .and_then(|segments| {
+                segments
+                    .iter()
+                    .position(|segment| {
+                        zero_width_edge[0] |= segment.zero_width_edge[0];
+                        zero_width_edge[1] |= segment.zero_width_edge[1];
+                        segment.has_float != [false, false]
+                    })
+                    .map(|idx| idx + first_idx)
+            })
+            .unwrap_or(self.segments.len());
         match self.segments.get(start_idx) {
             Some(segment) => {
                 let lead = match direction {
@@ -711,11 +764,23 @@ impl FloatContext {
                 let has_trail_float = segment.has_float[trail];
                 let mut fit_insets = [0.0; 2];
                 let mut stretch_insets = [0.0; 2];
-                fit_insets[lead] =
-                    if has_lead_float { segment.insets[lead].max(margin_insets[lead]) } else { margin_insets[lead] };
+                fit_insets[lead] = if has_lead_float {
+                    segment.insets[lead].max(margin_insets[lead])
+                } else if zero_width_edge[lead] {
+                    // No box-constraining float on the leading side, but a zero-width float's
+                    // edge lies at the containing block's content edge: a negative leading
+                    // margin does not move the border edge past that obstacle.
+                    margin_insets[lead].max(containing_block_insets[lead])
+                } else {
+                    margin_insets[lead]
+                };
                 stretch_insets[lead] = fit_insets[lead];
                 fit_insets[trail] = if has_trail_float {
                     segment.insets[trail].max(containing_block_insets[trail])
+                } else if zero_width_edge[trail] {
+                    // A zero-width float's edge on the trailing side stops a negative trailing
+                    // margin from widening the space for the border box
+                    containing_block_insets[trail]
                 } else {
                     // A positive trailing margin may overflow the containing block edge (it does
                     // not affect fit), but a negative one widens the space for the border box
@@ -723,22 +788,21 @@ impl FloatContext {
                 };
                 stretch_insets[trail] = if has_trail_float {
                     segment.insets[trail].max(margin_insets[trail])
+                } else if zero_width_edge[trail] {
+                    margin_insets[trail].max(containing_block_insets[trail])
                 } else {
                     margin_insets[trail]
                 };
                 BfcSlot {
                     segment_id: Some(start_idx),
                     x: fit_insets[0],
-                    y: segment.y.start.max(min_y),
+                    y: slot_y,
                     border_width: self.available_width - fit_insets[0] - fit_insets[1],
                     stretch_width: self.available_width - stretch_insets[0] - stretch_insets[1],
                 }
             }
-            // Below all floats
-            None => BfcSlot {
-                y: self.segments.last().map(|segment| segment.y.end).unwrap_or(min_y).max(min_y),
-                ..no_float_slot
-            },
+            // Only unconstrained segments at or below the box's position
+            None => BfcSlot { segment_id: Some(first_idx), y: slot_y, ..no_float_slot },
         }
     }
 }
