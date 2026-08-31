@@ -1112,6 +1112,15 @@ fn collect_flex_lines<'a>(
                 let available = if constants.has_definite_main_size { available } else { available.min(max_size) };
                 available.maybe_max(constants.min_size.main(constants.dir))
             }),
+            // A column container's automatic main size is content-based, so definite available space
+            // handed down by an ancestor does not constrain where its lines wrap. Automatic widths
+            // resolve against available space, so rows do wrap against it.
+            None if !constants.dir.is_row()
+                && !constants.has_definite_main_size
+                && available_space.main(constants.dir).is_definite() =>
+            {
+                AvailableSpace::MaxContent
+            }
             None => available_space.main(constants.dir),
         };
 
@@ -1193,6 +1202,15 @@ fn collect_balanced_flex_lines<'a>(
                 let available = if constants.has_definite_main_size { available } else { available.min(max_size) };
                 available.maybe_max(constants.min_size.main(constants.dir))
             }),
+            // A column container's automatic main size is content-based, so definite available space
+            // handed down by an ancestor does not constrain where its lines wrap. Automatic widths
+            // resolve against available space, so rows do wrap against it.
+            None if !constants.dir.is_row()
+                && !constants.has_definite_main_size
+                && available_space.main(constants.dir).is_definite() =>
+            {
+                AvailableSpace::MaxContent
+            }
             None => available_space.main(constants.dir),
         }
     } else {

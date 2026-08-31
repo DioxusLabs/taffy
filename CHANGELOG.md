@@ -7,6 +7,7 @@
 - Grid: items with an `auto` start line and a definite end line (e.g. `grid-column: auto / 1`) no longer cause a phantom zero-sized positive implicit track to be created. This previously caused `grid_template_columns()`/`grid_template_rows()` to serialize an extra `0px` track (e.g. `10px 0px` instead of `10px`)
 - Grid: fixed `DetailedGridTracksInfo::resolve_absolute_grid_area` edge cases: placements are now normalized (lines sorted, named lines resolved) *before* out-of-range lines are treated as `auto`, and axes with no tracks resolve against the axis' single content-aligned grid line instead of falling back to the padding edge
 - Block/float: absorb `f32` rounding errors in horizontal fit checks, preventing floats from spuriously wrapping when percentage widths and margins sum to exactly 100% of the container (#1161).
+- Flexbox: an auto-height `flex-wrap: wrap` column container no longer wraps its lines against definite available space handed down by an ancestor. A column container's automatic main size is content-based, so lines only wrap against a definite main size or a max main size (#1175)
 - Flexbox: main-axis margins are no longer dropped from an item's intrinsic main-size contribution when the contribution is floored by the item's flex basis (column containers). This fixes negative margins being ignored on flex items with `flex-grow` (#1162) and on descendants containing an `overflow: hidden` grid item (#1163).
 
 ## 0.14.0

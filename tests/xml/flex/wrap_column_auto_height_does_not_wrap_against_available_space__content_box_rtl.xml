@@ -1,0 +1,19 @@
+<test name="wrap_column_auto_height_does_not_wrap_against_available_space__content_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="flex" box-sizing="content-box" direction="rtl" align-items="flex-start" width="400px" height="150px">
+      <div display="flex" box-sizing="content-box" direction="rtl" flex-direction="column" flex-wrap="wrap">
+        <div box-sizing="content-box" direction="rtl" width="60px" height="100px"/>
+        <div box-sizing="content-box" direction="rtl" width="60px" height="100px"/>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="400" height="150">
+      <node x="340" y="0" width="60" height="200">
+        <node x="0" y="0" width="60" height="100"/>
+        <node x="0" y="100" width="60" height="100"/>
+      </node>
+    </node>
+  </expectations>
+</test>
