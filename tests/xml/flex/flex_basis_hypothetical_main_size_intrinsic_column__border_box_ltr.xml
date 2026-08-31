@@ -1,0 +1,17 @@
+<test name="flex_basis_hypothetical_main_size_intrinsic_column__border_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="flex" direction="ltr" flex-direction="column" width="100px">
+      <div direction="ltr" flex-grow="1" flex-basis="200px" min-height="0px">
+        <div direction="ltr" height="300px"/>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="100" height="200">
+      <node x="0" y="0" width="100" height="200">
+        <node x="0" y="0" width="0" height="300"/>
+      </node>
+    </node>
+  </expectations>
+</test>

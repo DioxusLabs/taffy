@@ -4,6 +4,7 @@
 
 ### Fixed
 
+- Flexbox: the intrinsic main-size contribution of an item in a column flex container is now its outer hypothetical main size (flex base size clamped by min/max main sizes, including the automatic minimum size), matching the behavior browsers ship for the block axis. Previously the contribution was content-based and floored by the item's flex basis, which diverged from browsers when the automatic minimum size did not apply (e.g. with an explicit `min-height`).
 - Grid: items with an `auto` start line and a definite end line (e.g. `grid-column: auto / 1`) no longer cause a phantom zero-sized positive implicit track to be created. This previously caused `grid_template_columns()`/`grid_template_rows()` to serialize an extra `0px` track (e.g. `10px 0px` instead of `10px`)
 - Grid: fixed `DetailedGridTracksInfo::resolve_absolute_grid_area` edge cases: placements are now normalized (lines sorted, named lines resolved) *before* out-of-range lines are treated as `auto`, and axes with no tracks resolve against the axis' single content-aligned grid line instead of falling back to the padding edge
 - Block/float: absorb `f32` rounding errors in horizontal fit checks, preventing floats from spuriously wrapping when percentage widths and margins sum to exactly 100% of the container (#1161).
