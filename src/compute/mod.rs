@@ -57,7 +57,7 @@ use crate::tree::{
 };
 use crate::util::debug::{debug_log, debug_log_node, debug_pop_node, debug_push_node};
 use crate::util::sys::round;
-use crate::util::ResolveOrZero;
+use crate::util::{OptF32, ResolveOrZero};
 use crate::{CacheTree, MaybeMath, MaybeResolve};
 
 /// Compute layout for the root node in the tree
@@ -99,15 +99,16 @@ pub fn compute_root_layout(tree: &mut impl LayoutPartialTree, root: NodeId, avai
                 .maybe_clamp(min_size, max_size);
 
             // If both min and max in a given axis are set and max <= min then this determines the size in that axis
-            let min_max_definite_size = min_size.zip_map(max_size, |min, max| match (min, max) {
-                (Some(min), Some(max)) if max <= min => Some(min),
-                _ => None,
-            });
+            let min_max_definite_size =
+                min_size.zip_map(max_size, |min, max| match (min.into_option(), max.into_option()) {
+                    (Some(min), Some(max)) if max <= min => OptF32::some(min),
+                    _ => OptF32::NONE,
+                });
 
             // Block nodes automatically stretch fit their width to fit available space if available space is definite
             let available_space_based_size = Size {
                 width: available_space.width.into_option().maybe_sub(margin.horizontal_axis_sum()),
-                height: None,
+                height: OptF32::NONE,
             };
 
             let styled_based_known_dimensions = known_dimensions

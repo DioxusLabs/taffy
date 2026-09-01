@@ -3,6 +3,7 @@
 
 use crate::geometry::Size;
 use crate::style::AvailableSpace;
+use crate::util::OptF32;
 
 /// A trait to conveniently calculate minimums and maximums when some data may not be defined
 ///
@@ -25,111 +26,115 @@ pub trait MaybeMath<In, Out> {
     fn maybe_sub(self, rhs: In) -> Out;
 }
 
-impl MaybeMath<Option<f32>, Option<f32>> for Option<f32> {
-    fn maybe_min(self, rhs: Option<f32>) -> Option<f32> {
-        match (self, rhs) {
-            (Some(l), Some(r)) => Some(l.min(r)),
-            (Some(_l), None) => self,
-            (None, Some(_r)) => None,
-            (None, None) => None,
+impl MaybeMath<OptF32, OptF32> for OptF32 {
+    #[inline(always)]
+    fn maybe_min(self, rhs: OptF32) -> OptF32 {
+        if self.is_none() || rhs.is_none() {
+            self
+        } else {
+            OptF32::some(self.unchecked_value().min(rhs.unchecked_value()))
         }
     }
 
-    fn maybe_max(self, rhs: Option<f32>) -> Option<f32> {
-        match (self, rhs) {
-            (Some(l), Some(r)) => Some(l.max(r)),
-            (Some(_l), None) => self,
-            (None, Some(_r)) => None,
-            (None, None) => None,
+    #[inline(always)]
+    fn maybe_max(self, rhs: OptF32) -> OptF32 {
+        if self.is_none() || rhs.is_none() {
+            self
+        } else {
+            OptF32::some(self.unchecked_value().max(rhs.unchecked_value()))
         }
     }
 
-    fn maybe_clamp(self, min: Option<f32>, max: Option<f32>) -> Option<f32> {
-        match (self, min, max) {
-            (Some(base), Some(min), Some(max)) => Some(base.min(max).max(min)),
-            (Some(base), None, Some(max)) => Some(base.min(max)),
-            (Some(base), Some(min), None) => Some(base.max(min)),
-            (Some(_), None, None) => self,
-            (None, _, _) => None,
+    #[inline(always)]
+    fn maybe_clamp(self, min: OptF32, max: OptF32) -> OptF32 {
+        self.maybe_min(max).maybe_max(min)
+    }
+
+    #[inline(always)]
+    fn maybe_add(self, rhs: OptF32) -> OptF32 {
+        if self.is_none() || rhs.is_none() {
+            self
+        } else {
+            OptF32::some(self.unchecked_value() + rhs.unchecked_value())
         }
     }
 
-    fn maybe_add(self, rhs: Option<f32>) -> Option<f32> {
-        match (self, rhs) {
-            (Some(l), Some(r)) => Some(l + r),
-            (Some(_l), None) => self,
-            (None, Some(_r)) => None,
-            (None, None) => None,
-        }
-    }
-
-    fn maybe_sub(self, rhs: Option<f32>) -> Option<f32> {
-        match (self, rhs) {
-            (Some(l), Some(r)) => Some(l - r),
-            (Some(_l), None) => self,
-            (None, Some(_r)) => None,
-            (None, None) => None,
+    #[inline(always)]
+    fn maybe_sub(self, rhs: OptF32) -> OptF32 {
+        if self.is_none() || rhs.is_none() {
+            self
+        } else {
+            OptF32::some(self.unchecked_value() - rhs.unchecked_value())
         }
     }
 }
 
-impl MaybeMath<f32, Option<f32>> for Option<f32> {
-    fn maybe_min(self, rhs: f32) -> Option<f32> {
+impl MaybeMath<f32, OptF32> for OptF32 {
+    #[inline(always)]
+    fn maybe_min(self, rhs: f32) -> OptF32 {
         self.map(|val| val.min(rhs))
     }
 
-    fn maybe_max(self, rhs: f32) -> Option<f32> {
+    #[inline(always)]
+    fn maybe_max(self, rhs: f32) -> OptF32 {
         self.map(|val| val.max(rhs))
     }
 
-    fn maybe_clamp(self, min: f32, max: f32) -> Option<f32> {
+    #[inline(always)]
+    fn maybe_clamp(self, min: f32, max: f32) -> OptF32 {
         self.map(|val| val.min(max).max(min))
     }
 
-    fn maybe_add(self, rhs: f32) -> Option<f32> {
+    #[inline(always)]
+    fn maybe_add(self, rhs: f32) -> OptF32 {
         self.map(|val| val + rhs)
     }
 
-    fn maybe_sub(self, rhs: f32) -> Option<f32> {
+    #[inline(always)]
+    fn maybe_sub(self, rhs: f32) -> OptF32 {
         self.map(|val| val - rhs)
     }
 }
 
-impl MaybeMath<Option<f32>, f32> for f32 {
-    fn maybe_min(self, rhs: Option<f32>) -> f32 {
-        match rhs {
-            Some(val) => self.min(val),
-            None => self,
+impl MaybeMath<OptF32, f32> for f32 {
+    #[inline(always)]
+    fn maybe_min(self, rhs: OptF32) -> f32 {
+        if rhs.is_none() {
+            self
+        } else {
+            self.min(rhs.unchecked_value())
         }
     }
 
-    fn maybe_max(self, rhs: Option<f32>) -> f32 {
-        match rhs {
-            Some(val) => self.max(val),
-            None => self,
+    #[inline(always)]
+    fn maybe_max(self, rhs: OptF32) -> f32 {
+        if rhs.is_none() {
+            self
+        } else {
+            self.max(rhs.unchecked_value())
         }
     }
 
-    fn maybe_clamp(self, min: Option<f32>, max: Option<f32>) -> f32 {
-        match (min, max) {
-            (Some(min), Some(max)) => self.min(max).max(min),
-            (None, Some(max)) => self.min(max),
-            (Some(min), None) => self.max(min),
-            (None, None) => self,
+    #[inline(always)]
+    fn maybe_clamp(self, min: OptF32, max: OptF32) -> f32 {
+        self.maybe_min(max).maybe_max(min)
+    }
+
+    #[inline(always)]
+    fn maybe_add(self, rhs: OptF32) -> f32 {
+        if rhs.is_none() {
+            self
+        } else {
+            self + rhs.unchecked_value()
         }
     }
 
-    fn maybe_add(self, rhs: Option<f32>) -> f32 {
-        match rhs {
-            Some(val) => self + val,
-            None => self,
-        }
-    }
-
-    fn maybe_sub(self, rhs: Option<f32>) -> f32 {
-        match rhs {
-            Some(val) => self - val,
-            None => self,
+    #[inline(always)]
+    fn maybe_sub(self, rhs: OptF32) -> f32 {
+        if rhs.is_none() {
+            self
+        } else {
+            self - rhs.unchecked_value()
         }
     }
 }
@@ -174,9 +179,9 @@ impl MaybeMath<f32, AvailableSpace> for AvailableSpace {
     }
 }
 
-impl MaybeMath<Option<f32>, AvailableSpace> for AvailableSpace {
-    fn maybe_min(self, rhs: Option<f32>) -> AvailableSpace {
-        match (self, rhs) {
+impl MaybeMath<OptF32, AvailableSpace> for AvailableSpace {
+    fn maybe_min(self, rhs: OptF32) -> AvailableSpace {
+        match (self, rhs.into_option()) {
             (AvailableSpace::Definite(val), Some(rhs)) => AvailableSpace::Definite(val.min(rhs)),
             (AvailableSpace::Definite(val), None) => AvailableSpace::Definite(val),
             (AvailableSpace::MinContent, Some(rhs)) => AvailableSpace::Definite(rhs),
@@ -185,8 +190,8 @@ impl MaybeMath<Option<f32>, AvailableSpace> for AvailableSpace {
             (AvailableSpace::MaxContent, None) => AvailableSpace::MaxContent,
         }
     }
-    fn maybe_max(self, rhs: Option<f32>) -> AvailableSpace {
-        match (self, rhs) {
+    fn maybe_max(self, rhs: OptF32) -> AvailableSpace {
+        match (self, rhs.into_option()) {
             (AvailableSpace::Definite(val), Some(rhs)) => AvailableSpace::Definite(val.max(rhs)),
             (AvailableSpace::Definite(val), None) => AvailableSpace::Definite(val),
             (AvailableSpace::MinContent, _) => AvailableSpace::MinContent,
@@ -194,8 +199,8 @@ impl MaybeMath<Option<f32>, AvailableSpace> for AvailableSpace {
         }
     }
 
-    fn maybe_clamp(self, min: Option<f32>, max: Option<f32>) -> AvailableSpace {
-        match (self, min, max) {
+    fn maybe_clamp(self, min: OptF32, max: OptF32) -> AvailableSpace {
+        match (self, min.into_option(), max.into_option()) {
             (AvailableSpace::Definite(val), Some(min), Some(max)) => AvailableSpace::Definite(val.min(max).max(min)),
             (AvailableSpace::Definite(val), None, Some(max)) => AvailableSpace::Definite(val.min(max)),
             (AvailableSpace::Definite(val), Some(min), None) => AvailableSpace::Definite(val.max(min)),
@@ -205,16 +210,16 @@ impl MaybeMath<Option<f32>, AvailableSpace> for AvailableSpace {
         }
     }
 
-    fn maybe_add(self, rhs: Option<f32>) -> AvailableSpace {
-        match (self, rhs) {
+    fn maybe_add(self, rhs: OptF32) -> AvailableSpace {
+        match (self, rhs.into_option()) {
             (AvailableSpace::Definite(val), Some(rhs)) => AvailableSpace::Definite(val + rhs),
             (AvailableSpace::Definite(val), None) => AvailableSpace::Definite(val),
             (AvailableSpace::MinContent, _) => AvailableSpace::MinContent,
             (AvailableSpace::MaxContent, _) => AvailableSpace::MaxContent,
         }
     }
-    fn maybe_sub(self, rhs: Option<f32>) -> AvailableSpace {
-        match (self, rhs) {
+    fn maybe_sub(self, rhs: OptF32) -> AvailableSpace {
+        match (self, rhs.into_option()) {
             (AvailableSpace::Definite(val), Some(rhs)) => AvailableSpace::Definite(val - rhs),
             (AvailableSpace::Definite(val), None) => AvailableSpace::Definite(val),
             (AvailableSpace::MinContent, _) => AvailableSpace::MinContent,
@@ -251,106 +256,106 @@ impl<In, Out, T: MaybeMath<In, Out>> MaybeMath<Size<In>, Size<Out>> for Size<T> 
 #[cfg(test)]
 mod tests {
     mod lhs_option_f32_rhs_option_f32 {
-        use crate::util::MaybeMath;
+        use crate::util::{MaybeMath, OptF32};
 
         #[test]
         fn test_maybe_min() {
-            assert_eq!(Some(3.0).maybe_min(Some(5.0)), Some(3.0));
-            assert_eq!(Some(5.0).maybe_min(Some(3.0)), Some(3.0));
-            assert_eq!(Some(3.0).maybe_min(None), Some(3.0));
-            assert_eq!(None.maybe_min(Some(3.0)), None);
-            assert_eq!(None.maybe_min(None), None);
+            assert_eq!(OptF32::some(3.0).maybe_min(OptF32::some(5.0)), OptF32::some(3.0));
+            assert_eq!(OptF32::some(5.0).maybe_min(OptF32::some(3.0)), OptF32::some(3.0));
+            assert_eq!(OptF32::some(3.0).maybe_min(OptF32::NONE), OptF32::some(3.0));
+            assert_eq!(OptF32::NONE.maybe_min(OptF32::some(3.0)), OptF32::NONE);
+            assert_eq!(OptF32::NONE.maybe_min(OptF32::NONE), OptF32::NONE);
         }
 
         #[test]
         fn test_maybe_max() {
-            assert_eq!(Some(3.0).maybe_max(Some(5.0)), Some(5.0));
-            assert_eq!(Some(5.0).maybe_max(Some(3.0)), Some(5.0));
-            assert_eq!(Some(3.0).maybe_max(None), Some(3.0));
-            assert_eq!(None.maybe_max(Some(3.0)), None);
-            assert_eq!(None.maybe_max(None), None);
+            assert_eq!(OptF32::some(3.0).maybe_max(OptF32::some(5.0)), OptF32::some(5.0));
+            assert_eq!(OptF32::some(5.0).maybe_max(OptF32::some(3.0)), OptF32::some(5.0));
+            assert_eq!(OptF32::some(3.0).maybe_max(OptF32::NONE), OptF32::some(3.0));
+            assert_eq!(OptF32::NONE.maybe_max(OptF32::some(3.0)), OptF32::NONE);
+            assert_eq!(OptF32::NONE.maybe_max(OptF32::NONE), OptF32::NONE);
         }
 
         #[test]
         fn test_maybe_add() {
-            assert_eq!(Some(3.0).maybe_add(Some(5.0)), Some(8.0));
-            assert_eq!(Some(5.0).maybe_add(Some(3.0)), Some(8.0));
-            assert_eq!(Some(3.0).maybe_add(None), Some(3.0));
-            assert_eq!(None.maybe_add(Some(3.0)), None);
-            assert_eq!(None.maybe_add(None), None);
+            assert_eq!(OptF32::some(3.0).maybe_add(OptF32::some(5.0)), OptF32::some(8.0));
+            assert_eq!(OptF32::some(5.0).maybe_add(OptF32::some(3.0)), OptF32::some(8.0));
+            assert_eq!(OptF32::some(3.0).maybe_add(OptF32::NONE), OptF32::some(3.0));
+            assert_eq!(OptF32::NONE.maybe_add(OptF32::some(3.0)), OptF32::NONE);
+            assert_eq!(OptF32::NONE.maybe_add(OptF32::NONE), OptF32::NONE);
         }
 
         #[test]
         fn test_maybe_sub() {
-            assert_eq!(Some(3.0).maybe_sub(Some(5.0)), Some(-2.0));
-            assert_eq!(Some(5.0).maybe_sub(Some(3.0)), Some(2.0));
-            assert_eq!(Some(3.0).maybe_sub(None), Some(3.0));
-            assert_eq!(None.maybe_sub(Some(3.0)), None);
-            assert_eq!(None.maybe_sub(None), None);
+            assert_eq!(OptF32::some(3.0).maybe_sub(OptF32::some(5.0)), OptF32::some(-2.0));
+            assert_eq!(OptF32::some(5.0).maybe_sub(OptF32::some(3.0)), OptF32::some(2.0));
+            assert_eq!(OptF32::some(3.0).maybe_sub(OptF32::NONE), OptF32::some(3.0));
+            assert_eq!(OptF32::NONE.maybe_sub(OptF32::some(3.0)), OptF32::NONE);
+            assert_eq!(OptF32::NONE.maybe_sub(OptF32::NONE), OptF32::NONE);
         }
     }
 
     mod lhs_option_f32_rhs_f32 {
-        use crate::util::MaybeMath;
+        use crate::util::{MaybeMath, OptF32};
 
         #[test]
         fn test_maybe_min() {
-            assert_eq!(Some(3.0).maybe_min(5.0), Some(3.0));
-            assert_eq!(Some(5.0).maybe_min(3.0), Some(3.0));
-            assert_eq!(None.maybe_min(3.0), None);
+            assert_eq!(OptF32::some(3.0).maybe_min(5.0), OptF32::some(3.0));
+            assert_eq!(OptF32::some(5.0).maybe_min(3.0), OptF32::some(3.0));
+            assert_eq!(OptF32::NONE.maybe_min(3.0), OptF32::NONE);
         }
 
         #[test]
         fn test_maybe_max() {
-            assert_eq!(Some(3.0).maybe_max(5.0), Some(5.0));
-            assert_eq!(Some(5.0).maybe_max(3.0), Some(5.0));
-            assert_eq!(None.maybe_max(3.0), None);
+            assert_eq!(OptF32::some(3.0).maybe_max(5.0), OptF32::some(5.0));
+            assert_eq!(OptF32::some(5.0).maybe_max(3.0), OptF32::some(5.0));
+            assert_eq!(OptF32::NONE.maybe_max(3.0), OptF32::NONE);
         }
 
         #[test]
         fn test_maybe_add() {
-            assert_eq!(Some(3.0).maybe_add(5.0), Some(8.0));
-            assert_eq!(Some(5.0).maybe_add(3.0), Some(8.0));
-            assert_eq!(None.maybe_add(3.0), None);
+            assert_eq!(OptF32::some(3.0).maybe_add(5.0), OptF32::some(8.0));
+            assert_eq!(OptF32::some(5.0).maybe_add(3.0), OptF32::some(8.0));
+            assert_eq!(OptF32::NONE.maybe_add(3.0), OptF32::NONE);
         }
 
         #[test]
         fn test_maybe_sub() {
-            assert_eq!(Some(3.0).maybe_sub(5.0), Some(-2.0));
-            assert_eq!(Some(5.0).maybe_sub(3.0), Some(2.0));
-            assert_eq!(None.maybe_sub(3.0), None);
+            assert_eq!(OptF32::some(3.0).maybe_sub(5.0), OptF32::some(-2.0));
+            assert_eq!(OptF32::some(5.0).maybe_sub(3.0), OptF32::some(2.0));
+            assert_eq!(OptF32::NONE.maybe_sub(3.0), OptF32::NONE);
         }
     }
 
     mod lhs_f32_rhs_option_f32 {
-        use crate::util::MaybeMath;
+        use crate::util::{MaybeMath, OptF32};
 
         #[test]
         fn test_maybe_min() {
-            assert_eq!(3.0.maybe_min(Some(5.0)), 3.0);
-            assert_eq!(5.0.maybe_min(Some(3.0)), 3.0);
-            assert_eq!(3.0.maybe_min(None), 3.0);
+            assert_eq!(3.0.maybe_min(OptF32::some(5.0)), 3.0);
+            assert_eq!(5.0.maybe_min(OptF32::some(3.0)), 3.0);
+            assert_eq!(3.0.maybe_min(OptF32::NONE), 3.0);
         }
 
         #[test]
         fn test_maybe_max() {
-            assert_eq!(3.0.maybe_max(Some(5.0)), 5.0);
-            assert_eq!(5.0.maybe_max(Some(3.0)), 5.0);
-            assert_eq!(3.0.maybe_max(None), 3.0);
+            assert_eq!(3.0.maybe_max(OptF32::some(5.0)), 5.0);
+            assert_eq!(5.0.maybe_max(OptF32::some(3.0)), 5.0);
+            assert_eq!(3.0.maybe_max(OptF32::NONE), 3.0);
         }
 
         #[test]
         fn test_maybe_add() {
-            assert_eq!(3.0.maybe_add(Some(5.0)), 8.0);
-            assert_eq!(5.0.maybe_add(Some(3.0)), 8.0);
-            assert_eq!(3.0.maybe_add(None), 3.0);
+            assert_eq!(3.0.maybe_add(OptF32::some(5.0)), 8.0);
+            assert_eq!(5.0.maybe_add(OptF32::some(3.0)), 8.0);
+            assert_eq!(3.0.maybe_add(OptF32::NONE), 3.0);
         }
 
         #[test]
         fn test_maybe_sub() {
-            assert_eq!(3.0.maybe_sub(Some(5.0)), -2.0);
-            assert_eq!(5.0.maybe_sub(Some(3.0)), 2.0);
-            assert_eq!(3.0.maybe_sub(None), 3.0);
+            assert_eq!(3.0.maybe_sub(OptF32::some(5.0)), -2.0);
+            assert_eq!(5.0.maybe_sub(OptF32::some(3.0)), 2.0);
+            assert_eq!(3.0.maybe_sub(OptF32::NONE), 3.0);
         }
     }
 }

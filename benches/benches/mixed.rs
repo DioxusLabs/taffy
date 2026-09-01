@@ -47,10 +47,11 @@ impl ParleyTextContext {
 }
 
 fn measure_function(
-    known_dimensions: taffy::Size<Option<f32>>,
+    known_dimensions: taffy::Size<taffy::OptF32>,
     available_space: taffy::Size<taffy::AvailableSpace>,
     node_context: Option<&mut ParleyTextContext>,
 ) -> Size<f32> {
+    let known_dimensions = known_dimensions.into_options();
     if let Size { width: Some(width), height: Some(height) } = known_dimensions {
         return Size { width, height };
     }

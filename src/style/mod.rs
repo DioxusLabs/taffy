@@ -1,7 +1,7 @@
 //! A typed representation of [CSS style properties](https://css-tricks.com/snippets/css/a-guide-to-flexbox/) in Rust. Used as input to layout computation.
 mod alignment;
 mod available_space;
-mod compact_length;
+pub(crate) mod compact_length;
 mod dimension;
 
 #[cfg(feature = "block_layout")]
@@ -24,6 +24,7 @@ pub use self::dimension::{
     LengthPercentageAuto,
 };
 use crate::sys::DefaultCheapStr;
+use crate::util::OptF32;
 
 #[cfg(feature = "block_layout")]
 pub use self::block::{BlockContainerStyle, BlockItemStyle, TextAlign};
@@ -392,10 +393,10 @@ impl Overflow {
     /// Returns `Some(0.0)` if the overflow mode would cause the automatic minimum size of a Flexbox or CSS Grid item
     /// to be `0`. Else returns None.
     #[inline(always)]
-    pub(crate) fn maybe_into_automatic_min_size(self) -> Option<f32> {
+    pub(crate) fn maybe_into_automatic_min_size(self) -> OptF32 {
         match self.is_scroll_container() {
-            true => Some(0.0),
-            false => None,
+            true => OptF32::some(0.0),
+            false => OptF32::NONE,
         }
     }
 }

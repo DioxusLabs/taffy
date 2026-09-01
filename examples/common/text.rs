@@ -17,13 +17,15 @@ pub struct TextContext {
 }
 
 pub fn text_measure_function(
-    known_dimensions: taffy::geometry::Size<Option<f32>>,
+    known_dimensions: taffy::geometry::Size<taffy::OptF32>,
     available_space: taffy::geometry::Size<taffy::style::AvailableSpace>,
     text_context: &TextContext,
     font_metrics: &FontMetrics,
 ) -> taffy::geometry::Size<f32> {
     use taffy::geometry::AbsoluteAxis;
     use taffy::prelude::*;
+
+    let known_dimensions = known_dimensions.into_options();
 
     let inline_axis = match text_context.writing_mode {
         WritingMode::Horizontal => AbsoluteAxis::Horizontal,

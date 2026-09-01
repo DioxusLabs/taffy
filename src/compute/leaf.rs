@@ -1,6 +1,5 @@
 //! Computes size using styles and measure functions
 
-#[cfg(feature = "content_size")]
 use crate::geometry::Rect;
 use crate::geometry::Size;
 use crate::style::{AvailableSpace, Overflow, Position};
@@ -9,6 +8,7 @@ use crate::tree::{LayoutInput, LayoutOutput, SizingMode};
 use crate::util::debug::debug_log;
 use crate::util::sys::f32_max;
 use crate::util::MaybeMath;
+use crate::util::OptF32;
 use crate::util::{MaybeResolve, ResolveOrZero};
 use crate::{BoxSizing, CoreStyle};
 use core::unreachable;
@@ -21,7 +21,7 @@ pub fn compute_leaf_layout<MeasureFunction>(
     measure_function: MeasureFunction,
 ) -> LayoutOutput
 where
-    MeasureFunction: FnOnce(Size<Option<f32>>, Size<AvailableSpace>) -> Size<f32>,
+    MeasureFunction: FnOnce(Size<OptF32>, Size<AvailableSpace>) -> Size<f32>,
 {
     let LayoutInput { known_dimensions, parent_size, available_space, sizing_mode, run_mode, .. } = inputs;
 
@@ -84,8 +84,8 @@ where
         || padding.bottom > 0.0
         || border.top > 0.0
         || border.bottom > 0.0
-        || matches!(node_size.height, Some(h) if h > 0.0)
-        || matches!(node_min_size.height, Some(h) if h > 0.0);
+        || matches!(node_size.height.into_option(), Some(h) if h > 0.0)
+        || matches!(node_min_size.height.into_option(), Some(h) if h > 0.0);
 
     debug_log!("LEAF");
     debug_log!("node_size", dbg:node_size);
@@ -94,10 +94,10 @@ where
 
     // Return early if both width and height are known
     if run_mode == RunMode::ComputeSize && has_styles_preventing_being_collapsed_through {
-        if let Size { width: Some(width), height: Some(height) } = node_size {
+        if let Size { width: Some(width), height: Some(height) } = node_size.into_options() {
             let size = Size { width, height }
                 .maybe_clamp(node_min_size, node_max_size)
-                .maybe_max(padding_border.sum_axes().map(Some));
+                .maybe_max(padding_border.sum_axes().map(OptF32::some));
             return LayoutOutput {
                 size,
                 #[cfg(feature = "content_size")]
@@ -114,8 +114,7 @@ where
     let available_space = Size {
         width: known_dimensions
             .width
-            .map(AvailableSpace::from)
-            .unwrap_or(available_space.width)
+            .map_or(available_space.width, AvailableSpace::from)
             .maybe_sub(margin.horizontal_axis_sum())
             .maybe_set(known_dimensions.width)
             .maybe_set(node_size.width)
@@ -124,8 +123,7 @@ where
             }),
         height: known_dimensions
             .height
-            .map(AvailableSpace::from)
-            .unwrap_or(available_space.height)
+            .map_or(available_space.height, AvailableSpace::from)
             .maybe_sub(margin.vertical_axis_sum())
             .maybe_set(known_dimensions.height)
             .maybe_set(node_size.height)
@@ -151,7 +149,7 @@ where
         width: clamped_size.width,
         height: f32_max(clamped_size.height, aspect_ratio.map(|ratio| clamped_size.width / ratio).unwrap_or(0.0)),
     };
-    let size = size.maybe_max(padding_border.sum_axes().map(Some));
+    let size = size.maybe_max(padding_border.sum_axes().map(OptF32::some));
 
     // A scroll container's own padding at the end of the content is part of its scrollable
     // overflow region, so it is included in the overflow rect. Boxes that are not scroll

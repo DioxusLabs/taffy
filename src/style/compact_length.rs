@@ -4,11 +4,12 @@ use super::LengthPercentage;
 use crate::style_helpers::{
     FromFr, FromLength, FromPercent, TaffyAuto, TaffyFitContent, TaffyMaxContent, TaffyMinContent, TaffyZero,
 };
+use crate::util::OptF32;
 
 /// Note: these two functions are copied directly from the std (core) library. But by duplicating them
 /// here we can reduce MSRV from 1.84 all the way down to 1.65 while retaining const constructors and
 /// strict pointer provenance
-mod compat {
+pub(crate) mod compat {
     #![allow(unsafe_code)]
     #![allow(unknown_lints)]
     #![allow(unnecessary_transmutes)]
@@ -494,16 +495,12 @@ impl CompactLength {
     /// Resolve percentage values against the passed parent_size, returning Some(value)
     /// Non-percentage values always return None.
     #[inline(always)]
-    pub fn resolved_percentage_size(
-        self,
-        parent_size: f32,
-        calc_resolver: impl Fn(*const (), f32) -> f32,
-    ) -> Option<f32> {
+    pub fn resolved_percentage_size(self, parent_size: f32, calc_resolver: impl Fn(*const (), f32) -> f32) -> OptF32 {
         match self.tag() {
-            CompactLength::PERCENT_TAG => Some(self.value() * parent_size),
+            CompactLength::PERCENT_TAG => OptF32::some(self.value() * parent_size),
             #[cfg(feature = "calc")]
-            _ if self.is_calc() => Some(calc_resolver(self.0.ptr(), parent_size)),
-            _ => None,
+            _ if self.is_calc() => OptF32::some(calc_resolver(self.0.ptr(), parent_size)),
+            _ => OptF32::NONE,
         }
     }
 }

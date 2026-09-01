@@ -1,5 +1,6 @@
 #![allow(dead_code)]
 
+use crate::util::OptF32;
 use taffy::{AvailableSpace, NodeId, Size, Style};
 
 /// A shared measure function for tests which means that tests compiled with separate crates
@@ -57,7 +58,7 @@ pub enum TestMeasureData {
 
 /// A measure function for tests that works with `TestNodeContext`
 pub fn test_measure_function(
-    known_dimensions: Size<Option<f32>>,
+    known_dimensions: Size<OptF32>,
     available_space: Size<AvailableSpace>,
     _node_id: NodeId,
     context: Option<&mut TestNodeContext>,
@@ -92,7 +93,7 @@ pub struct AspectRatioMeasureData {
     height_ratio: f32,
 }
 impl AspectRatioMeasureData {
-    fn measure(&self, known_dimensions: Size<Option<f32>>) -> Size<f32> {
+    fn measure(&self, known_dimensions: Size<OptF32>) -> Size<f32> {
         let width = known_dimensions.width.unwrap_or(self.width);
         let height = known_dimensions.height.unwrap_or(width * self.height_ratio);
         Size { width, height }
@@ -118,7 +119,7 @@ pub struct AhemTextMeasureData {
 impl AhemTextMeasureData {
     fn measure(
         &self,
-        known_dimensions: taffy::Size<Option<f32>>,
+        known_dimensions: taffy::Size<OptF32>,
         available_space: taffy::Size<taffy::AvailableSpace>,
     ) -> taffy::Size<f32> {
         use taffy::prelude::*;

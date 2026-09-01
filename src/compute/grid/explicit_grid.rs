@@ -6,6 +6,7 @@ use crate::style::{LengthPercentage, RepetitionCount, TrackSizingFunction};
 use crate::style_helpers::TaffyAuto;
 use crate::util::sys::{ceil, floor, Vec};
 use crate::util::MaybeMath;
+use crate::util::OptF32;
 use crate::util::ResolveOrZero;
 use core::cmp::min;
 
@@ -26,7 +27,7 @@ pub(crate) enum AutoRepeatStrategy {
 /// Compute the number of rows and columns in the explicit grid
 pub(crate) fn compute_explicit_grid_size_in_axis(
     style: &impl GridContainerStyle,
-    auto_fit_container_size: Option<f32>,
+    auto_fit_container_size: OptF32,
     auto_fit_strategy: AutoRepeatStrategy,
     resolve_calc_value: impl Fn(*const (), f32) -> f32,
     axis: AbsoluteAxis,
@@ -116,16 +117,16 @@ pub(crate) fn compute_explicit_grid_size_in_axis(
     let repetition_track_count = repetition_definition_iter.len().min(u16::MAX as usize) as u16;
 
     // Determine the number of repetitions
-    let num_repetitions: u32 = match auto_fit_container_size {
+    let num_repetitions: u32 = match auto_fit_container_size.into_option() {
         None => 1,
         Some(inner_container_size) => {
-            let parent_size = Some(inner_container_size);
+            let parent_size = OptF32::some(inner_container_size);
 
             /// ...treating each track as its max track sizing function if that is definite or as its minimum track sizing function
             /// otherwise, flooring the max track sizing function by the min track sizing function if both are definite
             fn track_definite_value(
                 sizing_function: TrackSizingFunction,
-                parent_size: Option<f32>,
+                parent_size: OptF32,
                 calc_resolver: impl Fn(*const (), f32) -> f32,
             ) -> f32 {
                 let max_size = sizing_function.max.definite_value(parent_size, &calc_resolver);
@@ -153,7 +154,8 @@ pub(crate) fn compute_explicit_grid_size_in_axis(
                     },
                 })
                 .sum();
-            let gap_size = style.gap().get_abs(axis).resolve_or_zero(Some(inner_container_size), &resolve_calc_value);
+            let gap_size =
+                style.gap().get_abs(axis).resolve_or_zero(OptF32::some(inner_container_size), &resolve_calc_value);
 
             // Compute the amount of space that a single repetition of the repeated track list takes
             let per_repetition_track_used_space: f32 = repetition_definition_iter
@@ -392,6 +394,7 @@ mod test {
     use crate::geometry::AbsoluteAxis;
     use crate::prelude::*;
     use crate::sys::DefaultCheapStr;
+    use crate::util::OptF32;
 
     #[test]
     fn explicit_grid_sizing_no_repeats() {
@@ -489,7 +492,7 @@ mod test {
             grid_template_rows: vec![repeat(AutoFill, vec![length(20.0)])],
             ..Default::default()
         };
-        let inner_container_size = Size { width: Some(120.0), height: Some(80.0) };
+        let inner_container_size = Size { width: OptF32::some(120.0), height: OptF32::some(80.0) };
         let (auto_col_reps, col_count) = compute_explicit_grid_size_in_axis(
             &grid_style,
             inner_container_size.get_abs(AbsoluteAxis::Horizontal),
@@ -520,7 +523,7 @@ mod test {
             grid_template_rows: vec![repeat(AutoFill, vec![length(20.0)])],
             ..Default::default()
         };
-        let inner_container_size = Size { width: Some(140.0), height: Some(90.0) };
+        let inner_container_size = Size { width: OptF32::some(140.0), height: OptF32::some(90.0) };
         let (auto_col_reps, col_count) = compute_explicit_grid_size_in_axis(
             &grid_style,
             inner_container_size.get_abs(AbsoluteAxis::Horizontal),
@@ -678,7 +681,7 @@ mod test {
             grid_template_rows: vec![repeat(AutoFill, vec![length(20.0)])],
             ..Default::default()
         };
-        let inner_container_size = Size { width: Some(100.0), height: Some(80.0) };
+        let inner_container_size = Size { width: OptF32::some(100.0), height: OptF32::some(80.0) };
         let (auto_col_reps, col_count) = compute_explicit_grid_size_in_axis(
             &grid_style,
             inner_container_size.get_abs(AbsoluteAxis::Horizontal),
@@ -710,7 +713,7 @@ mod test {
         };
         let (repetitions, track_count) = compute_explicit_grid_size_in_axis(
             &auto_repeat_first,
-            None,
+            OptF32::NONE,
             AutoRepeatStrategy::MaxRepetitionsThatDoNotOverflow,
             |_, _| 42.42,
             AbsoluteAxis::Horizontal,
@@ -735,7 +738,7 @@ mod test {
         };
         let (repetitions, track_count) = compute_explicit_grid_size_in_axis(
             &auto_repeat_last,
-            None,
+            OptF32::NONE,
             AutoRepeatStrategy::MaxRepetitionsThatDoNotOverflow,
             |_, _| 42.42,
             AbsoluteAxis::Horizontal,
@@ -759,7 +762,7 @@ mod test {
         };
         let result = compute_explicit_grid_size_in_axis(
             &grid_style,
-            None,
+            OptF32::NONE,
             AutoRepeatStrategy::MaxRepetitionsThatDoNotOverflow,
             |_, _| 42.42,
             AbsoluteAxis::Horizontal,
