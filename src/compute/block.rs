@@ -351,7 +351,7 @@ struct BlockItem {
 
 /// Computes the layout of [`LayoutPartialTree`] according to the block layout algorithm
 pub fn compute_block_layout(
-    tree: &mut impl LayoutBlockContainer,
+    tree: &mut (impl LayoutBlockContainer + crate::tree::LayoutContainingBlock),
     node_id: NodeId,
     inputs: LayoutInput,
     block_ctx: Option<&mut BlockContext<'_>>,
@@ -454,7 +454,7 @@ pub fn compute_block_layout(
 
 /// Computes the layout of [`LayoutBlockContainer`] according to the block layout algorithm
 fn compute_inner(
-    tree: &mut impl LayoutBlockContainer,
+    tree: &mut (impl LayoutBlockContainer + crate::tree::LayoutContainingBlock),
     node_id: NodeId,
     inputs: LayoutInput,
     #[allow(unused_mut)] mut block_ctx: &mut BlockContext<'_>,
@@ -782,6 +782,7 @@ fn compute_inner(
     let mut unclaimed = OofCandidates::new();
     let absolute_overflow_rect = perform_oof_layout(
         tree,
+        node_id,
         candidates,
         absolute_position_area,
         absolute_position_offset,
