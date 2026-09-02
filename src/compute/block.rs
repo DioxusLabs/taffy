@@ -4,7 +4,8 @@ use crate::style::{AvailableSpace, CoreStyle, LengthPercentageAuto, Overflow, Po
 use crate::style_helpers::TaffyMaxContent;
 use crate::tree::{Baselines, CollapsibleMarginSet, Layout, LayoutInput, LayoutOutput, RunMode, SizingMode};
 use crate::tree::{
-    LayoutPartialTree, LayoutPartialTreeExt, NodeId, OofCandidate, OofCandidates, StaticEdge, StaticPosition,
+    LayoutPartialTree, LayoutPartialTreeExt, NodeId, OofCandidate, OofCandidates, OofPositioningArea, StaticEdge,
+    StaticPosition,
 };
 use crate::util::debug::debug_log;
 use crate::util::sys::f32_max;
@@ -269,7 +270,6 @@ use super::common::alignment::{apply_alignment_fallback, compute_alignment_offse
 #[cfg(feature = "content_size")]
 use super::common::scrollable_overflow::compute_scrollable_overflow_contribution;
 use super::common::sizing_keyword::{resolve_sizing_keyword, SizingKeywordResolution};
-use super::oof::perform_oof_layout;
 
 /// Per-child data that is accumulated and modified over the course of the layout algorithm
 struct BlockItem {
@@ -351,7 +351,7 @@ struct BlockItem {
 
 /// Computes the layout of [`LayoutPartialTree`] according to the block layout algorithm
 pub fn compute_block_layout(
-    tree: &mut (impl LayoutBlockContainer + crate::tree::LayoutContainingBlock),
+    tree: &mut impl LayoutBlockContainer,
     node_id: NodeId,
     inputs: LayoutInput,
     block_ctx: Option<&mut BlockContext<'_>>,
@@ -454,7 +454,7 @@ pub fn compute_block_layout(
 
 /// Computes the layout of [`LayoutBlockContainer`] according to the block layout algorithm
 fn compute_inner(
-    tree: &mut (impl LayoutBlockContainer + crate::tree::LayoutContainingBlock),
+    tree: &mut impl LayoutBlockContainer,
     node_id: NodeId,
     inputs: LayoutInput,
     #[allow(unused_mut)] mut block_ctx: &mut BlockContext<'_>,
@@ -561,7 +561,6 @@ fn compute_inner(
 
     let text_align = style.text_align();
     let align_content = style.align_content();
-    let containing_block_claims = style.is_containing_block();
     drop(style);
 
     // 1. Generate items
@@ -731,6 +730,7 @@ fn compute_inner(
         },
         margins_can_collapse_through: can_be_collapsed_through,
         oof_candidates: OofCandidates::NONE,
+        oof_positioning_area: None,
     };
 
     // Short-circuit if computing size.
@@ -749,8 +749,8 @@ fn compute_inner(
     }
 
     // 4. Collect out-of-flow candidates in document order (direct out-of-flow children plus
-    // candidates bubbled from in-flow children's subtrees) and lay out those for which this node
-    // is the containing block. The rest bubble up via `output.oof_candidates`.
+    // candidates bubbled from in-flow children's subtrees). These are laid out by the
+    // out-of-flow positioning pass (`compute_oof_layout`), which runs after this algorithm.
     let mut candidates = OofCandidates::new();
     for item in items.iter_mut() {
         if item.position.is_out_of_flow() {
@@ -778,23 +778,9 @@ fn compute_inner(
     let absolute_position_inset = resolved_border + scrollbar_gutter;
     let absolute_position_area = final_outer_size - absolute_position_inset.sum_axes();
     let absolute_position_offset = Point { x: absolute_position_inset.left, y: absolute_position_inset.top };
-    let mut hoisted: Vec<NodeId> = Vec::new();
-    let mut unclaimed = OofCandidates::new();
-    let absolute_overflow_rect = perform_oof_layout(
-        tree,
-        node_id,
-        candidates,
-        absolute_position_area,
-        absolute_position_offset,
-        direction,
-        containing_block_claims,
-        #[cfg(feature = "content_size")]
-        is_scroll_container,
-        &mut hoisted,
-        &mut unclaimed,
-    );
-    tree.set_hoisted_children(node_id, &hoisted);
-    output.oof_candidates = unclaimed;
+    output.oof_candidates = candidates;
+    output.oof_positioning_area =
+        Some(OofPositioningArea { size: absolute_position_area, offset: absolute_position_offset });
 
     #[cfg(feature = "content_size")]
     {
@@ -806,7 +792,7 @@ fn compute_inner(
                 if direction.is_rtl() { resolved_padding.left } else { resolved_padding.right };
             inflow_overflow_rect.bottom += resolved_padding.bottom;
         }
-        output.scrollable_overflow_rect = inflow_overflow_rect.union(absolute_overflow_rect);
+        output.scrollable_overflow_rect = inflow_overflow_rect;
     }
 
     // 5. Perform hidden layout on hidden children
