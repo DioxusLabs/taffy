@@ -661,7 +661,7 @@ fn generate_anonymous_flex_items(
     tree.child_ids(node)
         .enumerate()
         .map(|(index, child)| (index, child, tree.get_flexbox_child_style(child)))
-        .filter(|(_, _, style)| style.position() != Position::Absolute)
+        .filter(|(_, _, style)| !style.position().is_out_of_flow())
         .filter(|(_, _, style)| style.box_generation_mode() != BoxGenerationMode::None)
         .map(|(index, child, child_style)| {
             let aspect_ratio = child_style.aspect_ratio();
@@ -693,9 +693,13 @@ fn generate_anonymous_flex_items(
                     .maybe_add(box_sizing_adjustment),
                 aspect_ratio,
 
-                inset: child_style
-                    .inset()
-                    .zip_size(constants.node_inner_size, |p, s| p.maybe_resolve(s, |val, basis| tree.calc(val, basis))),
+                inset: if child_style.position() == Position::Relative {
+                    child_style.inset().zip_size(constants.node_inner_size, |p, s| {
+                        p.maybe_resolve(s, |val, basis| tree.calc(val, basis))
+                    })
+                } else {
+                    Rect::NONE
+                },
                 margin: child_style
                     .margin()
                     .resolve_or_zero(constants.node_inner_size.width, |val, basis| tree.calc(val, basis)),
@@ -2669,8 +2673,7 @@ fn perform_absolute_layout_on_absolute_children(
         let child_style = tree.get_flexbox_child_style(child);
 
         // Skip items that are display:none or are not position:absolute
-        if child_style.box_generation_mode() == BoxGenerationMode::None || child_style.position() != Position::Absolute
-        {
+        if child_style.box_generation_mode() == BoxGenerationMode::None || !child_style.position().is_out_of_flow() {
             continue;
         }
 

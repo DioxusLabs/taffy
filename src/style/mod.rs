@@ -295,26 +295,50 @@ impl Default for BoxGenerationMode {
 /// WARNING: this enum follows the behavior of [CSS's `position` property](https://developer.mozilla.org/en-US/docs/Web/CSS/position),
 /// which can be unintuitive.
 ///
-/// [`Position::Relative`] is the default value, in contrast to the default behavior in CSS.
+/// [`Position::Static`] is the default value, matching the default behavior in CSS.
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum Position {
-    /// The offset is computed relative to the final position given by the layout algorithm.
-    /// Offsets do not affect the position of any other items; they are effectively a correction factor applied at the end.
+    /// The item is laid out in normal flow. `inset` has no effect on statically positioned items,
+    /// and they do not act as a containing block for absolutely positioned descendants.
     #[default]
+    Static,
+    /// The item is laid out in normal flow, then the `inset` offset is applied as a correction factor.
+    /// Offsets do not affect the position of any other items.
+    /// Relatively positioned items act as a containing block for absolutely positioned descendants.
     Relative,
-    /// The offset is computed relative to this item's closest positioned ancestor, if any.
-    /// Otherwise, it is placed relative to the origin.
+    /// The item is taken out of normal flow and positioned relative to its closest positioned ancestor
+    /// (its containing block), if any. Otherwise, it is placed relative to the root.
     /// No space is created for the item in the page layout, and its size will not be altered.
     ///
     /// WARNING: to opt-out of layouting entirely, you must use [`Display::None`] instead on your [`Style`] object.
     Absolute,
+    /// The item is taken out of normal flow and positioned relative to the root (viewport),
+    /// unless an ancestor overrides containing-block behavior (e.g. via transforms in a full CSS implementation).
+    Fixed,
+}
+
+impl Position {
+    /// Returns true if this position takes the item out of normal flow (`Absolute` or `Fixed`)
+    #[inline(always)]
+    pub fn is_out_of_flow(self) -> bool {
+        matches!(self, Position::Absolute | Position::Fixed)
+    }
+
+    /// Returns true if this position causes the item to act as a containing block
+    /// for absolutely positioned descendants (any value other than `Static`)
+    #[inline(always)]
+    pub fn is_positioned(self) -> bool {
+        !matches!(self, Position::Static)
+    }
 }
 
 #[cfg(feature = "parse")]
 crate::util::parse::impl_parse_for_keyword_enum!(Position,
+    "static" => Static,
     "relative" => Relative,
     "absolute" => Absolute,
+    "fixed" => Fixed,
 );
 
 /// Specifies whether size styles for this node are assigned to the node's "content box" or "border box"
@@ -775,7 +799,7 @@ impl<S: CheapCloneStr> Style<S> {
         float: Float::None,
         #[cfg(feature = "float_layout")]
         clear: Clear::None,
-        position: Position::Relative,
+        position: Position::Static,
         inset: Rect::auto(),
         margin: Rect::zero(),
         padding: Rect::zero(),
