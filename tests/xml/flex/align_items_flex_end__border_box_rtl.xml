@@ -1,8 +1,8 @@
 <test name="align_items_flex_end__border_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div direction="rtl" align-items="flex-end" width="100px" height="100px">
-      <div direction="rtl" width="10px" height="10px"/>
+    <div direction="rtl" position="absolute" align-items="flex-end" width="100px" height="100px">
+      <div direction="rtl" position="relative" width="10px" height="10px"/>
     </div>
   </input>
   <expectations>

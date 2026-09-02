@@ -1,10 +1,10 @@
 <test name="justify_content_row_space_between__border_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div direction="ltr" justify-content="space-between" width="100px" height="100px">
-      <div direction="ltr" width="10px"/>
-      <div direction="ltr" width="10px"/>
-      <div direction="ltr" width="10px"/>
+    <div direction="ltr" position="absolute" justify-content="space-between" width="100px" height="100px">
+      <div direction="ltr" position="relative" width="10px"/>
+      <div direction="ltr" position="relative" width="10px"/>
+      <div direction="ltr" position="relative" width="10px"/>
     </div>
   </input>
   <expectations>

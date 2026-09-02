@@ -1,13 +1,13 @@
 <test name="align_content_space_around_single_line__content_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div box-sizing="content-box" direction="ltr" align-content="space-around" width="100px" height="100px">
-      <div box-sizing="content-box" direction="ltr" width="50px" height="10px"/>
-      <div box-sizing="content-box" direction="ltr" width="50px" height="10px"/>
-      <div box-sizing="content-box" direction="ltr" width="50px" height="10px"/>
-      <div box-sizing="content-box" direction="ltr" width="50px" height="10px"/>
-      <div box-sizing="content-box" direction="ltr" width="50px" height="10px"/>
-      <div box-sizing="content-box" direction="ltr" width="50px" height="10px"/>
+    <div box-sizing="content-box" direction="ltr" position="absolute" align-content="space-around" width="100px" height="100px">
+      <div box-sizing="content-box" direction="ltr" position="relative" width="50px" height="10px"/>
+      <div box-sizing="content-box" direction="ltr" position="relative" width="50px" height="10px"/>
+      <div box-sizing="content-box" direction="ltr" position="relative" width="50px" height="10px"/>
+      <div box-sizing="content-box" direction="ltr" position="relative" width="50px" height="10px"/>
+      <div box-sizing="content-box" direction="ltr" position="relative" width="50px" height="10px"/>
+      <div box-sizing="content-box" direction="ltr" position="relative" width="50px" height="10px"/>
     </div>
   </input>
   <expectations>

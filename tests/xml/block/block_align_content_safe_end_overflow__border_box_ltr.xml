@@ -1,9 +1,9 @@
 <test name="block_align_content_safe_end_overflow__border_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="block" direction="ltr" align-content="safe end" width="100px" height="100px">
-      <div direction="ltr" width="50px" height="80px"/>
-      <div direction="ltr" width="50px" height="80px"/>
+    <div display="block" direction="ltr" position="absolute" align-content="safe end" width="100px" height="100px">
+      <div direction="ltr" position="relative" width="50px" height="80px"/>
+      <div direction="ltr" position="relative" width="50px" height="80px"/>
     </div>
   </input>
   <expectations>

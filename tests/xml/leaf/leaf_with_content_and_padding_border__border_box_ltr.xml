@@ -1,7 +1,7 @@
 <test name="leaf_with_content_and_padding_border__border_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <text direction="ltr" padding-top="2px" padding-left="8px" padding-bottom="6px" padding-right="4px" border-top="1px" border-left="7px" border-bottom="5px" border-right="3px">
+    <text direction="ltr" position="absolute" padding-top="2px" padding-left="8px" padding-bottom="6px" padding-right="4px" border-top="1px" border-left="7px" border-bottom="5px" border-right="3px">
       HHHH
     </text>
   </input>

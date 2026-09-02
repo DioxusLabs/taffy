@@ -1,10 +1,10 @@
 <test name="balance_row_percent_aspect_ratio_line_count__content_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div box-sizing="content-box" direction="rtl" flex-wrap="balance" flex-line-count="2" align-items="start" align-content="start" width="220px" height="100px" row-gap="20px" column-gap="20px">
-      <div box-sizing="content-box" direction="rtl" height="60%" aspect-ratio="1"/>
-      <div box-sizing="content-box" direction="rtl" height="60%" aspect-ratio="1"/>
-      <div box-sizing="content-box" direction="rtl" height="60%" aspect-ratio="1"/>
+    <div box-sizing="content-box" direction="rtl" position="absolute" flex-wrap="balance" flex-line-count="2" align-items="start" align-content="start" width="220px" height="100px" row-gap="20px" column-gap="20px">
+      <div box-sizing="content-box" direction="rtl" position="relative" height="60%" aspect-ratio="1"/>
+      <div box-sizing="content-box" direction="rtl" position="relative" height="60%" aspect-ratio="1"/>
+      <div box-sizing="content-box" direction="rtl" position="relative" height="60%" aspect-ratio="1"/>
     </div>
   </input>
   <expectations>

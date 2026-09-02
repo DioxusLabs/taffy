@@ -1,9 +1,9 @@
 <test name="float_bfc_positive_margin_absorbed_by_float__content_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="block" box-sizing="content-box" direction="ltr" width="100px">
-      <div box-sizing="content-box" direction="ltr" float="left" width="50px" height="100px"/>
-      <div display="block" box-sizing="content-box" direction="ltr" overflow-x="hidden" overflow-y="hidden" scrollbar-width="15" height="50px" margin-left="20px"/>
+    <div display="block" box-sizing="content-box" direction="ltr" position="absolute" width="100px">
+      <div box-sizing="content-box" direction="ltr" position="relative" float="left" width="50px" height="100px"/>
+      <div display="block" box-sizing="content-box" direction="ltr" position="relative" overflow-x="hidden" overflow-y="hidden" scrollbar-width="15" height="50px" margin-left="20px"/>
     </div>
   </input>
   <expectations>

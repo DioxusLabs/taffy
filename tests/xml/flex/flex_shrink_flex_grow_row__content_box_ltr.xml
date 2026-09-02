@@ -1,9 +1,9 @@
 <test name="flex_shrink_flex_grow_row__content_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div box-sizing="content-box" direction="ltr" width="500px" height="500px">
-      <div box-sizing="content-box" direction="ltr" width="500px" height="100px"/>
-      <div box-sizing="content-box" direction="ltr" width="500px" height="100px"/>
+    <div box-sizing="content-box" direction="ltr" position="absolute" width="500px" height="500px">
+      <div box-sizing="content-box" direction="ltr" position="relative" width="500px" height="100px"/>
+      <div box-sizing="content-box" direction="ltr" position="relative" width="500px" height="100px"/>
     </div>
   </input>
   <expectations>

@@ -1,16 +1,16 @@
 <test name="grid_align_content_space_evenly_with_padding_border__content_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="grid" box-sizing="content-box" direction="ltr" align-content="space-evenly" width="200px" height="200px" padding-top="10px" padding-left="40px" padding-bottom="30px" padding-right="20px" border-top="2px" border-left="8px" border-bottom="6px" border-right="4px" grid-template-rows="40px 40px 40px" grid-template-columns="40px 40px 40px">
-      <div box-sizing="content-box" direction="ltr"/>
-      <div box-sizing="content-box" direction="ltr"/>
-      <div box-sizing="content-box" direction="ltr"/>
-      <div box-sizing="content-box" direction="ltr"/>
-      <div box-sizing="content-box" direction="ltr"/>
-      <div box-sizing="content-box" direction="ltr"/>
-      <div box-sizing="content-box" direction="ltr"/>
-      <div box-sizing="content-box" direction="ltr"/>
-      <div box-sizing="content-box" direction="ltr"/>
+    <div display="grid" box-sizing="content-box" direction="ltr" position="absolute" align-content="space-evenly" width="200px" height="200px" padding-top="10px" padding-left="40px" padding-bottom="30px" padding-right="20px" border-top="2px" border-left="8px" border-bottom="6px" border-right="4px" grid-template-rows="40px 40px 40px" grid-template-columns="40px 40px 40px">
+      <div box-sizing="content-box" direction="ltr" position="relative"/>
+      <div box-sizing="content-box" direction="ltr" position="relative"/>
+      <div box-sizing="content-box" direction="ltr" position="relative"/>
+      <div box-sizing="content-box" direction="ltr" position="relative"/>
+      <div box-sizing="content-box" direction="ltr" position="relative"/>
+      <div box-sizing="content-box" direction="ltr" position="relative"/>
+      <div box-sizing="content-box" direction="ltr" position="relative"/>
+      <div box-sizing="content-box" direction="ltr" position="relative"/>
+      <div box-sizing="content-box" direction="ltr" position="relative"/>
     </div>
   </input>
   <expectations>

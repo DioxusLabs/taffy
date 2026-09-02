@@ -1,7 +1,7 @@
 <test name="measure_child_absolute__content_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div box-sizing="content-box" direction="ltr" width="100px" height="100px">
+    <div box-sizing="content-box" direction="ltr" position="absolute" width="100px" height="100px">
       <text box-sizing="content-box" direction="ltr" position="absolute">
         HHHHHH
       </text>

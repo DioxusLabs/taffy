@@ -1,9 +1,9 @@
 <test name="grid_align_self_self_start_self_end__content_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="grid" box-sizing="content-box" direction="ltr" width="120px" height="120px" grid-template-rows="40px 40px 40px" grid-template-columns="40px 40px 40px">
-      <div box-sizing="content-box" direction="ltr" align-self="self-start" width="20px" height="20px" grid-row-start="1" grid-column-start="1"/>
-      <div box-sizing="content-box" direction="rtl" align-self="self-end" width="20px" height="20px" grid-row-start="2" grid-column-start="2"/>
+    <div display="grid" box-sizing="content-box" direction="ltr" position="absolute" width="120px" height="120px" grid-template-rows="40px 40px 40px" grid-template-columns="40px 40px 40px">
+      <div box-sizing="content-box" direction="ltr" position="relative" align-self="self-start" width="20px" height="20px" grid-row-start="1" grid-column-start="1"/>
+      <div box-sizing="content-box" direction="rtl" position="relative" align-self="self-end" width="20px" height="20px" grid-row-start="2" grid-column-start="2"/>
     </div>
   </input>
   <expectations>

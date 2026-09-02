@@ -1,11 +1,11 @@
 <test name="intrinsic_sizing_main_size_column_wrap__content_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div box-sizing="content-box" direction="rtl" flex-direction="column" flex-wrap="wrap">
-      <text box-sizing="content-box" direction="rtl" writing-mode="vertical-lr" flex-direction="column">
+    <div box-sizing="content-box" direction="rtl" position="absolute" flex-direction="column" flex-wrap="wrap">
+      <text box-sizing="content-box" direction="rtl" writing-mode="vertical-lr" position="relative" flex-direction="column">
         HH​HH
       </text>
-      <text box-sizing="content-box" direction="rtl" writing-mode="vertical-lr" flex-direction="column">
+      <text box-sizing="content-box" direction="rtl" writing-mode="vertical-lr" position="relative" flex-direction="column">
         HH​HH
       </text>
     </div>

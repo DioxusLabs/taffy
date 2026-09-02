@@ -1,10 +1,10 @@
 <test name="align_flex_start_with_stretching_children__content_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div box-sizing="content-box" direction="ltr" width="500px" height="500px">
-      <div box-sizing="content-box" direction="ltr" align-items="stretch">
-        <div box-sizing="content-box" direction="ltr" flex-grow="1">
-          <div box-sizing="content-box" direction="ltr" flex-grow="1"/>
+    <div box-sizing="content-box" direction="ltr" position="absolute" width="500px" height="500px">
+      <div box-sizing="content-box" direction="ltr" position="relative" align-items="stretch">
+        <div box-sizing="content-box" direction="ltr" position="relative" flex-grow="1">
+          <div box-sizing="content-box" direction="ltr" position="relative" flex-grow="1"/>
         </div>
       </div>
     </div>

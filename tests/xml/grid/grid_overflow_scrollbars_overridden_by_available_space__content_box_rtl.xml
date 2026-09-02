@@ -1,9 +1,9 @@
 <test name="grid_overflow_scrollbars_overridden_by_available_space__content_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="grid" box-sizing="content-box" direction="rtl" width="2px" height="4px">
-      <div display="grid" box-sizing="content-box" direction="rtl" overflow-x="scroll" overflow-y="scroll" scrollbar-width="15">
-        <div box-sizing="content-box" direction="rtl"/>
+    <div display="grid" box-sizing="content-box" direction="rtl" position="absolute" width="2px" height="4px">
+      <div display="grid" box-sizing="content-box" direction="rtl" position="relative" overflow-x="scroll" overflow-y="scroll" scrollbar-width="15">
+        <div box-sizing="content-box" direction="rtl" position="relative"/>
       </div>
     </div>
   </input>

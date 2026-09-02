@@ -1,9 +1,9 @@
 <test name="block_padding_border_overrides_max_size__border_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="block" direction="rtl">
-      <div display="block" direction="rtl" max-width="12px" max-height="12px" padding-top="2px" padding-left="8px" padding-bottom="6px" padding-right="4px" border-top="1px" border-left="7px" border-bottom="5px" border-right="3px">
-        <div direction="rtl"/>
+    <div display="block" direction="rtl" position="absolute">
+      <div display="block" direction="rtl" position="relative" max-width="12px" max-height="12px" padding-top="2px" padding-left="8px" padding-bottom="6px" padding-right="4px" border-top="1px" border-left="7px" border-bottom="5px" border-right="3px">
+        <div direction="rtl" position="relative"/>
       </div>
     </div>
   </input>

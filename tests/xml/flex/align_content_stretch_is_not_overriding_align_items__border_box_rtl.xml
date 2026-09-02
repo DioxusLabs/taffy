@@ -1,9 +1,9 @@
 <test name="align_content_stretch_is_not_overriding_align_items__border_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div direction="rtl" align-content="stretch">
-      <div direction="rtl" align-items="center" align-content="stretch" width="100px" height="100px">
-        <div direction="rtl" align-content="stretch" width="10px" height="10px"/>
+    <div direction="rtl" position="absolute" align-content="stretch">
+      <div direction="rtl" position="relative" align-items="center" align-content="stretch" width="100px" height="100px">
+        <div direction="rtl" position="relative" align-content="stretch" width="10px" height="10px"/>
       </div>
     </div>
   </input>

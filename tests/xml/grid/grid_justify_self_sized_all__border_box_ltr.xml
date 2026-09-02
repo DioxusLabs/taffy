@@ -1,15 +1,15 @@
 <test name="grid_justify_self_sized_all__border_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="grid" direction="ltr" width="120px" height="120px" grid-template-rows="40px 40px 40px" grid-template-columns="40px 40px 40px">
-      <div direction="ltr" justify-self="start" width="20px" height="20px"/>
-      <div direction="ltr" justify-self="start" width="60px" height="60px"/>
-      <div direction="ltr" justify-self="end" width="20px" height="20px"/>
-      <div direction="ltr" justify-self="end" width="60px" height="60px"/>
-      <div direction="ltr" justify-self="center" width="20px" height="20px"/>
-      <div direction="ltr" justify-self="center" width="60px" height="60px"/>
-      <div direction="ltr" justify-self="stretch" width="20px" height="20px"/>
-      <div direction="ltr" justify-self="stretch" width="60px" height="60px"/>
+    <div display="grid" direction="ltr" position="absolute" width="120px" height="120px" grid-template-rows="40px 40px 40px" grid-template-columns="40px 40px 40px">
+      <div direction="ltr" position="relative" justify-self="start" width="20px" height="20px"/>
+      <div direction="ltr" position="relative" justify-self="start" width="60px" height="60px"/>
+      <div direction="ltr" position="relative" justify-self="end" width="20px" height="20px"/>
+      <div direction="ltr" position="relative" justify-self="end" width="60px" height="60px"/>
+      <div direction="ltr" position="relative" justify-self="center" width="20px" height="20px"/>
+      <div direction="ltr" position="relative" justify-self="center" width="60px" height="60px"/>
+      <div direction="ltr" position="relative" justify-self="stretch" width="20px" height="20px"/>
+      <div direction="ltr" position="relative" justify-self="stretch" width="60px" height="60px"/>
     </div>
   </input>
   <expectations>

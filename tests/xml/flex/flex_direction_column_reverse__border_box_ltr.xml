@@ -1,10 +1,10 @@
 <test name="flex_direction_column_reverse__border_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div direction="ltr" flex-direction="column-reverse" width="100px" height="100px">
-      <div direction="ltr" height="10px"/>
-      <div direction="ltr" height="10px"/>
-      <div direction="ltr" height="10px"/>
+    <div direction="ltr" position="absolute" flex-direction="column-reverse" width="100px" height="100px">
+      <div direction="ltr" position="relative" height="10px"/>
+      <div direction="ltr" position="relative" height="10px"/>
+      <div direction="ltr" position="relative" height="10px"/>
     </div>
   </input>
   <expectations>

@@ -1,12 +1,12 @@
 <test name="align_content_start__content_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div box-sizing="content-box" direction="ltr" flex-wrap="wrap" align-content="start" width="130px" height="100px">
-      <div box-sizing="content-box" direction="ltr" width="50px" height="10px"/>
-      <div box-sizing="content-box" direction="ltr" width="50px" height="10px"/>
-      <div box-sizing="content-box" direction="ltr" width="50px" height="10px"/>
-      <div box-sizing="content-box" direction="ltr" width="50px" height="10px"/>
-      <div box-sizing="content-box" direction="ltr" width="50px" height="10px"/>
+    <div box-sizing="content-box" direction="ltr" position="absolute" flex-wrap="wrap" align-content="start" width="130px" height="100px">
+      <div box-sizing="content-box" direction="ltr" position="relative" width="50px" height="10px"/>
+      <div box-sizing="content-box" direction="ltr" position="relative" width="50px" height="10px"/>
+      <div box-sizing="content-box" direction="ltr" position="relative" width="50px" height="10px"/>
+      <div box-sizing="content-box" direction="ltr" position="relative" width="50px" height="10px"/>
+      <div box-sizing="content-box" direction="ltr" position="relative" width="50px" height="10px"/>
     </div>
   </input>
   <expectations>

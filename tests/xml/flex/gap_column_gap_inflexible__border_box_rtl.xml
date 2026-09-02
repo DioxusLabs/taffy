@@ -1,10 +1,10 @@
 <test name="gap_column_gap_inflexible__border_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div direction="rtl" width="80px" height="100px" column-gap="10px">
-      <div direction="rtl" width="20px"/>
-      <div direction="rtl" width="20px"/>
-      <div direction="rtl" width="20px"/>
+    <div direction="rtl" position="absolute" width="80px" height="100px" column-gap="10px">
+      <div direction="rtl" position="relative" width="20px"/>
+      <div direction="rtl" position="relative" width="20px"/>
+      <div direction="rtl" position="relative" width="20px"/>
     </div>
   </input>
   <expectations>

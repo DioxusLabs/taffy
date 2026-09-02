@@ -1,10 +1,10 @@
 <test name="gap_row_gap_row_wrap_child_margins__border_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div direction="ltr" flex-wrap="wrap" width="100px" height="200px" row-gap="10px">
-      <div direction="ltr" width="60px" margin-top="2px" margin-bottom="2px"/>
-      <div direction="ltr" width="60px" margin-top="10px" margin-bottom="10px"/>
-      <div direction="ltr" width="60px" margin-top="15px" margin-bottom="15px"/>
+    <div direction="ltr" position="absolute" flex-wrap="wrap" width="100px" height="200px" row-gap="10px">
+      <div direction="ltr" position="relative" width="60px" margin-top="2px" margin-bottom="2px"/>
+      <div direction="ltr" position="relative" width="60px" margin-top="10px" margin-bottom="10px"/>
+      <div direction="ltr" position="relative" width="60px" margin-top="15px" margin-bottom="15px"/>
     </div>
   </input>
   <expectations>
