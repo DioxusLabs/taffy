@@ -757,19 +757,25 @@ fn determine_available_space(
 ) -> Size<AvailableSpace> {
     // Note: min/max/preferred size styles have already been applied to known_dimensions in the `compute` function above
     let width = match known_dimensions.width {
-        Some(node_width) => AvailableSpace::Definite(node_width - constants.content_box_inset.horizontal_axis_sum()),
+        Some(node_width) => {
+            AvailableSpace::Definite((node_width - constants.content_box_inset.horizontal_axis_sum()).max(0.0))
+        }
         None => outer_available_space
             .width
             .maybe_sub(constants.margin.horizontal_axis_sum())
-            .maybe_sub(constants.content_box_inset.horizontal_axis_sum()),
+            .maybe_sub(constants.content_box_inset.horizontal_axis_sum())
+            .maybe_max(0.0),
     };
 
     let height = match known_dimensions.height {
-        Some(node_height) => AvailableSpace::Definite(node_height - constants.content_box_inset.vertical_axis_sum()),
+        Some(node_height) => {
+            AvailableSpace::Definite((node_height - constants.content_box_inset.vertical_axis_sum()).max(0.0))
+        }
         None => outer_available_space
             .height
             .maybe_sub(constants.margin.vertical_axis_sum())
-            .maybe_sub(constants.content_box_inset.vertical_axis_sum()),
+            .maybe_sub(constants.content_box_inset.vertical_axis_sum())
+            .maybe_max(0.0),
     };
 
     Size { width, height }
@@ -862,7 +868,7 @@ fn determine_flex_base_size(
             {
                 ckd.set_cross(
                     dir,
-                    cross_axis_available_space.into_option().maybe_sub(child.margin.cross_axis_sum(dir)),
+                    cross_axis_available_space.into_option().maybe_sub(child.margin.cross_axis_sum(dir)).maybe_max(0.0),
                 );
                 // The cross size of a stretched item is definite if the container has a definite
                 // cross size (https://www.w3.org/TR/css-flexbox-1/#definite-sizes)
@@ -904,7 +910,8 @@ fn determine_flex_base_size(
             // Note: `child.size` has already been resolved against aspect_ratio in generate_anonymous_flex_items
             // So B will just work here by using main_size without special handling for aspect_ratio
             let main_size = child.size.main(dir);
-            let main_stretch_size = percent_resolution_main_size.maybe_sub(child.margin.main_axis_sum(dir));
+            let main_stretch_size =
+                percent_resolution_main_size.maybe_sub(child.margin.main_axis_sum(dir)).maybe_max(0.0);
 
             // A flex basis that is a sizing keyword (min-content, max-content, fit-content,
             // fit-content(...), stretch) is used in place of the main size property: `stretch`
@@ -1458,7 +1465,8 @@ fn determine_container_main_size(
                                             dir,
                                             cross_axis_available_space
                                                 .into_option()
-                                                .maybe_sub(item.margin.cross_axis_sum(dir)),
+                                                .maybe_sub(item.margin.cross_axis_sum(dir))
+                                                .maybe_max(0.0),
                                         );
                                     }
                                     ckd
@@ -1821,7 +1829,8 @@ fn determine_hypothetical_cross_size(
             .node_inner_size
             .cross(constants.dir)
             .map(|val| constants.divided_cross_space(val))
-            .maybe_sub(child.margin.cross_axis_sum(constants.dir));
+            .maybe_sub(child.margin.cross_axis_sum(constants.dir))
+            .maybe_max(0.0);
         let child_available_cross = match resolve_sizing_keyword(
             child.size_style.cross(constants.dir),
             cross_stretch_size,
@@ -2091,7 +2100,7 @@ fn determine_used_cross_size(
                         .maybe_resolve(constants.node_inner_size, |val, basis| tree.calc(val, basis))
                         .maybe_add(box_sizing_adjustment);
 
-                    (line_cross_size - child.margin.cross_axis_sum(constants.dir)).maybe_clamp(
+                    (line_cross_size - child.margin.cross_axis_sum(constants.dir)).max(0.0).maybe_clamp(
                         child.min_size.cross(constants.dir),
                         max_size_ignoring_aspect_ratio.cross(constants.dir),
                     )

@@ -973,7 +973,7 @@ fn perform_final_layout_on_in_flow_children(
     block_ctx: &mut BlockContext<'_>,
 ) -> (Rect<f32>, f32, CollapsibleMarginSet, CollapsibleMarginSet, Option<f32>) {
     // Resolve container_inner_width for sizing child nodes using initial content_box_inset
-    let container_inner_width = container_outer_width - resolved_content_box_inset.horizontal_axis_sum();
+    let container_inner_width = (container_outer_width - resolved_content_box_inset.horizontal_axis_sum()).max(0.0);
     let container_percentage_resolution_height =
         container_percentage_resolution_height.maybe_sub(resolved_content_box_inset.vertical_axis_sum());
     let parent_size = Size { width: Some(container_inner_width), height: container_percentage_resolution_height };
@@ -1046,7 +1046,7 @@ fn perform_final_layout_on_in_flow_children(
 
                 // A float with `width: auto` is shrink-to-fit (fit-content) sized: the available
                 // space clamped between its min-content and max-content sizes.
-                let available_width = container_inner_width - item_non_auto_x_margin_sum;
+                let available_width = (container_inner_width - item_non_auto_x_margin_sum).max(0.0);
                 let (item_known_width, item_available_width) = match resolve_sizing_keyword(
                     item.size_style.width,
                     Some(available_width),
@@ -1160,7 +1160,7 @@ fn perform_final_layout_on_in_flow_children(
             let mut item_pushed_below_float = false;
 
             let (stretch_width, float_avoiding_position, float_avoiding_width) = if item.is_in_same_bfc {
-                let stretch_width = container_inner_width - item_non_auto_x_margin_sum;
+                let stretch_width = (container_inner_width - item_non_auto_x_margin_sum).max(0.0);
                 let position = Point { x: 0.0, y: 0.0 };
                 let width = 0.0;
 
@@ -1193,7 +1193,7 @@ fn perform_final_layout_on_in_flow_children(
                             let width = item
                                 .size
                                 .width
-                                .unwrap_or(slot.stretch_width.max(min_auto_width))
+                                .unwrap_or(slot.stretch_width.max(min_auto_width).max(0.0))
                                 .maybe_clamp(item.min_size.width, item.max_size.width);
                             if width <= slot.border_width + FIT_TOLERANCE {
                                 break slot;
@@ -1210,12 +1210,12 @@ fn perform_final_layout_on_in_flow_children(
 
                         has_active_floats = slot.segment_id.is_some();
                         item_avoids_floats = true;
-                        let stretch_width = slot.stretch_width.max(min_auto_width);
+                        let stretch_width = slot.stretch_width.max(min_auto_width).max(0.0);
                         break 'block (stretch_width, Point { x: slot.x, y: slot.y }, slot.border_width);
                     }
 
                     if !has_active_floats {
-                        let stretch_width = container_inner_width - item_non_auto_x_margin_sum;
+                        let stretch_width = (container_inner_width - item_non_auto_x_margin_sum).max(0.0);
                         break 'block (
                             stretch_width,
                             Point { x: resolved_content_box_inset.left, y: min_y },
