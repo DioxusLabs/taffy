@@ -185,8 +185,8 @@ pub(super) fn align_and_position_item(
     drop(style);
 
     let grid_area_minus_item_margins_size = Size {
-        width: grid_area_size.width.maybe_sub(margin.left).maybe_sub(margin.right),
-        height: grid_area_size.height.maybe_sub(margin.top).maybe_sub(margin.bottom) - baseline_shim,
+        width: grid_area_size.width.maybe_sub(margin.left).maybe_sub(margin.right).max(0.0),
+        height: (grid_area_size.height.maybe_sub(margin.top).maybe_sub(margin.bottom) - baseline_shim).max(0.0),
     };
 
     // A size that is a sizing keyword (min-content, max-content, fit-content,

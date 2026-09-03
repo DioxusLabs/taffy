@@ -9,6 +9,7 @@
 ### Fixed
 
 - Block: a block container's content width and the stretch width / available width handed to its in-flow and floated children are floored at zero when padding/border or the child's margins exceed the container width. Children (and measure functions) could previously receive negative widths.
+- Flexbox/Grid: the stretch size and available space derived from the container/grid area minus an item's margins are likewise floored at zero. Stretched flex items whose cross-axis margins exceeded the line previously ended up with a negative used cross size (Chrome gives 0).
 - Grid: items with an `auto` start line and a definite end line (e.g. `grid-column: auto / 1`) no longer cause a phantom zero-sized positive implicit track to be created. This previously caused `grid_template_columns()`/`grid_template_rows()` to serialize an extra `0px` track (e.g. `10px 0px` instead of `10px`)
 - Grid: fixed `DetailedGridTracksInfo::resolve_absolute_grid_area` edge cases: placements are now normalized (lines sorted, named lines resolved) *before* out-of-range lines are treated as `auto`, and axes with no tracks resolve against the axis' single content-aligned grid line instead of falling back to the padding edge
 - Block/float: absorb `f32` rounding errors in horizontal fit checks, preventing floats from spuriously wrapping when percentage widths and margins sum to exactly 100% of the container (#1161).

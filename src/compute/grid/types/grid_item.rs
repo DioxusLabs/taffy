@@ -312,7 +312,7 @@ impl GridItem {
             .maybe_apply_aspect_ratio(aspect_ratio)
             .maybe_add(box_sizing_adjustment);
 
-        let grid_area_minus_item_margins_size = grid_area_size.maybe_sub(margins);
+        let grid_area_minus_item_margins_size = grid_area_size.maybe_sub(margins).maybe_max(Size::ZERO);
 
         // If node is absolutely positioned and width is not set explicitly, then deduce it
         // from left, right and container_content_box if both are set.
@@ -575,7 +575,7 @@ impl GridItem {
             if !size_style.is_sizing_keyword() {
                 continue;
             }
-            let stretch_size = grid_area_size.get(axis).maybe_sub(margins.get(axis));
+            let stretch_size = grid_area_size.get(axis).maybe_sub(margins.get(axis)).maybe_max(0.0);
             if let Some(SizingKeywordResolution::Measure(available)) =
                 resolve_sizing_keyword(size_style, stretch_size, grid_area_size.get(axis))
             {
