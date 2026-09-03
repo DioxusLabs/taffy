@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Changed
+
+- Grid: intrinsic track sizing no longer measures an item's min-/max-content contribution in a step where none of the item's spanned tracks can receive that contribution (e.g. items spanning only `minmax(0, 1fr)` or fixed tracks). This matches Blink and avoids redundant, sometimes very expensive, measurement of large subtrees under a min-content constraint.
+
 ### Fixed
 
 - Grid: items with an `auto` start line and a definite end line (e.g. `grid-column: auto / 1`) no longer cause a phantom zero-sized positive implicit track to be created. This previously caused `grid_template_columns()`/`grid_template_rows()` to serialize an extra `0px` track (e.g. `10px 0px` instead of `10px`)

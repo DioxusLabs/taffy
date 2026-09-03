@@ -186,6 +186,16 @@ impl GridItem {
         (indexes.start as usize + 1)..(indexes.end as usize)
     }
 
+    /// Whether any track spanned by this item in the specified axis satisfies `predicate`
+    pub fn spans_track_matching(
+        &self,
+        axis: AbstractAxis,
+        axis_tracks: &[GridTrack],
+        predicate: impl Fn(&GridTrack) -> bool,
+    ) -> bool {
+        axis_tracks[self.track_range_excluding_lines(axis)].iter().any(predicate)
+    }
+
     /// Returns the number of tracks that this item spans in the specified axis
     pub fn span(&self, axis: AbstractAxis) -> u16 {
         match axis {

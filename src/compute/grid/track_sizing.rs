@@ -796,6 +796,9 @@ fn resolve_intrinsic_track_sizes<Tree: LayoutPartialTree>(
         let has_min_or_max_content_min_track_sizing_function =
             move |track: &GridTrack| track.min_track_sizing_function.is_min_or_max_content();
         for item in batch.iter_mut() {
+            if !item.spans_track_matching(axis, axis_tracks, has_min_or_max_content_min_track_sizing_function) {
+                continue;
+            }
             let space = item_sizer.min_content_contribution(item, axis_tracks);
             let tracks = &mut axis_tracks[item.track_range_excluding_lines(axis)];
             if space > 0.0 {
@@ -856,6 +859,11 @@ fn resolve_intrinsic_track_sizes<Tree: LayoutPartialTree>(
             }
 
             for item in batch.iter_mut() {
+                if !item.spans_track_matching(axis, axis_tracks, |track| {
+                    has_auto_min_track_sizing_function(track) || has_max_content_min_track_sizing_function(track)
+                }) {
+                    continue;
+                }
                 let axis_max_content_size = item_sizer.max_content_contribution(item, axis_tracks);
                 let limit = item.spanned_track_limit(axis, axis_tracks, axis_inner_node_size, &|val, basis| {
                     item_sizer.calc(val, basis)
@@ -918,6 +926,9 @@ fn resolve_intrinsic_track_sizes<Tree: LayoutPartialTree>(
         let has_max_content_min_track_sizing_function =
             move |track: &GridTrack| track.min_track_sizing_function.is_max_content();
         for item in batch.iter_mut() {
+            if !item.spans_track_matching(axis, axis_tracks, has_max_content_min_track_sizing_function) {
+                continue;
+            }
             let axis_max_content_size = item_sizer.max_content_contribution(item, axis_tracks);
             let space = axis_max_content_size;
             let tracks = &mut axis_tracks[item.track_range_excluding_lines(axis)];
@@ -950,6 +961,9 @@ fn resolve_intrinsic_track_sizes<Tree: LayoutPartialTree>(
             let has_intrinsic_max_track_sizing_function =
                 move |track: &GridTrack| !track.max_track_sizing_function.has_definite_value(axis_inner_node_size);
             for item in batch.iter_mut() {
+                if !item.spans_track_matching(axis, axis_tracks, has_intrinsic_max_track_sizing_function) {
+                    continue;
+                }
                 let axis_min_content_size = item_sizer.min_content_contribution(item, axis_tracks);
                 let space = axis_min_content_size;
                 let tracks = &mut axis_tracks[item.track_range_excluding_lines(axis)];
@@ -973,6 +987,9 @@ fn resolve_intrinsic_track_sizes<Tree: LayoutPartialTree>(
                     || (track.max_track_sizing_function.uses_percentage() && axis_inner_node_size.is_none())
             };
             for item in batch.iter_mut() {
+                if !item.spans_track_matching(axis, axis_tracks, has_max_content_max_track_sizing_function) {
+                    continue;
+                }
                 let axis_max_content_size = item_sizer.max_content_contribution(item, axis_tracks);
                 let space = axis_max_content_size;
                 let tracks = &mut axis_tracks[item.track_range_excluding_lines(axis)];
