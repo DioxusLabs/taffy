@@ -1,0 +1,19 @@
+<test name="grid_fr_row_max_content_uses_column_width__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" box-sizing="content-box" direction="ltr" grid-template-rows="minmax(10px, 1fr) minmax(min-content, 50px)" grid-template-columns="50px">
+      <text box-sizing="content-box" direction="ltr">
+        HHHHH​HHHH
+      </text>
+      <text box-sizing="content-box" direction="ltr">
+        HHHHH​HHHH
+      </text>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="50" height="70" resolved-rows="20px 50px" resolved-columns="50px">
+      <node x="0" y="0" width="50" height="20"/>
+      <node x="0" y="20" width="50" height="50"/>
+    </node>
+  </expectations>
+</test>
