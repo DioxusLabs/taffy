@@ -27465,6 +27465,30 @@ mod grid {
 
     #[cfg(feature = "grid")]
     #[test]
+    fn grid_fr_row_max_content_uses_column_width__border_box_ltr() {
+        crate::run_xml_test("grid", "grid_fr_row_max_content_uses_column_width__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_fr_row_max_content_uses_column_width__content_box_ltr() {
+        crate::run_xml_test("grid", "grid_fr_row_max_content_uses_column_width__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_fr_row_max_content_uses_column_width__border_box_rtl() {
+        crate::run_xml_test("grid", "grid_fr_row_max_content_uses_column_width__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_fr_row_max_content_uses_column_width__content_box_rtl() {
+        crate::run_xml_test("grid", "grid_fr_row_max_content_uses_column_width__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
     fn grid_fr_single_item_indefinite__border_box_ltr() {
         crate::run_xml_test("grid", "grid_fr_single_item_indefinite__border_box_ltr");
     }

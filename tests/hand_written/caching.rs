@@ -91,4 +91,34 @@ mod caching {
             assert_eq!(layout.location.y, 19.0 * index as f32);
         }
     }
+    /// An item whose spanned tracks cannot receive its min-/max-content contribution in any
+    /// intrinsic track sizing step (definite min, flexible max) must not be measured for it.
+    #[test]
+    #[cfg(feature = "grid")]
+    fn grid_item_spanning_only_unaffected_tracks_is_not_measured() {
+        let mut taffy = new_test_tree();
+
+        let text = TestNodeContext::ahem_text("HH HH HH HH".to_string(), taffy_test_helpers::WritingMode::Horizontal);
+        let leaf_style =
+            Style { grid_column: taffy::geometry::Line { start: line(2), end: line(3) }, ..Default::default() };
+        let leaf = taffy.new_leaf_with_context(leaf_style, text).unwrap();
+        let grid = taffy
+            .new_with_children(
+                Style {
+                    display: Display::Grid,
+                    size: Size { width: length(400.0), height: length(50.0) },
+                    grid_template_columns: vec![length(100.0), minmax(length(0.0), fr(1.0))],
+                    grid_template_rows: vec![length(50.0)],
+                    ..Default::default()
+                },
+                &[leaf],
+            )
+            .unwrap();
+
+        taffy.compute_layout_with_measure(grid, Size::MAX_CONTENT, test_measure_function).unwrap();
+
+        // Only the final layout pass measures the leaf; track sizing does not.
+        assert_eq!(taffy.layout(leaf).unwrap().size.width, 300.0);
+        assert_eq!(taffy.get_node_context_mut(leaf).unwrap().count, 1);
+    }
 }
