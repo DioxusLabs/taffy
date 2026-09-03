@@ -92,6 +92,8 @@ struct CacheKey {
     /// Whether each known dimension is definite. Normalized such that an axis
     /// without a known dimension is always `true`.
     known_dimensions_are_definite: Size<bool>,
+    /// The block-start content offset (bit pattern), see [`LayoutInput::content_offset_y`]
+    content_offset_y: u32,
 }
 
 impl CacheKey {
@@ -137,6 +139,7 @@ impl From<&LayoutInput> for CacheKey {
             known_dimensions_are_definite: input
                 .known_dimensions_are_definite
                 .zip_map(input.known_dimensions, |is_definite, kd| is_definite || kd.is_none()),
+            content_offset_y: input.content_offset_y.to_bits(),
         }
     }
 }
@@ -198,6 +201,7 @@ impl Cache {
                         && entry.key.known_dimensions_are_definite == key.known_dimensions_are_definite
                         && (entry.key.x_axis_parent_size() == key.x_axis_parent_size())
                         && entry.key.size_is_valid_for(&key)
+                        && entry.key.content_offset_y == key.content_offset_y
                     {
                         self.recently_used_entries |= 1 << index;
                         return Some(LayoutOutput::from_outer_size(entry.content));
@@ -299,6 +303,7 @@ mod tests {
             parent_size: Size::NONE,
             available_space: Size { width: AvailableSpace::MaxContent, height: AvailableSpace::MaxContent },
             vertical_margins_are_collapsible: Line::FALSE,
+            content_offset_y: 0.0,
         }
     }
 

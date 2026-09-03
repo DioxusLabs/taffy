@@ -1849,6 +1849,7 @@ fn determine_hypothetical_cross_size(
                         height: if constants.is_row { child_available_cross } else { child_known_main },
                     },
                     vertical_margins_are_collapsible: Line::FALSE,
+                    content_offset_y: 0.0,
                 },
             )
             .size
@@ -1926,6 +1927,7 @@ fn calculate_children_base_lines(
                         },
                     },
                     vertical_margins_are_collapsible: Line::FALSE,
+                    content_offset_y: 0.0,
                 },
             );
 
@@ -2420,6 +2422,7 @@ fn calculate_flex_item(
             parent_size: node_inner_size,
             available_space: container_size.map(|s| s.into()),
             vertical_margins_are_collapsible: Line::FALSE,
+            content_offset_y: 0.0,
         },
     );
     let LayoutOutput {

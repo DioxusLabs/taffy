@@ -1,0 +1,27 @@
+<test name="table_row_height_table_taller_than_content__border_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="table" direction="ltr" border-spacing-x="0px" border-spacing-y="0px" height="200px">
+      <div display="table-row-group" direction="ltr">
+        <div display="table-row" direction="ltr">
+          <div display="table-cell" direction="ltr" width="40px" height="20px"/>
+        </div>
+        <div display="table-row" direction="ltr">
+          <div display="table-cell" direction="ltr" width="40px" height="20px"/>
+        </div>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="40" height="200">
+      <node x="0" y="0" width="40" height="200">
+        <node x="0" y="0" width="40" height="100">
+          <node x="0" y="0" width="40" height="100"/>
+        </node>
+        <node x="0" y="100" width="40" height="100">
+          <node x="0" y="0" width="40" height="100"/>
+        </node>
+      </node>
+    </node>
+  </expectations>
+</test>

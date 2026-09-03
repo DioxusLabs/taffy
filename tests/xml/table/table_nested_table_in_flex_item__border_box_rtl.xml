@@ -1,0 +1,31 @@
+<test name="table_nested_table_in_flex_item__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="flex" direction="rtl" width="200px">
+      <div display="block" direction="rtl">
+        <div display="table" direction="rtl" border-spacing-x="0px" border-spacing-y="0px">
+          <div display="table-row-group" direction="rtl">
+            <div display="table-row" direction="rtl">
+              <div display="table-cell" direction="rtl" width="40px" height="20px"/>
+              <div display="table-cell" direction="rtl" width="40px" height="20px"/>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="200" height="20">
+      <node x="120" y="0" width="80" height="20">
+        <node x="0" y="0" width="80" height="20">
+          <node x="0" y="0" width="80" height="20">
+            <node x="0" y="0" width="80" height="20">
+              <node x="40" y="0" width="40" height="20"/>
+              <node x="0" y="0" width="40" height="20"/>
+            </node>
+          </node>
+        </node>
+      </node>
+    </node>
+  </expectations>
+</test>

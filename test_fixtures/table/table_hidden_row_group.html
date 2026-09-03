@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    A row group with display none takes its rows out of the table
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="display: table; border-collapse: separate;">
+  <div style="display: none;">
+    <div style="display: table-row;">
+      <div style="display: table-cell; width: 60px; height: 40px;"></div>
+      <div style="display: table-cell; width: 60px; height: 40px;"></div>
+    </div>
+  </div>
+  <div style="display: table-row-group;">
+    <div style="display: table-row;">
+      <div style="display: table-cell; width: 20px; height: 20px;"></div>
+      <div style="display: table-cell; width: 30px; height: 20px;"></div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

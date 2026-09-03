@@ -1,0 +1,27 @@
+<test name="table_column_width_mixed__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="table" box-sizing="content-box" direction="ltr" border-spacing-x="0px" border-spacing-y="0px" width="300px">
+      <div display="table-row-group" box-sizing="content-box" direction="ltr">
+        <div display="table-row" box-sizing="content-box" direction="ltr">
+          <div display="table-cell" box-sizing="content-box" direction="ltr" width="40px" height="20px"/>
+          <div display="table-cell" box-sizing="content-box" direction="ltr" width="25%" height="20px"/>
+          <text display="table-cell" box-sizing="content-box" direction="ltr" height="20px">
+            HHHH
+          </text>
+        </div>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="300" height="20">
+      <node x="0" y="0" width="300" height="20">
+        <node x="0" y="0" width="300" height="20">
+          <node x="0" y="0" width="40" height="20"/>
+          <node x="40" y="0" width="75" height="20"/>
+          <node x="115" y="0" width="185" height="20"/>
+        </node>
+      </node>
+    </node>
+  </expectations>
+</test>
