@@ -1,0 +1,15 @@
+<test name="flex_image_shrink__border_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="flex" direction="ltr" align-items="start" width="120px">
+      <img intrinsic-width="100" intrinsic-height="50" direction="ltr"/>
+      <img intrinsic-width="60" intrinsic-height="60" direction="ltr"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="120" height="60">
+      <node x="0" y="0" width="100" height="50"/>
+      <node x="100" y="0" width="60" height="60"/>
+    </node>
+  </expectations>
+</test>
