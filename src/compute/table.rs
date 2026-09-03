@@ -402,14 +402,7 @@ pub fn compute_table_layout(
         let origin = Point { x: grid_origin_x, y: start_y };
         group_origin.push(origin);
 
-        set_item_layout(
-            tree,
-            group.node_id,
-            group.order,
-            origin,
-            Size { width: grid_width, height: end_y - start_y },
-            parent_width,
-        );
+        set_item_layout(tree, group.node_id, group.order, origin, Size { width: grid_width, height: end_y - start_y });
     }
 
     for (row_index, row) in rows.iter().enumerate() {
@@ -417,14 +410,7 @@ pub fn compute_table_layout(
             Some(g) => Point { x: 0.0, y: row_y[row_index] - group_origin[g].y },
             None => Point { x: grid_origin_x, y: row_y[row_index] },
         };
-        set_item_layout(
-            tree,
-            row.node_id,
-            row.order,
-            origin,
-            Size { width: grid_width, height: row.used_height },
-            parent_width,
-        );
+        set_item_layout(tree, row.node_id, row.order, origin, Size { width: grid_width, height: row.used_height });
     }
 
     let mut cell_overflow_rect = Rect::ZERO;
@@ -1164,20 +1150,19 @@ fn resolve_fixed_layout_columns(columns: &mut [Column], assignable: f32) {
     }
 }
 
-/// Write a positioned layout for a non-cell table item (row or row group)
+/// Write a positioned layout for a non-cell table item (row or row group).
+///
+/// Padding does not apply to a row or a row group (css-tables-3 §6.1), and in the separate
+/// borders model its border is ignored (CSS 2.2 §17.6.1). Under `border-collapse: collapse`
+/// the border belongs to the grid line rather than the box, and Taffy leaves that resolution
+/// to the tree builder.
 fn set_item_layout(
     tree: &mut impl LayoutTableContainer,
     node_id: NodeId,
     order: u32,
     location: Point<f32>,
     size: Size<f32>,
-    parent_width: Option<f32>,
 ) {
-    let style = tree.get_table_child_style(node_id);
-    let padding = style.padding().resolve_or_zero(parent_width, |v, b| tree.calc(v, b));
-    let border = style.border().resolve_or_zero(parent_width, |v, b| tree.calc(v, b));
-    drop(style);
-
     tree.set_unrounded_layout(
         node_id,
         &Layout {
@@ -1187,8 +1172,8 @@ fn set_item_layout(
             #[cfg(feature = "content_size")]
             scrollable_overflow_rect: Rect { left: 0.0, right: size.width, top: 0.0, bottom: size.height },
             scrollbar_size: Size::ZERO,
-            padding,
-            border,
+            padding: Rect::ZERO,
+            border: Rect::ZERO,
             margin: Rect::ZERO,
         },
     );
