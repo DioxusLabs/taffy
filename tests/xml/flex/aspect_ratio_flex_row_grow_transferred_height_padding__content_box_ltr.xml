@@ -1,0 +1,13 @@
+<test name="aspect_ratio_flex_row_grow_transferred_height_padding__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="flex" box-sizing="content-box" direction="ltr" align-items="start" width="200px" height="300px">
+      <div box-sizing="content-box" direction="ltr" flex-grow="1" width="50px" aspect-ratio="1" padding-top="10px" padding-left="20px" padding-bottom="10px" padding-right="20px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="200" height="300">
+      <node x="0" y="0" width="200" height="180"/>
+    </node>
+  </expectations>
+</test>
