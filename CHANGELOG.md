@@ -15,6 +15,7 @@
 - Block/float: absorb `f32` rounding errors in horizontal fit checks, preventing floats from spuriously wrapping when percentage widths and margins sum to exactly 100% of the container (#1161).
 - Flexbox: an auto-height `flex-wrap: wrap` column container no longer wraps its lines against definite available space handed down by an ancestor. A column container's automatic main size is content-based, so lines only wrap against a definite main size or a max main size (#1175)
 - Flexbox: main-axis margins are no longer dropped from an item's intrinsic main-size contribution when the contribution is floored by the item's flex basis (column containers). This fixes negative margins being ignored on flex items with `flex-grow` (#1162) and on descendants containing an `overflow: hidden` grid item (#1163).
+- Flexbox: items with `aspect-ratio` and `flex-grow`/`flex-shrink` kept the cross size of their unflexed main size (a `min-width: 64px; max-width: 128px; aspect-ratio: 1; flex-grow: 1` item ended 128×64). The cross size is now transferred from the used main size (css-flexbox-1 §9.4 step 7). Auto-width column containers still take their width from the unflexed item sizes (§9.9.2) (#804)
 
 ## 0.14.0
 

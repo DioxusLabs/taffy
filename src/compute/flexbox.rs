@@ -1809,11 +1809,37 @@ fn determine_hypothetical_cross_size(
         let transferred_min_cross = child.min_size.maybe_apply_aspect_ratio(child.aspect_ratio).cross(constants.dir);
         let transferred_max_cross = child.max_size.maybe_apply_aspect_ratio(child.aspect_ratio).cross(constants.dir);
 
-        let child_cross = child
-            .size
-            .cross(constants.dir)
-            .maybe_clamp(transferred_min_cross, transferred_max_cross)
-            .maybe_max(padding_border_sum);
+        // A cross size transferred through the aspect ratio must follow the used (flexed) main size
+        // https://www.w3.org/TR/css-flexbox-1/#algo-cross-item
+        //
+        // Except in an auto-width column container, whose width is the largest max-content
+        // contribution of its items, measured before flexing
+        // https://www.w3.org/TR/css-flexbox-1/#intrinsic-cross-sizes
+        let transferred_cross_follows_main = constants.is_row || constants.has_definite_cross_size;
+        let cross_size = if transferred_cross_follows_main
+            && child.aspect_ratio.is_some()
+            && child.size_style.cross(constants.dir).is_auto()
+        {
+            let box_sizing_adjustment =
+                if tree.get_flexbox_child_style(child.node).box_sizing() == BoxSizing::ContentBox {
+                    (child.padding + child.border).sum_axes()
+                } else {
+                    Size::ZERO
+                };
+            Size::NONE
+                .with_main(
+                    constants.dir,
+                    Some(child.target_size.main(constants.dir) - box_sizing_adjustment.main(constants.dir)),
+                )
+                .maybe_apply_aspect_ratio(child.aspect_ratio)
+                .maybe_add(box_sizing_adjustment)
+                .cross(constants.dir)
+        } else {
+            child.size.cross(constants.dir)
+        };
+
+        let child_cross =
+            cross_size.maybe_clamp(transferred_min_cross, transferred_max_cross).maybe_max(padding_border_sum);
 
         let child_available_cross = available_space
             .cross(constants.dir)

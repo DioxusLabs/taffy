@@ -1,0 +1,13 @@
+<test name="aspect_ratio_flex_row_grow_transferred_height_auto_height_container__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="flex" direction="rtl" align-items="start" width="200px">
+      <div direction="rtl" flex-grow="1" width="50px" aspect-ratio="1"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="200" height="200">
+      <node x="0" y="0" width="200" height="200"/>
+    </node>
+  </expectations>
+</test>
