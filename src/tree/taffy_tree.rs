@@ -601,6 +601,10 @@ impl<NodeContext> TaffyTree<NodeContext> {
         self.nodes.clear();
         self.children.clear();
         self.parents.clear();
+        // A context belongs to the node that owns it. Leaving it behind keeps arbitrary
+        // user data -- for a measure function, a boxed closure and everything it
+        // captures -- alive after the node it belonged to is gone.
+        self.node_context_data.clear();
     }
 
     /// Remove a specific node from the tree and drop it
@@ -625,6 +629,7 @@ impl<NodeContext> TaffyTree<NodeContext> {
         let _ = self.children.remove(key);
         let _ = self.parents.remove(key);
         let _ = self.nodes.remove(key);
+        let _ = self.node_context_data.remove(key);
 
         Ok(node)
     }
@@ -1427,5 +1432,47 @@ mod tests {
         taffy.set_children(new_parent, &[child]).unwrap();
 
         assert!(taffy.children(old_parent).unwrap().is_empty());
+    }
+
+    /// A context that increments a counter when dropped. Each test owns its own static
+    /// counter so the two can run in parallel.
+    struct DropCounted(&'static core::sync::atomic::AtomicUsize);
+
+    impl Drop for DropCounted {
+        fn drop(&mut self) {
+            self.0.fetch_add(1, core::sync::atomic::Ordering::SeqCst);
+        }
+    }
+
+    #[test]
+    fn remove_drops_the_nodes_context() {
+        static DROPS: core::sync::atomic::AtomicUsize = core::sync::atomic::AtomicUsize::new(0);
+        let mut taffy: TaffyTree<DropCounted> = TaffyTree::new();
+        let node = taffy.new_leaf_with_context(Style::DEFAULT, DropCounted(&DROPS)).unwrap();
+
+        taffy.remove(node).unwrap();
+
+        assert_eq!(
+            DROPS.load(core::sync::atomic::Ordering::SeqCst),
+            1,
+            "removing a node must drop its context rather than strand it in node_context_data"
+        );
+    }
+
+    #[test]
+    fn clear_drops_every_nodes_context() {
+        static DROPS: core::sync::atomic::AtomicUsize = core::sync::atomic::AtomicUsize::new(0);
+        let mut taffy: TaffyTree<DropCounted> = TaffyTree::new();
+        for _ in 0..8 {
+            taffy.new_leaf_with_context(Style::DEFAULT, DropCounted(&DROPS)).unwrap();
+        }
+
+        taffy.clear();
+
+        assert_eq!(
+            DROPS.load(core::sync::atomic::Ordering::SeqCst),
+            8,
+            "clear() drops all nodes, so it must drop their contexts too"
+        );
     }
 }
