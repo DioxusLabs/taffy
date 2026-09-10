@@ -5,7 +5,7 @@ mod detailed_grid_info {
     use taffy::prelude::*;
     use taffy::style::{GridTemplateArea, GridTemplateAreas, GridTemplateComponent, GridTemplateRepetition};
     use taffy::tree::DetailedLayoutInfo;
-    use taffy::{Point, RepetitionCount};
+    use taffy::{Direction, Point, RepetitionCount};
     use taffy_test_helpers::new_test_tree;
 
     fn definite(width: f32, height: f32) -> Size<AvailableSpace> {
@@ -85,19 +85,30 @@ mod detailed_grid_info {
         let info = get_detailed_grid_info(&tree, root);
         let column_lines: Vec<&[String]> = info.columns.iter_line_names().collect();
         assert_eq!(column_lines.len(), 3);
-        assert_eq!(column_lines[0], ["full-start".to_string(), "hero-start".to_string()]);
+        assert_eq!(column_lines[0], ["full-start".to_string()]);
         assert_eq!(column_lines[1], ["main-start".to_string()]);
-        assert_eq!(column_lines[2], ["main-end".to_string(), "full-end".to_string(), "hero-end".to_string()]);
+        assert_eq!(column_lines[2], ["main-end".to_string(), "full-end".to_string()]);
         assert_eq!(info.columns.names_for_line(1), ["main-start".to_string()]);
 
-        let row_lines: Vec<&[String]> = info.rows.iter_line_names().collect();
-        assert_eq!(row_lines, [&["hero-start".to_string()][..], &["hero-end".to_string()][..]]);
+        // Implicit `<area>-start`/`<area>-end` names are not part of the resolved track list
+        assert_eq!(info.rows.iter_line_names().count(), 0);
 
+        assert_eq!(info.grid_template_columns(), "[full-start] 40px [main-start] 60px [main-end full-end]");
+        assert_eq!(info.grid_template_rows(), "50px");
+
+        // ...but they still resolve for placement
         assert_eq!(
-            info.grid_template_columns(),
-            "[full-start hero-start] 40px [main-start] 60px [main-end full-end hero-end]"
+            info.resolve_absolute_grid_area(
+                Line { start: GridPlacement::from_line_index(1), end: GridPlacement::from_line_index(2) },
+                Line {
+                    start: GridPlacement::NamedLine("hero-start".into(), 1),
+                    end: GridPlacement::NamedLine("hero-end".into(), 1),
+                },
+                Direction::Ltr,
+                Rect { left: 0.0, right: 100.0, top: 0.0, bottom: 50.0 },
+            ),
+            Rect { left: 0.0, right: 100.0, top: 0.0, bottom: 50.0 }
         );
-        assert_eq!(info.grid_template_rows(), "[hero-start] 50px [hero-end]");
     }
 
     #[test]
