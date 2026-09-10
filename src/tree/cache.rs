@@ -2,6 +2,8 @@
 
 #![allow(clippy::unusual_byte_groupings)]
 
+use core::num::NonZeroU64;
+
 use crate::geometry::Size;
 use crate::style::AvailableSpace;
 use crate::tree::{CollapsibleMarginSet, LayoutInput, LayoutOutput, RunMode};
@@ -9,6 +11,12 @@ use crate::RequestedAxis;
 
 /// The number of cache entries for each node in the tree
 const CACHE_SIZE: usize = 9;
+/// The number of bits needed to encode definiteness in both axes
+const DEFINITE_DIMENSIONS_BITS: usize = 2;
+/// The position of the final layout's definiteness bits
+const FINAL_LAYOUT_DEFINITE_DIMENSIONS_SHIFT: usize = CACHE_SIZE * DEFINITE_DIMENSIONS_BITS;
+/// A mask for one entry's definiteness bits
+const DEFINITE_DIMENSIONS_MASK: u32 = 0b11;
 
 // Manually written-out results of float to u32 bit casts because
 // `f32::to_bits` is not yet const at our MSRV.
@@ -87,11 +95,9 @@ fn size_mixed_cache_key(kd: Size<Option<f32>>, avs: Size<AvailableSpace>) -> u64
 struct CacheKey {
     /// The initial cached size of the node itself
     kd_available_space: u64,
-    /// The initial cached size of the parent's node
-    parent_size: u64,
-    /// Whether each known dimension is definite. Normalized such that an axis
-    /// without a known dimension is always `true`.
-    known_dimensions_are_definite: Size<bool>,
+    /// The parent's size and requested axis. The axis bits make this non-zero and provide
+    /// a niche that keeps `Option<CacheEntry<_>>` the same size as `CacheEntry<_>`.
+    parent_size: NonZeroU64,
 }
 
 impl CacheKey {
@@ -99,18 +105,18 @@ impl CacheKey {
     #[allow(dead_code)]
     /// Return the parent size with the extra bits that encode the requested axis masked out
     fn parent_size(&self) -> u64 {
-        self.parent_size & NON_SIGN_BITS_MASK
+        self.parent_size.get() & NON_SIGN_BITS_MASK
     }
 
     /// Return the parent size with the extra bits that encode the requested axis masked out
     /// And the y-axis value masked out
     fn x_axis_parent_size(&self) -> u64 {
-        self.parent_size & (X_AXIS_VALUE_MASK & NON_SIGN_BITS_MASK)
+        self.parent_size.get() & (X_AXIS_VALUE_MASK & NON_SIGN_BITS_MASK)
     }
 
     /// Return the bits that encode the requested axis
     fn requested_axis_bits(&self) -> u64 {
-        self.parent_size & BOTH_SIGN_BITS_MASK
+        self.parent_size.get() & BOTH_SIGN_BITS_MASK
     }
 
     /// Whether a cached entry with this key contains a valid size for the axis requested by `other`.
@@ -133,12 +139,16 @@ impl From<&LayoutInput> for CacheKey {
 
         Self {
             kd_available_space: size_mixed_cache_key(input.known_dimensions, input.available_space),
-            parent_size: (size_option_cache_key(input.parent_size) & NON_SIGN_BITS_MASK) | extra_bits,
-            known_dimensions_are_definite: input
-                .known_dimensions_are_definite
-                .zip_map(input.known_dimensions, |is_definite, kd| is_definite || kd.is_none()),
+            parent_size: NonZeroU64::new((size_option_cache_key(input.parent_size) & NON_SIGN_BITS_MASK) | extra_bits)
+                .unwrap(),
         }
     }
+}
+
+/// Encode definiteness, treating axes without known dimensions as definite
+fn definite_dimensions(input: &LayoutInput) -> u32 {
+    u32::from(input.known_dimensions_are_definite.width || input.known_dimensions.width.is_none())
+        | (u32::from(input.known_dimensions_are_definite.height || input.known_dimensions.height.is_none()) << 1)
 }
 
 /// Cached intermediate layout results
@@ -159,6 +169,8 @@ pub struct Cache {
     final_layout_entry: Option<CacheEntry<LayoutOutput>>,
     /// The cache entries for the node's preliminary size measurements
     measure_entries: [Option<CacheEntry<Size<f32>>>; CACHE_SIZE],
+    /// Two definiteness bits for each measurement entry, followed by two for the final layout
+    definite_dimensions: u32,
     /// Tracks which measure entries have been used since the eviction cursor last passed them
     recently_used_entries: u16,
     /// The next measure entry to consider replacing
@@ -179,6 +191,7 @@ impl Cache {
         Self {
             final_layout_entry: None,
             measure_entries: [None; CACHE_SIZE],
+            definite_dimensions: 0,
             recently_used_entries: 0,
             next_measure_entry: 0,
             is_empty: true,
@@ -189,13 +202,23 @@ impl Cache {
     #[inline]
     pub fn get(&mut self, input: &LayoutInput) -> Option<LayoutOutput> {
         let key = CacheKey::from(input);
+        let definite = definite_dimensions(input);
         match input.run_mode {
-            RunMode::PerformLayout => self.final_layout_entry.filter(|entry| entry.key == key).map(|e| e.content),
+            RunMode::PerformLayout => self
+                .final_layout_entry
+                .filter(|entry| {
+                    entry.key == key
+                        && (self.definite_dimensions >> FINAL_LAYOUT_DEFINITE_DIMENSIONS_SHIFT)
+                            & DEFINITE_DIMENSIONS_MASK
+                            == definite
+                })
+                .map(|e| e.content),
             RunMode::ComputeSize => {
                 for (index, entry) in self.measure_entries.iter().enumerate() {
                     let Some(entry) = entry else { continue };
                     if entry.key.kd_available_space == key.kd_available_space
-                        && entry.key.known_dimensions_are_definite == key.known_dimensions_are_definite
+                        && (self.definite_dimensions >> (index * DEFINITE_DIMENSIONS_BITS)) & DEFINITE_DIMENSIONS_MASK
+                            == definite
                         && (entry.key.x_axis_parent_size() == key.x_axis_parent_size())
                         && entry.key.size_is_valid_for(&key)
                     {
@@ -213,9 +236,13 @@ impl Cache {
     /// Store a computed size in the cache
     pub fn store(&mut self, input: &LayoutInput, layout_output: LayoutOutput) {
         let key = CacheKey::from(input);
+        let definite = definite_dimensions(input);
         match input.run_mode {
             RunMode::PerformLayout => {
                 self.is_empty = false;
+                self.definite_dimensions = (self.definite_dimensions
+                    & !(DEFINITE_DIMENSIONS_MASK << FINAL_LAYOUT_DEFINITE_DIMENSIONS_SHIFT))
+                    | (definite << FINAL_LAYOUT_DEFINITE_DIMENSIONS_SHIFT);
                 self.final_layout_entry = Some(CacheEntry { key, content: layout_output })
             }
             RunMode::ComputeSize => {
@@ -230,9 +257,14 @@ impl Cache {
                     return;
                 }
                 self.is_empty = false;
-                if let Some(index) =
-                    self.measure_entries.iter().position(|entry| entry.is_some_and(|entry| entry.key == key))
-                {
+                if let Some(index) = self.measure_entries.iter().enumerate().position(|(index, entry)| {
+                    entry.is_some_and(|entry| {
+                        entry.key == key
+                            && (self.definite_dimensions >> (index * DEFINITE_DIMENSIONS_BITS))
+                                & DEFINITE_DIMENSIONS_MASK
+                                == definite
+                    })
+                }) {
                     self.measure_entries[index].as_mut().unwrap().content = layout_output.size;
                     self.recently_used_entries |= 1 << index;
                     return;
@@ -246,6 +278,9 @@ impl Cache {
                 }
                 let entry_index = self.next_measure_entry as usize;
                 self.measure_entries[entry_index] = Some(CacheEntry { key, content: layout_output.size });
+                let definite_shift = entry_index * DEFINITE_DIMENSIONS_BITS;
+                self.definite_dimensions = (self.definite_dimensions & !(DEFINITE_DIMENSIONS_MASK << definite_shift))
+                    | (definite << definite_shift);
                 self.recently_used_entries |= 1 << entry_index;
                 self.next_measure_entry += 1;
                 if self.next_measure_entry == CACHE_SIZE as u8 {
@@ -264,6 +299,7 @@ impl Cache {
         self.is_empty = true;
         self.final_layout_entry = None;
         self.measure_entries = [None; CACHE_SIZE];
+        self.definite_dimensions = 0;
         self.recently_used_entries = 0;
         self.next_measure_entry = 0;
         ClearState::Cleared
@@ -358,5 +394,59 @@ mod tests {
         assert_eq!(cache.get(&input(1.0)), Some(output(1.0)));
         assert_eq!(cache.measure_entries, entries);
         assert_ne!(cache.recently_used_entries, 0);
+    }
+
+    #[test]
+    fn definiteness_follows_measurements_through_eviction_and_updates() {
+        let mut cache = Cache::new();
+        for width in 0..CACHE_SIZE * 4 {
+            let mut request = input(width as f32);
+            request.known_dimensions.height = Some(20.0);
+            for bits in 0..4 {
+                request.known_dimensions_are_definite = Size { width: bits & 1 != 0, height: bits & 2 != 0 };
+                cache.store(&request, output(bits as f32));
+            }
+            for bits in 0..4 {
+                request.known_dimensions_are_definite = Size { width: bits & 1 != 0, height: bits & 2 != 0 };
+                assert_eq!(cache.get(&request), Some(output(bits as f32)));
+                cache.store(&request, output((bits + 10) as f32));
+                assert_eq!(cache.get(&request), Some(output((bits + 10) as f32)));
+            }
+        }
+        cache.clear();
+        assert_eq!(cache, Cache::new());
+    }
+
+    #[test]
+    fn final_layout_preserves_normalized_definiteness() {
+        let mut cache = Cache::new();
+        let mut request = input(10.0);
+        request.run_mode = RunMode::PerformLayout;
+        cache.store(&request, output(10.0));
+        request.known_dimensions_are_definite.height = false;
+        assert_eq!(cache.get(&request), Some(output(10.0)));
+        request.known_dimensions_are_definite.width = false;
+        assert_eq!(cache.get(&request), None);
+        cache.store(&request, output(20.0));
+        assert_eq!(cache.get(&request), Some(output(20.0)));
+        cache.clear();
+        assert_eq!(cache.get(&request), None);
+    }
+
+    #[test]
+    fn measurement_and_final_layout_definiteness_are_independent() {
+        let mut cache = Cache::new();
+        let mut measurement = input(10.0);
+        measurement.known_dimensions.height = Some(20.0);
+        measurement.known_dimensions_are_definite = Size { width: true, height: false };
+        cache.store(&measurement, output(10.0));
+
+        let mut final_layout = measurement;
+        final_layout.run_mode = RunMode::PerformLayout;
+        final_layout.known_dimensions_are_definite = Size { width: false, height: true };
+        cache.store(&final_layout, output(20.0));
+
+        assert_eq!(cache.get(&measurement), Some(output(10.0)));
+        assert_eq!(cache.get(&final_layout), Some(output(20.0)));
     }
 }
