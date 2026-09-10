@@ -1,0 +1,17 @@
+<test name="block_aspect_ratio_content_minimum_overflow_hidden__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="block" box-sizing="content-box" direction="ltr" width="100px">
+      <div display="block" box-sizing="content-box" direction="ltr" overflow-y="hidden" scrollbar-width="15" aspect-ratio="0.85">
+        <div display="block" box-sizing="content-box" direction="ltr" height="300px"/>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="100" height="118">
+      <node x="0" y="0" width="100" height="118" scroll_width="0" scroll_height="182">
+        <node x="0" y="0" width="100" height="300"/>
+      </node>
+    </node>
+  </expectations>
+</test>

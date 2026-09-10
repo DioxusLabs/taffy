@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    A block box with a preferred aspect ratio at a definite width, whose content is taller than the ratio derives. The ratio-derived height is an automatic size, so it takes a content-based automatic minimum in the ratio-dependent axis and the box grows to its content instead of the content overflowing it.
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="display: block; width: 100px;">
+  <div style="display: block; aspect-ratio: 0.85;">
+    <div style="display: block; height: 300px;"></div>
+  </div>
+</div>
+
+</body>
+</html>

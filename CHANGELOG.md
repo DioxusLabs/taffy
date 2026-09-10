@@ -18,6 +18,7 @@
 - Block: when a block container is measured under `SizingMode::ContentSize` (e.g. for a flex item's automatic minimum size or min-/max-content contribution), its own `height`/`min-height` is no longer used as the percentage basis for its children. A `height: 100%` child previously resolved against the ignored `height`, inflating the container's content size (WPT `css-flexbox/flex-minimum-height-flex-items-025`).
 - Flexbox: in column containers an item's max-content contribution is clamped by its flex base size alone (per spec) rather than by `max(flex-basis, height)`, so an item's `height` no longer inflates the container's automatic main size past the item's `flex-basis`.
 - Flexbox: main-axis margins are no longer dropped from an item's intrinsic main-size contribution when the contribution is floored by the item's flex basis (column containers). This fixes negative margins being ignored on flex items with `flex-grow` (#1162) and on descendants containing an `overflow: hidden` grid item (#1163).
+- Block: a block box with a preferred aspect ratio and an automatic height now takes a content-based automatic minimum size in the ratio-dependent axis, so content taller than the ratio derives grows the box instead of overflowing it. The minimum is capped by `max-height`, and does not apply where `min-height` is specified, where the height is specified, or where the box is a scroll container in that axis (#1184).
 
 ## 0.14.0
 

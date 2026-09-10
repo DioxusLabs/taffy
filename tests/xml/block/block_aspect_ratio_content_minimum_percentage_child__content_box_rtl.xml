@@ -1,0 +1,19 @@
+<test name="block_aspect_ratio_content_minimum_percentage_child__content_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="block" box-sizing="content-box" direction="rtl" width="100px">
+      <div display="block" box-sizing="content-box" direction="rtl" aspect-ratio="0.85">
+        <div display="block" box-sizing="content-box" direction="rtl" height="300px"/>
+        <div display="block" box-sizing="content-box" direction="rtl" height="50%"/>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="100" height="359">
+      <node x="0" y="0" width="100" height="359">
+        <node x="0" y="0" width="100" height="300"/>
+        <node x="0" y="300" width="100" height="59"/>
+      </node>
+    </node>
+  </expectations>
+</test>

@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    A specified height is an override rather than an automatic size, so no automatic minimum applies and the content overflows it. Control for the case the fix must not change.
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="display: block; width: 100px;">
+  <div style="display: block; aspect-ratio: 0.85; height: 50px;">
+    <div style="display: block; height: 300px;"></div>
+  </div>
+</div>
+
+</body>
+</html>

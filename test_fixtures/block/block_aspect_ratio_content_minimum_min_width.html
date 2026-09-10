@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    A specified min-width transfers through the ratio to a minimum height (css-sizing-4 4.4), and the box also takes the content-based automatic minimum because min-height is still auto. Both are minimums; the larger governs. Boundary between the two rules.
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="display: block; width: 100px;">
+  <div style="display: block; aspect-ratio: 0.85; min-width: 200px;">
+    <div style="display: block; height: 300px;"></div>
+  </div>
+</div>
+
+</body>
+</html>

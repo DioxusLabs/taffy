@@ -513,10 +513,18 @@ fn compute_inner(
     // while probing intrinsic sizes, so measure passes stay content-based. Only a
     // newly-filled axis is adopted (and clamped); an incoming known size is left
     // as the parent resolved it (re-clamping would undo padding/border overrides).
+
+    // Both are read by `ratio_content_minimum_height` below, and neither can be recovered there:
+    // an author's height and a ratio-derived one are indistinguishable once both are `Some`, and
+    // `min_size.height` may by then hold a minimum transferred from `min-width` through the ratio
+    // rather than the author's own `min-height`.
+    let min_height_is_auto = style.min_size().height.is_auto();
+    let height_was_absent = known_dimensions.height.is_none();
     let known_dimensions = {
         let derived = known_dimensions.maybe_apply_aspect_ratio(aspect_ratio).maybe_clamp(min_size, max_size);
         Size { width: known_dimensions.width.or(derived.width), height: known_dimensions.height.or(derived.height) }
     };
+    let height_is_ratio_derived = height_was_absent && known_dimensions.height.is_some();
     let percentage_basis_dimensions = Size {
         width: known_dimensions.width,
         height: known_dimensions.height.filter(|_| inputs.known_dimensions_are_definite.height),
@@ -629,8 +637,24 @@ fn compute_inner(
         intrinsic_outer_height = intrinsic_outer_height.max(block_ctx.floated_content_height_contribution());
     }
 
+    // css-sizing-4 §4.3: the automatic content-based minimum size in the ratio-dependent axis.
+    // <https://www.w3.org/TR/css-sizing-4/#aspect-ratio-minimum>
+    //
+    // > the automatic minimum size in the ratio-dependent axis of a box with a preferred aspect
+    // > ratio that is neither a replaced element, nor a scroll container in that axis, is its
+    // > min-content size capped by its maximum size.
+    //
+    // The three conditions are that sentence's: an automatic height rather than an author's
+    // override, `min-height` computing to `auto`, and not a scroll container in that axis. The
+    // minimum is raised rather than the used height maxed, so `max-height`, the clamping order
+    // and the padding-border floor keep composing as they already do.
+    let ratio_content_minimum_height =
+        (height_is_ratio_derived && min_height_is_auto && !overflow.y.is_scroll_container())
+            .then(|| intrinsic_outer_height.maybe_min(max_size.height));
+
     let container_outer_height = known_dimensions
         .height
+        .maybe_max(ratio_content_minimum_height)
         .unwrap_or(intrinsic_outer_height.maybe_clamp(min_size.height, max_size.height))
         .maybe_max(Some(padding_border_size.height));
     let final_outer_size = Size { width: container_outer_width, height: container_outer_height };

@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    Content shorter than the ratio derives: the ratio-derived height already exceeds the content-based minimum, so the minimum is inert and the ratio governs. Control for the interior of the rule.
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="display: block; width: 100px;">
+  <div style="display: block; aspect-ratio: 0.85;">
+    <div style="display: block; height: 40px;"></div>
+  </div>
+</div>
+
+</body>
+</html>
