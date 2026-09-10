@@ -579,8 +579,13 @@ fn compute_inner(
         return LayoutOutput::from_outer_size(Size { width: container_outer_width, height: 0.0 });
     }
 
-    let container_percentage_resolution_height =
-        percentage_basis_dimensions.height.or(size.height.maybe_max(min_size.height));
+    // Under `SizingMode::ContentSize` the container's own `height`/`min-height` are ignored,
+    // so they cannot serve as the percentage basis for children either
+    // (https://drafts.csswg.org/css-flexbox/#min-size-auto: the content size suggestion
+    // must not be influenced by the item's specified height).
+    let container_percentage_resolution_height = percentage_basis_dimensions
+        .height
+        .or(if inputs.sizing_mode == SizingMode::InherentSize { size.height.maybe_max(min_size.height) } else { None });
 
     // 3. Perform final item layout and return content height
     //

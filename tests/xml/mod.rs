@@ -5124,6 +5124,38 @@ mod blockflex {
     }
 
     #[test]
+    fn blockflex_min_content_ignores_own_height_as_percentage_basis__border_box_ltr() {
+        crate::run_xml_test(
+            "blockflex",
+            "blockflex_min_content_ignores_own_height_as_percentage_basis__border_box_ltr",
+        );
+    }
+
+    #[test]
+    fn blockflex_min_content_ignores_own_height_as_percentage_basis__content_box_ltr() {
+        crate::run_xml_test(
+            "blockflex",
+            "blockflex_min_content_ignores_own_height_as_percentage_basis__content_box_ltr",
+        );
+    }
+
+    #[test]
+    fn blockflex_min_content_ignores_own_height_as_percentage_basis__border_box_rtl() {
+        crate::run_xml_test(
+            "blockflex",
+            "blockflex_min_content_ignores_own_height_as_percentage_basis__border_box_rtl",
+        );
+    }
+
+    #[test]
+    fn blockflex_min_content_ignores_own_height_as_percentage_basis__content_box_rtl() {
+        crate::run_xml_test(
+            "blockflex",
+            "blockflex_min_content_ignores_own_height_as_percentage_basis__content_box_rtl",
+        );
+    }
+
+    #[test]
     fn blockflex_overflow_hidden__border_box_ltr() {
         crate::run_xml_test("blockflex", "blockflex_overflow_hidden__border_box_ltr");
     }

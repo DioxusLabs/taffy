@@ -1391,13 +1391,20 @@ fn determine_container_main_size(
                         let style_max = item.max_size.main(constants.dir);
 
                         // The spec seems a bit unclear on this point (my initial reading was that the `.maybe_max(style_preferred)` should
-                        // not be included here), however this matches both Chrome and Firefox as of 9th March 2023.
+                        // not be included here), however for row containers this matches both Chrome and Firefox as of 9th March 2023.
+                        // For column containers the flex base size alone is the clamping basis (as the spec says): a column item's
+                        // `height` must not inflate the container's max-content size beyond the item's flex-basis.
                         //
                         // Spec: https://www.w3.org/TR/css-flexbox-1/#intrinsic-item-contributions
                         // Spec modification: https://www.w3.org/TR/css-flexbox-1/#change-2016-max-contribution
                         // Issue: https://github.com/w3c/csswg-drafts/issues/1435
                         // Gentest: padding_border_overrides_size_flex_basis_0.html
-                        let clamping_basis = Some(item.flex_basis).maybe_max(style_preferred);
+                        // Gentest: blockflex_min_content_ignores_own_height_as_percentage_basis.html
+                        let clamping_basis = if constants.is_row {
+                            Some(item.flex_basis).maybe_max(style_preferred)
+                        } else {
+                            Some(item.flex_basis)
+                        };
                         let flex_basis_min = clamping_basis.filter(|_| item.flex_shrink == 0.0);
                         let flex_basis_max = clamping_basis.filter(|_| item.flex_grow == 0.0);
 
