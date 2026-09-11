@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Added
+
+- Grid: `GridTemplateAreas` can now be parsed from a CSS string (`FromStr`/`FromCss`, behind the `parse` feature), e.g. `"\"header header\" \"nav main\"".parse::<GridTemplateAreas<String>>()`. The parser follows the [CSS Grid specification](https://drafts.csswg.org/css-grid/#grid-template-areas-property), including longest-match tokenization of `.` runs and validation that rows have equal widths and named areas form rectangles
+
 ### Changed
 
 - Grid: intrinsic track sizing no longer measures an item's min-/max-content contribution in a step where none of the item's spanned tracks can receive that contribution (e.g. items spanning only `minmax(0, 1fr)` or fixed tracks). This matches Blink and avoids redundant, sometimes very expensive, measurement of large subtrees under a min-content constraint.
