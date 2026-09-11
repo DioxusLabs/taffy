@@ -1,0 +1,15 @@
+<test name="block_image_intrinsic_size__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="block" direction="rtl" width="200px">
+      <img intrinsic-width="100" intrinsic-height="50" direction="rtl"/>
+      <img intrinsic-width="50" intrinsic-height="100" direction="rtl"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="200" height="150">
+      <node x="100" y="0" width="100" height="50"/>
+      <node x="150" y="50" width="50" height="100"/>
+    </node>
+  </expectations>
+</test>

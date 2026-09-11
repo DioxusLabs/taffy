@@ -36,6 +36,12 @@ div {
   display: flex;
 }
 
+/* Blockify images so that they generate a block-level box like Taffy leaf nodes do,
+   rather than participating in inline layout */
+img {
+  display: block;
+}
+
 body > * {
   position: absolute;
   border-color: red;
