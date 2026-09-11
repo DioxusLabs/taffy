@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    The percentage is one level deeper, behind a nested column, so the definiteness of the transferred basis has to survive being propagated rather than read directly.
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="flex-direction: column; align-items: flex-start;">
+  <div style="flex-direction: column; aspect-ratio: 1;">
+    <div style="flex-direction: column; align-items: flex-start;">
+      <div style="width: 40px; height: 10px;"></div>
+      <div style="width: 20px; height: 50%;"></div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

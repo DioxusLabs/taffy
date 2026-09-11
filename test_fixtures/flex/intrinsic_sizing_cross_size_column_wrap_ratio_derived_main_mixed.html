@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    Derived main sizes that differ between items, so the composition of each line and not merely the number of lines depends on getting them right: ratios of 1 and 2 over the same 30px cross size give main sizes of 30 and 15.
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="flex-direction: column; flex-wrap: wrap; height: 60px; align-items: flex-start;">
+  <div style="aspect-ratio: 1;">HHH</div>
+  <div style="aspect-ratio: 2;">HHH</div>
+  <div style="aspect-ratio: 1;">HHH</div>
+  <div style="aspect-ratio: 2;">HHH</div>
+</div>
+
+</body>
+</html>

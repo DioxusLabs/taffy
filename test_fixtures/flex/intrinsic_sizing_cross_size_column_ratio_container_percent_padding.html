@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    Percentage padding on a column container holding a ratio'd item. The padding sits on a
+    child of the root rather than on the root, so it resolves against a width the fixture
+    states rather than against the browser window.
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="width: 300px; height: 200px;">
+  <div style="flex-direction: column; align-items: flex-start; padding: 10%; height: 200px;">
+    <div style="height: 50px; aspect-ratio: 1; flex-grow: 1;"></div>
+  </div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    Regression guard. An inline size that is definite before layout already transfers through the aspect ratio inside a flex container, and must keep doing so.
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="align-items: flex-start;">
+  <div style="width: 30px; aspect-ratio: 0.85;"></div>
+</div>
+
+</body>
+</html>

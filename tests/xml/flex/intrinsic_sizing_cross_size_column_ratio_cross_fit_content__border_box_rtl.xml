@@ -1,0 +1,15 @@
+<test name="intrinsic_sizing_cross_size_column_ratio_cross_fit_content__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div direction="rtl" flex-direction="column" align-items="flex-start">
+      <text direction="rtl" width="fit-content" aspect-ratio="1">
+        HHH
+      </text>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="30" height="30">
+      <node x="0" y="0" width="30" height="30"/>
+    </node>
+  </expectations>
+</test>

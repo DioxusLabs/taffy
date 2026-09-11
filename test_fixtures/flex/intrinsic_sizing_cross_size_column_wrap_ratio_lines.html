@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    Two lines of a wrapped column, each sized by a different aspect ratio, with an indefinite cross size. The container must sum the two line cross sizes.
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="flex-direction: column; flex-wrap: wrap; height: 100px; align-items: flex-start;">
+  <div style="height: 60px; aspect-ratio: 2;"></div>
+  <div style="height: 60px; aspect-ratio: 0.5;"></div>
+</div>
+
+</body>
+</html>

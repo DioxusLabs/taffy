@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    As the percentage padding case with the main axis cut, so the padded and unpadded readings differ by one item on the first line.
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="width: 300px;">
+  <div style="flex-direction: column; flex-wrap: wrap; height: 96px; align-items: flex-start; padding: 10%;">
+    <div style="aspect-ratio: 1;">HHH</div>
+    <div style="aspect-ratio: 1;">HHH</div>
+    <div style="aspect-ratio: 1;">HHH</div>
+    <div style="aspect-ratio: 1;">HHH</div>
+  </div>
+</div>
+
+</body>
+</html>

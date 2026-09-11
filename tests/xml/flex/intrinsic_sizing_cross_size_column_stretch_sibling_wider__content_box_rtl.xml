@@ -1,0 +1,15 @@
+<test name="intrinsic_sizing_cross_size_column_stretch_sibling_wider__content_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div box-sizing="content-box" direction="rtl" flex-direction="column" height="200px">
+      <div box-sizing="content-box" direction="rtl" flex-grow="1" aspect-ratio="1"/>
+      <div box-sizing="content-box" direction="rtl" width="40px" height="30px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="40" height="200">
+      <node x="0" y="0" width="40" height="170"/>
+      <node x="0" y="170" width="40" height="30"/>
+    </node>
+  </expectations>
+</test>

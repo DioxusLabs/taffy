@@ -1,0 +1,21 @@
+<test name="intrinsic_sizing_cross_size_column_nested_percent_padding_basis__content_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div box-sizing="content-box" direction="rtl" width="300px" height="200px">
+      <div box-sizing="content-box" direction="rtl" flex-direction="column" padding-top="10%" padding-left="10%" padding-bottom="10%" padding-right="10%">
+        <div box-sizing="content-box" direction="rtl" flex-direction="column" align-items="flex-start" padding-top="10%" padding-left="10%" padding-bottom="10%" padding-right="10%">
+          <div box-sizing="content-box" direction="rtl" height="50px" aspect-ratio="1"/>
+        </div>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="300" height="200">
+      <node x="190" y="0" width="110" height="200">
+        <node x="30" y="30" width="50" height="60">
+          <node x="-5" y="5" width="50" height="50"/>
+        </node>
+      </node>
+    </node>
+  </expectations>
+</test>

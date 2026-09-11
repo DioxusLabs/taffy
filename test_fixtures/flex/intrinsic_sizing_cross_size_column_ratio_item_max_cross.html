@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    A cross-axis maximum on a ratio'd item in an indefinite-width column. The maximum clamps the size the ratio produced, and the container follows the clamped result.
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="flex-direction: column; height: 200px; align-items: flex-start;">
+  <div style="height: 50px; aspect-ratio: 1; flex-grow: 1; max-width: 23px;"></div>
+</div>
+
+</body>
+</html>

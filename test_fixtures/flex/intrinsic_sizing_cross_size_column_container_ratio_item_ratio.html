@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    A ratio on the container and a ratio on the item, so the item's transfer feeds a container size that is itself constrained by a ratio.
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="flex-direction: column; height: 200px; align-items: flex-start; aspect-ratio: 2;">
+  <div style="height: 50px; aspect-ratio: 1; flex-grow: 1;"></div>
+</div>
+
+</body>
+</html>

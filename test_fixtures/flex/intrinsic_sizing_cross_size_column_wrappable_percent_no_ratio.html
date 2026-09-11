@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    Control for the wrappable cases: the same scene with no aspect ratio, so nothing transfers and the percentage has no ratio-derived basis to resolve against.
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="flex-direction: column; align-items: flex-start;">
+  <div style="flex-direction: column;">
+    <div>HH&ZeroWidthSpace;HH&ZeroWidthSpace;HH&ZeroWidthSpace;HH&ZeroWidthSpace;HH</div>
+    <div style="width: 20px; height: 50%;"></div>
+  </div>
+</div>
+
+</body>
+</html>

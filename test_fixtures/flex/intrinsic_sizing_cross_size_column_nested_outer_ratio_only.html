@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    Nested columns where only the inner container carries a ratio and its content does not. Paired with the existing scene where both carry one, this separates an axis-ordering rule from a rule about ratio-affected intrinsic sizes.
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="flex-direction: column; align-items: flex-start;">
+  <div style="flex-direction: column; aspect-ratio: 2;">
+    <div>HHH</div>
+  </div>
+</div>
+
+</body>
+</html>

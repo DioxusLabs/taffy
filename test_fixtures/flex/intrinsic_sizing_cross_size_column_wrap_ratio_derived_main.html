@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    Wrapped column, indefinite cross size, main size derived through the ratio from a shrink-to-fit cross size. Four items against a 100px main axis, so a stale main size of 10 and a corrected one of 30 fall on different lines.
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="flex-direction: column; flex-wrap: wrap; height: 100px; align-items: flex-start;">
+  <div style="aspect-ratio: 1;">HHH</div>
+  <div style="aspect-ratio: 1;">HHH</div>
+  <div style="aspect-ratio: 1;">HHH</div>
+  <div style="aspect-ratio: 1;">HHH</div>
+</div>
+
+</body>
+</html>

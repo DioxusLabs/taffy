@@ -1,0 +1,13 @@
+<test name="intrinsic_sizing_cross_size_column_ratio_item_max_cross__border_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div direction="ltr" flex-direction="column" align-items="flex-start" height="200px">
+      <div direction="ltr" flex-grow="1" height="50px" max-width="23px" aspect-ratio="1"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="23" height="200">
+      <node x="0" y="0" width="23" height="200"/>
+    </node>
+  </expectations>
+</test>

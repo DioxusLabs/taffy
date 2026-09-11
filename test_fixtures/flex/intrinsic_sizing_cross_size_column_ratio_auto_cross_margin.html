@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    An auto cross-axis margin on a ratio'd item. The margin must be resolved against the container's cross size, which is itself derived from the item.
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="flex-direction: column; height: 200px; align-items: flex-start;">
+  <div style="height: 50px; aspect-ratio: 1; flex-grow: 1; margin-left: auto;"></div>
+</div>
+
+</body>
+</html>

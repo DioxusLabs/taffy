@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    Padding and border on an indefinite-width column container holding a ratio'd item, so the padding and border term of the container's cross size is exercised.
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="flex-direction: column; height: 200px; align-items: flex-start; padding: 9px; border-width: 3px;">
+  <div style="height: 50px; aspect-ratio: 1; flex-grow: 1;"></div>
+</div>
+
+</body>
+</html>

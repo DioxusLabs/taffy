@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    The ratio'd item's inline size comes from wrappable content, so it is genuinely constraint-dependent rather than pinned: min-content is 20px and max-content is 100px. A percentage child probes whether the size the ratio transferred from it counts as definite.
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="flex-direction: column; align-items: flex-start;">
+  <div style="flex-direction: column; aspect-ratio: 1;">
+    <div>HH&ZeroWidthSpace;HH&ZeroWidthSpace;HH&ZeroWidthSpace;HH&ZeroWidthSpace;HH</div>
+    <div style="width: 20px; height: 50%;"></div>
+  </div>
+</div>
+
+</body>
+</html>

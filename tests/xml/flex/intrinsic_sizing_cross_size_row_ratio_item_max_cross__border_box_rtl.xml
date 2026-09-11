@@ -1,0 +1,13 @@
+<test name="intrinsic_sizing_cross_size_row_ratio_item_max_cross__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div direction="rtl" align-items="flex-start" width="200px">
+      <div direction="rtl" flex-grow="1" max-height="23px" aspect-ratio="1"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="200" height="23">
+      <node x="0" y="0" width="200" height="23"/>
+    </node>
+  </expectations>
+</test>

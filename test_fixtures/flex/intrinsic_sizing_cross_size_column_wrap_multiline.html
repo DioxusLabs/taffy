@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    Multi-line column flex container with an indefinite cross size. Each 60px item fills its own line against the 100px main axis, so the container cross size must come from all three lines.
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="flex-direction: column; flex-wrap: wrap; height: 100px; align-items: flex-start;">
+  <div style="width: 30px; height: 60px;"></div>
+  <div style="width: 50px; height: 60px;"></div>
+  <div style="width: 20px; height: 60px;"></div>
+</div>
+
+</body>
+</html>

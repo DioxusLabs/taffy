@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    Wrapped lines in reverse order with different ratios, so the container's cross size must still be the sum regardless of the direction the lines are stacked.
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="flex-direction: column; flex-wrap: wrap-reverse; height: 100px; align-items: flex-start;">
+  <div style="height: 60px; aspect-ratio: 2;"></div>
+  <div style="height: 60px; aspect-ratio: 0.5;"></div>
+</div>
+
+</body>
+</html>

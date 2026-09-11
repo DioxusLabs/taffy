@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    Regression guard. Block layout already transfers a content-derived inline size through an aspect ratio; a flex-side fix must not disturb it.
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="display: block;">
+  <div style="aspect-ratio: 0.85;">HHH</div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,27 @@
+<test name="intrinsic_sizing_cross_size_column_wrap_ratio_derived_main_mixed__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div box-sizing="content-box" direction="ltr" flex-direction="column" flex-wrap="wrap" align-items="flex-start" height="60px">
+      <text box-sizing="content-box" direction="ltr" aspect-ratio="1">
+        HHH
+      </text>
+      <text box-sizing="content-box" direction="ltr" aspect-ratio="2">
+        HHH
+      </text>
+      <text box-sizing="content-box" direction="ltr" aspect-ratio="1">
+        HHH
+      </text>
+      <text box-sizing="content-box" direction="ltr" aspect-ratio="2">
+        HHH
+      </text>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="60" height="60">
+      <node x="0" y="0" width="30" height="30"/>
+      <node x="0" y="30" width="30" height="15"/>
+      <node x="30" y="0" width="30" height="30"/>
+      <node x="30" y="30" width="30" height="15"/>
+    </node>
+  </expectations>
+</test>

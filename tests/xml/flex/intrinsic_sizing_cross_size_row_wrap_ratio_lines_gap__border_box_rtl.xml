@@ -1,0 +1,15 @@
+<test name="intrinsic_sizing_cross_size_row_wrap_ratio_lines_gap__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div direction="rtl" flex-wrap="wrap" align-items="flex-start" width="100px" row-gap="7px">
+      <div direction="rtl" width="60px" aspect-ratio="0.5"/>
+      <div direction="rtl" width="60px" aspect-ratio="2"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="100" height="157">
+      <node x="40" y="0" width="60" height="120"/>
+      <node x="40" y="127" width="60" height="30"/>
+    </node>
+  </expectations>
+</test>

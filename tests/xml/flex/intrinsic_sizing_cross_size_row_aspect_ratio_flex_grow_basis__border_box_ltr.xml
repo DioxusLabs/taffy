@@ -1,0 +1,13 @@
+<test name="intrinsic_sizing_cross_size_row_aspect_ratio_flex_grow_basis__border_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div direction="ltr" align-items="flex-start" width="200px">
+      <div direction="ltr" flex-grow="1" width="50px" aspect-ratio="1"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="200" height="200">
+      <node x="0" y="0" width="200" height="200"/>
+    </node>
+  </expectations>
+</test>

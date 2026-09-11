@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    Non-wrapping row with a definite cross, holding a ratio'd item and a plain one. The plain sibling's size is independent of any ratio, which is what the reading behind the item-count observation actually requires.
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="width: 100px; height: 70px;">
+  <div style="aspect-ratio: 1; flex: 1;"></div>
+  <div style="width: 12px; height: 24px;"></div>
+</div>
+
+</body>
+</html>

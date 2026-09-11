@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    A percentage MARGIN rather than padding on the same container, resolved by the same machinery against the same basis.
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="width: 300px; height: 200px;">
+  <div style="flex-direction: column; align-items: flex-start; margin-left: 10%; margin-right: 10%;">
+    <div style="height: 50px; aspect-ratio: 1;"></div>
+  </div>
+</div>
+
+</body>
+</html>

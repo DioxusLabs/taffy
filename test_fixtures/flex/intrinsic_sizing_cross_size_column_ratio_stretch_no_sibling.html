@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    A stretched ratio'd item that is the only item, so the container's cross size comes from the
+    item itself. Pairs with the sibling scene, where a second item fixes the cross size
+    independently and stretch has something to stretch to.
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="flex-direction: column; height: 200px;">
+  <div style="height: 50px; aspect-ratio: 1; flex-grow: 1; align-self: stretch;"></div>
+</div>
+
+</body>
+</html>

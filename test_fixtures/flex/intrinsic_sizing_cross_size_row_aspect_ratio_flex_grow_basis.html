@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    As the row flex-grow case, but with a 50px base width, so the wrong answer is a plausible number rather than zero.
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="width: 200px; align-items: flex-start;">
+  <div style="width: 50px; aspect-ratio: 1; flex-grow: 1;"></div>
+</div>
+
+</body>
+</html>

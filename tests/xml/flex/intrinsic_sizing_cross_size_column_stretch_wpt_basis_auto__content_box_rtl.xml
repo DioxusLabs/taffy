@@ -1,0 +1,13 @@
+<test name="intrinsic_sizing_cross_size_column_stretch_wpt_basis_auto__content_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div box-sizing="content-box" direction="rtl" flex-direction="column" flex-wrap="wrap" height="100px">
+      <div box-sizing="content-box" direction="rtl" flex-grow="1" height="50px" min-height="0px" aspect-ratio="1"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="50" height="100">
+      <node x="-50" y="0" width="100" height="100"/>
+    </node>
+  </expectations>
+</test>

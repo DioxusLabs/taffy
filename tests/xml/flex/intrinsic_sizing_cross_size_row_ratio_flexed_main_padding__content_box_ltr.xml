@@ -1,0 +1,13 @@
+<test name="intrinsic_sizing_cross_size_row_ratio_flexed_main_padding__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="flex" box-sizing="content-box" direction="ltr" align-items="flex-start" width="240px" height="300px">
+      <div box-sizing="content-box" direction="ltr" flex-grow="1" width="50px" aspect-ratio="2" padding-top="5px" padding-left="15px" padding-bottom="5px" padding-right="15px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="240" height="300">
+      <node x="0" y="0" width="240" height="115"/>
+    </node>
+  </expectations>
+</test>

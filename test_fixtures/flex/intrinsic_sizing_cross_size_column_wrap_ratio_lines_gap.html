@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    As the two-line case, with a cross-axis gap between the lines, so the gap term of the container's cross size is exercised as well as the line sum.
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="flex-direction: column; flex-wrap: wrap; height: 100px; align-items: flex-start; column-gap: 7px;">
+  <div style="height: 60px; aspect-ratio: 2;"></div>
+  <div style="height: 60px; aspect-ratio: 0.5;"></div>
+</div>
+
+</body>
+</html>

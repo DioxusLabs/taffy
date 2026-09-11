@@ -1,0 +1,27 @@
+<test name="intrinsic_sizing_cross_size_column_wrap_ratio_percent_margin_stretch__content_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div box-sizing="content-box" direction="rtl" flex-direction="column" flex-wrap="wrap" height="100px">
+      <text box-sizing="content-box" direction="rtl" align-self="stretch" aspect-ratio="1" margin-left="10%">
+        HHH
+      </text>
+      <text box-sizing="content-box" direction="rtl" align-self="stretch" aspect-ratio="1" margin-left="10%">
+        HHH
+      </text>
+      <text box-sizing="content-box" direction="rtl" align-self="stretch" aspect-ratio="1" margin-left="10%">
+        HHH
+      </text>
+      <text box-sizing="content-box" direction="rtl" align-self="stretch" aspect-ratio="1" margin-left="10%">
+        HHH
+      </text>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="60" height="100">
+      <node x="30" y="0" width="30" height="30"/>
+      <node x="30" y="30" width="30" height="30"/>
+      <node x="30" y="60" width="30" height="30"/>
+      <node x="-6" y="0" width="30" height="30"/>
+    </node>
+  </expectations>
+</test>

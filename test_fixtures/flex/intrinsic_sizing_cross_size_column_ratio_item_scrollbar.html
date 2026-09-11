@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    A scrollbar gutter on a ratio'd item. The gutter reduces the content box while the ratio applies to the border box, so the two must not be conflated.
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="flex-direction: column; align-items: flex-start;">
+  <div style="aspect-ratio: 0.85; overflow: scroll;">HHH</div>
+</div>
+
+</body>
+</html>

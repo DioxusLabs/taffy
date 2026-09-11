@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    A cross-axis minimum larger than the size the ratio produces, so the minimum must win and the item become wider than its ratio allows.
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="flex-direction: column; height: 200px; align-items: flex-start;">
+  <div style="height: 50px; aspect-ratio: 1; flex-grow: 1; min-width: 140px;"></div>
+</div>
+
+</body>
+</html>

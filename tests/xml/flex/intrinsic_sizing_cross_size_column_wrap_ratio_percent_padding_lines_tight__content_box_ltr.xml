@@ -1,0 +1,31 @@
+<test name="intrinsic_sizing_cross_size_column_wrap_ratio_percent_padding_lines_tight__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div box-sizing="content-box" direction="ltr" width="300px">
+      <div box-sizing="content-box" direction="ltr" flex-direction="column" flex-wrap="wrap" align-items="flex-start" height="96px" padding-top="10%" padding-left="10%" padding-bottom="10%" padding-right="10%">
+        <text box-sizing="content-box" direction="ltr" aspect-ratio="1">
+          HHH
+        </text>
+        <text box-sizing="content-box" direction="ltr" aspect-ratio="1">
+          HHH
+        </text>
+        <text box-sizing="content-box" direction="ltr" aspect-ratio="1">
+          HHH
+        </text>
+        <text box-sizing="content-box" direction="ltr" aspect-ratio="1">
+          HHH
+        </text>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="300" height="156">
+      <node x="0" y="0" width="120" height="156">
+        <node x="30" y="30" width="30" height="30"/>
+        <node x="30" y="60" width="30" height="30"/>
+        <node x="30" y="90" width="30" height="30"/>
+        <node x="60" y="30" width="30" height="30"/>
+      </node>
+    </node>
+  </expectations>
+</test>

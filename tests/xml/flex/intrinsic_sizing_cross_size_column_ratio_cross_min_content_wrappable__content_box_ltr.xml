@@ -1,0 +1,15 @@
+<test name="intrinsic_sizing_cross_size_column_ratio_cross_min_content_wrappable__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div box-sizing="content-box" direction="ltr" flex-direction="column" align-items="flex-start">
+      <text box-sizing="content-box" direction="ltr" width="min-content" aspect-ratio="1">
+        HH​HH​HH​HH​HH
+      </text>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="20" height="50">
+      <node x="0" y="0" width="50" height="50"/>
+    </node>
+  </expectations>
+</test>

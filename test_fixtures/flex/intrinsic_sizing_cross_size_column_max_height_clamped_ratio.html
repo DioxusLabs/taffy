@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    An indefinite-main column whose max-height shrinks the item below its flex base size. The item's cross size must follow the size it ended up at, not the one it started from.
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="flex-direction: column; align-items: flex-start; max-height: 20px;">
+  <div style="aspect-ratio: 0.85;">HHH</div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,15 @@
+<test name="intrinsic_sizing_cross_size_column_ratio_item_scrollbar__content_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div box-sizing="content-box" direction="rtl" flex-direction="column" align-items="flex-start">
+      <text box-sizing="content-box" direction="rtl" overflow-x="scroll" overflow-y="scroll" scrollbar-width="15" aspect-ratio="0.85">
+        HHH
+      </text>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="45" height="53">
+      <node x="0" y="0" width="45" height="53" scroll_width="0" scroll_height="0"/>
+    </node>
+  </expectations>
+</test>

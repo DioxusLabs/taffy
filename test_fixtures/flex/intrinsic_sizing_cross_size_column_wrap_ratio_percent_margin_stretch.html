@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    As the percentage-margin case, but the items stretch, so their cross size depends on the margin and their main size then depends on the cross size through the ratio. This is the shortest path from a margin to a line break.
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="flex-direction: column; flex-wrap: wrap; height: 100px;">
+  <div style="aspect-ratio: 1; margin-left: 10%; align-self: stretch;">HHH</div>
+  <div style="aspect-ratio: 1; margin-left: 10%; align-self: stretch;">HHH</div>
+  <div style="aspect-ratio: 1; margin-left: 10%; align-self: stretch;">HHH</div>
+  <div style="aspect-ratio: 1; margin-left: 10%; align-self: stretch;">HHH</div>
+</div>
+
+</body>
+</html>

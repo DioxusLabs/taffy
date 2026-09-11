@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Flex container intrinsic cross sizes (#351)
+
+Taffy now implements [§9.9.2 Flex Container Intrinsic Cross Sizes](https://www.w3.org/TR/css-flexbox-1/#intrinsic-cross-sizes). A column flex container with an auto cross size is now sized from its items' pre-flex contributions rather than from their post-flex line cross sizes, so **existing layouts may change**: the container can come out narrower or wider than before, and an item with an aspect ratio may now overflow it rather than being shrunk to fit. Both of those match Chrome. A row container's own cross size is unchanged — its cross axis is the block axis, where §9.9.2 and the existing sum of the flex lines' cross sizes coincide — but its items are affected by the fixes below.
+
 ### Changed
 
 - Grid: intrinsic track sizing no longer measures an item's min-/max-content contribution in a step where none of the item's spanned tracks can receive that contribution (e.g. items spanning only `minmax(0, 1fr)` or fixed tracks). This matches Blink and avoids redundant, sometimes very expensive, measurement of large subtrees under a min-content constraint.
@@ -18,6 +22,12 @@
 - Block: when a block container is measured under `SizingMode::ContentSize` (e.g. for a flex item's automatic minimum size or min-/max-content contribution), its own `height`/`min-height` is no longer used as the percentage basis for its children. A `height: 100%` child previously resolved against the ignored `height`, inflating the container's content size (WPT `css-flexbox/flex-minimum-height-flex-items-025`).
 - Flexbox: in column containers an item's max-content contribution is clamped by its flex base size alone (per spec) rather than by `max(flex-basis, height)`, so an item's `height` no longer inflates the container's automatic main size past the item's `flex-basis`.
 - Flexbox: main-axis margins are no longer dropped from an item's intrinsic main-size contribution when the contribution is floored by the item's flex basis (column containers). This fixes negative margins being ignored on flex items with `flex-grow` (#1162) and on descendants containing an `overflow: hidden` grid item (#1163).
+- Flexbox: an aspect ratio is no longer dropped when a flex item's inline size is derived by layout — from shrink-to-fit content or from `flex-grow` distribution — rather than declared (#804).
+- Flexbox: percentages in the descendants of a flex item whose size comes from its aspect ratio now resolve instead of collapsing to zero (#351).
+- Flexbox: percentage padding, margin and border on a flex item now resolve against the containing block's inline size on both axes, instead of collapsing to zero (#351).
+- Flexbox: intrinsic measurement now honours an item's own cross size style, so an item with `width: min-content` and wrappable content is measured at the width it is laid out at rather than at its widest possible line (#351).
+- Flexbox: the automatic minimum size of a flex item with an aspect ratio now includes the transferred size suggestion — its cross size taken through the ratio — where that cross size is definite and comes from the item's own `width`/`height` rather than from stretching (#351).
+- Flexbox: a flex item with an aspect ratio and a binding cross-axis minimum or maximum keeps a main size determined by the container, instead of having it pulled back to satisfy the ratio (#351).
 
 ## 0.14.0
 

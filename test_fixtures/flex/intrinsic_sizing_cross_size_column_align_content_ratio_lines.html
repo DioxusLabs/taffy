@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    align-content on a multi-line column whose cross size is indefinite. There is no free space to distribute when the container is sized to its lines, so the alignment must not move anything.
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="flex-direction: column; flex-wrap: wrap; height: 100px; align-items: flex-start; align-content: center;">
+  <div style="height: 60px; aspect-ratio: 2;"></div>
+  <div style="height: 60px; aspect-ratio: 0.5;"></div>
+</div>
+
+</body>
+</html>

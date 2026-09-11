@@ -1,0 +1,15 @@
+<test name="intrinsic_sizing_cross_size_column_intrinsic_max_content_no_ratio__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div box-sizing="content-box" direction="ltr" flex-direction="column" align-items="flex-start">
+      <text box-sizing="content-box" direction="ltr" width="max-content">
+        HH​HH​HH​HH​HH​HH​HH​HH
+      </text>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="160" height="10">
+      <node x="0" y="0" width="160" height="10"/>
+    </node>
+  </expectations>
+</test>

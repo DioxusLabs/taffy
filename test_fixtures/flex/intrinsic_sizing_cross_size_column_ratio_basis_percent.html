@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    A percentage flex-basis in a column whose main size is indefinite, so the basis has nothing definite to resolve against, beside an aspect ratio.
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="flex-direction: column; align-items: flex-start;">
+  <div style="aspect-ratio: 0.85; flex-basis: 50%;">HHH</div>
+</div>
+
+</body>
+</html>

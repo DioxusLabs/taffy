@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    The percentage padding on the ITEM rather than on the container, so it resolves against a container size that is itself being computed from the item.
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="height: 200px;">
+  <div style="flex-direction: column; align-items: flex-start;">
+    <div style="height: 50px; aspect-ratio: 1; padding: 10%;"></div>
+  </div>
+</div>
+
+</body>
+</html>

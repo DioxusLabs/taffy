@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    Row flex container. The item has no base width, so its flexed main size is the only source for its cross size. The wrong answer here is zero.
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="width: 200px; align-items: flex-start;">
+  <div style="aspect-ratio: 1; flex-grow: 1;"></div>
+</div>
+
+</body>
+</html>

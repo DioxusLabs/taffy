@@ -1,0 +1,15 @@
+<test name="intrinsic_sizing_cross_size_column_wrap_reverse_ratio_lines__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div direction="rtl" flex-direction="column" flex-wrap="wrap-reverse" align-items="flex-start" height="100px">
+      <div direction="rtl" height="60px" aspect-ratio="2"/>
+      <div direction="rtl" height="60px" aspect-ratio="0.5"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="150" height="100">
+      <node x="0" y="0" width="120" height="60"/>
+      <node x="120" y="0" width="30" height="60"/>
+    </node>
+  </expectations>
+</test>

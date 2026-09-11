@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    A grown item transfers its flexed main size through the aspect ratio while carrying asymmetric padding. The ratio relates the boxes named by box-sizing, so the generated content-box and border-box variants must differ: content-box takes the padding off the main size before the transfer and adds the cross padding back after, border-box does neither. The non-square ratio keeps the two apart.
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="display: flex; align-items: flex-start; width: 240px; height: 300px;">
+  <div style="width: 50px; padding: 5px 15px; aspect-ratio: 2; flex-grow: 1;"></div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    A sibling wider than the ratio'd item, so the line's cross size is not this item's own.
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="flex-direction: column; height: 200px;">
+  <div style="aspect-ratio: 1; flex-grow: 1;"></div>
+  <div style="width: 40px; height: 30px;"></div>
+</div>
+
+</body>
+</html>

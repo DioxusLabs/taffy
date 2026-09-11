@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    As the derived case with the main axis cut to 90px, so exactly three corrected items fit a line while four stale ones would. The line break sits between the two readings rather than beyond both.
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="flex-direction: column; flex-wrap: wrap; height: 90px; align-items: flex-start;">
+  <div style="aspect-ratio: 1;">HHH</div>
+  <div style="aspect-ratio: 1;">HHH</div>
+  <div style="aspect-ratio: 1;">HHH</div>
+  <div style="aspect-ratio: 1;">HHH</div>
+</div>
+
+</body>
+</html>

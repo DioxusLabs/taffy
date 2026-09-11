@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    flex-basis differs from the main size property, so the ratio transfer must use the flex base size rather than the height. Implementations that agree wherever flex-basis is auto diverge here.
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="flex-direction: column; height: 200px; align-items: flex-start;">
+  <div style="height: 50px; flex-basis: 80px; aspect-ratio: 1;"></div>
+</div>
+
+</body>
+</html>

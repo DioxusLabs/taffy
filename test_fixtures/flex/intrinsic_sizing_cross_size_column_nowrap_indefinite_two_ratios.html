@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    Non-wrapping column with an indefinite cross and two ratio'd items. The one-item version abandons the ratio and the existing two-item scene has a plain sibling, so this is the cell where the two readings would differ.
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="flex-direction: column; height: 200px;">
+  <div style="aspect-ratio: 1; flex: 1;"></div>
+  <div style="aspect-ratio: 1; flex: 1;"></div>
+</div>
+
+</body>
+</html>

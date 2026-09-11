@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    align-self: stretch overriding align-items: flex-start on the item that carries the ratio.
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="flex-direction: column; height: 200px; align-items: flex-start;">
+  <div style="aspect-ratio: 1; flex-grow: 1; align-self: stretch;"></div>
+</div>
+
+</body>
+</html>

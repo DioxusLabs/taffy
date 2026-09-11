@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    Percentage padding at two levels, neither of which has a basis, so the outer resolution has to settle before the inner one has anything to resolve against.
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="height: 200px;">
+  <div style="flex-direction: column; padding: 10%;">
+    <div style="flex-direction: column; align-items: flex-start; padding: 10%;">
+      <div style="height: 50px; aspect-ratio: 1;"></div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
