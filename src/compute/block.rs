@@ -808,8 +808,10 @@ fn generate_item_list(
         .enumerate()
         .map(|(order, (child_node_id, child_style))| {
             let aspect_ratio = child_style.aspect_ratio();
-            let padding = child_style.padding().resolve_or_zero(node_inner_size, |val, basis| tree.calc(val, basis));
-            let border = child_style.border().resolve_or_zero(node_inner_size, |val, basis| tree.calc(val, basis));
+            let padding =
+                child_style.padding().resolve_or_zero(node_inner_size.width, |val, basis| tree.calc(val, basis));
+            let border =
+                child_style.border().resolve_or_zero(node_inner_size.width, |val, basis| tree.calc(val, basis));
             let pb_sum = (padding + border).sum_axes();
             let box_sizing_adjustment =
                 if child_style.box_sizing() == BoxSizing::ContentBox { pb_sum } else { Size::ZERO };
