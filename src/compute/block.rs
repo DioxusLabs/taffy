@@ -550,9 +550,7 @@ fn compute_inner(
         || padding.top > 0.0
         || padding.bottom > 0.0
         || border.top > 0.0
-        || border.bottom > 0.0
-        || matches!(size.height, Some(h) if h > 0.0)
-        || matches!(min_size.height, Some(h) if h > 0.0);
+        || border.bottom > 0.0;
 
     let text_align = style.text_align();
     let align_content = style.align_content();
@@ -707,8 +705,13 @@ fn compute_inner(
         }
         item.position == Position::Absolute || item.can_be_collapsed_through
     });
-    let can_be_collapsed_through =
-        !has_styles_preventing_being_collapsed_through && all_in_flow_children_can_be_collapsed_through;
+    // CSS2 §8.3.1: a box's top and bottom margins collapse through it only if its *used* height
+    // is zero, so `height`/`min-height`/`max-height` are judged by the height they resolve to
+    // (e.g. `height: 1px; max-height: 0` collapses, `min-height: 1%` under an auto-height
+    // parent collapses) rather than by their computed values.
+    let can_be_collapsed_through = !has_styles_preventing_being_collapsed_through
+        && container_outer_height == 0.0
+        && all_in_flow_children_can_be_collapsed_through;
 
     let mut output = LayoutOutput {
         size: final_outer_size,
