@@ -1,7 +1,7 @@
 <test name="block_absolute_margin_auto_top_and_bottom_max_height__content_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="block" box-sizing="content-box" direction="ltr" width="200px" height="100px">
+    <div display="block" box-sizing="content-box" direction="ltr" position="relative" width="200px" height="100px">
       <div box-sizing="content-box" direction="ltr" position="absolute" width="100px" height="90px" max-height="40px" margin-top="auto" margin-left="auto" margin-bottom="auto" margin-right="auto" top="0px" left="20px" bottom="0px"/>
     </div>
   </input>
