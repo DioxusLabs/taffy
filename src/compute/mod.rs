@@ -64,7 +64,11 @@ use crate::util::ResolveOrZero;
 use crate::{CacheTree, MaybeMath, MaybeResolve};
 
 /// Compute layout for the root node in the tree
-pub fn compute_root_layout(tree: &mut impl LayoutPartialTree, root: NodeId, available_space: Size<AvailableSpace>) {
+pub fn compute_root_layout(
+    tree: &mut impl crate::tree::LayoutContainingBlock,
+    root: NodeId,
+    available_space: Size<AvailableSpace>,
+) {
     let mut known_dimensions = Size::NONE;
 
     #[cfg(feature = "block_layout")]
@@ -191,6 +195,7 @@ pub fn compute_root_layout(tree: &mut impl LayoutPartialTree, root: NodeId, avai
         let mut unclaimed = OofCandidates::new();
         oof::perform_oof_layout(
             tree,
+            root,
             candidates,
             area_size,
             area_offset,
@@ -350,7 +355,6 @@ pub fn compute_hidden_layout(tree: &mut (impl LayoutPartialTree + CacheTree), no
 }
 
 /// A module for unified re-exports of detailed layout info structs, used by low level API
-#[cfg(feature = "detailed_layout_info")]
 pub mod detailed_info {
     #[cfg(feature = "grid")]
     pub use super::grid::{

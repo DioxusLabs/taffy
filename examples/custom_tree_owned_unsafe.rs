@@ -9,7 +9,7 @@ use taffy::tree::Cache;
 use taffy::util::print_tree;
 use taffy::{
     compute_cached_layout, compute_flexbox_layout, compute_grid_layout, compute_leaf_layout, compute_root_layout,
-    prelude::*, round_layout, CacheTree,
+    prelude::*, round_layout, CacheTree, LayoutContainingBlock,
 };
 
 #[derive(Debug, Copy, Clone)]
@@ -148,16 +148,6 @@ impl LayoutPartialTree for StatelessLayoutTree {
         unsafe { node_from_id_mut(node_id).unrounded_layout = *layout };
     }
 
-    fn set_hoisted_children(&mut self, node_id: NodeId, hoisted: &[NodeId]) {
-        let vec = unsafe { &mut node_from_id_mut(node_id).hoisted_children };
-        vec.clear();
-        vec.extend_from_slice(hoisted);
-    }
-
-    fn add_hoisted_children(&mut self, node_id: NodeId, hoisted: &[NodeId]) {
-        unsafe { node_from_id_mut(node_id).hoisted_children.extend_from_slice(hoisted) };
-    }
-
     fn resolve_calc_value(&self, _val: *const (), _basis: f32) -> f32 {
         0.0
     }
@@ -193,6 +183,27 @@ impl LayoutPartialTree for StatelessLayoutTree {
                 ),
             }
         })
+    }
+}
+
+impl LayoutContainingBlock for StatelessLayoutTree {
+    type OofItemStyle<'a>
+        = &'a Style
+    where
+        Self: 'a;
+
+    fn get_oof_item_style(&self, node_id: NodeId) -> Self::OofItemStyle<'_> {
+        unsafe { &node_from_id(node_id).style }
+    }
+
+    fn set_hoisted_children(&mut self, node_id: NodeId, hoisted: &[NodeId]) {
+        let vec = unsafe { &mut node_from_id_mut(node_id).hoisted_children };
+        vec.clear();
+        vec.extend_from_slice(hoisted);
+    }
+
+    fn add_hoisted_children(&mut self, node_id: NodeId, hoisted: &[NodeId]) {
+        unsafe { node_from_id_mut(node_id).hoisted_children.extend_from_slice(hoisted) };
     }
 }
 
