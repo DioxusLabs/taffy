@@ -1,8 +1,8 @@
 <test name="grid_overflow_scrollbars_overridden_by_size__content_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="grid" box-sizing="content-box" direction="ltr" overflow-x="scroll" overflow-y="scroll" scrollbar-width="15" width="2px" height="4px">
-      <div box-sizing="content-box" direction="ltr"/>
+    <div display="grid" box-sizing="content-box" direction="ltr" position="absolute" overflow-x="scroll" overflow-y="scroll" scrollbar-width="15" width="2px" height="4px">
+      <div box-sizing="content-box" direction="ltr" position="relative"/>
     </div>
   </input>
   <expectations>

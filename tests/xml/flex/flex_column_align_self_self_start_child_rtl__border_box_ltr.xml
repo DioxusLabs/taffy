@@ -1,9 +1,9 @@
 <test name="flex_column_align_self_self_start_child_rtl__border_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div direction="ltr" flex-direction="column" width="100px" height="100px">
-      <div direction="rtl" align-self="self-start" width="10px" height="10px"/>
-      <div direction="ltr" align-self="self-start" width="10px" height="10px"/>
+    <div direction="ltr" position="absolute" flex-direction="column" width="100px" height="100px">
+      <div direction="rtl" position="relative" align-self="self-start" width="10px" height="10px"/>
+      <div direction="ltr" position="relative" align-self="self-start" width="10px" height="10px"/>
     </div>
   </input>
   <expectations>

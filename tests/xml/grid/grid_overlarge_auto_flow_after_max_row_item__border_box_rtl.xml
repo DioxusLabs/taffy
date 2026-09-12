@@ -1,10 +1,10 @@
 <test name="grid_overlarge_auto_flow_after_max_row_item__border_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="grid" direction="rtl" grid-auto-rows="0px">
-      <div direction="rtl" width="20px" height="20px" grid-row-start="10000"/>
-      <div direction="rtl" width="20px" height="20px"/>
-      <div direction="rtl" width="20px" height="20px"/>
+    <div display="grid" direction="rtl" position="absolute" grid-auto-rows="0px">
+      <div direction="rtl" position="relative" width="20px" height="20px" grid-row-start="10000"/>
+      <div direction="rtl" position="relative" width="20px" height="20px"/>
+      <div direction="rtl" position="relative" width="20px" height="20px"/>
     </div>
   </input>
   <expectations>

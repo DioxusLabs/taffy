@@ -1,9 +1,9 @@
 <test name="grid_auto_fit_with_empty_auto_track__border_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="grid" direction="ltr" justify-content="space-evenly" width="120px" height="120px" grid-template-rows="40px 40px 40px" grid-template-columns="repeat(auto-fit, 40px)">
-      <div direction="ltr"/>
-      <div direction="ltr"/>
+    <div display="grid" direction="ltr" position="absolute" justify-content="space-evenly" width="120px" height="120px" grid-template-rows="40px 40px 40px" grid-template-columns="repeat(auto-fit, 40px)">
+      <div direction="ltr" position="relative"/>
+      <div direction="ltr" position="relative"/>
     </div>
   </input>
   <expectations>

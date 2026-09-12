@@ -1,15 +1,15 @@
 <test name="flex_column_stretch_margin_x_exceeds_container_width__border_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="flex" direction="rtl" flex-direction="column" width="20px" height="100px">
-      <div display="flex" direction="rtl" height="20px" margin-left="30px" margin-right="10px">
-        <div direction="rtl" flex-grow="1" flex-basis="10px" height="20px"/>
-        <div direction="rtl" flex-grow="1" flex-basis="10px" height="20px"/>
+    <div display="flex" direction="rtl" position="absolute" flex-direction="column" width="20px" height="100px">
+      <div display="flex" direction="rtl" position="relative" height="20px" margin-left="30px" margin-right="10px">
+        <div direction="rtl" position="relative" flex-grow="1" flex-basis="10px" height="20px"/>
+        <div direction="rtl" position="relative" flex-grow="1" flex-basis="10px" height="20px"/>
       </div>
-      <div direction="rtl" height="20px" margin-left="30px" margin-right="10px"/>
-      <div display="flex" direction="rtl" flex-wrap="wrap" margin-left="30px" margin-right="10px">
-        <div direction="rtl" width="5px" height="10px"/>
-        <div direction="rtl" width="5px" height="10px"/>
+      <div direction="rtl" position="relative" height="20px" margin-left="30px" margin-right="10px"/>
+      <div display="flex" direction="rtl" position="relative" flex-wrap="wrap" margin-left="30px" margin-right="10px">
+        <div direction="rtl" position="relative" width="5px" height="10px"/>
+        <div direction="rtl" position="relative" width="5px" height="10px"/>
       </div>
     </div>
   </input>

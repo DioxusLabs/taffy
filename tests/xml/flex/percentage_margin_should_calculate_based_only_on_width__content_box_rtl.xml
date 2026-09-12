@@ -1,9 +1,9 @@
 <test name="percentage_margin_should_calculate_based_only_on_width__content_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div box-sizing="content-box" direction="rtl" flex-direction="column" width="200px" height="100px">
-      <div box-sizing="content-box" direction="rtl" flex-direction="column" flex-grow="1" margin-top="10%" margin-left="10%" margin-bottom="10%" margin-right="10%">
-        <div box-sizing="content-box" direction="rtl" width="10px" height="10px"/>
+    <div box-sizing="content-box" direction="rtl" position="absolute" flex-direction="column" width="200px" height="100px">
+      <div box-sizing="content-box" direction="rtl" position="relative" flex-direction="column" flex-grow="1" margin-top="10%" margin-left="10%" margin-bottom="10%" margin-right="10%">
+        <div box-sizing="content-box" direction="rtl" position="relative" width="10px" height="10px"/>
       </div>
     </div>
   </input>

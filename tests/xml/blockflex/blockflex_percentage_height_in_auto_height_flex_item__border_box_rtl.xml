@@ -1,10 +1,10 @@
 <test name="blockflex_percentage_height_in_auto_height_flex_item__border_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="flex" direction="rtl" width="100px">
-      <div display="block" direction="rtl" width="50px" min-height="0px">
-        <div display="block" direction="rtl" height="50%">
-          <div display="block" direction="rtl" width="50px" height="50px"/>
+    <div display="flex" direction="rtl" position="absolute" width="100px">
+      <div display="block" direction="rtl" position="relative" width="50px" min-height="0px">
+        <div display="block" direction="rtl" position="relative" height="50%">
+          <div display="block" direction="rtl" position="relative" width="50px" height="50px"/>
         </div>
       </div>
     </div>

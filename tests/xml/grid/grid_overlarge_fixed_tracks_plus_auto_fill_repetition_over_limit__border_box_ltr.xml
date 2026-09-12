@@ -1,9 +1,9 @@
 <test name="grid_overlarge_fixed_tracks_plus_auto_fill_repetition_over_limit__border_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="grid" direction="ltr" width="200px" grid-template-columns="repeat(9990, 0px) repeat(auto-fill, 0px 0px 0px 0px 0px 0px 0px 0px 0px 0px 0px 0px 0px 0px 0px 0px 0px 0px 0px 0px)">
-      <div direction="ltr" width="20px" height="20px"/>
-      <div direction="ltr" width="20px" height="20px" grid-column-start="10010" grid-column-end="10011"/>
+    <div display="grid" direction="ltr" position="absolute" width="200px" grid-template-columns="repeat(9990, 0px) repeat(auto-fill, 0px 0px 0px 0px 0px 0px 0px 0px 0px 0px 0px 0px 0px 0px 0px 0px 0px 0px 0px 0px)">
+      <div direction="ltr" position="relative" width="20px" height="20px"/>
+      <div direction="ltr" position="relative" width="20px" height="20px" grid-column-start="10010" grid-column-end="10011"/>
     </div>
   </input>
   <expectations>

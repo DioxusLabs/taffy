@@ -1,10 +1,10 @@
 <test name="blockflex_percentage_height_in_unstretched_flex_item__border_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="flex" direction="ltr" align-items="flex-start" width="100px" height="100px">
-      <div display="block" direction="ltr" width="50px">
-        <div display="block" direction="ltr" height="50%">
-          <div display="block" direction="ltr" width="20px" height="20px"/>
+    <div display="flex" direction="ltr" position="absolute" align-items="flex-start" width="100px" height="100px">
+      <div display="block" direction="ltr" position="relative" width="50px">
+        <div display="block" direction="ltr" position="relative" height="50%">
+          <div display="block" direction="ltr" position="relative" width="20px" height="20px"/>
         </div>
       </div>
     </div>

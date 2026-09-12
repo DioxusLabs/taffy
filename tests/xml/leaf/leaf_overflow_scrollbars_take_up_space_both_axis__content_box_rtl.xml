@@ -1,7 +1,7 @@
 <test name="leaf_overflow_scrollbars_take_up_space_both_axis__content_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <text box-sizing="content-box" direction="rtl" overflow-x="scroll" overflow-y="scroll" scrollbar-width="15">
+    <text box-sizing="content-box" direction="rtl" position="absolute" overflow-x="scroll" overflow-y="scroll" scrollbar-width="15">
       HH
     </text>
   </input>

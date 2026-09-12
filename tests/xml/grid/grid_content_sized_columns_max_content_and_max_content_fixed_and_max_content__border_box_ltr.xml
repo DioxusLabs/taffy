@@ -1,14 +1,14 @@
 <test name="grid_content_sized_columns_max_content_and_max_content_fixed_and_max_content__border_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="grid" direction="ltr" width="300px" grid-template-columns="max-content minmax(max-content, 20px) max-content">
-      <text direction="ltr" grid-row-start="1" grid-column-start="1">
+    <div display="grid" direction="ltr" position="absolute" width="300px" grid-template-columns="max-content minmax(max-content, 20px) max-content">
+      <text direction="ltr" position="relative" grid-row-start="1" grid-column-start="1">
         X​X​X​X​X
       </text>
-      <text direction="ltr" grid-row-start="1" grid-column-start="3">
+      <text direction="ltr" position="relative" grid-row-start="1" grid-column-start="3">
         X​X​X
       </text>
-      <text direction="ltr" grid-row-start="1" grid-column-start="1" grid-column-end="-1">
+      <text direction="ltr" position="relative" grid-row-start="1" grid-column-start="1" grid-column-end="-1">
         XX​XX​XX​XX​XX​XX​XX
       </text>
     </div>

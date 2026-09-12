@@ -1,11 +1,11 @@
 <test name="grid_relayout_vertical_text__border_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="grid" direction="rtl" grid-template-rows="40px" grid-template-columns="min-content">
-      <text direction="rtl" writing-mode="vertical-lr">
+    <div display="grid" direction="rtl" position="absolute" grid-template-rows="40px" grid-template-columns="min-content">
+      <text direction="rtl" writing-mode="vertical-lr" position="relative">
         HH​HH​HH​HH​HH​HH​HH
       </text>
-      <text direction="rtl">
+      <text direction="rtl" position="relative">
         HH​HH​HH
       </text>
     </div>

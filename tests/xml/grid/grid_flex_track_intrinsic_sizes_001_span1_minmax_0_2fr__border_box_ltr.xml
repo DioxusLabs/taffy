@@ -1,9 +1,9 @@
 <test name="grid_flex_track_intrinsic_sizes_001_span1_minmax_0_2fr__border_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="grid" direction="ltr" width="50px" height="50px" border-top="3px" border-left="3px" border-bottom="3px" border-right="3px" grid-template-rows="minmax(0px, 2fr)" grid-template-columns="minmax(0px, 2fr)">
-      <div direction="ltr" width="100px" height="100px" grid-row-start="1" grid-row-end="span 1" grid-column-start="1" grid-column-end="span 1"/>
-      <div direction="ltr" grid-row-start="1" grid-column-start="1"/>
+    <div display="grid" direction="ltr" position="absolute" width="50px" height="50px" border-top="3px" border-left="3px" border-bottom="3px" border-right="3px" grid-template-rows="minmax(0px, 2fr)" grid-template-columns="minmax(0px, 2fr)">
+      <div direction="ltr" position="relative" width="100px" height="100px" grid-row-start="1" grid-row-end="span 1" grid-column-start="1" grid-column-end="span 1"/>
+      <div direction="ltr" position="relative" grid-row-start="1" grid-column-start="1"/>
     </div>
   </input>
   <expectations>

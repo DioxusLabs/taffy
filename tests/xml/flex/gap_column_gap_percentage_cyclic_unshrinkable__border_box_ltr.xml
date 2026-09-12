@@ -1,10 +1,10 @@
 <test name="gap_column_gap_percentage_cyclic_unshrinkable__border_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div direction="ltr" column-gap="20%">
-      <div direction="ltr" flex-shrink="0" width="20px" height="40px"/>
-      <div direction="ltr" flex-shrink="0" width="20px" height="40px"/>
-      <div direction="ltr" flex-shrink="0" width="20px" height="40px"/>
+    <div direction="ltr" position="absolute" column-gap="20%">
+      <div direction="ltr" position="relative" flex-shrink="0" width="20px" height="40px"/>
+      <div direction="ltr" position="relative" flex-shrink="0" width="20px" height="40px"/>
+      <div direction="ltr" position="relative" flex-shrink="0" width="20px" height="40px"/>
     </div>
   </input>
   <expectations>

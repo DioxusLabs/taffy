@@ -1,10 +1,10 @@
 <test name="align_items_center_with_max_height_percentage_with_align_content_flex_start__border_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div direction="ltr" width="100px" height="100px">
-      <div display="flex" direction="ltr" align-items="center" align-content="flex-start" width="100px" height="100px" max-height="50%">
-        <div direction="ltr" width="10px" height="10px"/>
-        <div direction="ltr" width="10px" height="20px"/>
+    <div direction="ltr" position="absolute" width="100px" height="100px">
+      <div display="flex" direction="ltr" position="relative" align-items="center" align-content="flex-start" width="100px" height="100px" max-height="50%">
+        <div direction="ltr" position="relative" width="10px" height="10px"/>
+        <div direction="ltr" position="relative" width="10px" height="20px"/>
       </div>
     </div>
   </input>

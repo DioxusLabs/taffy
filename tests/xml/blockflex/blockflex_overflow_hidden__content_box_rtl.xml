@@ -1,11 +1,11 @@
 <test name="blockflex_overflow_hidden__content_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="flex" box-sizing="content-box" direction="rtl" width="20px" height="50px">
-      <text display="block" box-sizing="content-box" direction="rtl" overflow-x="hidden" overflow-y="hidden" scrollbar-width="15" flex-grow="1">
+    <div display="flex" box-sizing="content-box" direction="rtl" position="absolute" width="20px" height="50px">
+      <text display="block" box-sizing="content-box" direction="rtl" position="relative" overflow-x="hidden" overflow-y="hidden" scrollbar-width="15" flex-grow="1">
         HHHH​HH
       </text>
-      <text display="block" box-sizing="content-box" direction="rtl" flex-grow="1">
+      <text display="block" box-sizing="content-box" direction="rtl" position="relative" flex-grow="1">
         HHHH​HH
       </text>
     </div>

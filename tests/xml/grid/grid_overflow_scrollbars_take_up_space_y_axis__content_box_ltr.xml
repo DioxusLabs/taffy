@@ -1,8 +1,8 @@
 <test name="grid_overflow_scrollbars_take_up_space_y_axis__content_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="grid" box-sizing="content-box" direction="ltr" overflow-y="scroll" scrollbar-width="15" width="50px" height="50px">
-      <div box-sizing="content-box" direction="ltr"/>
+    <div display="grid" box-sizing="content-box" direction="ltr" position="absolute" overflow-y="scroll" scrollbar-width="15" width="50px" height="50px">
+      <div box-sizing="content-box" direction="ltr" position="relative"/>
     </div>
   </input>
   <expectations>

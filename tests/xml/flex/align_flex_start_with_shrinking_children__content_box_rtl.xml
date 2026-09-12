@@ -1,10 +1,10 @@
 <test name="align_flex_start_with_shrinking_children__content_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div box-sizing="content-box" direction="rtl" width="500px" height="500px">
-      <div box-sizing="content-box" direction="rtl" align-items="flex-start">
-        <div box-sizing="content-box" direction="rtl" flex-grow="1">
-          <div box-sizing="content-box" direction="rtl" flex-grow="1"/>
+    <div box-sizing="content-box" direction="rtl" position="absolute" width="500px" height="500px">
+      <div box-sizing="content-box" direction="rtl" position="relative" align-items="flex-start">
+        <div box-sizing="content-box" direction="rtl" position="relative" flex-grow="1">
+          <div box-sizing="content-box" direction="rtl" position="relative" flex-grow="1"/>
         </div>
       </div>
     </div>

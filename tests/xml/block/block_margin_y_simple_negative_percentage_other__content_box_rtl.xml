@@ -1,9 +1,9 @@
 <test name="block_margin_y_simple_negative_percentage_other__content_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="block" box-sizing="content-box" direction="rtl" width="50px">
-      <div box-sizing="content-box" direction="rtl" height="10px" margin-top="-10%" margin-bottom="-10%"/>
-      <div box-sizing="content-box" direction="rtl" width="50px" height="10px"/>
+    <div display="block" box-sizing="content-box" direction="rtl" position="absolute" width="50px">
+      <div box-sizing="content-box" direction="rtl" position="relative" height="10px" margin-top="-10%" margin-bottom="-10%"/>
+      <div box-sizing="content-box" direction="rtl" position="relative" width="50px" height="10px"/>
     </div>
   </input>
   <expectations>

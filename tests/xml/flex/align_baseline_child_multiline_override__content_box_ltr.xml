@@ -1,13 +1,13 @@
 <test name="align_baseline_child_multiline_override__content_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div box-sizing="content-box" direction="ltr" align-items="baseline" width="100px" height="100px">
-      <div box-sizing="content-box" direction="ltr" width="50px" height="60px"/>
-      <div box-sizing="content-box" direction="ltr" flex-wrap="wrap" width="50px" height="25px">
-        <div box-sizing="content-box" direction="ltr" width="25px" height="20px"/>
-        <div box-sizing="content-box" direction="ltr" align-self="baseline" width="25px" height="10px"/>
-        <div box-sizing="content-box" direction="ltr" width="25px" height="20px"/>
-        <div box-sizing="content-box" direction="ltr" align-self="baseline" width="25px" height="10px"/>
+    <div box-sizing="content-box" direction="ltr" position="absolute" align-items="baseline" width="100px" height="100px">
+      <div box-sizing="content-box" direction="ltr" position="relative" width="50px" height="60px"/>
+      <div box-sizing="content-box" direction="ltr" position="relative" flex-wrap="wrap" width="50px" height="25px">
+        <div box-sizing="content-box" direction="ltr" position="relative" width="25px" height="20px"/>
+        <div box-sizing="content-box" direction="ltr" position="relative" align-self="baseline" width="25px" height="10px"/>
+        <div box-sizing="content-box" direction="ltr" position="relative" width="25px" height="20px"/>
+        <div box-sizing="content-box" direction="ltr" position="relative" align-self="baseline" width="25px" height="10px"/>
       </div>
     </div>
   </input>

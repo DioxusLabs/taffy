@@ -1,8 +1,8 @@
 <test name="overflow_main_axis__border_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div direction="rtl" width="100px" height="100px">
-      <div direction="rtl" flex-shrink="0" width="200px"/>
+    <div direction="rtl" position="absolute" width="100px" height="100px">
+      <div direction="rtl" position="relative" flex-shrink="0" width="200px"/>
     </div>
   </input>
   <expectations>

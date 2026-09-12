@@ -1,22 +1,22 @@
 <test name="rounding_fractial_input_7__content_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div box-sizing="content-box" direction="rtl" width="7px">
-      <div box-sizing="content-box" direction="rtl" flex-wrap="wrap" width="25%">
-        <div box-sizing="content-box" direction="rtl" width="1px" height="10px"/>
-        <div box-sizing="content-box" direction="rtl" width="1px" height="10px"/>
+    <div box-sizing="content-box" direction="rtl" position="absolute" width="7px">
+      <div box-sizing="content-box" direction="rtl" position="relative" flex-wrap="wrap" width="25%">
+        <div box-sizing="content-box" direction="rtl" position="relative" width="1px" height="10px"/>
+        <div box-sizing="content-box" direction="rtl" position="relative" width="1px" height="10px"/>
       </div>
-      <div box-sizing="content-box" direction="rtl" flex-wrap="wrap" width="25%">
-        <div box-sizing="content-box" direction="rtl" width="1px" height="10px"/>
-        <div box-sizing="content-box" direction="rtl" width="1px" height="10px"/>
+      <div box-sizing="content-box" direction="rtl" position="relative" flex-wrap="wrap" width="25%">
+        <div box-sizing="content-box" direction="rtl" position="relative" width="1px" height="10px"/>
+        <div box-sizing="content-box" direction="rtl" position="relative" width="1px" height="10px"/>
       </div>
-      <div box-sizing="content-box" direction="rtl" flex-wrap="wrap" width="25%">
-        <div box-sizing="content-box" direction="rtl" width="1px" height="10px"/>
-        <div box-sizing="content-box" direction="rtl" width="1px" height="10px"/>
+      <div box-sizing="content-box" direction="rtl" position="relative" flex-wrap="wrap" width="25%">
+        <div box-sizing="content-box" direction="rtl" position="relative" width="1px" height="10px"/>
+        <div box-sizing="content-box" direction="rtl" position="relative" width="1px" height="10px"/>
       </div>
-      <div box-sizing="content-box" direction="rtl" flex-wrap="wrap" width="25%">
-        <div box-sizing="content-box" direction="rtl" width="1px" height="10px"/>
-        <div box-sizing="content-box" direction="rtl" width="1px" height="10px"/>
+      <div box-sizing="content-box" direction="rtl" position="relative" flex-wrap="wrap" width="25%">
+        <div box-sizing="content-box" direction="rtl" position="relative" width="1px" height="10px"/>
+        <div box-sizing="content-box" direction="rtl" position="relative" width="1px" height="10px"/>
       </div>
     </div>
   </input>

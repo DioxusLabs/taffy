@@ -1,12 +1,12 @@
 <test name="balance_row_zero_sized_items__border_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div direction="ltr" flex-wrap="balance" width="100px">
-      <div direction="ltr" width="40px" height="30px"/>
-      <div direction="ltr" width="0px" height="10px"/>
-      <div direction="ltr" width="40px" height="30px"/>
-      <div direction="ltr" width="0px" height="10px"/>
-      <div direction="ltr" width="40px" height="30px"/>
+    <div direction="ltr" position="absolute" flex-wrap="balance" width="100px">
+      <div direction="ltr" position="relative" width="40px" height="30px"/>
+      <div direction="ltr" position="relative" width="0px" height="10px"/>
+      <div direction="ltr" position="relative" width="40px" height="30px"/>
+      <div direction="ltr" position="relative" width="0px" height="10px"/>
+      <div direction="ltr" position="relative" width="40px" height="30px"/>
     </div>
   </input>
   <expectations>

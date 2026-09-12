@@ -1,9 +1,9 @@
 <test name="block_padding_exceeds_container_width__content_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="block" direction="rtl" width="10px" padding-left="20px" padding-right="20px">
-      <div box-sizing="content-box" direction="rtl" height="10px" margin-left="5px"/>
-      <div box-sizing="content-box" direction="rtl" width="50%" height="10px"/>
+    <div display="block" direction="rtl" position="absolute" width="10px" padding-left="20px" padding-right="20px">
+      <div box-sizing="content-box" direction="rtl" position="relative" height="10px" margin-left="5px"/>
+      <div box-sizing="content-box" direction="rtl" position="relative" width="50%" height="10px"/>
     </div>
   </input>
   <expectations>

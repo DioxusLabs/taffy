@@ -1,9 +1,9 @@
 <test name="grid_template_serialization_implicit_tracks__border_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="grid" direction="rtl" grid-template-rows="[r1] 20px [r2]" grid-template-columns="[a] 40px [b] 60px [c]" grid-auto-rows="25px" grid-auto-columns="15px">
-      <div direction="rtl" grid-row-start="1" grid-column-start="-5"/>
-      <div direction="rtl" grid-row-start="3" grid-column-start="4"/>
+    <div display="grid" direction="rtl" position="absolute" grid-template-rows="[r1] 20px [r2]" grid-template-columns="[a] 40px [b] 60px [c]" grid-auto-rows="25px" grid-auto-columns="15px">
+      <div direction="rtl" position="relative" grid-row-start="1" grid-column-start="-5"/>
+      <div direction="rtl" position="relative" grid-row-start="3" grid-column-start="4"/>
     </div>
   </input>
   <expectations>

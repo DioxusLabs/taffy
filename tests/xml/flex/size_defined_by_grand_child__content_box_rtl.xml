@@ -1,9 +1,9 @@
 <test name="size_defined_by_grand_child__content_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div box-sizing="content-box" direction="rtl">
-      <div box-sizing="content-box" direction="rtl">
-        <div box-sizing="content-box" direction="rtl" width="100px" height="100px"/>
+    <div box-sizing="content-box" direction="rtl" position="absolute">
+      <div box-sizing="content-box" direction="rtl" position="relative">
+        <div box-sizing="content-box" direction="rtl" position="relative" width="100px" height="100px"/>
       </div>
     </div>
   </input>

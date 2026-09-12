@@ -1,9 +1,9 @@
 <test name="block_absolute_child_with_max_height__border_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="block" direction="rtl" width="100px" height="200px">
+    <div display="block" direction="rtl" position="absolute" width="100px" height="200px">
       <div display="block" direction="rtl" position="absolute" max-height="100px" bottom="20px">
-        <div display="block" direction="rtl" width="100px" height="150px"/>
+        <div display="block" direction="rtl" position="relative" width="100px" height="150px"/>
       </div>
     </div>
   </input>

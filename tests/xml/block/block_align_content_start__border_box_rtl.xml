@@ -1,10 +1,10 @@
 <test name="block_align_content_start__border_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="block" direction="rtl" align-content="start" width="100px" height="120px">
-      <div direction="rtl" width="50px" height="20px"/>
-      <div direction="rtl" width="50px" height="20px"/>
-      <div direction="rtl" width="50px" height="20px"/>
+    <div display="block" direction="rtl" position="absolute" align-content="start" width="100px" height="120px">
+      <div direction="rtl" position="relative" width="50px" height="20px"/>
+      <div direction="rtl" position="relative" width="50px" height="20px"/>
+      <div direction="rtl" position="relative" width="50px" height="20px"/>
     </div>
   </input>
   <expectations>

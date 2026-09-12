@@ -1,9 +1,9 @@
 <test name="grid_overlarge_span_overflow_secondary_axis__content_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="grid" box-sizing="content-box" direction="ltr" grid-auto-rows="0px" grid-auto-columns="0px">
-      <div box-sizing="content-box" direction="ltr" width="20px" height="20px" grid-row-start="9995" grid-row-end="span 20" grid-column-start="2"/>
-      <div box-sizing="content-box" direction="ltr" width="20px" height="20px"/>
+    <div display="grid" box-sizing="content-box" direction="ltr" position="absolute" grid-auto-rows="0px" grid-auto-columns="0px">
+      <div box-sizing="content-box" direction="ltr" position="relative" width="20px" height="20px" grid-row-start="9995" grid-row-end="span 20" grid-column-start="2"/>
+      <div box-sizing="content-box" direction="ltr" position="relative" width="20px" height="20px"/>
     </div>
   </input>
   <expectations>

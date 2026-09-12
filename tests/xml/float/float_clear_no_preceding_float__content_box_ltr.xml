@@ -1,9 +1,9 @@
 <test name="float_clear_no_preceding_float__content_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="block" box-sizing="content-box" direction="ltr" width="500px">
-      <div display="block" box-sizing="content-box" direction="ltr" float="right" width="96px" height="96px"/>
-      <div display="block" box-sizing="content-box" direction="ltr" float="right" clear="right" width="96px" height="96px"/>
+    <div display="block" box-sizing="content-box" direction="ltr" position="absolute" width="500px">
+      <div display="block" box-sizing="content-box" direction="ltr" position="relative" float="right" width="96px" height="96px"/>
+      <div display="block" box-sizing="content-box" direction="ltr" position="relative" float="right" clear="right" width="96px" height="96px"/>
     </div>
   </input>
   <expectations>

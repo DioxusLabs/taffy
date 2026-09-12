@@ -1,8 +1,8 @@
 <test name="grid_minmax_auto_percent_definite__border_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="grid" direction="ltr" width="100px" grid-template-rows="40px" grid-template-columns="minmax(auto, 20%)">
-      <text direction="ltr">
+    <div display="grid" direction="ltr" position="absolute" width="100px" grid-template-rows="40px" grid-template-columns="minmax(auto, 20%)">
+      <text direction="ltr" position="relative">
         HH​HH
       </text>
     </div>

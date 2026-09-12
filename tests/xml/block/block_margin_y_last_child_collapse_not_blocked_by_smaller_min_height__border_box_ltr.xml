@@ -1,11 +1,11 @@
 <test name="block_margin_y_last_child_collapse_not_blocked_by_smaller_min_height__border_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="block" direction="ltr" width="50px">
-      <div display="block" direction="ltr" min-height="10px" margin-bottom="10px">
-        <div display="block" direction="ltr" height="20px" margin-bottom="30px"/>
+    <div display="block" direction="ltr" position="absolute" width="50px">
+      <div display="block" direction="ltr" position="relative" min-height="10px" margin-bottom="10px">
+        <div display="block" direction="ltr" position="relative" height="20px" margin-bottom="30px"/>
       </div>
-      <div display="block" direction="ltr" height="10px"/>
+      <div display="block" direction="ltr" position="relative" height="10px"/>
     </div>
   </input>
   <expectations>

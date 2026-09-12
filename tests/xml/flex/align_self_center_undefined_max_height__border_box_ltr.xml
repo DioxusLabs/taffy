@@ -1,9 +1,9 @@
 <test name="align_self_center_undefined_max_height__border_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div direction="ltr" width="280px" min-height="52px">
-      <div direction="ltr" width="240px" height="44px"/>
-      <div direction="ltr" align-self="center" width="40px" height="56px"/>
+    <div direction="ltr" position="absolute" width="280px" min-height="52px">
+      <div direction="ltr" position="relative" width="240px" height="44px"/>
+      <div direction="ltr" position="relative" align-self="center" width="40px" height="56px"/>
     </div>
   </input>
   <expectations>

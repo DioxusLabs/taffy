@@ -1,8 +1,8 @@
 <test name="grid_safe_align_self_end_no_overflow__border_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="grid" direction="ltr" width="100px" height="100px" grid-template-rows="100px" grid-template-columns="100px">
-      <div direction="ltr" align-self="safe end" width="50px" height="40px"/>
+    <div display="grid" direction="ltr" position="absolute" width="100px" height="100px" grid-template-rows="100px" grid-template-columns="100px">
+      <div direction="ltr" position="relative" align-self="safe end" width="50px" height="40px"/>
     </div>
   </input>
   <expectations>

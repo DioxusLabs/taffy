@@ -1,7 +1,7 @@
 <test name="absolute_minmax_bottom_right_max__content_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div box-sizing="content-box" direction="rtl" width="100px" height="100px">
+    <div box-sizing="content-box" direction="rtl" position="absolute" width="100px" height="100px">
       <div box-sizing="content-box" direction="rtl" position="absolute" width="100px" height="100px" max-width="40px" max-height="30px" bottom="10px" right="10px"/>
     </div>
   </input>

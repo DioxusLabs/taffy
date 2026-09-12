@@ -1,8 +1,8 @@
 <test name="grid_aspect_ratio_fill_child_max_width__border_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="grid" direction="rtl" width="100px" height="100px">
-      <text direction="rtl" max-height="20px" aspect-ratio="2">
+    <div display="grid" direction="rtl" position="absolute" width="100px" height="100px">
+      <text direction="rtl" position="relative" max-height="20px" aspect-ratio="2">
         HH​HH​HH​HH
       </text>
     </div>
