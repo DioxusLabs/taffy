@@ -4842,6 +4842,26 @@ mod block {
     }
 
     #[test]
+    fn block_padding_percentage_vertical_indefinite_container_height__border_box_ltr() {
+        crate::run_xml_test("block", "block_padding_percentage_vertical_indefinite_container_height__border_box_ltr");
+    }
+
+    #[test]
+    fn block_padding_percentage_vertical_indefinite_container_height__content_box_ltr() {
+        crate::run_xml_test("block", "block_padding_percentage_vertical_indefinite_container_height__content_box_ltr");
+    }
+
+    #[test]
+    fn block_padding_percentage_vertical_indefinite_container_height__border_box_rtl() {
+        crate::run_xml_test("block", "block_padding_percentage_vertical_indefinite_container_height__border_box_rtl");
+    }
+
+    #[test]
+    fn block_padding_percentage_vertical_indefinite_container_height__content_box_rtl() {
+        crate::run_xml_test("block", "block_padding_percentage_vertical_indefinite_container_height__content_box_rtl");
+    }
+
+    #[test]
     fn block_padding_rtl__border_box_ltr() {
         crate::run_xml_test("block", "block_padding_rtl__border_box_ltr");
     }
