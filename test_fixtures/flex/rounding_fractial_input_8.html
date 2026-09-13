@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    Children of a container at a fractional offset must tile without 1px gaps or overlaps after rounding
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="width: 100px; height: 200px; padding-top: 51.25px; padding-left: 20.625px;">
+  <div style="flex-direction: column;">
+    <div style="width: 13.9375px; height: 13.9375px; background-color: red;"></div>
+    <div style="width: 13.9375px; height: 13.9375px; background-color: green;"></div>
+    <div style="width: 13.9375px; height: 13.9375px; background-color: red;"></div>
+    <div style="width: 13.9375px; height: 13.9375px; background-color: green;"></div>
+    <div style="width: 13.9375px; height: 13.9375px; background-color: red;"></div>
+    <div style="width: 13.9375px; height: 13.9375px; background-color: green;"></div>
+    <div style="width: 13.9375px; height: 13.9375px; background-color: red;"></div>
+    <div style="width: 13.9375px; height: 13.9375px; background-color: green;"></div>
+    <div style="width: 13.9375px; height: 13.9375px; background-color: red;"></div>
+    <div style="width: 13.9375px; height: 13.9375px; background-color: green;"></div>
+  </div>
+</div>
+
+</body>
+</html>

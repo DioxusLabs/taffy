@@ -224,11 +224,13 @@ pub fn round_layout(tree: &mut impl RoundTree, node_id: NodeId) {
         let unrounded_layout = tree.get_unrounded_layout(node_id);
         let mut layout = unrounded_layout;
 
+        let parent_x = cumulative_x;
+        let parent_y = cumulative_y;
         let cumulative_x = cumulative_x + unrounded_layout.location.x;
         let cumulative_y = cumulative_y + unrounded_layout.location.y;
 
-        layout.location.x = round(unrounded_layout.location.x);
-        layout.location.y = round(unrounded_layout.location.y);
+        layout.location.x = round(cumulative_x) - round(parent_x);
+        layout.location.y = round(cumulative_y) - round(parent_y);
         layout.size.width = round(cumulative_x + unrounded_layout.size.width) - round(cumulative_x);
         layout.size.height = round(cumulative_y + unrounded_layout.size.height) - round(cumulative_y);
         layout.scrollbar_size.width = round(unrounded_layout.scrollbar_size.width);
