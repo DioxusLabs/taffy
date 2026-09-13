@@ -18284,6 +18284,26 @@ mod flex {
     }
 
     #[test]
+    fn rounding_fractial_input_8__border_box_ltr() {
+        crate::run_xml_test("flex", "rounding_fractial_input_8__border_box_ltr");
+    }
+
+    #[test]
+    fn rounding_fractial_input_8__content_box_ltr() {
+        crate::run_xml_test("flex", "rounding_fractial_input_8__content_box_ltr");
+    }
+
+    #[test]
+    fn rounding_fractial_input_8__border_box_rtl() {
+        crate::run_xml_test("flex", "rounding_fractial_input_8__border_box_rtl");
+    }
+
+    #[test]
+    fn rounding_fractial_input_8__content_box_rtl() {
+        crate::run_xml_test("flex", "rounding_fractial_input_8__content_box_rtl");
+    }
+
+    #[test]
     fn rounding_inner_node_controversy_combined__border_box_ltr() {
         crate::run_xml_test("flex", "rounding_inner_node_controversy_combined__border_box_ltr");
     }
