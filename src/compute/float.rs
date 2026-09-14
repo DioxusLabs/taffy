@@ -485,7 +485,10 @@ impl FloatContext {
 
         // Handle case where floated box is placed after all existing segments
         if start.is_none() {
-            let last_y_end = self.segments.last().map(|seg| seg.y.end).unwrap_or(0.0);
+            // The first segment starts wherever the first float is placed. This may be above
+            // the top of the block formatting context (`y < 0`): the containing block of the
+            // float (CSS2 float rule 4) may be pulled up by a negative margin.
+            let last_y_end = self.segments.last().map(|seg| seg.y.end).unwrap_or(start_y);
             if start_y > last_y_end {
                 self.segments.push(Segment { y: last_y_end..start_y, insets: [0.0, 0.0], has_float: [false; 2] });
             }

@@ -9,6 +9,7 @@
 ### Fixed
 
 - Block: apply `position: relative` insets to floated boxes. The offset does not affect the placement of other content.
+- Float: don't clamp the first float of a block formatting context to the top of the context. A float in a box pulled up by a negative top margin is placed at the top of its containing block, which may be above the top of the context.
 
 ## 0.15.0
 

@@ -276,3 +276,67 @@ fn float_avoiding_auto_margins_in_nested_block_ignore_relative_insets_and_cleara
         assert_eq!(nested_layout.margin.right, 30.0);
     }
 }
+
+/// A float inside a block that is pulled up by a negative `margin-top` must be placed at the
+/// top of its containing block (CSS2 float rule 4), even when that top is above the top of the
+/// block formatting context. The float's position was previously clamped to `y = 0` in the
+/// formatting context, dropping it by the size of the negative margin.
+#[test]
+fn float_in_block_with_negative_margin_top() {
+    let mut taffy = new_test_tree();
+
+    let spacer = taffy.new_leaf(float_block(400.0, 500.0, Float::None)).unwrap();
+    let floated_left = taffy.new_leaf(float_block(100.0, 50.0, Float::Left)).unwrap();
+    let floated_right = taffy.new_leaf(float_block(100.0, 50.0, Float::Right)).unwrap();
+    let pulled_up = taffy
+        .new_with_children(
+            Style {
+                display: Display::Block,
+                margin: Rect { top: length(-455.0), ..Rect::zero() },
+                size: Size { width: length(400.0), height: auto() },
+                ..Default::default()
+            },
+            &[floated_left, floated_right],
+        )
+        .unwrap();
+    let root = taffy.new_with_children(root_style(400.0), &[spacer, pulled_up]).unwrap();
+
+    taffy.compute_layout(root, Size::MAX_CONTENT).unwrap();
+
+    // The pulled-up block starts 455px above the bottom of the spacer
+    assert_eq!(taffy.layout(pulled_up).unwrap().location, Point { x: 0.0, y: 45.0 });
+    // The floats sit at the top of the pulled-up block (relative to it)
+    assert_eq!(taffy.layout(floated_left).unwrap().location, Point { x: 0.0, y: 0.0 });
+    assert_eq!(taffy.layout(floated_right).unwrap().location, Point { x: 300.0, y: 0.0 });
+}
+
+/// Same as above, but the block formatting context itself starts with the float: the first
+/// float in the context must not be clamped to `y = 0` either.
+#[test]
+fn first_float_in_context_above_context_top() {
+    let mut taffy = new_test_tree();
+
+    let floated = taffy.new_leaf(float_block(100.0, 50.0, Float::Left)).unwrap();
+    let pulled_up = taffy
+        .new_with_children(
+            Style {
+                display: Display::Block,
+                margin: Rect { top: length(-30.0), ..Rect::zero() },
+                size: Size { width: length(400.0), height: auto() },
+                ..Default::default()
+            },
+            &[floated],
+        )
+        .unwrap();
+    let root = taffy
+        .new_with_children(
+            Style { padding: Rect { top: length(1.0), ..Rect::zero() }, ..root_style(400.0) },
+            &[pulled_up],
+        )
+        .unwrap();
+
+    taffy.compute_layout(root, Size::MAX_CONTENT).unwrap();
+
+    assert_eq!(taffy.layout(pulled_up).unwrap().location, Point { x: 0.0, y: -29.0 });
+    assert_eq!(taffy.layout(floated).unwrap().location, Point { x: 0.0, y: 0.0 });
+}
