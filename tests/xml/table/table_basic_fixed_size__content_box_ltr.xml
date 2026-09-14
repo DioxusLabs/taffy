@@ -1,0 +1,21 @@
+<test name="table_basic_fixed_size__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="table" box-sizing="content-box" direction="ltr" border-spacing-x="0px" border-spacing-y="0px" width="200px" height="100px">
+      <div display="table-row-group" box-sizing="content-box" direction="ltr">
+        <div display="table-row" box-sizing="content-box" direction="ltr">
+          <div display="table-cell" box-sizing="content-box" direction="ltr"/>
+        </div>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="200" height="100">
+      <node x="0" y="0" width="200" height="100">
+        <node x="0" y="0" width="200" height="100">
+          <node x="0" y="0" width="200" height="100"/>
+        </node>
+      </node>
+    </node>
+  </expectations>
+</test>

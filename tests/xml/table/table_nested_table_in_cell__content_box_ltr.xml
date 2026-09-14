@@ -1,0 +1,39 @@
+<test name="table_nested_table_in_cell__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="table" box-sizing="content-box" direction="ltr" border-spacing-x="0px" border-spacing-y="0px">
+      <div display="table-row-group" box-sizing="content-box" direction="ltr">
+        <div display="table-row" box-sizing="content-box" direction="ltr">
+          <div display="table-cell" box-sizing="content-box" direction="ltr">
+            <div display="table" box-sizing="content-box" direction="ltr" border-spacing-x="0px" border-spacing-y="0px">
+              <div display="table-row-group" box-sizing="content-box" direction="ltr">
+                <div display="table-row" box-sizing="content-box" direction="ltr">
+                  <div display="table-cell" box-sizing="content-box" direction="ltr" width="20px" height="20px"/>
+                  <div display="table-cell" box-sizing="content-box" direction="ltr" width="20px" height="20px"/>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="40" height="20">
+      <node x="0" y="0" width="40" height="20">
+        <node x="0" y="0" width="40" height="20">
+          <node x="0" y="0" width="40" height="20">
+            <node x="0" y="0" width="40" height="20">
+              <node x="0" y="0" width="40" height="20">
+                <node x="0" y="0" width="40" height="20">
+                  <node x="0" y="0" width="20" height="20"/>
+                  <node x="20" y="0" width="20" height="20"/>
+                </node>
+              </node>
+            </node>
+          </node>
+        </node>
+      </node>
+    </node>
+  </expectations>
+</test>

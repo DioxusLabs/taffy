@@ -26,6 +26,9 @@ pub use traits::LayoutGridContainer;
 #[cfg(feature = "block_layout")]
 pub use traits::LayoutBlockContainer;
 
+#[cfg(feature = "table_layout")]
+pub use traits::LayoutTableContainer;
+
 #[cfg(feature = "taffy_tree")]
 mod taffy_tree;
 #[cfg(feature = "taffy_tree")]

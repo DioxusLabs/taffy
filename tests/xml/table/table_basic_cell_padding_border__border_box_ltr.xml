@@ -1,0 +1,21 @@
+<test name="table_basic_cell_padding_border__border_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="table" direction="ltr" border-spacing-x="0px" border-spacing-y="0px">
+      <div display="table-row-group" direction="ltr">
+        <div display="table-row" direction="ltr">
+          <div display="table-cell" direction="ltr" width="60px" height="40px" padding-top="10px" padding-left="10px" padding-bottom="10px" padding-right="10px" border-top="5px" border-left="5px" border-bottom="5px" border-right="5px"/>
+        </div>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="60" height="40">
+      <node x="0" y="0" width="60" height="40">
+        <node x="0" y="0" width="60" height="40">
+          <node x="0" y="0" width="60" height="40"/>
+        </node>
+      </node>
+    </node>
+  </expectations>
+</test>

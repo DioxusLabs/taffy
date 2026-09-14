@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    Table narrower than max-content shrinks columns toward min-content
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="display: table; border-collapse: separate; width: 60px;">
+  <div style="display: table-row-group;">
+    <div style="display: table-row;">
+      <div style="display: table-cell; height: 20px;">HHHH&ZeroWidthSpace;HHHH</div>
+      <div style="display: table-cell; height: 20px;">HHHH&ZeroWidthSpace;HHHH</div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    A table's baseline is the baseline of its first row, used by flex baseline alignment
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="display: flex; align-items: baseline;">
+  <div style="display: block; padding-top: 20px;">HH</div>
+  <div style="display: table; border-collapse: separate;">
+    <div style="display: table-row-group;">
+      <div style="display: table-row;">
+        <div style="display: table-cell; width: 40px;">
+          <div style="display: block;">HH</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

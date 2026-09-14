@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    Only baseline cells participate: an align-content start cell keeps its content at the top
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="display: table; border-collapse: separate;">
+  <div style="display: table-row-group;">
+    <div style="display: table-row;">
+      <div style="display: table-cell; width: 40px;">
+        <div style="display: block;">HH</div>
+      </div>
+      <div style="display: table-cell; width: 40px; align-content: start;">
+        <div style="display: block;">HH</div>
+      </div>
+      <div style="display: table-cell; width: 40px; padding-top: 20px;">
+        <div style="display: block;">HH</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

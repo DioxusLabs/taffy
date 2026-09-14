@@ -1,0 +1,23 @@
+<test name="table_fixed_layout_percent_over_remainder__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="table" direction="ltr" table-layout="fixed" border-spacing-x="0px" border-spacing-y="0px" width="200px">
+      <div display="table-row-group" box-sizing="content-box" direction="ltr">
+        <div display="table-row" box-sizing="content-box" direction="ltr">
+          <div display="table-cell" direction="ltr" width="150px" height="20px" padding-top="0px" padding-left="0px" padding-bottom="0px" padding-right="0px"/>
+          <div display="table-cell" direction="ltr" width="80%" height="20px" padding-top="0px" padding-left="0px" padding-bottom="0px" padding-right="0px"/>
+        </div>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="200" height="20">
+      <node x="0" y="0" width="200" height="20">
+        <node x="0" y="0" width="200" height="20">
+          <node x="0" y="0" width="150" height="20"/>
+          <node x="150" y="0" width="50" height="20"/>
+        </node>
+      </node>
+    </node>
+  </expectations>
+</test>

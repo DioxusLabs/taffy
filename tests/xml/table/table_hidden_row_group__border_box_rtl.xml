@@ -1,0 +1,35 @@
+<test name="table_hidden_row_group__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="table" direction="rtl" border-spacing-x="0px" border-spacing-y="0px">
+      <div display="none" direction="rtl">
+        <div display="table-row" direction="rtl">
+          <div display="table-cell" direction="rtl" width="60px" height="40px"/>
+          <div display="table-cell" direction="rtl" width="60px" height="40px"/>
+        </div>
+      </div>
+      <div display="table-row-group" direction="rtl">
+        <div display="table-row" direction="rtl">
+          <div display="table-cell" direction="rtl" width="20px" height="20px"/>
+          <div display="table-cell" direction="rtl" width="30px" height="20px"/>
+        </div>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="50" height="20">
+      <node x="0" y="0" width="0" height="0">
+        <node x="0" y="0" width="0" height="0">
+          <node x="0" y="0" width="0" height="0"/>
+          <node x="0" y="0" width="0" height="0"/>
+        </node>
+      </node>
+      <node x="0" y="0" width="50" height="20">
+        <node x="0" y="0" width="50" height="20">
+          <node x="30" y="0" width="20" height="20"/>
+          <node x="0" y="0" width="30" height="20"/>
+        </node>
+      </node>
+    </node>
+  </expectations>
+</test>

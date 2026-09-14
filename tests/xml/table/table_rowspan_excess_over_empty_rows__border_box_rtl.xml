@@ -1,0 +1,29 @@
+<test name="table_rowspan_excess_over_empty_rows__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="table" direction="rtl" border-spacing-x="0px" border-spacing-y="0px">
+      <div display="table-row-group" direction="rtl">
+        <div display="table-row" direction="rtl">
+          <div display="table-cell" direction="rtl" width="40px" padding-top="0px" padding-left="0px" padding-bottom="0px" padding-right="0px"/>
+          <div display="table-cell" direction="rtl" rowspan="2" width="40px" height="100px" padding-top="0px" padding-left="0px" padding-bottom="0px" padding-right="0px"/>
+        </div>
+        <div display="table-row" direction="rtl">
+          <div display="table-cell" direction="rtl" width="40px" padding-top="0px" padding-left="0px" padding-bottom="0px" padding-right="0px"/>
+        </div>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="80" height="100">
+      <node x="0" y="0" width="80" height="100">
+        <node x="0" y="0" width="80" height="0">
+          <node x="40" y="0" width="40" height="0"/>
+          <node x="0" y="0" width="40" height="100"/>
+        </node>
+        <node x="0" y="0" width="80" height="100">
+          <node x="40" y="0" width="40" height="100"/>
+        </node>
+      </node>
+    </node>
+  </expectations>
+</test>

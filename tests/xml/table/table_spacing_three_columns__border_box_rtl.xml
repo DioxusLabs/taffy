@@ -1,0 +1,25 @@
+<test name="table_spacing_three_columns__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="table" direction="rtl" border-spacing-x="10px" border-spacing-y="0px">
+      <div display="table-row-group" direction="rtl">
+        <div display="table-row" direction="rtl">
+          <div display="table-cell" direction="rtl" width="20px" height="20px"/>
+          <div display="table-cell" direction="rtl" width="30px" height="20px"/>
+          <div display="table-cell" direction="rtl" width="40px" height="20px"/>
+        </div>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="130" height="20">
+      <node x="10" y="0" width="110" height="20">
+        <node x="0" y="0" width="110" height="20">
+          <node x="90" y="0" width="20" height="20"/>
+          <node x="50" y="0" width="30" height="20"/>
+          <node x="0" y="0" width="40" height="20"/>
+        </node>
+      </node>
+    </node>
+  </expectations>
+</test>

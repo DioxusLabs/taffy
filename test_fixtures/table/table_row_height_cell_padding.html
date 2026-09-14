@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    Cell padding contributes to the row height
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="display: table; border-collapse: separate;">
+  <div style="display: table-row-group;">
+    <div style="display: table-row;">
+      <div style="display: table-cell; width: 40px; padding: 10px;">HH</div>
+      <div style="display: table-cell; width: 40px;">HH</div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

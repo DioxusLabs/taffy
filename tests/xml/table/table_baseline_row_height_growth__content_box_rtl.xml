@@ -1,0 +1,35 @@
+<test name="table_baseline_row_height_growth__content_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="table" box-sizing="content-box" direction="rtl" border-spacing-x="0px" border-spacing-y="0px">
+      <div display="table-row-group" box-sizing="content-box" direction="rtl">
+        <div display="table-row" box-sizing="content-box" direction="rtl">
+          <div display="table-cell" box-sizing="content-box" direction="rtl" width="40px" padding-top="30px">
+            <text display="block" box-sizing="content-box" direction="rtl">
+              HH
+            </text>
+          </div>
+          <div display="table-cell" box-sizing="content-box" direction="rtl" width="40px" padding-bottom="30px">
+            <text display="block" box-sizing="content-box" direction="rtl">
+              HH
+            </text>
+          </div>
+        </div>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="80" height="70">
+      <node x="0" y="0" width="80" height="70">
+        <node x="0" y="0" width="80" height="70">
+          <node x="40" y="0" width="40" height="70">
+            <node x="0" y="30" width="40" height="10"/>
+          </node>
+          <node x="0" y="0" width="40" height="70">
+            <node x="0" y="30" width="40" height="10"/>
+          </node>
+        </node>
+      </node>
+    </node>
+  </expectations>
+</test>

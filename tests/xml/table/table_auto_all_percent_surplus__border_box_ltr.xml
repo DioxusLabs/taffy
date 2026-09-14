@@ -1,0 +1,27 @@
+<test name="table_auto_all_percent_surplus__border_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="table" direction="ltr" border-spacing-x="0px" border-spacing-y="0px" width="400px">
+      <div display="table-row-group" direction="ltr">
+        <div display="table-row" direction="ltr">
+          <div display="table-cell" direction="ltr" width="25%" height="20px" padding-top="0px" padding-left="0px" padding-bottom="0px" padding-right="0px">
+            <div direction="ltr" width="150px" height="20px"/>
+          </div>
+          <div display="table-cell" direction="ltr" width="25%" height="20px" padding-top="0px" padding-left="0px" padding-bottom="0px" padding-right="0px"/>
+        </div>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="400" height="20">
+      <node x="0" y="0" width="400" height="20">
+        <node x="0" y="0" width="400" height="20">
+          <node x="0" y="0" width="225" height="20">
+            <node x="0" y="0" width="150" height="20"/>
+          </node>
+          <node x="225" y="0" width="175" height="20"/>
+        </node>
+      </node>
+    </node>
+  </expectations>
+</test>

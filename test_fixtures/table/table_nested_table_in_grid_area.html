@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    Table placed in a grid area
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="display: grid; grid-template-columns: 100px 100px; width: 200px;">
+  <div style="display: table; border-collapse: separate;">
+    <div style="display: table-row-group;">
+      <div style="display: table-row;">
+        <div style="display: table-cell; width: 40px; height: 20px;"></div>
+        <div style="display: table-cell; width: 40px; height: 20px;"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

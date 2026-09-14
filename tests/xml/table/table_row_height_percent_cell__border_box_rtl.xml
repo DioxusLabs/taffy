@@ -1,0 +1,21 @@
+<test name="table_row_height_percent_cell__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="table" direction="rtl" border-spacing-x="0px" border-spacing-y="0px" height="100px">
+      <div display="table-row-group" direction="rtl">
+        <div display="table-row" direction="rtl">
+          <div display="table-cell" direction="rtl" width="40px" height="50%"/>
+        </div>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="40" height="100">
+      <node x="0" y="0" width="40" height="100">
+        <node x="0" y="0" width="40" height="100">
+          <node x="0" y="0" width="40" height="100"/>
+        </node>
+      </node>
+    </node>
+  </expectations>
+</test>
