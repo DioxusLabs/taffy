@@ -10,7 +10,7 @@ use crate::util::MaybeMath;
 use crate::util::{MaybeResolve, ResolveOrZero};
 use crate::{
     style_helpers::*, AlignContent, BoxGenerationMode, BoxSizing, CoreStyle, Direction, GridContainerStyle,
-    GridItemStyle, JustifyContent, LayoutGridContainer, RequestedAxis,
+    GridItemStyle, JustifyContent, LayoutGridContainer, RequestedAxis, SuspendIterator,
 };
 use alignment::{align_and_position_item, align_tracks};
 use explicit_grid::{compute_explicit_grid_size_in_axis, initialize_grid_tracks, AutoRepeatStrategy};
@@ -170,9 +170,9 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     // Absolutely positioned children do not take part in grid placement and do not create
     // implicit tracks, so they are excluded from the grid size estimate.
     let get_child_styles_iter = |node| {
-        tree.child_ids(node).map(|child_node: NodeId| tree.get_grid_child_style(child_node)).filter(|style| {
-            style.box_generation_mode() != BoxGenerationMode::None && style.position() != Position::Absolute
-        })
+        tree.child_ids(node).iter(tree).map(|child_node: NodeId| tree.get_grid_child_style(child_node)).filter(
+            |style| style.box_generation_mode() != BoxGenerationMode::None && style.position() != Position::Absolute,
+        )
     };
     let child_styles_iter = get_child_styles_iter(node);
 
@@ -244,7 +244,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     let mut cell_occupancy_matrix = CellOccupancyMatrix::with_track_counts(est_col_counts, est_row_counts);
     let in_flow_children_iter = || {
         tree.child_ids(node)
-            .enumerate()
+            .iter_enumerate(tree)
             .map(|(index, child_node)| (index, child_node, tree.get_grid_child_style(child_node)))
             .filter(|(_, _, style)| {
                 style.box_generation_mode() != BoxGenerationMode::None && style.position() != Position::Absolute
@@ -647,8 +647,8 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
 
     // Position hidden and absolutely positioned children
     let mut order = items.len() as u32;
-    (0..tree.child_count(node)).for_each(|index| {
-        let child = tree.get_child_id(node, index);
+    let mut child_ids = tree.child_ids(node);
+    while let Some((_, child)) = child_ids.next(tree) {
         let child_style = tree.get_grid_child_style(child);
 
         // Position hidden child
@@ -664,7 +664,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
                 Line::FALSE,
             );
             order += 1;
-            return;
+            continue;
         }
 
         // Position absolutely positioned child
@@ -789,7 +789,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
 
             order += 1;
         }
-    });
+    }
 
     #[cfg(feature = "detailed_layout_info")]
     name_resolver.populate_detailed_line_resolvers(&mut detailed_row_line_names, &mut detailed_column_line_names);

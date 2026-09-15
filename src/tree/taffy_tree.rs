@@ -1,4 +1,6 @@
 //! Contains [TaffyTree](crate::tree::TaffyTree): the default implementation of [LayoutTree](crate::tree::LayoutTree), and the error type for Taffy.
+use core::marker::PhantomData;
+
 #[cfg(not(feature = "std"))]
 use slotmap::SecondaryMap;
 #[cfg(feature = "std")]
@@ -20,7 +22,7 @@ use crate::util::sys::{new_vec_with_capacity, ChildrenVec, Vec};
 use crate::compute::{
     compute_cached_layout, compute_hidden_layout, compute_leaf_layout, compute_root_layout, round_layout,
 };
-use crate::CacheTree;
+use crate::{CacheTree, SuspendIterator};
 
 #[cfg(feature = "block_layout")]
 use crate::{compute::compute_block_layout, LayoutBlockContainer};
@@ -172,36 +174,66 @@ impl Default for TaffyTree {
 }
 
 /// Iterator that wraps a slice of nodes, lazily converting them to u64
-pub struct TaffyTreeChildIter<'a>(core::slice::Iter<'a, NodeId>);
-impl Iterator for TaffyTreeChildIter<'_> {
+pub struct TaffyTreeChildIter<T> {
+    parent_node_id: NodeId,
+    index: usize,
+    _p: PhantomData<*const T>,
+}
+
+impl<T> TaffyTreeChildIter<T> {
+    fn new(parent_node_id: NodeId) -> Self {
+        Self { parent_node_id, index: 0, _p: PhantomData }
+    }
+}
+
+impl<NodeContext> SuspendIterator<TaffyTree<NodeContext>> for TaffyTreeChildIter<TaffyTree<NodeContext>> {
     type Item = NodeId;
 
     #[inline]
-    fn next(&mut self) -> Option<Self::Item> {
-        self.0.next().copied()
+    fn next(&mut self, source: &TaffyTree<NodeContext>) -> Option<(usize, Self::Item)> {
+        match source.children[self.parent_node_id.into()].get(self.index) {
+            Some(r) => {
+                let index = self.index;
+                self.index += 1;
+                Some((index, *r))
+            }
+            None => None,
+        }
+    }
+}
+
+impl<'t, NodeContext, MeasureFunction> SuspendIterator<TaffyView<'t, NodeContext, MeasureFunction>>
+    for TaffyTreeChildIter<TaffyView<'t, NodeContext, MeasureFunction>>
+where
+    MeasureFunction: FnMut(LayoutInput, NodeId, Option<&mut NodeContext>, &Style) -> LayoutOutput,
+{
+    type Item = NodeId;
+
+    #[inline]
+    fn next(&mut self, source: &TaffyView<'t, NodeContext, MeasureFunction>) -> Option<(usize, Self::Item)> {
+        match source.taffy.children[self.parent_node_id.into()].get(self.index) {
+            Some(r) => {
+                let index = self.index;
+                self.index += 1;
+                Some((index, *r))
+            }
+            None => None,
+        }
     }
 }
 
 // TraversePartialTree impl for TaffyTree
 impl<NodeContext> TraversePartialTree for TaffyTree<NodeContext> {
-    type ChildIter<'a>
-        = TaffyTreeChildIter<'a>
-    where
-        Self: 'a;
+    type ChildIter = TaffyTreeChildIter<Self>;
 
     #[inline(always)]
-    fn child_ids(&self, parent_node_id: NodeId) -> Self::ChildIter<'_> {
-        TaffyTreeChildIter(self.children[parent_node_id.into()].iter())
+    fn child_ids(&self, parent_node_id: NodeId) -> Self::ChildIter {
+        TaffyTreeChildIter::new(parent_node_id)
     }
 
     #[inline(always)]
     fn child_count(&self, parent_node_id: NodeId) -> usize {
         self.children[parent_node_id.into()].len()
-    }
-
-    #[inline(always)]
-    fn get_child_id(&self, parent_node_id: NodeId, id: usize) -> NodeId {
-        self.children[parent_node_id.into()][id]
     }
 }
 
@@ -334,24 +366,16 @@ impl<NodeContext, MeasureFunction> TraversePartialTree for TaffyView<'_, NodeCon
 where
     MeasureFunction: FnMut(LayoutInput, NodeId, Option<&mut NodeContext>, &Style) -> LayoutOutput,
 {
-    type ChildIter<'a>
-        = TaffyTreeChildIter<'a>
-    where
-        Self: 'a;
+    type ChildIter = TaffyTreeChildIter<Self>;
 
     #[inline(always)]
-    fn child_ids(&self, parent_node_id: NodeId) -> Self::ChildIter<'_> {
-        self.taffy.child_ids(parent_node_id)
+    fn child_ids(&self, parent_node_id: NodeId) -> Self::ChildIter {
+        TaffyTreeChildIter::new(parent_node_id)
     }
 
     #[inline(always)]
     fn child_count(&self, parent_node_id: NodeId) -> usize {
         self.taffy.child_count(parent_node_id)
-    }
-
-    #[inline(always)]
-    fn get_child_id(&self, parent_node_id: NodeId, child_index: usize) -> NodeId {
-        self.taffy.get_child_id(parent_node_id, child_index)
     }
 }
 

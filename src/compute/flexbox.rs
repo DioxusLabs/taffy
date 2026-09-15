@@ -13,7 +13,7 @@ use crate::util::debug::debug_log;
 use crate::util::sys::{f32_max, f32_min, new_vec_with_capacity, Vec};
 use crate::util::MaybeMath;
 use crate::util::{MaybeResolve, ResolveOrZero};
-use crate::{BoxGenerationMode, BoxSizing, Dimension, Direction, RequestedAxis};
+use crate::{BoxGenerationMode, BoxSizing, Dimension, Direction, RequestedAxis, SuspendIterator};
 
 use super::common::alignment::apply_alignment_fallback;
 #[cfg(feature = "content_size")]
@@ -486,9 +486,8 @@ fn compute_preliminary(tree: &mut impl LayoutFlexboxContainer, node: NodeId, inp
     let absolute_overflow_rect = perform_absolute_layout_on_absolute_children(tree, node, &constants);
 
     debug_log!("hidden_layout");
-    let len = tree.child_count(node);
-    for order in 0..len {
-        let child = tree.get_child_id(node, order);
+    let mut child_ids = tree.child_ids(node);
+    while let Some((order, child)) = child_ids.next(tree) {
         if tree.get_flexbox_child_style(child).box_generation_mode() == BoxGenerationMode::None {
             tree.set_unrounded_layout(child, &Layout::with_order(order as u32));
             tree.perform_child_layout(
@@ -659,7 +658,7 @@ fn generate_anonymous_flex_items(
     };
 
     tree.child_ids(node)
-        .enumerate()
+        .iter_enumerate(tree)
         .map(|(index, child)| (index, child, tree.get_flexbox_child_style(child)))
         .filter(|(_, _, style)| style.position() != Position::Absolute)
         .filter(|(_, _, style)| style.box_generation_mode() != BoxGenerationMode::None)
@@ -2680,8 +2679,8 @@ fn perform_absolute_layout_on_absolute_children(
     #[cfg_attr(not(feature = "content_size"), allow(unused_mut))]
     let mut overflow_rect = Rect::ZERO;
 
-    for order in 0..tree.child_count(node) {
-        let child = tree.get_child_id(node, order);
+    let mut child_ids = tree.child_ids(node);
+    while let Some((order, child)) = child_ids.next(tree) {
         let child_style = tree.get_flexbox_child_style(child);
 
         // Skip items that are display:none or are not position:absolute

@@ -142,23 +142,69 @@ use crate::{BlockContainerStyle, BlockContext, BlockItemStyle};
 #[cfg(all(feature = "grid", feature = "detailed_layout_info"))]
 use crate::compute::grid::DetailedGridInfo;
 
+/// Suspendable iterator to bypass Rust's lifetime restrictions.
+pub trait SuspendIterator<Source: ?Sized> {
+    /// The type of the elements being iterated over.
+    type Item;
+
+    /// Advances the iterator and returns the next value.
+    fn next(&mut self, source: &Source) -> Option<(usize, Self::Item)>;
+
+    /// Convert to an iterator for ease of use.
+    fn iter<'a>(self, source: &'a Source) -> impl Iterator<Item = Self::Item>
+    where
+        Self: Sized,
+    {
+        SuspendIter(self, source)
+    }
+
+    /// Convert to an enumerate iterator for ease of use.
+    fn iter_enumerate<'a>(self, source: &'a Source) -> impl Iterator<Item = (usize, Self::Item)>
+    where
+        Self: Sized,
+    {
+        SuspendIterWithIndex(self, source)
+    }
+}
+
+struct SuspendIter<'a, Suspend, Source: ?Sized>(Suspend, &'a Source);
+
+impl<'a, Suspend, Source: ?Sized> Iterator for SuspendIter<'a, Suspend, Source>
+where
+    Suspend: SuspendIterator<Source>,
+{
+    type Item = Suspend::Item;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.0.next(self.1).map(|a| a.1)
+    }
+}
+
+struct SuspendIterWithIndex<'a, Suspend, Source: ?Sized>(Suspend, &'a Source);
+
+impl<'a, Suspend, Source: ?Sized> Iterator for SuspendIterWithIndex<'a, Suspend, Source>
+where
+    Suspend: SuspendIterator<Source>,
+{
+    type Item = (usize, Suspend::Item);
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.0.next(self.1)
+    }
+}
+
 /// Taffy's abstraction for downward tree traversal.
 ///
 /// However, this trait does *not* require access to any node's other than a single container node's immediate children unless you also intend to implement `TraverseTree`.
 pub trait TraversePartialTree {
     /// Type representing an iterator of the children of a node
-    type ChildIter<'a>: Iterator<Item = NodeId>
-    where
-        Self: 'a;
+    type ChildIter: SuspendIterator<Self, Item = NodeId>;
 
     /// Get the list of children IDs for the given node
-    fn child_ids(&self, parent_node_id: NodeId) -> Self::ChildIter<'_>;
+    fn child_ids(&self, parent_node_id: NodeId) -> Self::ChildIter;
 
     /// Get the number of children for the given node
     fn child_count(&self, parent_node_id: NodeId) -> usize;
-
-    /// Get a specific child of a node, where the index represents the nth child
-    fn get_child_id(&self, parent_node_id: NodeId, child_index: usize) -> NodeId;
 }
 
 /// A marker trait which extends `TraversePartialTree`

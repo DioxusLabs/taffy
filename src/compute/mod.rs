@@ -58,7 +58,7 @@ use crate::tree::{
 use crate::util::debug::{debug_log, debug_log_node, debug_pop_node, debug_push_node};
 use crate::util::sys::round;
 use crate::util::ResolveOrZero;
-use crate::{CacheTree, MaybeMath, MaybeResolve};
+use crate::{CacheTree, MaybeMath, MaybeResolve, SuspendIterator};
 
 /// Compute layout for the root node in the tree
 pub fn compute_root_layout(tree: &mut impl LayoutPartialTree, root: NodeId, available_space: Size<AvailableSpace>) {
@@ -258,9 +258,8 @@ pub fn round_layout(tree: &mut impl RoundTree, node_id: NodeId) {
 
         tree.set_final_layout(node_id, &layout);
 
-        let child_count = tree.child_count(node_id);
-        for index in 0..child_count {
-            let child = tree.get_child_id(node_id, index);
+        let mut child_ids = tree.child_ids(node_id);
+        while let Some((_, child)) = child_ids.next(tree) {
             round_layout_inner(tree, child, cumulative_x, cumulative_y);
         }
     }
@@ -290,8 +289,8 @@ pub fn compute_hidden_layout(tree: &mut (impl LayoutPartialTree + CacheTree), no
     tree.set_unrounded_layout(node, &Layout::with_order(0));
 
     // Perform hidden layout on all children
-    for index in 0..tree.child_count(node) {
-        let child_id = tree.get_child_id(node, index);
+    let mut child_ids = tree.child_ids(node);
+    while let Some((_, child_id)) = child_ids.next(tree) {
         tree.compute_child_layout(child_id, LayoutInput::HIDDEN);
     }
 
