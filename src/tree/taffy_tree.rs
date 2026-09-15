@@ -175,12 +175,18 @@ impl Default for TaffyTree {
 
 /// Iterator that wraps a slice of nodes, lazily converting them to u64
 pub struct TaffyTreeChildIter<T> {
+    /// Nodes currently undergoing iteration
     parent_node_id: NodeId,
+
+    /// The index of the node to be checked by the next `next` call.
     index: usize,
+
+    /// PhantomData
     _p: PhantomData<*const T>,
 }
 
 impl<T> TaffyTreeChildIter<T> {
+    /// Create the TaffyTreeChildIter
     fn new(parent_node_id: NodeId) -> Self {
         Self { parent_node_id, index: 0, _p: PhantomData }
     }

@@ -151,7 +151,7 @@ pub trait SuspendIterator<Source: ?Sized> {
     fn next(&mut self, source: &Source) -> Option<(usize, Self::Item)>;
 
     /// Convert to an iterator for ease of use.
-    fn iter<'a>(self, source: &'a Source) -> impl Iterator<Item = Self::Item>
+    fn iter(self, source: &'_ Source) -> SuspendIter<'_, Self, Source>
     where
         Self: Sized,
     {
@@ -159,7 +159,7 @@ pub trait SuspendIterator<Source: ?Sized> {
     }
 
     /// Convert to an enumerate iterator for ease of use.
-    fn iter_enumerate<'a>(self, source: &'a Source) -> impl Iterator<Item = (usize, Self::Item)>
+    fn iter_enumerate(self, source: &'_ Source) -> SuspendIterWithIndex<'_, Self, Source>
     where
         Self: Sized,
     {
@@ -167,7 +167,8 @@ pub trait SuspendIterator<Source: ?Sized> {
     }
 }
 
-struct SuspendIter<'a, Suspend, Source: ?Sized>(Suspend, &'a Source);
+/// Immutable iterator wrapper for ease of use.
+pub struct SuspendIter<'a, Suspend, Source: ?Sized>(Suspend, &'a Source);
 
 impl<'a, Suspend, Source: ?Sized> Iterator for SuspendIter<'a, Suspend, Source>
 where
@@ -180,7 +181,8 @@ where
     }
 }
 
-struct SuspendIterWithIndex<'a, Suspend, Source: ?Sized>(Suspend, &'a Source);
+/// Mutable iterator wrapper for ease of use.
+pub struct SuspendIterWithIndex<'a, Suspend, Source: ?Sized>(Suspend, &'a Source);
 
 impl<'a, Suspend, Source: ?Sized> Iterator for SuspendIterWithIndex<'a, Suspend, Source>
 where
