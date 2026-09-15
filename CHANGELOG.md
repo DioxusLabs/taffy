@@ -4,6 +4,7 @@
 
 ### Changed
 
+- BREAKING: (#1191) `TraversePartialTree` now uses `SuspendIterator` instead of `Iterator`. `SuspendIterator` is an abstraction of the iterative state that does not persistently borrow from the tree; it only borrows it temporarily during each iteration. This allows for non-contiguous storage of child nodes.
 - Grid: intrinsic track sizing no longer measures an item's min-/max-content contribution in a step where none of the item's spanned tracks can receive that contribution (e.g. items spanning only `minmax(0, 1fr)` or fixed tracks). This matches Blink and avoids redundant, sometimes very expensive, measurement of large subtrees under a min-content constraint.
 
 ### Fixed

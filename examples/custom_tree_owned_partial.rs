@@ -13,7 +13,7 @@ use common::image::{image_measure_function, ImageContext};
 use common::text::{text_measure_function, FontMetrics, TextContext, WritingMode, LOREM_IPSUM};
 use taffy::{
     compute_cached_layout, compute_flexbox_layout, compute_grid_layout, compute_leaf_layout, compute_root_layout,
-    prelude::*, Cache, CacheTree, Layout, Style,
+    prelude::*, Cache, CacheTree, Layout, Style, SuspendIterator,
 };
 
 #[derive(Debug, Copy, Clone)]
@@ -109,26 +109,23 @@ impl Node {
 }
 
 struct ChildIter(std::ops::Range<usize>);
-impl Iterator for ChildIter {
+impl SuspendIterator<Node> for ChildIter {
     type Item = NodeId;
-    fn next(&mut self) -> Option<Self::Item> {
-        self.0.next().map(NodeId::from)
+
+    fn next(&mut self, _source: &Node) -> Option<(usize, Self::Item)> {
+        self.0.next().map(|a| (a, NodeId::from(a)))
     }
 }
 
 impl taffy::TraversePartialTree for Node {
-    type ChildIter<'a> = ChildIter;
+    type ChildIter = ChildIter;
 
-    fn child_ids(&self, _node_id: NodeId) -> Self::ChildIter<'_> {
+    fn child_ids(&self, _node_id: NodeId) -> Self::ChildIter {
         ChildIter(0..self.children.len())
     }
 
     fn child_count(&self, _node_id: NodeId) -> usize {
         self.children.len()
-    }
-
-    fn get_child_id(&self, _node_id: NodeId, index: usize) -> NodeId {
-        NodeId::from(index)
     }
 }
 

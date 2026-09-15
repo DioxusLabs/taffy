@@ -11,7 +11,7 @@ use crate::util::MaybeMath;
 use crate::util::{MaybeResolve, ResolveOrZero};
 use crate::{
     BlockContainerStyle, BlockItemStyle, BoxGenerationMode, BoxSizing, Contain, Dimension, Direction,
-    LayoutBlockContainer, RequestedAxis, TextAlign,
+    LayoutBlockContainer, RequestedAxis, SuspendIterator, TextAlign,
 };
 
 #[cfg(feature = "float_layout")]
@@ -777,9 +777,8 @@ fn compute_inner(
     }
 
     // 5. Perform hidden layout on hidden children
-    let len = tree.child_count(node_id);
-    for order in 0..len {
-        let child = tree.get_child_id(node_id, order);
+    let mut child_ids = tree.child_ids(node_id);
+    while let Some((order, child)) = child_ids.next(tree) {
         let child_style = tree.get_block_child_style(child);
         if child_style.box_generation_mode() == BoxGenerationMode::None {
             drop(child_style);
@@ -806,6 +805,7 @@ fn generate_item_list(
     node_inner_size: Size<Option<f32>>,
 ) -> Vec<BlockItem> {
     tree.child_ids(node)
+        .iter(tree)
         .map(|child_node_id| (child_node_id, tree.get_block_child_style(child_node_id)))
         .filter(|(_, style)| style.box_generation_mode() != BoxGenerationMode::None)
         .enumerate()

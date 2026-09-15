@@ -3,6 +3,8 @@ mod common {
     pub mod text;
 }
 
+use std::ptr::NonNull;
+
 use common::image::{image_measure_function, ImageContext};
 use common::text::{text_measure_function, FontMetrics, TextContext, WritingMode, LOREM_IPSUM};
 use taffy::tree::Cache;
@@ -29,12 +31,17 @@ struct Node {
     cache: Cache,
     unrounded_layout: Layout,
     final_layout: Layout,
-    children: Vec<Node>,
+
+    prev: Option<NonNull<Node>>,
+    next: Option<NonNull<Node>>,
+    child_head: Option<NonNull<Node>>,
+    child_tail: Option<NonNull<Node>>,
+    child_count: usize,
 }
 
-impl Default for Node {
-    fn default() -> Self {
-        Node {
+impl Node {
+    fn new() -> Box<Self> {
+        Box::new(Node {
             kind: NodeKind::Flexbox,
             style: Style::default(),
             text_data: None,
@@ -42,38 +49,73 @@ impl Default for Node {
             cache: Cache::new(),
             unrounded_layout: Layout::with_order(0),
             final_layout: Layout::with_order(0),
-            children: Vec::new(),
+            prev: None,
+            next: None,
+            child_head: None,
+            child_tail: None,
+            child_count: 0,
+        })
+    }
+}
+
+impl Drop for Node {
+    fn drop(&mut self) {
+        if let Some(node) = self.next {
+            drop(unsafe { Box::from_raw(node.as_ptr()) });
+        }
+        if let Some(node) = self.child_head {
+            drop(unsafe { Box::from_raw(node.as_ptr()) });
         }
     }
 }
 
 #[allow(dead_code)]
 impl Node {
-    pub fn new_row(style: Style) -> Node {
-        Node {
-            kind: NodeKind::Flexbox,
-            style: Style { display: Display::Flex, flex_direction: FlexDirection::Row, ..style },
-            ..Node::default()
+    pub fn new_row(style: Style) -> Box<Node> {
+        let mut node = Node::new();
+        node.kind = NodeKind::Flexbox;
+        node.style = Style { display: Display::Flex, flex_direction: FlexDirection::Row, ..style };
+        node
+    }
+    pub fn new_column(style: Style) -> Box<Node> {
+        let mut node = Node::new();
+        node.kind = NodeKind::Flexbox;
+        node.style = Style { display: Display::Flex, flex_direction: FlexDirection::Column, ..style };
+        node
+    }
+    pub fn new_grid(style: Style) -> Box<Node> {
+        let mut node = Node::new();
+        node.kind = NodeKind::Grid;
+        node.style = Style { display: Display::Grid, ..style };
+        node
+    }
+    pub fn new_text(style: Style, text_data: TextContext) -> Box<Node> {
+        let mut node = Node::new();
+        node.kind = NodeKind::Text;
+        node.style = style;
+        node.text_data = Some(text_data);
+        node
+    }
+    pub fn new_image(style: Style, image_data: ImageContext) -> Box<Node> {
+        let mut node = Node::new();
+        node.kind = NodeKind::Image;
+        node.style = style;
+        node.image_data = Some(image_data);
+        node
+    }
+    pub fn append_child(&mut self, node: Box<Node>) {
+        debug_assert!(node.prev.is_none() && node.next.is_none());
+        let mut node = NonNull::from_ref(Box::leak(node));
+        if let Some(mut tail) = self.child_tail {
+            debug_assert!(unsafe { tail.as_mut() }.next.is_none());
+            unsafe { tail.as_mut() }.next = Some(node);
+            unsafe { node.as_mut() }.prev = Some(tail);
+        } else {
+            debug_assert!(self.child_head.is_none());
+            self.child_head = Some(node);
         }
-    }
-    pub fn new_column(style: Style) -> Node {
-        Node {
-            kind: NodeKind::Flexbox,
-            style: Style { display: Display::Flex, flex_direction: FlexDirection::Column, ..style },
-            ..Node::default()
-        }
-    }
-    pub fn new_grid(style: Style) -> Node {
-        Node { kind: NodeKind::Grid, style: Style { display: Display::Grid, ..style }, ..Node::default() }
-    }
-    pub fn new_text(style: Style, text_data: TextContext) -> Node {
-        Node { kind: NodeKind::Text, style, text_data: Some(text_data), ..Node::default() }
-    }
-    pub fn new_image(style: Style, image_data: ImageContext) -> Node {
-        Node { kind: NodeKind::Image, style, image_data: Some(image_data), ..Node::default() }
-    }
-    pub fn append_child(&mut self, node: Node) {
-        self.children.push(node);
+        self.child_tail = Some(node);
+        self.child_count += 1;
     }
 
     unsafe fn as_id(&self) -> NodeId {
@@ -93,13 +135,20 @@ impl Node {
     }
 }
 
-struct ChildIter(NodeId, std::ops::Range<usize>);
+struct ChildIter(Option<NonNull<Node>>, usize);
 impl SuspendIterator<StatelessLayoutTree> for ChildIter {
     type Item = NodeId;
 
     fn next(&mut self, _source: &StatelessLayoutTree) -> Option<(usize, Self::Item)> {
-        let node = unsafe { node_from_id(self.0) };
-        self.1.next().map(|a| (a, NodeId::from((&node.children[a]) as *const Node as usize)))
+        match self.0 {
+            Some(node) => {
+                let index = self.1;
+                self.1 += 1;
+                self.0 = unsafe { node.as_ref() }.next;
+                Some((index, NodeId::from(node.as_ptr() as usize)))
+            }
+            None => None,
+        }
     }
 }
 
@@ -118,11 +167,11 @@ impl TraversePartialTree for StatelessLayoutTree {
     type ChildIter = ChildIter;
 
     fn child_ids(&self, node_id: NodeId) -> Self::ChildIter {
-        ChildIter(node_id, 0..unsafe { node_from_id(node_id).children.len() })
+        ChildIter(unsafe { node_from_id(node_id) }.child_head, 0)
     }
 
     fn child_count(&self, node_id: NodeId) -> usize {
-        unsafe { node_from_id(node_id).children.len() }
+        unsafe { node_from_id(node_id).child_count }
     }
 }
 

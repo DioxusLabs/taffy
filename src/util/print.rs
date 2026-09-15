@@ -1,5 +1,8 @@
 //! Contains functions for printing a debug representation of the tree
-use crate::tree::{NodeId, PrintTree};
+use crate::{
+    tree::{NodeId, PrintTree},
+    SuspendIterator,
+};
 use std::io;
 
 /// Prints a debug representation of the computed layout for a tree of nodes, starting with the passed root node.
@@ -70,7 +73,7 @@ pub fn write_tree(mut writer: impl io::Write, tree: &impl PrintTree, root: NodeI
         let new_string = lines_string + bar;
 
         // Recurse into children
-        for (index, child) in tree.child_ids(node_id).enumerate() {
+        for (index, child) in tree.child_ids(node_id).iter_enumerate(tree) {
             let has_sibling = index < num_children - 1;
             write_node(writer, tree, child, has_sibling, new_string.clone())?;
         }
