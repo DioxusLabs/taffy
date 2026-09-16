@@ -637,9 +637,15 @@ fn generate_node(w: &mut XmlWriter, node: &Value) {
         }
     }
 
-    // Handle text/leaf node case
+    // Handle text/image/leaf node case
     let text_content = get_string_value(&node["textContent"]);
-    if text_content.is_some() {
+    let image_data = node["imageData"].as_object();
+    if let Some(image_data) = image_data {
+        w.start_element("img");
+        let natural_size = |dimension: &str| image_data[dimension].as_f64().unwrap() as f32;
+        w.write_attribute("intrinsic-width", &natural_size("width"));
+        w.write_attribute("intrinsic-height", &natural_size("height"));
+    } else if text_content.is_some() {
         w.start_element("text");
     } else {
         w.start_element("div");
