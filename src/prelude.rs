@@ -29,3 +29,6 @@ pub use crate::style_helpers::{
 
 #[cfg(feature = "taffy_tree")]
 pub use crate::TaffyTree;
+
+#[cfg(feature = "builder")]
+pub use crate::style::StyleBuilder;
