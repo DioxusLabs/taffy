@@ -1,7 +1,7 @@
 #![cfg(feature = "float_layout")]
 use taffy::geometry::Point;
 use taffy::prelude::*;
-use taffy::style::{Clear, Float};
+use taffy::style::{Clear, Float, Overflow};
 use taffy_test_helpers::new_test_tree;
 
 /// Regression test for <https://wpt.live/css/CSS2/floats-clear/floats-146.xht>
@@ -148,4 +148,96 @@ fn float_beside_existing_float_moves_down_instead_of_overflowing() {
     assert_eq!(taffy.layout(left).unwrap().location, Point { x: 0.0, y: 0.0 });
     assert_eq!(taffy.layout(right).unwrap().location, Point { x: 40.0, y: 50.0 });
     assert_eq!(taffy.layout(left2).unwrap().location, Point { x: 0.0, y: 100.0 });
+}
+
+/// Regression test for <https://wpt.live/css/CSS2/floats/zero-width-floats.html>
+///
+/// A BFC root with negative horizontal margins placed beside only zero-width floats
+/// must not have those margins clamped: zero-width floats don't constrain the width
+/// of adjacent boxes, so the box behaves as if no float were present.
+#[test]
+fn bfc_negative_margins_not_clamped_by_zero_width_floats() {
+    let mut taffy = new_test_tree();
+
+    let zero_width_left = taffy.new_leaf(float_block(0.0, 50.0, Float::Left)).unwrap();
+    let zero_width_right =
+        taffy.new_leaf(Style { clear: Clear::Left, ..float_block(0.0, 150.0, Float::Right) }).unwrap();
+    let bfc = taffy
+        .new_leaf(Style {
+            display: Display::Block,
+            overflow: Point { x: Overflow::Hidden, y: Overflow::Hidden },
+            margin: Rect { left: length(-50.0), right: length(-50.0), top: zero(), bottom: zero() },
+            size: Size { width: auto(), height: length(100.0) },
+            ..Default::default()
+        })
+        .unwrap();
+
+    let root = taffy.new_with_children(root_style(100.0), &[zero_width_left, zero_width_right, bfc]).unwrap();
+
+    taffy.compute_layout(root, Size::MAX_CONTENT).unwrap();
+
+    let layout = taffy.layout(bfc).unwrap();
+    // Negative margins expand the BFC past the containing block on both sides
+    assert_eq!(layout.location, Point { x: -50.0, y: 0.0 });
+    assert_eq!(layout.size, Size { width: 200.0, height: 100.0 });
+}
+
+/// Regression test for <https://wpt.live/css/CSS2/floats/zero-width-floats-positioning.tentative.html>
+///
+/// When a BFC root is narrowed to fit beside a real (positive-width) float, a zero-width
+/// float's edge acts as an obstacle: a negative margin may not move the border edge past it.
+#[test]
+fn zero_width_float_edge_blocks_negative_margin_beside_real_float() {
+    let mut taffy = new_test_tree();
+
+    let zero_width_left = taffy.new_leaf(float_block(0.0, 50.0, Float::Left)).unwrap();
+    let real_right = taffy.new_leaf(Style { clear: Clear::Left, ..float_block(25.0, 50.0, Float::Right) }).unwrap();
+    let bfc = taffy
+        .new_leaf(Style {
+            display: Display::Block,
+            overflow: Point { x: Overflow::Hidden, y: Overflow::Hidden },
+            margin: Rect { left: length(-50.0), right: zero(), top: zero(), bottom: zero() },
+            size: Size { width: auto(), height: length(100.0) },
+            ..Default::default()
+        })
+        .unwrap();
+
+    let root = taffy.new_with_children(root_style(125.0), &[zero_width_left, real_right, bfc]).unwrap();
+
+    taffy.compute_layout(root, Size::MAX_CONTENT).unwrap();
+
+    let layout = taffy.layout(bfc).unwrap();
+    // The zero-width left float's edge stops the negative left margin; the real right
+    // float (below the zero-width float due to clear: left) narrows the box.
+    assert_eq!(layout.location, Point { x: 0.0, y: 0.0 });
+    assert_eq!(layout.size, Size { width: 100.0, height: 100.0 });
+}
+
+/// Regression test for <https://wpt.live/css/CSS2/floats/floats-wrap-bfc-with-margin-006.tentative.html>
+///
+/// A negative leading margin on a BFC root beside a real float on the trailing side only
+/// is applied as usual (there is no float edge on the leading side to act as an obstacle).
+#[test]
+fn bfc_negative_leading_margin_beside_trailing_float() {
+    let mut taffy = new_test_tree();
+
+    let real_right = taffy.new_leaf(float_block(25.0, 50.0, Float::Right)).unwrap();
+    let bfc = taffy
+        .new_leaf(Style {
+            display: Display::Block,
+            overflow: Point { x: Overflow::Hidden, y: Overflow::Hidden },
+            margin: Rect { left: length(-50.0), right: zero(), top: zero(), bottom: zero() },
+            size: Size { width: auto(), height: length(50.0) },
+            ..Default::default()
+        })
+        .unwrap();
+
+    let root = taffy.new_with_children(root_style(50.0), &[real_right, bfc]).unwrap();
+
+    taffy.compute_layout(root, Size::MAX_CONTENT).unwrap();
+
+    let layout = taffy.layout(bfc).unwrap();
+    // width = 50 (container) + 50 (negative margin) - 25 (float) = 75
+    assert_eq!(layout.location, Point { x: -50.0, y: 0.0 });
+    assert_eq!(layout.size, Size { width: 75.0, height: 50.0 });
 }
