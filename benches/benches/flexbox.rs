@@ -218,12 +218,50 @@ fn super_deep_benchmarks(c: &mut Criterion) {
     group.finish();
 }
 
+fn balanced_wrap_benchmarks(c: &mut Criterion) {
+    let mut group = c.benchmark_group("flex-wrap: balance");
+    group.sample_size(10);
+    // Near-equal item/line counts are the worst case for the balancing algorithm
+    for (item_count, line_count) in [(1_000, 500), (10_000, 5_000), (10_000, 9_999)] {
+        let benchmark_id = BenchmarkId::new("Taffy 0.7", format!("{item_count} items / {line_count} lines"));
+        group.bench_function(benchmark_id, |b| {
+            b.iter_batched(
+                || {
+                    let mut tree: TaffyTree<()> = TaffyTree::with_capacity(item_count + 1);
+                    let children: Vec<NodeId> = (0..item_count)
+                        .map(|index| {
+                            let width = length((index % 5) as f32 * 10.0);
+                            let style =
+                                TaffyStyle { size: Size { width, height: length(10.0) }, ..Default::default() };
+                            tree.new_leaf(style).unwrap()
+                        })
+                        .collect();
+                    let root_style = TaffyStyle {
+                        flex_wrap: FlexWrap::Balance,
+                        flex_line_count: line_count,
+                        size: Size { width: length(100.0), height: auto() },
+                        ..Default::default()
+                    };
+                    let root = tree.new_with_children(root_style, &children).unwrap();
+                    (tree, root)
+                },
+                |(mut tree, root)| {
+                    tree.compute_layout(root, Size::MAX_CONTENT).unwrap();
+                },
+                criterion::BatchSize::SmallInput,
+            )
+        });
+    }
+    group.finish();
+}
+
 fn taffy_benchmarks(c: &mut Criterion) {
     huge_nested_benchmarks(c);
     wide_benchmarks(c);
     deep_auto_benchmarks(c);
     deep_random_benchmarks(c);
     super_deep_benchmarks(c);
+    balanced_wrap_benchmarks(c);
 }
 
 criterion_group!(benches, taffy_benchmarks);
