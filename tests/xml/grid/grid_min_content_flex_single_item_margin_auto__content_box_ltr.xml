@@ -1,17 +1,17 @@
 <test name="grid_min_content_flex_single_item_margin_auto__content_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="grid" box-sizing="content-box" direction="ltr" grid-template-rows="40px 40px 40px" grid-template-columns="40px min-content 1fr">
-      <div box-sizing="content-box" direction="ltr"/>
-      <div box-sizing="content-box" direction="ltr" min-width="10px" margin-top="auto" margin-left="auto" margin-bottom="auto" margin-right="auto"/>
-      <div box-sizing="content-box" direction="ltr"/>
-      <div box-sizing="content-box" direction="ltr"/>
-      <text box-sizing="content-box" direction="ltr" margin-top="auto" margin-left="auto" margin-bottom="auto" margin-right="auto" grid-column-start="span 2">
+    <div display="grid" box-sizing="content-box" direction="ltr" position="absolute" grid-template-rows="40px 40px 40px" grid-template-columns="40px min-content 1fr">
+      <div box-sizing="content-box" direction="ltr" position="relative"/>
+      <div box-sizing="content-box" direction="ltr" position="relative" min-width="10px" margin-top="auto" margin-left="auto" margin-bottom="auto" margin-right="auto"/>
+      <div box-sizing="content-box" direction="ltr" position="relative"/>
+      <div box-sizing="content-box" direction="ltr" position="relative"/>
+      <text box-sizing="content-box" direction="ltr" position="relative" margin-top="auto" margin-left="auto" margin-bottom="auto" margin-right="auto" grid-column-start="span 2">
         HH​HH
       </text>
-      <div box-sizing="content-box" direction="ltr"/>
-      <div box-sizing="content-box" direction="ltr"/>
-      <div box-sizing="content-box" direction="ltr"/>
+      <div box-sizing="content-box" direction="ltr" position="relative"/>
+      <div box-sizing="content-box" direction="ltr" position="relative"/>
+      <div box-sizing="content-box" direction="ltr" position="relative"/>
     </div>
   </input>
   <expectations>

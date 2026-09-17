@@ -1,9 +1,9 @@
 <test name="block_padding_percentage_vertical_indefinite_container_height__border_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="block" direction="ltr" width="100px">
-      <div display="block" direction="ltr" height="20px" padding-top="10%" padding-left="15%" padding-bottom="20%" padding-right="5%">
-        <div display="block" direction="ltr" height="10px"/>
+    <div display="block" direction="ltr" position="absolute" width="100px">
+      <div display="block" direction="ltr" position="relative" height="20px" padding-top="10%" padding-left="15%" padding-bottom="20%" padding-right="5%">
+        <div display="block" direction="ltr" position="relative" height="10px"/>
       </div>
     </div>
   </input>

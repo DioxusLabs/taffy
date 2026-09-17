@@ -1,8 +1,8 @@
 <test name="display_none_absolute_child__border_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div direction="ltr" width="100px" height="100px">
-      <div direction="ltr" flex-grow="1"/>
+    <div direction="ltr" position="absolute" width="100px" height="100px">
+      <div direction="ltr" position="relative" flex-grow="1"/>
       <div display="none" direction="ltr" position="absolute" width="20px" height="20px" top="10px" left="10px"/>
     </div>
   </input>

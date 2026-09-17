@@ -1,12 +1,12 @@
 <test name="bevy_issue_8017_reduced__content_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div box-sizing="content-box" direction="rtl" flex-direction="column" width="200px" height="400px" row-gap="8px" column-gap="8px">
-      <div box-sizing="content-box" direction="rtl" height="50%">
-        <div box-sizing="content-box" direction="rtl"/>
+    <div box-sizing="content-box" direction="rtl" position="absolute" flex-direction="column" width="200px" height="400px" row-gap="8px" column-gap="8px">
+      <div box-sizing="content-box" direction="rtl" position="relative" height="50%">
+        <div box-sizing="content-box" direction="rtl" position="relative"/>
       </div>
-      <div box-sizing="content-box" direction="rtl" height="50%">
-        <div box-sizing="content-box" direction="rtl"/>
+      <div box-sizing="content-box" direction="rtl" position="relative" height="50%">
+        <div box-sizing="content-box" direction="rtl" position="relative"/>
       </div>
     </div>
   </input>

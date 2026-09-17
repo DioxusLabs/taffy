@@ -1,16 +1,16 @@
 <test name="grid_justify_content_center_direction_rtl__content_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="grid" box-sizing="content-box" direction="rtl" justify-content="center" width="200px" height="200px" grid-template-rows="40px 40px 40px" grid-template-columns="40px 40px 40px">
-      <div box-sizing="content-box" direction="rtl"/>
-      <div box-sizing="content-box" direction="rtl"/>
-      <div box-sizing="content-box" direction="rtl"/>
-      <div box-sizing="content-box" direction="rtl"/>
-      <div box-sizing="content-box" direction="rtl"/>
-      <div box-sizing="content-box" direction="rtl"/>
-      <div box-sizing="content-box" direction="rtl"/>
-      <div box-sizing="content-box" direction="rtl"/>
-      <div box-sizing="content-box" direction="rtl"/>
+    <div display="grid" box-sizing="content-box" direction="rtl" position="absolute" justify-content="center" width="200px" height="200px" grid-template-rows="40px 40px 40px" grid-template-columns="40px 40px 40px">
+      <div box-sizing="content-box" direction="rtl" position="relative"/>
+      <div box-sizing="content-box" direction="rtl" position="relative"/>
+      <div box-sizing="content-box" direction="rtl" position="relative"/>
+      <div box-sizing="content-box" direction="rtl" position="relative"/>
+      <div box-sizing="content-box" direction="rtl" position="relative"/>
+      <div box-sizing="content-box" direction="rtl" position="relative"/>
+      <div box-sizing="content-box" direction="rtl" position="relative"/>
+      <div box-sizing="content-box" direction="rtl" position="relative"/>
+      <div box-sizing="content-box" direction="rtl" position="relative"/>
     </div>
   </input>
   <expectations>

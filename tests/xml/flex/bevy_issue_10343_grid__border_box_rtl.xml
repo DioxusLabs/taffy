@@ -1,10 +1,10 @@
 <test name="bevy_issue_10343_grid__border_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="flex" direction="rtl" flex-direction="column" justify-content="space-around" width="100px" height="100px">
-      <div display="flex" direction="rtl">
-        <div display="grid" direction="rtl" width="200px" height="200px" margin-top="5px" margin-left="5px" margin-bottom="5px" margin-right="5px">
-          <div direction="rtl"/>
+    <div display="flex" direction="rtl" position="absolute" flex-direction="column" justify-content="space-around" width="100px" height="100px">
+      <div display="flex" direction="rtl" position="relative">
+        <div display="grid" direction="rtl" position="relative" width="200px" height="200px" margin-top="5px" margin-left="5px" margin-bottom="5px" margin-right="5px">
+          <div direction="rtl" position="relative"/>
         </div>
       </div>
     </div>

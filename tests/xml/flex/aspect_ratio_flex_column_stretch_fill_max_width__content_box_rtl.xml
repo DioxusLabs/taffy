@@ -1,8 +1,8 @@
 <test name="aspect_ratio_flex_column_stretch_fill_max_width__content_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="flex" box-sizing="content-box" direction="rtl" flex-direction="column" width="100px" height="100px">
-      <text box-sizing="content-box" direction="rtl" max-height="20px" aspect-ratio="2">
+    <div display="flex" box-sizing="content-box" direction="rtl" position="absolute" flex-direction="column" width="100px" height="100px">
+      <text box-sizing="content-box" direction="rtl" position="relative" max-height="20px" aspect-ratio="2">
         HH​HH​HH​HH
       </text>
     </div>

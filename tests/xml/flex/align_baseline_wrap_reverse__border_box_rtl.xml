@@ -1,11 +1,11 @@
 <test name="align_baseline_wrap_reverse__border_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div direction="rtl" flex-wrap="wrap-reverse" align-items="baseline" width="100px" height="100px">
-      <div direction="rtl" width="60px" height="20px"/>
-      <div direction="rtl" width="40px" height="40px"/>
-      <div direction="rtl" width="60px" height="30px"/>
-      <div direction="rtl" width="40px" height="10px"/>
+    <div direction="rtl" position="absolute" flex-wrap="wrap-reverse" align-items="baseline" width="100px" height="100px">
+      <div direction="rtl" position="relative" width="60px" height="20px"/>
+      <div direction="rtl" position="relative" width="40px" height="40px"/>
+      <div direction="rtl" position="relative" width="60px" height="30px"/>
+      <div direction="rtl" position="relative" width="40px" height="10px"/>
     </div>
   </input>
   <expectations>

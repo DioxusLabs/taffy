@@ -1,8 +1,8 @@
 <test name="grid_overlarge_span_to_negative_end__border_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="grid" direction="rtl" grid-template-columns="repeat(3, 10px)">
-      <div direction="rtl" height="20px" grid-column-start="span 10000" grid-column-end="-1"/>
+    <div display="grid" direction="rtl" position="absolute" grid-template-columns="repeat(3, 10px)">
+      <div direction="rtl" position="relative" height="20px" grid-column-start="span 10000" grid-column-end="-1"/>
     </div>
   </input>
   <expectations>

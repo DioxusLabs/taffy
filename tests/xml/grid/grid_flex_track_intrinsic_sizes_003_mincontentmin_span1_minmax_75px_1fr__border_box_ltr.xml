@@ -1,11 +1,11 @@
 <test name="grid_flex_track_intrinsic_sizes_003_mincontentmin_span1_minmax_75px_1fr__border_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="grid" direction="ltr" width="60px" height="60px" border-top="3px" border-left="3px" border-bottom="3px" border-right="3px" grid-template-rows="minmax(75px, 1fr)" grid-template-columns="minmax(75px, 1fr)">
-      <div direction="ltr" min-width="100px" min-height="100px" grid-row-start="1" grid-row-end="span 1" grid-column-start="1" grid-column-end="span 1">
-        <div direction="ltr" width="100px" height="100px"/>
+    <div display="grid" direction="ltr" position="absolute" width="60px" height="60px" border-top="3px" border-left="3px" border-bottom="3px" border-right="3px" grid-template-rows="minmax(75px, 1fr)" grid-template-columns="minmax(75px, 1fr)">
+      <div direction="ltr" position="relative" min-width="100px" min-height="100px" grid-row-start="1" grid-row-end="span 1" grid-column-start="1" grid-column-end="span 1">
+        <div direction="ltr" position="relative" width="100px" height="100px"/>
       </div>
-      <div direction="ltr" grid-row-start="1" grid-column-start="1"/>
+      <div direction="ltr" position="relative" grid-row-start="1" grid-column-start="1"/>
     </div>
   </input>
   <expectations>

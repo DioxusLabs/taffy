@@ -1,8 +1,8 @@
 <test name="grid_overflow_scroll_container_padding__border_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="grid" direction="rtl" overflow-x="scroll" overflow-y="scroll" scrollbar-width="15" width="300px" height="200px" padding-top="20px" padding-left="10px" padding-bottom="20px" padding-right="10px">
-      <div direction="rtl" width="100px" height="1000px"/>
+    <div display="grid" direction="rtl" position="absolute" overflow-x="scroll" overflow-y="scroll" scrollbar-width="15" width="300px" height="200px" padding-top="20px" padding-left="10px" padding-bottom="20px" padding-right="10px">
+      <div direction="rtl" position="relative" width="100px" height="1000px"/>
     </div>
   </input>
   <expectations>

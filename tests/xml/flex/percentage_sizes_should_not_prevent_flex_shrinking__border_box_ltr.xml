@@ -1,9 +1,9 @@
 <test name="percentage_sizes_should_not_prevent_flex_shrinking__border_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div direction="ltr" width="200px" height="200px">
-      <div direction="ltr" width="120%">
-        <div direction="ltr"/>
+    <div direction="ltr" position="absolute" width="200px" height="200px">
+      <div direction="ltr" position="relative" width="120%">
+        <div direction="ltr" position="relative"/>
       </div>
     </div>
   </input>

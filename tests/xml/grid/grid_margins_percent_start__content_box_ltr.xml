@@ -1,13 +1,13 @@
 <test name="grid_margins_percent_start__content_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="grid" box-sizing="content-box" direction="ltr" grid-template-rows="40px 40px 40px" grid-template-columns="20px 20px 20px">
-      <div box-sizing="content-box" direction="ltr" align-self="start" justify-self="start" width="20px" height="20px" margin-top="5%" margin-left="20%" margin-bottom="15%" margin-right="10%"/>
-      <div box-sizing="content-box" direction="ltr"/>
-      <div box-sizing="content-box" direction="ltr"/>
-      <div box-sizing="content-box" direction="ltr"/>
-      <div box-sizing="content-box" direction="ltr"/>
-      <div box-sizing="content-box" direction="ltr"/>
+    <div display="grid" box-sizing="content-box" direction="ltr" position="absolute" grid-template-rows="40px 40px 40px" grid-template-columns="20px 20px 20px">
+      <div box-sizing="content-box" direction="ltr" position="relative" align-self="start" justify-self="start" width="20px" height="20px" margin-top="5%" margin-left="20%" margin-bottom="15%" margin-right="10%"/>
+      <div box-sizing="content-box" direction="ltr" position="relative"/>
+      <div box-sizing="content-box" direction="ltr" position="relative"/>
+      <div box-sizing="content-box" direction="ltr" position="relative"/>
+      <div box-sizing="content-box" direction="ltr" position="relative"/>
+      <div box-sizing="content-box" direction="ltr" position="relative"/>
     </div>
   </input>
   <expectations>

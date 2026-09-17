@@ -1,17 +1,17 @@
 <test name="grid_min_content_flex_single_item_margin_percent__border_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="grid" direction="ltr" grid-template-rows="40px 40px 40px" grid-template-columns="40px min-content 1fr">
-      <div direction="ltr"/>
-      <div direction="ltr" min-width="10px" margin-top="5%" margin-left="20%" margin-bottom="15%" margin-right="10%"/>
-      <div direction="ltr"/>
-      <div direction="ltr"/>
-      <text direction="ltr" margin-top="5%" margin-left="20%" margin-bottom="15%" margin-right="10%" grid-column-start="span 2">
+    <div display="grid" direction="ltr" position="absolute" grid-template-rows="40px 40px 40px" grid-template-columns="40px min-content 1fr">
+      <div direction="ltr" position="relative"/>
+      <div direction="ltr" position="relative" min-width="10px" margin-top="5%" margin-left="20%" margin-bottom="15%" margin-right="10%"/>
+      <div direction="ltr" position="relative"/>
+      <div direction="ltr" position="relative"/>
+      <text direction="ltr" position="relative" margin-top="5%" margin-left="20%" margin-bottom="15%" margin-right="10%" grid-column-start="span 2">
         HH​HH
       </text>
-      <div direction="ltr"/>
-      <div direction="ltr"/>
-      <div direction="ltr"/>
+      <div direction="ltr" position="relative"/>
+      <div direction="ltr" position="relative"/>
+      <div direction="ltr" position="relative"/>
     </div>
   </input>
   <expectations>

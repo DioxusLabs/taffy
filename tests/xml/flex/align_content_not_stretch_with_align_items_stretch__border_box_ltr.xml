@@ -1,12 +1,12 @@
 <test name="align_content_not_stretch_with_align_items_stretch__border_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div direction="ltr" flex-wrap="wrap" align-content="flex-start" width="328px" height="52px">
-      <div direction="ltr" flex-direction="column">
-        <div direction="ltr" width="272px" height="44px"/>
+    <div direction="ltr" position="absolute" flex-wrap="wrap" align-content="flex-start" width="328px" height="52px">
+      <div direction="ltr" position="relative" flex-direction="column">
+        <div direction="ltr" position="relative" width="272px" height="44px"/>
       </div>
-      <div direction="ltr" flex-direction="column">
-        <div direction="ltr" width="56px" height="44px"/>
+      <div direction="ltr" position="relative" flex-direction="column">
+        <div direction="ltr" position="relative" width="56px" height="44px"/>
       </div>
     </div>
   </input>

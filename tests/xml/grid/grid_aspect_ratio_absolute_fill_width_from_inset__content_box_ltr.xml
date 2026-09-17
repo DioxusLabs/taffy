@@ -1,7 +1,7 @@
 <test name="grid_aspect_ratio_absolute_fill_width_from_inset__content_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="flex" box-sizing="content-box" direction="ltr" width="400px" height="300px">
+    <div display="flex" box-sizing="content-box" direction="ltr" position="absolute" width="400px" height="300px">
       <div box-sizing="content-box" direction="ltr" position="absolute" aspect-ratio="3" top="30%" bottom="50%"/>
     </div>
   </input>

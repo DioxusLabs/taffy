@@ -1,8 +1,8 @@
 <test name="max_width_overrides_width__content_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div box-sizing="content-box" direction="rtl">
-      <div box-sizing="content-box" direction="rtl" width="200px" max-width="100px"/>
+    <div box-sizing="content-box" direction="rtl" position="absolute">
+      <div box-sizing="content-box" direction="rtl" position="relative" width="200px" max-width="100px"/>
     </div>
   </input>
   <expectations>

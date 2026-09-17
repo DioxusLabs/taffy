@@ -1,9 +1,9 @@
 <test name="absolute_child_with_max_height_larger_shrinkable_grandchild__content_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div box-sizing="content-box" direction="rtl" flex-direction="column" width="100px" height="200px">
+    <div box-sizing="content-box" direction="rtl" position="absolute" flex-direction="column" width="100px" height="200px">
       <div box-sizing="content-box" direction="rtl" position="absolute" flex-direction="column" max-height="100px" bottom="20px">
-        <div box-sizing="content-box" direction="rtl" flex-basis="150px" width="100px"/>
+        <div box-sizing="content-box" direction="rtl" position="relative" flex-basis="150px" width="100px"/>
       </div>
     </div>
   </input>

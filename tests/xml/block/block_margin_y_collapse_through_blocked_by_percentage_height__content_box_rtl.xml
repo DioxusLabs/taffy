@@ -1,12 +1,12 @@
 <test name="block_margin_y_collapse_through_blocked_by_percentage_height__content_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="block" box-sizing="content-box" direction="rtl" width="50px" height="100px">
-      <div display="block" box-sizing="content-box" direction="rtl" height="10px" margin-bottom="10px"/>
-      <div display="block" box-sizing="content-box" direction="rtl" height="10%" margin-top="10px" margin-bottom="10px">
-        <div display="block" box-sizing="content-box" direction="rtl"/>
+    <div display="block" box-sizing="content-box" direction="rtl" position="absolute" width="50px" height="100px">
+      <div display="block" box-sizing="content-box" direction="rtl" position="relative" height="10px" margin-bottom="10px"/>
+      <div display="block" box-sizing="content-box" direction="rtl" position="relative" height="10%" margin-top="10px" margin-bottom="10px">
+        <div display="block" box-sizing="content-box" direction="rtl" position="relative"/>
       </div>
-      <div display="block" box-sizing="content-box" direction="rtl" height="10px" margin-top="10px"/>
+      <div display="block" box-sizing="content-box" direction="rtl" position="relative" height="10px" margin-top="10px"/>
     </div>
   </input>
   <expectations>

@@ -1,17 +1,17 @@
 <test name="grid_item_width_keywords__content_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="grid" box-sizing="content-box" direction="rtl" grid-template-columns="120px" grid-auto-rows="30px">
-      <text box-sizing="content-box" direction="rtl" width="stretch">
+    <div display="grid" box-sizing="content-box" direction="rtl" position="absolute" grid-template-columns="120px" grid-auto-rows="30px">
+      <text box-sizing="content-box" direction="rtl" position="relative" width="stretch">
         HH​HH
       </text>
-      <text box-sizing="content-box" direction="rtl" width="fit-content">
+      <text box-sizing="content-box" direction="rtl" position="relative" width="fit-content">
         HH​HH
       </text>
-      <text box-sizing="content-box" direction="rtl" width="min-content">
+      <text box-sizing="content-box" direction="rtl" position="relative" width="min-content">
         HH​HH
       </text>
-      <text box-sizing="content-box" direction="rtl" width="max-content">
+      <text box-sizing="content-box" direction="rtl" position="relative" width="max-content">
         HH​HH
       </text>
     </div>

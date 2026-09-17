@@ -1,17 +1,17 @@
 <test name="grid_item_height_keywords__content_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="grid" box-sizing="content-box" direction="rtl" grid-template-rows="60px" grid-template-columns="40px 40px 40px 40px">
-      <text box-sizing="content-box" direction="rtl" height="stretch">
+    <div display="grid" box-sizing="content-box" direction="rtl" position="absolute" grid-template-rows="60px" grid-template-columns="40px 40px 40px 40px">
+      <text box-sizing="content-box" direction="rtl" position="relative" height="stretch">
         HH​HH
       </text>
-      <text box-sizing="content-box" direction="rtl" height="fit-content">
+      <text box-sizing="content-box" direction="rtl" position="relative" height="fit-content">
         HH​HH
       </text>
-      <text box-sizing="content-box" direction="rtl" height="min-content">
+      <text box-sizing="content-box" direction="rtl" position="relative" height="min-content">
         HH​HH
       </text>
-      <text box-sizing="content-box" direction="rtl" height="max-content">
+      <text box-sizing="content-box" direction="rtl" position="relative" height="max-content">
         HH​HH
       </text>
     </div>

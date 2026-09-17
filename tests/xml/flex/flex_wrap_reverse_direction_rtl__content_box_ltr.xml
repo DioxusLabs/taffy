@@ -1,10 +1,10 @@
 <test name="flex_wrap_reverse_direction_rtl__content_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div box-sizing="content-box" direction="rtl" flex-wrap="wrap-reverse" width="100px" height="100px">
-      <div box-sizing="content-box" direction="ltr" width="40px" height="20px"/>
-      <div box-sizing="content-box" direction="ltr" width="40px" height="20px"/>
-      <div box-sizing="content-box" direction="ltr" width="40px" height="20px"/>
+    <div box-sizing="content-box" direction="rtl" position="absolute" flex-wrap="wrap-reverse" width="100px" height="100px">
+      <div box-sizing="content-box" direction="ltr" position="relative" width="40px" height="20px"/>
+      <div box-sizing="content-box" direction="ltr" position="relative" width="40px" height="20px"/>
+      <div box-sizing="content-box" direction="ltr" position="relative" width="40px" height="20px"/>
     </div>
   </input>
   <expectations>

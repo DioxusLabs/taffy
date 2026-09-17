@@ -1,8 +1,8 @@
 <test name="scroll_size__border_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div direction="ltr" overflow-x="scroll" overflow-y="scroll" scrollbar-width="15" align-items="start" justify-content="start" width="50px" height="50px">
-      <div direction="ltr" flex-shrink="0" width="100px" height="100px"/>
+    <div direction="ltr" position="absolute" overflow-x="scroll" overflow-y="scroll" scrollbar-width="15" align-items="start" justify-content="start" width="50px" height="50px">
+      <div direction="ltr" position="relative" flex-shrink="0" width="100px" height="100px"/>
     </div>
   </input>
   <expectations>

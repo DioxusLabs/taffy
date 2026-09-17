@@ -1,9 +1,9 @@
 <test name="float_bfc_narrows_beside_float__border_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="block" direction="rtl" width="100px">
-      <div direction="rtl" float="left" width="50px" height="100px"/>
-      <div display="block" direction="rtl" overflow-x="hidden" overflow-y="hidden" scrollbar-width="15" height="50px"/>
+    <div display="block" direction="rtl" position="absolute" width="100px">
+      <div direction="rtl" position="relative" float="left" width="50px" height="100px"/>
+      <div display="block" direction="rtl" position="relative" overflow-x="hidden" overflow-y="hidden" scrollbar-width="15" height="50px"/>
     </div>
   </input>
   <expectations>

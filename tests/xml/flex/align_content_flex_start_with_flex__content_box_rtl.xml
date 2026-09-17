@@ -1,12 +1,12 @@
 <test name="align_content_flex_start_with_flex__content_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div box-sizing="content-box" direction="rtl" flex-direction="column" flex-wrap="wrap" align-content="flex-start" width="100px" height="120px">
-      <div box-sizing="content-box" direction="rtl" flex-grow="1" flex-shrink="0" flex-basis="0%" width="50px"/>
-      <div box-sizing="content-box" direction="rtl" flex-grow="1" flex-shrink="0" flex-basis="0%" width="50px" height="10px"/>
-      <div box-sizing="content-box" direction="rtl" width="50px"/>
-      <div box-sizing="content-box" direction="rtl" flex-grow="1" flex-basis="0%" width="50px"/>
-      <div box-sizing="content-box" direction="rtl" width="50px"/>
+    <div box-sizing="content-box" direction="rtl" position="absolute" flex-direction="column" flex-wrap="wrap" align-content="flex-start" width="100px" height="120px">
+      <div box-sizing="content-box" direction="rtl" position="relative" flex-grow="1" flex-shrink="0" flex-basis="0%" width="50px"/>
+      <div box-sizing="content-box" direction="rtl" position="relative" flex-grow="1" flex-shrink="0" flex-basis="0%" width="50px" height="10px"/>
+      <div box-sizing="content-box" direction="rtl" position="relative" width="50px"/>
+      <div box-sizing="content-box" direction="rtl" position="relative" flex-grow="1" flex-basis="0%" width="50px"/>
+      <div box-sizing="content-box" direction="rtl" position="relative" width="50px"/>
     </div>
   </input>
   <expectations>

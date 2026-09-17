@@ -1,15 +1,15 @@
 <test name="flex_column_stretch_margin_x_exceeds_container_width__content_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="flex" box-sizing="content-box" direction="ltr" flex-direction="column" width="20px" height="100px">
-      <div display="flex" box-sizing="content-box" direction="ltr" height="20px" margin-left="30px" margin-right="10px">
-        <div box-sizing="content-box" direction="ltr" flex-grow="1" flex-basis="10px" height="20px"/>
-        <div box-sizing="content-box" direction="ltr" flex-grow="1" flex-basis="10px" height="20px"/>
+    <div display="flex" box-sizing="content-box" direction="ltr" position="absolute" flex-direction="column" width="20px" height="100px">
+      <div display="flex" box-sizing="content-box" direction="ltr" position="relative" height="20px" margin-left="30px" margin-right="10px">
+        <div box-sizing="content-box" direction="ltr" position="relative" flex-grow="1" flex-basis="10px" height="20px"/>
+        <div box-sizing="content-box" direction="ltr" position="relative" flex-grow="1" flex-basis="10px" height="20px"/>
       </div>
-      <div box-sizing="content-box" direction="ltr" height="20px" margin-left="30px" margin-right="10px"/>
-      <div display="flex" box-sizing="content-box" direction="ltr" flex-wrap="wrap" margin-left="30px" margin-right="10px">
-        <div box-sizing="content-box" direction="ltr" width="5px" height="10px"/>
-        <div box-sizing="content-box" direction="ltr" width="5px" height="10px"/>
+      <div box-sizing="content-box" direction="ltr" position="relative" height="20px" margin-left="30px" margin-right="10px"/>
+      <div display="flex" box-sizing="content-box" direction="ltr" position="relative" flex-wrap="wrap" margin-left="30px" margin-right="10px">
+        <div box-sizing="content-box" direction="ltr" position="relative" width="5px" height="10px"/>
+        <div box-sizing="content-box" direction="ltr" position="relative" width="5px" height="10px"/>
       </div>
     </div>
   </input>

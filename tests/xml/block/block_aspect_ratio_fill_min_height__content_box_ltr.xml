@@ -1,8 +1,8 @@
 <test name="block_aspect_ratio_fill_min_height__content_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="block" box-sizing="content-box" direction="ltr" width="100px" height="100px">
-      <div display="block" box-sizing="content-box" direction="ltr" min-width="40px" aspect-ratio="2"/>
+    <div display="block" box-sizing="content-box" direction="ltr" position="absolute" width="100px" height="100px">
+      <div display="block" box-sizing="content-box" direction="ltr" position="relative" min-width="40px" aspect-ratio="2"/>
     </div>
   </input>
   <expectations>

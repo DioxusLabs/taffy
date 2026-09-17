@@ -1,9 +1,9 @@
 <test name="grid_overlarge_negative_line_with_explicit_tracks__content_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="grid" box-sizing="content-box" direction="rtl" grid-template-columns="repeat(9000, 0px)">
-      <div box-sizing="content-box" direction="rtl" width="20px" height="20px" grid-column-start="-19005"/>
-      <div box-sizing="content-box" direction="rtl" width="20px" height="20px" grid-column-start="9000"/>
+    <div display="grid" box-sizing="content-box" direction="rtl" position="absolute" grid-template-columns="repeat(9000, 0px)">
+      <div box-sizing="content-box" direction="rtl" position="relative" width="20px" height="20px" grid-column-start="-19005"/>
+      <div box-sizing="content-box" direction="rtl" position="relative" width="20px" height="20px" grid-column-start="9000"/>
     </div>
   </input>
   <expectations>

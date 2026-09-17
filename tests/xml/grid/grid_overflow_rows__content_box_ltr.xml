@@ -1,15 +1,15 @@
 <test name="grid_overflow_rows__content_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="grid" box-sizing="content-box" direction="ltr" grid-template-rows="40px 40px" grid-template-columns="min-content max-content 10px 20%">
-      <text box-sizing="content-box" direction="ltr" grid-column-start="1" grid-column-end="span 4">
+    <div display="grid" box-sizing="content-box" direction="ltr" position="absolute" grid-template-rows="40px 40px" grid-template-columns="min-content max-content 10px 20%">
+      <text box-sizing="content-box" direction="ltr" position="relative" grid-column-start="1" grid-column-end="span 4">
         HHHHHHHHHHHHHHHH​HHHHHHHHHHHHHHHH
       </text>
-      <div box-sizing="content-box" direction="ltr"/>
-      <div box-sizing="content-box" direction="ltr"/>
-      <div box-sizing="content-box" direction="ltr"/>
-      <div box-sizing="content-box" direction="ltr"/>
-      <div box-sizing="content-box" direction="ltr"/>
+      <div box-sizing="content-box" direction="ltr" position="relative"/>
+      <div box-sizing="content-box" direction="ltr" position="relative"/>
+      <div box-sizing="content-box" direction="ltr" position="relative"/>
+      <div box-sizing="content-box" direction="ltr" position="relative"/>
+      <div box-sizing="content-box" direction="ltr" position="relative"/>
     </div>
   </input>
   <expectations>

@@ -1,17 +1,17 @@
 <test name="grid_item_height_keywords__content_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="grid" box-sizing="content-box" direction="ltr" grid-template-rows="60px" grid-template-columns="40px 40px 40px 40px">
-      <text box-sizing="content-box" direction="ltr" height="stretch">
+    <div display="grid" box-sizing="content-box" direction="ltr" position="absolute" grid-template-rows="60px" grid-template-columns="40px 40px 40px 40px">
+      <text box-sizing="content-box" direction="ltr" position="relative" height="stretch">
         HH​HH
       </text>
-      <text box-sizing="content-box" direction="ltr" height="fit-content">
+      <text box-sizing="content-box" direction="ltr" position="relative" height="fit-content">
         HH​HH
       </text>
-      <text box-sizing="content-box" direction="ltr" height="min-content">
+      <text box-sizing="content-box" direction="ltr" position="relative" height="min-content">
         HH​HH
       </text>
-      <text box-sizing="content-box" direction="ltr" height="max-content">
+      <text box-sizing="content-box" direction="ltr" position="relative" height="max-content">
         HH​HH
       </text>
     </div>

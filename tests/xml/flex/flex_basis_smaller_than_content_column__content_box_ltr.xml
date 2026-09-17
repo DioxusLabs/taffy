@@ -1,9 +1,9 @@
 <test name="flex_basis_smaller_than_content_column__content_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div box-sizing="content-box" direction="ltr" flex-direction="column" height="100px">
-      <div box-sizing="content-box" direction="ltr" flex-direction="column" flex-basis="50px">
-        <div box-sizing="content-box" direction="ltr" width="100px" height="100px"/>
+    <div box-sizing="content-box" direction="ltr" position="absolute" flex-direction="column" height="100px">
+      <div box-sizing="content-box" direction="ltr" position="relative" flex-direction="column" flex-basis="50px">
+        <div box-sizing="content-box" direction="ltr" position="relative" width="100px" height="100px"/>
       </div>
     </div>
   </input>

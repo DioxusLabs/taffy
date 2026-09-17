@@ -1,15 +1,15 @@
 <test name="float_shrink_to_fit_cleared_floats__border_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="block" direction="ltr" width="400px" height="200px">
-      <div display="block" direction="ltr" float="right">
-        <div display="block" direction="ltr" float="right" width="100px" height="20px"/>
-        <div display="block" direction="ltr" float="right" clear="right" width="120px" height="20px"/>
+    <div display="block" direction="ltr" position="absolute" width="400px" height="200px">
+      <div display="block" direction="ltr" position="relative" float="right">
+        <div display="block" direction="ltr" position="relative" float="right" width="100px" height="20px"/>
+        <div display="block" direction="ltr" position="relative" float="right" clear="right" width="120px" height="20px"/>
       </div>
-      <div display="block" direction="ltr" float="left">
-        <div display="block" direction="ltr" float="left" width="50px" height="20px"/>
-        <div display="block" direction="ltr" float="left" clear="left" width="60px" height="20px"/>
-        <div display="block" direction="ltr" float="left" width="30px" height="20px"/>
+      <div display="block" direction="ltr" position="relative" float="left">
+        <div display="block" direction="ltr" position="relative" float="left" width="50px" height="20px"/>
+        <div display="block" direction="ltr" position="relative" float="left" clear="left" width="60px" height="20px"/>
+        <div display="block" direction="ltr" position="relative" float="left" width="30px" height="20px"/>
       </div>
     </div>
   </input>
