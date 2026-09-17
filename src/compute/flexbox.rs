@@ -1,5 +1,6 @@
 //! Computes the [flexbox](https://css-tricks.com/snippets/css/a-guide-to-flexbox/) layout algorithm on [`TaffyTree`](crate::TaffyTree) according to the [spec](https://www.w3.org/TR/css-flexbox-1/)
 use crate::compute::common::alignment::{compute_alignment_offset, resolve_self_alignment_safety};
+use crate::compute::common::order::{apply_permutation, order_modified_permutation};
 use crate::geometry::{Line, Point, Rect, Size};
 use crate::style::{
     AlignContent, AlignContentKeyword, AlignItems, AlignItemsKeyword, AlignSelf, AvailableSpace, Contain,
@@ -797,14 +798,12 @@ fn generate_anonymous_flex_items(
         })
         .collect();
 
-    // CSS Flexbox §5.4: lay out items in order-modified document order. Sorting by
-    // `(order, index)` keeps items with equal `order` values in document order (no allocation
-    // is needed, unlike a stable sort). Skipped entirely in the common case where no item sets
-    // `order` (the items are already in the correct order). `FlexItem` is large, so a
-    // permutation of indexes is sorted and then applied rather than sorting the items.
+    // CSS Flexbox §5.4: lay out items in order-modified document order. Skipped entirely in the
+    // common case where no item sets `order` (the items are already in the correct order).
+    // `FlexItem` is large, so a permutation of indexes is computed and then applied rather than
+    // sorting the items themselves.
     if flex_items.iter().any(|item| item.css_order != 0) {
-        let mut permutation: Vec<u32> = (0..flex_items.len() as u32).collect();
-        permutation.sort_unstable_by_key(|&index| (flex_items[index as usize].css_order, index));
+        let mut permutation = order_modified_permutation(flex_items.iter().map(|item| item.css_order));
         apply_permutation(&mut flex_items, &mut permutation);
     }
     for (rank, item) in flex_items.iter_mut().enumerate() {
@@ -812,25 +811,6 @@ fn generate_anonymous_flex_items(
     }
 
     flex_items
-}
-
-/// Reorder `items` in place such that `items[k]` becomes the item previously at `permutation[k]`.
-/// Each item is moved at most once (by following the permutation's cycles). `permutation` is
-/// consumed as scratch space.
-fn apply_permutation<T>(items: &mut [T], permutation: &mut [u32]) {
-    debug_assert_eq!(items.len(), permutation.len());
-    for start in 0..items.len() {
-        let mut position = start;
-        loop {
-            let source = permutation[position] as usize;
-            permutation[position] = position as u32;
-            if source == start {
-                break;
-            }
-            items.swap(position, source);
-            position = source;
-        }
-    }
 }
 
 /// Determine the available main and cross space for the flex items.
@@ -3455,25 +3435,6 @@ mod balance {
                      gap_between_items={gap_between_items} min_line_count={min_line_count}"
                 );
             }
-        }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::apply_permutation;
-
-    #[test]
-    fn apply_permutation_reorders_items() {
-        let items = ["a", "b", "c", "d", "e", "f"];
-        for permutation in
-            [[0, 1, 2, 3, 4, 5], [5, 4, 3, 2, 1, 0], [1, 0, 3, 2, 5, 4], [2, 0, 1, 5, 3, 4], [3, 4, 5, 0, 1, 2]]
-        {
-            let mut reordered = items;
-            let mut scratch: Vec<u32> = permutation.to_vec();
-            apply_permutation(&mut reordered, &mut scratch);
-            let expected: Vec<&str> = permutation.iter().map(|&index| items[index as usize]).collect();
-            assert_eq!(reordered.to_vec(), expected);
         }
     }
 }
