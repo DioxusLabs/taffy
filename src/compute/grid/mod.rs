@@ -594,10 +594,10 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     #[cfg_attr(not(feature = "content_size"), allow(unused_mut))]
     let mut item_overflow_rect = Rect::ZERO;
 
-    // Out-of-flow candidates: bubbled from in-flow children's subtrees, plus direct out-of-flow
-    // children of the grid
-    let mut bubbled_candidates = OofCandidates::new();
-    let mut direct_oof_candidates = OofCandidates::new();
+    // Out-of-flow candidates in document order: direct out-of-flow children of the grid
+    // interleaved with candidates bubbled from in-flow children's subtrees. These are laid out
+    // by the out-of-flow positioning pass (`compute_oof_layout`), which runs after this algorithm.
+    let mut oof_candidates = OofCandidates::new();
 
     // Sort items back into original order to allow them to be matched up with styles
     items.sort_by_key(|item| item.source_order);
@@ -636,7 +636,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
             border,
             #[cfg(feature = "content_size")]
             is_scroll_container,
-            &mut bubbled_candidates,
+            &mut item.oof_candidates,
         );
         item.y_position = y_position;
         item.height = height;
@@ -647,9 +647,16 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
         }
     }
 
-    // Position hidden and absolutely positioned children
+    // Position hidden and absolutely positioned children, merging in the candidates bubbled out
+    // of in-flow children's subtrees (`items` is sorted by `source_order`, i.e. child index)
     let mut order = items.len() as u32;
+    let mut in_flow_items = items.iter_mut().peekable();
     (0..tree.child_count(node)).for_each(|index| {
+        if let Some(item) = in_flow_items.next_if(|item| item.source_order as usize == index) {
+            oof_candidates.append(&mut item.oof_candidates);
+            return;
+        }
+
         let child = tree.get_child_id(node, index);
         let child_style = tree.get_grid_child_style(child);
 
@@ -749,7 +756,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
                 }
             }
 
-            direct_oof_candidates.push(OofCandidate {
+            oof_candidates.push(OofCandidate {
                 node: child,
                 order,
                 position,
@@ -767,10 +774,6 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
         }
     });
 
-    // Collect out-of-flow candidates (direct out-of-flow children in document order, then
-    // candidates bubbled from in-flow children). These are laid out by the out-of-flow
-    // positioning pass (`compute_oof_layout`), which runs after this algorithm.
-    direct_oof_candidates.append(&mut bubbled_candidates);
     let absolute_position_inset = border
         + Rect {
             left: if direction.is_rtl() { scrollbar_gutter.x } else { 0.0 },
@@ -816,7 +819,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
         };
         #[cfg(not(feature = "content_size"))]
         let mut output = LayoutOutput::from_outer_size(container_border_box);
-        output.oof_candidates = direct_oof_candidates;
+        output.oof_candidates = oof_candidates;
         output.oof_positioning_area = oof_positioning_area;
         return output;
     }
@@ -865,7 +868,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
         scrollable_overflow_rect,
         Baselines::from_first(grid_container_baseline),
     );
-    output.oof_candidates = direct_oof_candidates;
+    output.oof_candidates = oof_candidates;
     output.oof_positioning_area = oof_positioning_area;
     output
 }

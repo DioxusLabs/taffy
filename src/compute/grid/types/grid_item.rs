@@ -5,7 +5,7 @@ use crate::compute::grid::OriginZeroLine;
 use crate::geometry::AbstractAxis;
 use crate::geometry::{Line, Point, Rect, Size};
 use crate::style::{AlignItems, AlignSelf, AvailableSpace, Dimension, LengthPercentageAuto, Overflow};
-use crate::tree::{LayoutPartialTree, LayoutPartialTreeExt, NodeId, SizingMode};
+use crate::tree::{LayoutPartialTree, LayoutPartialTreeExt, NodeId, OofCandidates, SizingMode};
 use crate::util::{MaybeMath, MaybeResolve, ResolveOrZero};
 use crate::{AlignItemsKeyword, BoxSizing, GridItemStyle, LengthPercentage};
 use core::ops::Range;
@@ -90,6 +90,10 @@ pub(in super::super) struct GridItem {
     pub y_position: f32,
     /// Final height. Used to compute baseline alignment for the container.
     pub height: f32,
+
+    /// Out-of-flow candidates bubbled out of this item's subtree (anchors relative to the
+    /// container's border box)
+    pub oof_candidates: OofCandidates,
 }
 
 impl GridItem {
@@ -134,6 +138,7 @@ impl GridItem {
             minimum_contribution_cache: Size::NONE,
             y_position: 0.0,
             height: 0.0,
+            oof_candidates: OofCandidates::NONE,
         }
     }
 

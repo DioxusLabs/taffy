@@ -109,6 +109,10 @@ struct FlexItem {
     /// Offset is the relative position from the item's natural flow position based on
     /// relative position values, alignment, and justification. Does not include margin/padding/border.
     offset_cross: f32,
+
+    /// Out-of-flow candidates bubbled out of this item's subtree. Anchors are relative to the
+    /// container's border box (translated when the item's final layout is computed).
+    oof_candidates: OofCandidates,
 }
 
 impl FlexItem {
@@ -479,18 +483,15 @@ fn compute_preliminary(tree: &mut impl LayoutFlexboxContainer, node: NodeId, inp
     debug_log!("align_flex_lines_per_align_content");
     align_flex_lines_per_align_content(&mut flex_lines, &constants, total_line_cross_size);
 
-    // Do a final layout pass and gather the resulting layouts (collecting any out-of-flow
-    // candidates bubbled from in-flow children's subtrees)
+    // Do a final layout pass and gather the resulting layouts
     debug_log!("final_layout_pass");
-    let mut bubbled_candidates = OofCandidates::new();
-    let inflow_overflow_rect = final_layout_pass(tree, &mut flex_lines, &constants, &mut bubbled_candidates);
+    let inflow_overflow_rect = final_layout_pass(tree, &mut flex_lines, &constants);
 
-    // Collect out-of-flow candidates (direct out-of-flow children in document order, then
-    // candidates bubbled from in-flow children). These are laid out by the out-of-flow
-    // positioning pass (`compute_oof_layout`), which runs after this algorithm.
+    // Collect out-of-flow candidates in document order (direct out-of-flow children interleaved
+    // with candidates bubbled from in-flow children's subtrees). These are laid out by the
+    // out-of-flow positioning pass (`compute_oof_layout`), which runs after this algorithm.
     let mut candidates = OofCandidates::new();
-    collect_oof_candidates(tree, node, &constants, &mut candidates);
-    candidates.append(&mut bubbled_candidates);
+    collect_oof_candidates(tree, node, &constants, &mut flex_lines, &mut candidates);
 
     let absolute_position_inset = constants.border
         + Rect {
@@ -781,6 +782,8 @@ fn generate_anonymous_flex_items(
 
                 offset_main: 0.0,
                 offset_cross: 0.0,
+
+                oof_candidates: OofCandidates::NONE,
             }
         })
         .collect()
@@ -2467,7 +2470,6 @@ fn calculate_flex_item(
     #[cfg(feature = "content_size")] total_overflow_rect: &mut Rect<f32>,
     #[cfg(feature = "content_size")] border: Rect<f32>,
     constants: &AlgoConstants,
-    bubbled_candidates: &mut OofCandidates,
 ) {
     let container_size = constants.container_size;
     let node_inner_size = constants.node_inner_size;
@@ -2559,12 +2561,11 @@ fn calculate_flex_item(
         },
     );
 
-    // Bubble out-of-flow candidates from the item's subtree, translating anchors from
+    // Keep out-of-flow candidates from the item's subtree, translating anchors from
     // item-relative to container-relative coordinates
-    let mut item_candidates = layout_output.oof_candidates.take();
-    if !item_candidates.is_empty() {
-        item_candidates.translate(location);
-        bubbled_candidates.append(&mut item_candidates);
+    item.oof_candidates = layout_output.oof_candidates.take();
+    if !item.oof_candidates.is_empty() {
+        item.oof_candidates.translate(location);
     }
 
     if is_rtl_row {
@@ -2600,7 +2601,6 @@ fn calculate_layout_line(
     #[cfg(feature = "content_size")] overflow_rect: &mut Rect<f32>,
     #[cfg(feature = "content_size")] border: Rect<f32>,
     constants: &AlgoConstants,
-    bubbled_candidates: &mut OofCandidates,
 ) {
     let container_size = constants.container_size;
     let padding_border = constants.content_box_inset;
@@ -2631,7 +2631,6 @@ fn calculate_layout_line(
                 #[cfg(feature = "content_size")]
                 border,
                 constants,
-                bubbled_candidates,
             );
         }
     } else {
@@ -2647,7 +2646,6 @@ fn calculate_layout_line(
                 #[cfg(feature = "content_size")]
                 border,
                 constants,
-                bubbled_candidates,
             );
         }
     }
@@ -2663,7 +2661,6 @@ fn final_layout_pass(
     tree: &mut impl LayoutFlexboxContainer,
     flex_lines: &mut [FlexLine],
     constants: &AlgoConstants,
-    bubbled_candidates: &mut OofCandidates,
 ) -> Rect<f32> {
     let mut total_offset_cross = if constants.is_column && constants.layout_direction.is_rtl() {
         constants.container_size.width - constants.content_box_inset.cross_end(constants.dir)
@@ -2685,7 +2682,6 @@ fn final_layout_pass(
                 #[cfg(feature = "content_size")]
                 constants.border,
                 constants,
-                bubbled_candidates,
             );
         }
     } else {
@@ -2699,7 +2695,6 @@ fn final_layout_pass(
                 #[cfg(feature = "content_size")]
                 constants.border,
                 constants,
-                bubbled_candidates,
             );
         }
     }
@@ -2721,16 +2716,28 @@ fn final_layout_pass(
     overflow_rect
 }
 
-/// Collect out-of-flow candidates for all direct out-of-flow children, computing their static
-/// positions per the flexbox alignment rules. Final sizing and positioning happens in the shared
+/// Collect out-of-flow candidates in document order: direct out-of-flow children (computing their
+/// static positions per the flexbox alignment rules) interleaved with the candidates bubbled out
+/// of each in-flow item's subtree. Final sizing and positioning happens in the shared
 /// out-of-flow positioning pass at the containing block.
 #[inline]
 fn collect_oof_candidates(
     tree: &mut impl LayoutFlexboxContainer,
     node: NodeId,
     constants: &AlgoConstants,
+    flex_lines: &mut [FlexLine],
     candidates: &mut OofCandidates,
 ) {
+    // Items are stored in visual (line / reversed) order; sort those carrying bubbled candidates
+    // back into document order so they can be merged with the direct out-of-flow children
+    let mut items: Vec<&mut FlexItem> = flex_lines
+        .iter_mut()
+        .flat_map(|line| line.items.iter_mut())
+        .filter(|item| !item.oof_candidates.is_empty())
+        .collect();
+    items.sort_unstable_by_key(|item| item.order);
+    let mut items = items.into_iter().peekable();
+
     let dir = constants.dir;
     let container_size = constants.container_size;
     let content_box_inset = constants.content_box_inset;
@@ -2757,8 +2764,15 @@ fn collect_oof_candidates(
         let child_style = tree.get_flexbox_child_style(child);
         let position = child_style.position();
 
-        // Skip items that are display:none or are not out-of-flow
-        if child_style.box_generation_mode() == BoxGenerationMode::None || !position.is_out_of_flow() {
+        if child_style.box_generation_mode() == BoxGenerationMode::None {
+            continue;
+        }
+        // In-flow item: merge the candidates bubbled out of its subtree
+        if !position.is_out_of_flow() {
+            drop(child_style);
+            if let Some(item) = items.next_if(|item| item.order == order as u32) {
+                candidates.append(&mut item.oof_candidates);
+            }
             continue;
         }
 

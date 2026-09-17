@@ -57,6 +57,54 @@ mod oof_hoisting {
         }
     }
 
+    /// The containing block's hoisted children are recorded in document order: direct
+    /// out-of-flow children interleaved with boxes hoisted out of in-flow children's subtrees.
+    #[test]
+    fn hoisted_children_are_in_document_order() {
+        for display in [Display::Block, Display::Flex, Display::Grid] {
+            let mut tree: TaffyTree<()> = TaffyTree::new();
+            let abs_style = Style {
+                position: Position::Absolute,
+                size: Size { width: length(10.0), height: length(10.0) },
+                ..Default::default()
+            };
+            let inflow_style =
+                Style { display, size: Size { width: length(20.0), height: length(20.0) }, ..Default::default() };
+
+            // Children of `cb`, in document order:
+            //   [direct_a, static_b(> nested_b), static_c(> nested_c), direct_d, static_e(> nested_e)]
+            let direct_a = tree.new_leaf(abs_style.clone()).unwrap();
+            let nested_b = tree.new_leaf(abs_style.clone()).unwrap();
+            let static_b = tree.new_with_children(inflow_style.clone(), &[nested_b]).unwrap();
+            let nested_c = tree.new_leaf(abs_style.clone()).unwrap();
+            let static_c = tree.new_with_children(inflow_style.clone(), &[nested_c]).unwrap();
+            let direct_d = tree.new_leaf(abs_style.clone()).unwrap();
+            let nested_e = tree.new_leaf(abs_style.clone()).unwrap();
+            let static_e = tree.new_with_children(inflow_style.clone(), &[nested_e]).unwrap();
+            let cb = tree
+                .new_with_children(
+                    Style {
+                        display,
+                        position: Position::Relative,
+                        flex_wrap: FlexWrap::WrapReverse,
+                        flex_direction: FlexDirection::RowReverse,
+                        size: Size { width: length(50.0), height: length(200.0) },
+                        ..Default::default()
+                    },
+                    &[direct_a, static_b, static_c, direct_d, static_e],
+                )
+                .unwrap();
+
+            tree.compute_layout(cb, Size::MAX_CONTENT).unwrap();
+
+            assert_eq!(
+                tree.hoisted_children(cb).unwrap(),
+                &[direct_a, nested_b, nested_c, direct_d, nested_e],
+                "{display:?}"
+            );
+        }
+    }
+
     /// An absolute box with auto insets is placed at its static position: where it would
     /// have been placed in the normal flow of its DOM parent, expressed relative to its
     /// containing block.
