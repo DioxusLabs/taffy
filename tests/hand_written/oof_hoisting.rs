@@ -1,0 +1,527 @@
+//! Tests for out-of-flow hoisting: absolute/fixed boxes are laid out by their containing
+//! block (nearest positioned ancestor, or the root) rather than by their DOM parent, and
+//! their `Layout.location` is relative to that containing block.
+#[cfg(test)]
+mod oof_hoisting {
+    use taffy::prelude::*;
+    use taffy::Point;
+
+    fn leaf_style(width: f32, height: f32) -> Style {
+        Style { size: Size { width: length(width), height: length(height) }, ..Default::default() }
+    }
+
+    /// An absolute box whose parent is static is positioned relative to the nearest
+    /// positioned ancestor, with a containing-block-relative location.
+    #[test]
+    fn absolute_skips_static_parent() {
+        for display in [Display::Block, Display::Flex, Display::Grid] {
+            let mut tree: TaffyTree<()> = TaffyTree::new();
+            let abs = tree
+                .new_leaf(Style {
+                    position: Position::Absolute,
+                    inset: Rect { left: length(10.0), top: length(20.0), right: auto(), bottom: auto() },
+                    size: Size { width: length(30.0), height: length(30.0) },
+                    ..Default::default()
+                })
+                .unwrap();
+            // Static in-flow parent, offset from the containing block's origin
+            let static_parent = tree
+                .new_with_children(
+                    Style {
+                        display,
+                        margin: Rect { left: length(40.0), top: length(40.0), right: auto(), bottom: auto() },
+                        size: Size { width: length(50.0), height: length(50.0) },
+                        ..Default::default()
+                    },
+                    &[abs],
+                )
+                .unwrap();
+            let cb = tree
+                .new_with_children(
+                    Style {
+                        display,
+                        position: Position::Relative,
+                        size: Size { width: length(200.0), height: length(200.0) },
+                        ..Default::default()
+                    },
+                    &[static_parent],
+                )
+                .unwrap();
+
+            tree.compute_layout(cb, Size::MAX_CONTENT).unwrap();
+
+            // Location is relative to the containing block, not the static parent
+            let layout = tree.layout(abs).unwrap();
+            assert_eq!(layout.location, Point { x: 10.0, y: 20.0 }, "{display:?}");
+            assert_eq!(layout.size, Size { width: 30.0, height: 30.0 }, "{display:?}");
+        }
+    }
+
+    /// The containing block's hoisted children are recorded in document order: direct
+    /// out-of-flow children interleaved with boxes hoisted out of in-flow children's subtrees.
+    #[test]
+    fn hoisted_children_are_in_document_order() {
+        for display in [Display::Block, Display::Flex, Display::Grid] {
+            let mut tree: TaffyTree<()> = TaffyTree::new();
+            let abs_style = Style {
+                position: Position::Absolute,
+                size: Size { width: length(10.0), height: length(10.0) },
+                ..Default::default()
+            };
+            let inflow_style =
+                Style { display, size: Size { width: length(20.0), height: length(20.0) }, ..Default::default() };
+
+            // Children of `cb`, in document order:
+            //   [direct_a, static_b(> nested_b), static_c(> nested_c), direct_d, static_e(> nested_e)]
+            let direct_a = tree.new_leaf(abs_style.clone()).unwrap();
+            let nested_b = tree.new_leaf(abs_style.clone()).unwrap();
+            let static_b = tree.new_with_children(inflow_style.clone(), &[nested_b]).unwrap();
+            let nested_c = tree.new_leaf(abs_style.clone()).unwrap();
+            let static_c = tree.new_with_children(inflow_style.clone(), &[nested_c]).unwrap();
+            let direct_d = tree.new_leaf(abs_style.clone()).unwrap();
+            let nested_e = tree.new_leaf(abs_style.clone()).unwrap();
+            let static_e = tree.new_with_children(inflow_style.clone(), &[nested_e]).unwrap();
+            let cb = tree
+                .new_with_children(
+                    Style {
+                        display,
+                        position: Position::Relative,
+                        flex_wrap: FlexWrap::WrapReverse,
+                        flex_direction: FlexDirection::RowReverse,
+                        size: Size { width: length(50.0), height: length(200.0) },
+                        ..Default::default()
+                    },
+                    &[direct_a, static_b, static_c, direct_d, static_e],
+                )
+                .unwrap();
+
+            tree.compute_layout(cb, Size::MAX_CONTENT).unwrap();
+
+            assert_eq!(
+                tree.hoisted_children(cb).unwrap(),
+                &[direct_a, nested_b, nested_c, direct_d, nested_e],
+                "{display:?}"
+            );
+        }
+    }
+
+    /// An absolute box with auto insets is placed at its static position: where it would
+    /// have been placed in the normal flow of its DOM parent, expressed relative to its
+    /// containing block.
+    #[test]
+    fn static_position_is_containing_block_relative() {
+        for display in [Display::Block, Display::Flex, Display::Grid] {
+            let mut tree: TaffyTree<()> = TaffyTree::new();
+            let abs = tree
+                .new_leaf(Style {
+                    position: Position::Absolute,
+                    size: Size { width: length(30.0), height: length(30.0) },
+                    ..Default::default()
+                })
+                .unwrap();
+            let sibling = tree.new_leaf(leaf_style(50.0, 50.0)).unwrap();
+            let static_parent = tree
+                .new_with_children(
+                    Style {
+                        display,
+                        margin: Rect { left: length(40.0), top: length(40.0), right: auto(), bottom: auto() },
+                        size: Size { width: length(100.0), height: length(100.0) },
+                        ..Default::default()
+                    },
+                    &[sibling, abs],
+                )
+                .unwrap();
+            let cb = tree
+                .new_with_children(
+                    Style {
+                        display,
+                        position: Position::Relative,
+                        size: Size { width: length(200.0), height: length(200.0) },
+                        ..Default::default()
+                    },
+                    &[static_parent],
+                )
+                .unwrap();
+
+            tree.compute_layout(cb, Size::MAX_CONTENT).unwrap();
+
+            // Static position is offset by the static parent's location within the CB
+            let layout = tree.layout(abs).unwrap();
+            let expected = match display {
+                // Block: below the in-flow sibling
+                Display::Block => Point { x: 40.0, y: 90.0 },
+                // Flex/grid: placed as if it were the sole item, at the content-box start
+                Display::Flex => Point { x: 40.0, y: 40.0 },
+                Display::Grid => Point { x: 40.0, y: 40.0 },
+                _ => unreachable!(),
+            };
+            assert_eq!(layout.location, expected, "{display:?}");
+        }
+    }
+
+    /// A fixed box bubbles past positioned (non-transformed) ancestors all the way to the root.
+    #[test]
+    fn fixed_hoists_to_root() {
+        let mut tree: TaffyTree<()> = TaffyTree::new();
+        let fixed = tree
+            .new_leaf(Style {
+                position: Position::Fixed,
+                inset: Rect { left: length(5.0), top: length(5.0), right: auto(), bottom: auto() },
+                size: Size { width: length(10.0), height: length(10.0) },
+                ..Default::default()
+            })
+            .unwrap();
+        let positioned_parent = tree
+            .new_with_children(
+                Style {
+                    position: Position::Relative,
+                    margin: Rect { left: length(50.0), top: length(50.0), right: auto(), bottom: auto() },
+                    size: Size { width: length(50.0), height: length(50.0) },
+                    ..Default::default()
+                },
+                &[fixed],
+            )
+            .unwrap();
+        let root = tree
+            .new_with_children(
+                Style { size: Size { width: length(200.0), height: length(200.0) }, ..Default::default() },
+                &[positioned_parent],
+            )
+            .unwrap();
+
+        tree.compute_layout(root, Size::MAX_CONTENT).unwrap();
+
+        // Location is relative to the root, ignoring the positioned (but not fixed-CB) parent
+        assert_eq!(tree.layout(fixed).unwrap().location, Point { x: 5.0, y: 5.0 });
+    }
+
+    /// An absolute descendant of an absolute box resolves against the absolute box
+    /// (which is positioned and therefore a containing block).
+    #[test]
+    fn absolute_within_absolute() {
+        let mut tree: TaffyTree<()> = TaffyTree::new();
+        let inner = tree
+            .new_leaf(Style {
+                position: Position::Absolute,
+                inset: Rect { right: length(0.0), bottom: length(0.0), left: auto(), top: auto() },
+                size: Size { width: length(10.0), height: length(10.0) },
+                ..Default::default()
+            })
+            .unwrap();
+        let outer = tree
+            .new_with_children(
+                Style {
+                    position: Position::Absolute,
+                    inset: Rect { left: length(20.0), top: length(20.0), right: auto(), bottom: auto() },
+                    size: Size { width: length(50.0), height: length(50.0) },
+                    ..Default::default()
+                },
+                &[inner],
+            )
+            .unwrap();
+        let root = tree
+            .new_with_children(
+                Style { size: Size { width: length(200.0), height: length(200.0) }, ..Default::default() },
+                &[outer],
+            )
+            .unwrap();
+
+        tree.compute_layout(root, Size::MAX_CONTENT).unwrap();
+
+        assert_eq!(tree.layout(outer).unwrap().location, Point { x: 20.0, y: 20.0 });
+        // Relative to `outer`, its containing block
+        assert_eq!(tree.layout(inner).unwrap().location, Point { x: 40.0, y: 40.0 });
+    }
+
+    /// A fixed descendant surfaced while laying out an absolute box (at the abspos box's
+    /// containing block) is re-swept and continues bubbling to the root.
+    #[test]
+    fn fixed_within_absolute_hoists_to_root() {
+        let mut tree: TaffyTree<()> = TaffyTree::new();
+        let fixed = tree
+            .new_leaf(Style {
+                position: Position::Fixed,
+                inset: Rect { left: length(1.0), top: length(2.0), right: auto(), bottom: auto() },
+                size: Size { width: length(10.0), height: length(10.0) },
+                ..Default::default()
+            })
+            .unwrap();
+        let abs = tree
+            .new_with_children(
+                Style {
+                    position: Position::Absolute,
+                    inset: Rect { left: length(20.0), top: length(20.0), right: auto(), bottom: auto() },
+                    size: Size { width: length(50.0), height: length(50.0) },
+                    ..Default::default()
+                },
+                &[fixed],
+            )
+            .unwrap();
+        let cb = tree
+            .new_with_children(
+                Style {
+                    position: Position::Relative,
+                    margin: Rect { left: length(30.0), top: length(30.0), right: auto(), bottom: auto() },
+                    size: Size { width: length(100.0), height: length(100.0) },
+                    ..Default::default()
+                },
+                &[abs],
+            )
+            .unwrap();
+        let root = tree
+            .new_with_children(
+                Style { size: Size { width: length(200.0), height: length(200.0) }, ..Default::default() },
+                &[cb],
+            )
+            .unwrap();
+
+        tree.compute_layout(root, Size::MAX_CONTENT).unwrap();
+
+        assert_eq!(tree.layout(abs).unwrap().location, Point { x: 20.0, y: 20.0 });
+        // Root-relative, unaffected by `cb` or `abs` offsets
+        assert_eq!(tree.layout(fixed).unwrap().location, Point { x: 1.0, y: 2.0 });
+    }
+
+    /// Hoisting still works when the intermediate (static) ancestors hit the layout cache:
+    /// the cached `LayoutOutput` re-propagates the candidates without descending into
+    /// the skipped subtree.
+    #[test]
+    fn hoisting_survives_cache_hits() {
+        let mut tree: TaffyTree<()> = TaffyTree::new();
+        let abs = tree
+            .new_leaf(Style {
+                position: Position::Absolute,
+                inset: Rect { left: length(10.0), top: length(20.0), right: auto(), bottom: auto() },
+                size: Size { width: length(30.0), height: length(30.0) },
+                ..Default::default()
+            })
+            .unwrap();
+        let mut static_ancestor = tree.new_with_children(leaf_style(50.0, 50.0), &[abs]).unwrap();
+        for _ in 0..3 {
+            static_ancestor = tree.new_with_children(leaf_style(50.0, 50.0), &[static_ancestor]).unwrap();
+        }
+        let cb = tree
+            .new_with_children(
+                Style {
+                    position: Position::Relative,
+                    size: Size { width: length(200.0), height: length(200.0) },
+                    ..Default::default()
+                },
+                &[static_ancestor],
+            )
+            .unwrap();
+
+        tree.compute_layout(cb, Size::MAX_CONTENT).unwrap();
+        assert_eq!(tree.layout(abs).unwrap().location, Point { x: 10.0, y: 20.0 });
+
+        // Recompute without dirtying anything: everything hits the cache
+        tree.compute_layout(cb, Size::MAX_CONTENT).unwrap();
+        assert_eq!(tree.layout(abs).unwrap().location, Point { x: 10.0, y: 20.0 });
+
+        // Relayout with the same constraints: intermediate nodes hit the cache
+        tree.mark_dirty(cb).unwrap();
+        tree.compute_layout(cb, Size::MAX_CONTENT).unwrap();
+        assert_eq!(tree.layout(abs).unwrap().location, Point { x: 10.0, y: 20.0 });
+
+        // Changing the abspos box's styles relays it out through its containing block
+        let mut new_style = tree.style(abs).unwrap().clone();
+        new_style.inset.left = length(15.0);
+        tree.set_style(abs, new_style).unwrap();
+        tree.compute_layout(cb, Size::MAX_CONTENT).unwrap();
+        assert_eq!(tree.layout(abs).unwrap().location, Point { x: 15.0, y: 20.0 });
+    }
+
+    /// When the root's layout is served from the cache, the root positioning pass must not
+    /// re-add fixed boxes to the root's (still valid) hoisted-children list.
+    #[test]
+    fn cached_root_does_not_duplicate_hoisted_children() {
+        let mut tree: TaffyTree<()> = TaffyTree::new();
+        let fixed = tree
+            .new_leaf(Style {
+                position: Position::Fixed,
+                size: Size { width: length(30.0), height: length(30.0) },
+                ..Default::default()
+            })
+            .unwrap();
+        let inner = tree.new_with_children(leaf_style(50.0, 50.0), &[fixed]).unwrap();
+        let root = tree.new_with_children(leaf_style(200.0, 200.0), &[inner]).unwrap();
+
+        tree.compute_layout(root, Size::MAX_CONTENT).unwrap();
+        assert_eq!(tree.hoisted_children(root).unwrap(), &[fixed]);
+
+        tree.compute_layout(root, Size::MAX_CONTENT).unwrap();
+        assert_eq!(tree.hoisted_children(root).unwrap(), &[fixed]);
+
+        tree.mark_dirty(root).unwrap();
+        tree.compute_layout(root, Size::MAX_CONTENT).unwrap();
+        assert_eq!(tree.hoisted_children(root).unwrap(), &[fixed]);
+    }
+
+    /// Rounding recurses into hoisted boxes via their containing block, so a hoisted box's
+    /// rounded location is computed against the containing block's cumulative offset.
+    #[test]
+    fn rounding_uses_containing_block_offsets() {
+        let mut tree: TaffyTree<()> = TaffyTree::new();
+        tree.enable_rounding();
+        let abs = tree
+            .new_leaf(Style {
+                position: Position::Absolute,
+                inset: Rect { left: length(10.6), top: length(10.6), right: auto(), bottom: auto() },
+                size: Size { width: length(10.0), height: length(10.0) },
+                ..Default::default()
+            })
+            .unwrap();
+        let static_parent = tree.new_with_children(leaf_style(50.0, 50.0), &[abs]).unwrap();
+        let cb = tree
+            .new_with_children(
+                Style {
+                    position: Position::Relative,
+                    margin: Rect { left: length(20.3), top: length(20.3), right: auto(), bottom: auto() },
+                    size: Size { width: length(100.0), height: length(100.0) },
+                    ..Default::default()
+                },
+                &[static_parent],
+            )
+            .unwrap();
+        let root = tree
+            .new_with_children(
+                Style { size: Size { width: length(200.0), height: length(200.0) }, ..Default::default() },
+                &[cb],
+            )
+            .unwrap();
+
+        tree.compute_layout(root, Size::MAX_CONTENT).unwrap();
+
+        // cb rounds to x=20; abs at cumulative 20.3+10.6=30.9 rounds to 31, i.e. 11 relative to cb
+        assert_eq!(tree.layout(cb).unwrap().location, Point { x: 20.0, y: 20.0 });
+        assert_eq!(tree.layout(abs).unwrap().location, Point { x: 11.0, y: 11.0 });
+    }
+
+    /// When an intermediate ancestor becomes positioned (with a hot cache), it claims
+    /// the hoisted box away from the outer containing block, and vice versa when it
+    /// becomes static again.
+    #[test]
+    fn claim_change_relayouts_with_hot_cache() {
+        let mut tree: TaffyTree<()> = TaffyTree::new();
+        let abs = tree
+            .new_leaf(Style {
+                position: Position::Absolute,
+                inset: Rect { left: length(10.0), top: length(20.0), right: auto(), bottom: auto() },
+                size: Size { width: length(30.0), height: length(30.0) },
+                ..Default::default()
+            })
+            .unwrap();
+        let middle_style = Style {
+            margin: Rect { left: length(40.0), top: length(40.0), right: auto(), bottom: auto() },
+            size: Size { width: length(50.0), height: length(50.0) },
+            ..Default::default()
+        };
+        let middle = tree.new_with_children(middle_style.clone(), &[abs]).unwrap();
+        let cb = tree
+            .new_with_children(
+                Style {
+                    position: Position::Relative,
+                    size: Size { width: length(200.0), height: length(200.0) },
+                    ..Default::default()
+                },
+                &[middle],
+            )
+            .unwrap();
+
+        tree.compute_layout(cb, Size::MAX_CONTENT).unwrap();
+        assert_eq!(tree.layout(abs).unwrap().location, Point { x: 10.0, y: 20.0 });
+
+        // Make the middle node positioned: it now claims the abspos box, whose
+        // location becomes relative to the middle node.
+        let mut positioned_middle = middle_style.clone();
+        positioned_middle.position = Position::Relative;
+        tree.set_style(middle, positioned_middle).unwrap();
+        tree.compute_layout(cb, Size::MAX_CONTENT).unwrap();
+        assert_eq!(tree.layout(abs).unwrap().location, Point { x: 10.0, y: 20.0 });
+        // Page position moved by the middle node's offset
+        assert_eq!(tree.layout(middle).unwrap().location, Point { x: 40.0, y: 40.0 });
+
+        // Back to static: the outer containing block claims it again.
+        tree.set_style(middle, middle_style).unwrap();
+        tree.compute_layout(cb, Size::MAX_CONTENT).unwrap();
+        assert_eq!(tree.layout(abs).unwrap().location, Point { x: 10.0, y: 20.0 });
+        assert_eq!(tree.layout(middle).unwrap().location, Point { x: 40.0, y: 40.0 });
+    }
+
+    /// A fixed box hoisted to the root moves to an intermediate ancestor when that
+    /// ancestor starts claiming fixed boxes (position change with a hot cache), and back.
+    #[test]
+    fn fixed_claim_change_relayouts_with_hot_cache() {
+        let mut tree: TaffyTree<()> = TaffyTree::new();
+        let fixed = tree
+            .new_leaf(Style {
+                position: Position::Fixed,
+                inset: Rect { left: length(5.0), top: length(5.0), right: auto(), bottom: auto() },
+                size: Size { width: length(10.0), height: length(10.0) },
+                ..Default::default()
+            })
+            .unwrap();
+        let abs_style = Style {
+            position: Position::Absolute,
+            inset: Rect { left: length(50.0), top: length(50.0), right: auto(), bottom: auto() },
+            size: Size { width: length(80.0), height: length(80.0) },
+            ..Default::default()
+        };
+        let abs = tree.new_with_children(abs_style.clone(), &[fixed]).unwrap();
+        let root = tree
+            .new_with_children(
+                Style { size: Size { width: length(200.0), height: length(200.0) }, ..Default::default() },
+                &[abs],
+            )
+            .unwrap();
+
+        tree.compute_layout(root, Size::MAX_CONTENT).unwrap();
+        // Fixed box is claimed by the root, not the abspos ancestor
+        assert_eq!(tree.layout(fixed).unwrap().location, Point { x: 5.0, y: 5.0 });
+        assert_eq!(tree.layout(abs).unwrap().location, Point { x: 50.0, y: 50.0 });
+
+        // Dirty only the fixed box: it must still be re-laid out via the root
+        let mut new_fixed_style = tree.style(fixed).unwrap().clone();
+        new_fixed_style.inset.left = length(7.0);
+        tree.set_style(fixed, new_fixed_style).unwrap();
+        tree.compute_layout(root, Size::MAX_CONTENT).unwrap();
+        assert_eq!(tree.layout(fixed).unwrap().location, Point { x: 7.0, y: 5.0 });
+    }
+
+    /// Content changes inside a hoisted subtree relayout correctly through the
+    /// containing block even when unrelated siblings hit the cache.
+    #[test]
+    fn content_change_inside_hoisted_subtree() {
+        let mut tree: TaffyTree<()> = TaffyTree::new();
+        let inner = tree.new_leaf(leaf_style(10.0, 10.0)).unwrap();
+        let abs = tree
+            .new_with_children(
+                Style {
+                    position: Position::Absolute,
+                    inset: Rect { left: length(10.0), top: length(10.0), right: auto(), bottom: auto() },
+                    ..Default::default()
+                },
+                &[inner],
+            )
+            .unwrap();
+        let static_parent = tree.new_with_children(leaf_style(50.0, 50.0), &[abs]).unwrap();
+        let cb = tree
+            .new_with_children(
+                Style {
+                    position: Position::Relative,
+                    size: Size { width: length(200.0), height: length(200.0) },
+                    ..Default::default()
+                },
+                &[static_parent],
+            )
+            .unwrap();
+
+        tree.compute_layout(cb, Size::MAX_CONTENT).unwrap();
+        assert_eq!(tree.layout(abs).unwrap().size, Size { width: 10.0, height: 10.0 });
+
+        // Grow the inner leaf: the hoisted abspos box must resize
+        tree.set_style(inner, leaf_style(20.0, 30.0)).unwrap();
+        tree.compute_layout(cb, Size::MAX_CONTENT).unwrap();
+        assert_eq!(tree.layout(abs).unwrap().size, Size { width: 20.0, height: 30.0 });
+    }
+}

@@ -6,8 +6,8 @@ use common::image::{image_measure_function, ImageContext};
 use common::text::{text_measure_function, FontMetrics, TextContext, WritingMode, LOREM_IPSUM};
 use taffy::util::print_tree;
 use taffy::{
-    compute_cached_layout, compute_flexbox_layout, compute_grid_layout, compute_leaf_layout, compute_root_layout,
-    prelude::*, round_layout, Cache, CacheTree,
+    compute_cached_layout, compute_flexbox_layout, compute_grid_layout, compute_leaf_layout, compute_oof_layout,
+    compute_root_layout, prelude::*, round_layout, Cache, CacheTree,
 };
 
 #[derive(Debug, Copy, Clone)]
@@ -28,6 +28,7 @@ struct Node {
     unrounded_layout: Layout,
     final_layout: Layout,
     children: Vec<usize>,
+    hoisted_children: Vec<NodeId>,
 }
 
 impl Default for Node {
@@ -41,6 +42,7 @@ impl Default for Node {
             unrounded_layout: Layout::with_order(0),
             final_layout: Layout::with_order(0),
             children: Vec::new(),
+            hoisted_children: Vec::new(),
         }
     }
 }
@@ -163,7 +165,7 @@ impl taffy::LayoutPartialTree for Tree {
             let node = &mut tree.nodes[usize::from(node_id)];
             let font_metrics = FontMetrics { char_width: 10.0, char_height: 10.0 };
 
-            match node.kind {
+            let mut output = match node.kind {
                 NodeKind::Flexbox => compute_flexbox_layout(tree, node_id, inputs),
                 NodeKind::Grid => compute_grid_layout(tree, node_id, inputs),
                 NodeKind::Text => compute_leaf_layout(
@@ -187,8 +189,34 @@ impl taffy::LayoutPartialTree for Tree {
                         image_measure_function(known_dimensions, node.image_data.as_ref().unwrap())
                     },
                 ),
+            };
+
+            // Lay out any out-of-flow (absolute/fixed) boxes for which this node is the containing block
+            if inputs.run_mode == taffy::RunMode::PerformLayout {
+                compute_oof_layout(tree, node_id, &mut output);
             }
+
+            output
         })
+    }
+}
+
+impl taffy::LayoutContainingBlock for Tree {
+    type OofItemStyle<'a>
+        = &'a Style
+    where
+        Self: 'a;
+
+    fn get_oof_item_style(&self, node_id: NodeId) -> Self::OofItemStyle<'_> {
+        &self.node_from_id(node_id).style
+    }
+
+    fn clear_hoisted_children(&mut self, node_id: NodeId) {
+        self.node_from_id_mut(node_id).hoisted_children.clear();
+    }
+
+    fn add_hoisted_children(&mut self, node_id: NodeId, hoisted: &[NodeId]) {
+        self.node_from_id_mut(node_id).hoisted_children.extend_from_slice(hoisted);
     }
 }
 
@@ -253,6 +281,18 @@ impl taffy::RoundTree for Tree {
 
     fn set_final_layout(&mut self, node_id: NodeId, layout: &Layout) {
         self.node_from_id_mut(node_id).final_layout = *layout;
+    }
+
+    fn is_out_of_flow(&self, node_id: NodeId) -> bool {
+        self.node_from_id(node_id).style.position.is_out_of_flow()
+    }
+
+    fn hoisted_child_count(&self, node_id: NodeId) -> usize {
+        self.node_from_id(node_id).hoisted_children.len()
+    }
+
+    fn get_hoisted_child_id(&self, node_id: NodeId, index: usize) -> NodeId {
+        self.node_from_id(node_id).hoisted_children[index]
     }
 }
 

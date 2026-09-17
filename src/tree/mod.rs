@@ -11,11 +11,12 @@ pub mod traits;
 
 pub use cache::{Cache, ClearState};
 pub use layout::{
-    Baselines, CollapsibleMarginSet, Layout, LayoutInput, LayoutOutput, RequestedAxis, RunMode, SizingMode,
+    AxisStaticAlign, AxisStaticEdge, AxisStaticPosition, Baselines, CollapsibleMarginSet, Layout, LayoutInput,
+    LayoutOutput, OofCandidate, OofCandidates, OofPositioningArea, RequestedAxis, RunMode, SizingMode,
 };
 pub use node::NodeId;
 pub(crate) use traits::LayoutPartialTreeExt;
-pub use traits::{LayoutPartialTree, PrintTree, RoundTree, TraversePartialTree, TraverseTree};
+pub use traits::{LayoutContainingBlock, LayoutPartialTree, PrintTree, RoundTree, TraversePartialTree, TraverseTree};
 
 #[cfg(feature = "flexbox")]
 pub use traits::LayoutFlexboxContainer;
@@ -31,5 +32,4 @@ mod taffy_tree;
 #[cfg(feature = "taffy_tree")]
 pub use taffy_tree::{TaffyError, TaffyResult, TaffyTree};
 
-#[cfg(feature = "detailed_layout_info")]
 pub use layout::DetailedLayoutInfo;

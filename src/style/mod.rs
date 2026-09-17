@@ -142,6 +142,20 @@ pub trait CoreStyle {
     fn inset(&self) -> Rect<LengthPercentageAuto> {
         Style::<Self::CustomIdent>::DEFAULT.inset
     }
+    /// Which out-of-flow (`absolute`/`fixed`) descendants this node establishes the containing block for.
+    ///
+    /// This is the single policy point for containing-block establishment: it decides both which
+    /// out-of-flow boxes a node claims and lays out, and (for grid containers) whether the static
+    /// position of an out-of-flow child is derived from its grid area.
+    ///
+    /// The default matches plain CSS positioning: a node is the containing block for `absolute` boxes
+    /// when its own `position` is not `static`, and never for `fixed` boxes (which are claimed by the
+    /// root). Implementations may override this so that other style properties (such as `transform`,
+    /// `filter` or `will-change` in a full CSS implementation) establish a containing block.
+    #[inline(always)]
+    fn is_containing_block(&self) -> ContainingBlockClaims {
+        ContainingBlockClaims { absolute: self.position().is_positioned(), fixed: false }
+    }
 
     // Size properies
     /// Sets the initial size of the item
@@ -187,6 +201,25 @@ pub trait CoreStyle {
     #[inline(always)]
     fn contain(&self) -> Contain {
         Contain::NONE
+    }
+}
+
+/// The styles of an out-of-flow (`position: absolute` / `position: fixed`) box that are read by
+/// its containing block's out-of-flow positioning pass
+pub trait OofItemStyle: CoreStyle {
+    /// Defines which row in the grid the box should start and end at, when the box's containing
+    /// block is a grid container
+    #[cfg(feature = "grid")]
+    #[inline(always)]
+    fn grid_row(&self) -> Line<GridPlacement<Self::CustomIdent>> {
+        Default::default()
+    }
+    /// Defines which column in the grid the box should start and end at, when the box's
+    /// containing block is a grid container
+    #[cfg(feature = "grid")]
+    #[inline(always)]
+    fn grid_column(&self) -> Line<GridPlacement<Self::CustomIdent>> {
+        Default::default()
     }
 }
 
@@ -335,6 +368,34 @@ impl Position {
     #[inline(always)]
     pub fn is_positioned(self) -> bool {
         !matches!(self, Position::Static)
+    }
+}
+
+/// Which out-of-flow positions a node establishes a containing block for.
+///
+/// Returned by [`CoreStyle::is_containing_block`].
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+pub struct ContainingBlockClaims {
+    /// Whether the node is the containing block for `position: absolute` boxes
+    pub absolute: bool,
+    /// Whether the node is the containing block for `position: fixed` boxes
+    pub fixed: bool,
+}
+
+impl ContainingBlockClaims {
+    /// Claims nothing
+    pub const NONE: Self = Self { absolute: false, fixed: false };
+    /// Claims every out-of-flow box (the initial containing block)
+    pub const ALL: Self = Self { absolute: true, fixed: true };
+
+    /// Whether the node is the containing block for a box with the given `position`
+    #[inline(always)]
+    pub fn for_position(self, position: Position) -> bool {
+        match position {
+            Position::Absolute => self.absolute,
+            Position::Fixed => self.fixed,
+            _ => false,
+        }
     }
 }
 
@@ -952,6 +1013,21 @@ impl<S: CheapCloneStr> CoreStyle for Style<S> {
     }
 }
 
+impl<S: CheapCloneStr> OofItemStyle for Style<S> {
+    #[cfg(feature = "grid")]
+    #[inline(always)]
+    fn grid_row(&self) -> Line<GridPlacement<S>> {
+        // TODO: Investigate eliminating clone
+        self.grid_row.clone()
+    }
+    #[cfg(feature = "grid")]
+    #[inline(always)]
+    fn grid_column(&self) -> Line<GridPlacement<S>> {
+        // TODO: Investigate eliminating clone
+        self.grid_column.clone()
+    }
+}
+
 impl<T: CoreStyle> CoreStyle for &'_ T {
     type CustomIdent = T::CustomIdent;
 
@@ -992,6 +1068,10 @@ impl<T: CoreStyle> CoreStyle for &'_ T {
         (*self).inset()
     }
     #[inline(always)]
+    fn is_containing_block(&self) -> ContainingBlockClaims {
+        (*self).is_containing_block()
+    }
+    #[inline(always)]
     fn size(&self) -> Size<Dimension> {
         (*self).size()
     }
@@ -1022,6 +1102,19 @@ impl<T: CoreStyle> CoreStyle for &'_ T {
     #[inline(always)]
     fn contain(&self) -> Contain {
         (*self).contain()
+    }
+}
+
+impl<T: OofItemStyle> OofItemStyle for &'_ T {
+    #[cfg(feature = "grid")]
+    #[inline(always)]
+    fn grid_row(&self) -> Line<GridPlacement<Self::CustomIdent>> {
+        (*self).grid_row()
+    }
+    #[cfg(feature = "grid")]
+    #[inline(always)]
+    fn grid_column(&self) -> Line<GridPlacement<Self::CustomIdent>> {
+        (*self).grid_column()
     }
 }
 
