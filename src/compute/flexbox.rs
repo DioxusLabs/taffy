@@ -61,8 +61,9 @@ struct FlexItem {
     /// takes into account content based automatic minimum sizes
     resolved_minimum_main_size: f32,
 
-    /// The final offset of this item
-    inset: Rect<Option<f32>>,
+    /// The `position: relative` offset of this item, resolved to (width, height) in the
+    /// container's coordinate space (zero for non-relative items)
+    relative_inset: Size<f32>,
     /// The margin of this item
     margin: Rect<f32>,
     /// Whether each margin is an auto margin or not
@@ -638,6 +639,28 @@ fn compute_constants(
     }
 }
 
+/// Resolve a `position: relative` item's inset to a single offset in the container's flex axes,
+/// accounting for flex direction and writing direction.
+fn resolve_relative_inset(inset: Rect<Option<f32>>, constants: &AlgoConstants) -> Size<f32> {
+    let direction = constants.dir;
+    let is_rtl_row = direction.is_row() && constants.layout_direction.is_rtl();
+    let is_rtl_column = direction.is_column() && constants.layout_direction.is_rtl();
+    let main = if is_rtl_row {
+        inset.main_end(direction).or(inset.main_start(direction).map(|pos| -pos)).unwrap_or(0.0)
+    } else {
+        inset.main_start(direction).or(inset.main_end(direction).map(|pos| -pos)).unwrap_or(0.0)
+    };
+    let cross = if is_rtl_column {
+        inset.cross_end(direction).map(|pos| -pos).or(inset.cross_start(direction)).unwrap_or(0.0)
+    } else {
+        inset.cross_start(direction).or(inset.cross_end(direction).map(|pos| -pos)).unwrap_or(0.0)
+    };
+    let mut out = Size::ZERO;
+    out.set_main(direction, main);
+    out.set_cross(direction, cross);
+    out
+}
+
 /// Generate anonymous flex items.
 ///
 /// # [9.1. Initial Setup](https://www.w3.org/TR/css-flexbox-1/#box-manip)
@@ -693,12 +716,13 @@ fn generate_anonymous_flex_items(
                     .maybe_add(box_sizing_adjustment),
                 aspect_ratio,
 
-                inset: if child_style.position() == Position::Relative {
-                    child_style.inset().zip_size(constants.node_inner_size, |p, s| {
+                relative_inset: if child_style.position() == Position::Relative {
+                    let inset = child_style.inset().zip_size(constants.node_inner_size, |p, s| {
                         p.maybe_resolve(s, |val, basis| tree.calc(val, basis))
-                    })
+                    });
+                    resolve_relative_inset(inset, constants)
                 } else {
-                    Rect::NONE
+                    Size::ZERO
                 },
                 margin: child_style
                     .margin()
@@ -2451,16 +2475,8 @@ fn calculate_flex_item(
 
     let is_rtl_row = direction.is_row() && layout_direction.is_rtl();
     let is_rtl_column = direction.is_column() && layout_direction.is_rtl();
-    let main_relative_inset = if is_rtl_row {
-        item.inset.main_end(direction).or(item.inset.main_start(direction).map(|pos| -pos)).unwrap_or(0.0)
-    } else {
-        item.inset.main_start(direction).or(item.inset.main_end(direction).map(|pos| -pos)).unwrap_or(0.0)
-    };
-    let cross_relative_inset = if is_rtl_column {
-        item.inset.cross_end(direction).map(|pos| -pos).or(item.inset.cross_start(direction)).unwrap_or(0.0)
-    } else {
-        item.inset.cross_start(direction).or(item.inset.cross_end(direction).map(|pos| -pos)).unwrap_or(0.0)
-    };
+    let main_relative_inset = item.relative_inset.main(direction);
+    let cross_relative_inset = item.relative_inset.cross(direction);
     let effective_line_offset_cross = if is_rtl_column { 0.0 } else { line_offset_cross };
 
     let offset_main = if is_rtl_row {
