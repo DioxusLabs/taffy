@@ -55,8 +55,8 @@ pub use self::float::{BfcSlot, ContentSlot, FloatContext, FloatIntrinsicWidthCal
 use crate::geometry::{Line, Point, Size};
 use crate::style::{AvailableSpace, ContainingBlockClaims, CoreStyle, Overflow};
 use crate::tree::{
-    Layout, LayoutInput, LayoutOutput, LayoutPartialTree, LayoutPartialTreeExt, NodeId, OofCandidates, RoundTree,
-    SizingMode,
+    Layout, LayoutInput, LayoutOutput, LayoutPartialTree, LayoutPartialTreeExt, NodeId, OofCandidates, RequestedAxis,
+    RoundTree, RunMode, SizingMode,
 };
 use crate::util::debug::{debug_log, debug_log_node, debug_pop_node, debug_push_node};
 use crate::util::sys::{round, Vec};
@@ -64,7 +64,11 @@ use crate::util::ResolveOrZero;
 use crate::{CacheTree, MaybeMath, MaybeResolve};
 
 /// Compute layout for the root node in the tree
-pub fn compute_root_layout(tree: &mut impl LayoutPartialTree, root: NodeId, available_space: Size<AvailableSpace>) {
+pub fn compute_root_layout(
+    tree: &mut (impl LayoutPartialTree + CacheTree),
+    root: NodeId,
+    available_space: Size<AvailableSpace>,
+) {
     let mut known_dimensions = Size::NONE;
 
     #[cfg(feature = "block_layout")]
@@ -123,15 +127,23 @@ pub fn compute_root_layout(tree: &mut impl LayoutPartialTree, root: NodeId, avai
         }
     }
 
-    // Recursively compute node layout
-    let mut output = tree.perform_child_layout(
-        root,
+    let inputs = LayoutInput {
         known_dimensions,
-        available_space.into_options(),
+        known_dimensions_are_definite: Size { width: true, height: true },
+        parent_size: available_space.into_options(),
         available_space,
-        SizingMode::InherentSize,
-        Line::FALSE,
-    );
+        sizing_mode: SizingMode::InherentSize,
+        axis: RequestedAxis::Both,
+        run_mode: RunMode::PerformLayout,
+        vertical_margins_are_collapsible: Line::FALSE,
+    };
+    // When the root's layout is served from the cache its layout algorithm does not run, so the
+    // hoisted children it recorded on a previous run (including those added by the root
+    // positioning pass below) are still in place and must not be re-added.
+    let root_is_cached = tree.cache_get(root, &inputs).is_some();
+
+    // Recursively compute node layout
+    let mut output = tree.compute_child_layout(root, inputs);
     let style = tree.get_core_container_style(root);
     let padding =
         style.padding().resolve_or_zero(available_space.width.into_option(), |val, basis| tree.calc(val, basis));
@@ -203,7 +215,9 @@ pub fn compute_root_layout(tree: &mut impl LayoutPartialTree, root: NodeId, avai
             &mut unclaimed,
         );
         debug_assert!(unclaimed.is_empty(), "the root positioning pass must claim all remaining candidates");
-        tree.add_hoisted_children(root, &hoisted);
+        if !root_is_cached {
+            tree.add_hoisted_children(root, &hoisted);
+        }
     }
 }
 

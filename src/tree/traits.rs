@@ -212,10 +212,6 @@ pub trait LayoutPartialTree: TraversePartialTree {
     /// by [`round_layout`](crate::round_layout) (out-of-flow boxes are rounded via their
     /// containing block rather than via their parent), and are also useful for consumers
     /// implementing paint/hit-testing traversals.
-    ///
-    /// Implementations should ignore ids already present in the list: when the root node's
-    /// layout is served from the cache, its own list is not rebuilt, and the root positioning
-    /// pass may re-add ids recorded by a previous layout run.
     fn add_hoisted_children(&mut self, node_id: NodeId, hoisted: &[NodeId]);
 
     /// Compute the specified node's size or full layout given the specified constraints

@@ -400,12 +400,7 @@ where
 
     #[inline(always)]
     fn add_hoisted_children(&mut self, node_id: NodeId, hoisted: &[NodeId]) {
-        let vec = &mut self.taffy.nodes[node_id.into()].hoisted_children;
-        for id in hoisted.iter().copied() {
-            if !vec.contains(&id) {
-                vec.push(id);
-            }
-        }
+        self.taffy.nodes[node_id.into()].hoisted_children.extend_from_slice(hoisted);
     }
 
     #[inline(always)]
@@ -860,6 +855,13 @@ impl<NodeContext> TaffyTree<NodeContext> {
     /// Returns a list of children that belong to the parent node
     pub fn children(&self, parent: NodeId) -> TaffyResult<Vec<NodeId>> {
         Ok(self.children[parent.into()].clone())
+    }
+
+    /// Returns the out-of-flow (absolute/fixed) boxes whose containing block is `node`, as
+    /// recorded by the last layout. These boxes are laid out by `node` rather than by their
+    /// parent, and their [`Layout::location`] is relative to `node`.
+    pub fn hoisted_children(&self, node: NodeId) -> TaffyResult<&[NodeId]> {
+        Ok(&self.nodes[node.into()].hoisted_children)
     }
 
     /// Sets the [`Style`] of the provided `node`
