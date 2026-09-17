@@ -394,10 +394,8 @@ where
     }
 
     #[inline(always)]
-    fn set_hoisted_children(&mut self, node_id: NodeId, hoisted: &[NodeId]) {
-        let vec = &mut self.taffy.nodes[node_id.into()].hoisted_children;
-        vec.clear();
-        vec.extend(hoisted.iter().copied());
+    fn clear_hoisted_children(&mut self, node_id: NodeId) {
+        self.taffy.nodes[node_id.into()].hoisted_children.clear();
     }
 
     #[inline(always)]

@@ -915,7 +915,8 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
         &mut hoisted,
         &mut unclaimed,
     );
-    tree.set_hoisted_children(node, &hoisted);
+    tree.clear_hoisted_children(node);
+    tree.add_hoisted_children(node, &hoisted);
     #[cfg(feature = "content_size")]
     {
         absolute_overflow_rect = absolute_overflow_rect.union(oof_overflow_rect);

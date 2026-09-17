@@ -514,7 +514,8 @@ fn compute_preliminary(tree: &mut impl LayoutFlexboxContainer, node: NodeId, inp
         &mut hoisted,
         &mut unclaimed,
     );
-    tree.set_hoisted_children(node, &hoisted);
+    tree.clear_hoisted_children(node);
+    tree.add_hoisted_children(node, &hoisted);
 
     debug_log!("hidden_layout");
     let len = tree.child_count(node);
