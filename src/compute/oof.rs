@@ -19,8 +19,11 @@ use crate::util::{MaybeMath, MaybeResolve, ResolveOrZero};
 use crate::{AxisStaticEdge, BoxSizing, Direction};
 
 #[cfg(feature = "content_size")]
-use super::common::scrollable_overflow::compute_scrollable_overflow_contribution;
+use super::common::scrollable_overflow::{
+    clip_unreachable_overflow, compute_scrollable_overflow_contribution, ScrollOrigin,
+};
 use super::common::sizing_keyword::resolve_absolute_sizing_keywords;
+use crate::tree::ScrollableOverflowRect;
 
 /// Resolve the final static offset of an out-of-flow box from its static position, given the
 /// box's final size and resolved margins.
@@ -98,7 +101,7 @@ pub struct OofLayoutResult {
     pub unclaimed: OofCandidates,
     /// Scrollable overflow contributed by the claimed candidates, relative to the positioning
     /// area's origin.
-    pub scrollable_overflow_rect: Rect<f32>,
+    pub scrollable_overflow_rect: ScrollableOverflowRect,
 }
 
 /// Lay out out-of-flow candidates against an explicit positioning area.
@@ -119,11 +122,11 @@ pub fn compute_oof_layout_for_area(
     claims: ContainingBlockClaims,
 ) -> OofLayoutResult {
     #[cfg(feature = "content_size")]
-    let is_scroll_container = {
+    let scroll_origin = {
         let style = tree.get_core_container_style(geometry_owner);
         let is_scroll_container = style.overflow().x.is_scroll_container() || style.overflow().y.is_scroll_container();
         drop(style);
-        is_scroll_container
+        is_scroll_container.then_some(ScrollOrigin::new(area.size, area.scroll_origin_at_end))
     };
 
     let mut hoisted = Vec::new();
@@ -137,7 +140,7 @@ pub fn compute_oof_layout_for_area(
         direction,
         claims,
         #[cfg(feature = "content_size")]
-        is_scroll_container,
+        scroll_origin,
         &mut hoisted,
         &mut unclaimed,
     );
@@ -175,15 +178,19 @@ pub(crate) fn perform_oof_layout(
     area_offset: Point<f32>,
     direction: Direction,
     claims: ContainingBlockClaims,
-    #[cfg(feature = "content_size")] is_scroll_container: bool,
+    #[cfg(feature = "content_size")] scroll_origin: Option<ScrollOrigin>,
     hoisted: &mut Vec<NodeId>,
     unclaimed: &mut OofCandidates,
-) -> Rect<f32> {
-    #[cfg_attr(not(feature = "content_size"), allow(unused_mut))]
-    let mut absolute_overflow_rect = Rect::ZERO;
+) -> ScrollableOverflowRect {
+    #[cfg(feature = "content_size")]
+    let mut absolute_overflow_rect = ScrollOrigin::initial_rect(scroll_origin);
+    #[cfg(not(feature = "content_size"))]
+    let absolute_overflow_rect = Rect::ZERO;
+    #[cfg(feature = "content_size")]
+    let scrollport_offset = area_offset;
 
     if candidates.is_empty() {
-        return absolute_overflow_rect;
+        return ScrollableOverflowRect::new(absolute_overflow_rect);
     }
 
     // Split the candidate list into an initial work list of claimed candidates and the unclaimed
@@ -476,27 +483,24 @@ pub(crate) fn perform_oof_layout(
 
         #[cfg(feature = "content_size")]
         {
-            // Location is measured from the scroll origin (the inline-start edge: right side in RTL)
-            let relative_location = if direction.is_rtl() {
-                Point {
-                    x: area_size.width - (location.x - area_offset.x) - final_size.width,
-                    y: location.y - area_offset.y,
-                }
-            } else {
-                Point { x: location.x - area_offset.x, y: location.y - area_offset.y }
-            };
+            let relative_location = Point { x: location.x - scrollport_offset.x, y: location.y - scrollport_offset.y };
             absolute_overflow_rect = absolute_overflow_rect.union(compute_scrollable_overflow_contribution(
                 relative_location,
                 final_size,
                 layout_output.scrollable_overflow_rect,
                 overflow,
                 contain,
-                is_scroll_container,
+                scroll_origin,
             ));
         }
     }
 
-    absolute_overflow_rect
+    #[cfg(feature = "content_size")]
+    if let Some(origin) = scroll_origin {
+        clip_unreachable_overflow(&mut absolute_overflow_rect, origin);
+    }
+
+    ScrollableOverflowRect::new(absolute_overflow_rect)
 }
 
 #[cfg(test)]

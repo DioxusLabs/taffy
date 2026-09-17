@@ -211,7 +211,10 @@ pub fn compute_root_layout(
             // The root is the initial containing block and claims all remaining candidates
             ContainingBlockClaims::ALL,
             #[cfg(feature = "content_size")]
-            is_scroll_container,
+            is_scroll_container.then_some(common::scrollable_overflow::ScrollOrigin::new(
+                area_size,
+                Point { x: direction.is_rtl(), y: false },
+            )),
             &mut hoisted,
             &mut unclaimed,
         );
@@ -339,14 +342,16 @@ pub fn round_layout(tree: &mut impl RoundTree, node_id: NodeId) {
     /// This is split into a separate function to make it easier to feature flag.
     fn round_scrollable_overflow_rect(
         layout: &mut Layout,
-        unrounded_rect: crate::geometry::Rect<f32>,
+        unrounded_rect: crate::tree::ScrollableOverflowRect,
         cumulative_x: f32,
         cumulative_y: f32,
     ) {
-        layout.scrollable_overflow_rect.left = round(cumulative_x + unrounded_rect.left) - round(cumulative_x);
-        layout.scrollable_overflow_rect.right = round(cumulative_x + unrounded_rect.right) - round(cumulative_x);
-        layout.scrollable_overflow_rect.top = round(cumulative_y + unrounded_rect.top) - round(cumulative_y);
-        layout.scrollable_overflow_rect.bottom = round(cumulative_y + unrounded_rect.bottom) - round(cumulative_y);
+        let unrounded_rect = unrounded_rect.rect;
+        let rect = &mut layout.scrollable_overflow_rect.rect;
+        rect.left = round(cumulative_x + unrounded_rect.left) - round(cumulative_x);
+        rect.right = round(cumulative_x + unrounded_rect.right) - round(cumulative_x);
+        rect.top = round(cumulative_y + unrounded_rect.top) - round(cumulative_y);
+        rect.bottom = round(cumulative_y + unrounded_rect.bottom) - round(cumulative_y);
     }
 }
 
