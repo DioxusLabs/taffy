@@ -1,8 +1,8 @@
 <test name="grid_minmax_auto_fixed_10px__border_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="grid" direction="rtl" grid-template-rows="40px" grid-template-columns="minmax(auto, 10px)">
-      <text direction="rtl">
+    <div display="grid" direction="rtl" position="absolute" grid-template-rows="40px" grid-template-columns="minmax(auto, 10px)">
+      <text direction="rtl" position="relative">
         HH​HH
       </text>
     </div>

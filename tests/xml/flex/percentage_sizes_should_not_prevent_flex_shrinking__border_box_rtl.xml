@@ -1,9 +1,9 @@
 <test name="percentage_sizes_should_not_prevent_flex_shrinking__border_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div direction="rtl" width="200px" height="200px">
-      <div direction="rtl" width="120%">
-        <div direction="rtl"/>
+    <div direction="rtl" position="absolute" width="200px" height="200px">
+      <div direction="rtl" position="relative" width="120%">
+        <div direction="rtl" position="relative"/>
       </div>
     </div>
   </input>

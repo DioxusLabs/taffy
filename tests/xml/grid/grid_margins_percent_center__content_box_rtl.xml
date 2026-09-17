@@ -1,13 +1,13 @@
 <test name="grid_margins_percent_center__content_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="grid" box-sizing="content-box" direction="rtl" grid-template-rows="40px 40px 40px" grid-template-columns="20px 20px 20px">
-      <div box-sizing="content-box" direction="rtl" align-self="center" justify-self="center" width="20px" height="20px" margin-top="5%" margin-left="20%" margin-bottom="15%" margin-right="10%"/>
-      <div box-sizing="content-box" direction="rtl"/>
-      <div box-sizing="content-box" direction="rtl"/>
-      <div box-sizing="content-box" direction="rtl"/>
-      <div box-sizing="content-box" direction="rtl"/>
-      <div box-sizing="content-box" direction="rtl"/>
+    <div display="grid" box-sizing="content-box" direction="rtl" position="absolute" grid-template-rows="40px 40px 40px" grid-template-columns="20px 20px 20px">
+      <div box-sizing="content-box" direction="rtl" position="relative" align-self="center" justify-self="center" width="20px" height="20px" margin-top="5%" margin-left="20%" margin-bottom="15%" margin-right="10%"/>
+      <div box-sizing="content-box" direction="rtl" position="relative"/>
+      <div box-sizing="content-box" direction="rtl" position="relative"/>
+      <div box-sizing="content-box" direction="rtl" position="relative"/>
+      <div box-sizing="content-box" direction="rtl" position="relative"/>
+      <div box-sizing="content-box" direction="rtl" position="relative"/>
     </div>
   </input>
   <expectations>

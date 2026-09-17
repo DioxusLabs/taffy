@@ -1,7 +1,7 @@
 <test name="intrinsic_sizing_cross_size_column__content_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <text box-sizing="content-box" direction="ltr" flex-direction="column">
+    <text box-sizing="content-box" direction="ltr" position="absolute" flex-direction="column">
       HH​HH
     </text>
   </input>

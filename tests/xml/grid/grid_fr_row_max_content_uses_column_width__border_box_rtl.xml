@@ -1,11 +1,11 @@
 <test name="grid_fr_row_max_content_uses_column_width__border_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="grid" direction="rtl" grid-template-rows="minmax(10px, 1fr) minmax(min-content, 50px)" grid-template-columns="50px">
-      <text direction="rtl">
+    <div display="grid" direction="rtl" position="absolute" grid-template-rows="minmax(10px, 1fr) minmax(min-content, 50px)" grid-template-columns="50px">
+      <text direction="rtl" position="relative">
         HHHHH​HHHH
       </text>
-      <text direction="rtl">
+      <text direction="rtl" position="relative">
         HHHHH​HHHH
       </text>
     </div>

@@ -1,8 +1,8 @@
 <test name="measure_remeasure_child_after_stretching__border_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div direction="ltr" width="100px" height="100px">
-      <text direction="ltr">
+    <div direction="ltr" position="absolute" width="100px" height="100px">
+      <text direction="ltr" position="relative">
         HH
       </text>
     </div>

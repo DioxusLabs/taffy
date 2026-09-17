@@ -1,11 +1,11 @@
 <test name="grid_fr_row_max_content_uses_column_width__content_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="grid" box-sizing="content-box" direction="ltr" grid-template-rows="minmax(10px, 1fr) minmax(min-content, 50px)" grid-template-columns="50px">
-      <text box-sizing="content-box" direction="ltr">
+    <div display="grid" box-sizing="content-box" direction="ltr" position="absolute" grid-template-rows="minmax(10px, 1fr) minmax(min-content, 50px)" grid-template-columns="50px">
+      <text box-sizing="content-box" direction="ltr" position="relative">
         HHHHH​HHHH
       </text>
-      <text box-sizing="content-box" direction="ltr">
+      <text box-sizing="content-box" direction="ltr" position="relative">
         HHHHH​HHHH
       </text>
     </div>

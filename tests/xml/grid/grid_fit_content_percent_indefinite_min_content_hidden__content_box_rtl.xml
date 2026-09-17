@@ -1,8 +1,8 @@
 <test name="grid_fit_content_percent_indefinite_min_content_hidden__content_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="grid" box-sizing="content-box" direction="rtl" grid-template-rows="40px" grid-template-columns="fit-content(50%)">
-      <text box-sizing="content-box" direction="rtl" overflow-x="hidden" overflow-y="hidden" scrollbar-width="15">
+    <div display="grid" box-sizing="content-box" direction="rtl" position="absolute" grid-template-rows="40px" grid-template-columns="fit-content(50%)">
+      <text box-sizing="content-box" direction="rtl" position="relative" overflow-x="hidden" overflow-y="hidden" scrollbar-width="15">
         HHHH​HH
       </text>
     </div>

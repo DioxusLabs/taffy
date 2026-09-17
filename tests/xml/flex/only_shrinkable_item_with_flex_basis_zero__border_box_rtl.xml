@@ -1,10 +1,10 @@
 <test name="only_shrinkable_item_with_flex_basis_zero__border_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div direction="rtl" flex-direction="column" width="480px" max-height="764px">
-      <div direction="rtl" flex-basis="0px"/>
-      <div direction="rtl" flex-shrink="0" flex-basis="93px" margin-bottom="6px"/>
-      <div direction="rtl" flex-shrink="0" flex-basis="764px"/>
+    <div direction="rtl" position="absolute" flex-direction="column" width="480px" max-height="764px">
+      <div direction="rtl" position="relative" flex-basis="0px"/>
+      <div direction="rtl" position="relative" flex-shrink="0" flex-basis="93px" margin-bottom="6px"/>
+      <div direction="rtl" position="relative" flex-shrink="0" flex-basis="764px"/>
     </div>
   </input>
   <expectations>

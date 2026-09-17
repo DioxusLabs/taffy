@@ -1,15 +1,15 @@
 <test name="align_baseline_child_auto_margin_cross_start__border_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div direction="rtl" align-items="baseline" width="200px" height="100px">
-      <div direction="rtl" flex-direction="column" width="50px" height="40px">
-        <div direction="rtl" width="50px" height="20px"/>
+    <div direction="rtl" position="absolute" align-items="baseline" width="200px" height="100px">
+      <div direction="rtl" position="relative" flex-direction="column" width="50px" height="40px">
+        <div direction="rtl" position="relative" width="50px" height="20px"/>
       </div>
-      <div direction="rtl" flex-direction="column" width="50px" height="60px">
-        <div direction="rtl" width="50px" height="30px"/>
+      <div direction="rtl" position="relative" flex-direction="column" width="50px" height="60px">
+        <div direction="rtl" position="relative" width="50px" height="30px"/>
       </div>
-      <div direction="rtl" flex-direction="column" width="50px" height="50px" margin-top="auto">
-        <div direction="rtl" width="50px" height="45px"/>
+      <div direction="rtl" position="relative" flex-direction="column" width="50px" height="50px" margin-top="auto">
+        <div direction="rtl" position="relative" width="50px" height="45px"/>
       </div>
     </div>
   </input>

@@ -1,8 +1,8 @@
 <test name="flex_safe_align_self_end_overflow__border_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="flex" direction="rtl" width="100px" height="100px">
-      <div direction="rtl" align-self="safe end" flex-shrink="0" width="50px" height="150px"/>
+    <div display="flex" direction="rtl" position="absolute" width="100px" height="100px">
+      <div direction="rtl" position="relative" align-self="safe end" flex-shrink="0" width="50px" height="150px"/>
     </div>
   </input>
   <expectations>

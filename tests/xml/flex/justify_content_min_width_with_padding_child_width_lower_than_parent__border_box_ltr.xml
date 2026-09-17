@@ -1,10 +1,10 @@
 <test name="justify_content_min_width_with_padding_child_width_lower_than_parent__border_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div direction="ltr" flex-direction="column" align-content="stretch" width="1080px" height="1584px">
-      <div direction="ltr" align-content="stretch">
-        <div direction="ltr" align-content="stretch" justify-content="center" min-width="400px" padding-left="100px" padding-right="100px">
-          <div direction="ltr" align-content="stretch" width="199px" height="100px"/>
+    <div direction="ltr" position="absolute" flex-direction="column" align-content="stretch" width="1080px" height="1584px">
+      <div direction="ltr" position="relative" align-content="stretch">
+        <div direction="ltr" position="relative" align-content="stretch" justify-content="center" min-width="400px" padding-left="100px" padding-right="100px">
+          <div direction="ltr" position="relative" align-content="stretch" width="199px" height="100px"/>
         </div>
       </div>
     </div>

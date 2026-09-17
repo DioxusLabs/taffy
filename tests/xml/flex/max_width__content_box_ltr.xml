@@ -1,8 +1,8 @@
 <test name="max_width__content_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div box-sizing="content-box" direction="ltr" flex-direction="column" width="100px" height="100px">
-      <div box-sizing="content-box" direction="ltr" height="10px" max-width="50px"/>
+    <div box-sizing="content-box" direction="ltr" position="absolute" flex-direction="column" width="100px" height="100px">
+      <div box-sizing="content-box" direction="ltr" position="relative" height="10px" max-width="50px"/>
     </div>
   </input>
   <expectations>

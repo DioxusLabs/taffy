@@ -1,12 +1,12 @@
 <test name="rounding_flex_basis_flex_grow_row_prime_number_width__border_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div direction="ltr" width="113px" height="100px">
-      <div direction="ltr" flex-grow="1"/>
-      <div direction="ltr" flex-grow="1"/>
-      <div direction="ltr" flex-grow="1"/>
-      <div direction="ltr" flex-grow="1"/>
-      <div direction="ltr" flex-grow="1"/>
+    <div direction="ltr" position="absolute" width="113px" height="100px">
+      <div direction="ltr" position="relative" flex-grow="1"/>
+      <div direction="ltr" position="relative" flex-grow="1"/>
+      <div direction="ltr" position="relative" flex-grow="1"/>
+      <div direction="ltr" position="relative" flex-grow="1"/>
+      <div direction="ltr" position="relative" flex-grow="1"/>
     </div>
   </input>
   <expectations>

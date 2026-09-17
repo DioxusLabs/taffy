@@ -1,9 +1,9 @@
 <test name="taffy_issue_696_min_height__content_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="flex" box-sizing="content-box" direction="ltr" flex-direction="column" width="200px">
-      <div display="flex" box-sizing="content-box" direction="ltr" flex-direction="column" flex-basis="0px" min-height="100px" padding-top="20px" padding-left="20px" padding-bottom="20px" padding-right="20px">
-        <div display="flex" box-sizing="content-box" direction="ltr" flex-shrink="0" height="200px"/>
+    <div display="flex" box-sizing="content-box" direction="ltr" position="absolute" flex-direction="column" width="200px">
+      <div display="flex" box-sizing="content-box" direction="ltr" position="relative" flex-direction="column" flex-basis="0px" min-height="100px" padding-top="20px" padding-left="20px" padding-bottom="20px" padding-right="20px">
+        <div display="flex" box-sizing="content-box" direction="ltr" position="relative" flex-shrink="0" height="200px"/>
       </div>
     </div>
   </input>

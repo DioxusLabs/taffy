@@ -1,10 +1,10 @@
 <test name="justify_content_column_space_around__border_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div direction="rtl" flex-direction="column" justify-content="space-around" width="100px" height="100px">
-      <div direction="rtl" height="10px"/>
-      <div direction="rtl" height="10px"/>
-      <div direction="rtl" height="10px"/>
+    <div direction="rtl" position="absolute" flex-direction="column" justify-content="space-around" width="100px" height="100px">
+      <div direction="rtl" position="relative" height="10px"/>
+      <div direction="rtl" position="relative" height="10px"/>
+      <div direction="rtl" position="relative" height="10px"/>
     </div>
   </input>
   <expectations>

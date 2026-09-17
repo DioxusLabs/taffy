@@ -1,12 +1,12 @@
 <test name="grid_align_items_baseline_nested_column__content_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="grid" box-sizing="content-box" direction="ltr" align-items="baseline" width="100px" height="100px">
-      <div display="grid" box-sizing="content-box" direction="ltr" width="50px" height="60px"/>
-      <div display="grid" box-sizing="content-box" direction="ltr">
-        <div display="grid" box-sizing="content-box" direction="ltr" width="50px" height="80px">
-          <div display="grid" box-sizing="content-box" direction="ltr" width="50px" height="30px"/>
-          <div display="grid" box-sizing="content-box" direction="ltr" width="50px" height="40px"/>
+    <div display="grid" box-sizing="content-box" direction="ltr" position="absolute" align-items="baseline" width="100px" height="100px">
+      <div display="grid" box-sizing="content-box" direction="ltr" position="relative" width="50px" height="60px"/>
+      <div display="grid" box-sizing="content-box" direction="ltr" position="relative">
+        <div display="grid" box-sizing="content-box" direction="ltr" position="relative" width="50px" height="80px">
+          <div display="grid" box-sizing="content-box" direction="ltr" position="relative" width="50px" height="30px"/>
+          <div display="grid" box-sizing="content-box" direction="ltr" position="relative" width="50px" height="40px"/>
         </div>
       </div>
     </div>

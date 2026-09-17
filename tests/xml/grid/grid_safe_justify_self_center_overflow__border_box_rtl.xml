@@ -1,8 +1,8 @@
 <test name="grid_safe_justify_self_center_overflow__border_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="grid" direction="rtl" width="100px" height="100px" grid-template-rows="100px" grid-template-columns="100px">
-      <div direction="rtl" justify-self="safe center" width="150px" height="50px"/>
+    <div display="grid" direction="rtl" position="absolute" width="100px" height="100px" grid-template-rows="100px" grid-template-columns="100px">
+      <div direction="rtl" position="relative" justify-self="safe center" width="150px" height="50px"/>
     </div>
   </input>
   <expectations>

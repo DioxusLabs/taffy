@@ -1,13 +1,13 @@
 <test name="flex_container_baseline_wrap_reverse_multiline__border_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div direction="ltr" align-items="baseline" width="200px" height="200px">
-      <div direction="ltr" width="50px" height="100px"/>
-      <div direction="ltr" flex-wrap="wrap-reverse" align-items="baseline" align-content="flex-start" width="100px" height="120px">
-        <div direction="ltr" width="60px" height="20px"/>
-        <div direction="ltr" width="40px" height="40px"/>
-        <div direction="ltr" width="60px" height="30px"/>
-        <div direction="ltr" width="40px" height="10px"/>
+    <div direction="ltr" position="absolute" align-items="baseline" width="200px" height="200px">
+      <div direction="ltr" position="relative" width="50px" height="100px"/>
+      <div direction="ltr" position="relative" flex-wrap="wrap-reverse" align-items="baseline" align-content="flex-start" width="100px" height="120px">
+        <div direction="ltr" position="relative" width="60px" height="20px"/>
+        <div direction="ltr" position="relative" width="40px" height="40px"/>
+        <div direction="ltr" position="relative" width="60px" height="30px"/>
+        <div direction="ltr" position="relative" width="40px" height="10px"/>
       </div>
     </div>
   </input>

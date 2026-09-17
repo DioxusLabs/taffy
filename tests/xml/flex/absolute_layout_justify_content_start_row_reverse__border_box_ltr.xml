@@ -1,7 +1,7 @@
 <test name="absolute_layout_justify_content_start_row_reverse__border_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div direction="ltr" flex-direction="row-reverse" justify-content="start" width="100px" height="100px">
+    <div direction="ltr" position="absolute" flex-direction="row-reverse" justify-content="start" width="100px" height="100px">
       <div direction="ltr" position="absolute" width="20px" height="20px"/>
     </div>
   </input>

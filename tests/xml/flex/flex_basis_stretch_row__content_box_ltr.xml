@@ -1,8 +1,8 @@
 <test name="flex_basis_stretch_row__content_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div box-sizing="content-box" direction="ltr" width="200px" height="50px">
-      <text box-sizing="content-box" direction="ltr" flex-shrink="0" flex-basis="stretch">
+    <div box-sizing="content-box" direction="ltr" position="absolute" width="200px" height="50px">
+      <text box-sizing="content-box" direction="ltr" position="relative" flex-shrink="0" flex-basis="stretch">
         XXXX​XXXX
       </text>
     </div>

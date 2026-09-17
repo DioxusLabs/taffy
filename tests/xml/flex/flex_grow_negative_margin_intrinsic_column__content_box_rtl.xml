@@ -1,8 +1,8 @@
 <test name="flex_grow_negative_margin_intrinsic_column__content_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="flex" box-sizing="content-box" direction="rtl" flex-direction="column" width="300px">
-      <div box-sizing="content-box" direction="rtl" flex-grow="1" flex-shrink="0" width="100px" height="100px" margin-top="-24px"/>
+    <div display="flex" box-sizing="content-box" direction="rtl" position="absolute" flex-direction="column" width="300px">
+      <div box-sizing="content-box" direction="rtl" position="relative" flex-grow="1" flex-shrink="0" width="100px" height="100px" margin-top="-24px"/>
     </div>
   </input>
   <expectations>

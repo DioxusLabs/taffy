@@ -1,13 +1,13 @@
 <test name="balance_nowrap_line_count_no_effect__content_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div box-sizing="content-box" direction="rtl" flex-line-count="10000" width="20px" column-gap="20px">
-      <div box-sizing="content-box" direction="rtl" flex-shrink="0" width="20px" height="20px"/>
-      <div box-sizing="content-box" direction="rtl" flex-shrink="0" width="20px" height="20px"/>
-      <div box-sizing="content-box" direction="rtl" flex-shrink="0" width="20px" height="20px"/>
-      <div box-sizing="content-box" direction="rtl" flex-shrink="0" width="20px" height="20px"/>
-      <div box-sizing="content-box" direction="rtl" flex-shrink="0" width="20px" height="20px"/>
-      <div box-sizing="content-box" direction="rtl" flex-shrink="0" width="20px" height="20px"/>
+    <div box-sizing="content-box" direction="rtl" position="absolute" flex-line-count="10000" width="20px" column-gap="20px">
+      <div box-sizing="content-box" direction="rtl" position="relative" flex-shrink="0" width="20px" height="20px"/>
+      <div box-sizing="content-box" direction="rtl" position="relative" flex-shrink="0" width="20px" height="20px"/>
+      <div box-sizing="content-box" direction="rtl" position="relative" flex-shrink="0" width="20px" height="20px"/>
+      <div box-sizing="content-box" direction="rtl" position="relative" flex-shrink="0" width="20px" height="20px"/>
+      <div box-sizing="content-box" direction="rtl" position="relative" flex-shrink="0" width="20px" height="20px"/>
+      <div box-sizing="content-box" direction="rtl" position="relative" flex-shrink="0" width="20px" height="20px"/>
     </div>
   </input>
   <expectations>

@@ -1,18 +1,18 @@
 <test name="rounding_fractial_input_8__border_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div direction="ltr" width="100px" height="200px" padding-top="51.25px" padding-left="20.625px">
-      <div direction="ltr" flex-direction="column">
-        <div direction="ltr" width="13.9375px" height="13.9375px"/>
-        <div direction="ltr" width="13.9375px" height="13.9375px"/>
-        <div direction="ltr" width="13.9375px" height="13.9375px"/>
-        <div direction="ltr" width="13.9375px" height="13.9375px"/>
-        <div direction="ltr" width="13.9375px" height="13.9375px"/>
-        <div direction="ltr" width="13.9375px" height="13.9375px"/>
-        <div direction="ltr" width="13.9375px" height="13.9375px"/>
-        <div direction="ltr" width="13.9375px" height="13.9375px"/>
-        <div direction="ltr" width="13.9375px" height="13.9375px"/>
-        <div direction="ltr" width="13.9375px" height="13.9375px"/>
+    <div direction="ltr" position="absolute" width="100px" height="200px" padding-top="51.25px" padding-left="20.625px">
+      <div direction="ltr" position="relative" flex-direction="column">
+        <div direction="ltr" position="relative" width="13.9375px" height="13.9375px"/>
+        <div direction="ltr" position="relative" width="13.9375px" height="13.9375px"/>
+        <div direction="ltr" position="relative" width="13.9375px" height="13.9375px"/>
+        <div direction="ltr" position="relative" width="13.9375px" height="13.9375px"/>
+        <div direction="ltr" position="relative" width="13.9375px" height="13.9375px"/>
+        <div direction="ltr" position="relative" width="13.9375px" height="13.9375px"/>
+        <div direction="ltr" position="relative" width="13.9375px" height="13.9375px"/>
+        <div direction="ltr" position="relative" width="13.9375px" height="13.9375px"/>
+        <div direction="ltr" position="relative" width="13.9375px" height="13.9375px"/>
+        <div direction="ltr" position="relative" width="13.9375px" height="13.9375px"/>
       </div>
     </div>
   </input>

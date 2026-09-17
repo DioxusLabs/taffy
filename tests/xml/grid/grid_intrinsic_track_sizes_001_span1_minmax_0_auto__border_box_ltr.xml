@@ -1,11 +1,11 @@
 <test name="grid_intrinsic_track_sizes_001_span1_minmax_0_auto__border_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="grid" direction="ltr" width="120px" height="120px" border-top="3px" border-left="3px" border-bottom="3px" border-right="3px" grid-template-rows="minmax(0px, auto)" grid-template-columns="minmax(0px, auto)">
-      <text direction="ltr" min-width="12px" min-height="12px" grid-row-start="1" grid-row-end="span 1" grid-column-start="1" grid-column-end="span 1">
+    <div display="grid" direction="ltr" position="absolute" width="120px" height="120px" border-top="3px" border-left="3px" border-bottom="3px" border-right="3px" grid-template-rows="minmax(0px, auto)" grid-template-columns="minmax(0px, auto)">
+      <text direction="ltr" position="relative" min-width="12px" min-height="12px" grid-row-start="1" grid-row-end="span 1" grid-column-start="1" grid-column-end="span 1">
         XXX​XX​X
       </text>
-      <div direction="ltr" grid-row-start="1" grid-column-start="1"/>
+      <div direction="ltr" position="relative" grid-row-start="1" grid-column-start="1"/>
     </div>
   </input>
   <expectations>

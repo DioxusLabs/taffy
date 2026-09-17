@@ -1,7 +1,7 @@
 <test name="overflow_start_edge_absolute_child__content_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="flex" box-sizing="content-box" direction="ltr" overflow-x="hidden" overflow-y="hidden" scrollbar-width="15" width="100px" height="100px">
+    <div display="flex" box-sizing="content-box" direction="ltr" position="absolute" overflow-x="hidden" overflow-y="hidden" scrollbar-width="15" width="100px" height="100px">
       <div display="block" box-sizing="content-box" direction="ltr" position="relative" width="40px" height="20px" margin-left="60px">
         <div box-sizing="content-box" direction="ltr" position="absolute" width="80px" height="40px" top="0px" right="0px"/>
       </div>

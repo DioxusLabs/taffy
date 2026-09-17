@@ -1,12 +1,12 @@
 <test name="wrap_column_indefinite_main_size_percent_basis__border_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="flex" direction="rtl" flex-direction="column" width="300px">
-      <div display="flex" direction="rtl" flex-direction="column" flex-wrap="wrap" width="300px">
-        <text direction="rtl" flex-shrink="0" flex-basis="100%">
+    <div display="flex" direction="rtl" position="absolute" flex-direction="column" width="300px">
+      <div display="flex" direction="rtl" position="relative" flex-direction="column" flex-wrap="wrap" width="300px">
+        <text direction="rtl" position="relative" flex-shrink="0" flex-basis="100%">
           HHHHHHHHHH​HHHHHHHHHH
         </text>
-        <text direction="rtl">
+        <text direction="rtl" position="relative">
           HHHHHHHHHH​HHHHHHHHHH
         </text>
       </div>

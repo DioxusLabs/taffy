@@ -1,10 +1,10 @@
 <test name="grid_fr_span_2_proportion_zero_sum__border_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="grid" direction="ltr" grid-template-rows="40px 40px" grid-template-columns="0fr 0fr">
-      <div direction="ltr" width="60px" grid-column-start="span 2"/>
-      <div direction="ltr"/>
-      <div direction="ltr"/>
+    <div display="grid" direction="ltr" position="absolute" grid-template-rows="40px 40px" grid-template-columns="0fr 0fr">
+      <div direction="ltr" position="relative" width="60px" grid-column-start="span 2"/>
+      <div direction="ltr" position="relative"/>
+      <div direction="ltr" position="relative"/>
     </div>
   </input>
   <expectations>

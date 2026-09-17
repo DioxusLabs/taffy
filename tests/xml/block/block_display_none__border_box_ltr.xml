@@ -1,10 +1,10 @@
 <test name="block_display_none__border_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="block" direction="ltr" width="50px">
-      <div direction="ltr" height="10px"/>
-      <div display="none" direction="ltr" height="10px"/>
-      <div direction="ltr" height="10px"/>
+    <div display="block" direction="ltr" position="absolute" width="50px">
+      <div direction="ltr" position="relative" height="10px"/>
+      <div display="none" direction="ltr" position="relative" height="10px"/>
+      <div direction="ltr" position="relative" height="10px"/>
     </div>
   </input>
   <expectations>

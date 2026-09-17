@@ -1,9 +1,9 @@
 <test name="intrinsic_sizing_main_size_min_size__border_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="flex" direction="rtl" width="300px" height="200px">
+    <div display="flex" direction="rtl" position="absolute" width="300px" height="200px">
       <div display="flex" direction="rtl" position="absolute" align-items="center" justify-content="center" max-width="100px" max-height="100px" padding-top="10px" padding-left="10px" padding-bottom="10px" padding-right="10px" top="0px" left="0px">
-        <div display="flex" direction="rtl" min-width="50px" min-height="50px" padding-top="10px" padding-left="10px" padding-bottom="10px" padding-right="10px"/>
+        <div display="flex" direction="rtl" position="relative" min-width="50px" min-height="50px" padding-top="10px" padding-left="10px" padding-bottom="10px" padding-right="10px"/>
       </div>
     </div>
   </input>

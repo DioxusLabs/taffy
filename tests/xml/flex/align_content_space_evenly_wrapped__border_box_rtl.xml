@@ -1,13 +1,13 @@
 <test name="align_content_space_evenly_wrapped__border_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div direction="rtl" flex-wrap="wrap" align-content="space-evenly" width="100px" height="100px">
-      <div direction="rtl" width="50px" height="10px"/>
-      <div direction="rtl" width="50px" height="10px"/>
-      <div direction="rtl" width="50px" height="10px"/>
-      <div direction="rtl" width="50px" height="10px"/>
-      <div direction="rtl" width="50px" height="10px"/>
-      <div direction="rtl" width="50px" height="10px"/>
+    <div direction="rtl" position="absolute" flex-wrap="wrap" align-content="space-evenly" width="100px" height="100px">
+      <div direction="rtl" position="relative" width="50px" height="10px"/>
+      <div direction="rtl" position="relative" width="50px" height="10px"/>
+      <div direction="rtl" position="relative" width="50px" height="10px"/>
+      <div direction="rtl" position="relative" width="50px" height="10px"/>
+      <div direction="rtl" position="relative" width="50px" height="10px"/>
+      <div direction="rtl" position="relative" width="50px" height="10px"/>
     </div>
   </input>
   <expectations>

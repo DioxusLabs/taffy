@@ -1,12 +1,12 @@
 <test name="display_none_with_child__border_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div direction="ltr" width="100px" height="100px">
-      <div direction="ltr" flex-grow="1" flex-basis="0%"/>
-      <div display="none" direction="ltr" flex-direction="column" flex-grow="1" flex-basis="0%">
-        <div direction="ltr" flex-grow="1" flex-basis="0%" width="20px"/>
+    <div direction="ltr" position="absolute" width="100px" height="100px">
+      <div direction="ltr" position="relative" flex-grow="1" flex-basis="0%"/>
+      <div display="none" direction="ltr" position="relative" flex-direction="column" flex-grow="1" flex-basis="0%">
+        <div direction="ltr" position="relative" flex-grow="1" flex-basis="0%" width="20px"/>
       </div>
-      <div direction="ltr" flex-grow="1" flex-basis="0%"/>
+      <div direction="ltr" position="relative" flex-grow="1" flex-basis="0%"/>
     </div>
   </input>
   <expectations>

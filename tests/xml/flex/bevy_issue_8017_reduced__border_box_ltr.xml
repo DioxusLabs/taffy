@@ -1,12 +1,12 @@
 <test name="bevy_issue_8017_reduced__border_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div direction="ltr" flex-direction="column" width="200px" height="400px" row-gap="8px" column-gap="8px">
-      <div direction="ltr" height="50%">
-        <div direction="ltr"/>
+    <div direction="ltr" position="absolute" flex-direction="column" width="200px" height="400px" row-gap="8px" column-gap="8px">
+      <div direction="ltr" position="relative" height="50%">
+        <div direction="ltr" position="relative"/>
       </div>
-      <div direction="ltr" height="50%">
-        <div direction="ltr"/>
+      <div direction="ltr" position="relative" height="50%">
+        <div direction="ltr" position="relative"/>
       </div>
     </div>
   </input>

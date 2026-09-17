@@ -1,12 +1,12 @@
 <test name="block_display_none_with_child__border_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="block" direction="rtl" width="100px" height="100px">
-      <div direction="rtl" height="10px"/>
-      <div display="none" direction="rtl">
-        <div direction="rtl" width="20px" height="10px"/>
+    <div display="block" direction="rtl" position="absolute" width="100px" height="100px">
+      <div direction="rtl" position="relative" height="10px"/>
+      <div display="none" direction="rtl" position="relative">
+        <div direction="rtl" position="relative" width="20px" height="10px"/>
       </div>
-      <div direction="rtl" height="10px"/>
+      <div direction="rtl" position="relative" height="10px"/>
     </div>
   </input>
   <expectations>

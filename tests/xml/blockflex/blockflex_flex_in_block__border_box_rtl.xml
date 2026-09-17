@@ -1,11 +1,11 @@
 <test name="blockflex_flex_in_block__border_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="block" direction="rtl" width="200px">
-      <div display="flex" direction="rtl">
-        <div direction="rtl" width="50px" height="50px"/>
+    <div display="block" direction="rtl" position="absolute" width="200px">
+      <div display="flex" direction="rtl" position="relative">
+        <div direction="rtl" position="relative" width="50px" height="50px"/>
       </div>
-      <div display="block" direction="rtl" width="50px" height="20px"/>
+      <div display="block" direction="rtl" position="relative" width="50px" height="20px"/>
     </div>
   </input>
   <expectations>

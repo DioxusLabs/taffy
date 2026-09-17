@@ -1,9 +1,9 @@
 <test name="flex_grow_padding_auto_size_row__content_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="flex" box-sizing="content-box" direction="rtl" padding-top="100px" padding-left="100px" padding-bottom="100px" padding-right="100px">
-      <div box-sizing="content-box" direction="rtl" flex-grow="1" width="10px" height="50px"/>
-      <div box-sizing="content-box" direction="rtl" width="10px" height="50px"/>
+    <div display="flex" box-sizing="content-box" direction="rtl" position="absolute" padding-top="100px" padding-left="100px" padding-bottom="100px" padding-right="100px">
+      <div box-sizing="content-box" direction="rtl" position="relative" flex-grow="1" width="10px" height="50px"/>
+      <div box-sizing="content-box" direction="rtl" position="relative" width="10px" height="50px"/>
     </div>
   </input>
   <expectations>

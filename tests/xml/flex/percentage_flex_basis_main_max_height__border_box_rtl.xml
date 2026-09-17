@@ -1,9 +1,9 @@
 <test name="percentage_flex_basis_main_max_height__border_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div direction="rtl" width="200px" height="400px">
-      <div direction="rtl" flex-grow="1" flex-basis="10%" max-height="60%"/>
-      <div direction="rtl" flex-grow="4" flex-basis="10%" max-height="20%"/>
+    <div direction="rtl" position="absolute" width="200px" height="400px">
+      <div direction="rtl" position="relative" flex-grow="1" flex-basis="10%" max-height="60%"/>
+      <div direction="rtl" position="relative" flex-grow="4" flex-basis="10%" max-height="20%"/>
     </div>
   </input>
   <expectations>

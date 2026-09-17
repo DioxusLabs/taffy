@@ -1,11 +1,11 @@
 <test name="block_margin_y_total_collapse__content_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="block" box-sizing="content-box" direction="rtl" width="50px">
-      <div display="block" box-sizing="content-box" direction="rtl" height="10px" margin-top="10px" margin-bottom="10px">
-        <div display="block" box-sizing="content-box" direction="rtl" height="10px" margin-bottom="10px"/>
-        <div display="block" box-sizing="content-box" direction="rtl" margin-top="10px" margin-bottom="10px"/>
-        <div display="block" box-sizing="content-box" direction="rtl" height="10px" margin-top="10px"/>
+    <div display="block" box-sizing="content-box" direction="rtl" position="absolute" width="50px">
+      <div display="block" box-sizing="content-box" direction="rtl" position="relative" height="10px" margin-top="10px" margin-bottom="10px">
+        <div display="block" box-sizing="content-box" direction="rtl" position="relative" height="10px" margin-bottom="10px"/>
+        <div display="block" box-sizing="content-box" direction="rtl" position="relative" margin-top="10px" margin-bottom="10px"/>
+        <div display="block" box-sizing="content-box" direction="rtl" position="relative" height="10px" margin-top="10px"/>
       </div>
     </div>
   </input>

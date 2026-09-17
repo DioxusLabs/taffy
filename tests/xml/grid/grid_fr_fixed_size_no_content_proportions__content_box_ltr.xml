@@ -1,10 +1,10 @@
 <test name="grid_fr_fixed_size_no_content_proportions__content_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="grid" box-sizing="content-box" direction="ltr" width="200px" grid-template-rows="40px" grid-template-columns="1fr 2fr 3fr">
-      <div box-sizing="content-box" direction="ltr"/>
-      <div box-sizing="content-box" direction="ltr"/>
-      <div box-sizing="content-box" direction="ltr"/>
+    <div display="grid" box-sizing="content-box" direction="ltr" position="absolute" width="200px" grid-template-rows="40px" grid-template-columns="1fr 2fr 3fr">
+      <div box-sizing="content-box" direction="ltr" position="relative"/>
+      <div box-sizing="content-box" direction="ltr" position="relative"/>
+      <div box-sizing="content-box" direction="ltr" position="relative"/>
     </div>
   </input>
   <expectations>

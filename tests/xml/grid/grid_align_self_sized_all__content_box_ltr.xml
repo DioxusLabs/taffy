@@ -1,15 +1,15 @@
 <test name="grid_align_self_sized_all__content_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="grid" box-sizing="content-box" direction="ltr" width="120px" height="120px" grid-template-rows="40px 40px 40px" grid-template-columns="40px 40px 40px">
-      <div box-sizing="content-box" direction="ltr" align-self="start" width="20px" height="20px"/>
-      <div box-sizing="content-box" direction="ltr" align-self="start" width="60px" height="60px"/>
-      <div box-sizing="content-box" direction="ltr" align-self="end" width="20px" height="20px"/>
-      <div box-sizing="content-box" direction="ltr" align-self="end" width="60px" height="60px"/>
-      <div box-sizing="content-box" direction="ltr" align-self="center" width="20px" height="20px"/>
-      <div box-sizing="content-box" direction="ltr" align-self="center" width="60px" height="60px"/>
-      <div box-sizing="content-box" direction="ltr" align-self="stretch" width="20px" height="20px"/>
-      <div box-sizing="content-box" direction="ltr" align-self="stretch" width="60px" height="60px"/>
+    <div display="grid" box-sizing="content-box" direction="ltr" position="absolute" width="120px" height="120px" grid-template-rows="40px 40px 40px" grid-template-columns="40px 40px 40px">
+      <div box-sizing="content-box" direction="ltr" position="relative" align-self="start" width="20px" height="20px"/>
+      <div box-sizing="content-box" direction="ltr" position="relative" align-self="start" width="60px" height="60px"/>
+      <div box-sizing="content-box" direction="ltr" position="relative" align-self="end" width="20px" height="20px"/>
+      <div box-sizing="content-box" direction="ltr" position="relative" align-self="end" width="60px" height="60px"/>
+      <div box-sizing="content-box" direction="ltr" position="relative" align-self="center" width="20px" height="20px"/>
+      <div box-sizing="content-box" direction="ltr" position="relative" align-self="center" width="60px" height="60px"/>
+      <div box-sizing="content-box" direction="ltr" position="relative" align-self="stretch" width="20px" height="20px"/>
+      <div box-sizing="content-box" direction="ltr" position="relative" align-self="stretch" width="60px" height="60px"/>
     </div>
   </input>
   <expectations>

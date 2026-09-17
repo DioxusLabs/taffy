@@ -1,13 +1,13 @@
 <test name="align_baseline_child_multiline__border_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div direction="ltr" align-items="baseline" width="100px">
-      <div direction="ltr" width="50px" height="60px"/>
-      <div direction="ltr" flex-wrap="wrap" width="50px">
-        <div direction="ltr" width="25px" height="20px"/>
-        <div direction="ltr" width="25px" height="10px"/>
-        <div direction="ltr" width="25px" height="20px"/>
-        <div direction="ltr" width="25px" height="10px"/>
+    <div direction="ltr" position="absolute" align-items="baseline" width="100px">
+      <div direction="ltr" position="relative" width="50px" height="60px"/>
+      <div direction="ltr" position="relative" flex-wrap="wrap" width="50px">
+        <div direction="ltr" position="relative" width="25px" height="20px"/>
+        <div direction="ltr" position="relative" width="25px" height="10px"/>
+        <div direction="ltr" position="relative" width="25px" height="20px"/>
+        <div direction="ltr" position="relative" width="25px" height="10px"/>
       </div>
     </div>
   </input>

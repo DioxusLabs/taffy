@@ -1,9 +1,9 @@
 <test name="grid_template_serialization_auto_fill_named_lines__content_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="grid" box-sizing="content-box" direction="ltr" width="140px" grid-template-rows="20px" grid-template-columns="repeat(auto-fill, [col] 40px [col-end])">
-      <div box-sizing="content-box" direction="ltr"/>
-      <div box-sizing="content-box" direction="ltr"/>
+    <div display="grid" box-sizing="content-box" direction="ltr" position="absolute" width="140px" grid-template-rows="20px" grid-template-columns="repeat(auto-fill, [col] 40px [col-end])">
+      <div box-sizing="content-box" direction="ltr" position="relative"/>
+      <div box-sizing="content-box" direction="ltr" position="relative"/>
     </div>
   </input>
   <expectations>

@@ -1,7 +1,7 @@
 <test name="flex_column_relative_all_sides__content_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div box-sizing="content-box" direction="rtl" flex-direction="column" width="100px" height="100px">
+    <div box-sizing="content-box" direction="rtl" position="absolute" flex-direction="column" width="100px" height="100px">
       <div box-sizing="content-box" direction="rtl" position="relative" width="40px" top="10px" left="10px" bottom="10px" right="10px"/>
     </div>
   </input>

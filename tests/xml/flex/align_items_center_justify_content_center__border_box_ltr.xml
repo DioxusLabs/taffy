@@ -1,10 +1,10 @@
 <test name="align_items_center_justify_content_center__border_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div direction="ltr" flex-direction="column" width="500px" height="500px">
-      <div direction="ltr" flex-direction="column" align-items="center" justify-content="center" height="50px">
-        <div direction="ltr" flex-direction="column" align-items="center" justify-content="center" height="100%" margin-left="10px" margin-right="10px">
-          <text direction="ltr" width="10px" height="10px">
+    <div direction="ltr" position="absolute" flex-direction="column" width="500px" height="500px">
+      <div direction="ltr" position="relative" flex-direction="column" align-items="center" justify-content="center" height="50px">
+        <div direction="ltr" position="relative" flex-direction="column" align-items="center" justify-content="center" height="100%" margin-left="10px" margin-right="10px">
+          <text direction="ltr" position="relative" width="10px" height="10px">
             
           </text>
         </div>

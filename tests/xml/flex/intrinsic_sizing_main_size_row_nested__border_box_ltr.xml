@@ -1,8 +1,8 @@
 <test name="intrinsic_sizing_main_size_row_nested__border_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div direction="ltr">
-      <text direction="ltr">
+    <div direction="ltr" position="absolute">
+      <text direction="ltr" position="relative">
         HH​HH
       </text>
     </div>

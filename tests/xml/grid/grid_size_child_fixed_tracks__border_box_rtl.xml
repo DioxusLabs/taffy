@@ -1,20 +1,20 @@
 <test name="grid_size_child_fixed_tracks__border_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="grid" direction="rtl" width="120px" height="120px" grid-template-rows="40px 40px 40px" grid-template-columns="40px 40px 40px">
-      <text direction="rtl" align-self="start" justify-self="start">
+    <div display="grid" direction="rtl" position="absolute" width="120px" height="120px" grid-template-rows="40px 40px 40px" grid-template-columns="40px 40px 40px">
+      <text direction="rtl" position="relative" align-self="start" justify-self="start">
         HH​HH​HH​HH
       </text>
-      <text direction="rtl" align-self="start" justify-self="start">
+      <text direction="rtl" position="relative" align-self="start" justify-self="start">
         HHH​HHH
       </text>
-      <text direction="rtl" align-self="start" justify-self="start">
+      <text direction="rtl" position="relative" align-self="start" justify-self="start">
         HH​HHHH
       </text>
-      <text direction="rtl" align-self="start" justify-self="start" width="20px">
+      <text direction="rtl" position="relative" align-self="start" justify-self="start" width="20px">
         HH​HH​HH​HH
       </text>
-      <text direction="rtl" align-self="start" justify-self="start" max-width="30px">
+      <text direction="rtl" position="relative" align-self="start" justify-self="start" max-width="30px">
         HH​HH​HH​HH
       </text>
     </div>

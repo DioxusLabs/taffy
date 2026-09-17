@@ -1,9 +1,9 @@
 <test name="percentage_different_width_height_column__border_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div direction="rtl" flex-direction="column" width="200px" height="300px">
-      <div direction="rtl" flex-grow="1"/>
-      <div direction="rtl" height="30%"/>
+    <div direction="rtl" position="absolute" flex-direction="column" width="200px" height="300px">
+      <div direction="rtl" position="relative" flex-grow="1"/>
+      <div direction="rtl" position="relative" height="30%"/>
     </div>
   </input>
   <expectations>

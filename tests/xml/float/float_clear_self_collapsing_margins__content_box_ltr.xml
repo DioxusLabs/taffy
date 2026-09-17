@@ -1,12 +1,12 @@
 <test name="float_clear_self_collapsing_margins__content_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="block" box-sizing="content-box" direction="ltr" width="300px">
-      <div display="block" box-sizing="content-box" direction="ltr">
-        <div display="block" box-sizing="content-box" direction="ltr" float="left" width="100px" height="100px"/>
-        <div display="block" box-sizing="content-box" direction="ltr" clear="left" margin-top="40px" margin-bottom="140px"/>
+    <div display="block" box-sizing="content-box" direction="ltr" position="absolute" width="300px">
+      <div display="block" box-sizing="content-box" direction="ltr" position="relative">
+        <div display="block" box-sizing="content-box" direction="ltr" position="relative" float="left" width="100px" height="100px"/>
+        <div display="block" box-sizing="content-box" direction="ltr" position="relative" clear="left" margin-top="40px" margin-bottom="140px"/>
       </div>
-      <div display="block" box-sizing="content-box" direction="ltr" height="100px"/>
+      <div display="block" box-sizing="content-box" direction="ltr" position="relative" height="100px"/>
     </div>
   </input>
   <expectations>

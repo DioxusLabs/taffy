@@ -1,9 +1,9 @@
 <test name="block_absolute_child_with_max_height__content_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="block" box-sizing="content-box" direction="ltr" width="100px" height="200px">
+    <div display="block" box-sizing="content-box" direction="ltr" position="absolute" width="100px" height="200px">
       <div display="block" box-sizing="content-box" direction="ltr" position="absolute" max-height="100px" bottom="20px">
-        <div display="block" box-sizing="content-box" direction="ltr" width="100px" height="150px"/>
+        <div display="block" box-sizing="content-box" direction="ltr" position="relative" width="100px" height="150px"/>
       </div>
     </div>
   </input>

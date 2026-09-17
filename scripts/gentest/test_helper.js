@@ -204,11 +204,29 @@ function parseGridPosition(input) {
   return undefined;
 }
 
+// Find the element whose border box the given element's layout position is measured against.
+// Out-of-flow (absolute/fixed) elements are positioned relative to their containing block:
+// the nearest positioned ancestor, or the test root (which acts as the initial containing
+// block) when there is none. All other elements are positioned relative to their parent.
+function containingBlockElement(e) {
+  const position = getComputedStyle(e).position;
+  if (e.id !== "test-root" && (position === "absolute" || position === "fixed")) {
+    let ancestor = e.parentElement;
+    while (ancestor.id !== "test-root") {
+      if (position !== "fixed" && getComputedStyle(ancestor).position !== "static") return ancestor;
+      ancestor = ancestor.parentElement;
+    }
+    return ancestor;
+  }
+  return e.parentNode;
+}
+
 function describeElement(e) {
 
-  // Get precise, unrounded dimensions for the current element and it's parent
+  // Get precise, unrounded dimensions for the current element and its position reference
+  // (parent for in-flow elements, containing block for out-of-flow elements)
   let boundingRect = e.getBoundingClientRect();
-  let parentBoundingRect = e.parentNode.getBoundingClientRect();
+  let containingBlockElementBoundingRect = containingBlockElement(e).getBoundingClientRect();
 
   const computedStyle = getComputedStyle(e);
 
@@ -217,7 +235,10 @@ function describeElement(e) {
       display: parseEnum(e.style.display),
       boxSizing: parseEnum(computedStyle.boxSizing),
 
-      position: parseEnum(e.style.position),
+      // The computed position, not the inline style: the test base stylesheet sets
+      // `position: relative` on all divs/spans/imgs, which is what Chrome lays out with,
+      // and which no longer matches Taffy's default (`static`).
+      position: parseEnum(computedStyle.position),
       direction: parseEnum(computedStyle.direction),
 
       writingMode: parseEnum(e.style.writingMode),
@@ -319,8 +340,8 @@ function describeElement(e) {
     unroundedLayout: {
       width: boundingRect.width,
       height: boundingRect.height,
-      x: boundingRect.x - parentBoundingRect.x,
-      y: boundingRect.y - parentBoundingRect.y,
+      x: boundingRect.x - containingBlockElementBoundingRect.x,
+      y: boundingRect.y - containingBlockElementBoundingRect.y,
       scrollWidth: e.scrollWidth,
       scrollHeight: e.scrollHeight,
       clientWidth: e.clientWidth,
@@ -346,8 +367,8 @@ function describeElement(e) {
     smartRoundedLayout: {
       width: Math.round(boundingRect.right) - Math.round(boundingRect.left),
       height: Math.round(boundingRect.bottom) - Math.round(boundingRect.top),
-      x: Math.round(boundingRect.x) - Math.round(parentBoundingRect.x),
-      y: Math.round(boundingRect.y) - Math.round(parentBoundingRect.y),
+      x: Math.round(boundingRect.x) - Math.round(containingBlockElementBoundingRect.x),
+      y: Math.round(boundingRect.y) - Math.round(containingBlockElementBoundingRect.y),
       scrollWidth: e.scrollWidth,
       scrollHeight: e.scrollHeight,
       clientWidth: e.clientWidth,

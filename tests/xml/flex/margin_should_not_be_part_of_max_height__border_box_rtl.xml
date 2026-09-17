@@ -1,8 +1,8 @@
 <test name="margin_should_not_be_part_of_max_height__border_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div direction="rtl" width="250px" height="250px">
-      <div direction="rtl" width="100px" height="100px" max-height="100px" margin-top="20px"/>
+    <div direction="rtl" position="absolute" width="250px" height="250px">
+      <div direction="rtl" position="relative" width="100px" height="100px" max-height="100px" margin-top="20px"/>
     </div>
   </input>
   <expectations>

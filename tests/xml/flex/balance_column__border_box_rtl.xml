@@ -1,11 +1,11 @@
 <test name="balance_column__border_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div direction="rtl" flex-direction="column" flex-wrap="balance" height="100px">
-      <div direction="rtl" width="30px" height="31px"/>
-      <div direction="rtl" width="30px" height="32px"/>
-      <div direction="rtl" width="30px" height="33px"/>
-      <div direction="rtl" width="30px" height="34px"/>
+    <div direction="rtl" position="absolute" flex-direction="column" flex-wrap="balance" height="100px">
+      <div direction="rtl" position="relative" width="30px" height="31px"/>
+      <div direction="rtl" position="relative" width="30px" height="32px"/>
+      <div direction="rtl" position="relative" width="30px" height="33px"/>
+      <div direction="rtl" position="relative" width="30px" height="34px"/>
     </div>
   </input>
   <expectations>

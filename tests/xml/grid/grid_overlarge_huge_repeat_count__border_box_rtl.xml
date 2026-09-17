@@ -1,8 +1,8 @@
 <test name="grid_overlarge_huge_repeat_count__border_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="grid" direction="rtl" grid-template-rows="90px" grid-template-columns="repeat(32768, fit-content(512px)) fit-content(100%)">
-      <div direction="rtl" width="20px" height="20px"/>
+    <div display="grid" direction="rtl" position="absolute" grid-template-rows="90px" grid-template-columns="repeat(32768, fit-content(512px)) fit-content(100%)">
+      <div direction="rtl" position="relative" width="20px" height="20px"/>
     </div>
   </input>
   <expectations>
