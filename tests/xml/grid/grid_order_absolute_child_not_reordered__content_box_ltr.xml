@@ -1,0 +1,19 @@
+<test name="grid_order_absolute_child_not_reordered__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" box-sizing="content-box" direction="ltr" position="absolute" width="80px" height="80px" grid-template-rows="40px 40px" grid-template-columns="40px 40px">
+      <div box-sizing="content-box" direction="ltr" position="relative" order="1"/>
+      <div box-sizing="content-box" direction="ltr" position="absolute" order="-5" width="20px" height="20px"/>
+      <div box-sizing="content-box" direction="ltr" position="relative" order="-1"/>
+      <div box-sizing="content-box" direction="ltr" position="relative"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="80" height="80" resolved-rows="40px 40px" resolved-columns="40px 40px">
+      <node x="0" y="40" width="40" height="40"/>
+      <node x="0" y="0" width="20" height="20"/>
+      <node x="0" y="0" width="40" height="40"/>
+      <node x="40" y="0" width="40" height="40"/>
+    </node>
+  </expectations>
+</test>
