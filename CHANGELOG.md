@@ -29,6 +29,8 @@
   - Which candidates a node claims is decided by `CoreStyle::is_containing_block()` — the same policy the grid algorithm uses to decide whether an out-of-flow child's static position is derived from its grid area — so the two can never disagree
   - The container layout algorithms no longer require the `LayoutContainingBlock` bound (only `compute_oof_layout` and `compute_root_layout` do)
 
+- `Layout::scrollable_overflow_rect` and `LayoutOutput::scrollable_overflow_rect` are now the new `ScrollableOverflowRect` newtype (which derefs to `Rect<f32>`), and its coordinates are now **physical**: offsets from the top-left corner of the node's scrollport (padding box less scrollbars), the same coordinate space as its children's `location`s. Previously the rect was mirrored horizontally for RTL nodes so that `right` always measured the extent away from the scroll origin. Now reachable overflow towards the start of an axis (RTL block containers, `row-reverse`/`column-reverse`/`wrap-reverse` flex containers) is represented by negative `left`/`top` and overflow towards the end by `right`/`bottom` beyond the scrollport size. Scroll containers still exclude their unreachable overflow, so the sign of `left`/`top` indicates which end of each axis the scroll origin is at. Consumers should use the new methods rather than reading the edges directly: `ScrollableOverflowRect::{scroll_size, scroll_range, scroll_distance, clamp_scroll_offset, scroll_origin_at_end}` (taking the scrollport size), and the `Layout::{scrollport_size, scroll_size, scroll_range, clamp_scroll_offset}` convenience wrappers. `Layout::scroll_width`/`scroll_height` are unchanged in meaning (the total scrollable distance). `OofPositioningArea` gains a `scroll_origin_at_end: Point<bool>` field
+
 ### Added
 
 - `compute_oof_layout_for_area` and `OofLayoutResult` allow integrations to lay out out-of-flow candidates against an explicit positioning area without immediately mutating a layout node's hoisted-child list. This supports containing blocks represented outside Taffy's layout tree.
@@ -40,6 +42,9 @@
 ### Fixed
 
 - The `serde` feature now compiles without the `std` feature
+
+- Flexbox: overflow towards the main-start/cross-start edge of `row-reverse`, `column-reverse` and `wrap-reverse` scroll containers is now reachable scrollable overflow (the scroll origin of a flex container is its main-start cross-start corner per css-overflow-3), matching browsers. Previously it was treated as unreachable and excluded from `scroll_width`/`scroll_height`
+- Leaf nodes: the measured content of RTL leaf scroll containers is now aligned to the inline-start (right) edge, so overflowing content is reported as reachable start-side overflow rather than being lost
 
 - `TaffyTree::remove` and `TaffyTree::clear` now drop the removed nodes' contexts. Both are documented as dropping nodes, but neither touched `node_context_data`, so a node's context outlived the node — for a `TaffyTree` whose context is a measure function, that kept a boxed closure and everything it captured alive indefinitely. It is worst for callers that rebuild their tree every frame.
 - Block: a block container's content width and the stretch width / available width handed to its in-flow and floated children are floored at zero when padding/border or the child's margins exceed the container width. Children (and measure functions) could previously receive negative widths.
