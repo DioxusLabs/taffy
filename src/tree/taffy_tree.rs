@@ -538,7 +538,7 @@ where
     }
 
     #[inline(always)]
-    fn is_hoisted(&self, node_id: NodeId) -> bool {
+    fn is_out_of_flow(&self, node_id: NodeId) -> bool {
         let node = &self.taffy.nodes[node_id.into()];
         node.style.position.is_out_of_flow() && node.style.display != crate::style::Display::None
     }

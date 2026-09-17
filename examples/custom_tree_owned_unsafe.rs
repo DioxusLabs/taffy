@@ -257,7 +257,7 @@ impl RoundTree for StatelessLayoutTree {
         unsafe { node_from_id_mut(node_id).final_layout = *layout }
     }
 
-    fn is_hoisted(&self, node_id: NodeId) -> bool {
+    fn is_out_of_flow(&self, node_id: NodeId) -> bool {
         unsafe { node_from_id(node_id).style.position.is_out_of_flow() }
     }
 
