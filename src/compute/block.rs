@@ -268,8 +268,23 @@ impl BlockContext<'_> {
 
 use super::common::alignment::{apply_alignment_fallback, compute_alignment_offset};
 #[cfg(feature = "content_size")]
-use super::common::scrollable_overflow::compute_scrollable_overflow_contribution;
+use super::common::scrollable_overflow::{
+    compute_scrollable_overflow_contribution, finalize_scroll_container_overflow, ScrollOrigin,
+};
 use super::common::sizing_keyword::{resolve_sizing_keyword, SizingKeywordResolution};
+#[cfg(feature = "content_size")]
+use crate::tree::ScrollableOverflowRect;
+
+/// The scroll origin of a block scroll container: its block-start/inline-start corner, which is
+/// the top-left corner in LTR and the top-right corner in RTL
+#[cfg(feature = "content_size")]
+fn block_scroll_origin(
+    is_scroll_container: bool,
+    direction: Direction,
+    scrollport_size: Size<f32>,
+) -> Option<ScrollOrigin> {
+    is_scroll_container.then_some(ScrollOrigin::new(scrollport_size, Point { x: direction.is_rtl(), y: false }))
+}
 
 /// Per-child data that is accumulated and modified over the course of the layout algorithm
 struct BlockItem {
@@ -602,6 +617,18 @@ fn compute_inner(
     let resolved_border =
         raw_border.resolve_or_zero(Some(percentage_resolution_width), |val, basis| tree.calc(val, basis));
     let resolved_content_box_inset = resolved_padding + resolved_border + scrollbar_gutter;
+    // The scrollport offset/size used while accumulating the contributions of in-flow children.
+    // The height is not yet known at this point, but is only consulted if the scroll origin is at
+    // the bottom edge, which is never the case for a block container.
+    #[cfg(feature = "content_size")]
+    let scrollport_offset =
+        Point { x: resolved_border.left + scrollbar_gutter.left, y: resolved_border.top + scrollbar_gutter.top };
+    #[cfg(feature = "content_size")]
+    let scroll_origin = block_scroll_origin(
+        is_scroll_container,
+        direction,
+        Size { width: container_outer_width - (resolved_border + scrollbar_gutter).horizontal_axis_sum(), height: 0.0 },
+    );
     #[cfg_attr(not(feature = "content_size"), allow(unused_mut))]
     let (
         mut inflow_overflow_rect,
@@ -617,12 +644,13 @@ fn compute_inner(
         container_percentage_resolution_height,
         content_box_inset,
         resolved_content_box_inset,
-        resolved_border,
         text_align,
         direction,
         own_margins_collapse_with_children,
         #[cfg(feature = "content_size")]
-        is_scroll_container,
+        scrollport_offset,
+        #[cfg(feature = "content_size")]
+        scroll_origin,
         block_ctx,
     );
 
@@ -672,21 +700,12 @@ fn compute_inner(
 
             #[cfg(feature = "content_size")]
             {
-                inflow_overflow_rect = Rect::ZERO;
+                inflow_overflow_rect = ScrollOrigin::initial_rect(scroll_origin);
                 for item in items.iter() {
                     if let Some(layout) = item.final_layout.as_ref() {
-                        let contribution_location = if direction.is_rtl() {
-                            Point {
-                                x: container_outer_width
-                                    - (layout.location.x + layout.size.width)
-                                    - resolved_border.right,
-                                y: layout.location.y - resolved_border.top,
-                            }
-                        } else {
-                            Point {
-                                x: layout.location.x - resolved_border.left,
-                                y: layout.location.y - resolved_border.top,
-                            }
+                        let contribution_location = Point {
+                            x: layout.location.x - scrollport_offset.x,
+                            y: layout.location.y - scrollport_offset.y,
                         };
                         inflow_overflow_rect = inflow_overflow_rect.union(compute_scrollable_overflow_contribution(
                             contribution_location,
@@ -694,7 +713,7 @@ fn compute_inner(
                             layout.scrollable_overflow_rect,
                             item.overflow,
                             item.contain,
-                            is_scroll_container,
+                            scroll_origin,
                         ));
                     }
                 }
@@ -721,7 +740,7 @@ fn compute_inner(
     let mut output = LayoutOutput {
         size: final_outer_size,
         #[cfg(feature = "content_size")]
-        scrollable_overflow_rect: Rect::ZERO,
+        scrollable_overflow_rect: ScrollableOverflowRect::ZERO,
         baselines: Baselines::from_first(first_baseline),
         top_margin: if own_margins_collapse_with_children.start {
             first_child_top_margin_set
@@ -787,20 +806,18 @@ fn compute_inner(
     let absolute_position_area = final_outer_size - absolute_position_inset.sum_axes();
     let absolute_position_offset = Point { x: absolute_position_inset.left, y: absolute_position_inset.top };
     output.oof_candidates = candidates;
-    output.oof_positioning_area =
-        Some(OofPositioningArea { size: absolute_position_area, offset: absolute_position_offset });
+    output.oof_positioning_area = Some(OofPositioningArea {
+        size: absolute_position_area,
+        offset: absolute_position_offset,
+        scroll_origin_at_end: Point { x: direction.is_rtl(), y: false },
+    });
 
     #[cfg(feature = "content_size")]
     {
-        // A scroll container's own padding at the end of the content is part of its scrollable
-        // overflow region, so it is included in the in-flow overflow rect. Boxes that are not
-        // scroll containers do not extend their overflow region by their own padding.
-        if is_scroll_container {
-            inflow_overflow_rect.right +=
-                if direction.is_rtl() { resolved_padding.left } else { resolved_padding.right };
-            inflow_overflow_rect.bottom += resolved_padding.bottom;
+        if let Some(origin) = block_scroll_origin(is_scroll_container, direction, absolute_position_area) {
+            finalize_scroll_container_overflow(&mut inflow_overflow_rect, resolved_padding, origin);
         }
-        output.scrollable_overflow_rect = inflow_overflow_rect;
+        output.scrollable_overflow_rect = ScrollableOverflowRect::new(inflow_overflow_rect);
     }
 
     // 5. Perform hidden layout on hidden children
@@ -1003,11 +1020,11 @@ fn perform_final_layout_on_in_flow_children(
     container_percentage_resolution_height: Option<f32>,
     content_box_inset: Rect<f32>,
     resolved_content_box_inset: Rect<f32>,
-    resolved_border: Rect<f32>,
     text_align: TextAlign,
     direction: Direction,
     own_margins_collapse_with_children: Line<bool>,
-    #[cfg(feature = "content_size")] is_scroll_container: bool,
+    #[cfg(feature = "content_size")] scrollport_offset: Point<f32>,
+    #[cfg(feature = "content_size")] scroll_origin: Option<ScrollOrigin>,
     block_ctx: &mut BlockContext<'_>,
 ) -> (Rect<f32>, f32, CollapsibleMarginSet, CollapsibleMarginSet, Option<f32>) {
     // Resolve container_inner_width for sizing child nodes using initial content_box_inset
@@ -1040,8 +1057,10 @@ fn perform_final_layout_on_in_flow_children(
         block_ctx.commit_strut();
     }
 
-    #[cfg_attr(not(feature = "content_size"), allow(unused_mut))]
-    let mut inflow_overflow_rect = Rect::ZERO;
+    #[cfg(feature = "content_size")]
+    let mut inflow_overflow_rect = ScrollOrigin::initial_rect(scroll_origin);
+    #[cfg(not(feature = "content_size"))]
+    let inflow_overflow_rect = Rect::ZERO;
     let mut committed_y_offset = resolved_content_box_inset.top;
     let mut y_offset_for_absolute = resolved_content_box_inset.top;
     let mut first_child_top_margin_set = CollapsibleMarginSet::ZERO;
@@ -1169,21 +1188,15 @@ fn perform_final_layout_on_in_flow_children(
                 {
                     // TODO: Should the overflow of floated boxes count as "inflow_overflow_rect"
                     // or should it be counted separately?
-                    let contribution_location = if direction.is_rtl() {
-                        Point {
-                            x: container_outer_width - (location.x + item_layout.size.width) - resolved_border.right,
-                            y: location.y - resolved_border.top,
-                        }
-                    } else {
-                        Point { x: location.x - resolved_border.left, y: location.y - resolved_border.top }
-                    };
+                    let contribution_location =
+                        Point { x: location.x - scrollport_offset.x, y: location.y - scrollport_offset.y };
                     inflow_overflow_rect = inflow_overflow_rect.union(compute_scrollable_overflow_contribution(
                         contribution_location,
                         item_layout.size,
                         item_layout.scrollable_overflow_rect,
                         item.overflow,
                         item.contain,
-                        is_scroll_container,
+                        scroll_origin,
                     ));
                 }
 
@@ -1573,21 +1586,15 @@ fn perform_final_layout_on_in_flow_children(
 
             #[cfg(feature = "content_size")]
             {
-                let contribution_location = if direction.is_rtl() {
-                    Point {
-                        x: container_outer_width - (location.x + final_size.width) - resolved_border.right,
-                        y: location.y - resolved_border.top,
-                    }
-                } else {
-                    Point { x: location.x - resolved_border.left, y: location.y - resolved_border.top }
-                };
+                let contribution_location =
+                    Point { x: location.x - scrollport_offset.x, y: location.y - scrollport_offset.y };
                 inflow_overflow_rect = inflow_overflow_rect.union(compute_scrollable_overflow_contribution(
                     contribution_location,
                     final_size,
                     item_layout.scrollable_overflow_rect,
                     item.overflow,
                     item.contain,
-                    is_scroll_container,
+                    scroll_origin,
                 ));
             }
 

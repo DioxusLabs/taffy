@@ -7,6 +7,7 @@
 mod cache;
 mod layout;
 mod node;
+mod scrollable_overflow;
 pub mod traits;
 
 pub use cache::{Cache, ClearState};
@@ -15,6 +16,7 @@ pub use layout::{
     LayoutOutput, OofCandidate, OofCandidates, OofPositioningArea, RequestedAxis, RunMode, SizingMode,
 };
 pub use node::NodeId;
+pub use scrollable_overflow::ScrollableOverflowRect;
 pub(crate) use traits::LayoutPartialTreeExt;
 pub use traits::{LayoutContainingBlock, LayoutPartialTree, PrintTree, RoundTree, TraversePartialTree, TraverseTree};
 

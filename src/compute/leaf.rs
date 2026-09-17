@@ -1,9 +1,13 @@
 //! Computes size using styles and measure functions
 
 #[cfg(feature = "content_size")]
-use crate::geometry::Rect;
+use crate::compute::common::scrollable_overflow::{finalize_scroll_container_overflow, ScrollOrigin};
 use crate::geometry::Size;
+#[cfg(feature = "content_size")]
+use crate::geometry::{Point, Rect};
 use crate::style::{AvailableSpace, Overflow};
+#[cfg(feature = "content_size")]
+use crate::tree::ScrollableOverflowRect;
 use crate::tree::{Baselines, CollapsibleMarginSet, RunMode};
 use crate::tree::{LayoutInput, LayoutOutput, SizingMode};
 use crate::util::debug::debug_log;
@@ -101,7 +105,7 @@ where
             return LayoutOutput {
                 size,
                 #[cfg(feature = "content_size")]
-                scrollable_overflow_rect: Rect::ZERO,
+                scrollable_overflow_rect: ScrollableOverflowRect::ZERO,
                 baselines: Baselines::NONE,
                 top_margin: CollapsibleMarginSet::ZERO,
                 bottom_margin: CollapsibleMarginSet::ZERO,
@@ -162,14 +166,22 @@ where
     let scrollable_overflow_rect = {
         let is_scroll_container = style.overflow().x.is_scroll_container() || style.overflow().y.is_scroll_container();
         let is_rtl = style.direction().is_rtl();
-        let start_padding = if is_rtl { padding.right } else { padding.left };
-        let end_padding = if is_rtl { padding.left } else { padding.right };
-        Rect {
-            left: 0.0,
-            right: start_padding + measured_size.width + if is_scroll_container { end_padding } else { 0.0 },
-            top: 0.0,
-            bottom: padding.top + measured_size.height + if is_scroll_container { padding.bottom } else { 0.0 },
+        let scrollport_size =
+            (size - border.sum_axes() - Size { width: scrollbar_gutter.x, height: scrollbar_gutter.y })
+                .map(|v| f32_max(v, 0.0));
+        // Measured content is aligned to the inline-start edge of the content box
+        let left = if is_rtl { scrollport_size.width - padding.right - measured_size.width } else { padding.left };
+        let mut rect = Rect {
+            left,
+            right: left + measured_size.width,
+            top: padding.top,
+            bottom: padding.top + measured_size.height,
+        };
+        if is_scroll_container {
+            let origin = ScrollOrigin::new(scrollport_size, Point { x: is_rtl, y: false });
+            finalize_scroll_container_overflow(&mut rect, padding, origin);
         }
+        ScrollableOverflowRect::new(rect)
     };
 
     LayoutOutput {
