@@ -4,8 +4,8 @@ use crate::geometry::{AbsoluteAxis, AbstractAxis, InBothAbsAxis};
 use crate::geometry::{Line, Point, Rect, Size};
 use crate::style::{AlignItems, AvailableSpace, Overflow};
 use crate::tree::{
-    Baselines, Layout, LayoutInput, LayoutOutput, LayoutPartialTreeExt, NodeId, OofCandidate, OofCandidates,
-    OofPositioningArea, RunMode, SizingMode, StaticAlign, StaticEdge, StaticPosition,
+    AxisStaticAlign, AxisStaticEdge, AxisStaticPosition, Baselines, Layout, LayoutInput, LayoutOutput,
+    LayoutPartialTreeExt, NodeId, OofCandidate, OofCandidates, OofPositioningArea, RunMode, SizingMode,
 };
 use crate::util::debug::debug_log;
 use crate::util::sys::{f32_max, f32_min, GridTrackVec, Vec};
@@ -721,21 +721,25 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
             drop(child_style);
 
             /// Compute the static position for a single axis
-            fn static_position_for_axis(alignment: AlignSelf, area: Line<f32>, axis_is_rtl: bool) -> StaticPosition {
+            fn static_position_for_axis(
+                alignment: AlignSelf,
+                area: Line<f32>,
+                axis_is_rtl: bool,
+            ) -> AxisStaticPosition {
                 let edge_for = |keyword: AlignItemsKeyword| {
                     // Stretch does not apply to absolutely positioned items and falls
                     // back to start-alignment for static-position purposes
                     let start_position =
                         !matches!(keyword, AlignItemsKeyword::End | AlignItemsKeyword::FlexEnd) ^ axis_is_rtl;
                     match keyword {
-                        AlignItemsKeyword::Center => StaticEdge::Center,
-                        _ if start_position => StaticEdge::Start,
-                        _ => StaticEdge::End,
+                        AlignItemsKeyword::Center => AxisStaticEdge::Center,
+                        _ if start_position => AxisStaticEdge::Start,
+                        _ => AxisStaticEdge::End,
                     }
                 };
-                StaticPosition {
+                AxisStaticPosition {
                     area,
-                    align: StaticAlign {
+                    align: AxisStaticAlign {
                         keyword: edge_for(alignment.keyword),
                         safety: alignment.safety,
                         fallback: edge_for(crate::compute::common::alignment::resolve_self_alignment_safety(

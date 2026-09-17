@@ -16,7 +16,7 @@ use crate::tree::{
 };
 use crate::util::sys::{f32_max, Vec};
 use crate::util::{MaybeMath, MaybeResolve, ResolveOrZero};
-use crate::{BoxSizing, Direction, StaticEdge};
+use crate::{AxisStaticEdge, BoxSizing, Direction};
 
 #[cfg(feature = "content_size")]
 use super::common::scrollable_overflow::compute_scrollable_overflow_contribution;
@@ -32,18 +32,20 @@ use super::common::sizing_keyword::resolve_absolute_sizing_keywords;
 /// the static-position areas are relative to (the containing block's border box once a candidate
 /// has bubbled to its containing block).
 pub fn resolve_static_offset(
-    static_position: Point<crate::tree::StaticPosition>,
+    static_position: Point<crate::tree::AxisStaticPosition>,
     final_size: Size<f32>,
     resolved_margin: Rect<f32>,
 ) -> Point<f32> {
-    let resolve_axis = |sp: crate::tree::StaticPosition, size: f32, margin_start: f32, margin_end: f32| {
+    let resolve_axis = |sp: crate::tree::AxisStaticPosition, size: f32, margin_start: f32, margin_end: f32| {
         let overflows = matches!(sp.align.safety, crate::style::AlignmentSafety::Safe)
             && size + margin_start + margin_end > sp.area.end - sp.area.start;
         let keyword = if overflows { sp.align.fallback } else { sp.align.keyword };
         match keyword {
-            StaticEdge::Start => sp.area.start + margin_start,
-            StaticEdge::End => sp.area.end - size - margin_end,
-            StaticEdge::Center => (sp.area.start + sp.area.end) / 2.0 - size / 2.0 + (margin_start - margin_end) / 2.0,
+            AxisStaticEdge::Start => sp.area.start + margin_start,
+            AxisStaticEdge::End => sp.area.end - size - margin_end,
+            AxisStaticEdge::Center => {
+                (sp.area.start + sp.area.end) / 2.0 - size / 2.0 + (margin_start - margin_end) / 2.0
+            }
         }
     };
     Point {
@@ -502,14 +504,19 @@ mod tests {
     use super::resolve_static_offset;
     use crate::geometry::{Line, Point, Rect, Size};
     use crate::style::AlignmentSafety;
-    use crate::tree::{StaticAlign, StaticEdge, StaticPosition};
+    use crate::tree::{AxisStaticAlign, AxisStaticEdge, AxisStaticPosition};
 
-    fn sp(area: Line<f32>, keyword: StaticEdge, safety: AlignmentSafety, fallback: StaticEdge) -> StaticPosition {
-        StaticPosition { area, align: StaticAlign { keyword, safety, fallback } }
+    fn sp(
+        area: Line<f32>,
+        keyword: AxisStaticEdge,
+        safety: AlignmentSafety,
+        fallback: AxisStaticEdge,
+    ) -> AxisStaticPosition {
+        AxisStaticPosition { area, align: AxisStaticAlign { keyword, safety, fallback } }
     }
 
-    fn resolve_x(sp_x: StaticPosition, width: f32, margin: Rect<f32>) -> f32 {
-        let position = Point { x: sp_x, y: StaticPosition::from_edge(0.0, StaticEdge::Start) };
+    fn resolve_x(sp_x: AxisStaticPosition, width: f32, margin: Rect<f32>) -> f32 {
+        let position = Point { x: sp_x, y: AxisStaticPosition::from_edge(0.0, AxisStaticEdge::Start) };
         resolve_static_offset(position, Size { width, height: 10.0 }, margin).x
     }
 
@@ -519,21 +526,21 @@ mod tests {
 
     #[test]
     fn start_alignment() {
-        let sp_x = sp(AREA, StaticEdge::Start, AlignmentSafety::Unsafe, StaticEdge::Start);
+        let sp_x = sp(AREA, AxisStaticEdge::Start, AlignmentSafety::Unsafe, AxisStaticEdge::Start);
         assert_eq!(resolve_x(sp_x, 20.0, NO_MARGIN), 10.0);
         assert_eq!(resolve_x(sp_x, 20.0, MARGIN), 15.0);
     }
 
     #[test]
     fn end_alignment() {
-        let sp_x = sp(AREA, StaticEdge::End, AlignmentSafety::Unsafe, StaticEdge::End);
+        let sp_x = sp(AREA, AxisStaticEdge::End, AlignmentSafety::Unsafe, AxisStaticEdge::End);
         assert_eq!(resolve_x(sp_x, 20.0, NO_MARGIN), 90.0);
         assert_eq!(resolve_x(sp_x, 20.0, MARGIN), 75.0);
     }
 
     #[test]
     fn center_alignment() {
-        let sp_x = sp(AREA, StaticEdge::Center, AlignmentSafety::Unsafe, StaticEdge::Center);
+        let sp_x = sp(AREA, AxisStaticEdge::Center, AlignmentSafety::Unsafe, AxisStaticEdge::Center);
         assert_eq!(resolve_x(sp_x, 20.0, NO_MARGIN), 50.0);
         // Center offsets by half the margin difference
         assert_eq!(resolve_x(sp_x, 20.0, MARGIN), 45.0);
@@ -541,7 +548,7 @@ mod tests {
 
     #[test]
     fn safe_alignment_falls_back_only_on_overflow() {
-        let sp_x = sp(AREA, StaticEdge::End, AlignmentSafety::Safe, StaticEdge::Start);
+        let sp_x = sp(AREA, AxisStaticEdge::End, AlignmentSafety::Safe, AxisStaticEdge::Start);
         // Fits: aligned to the end
         assert_eq!(resolve_x(sp_x, 20.0, NO_MARGIN), 90.0);
         // Margin box exactly fills the area: no fallback
@@ -553,16 +560,16 @@ mod tests {
 
     #[test]
     fn unsafe_alignment_never_falls_back() {
-        let sp_x = sp(AREA, StaticEdge::End, AlignmentSafety::Unsafe, StaticEdge::Start);
+        let sp_x = sp(AREA, AxisStaticEdge::End, AlignmentSafety::Unsafe, AxisStaticEdge::Start);
         assert_eq!(resolve_x(sp_x, 120.0, NO_MARGIN), -10.0);
     }
 
     #[test]
     fn degenerate_area() {
         // A zero-extent area (static positions emitted by block layout) behaves as an anchor point
-        let anchor = StaticPosition::from_edge(40.0, StaticEdge::Start);
+        let anchor = AxisStaticPosition::from_edge(40.0, AxisStaticEdge::Start);
         assert_eq!(resolve_x(anchor, 20.0, NO_MARGIN), 40.0);
-        let anchor_end = StaticPosition::from_edge(40.0, StaticEdge::End);
+        let anchor_end = AxisStaticPosition::from_edge(40.0, AxisStaticEdge::End);
         assert_eq!(resolve_x(anchor_end, 20.0, NO_MARGIN), 20.0);
     }
 }

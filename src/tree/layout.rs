@@ -197,7 +197,7 @@ impl Baselines {
 /// position is recorded as an *area* plus the physical alignment keyword to apply to the box's
 /// margin box within that area.
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
-pub enum StaticEdge {
+pub enum AxisStaticEdge {
     /// Align the start (left/top) edge of the box's margin box to the start of the area
     Start,
     /// Center the box within the area
@@ -213,20 +213,20 @@ pub enum StaticEdge {
 /// resolution, flex-direction/wrap-reverse reversal, RTL flipping, `self-start`/`self-end`)
 /// are resolved by the emitting layout algorithm.
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
-pub struct StaticAlign {
+pub struct AxisStaticAlign {
     /// The physical alignment keyword
-    pub keyword: StaticEdge,
+    pub keyword: AxisStaticEdge,
     /// The `safe` overflow-position keyword from CSS Box Alignment: when `Safe`, the
     /// `fallback` keyword is used instead if the box's margin box overflows the area
     pub safety: AlignmentSafety,
     /// The physical alignment keyword to fall back to when `safety` is `Safe` and the box's
     /// margin box overflows the area
-    pub fallback: StaticEdge,
+    pub fallback: AxisStaticEdge,
 }
 
-impl StaticAlign {
-    /// Create a `StaticAlign` from a keyword with no safe fallback
-    pub const fn from_keyword(keyword: StaticEdge) -> Self {
+impl AxisStaticAlign {
+    /// Create a `AxisStaticAlign` from a keyword with no safe fallback
+    pub const fn from_keyword(keyword: AxisStaticEdge) -> Self {
         Self { keyword, safety: AlignmentSafety::Unsafe, fallback: keyword }
     }
 }
@@ -241,18 +241,18 @@ impl StaticAlign {
 /// Emitters which have no alignment area in an axis (e.g. block layout, where the static
 /// position is a point) emit a degenerate area (`start == end`).
 #[derive(Debug, Copy, Clone, PartialEq)]
-pub struct StaticPosition {
+pub struct AxisStaticPosition {
     /// The alignment container in this axis
     pub area: Line<f32>,
     /// The alignment to apply to the box's margin box within `area`
-    pub align: StaticAlign,
+    pub align: AxisStaticAlign,
 }
 
-impl StaticPosition {
-    /// Create a `StaticPosition` with a degenerate (zero-extent) area at `anchor` and no
+impl AxisStaticPosition {
+    /// Create a `AxisStaticPosition` with a degenerate (zero-extent) area at `anchor` and no
     /// safe fallback
-    pub const fn from_edge(anchor: f32, edge: StaticEdge) -> Self {
-        Self { area: Line { start: anchor, end: anchor }, align: StaticAlign::from_keyword(edge) }
+    pub const fn from_edge(anchor: f32, edge: AxisStaticEdge) -> Self {
+        Self { area: Line { start: anchor, end: anchor }, align: AxisStaticAlign::from_keyword(edge) }
     }
 }
 
@@ -271,7 +271,7 @@ pub struct OofCandidate {
     /// The position style of the node (`Position::Absolute` or `Position::Fixed`)
     pub position: Position,
     /// The static position of the box in each axis
-    pub static_position: Point<StaticPosition>,
+    pub static_position: Point<AxisStaticPosition>,
 }
 
 /// A list of [`OofCandidate`]s.

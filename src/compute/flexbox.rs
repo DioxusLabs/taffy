@@ -7,10 +7,11 @@ use crate::style::{
 };
 use crate::style::{CoreStyle, FlexDirection, FlexboxContainerStyle, FlexboxItemStyle};
 use crate::style_helpers::{TaffyMaxContent, TaffyMinContent};
-use crate::tree::{Baselines, Layout, LayoutInput, LayoutOutput, OofCandidate, OofCandidates, RunMode, SizingMode};
 use crate::tree::{
-    LayoutFlexboxContainer, LayoutPartialTreeExt, NodeId, OofPositioningArea, StaticAlign, StaticEdge, StaticPosition,
+    AxisStaticAlign, AxisStaticEdge, AxisStaticPosition, LayoutFlexboxContainer, LayoutPartialTreeExt, NodeId,
+    OofPositioningArea,
 };
+use crate::tree::{Baselines, Layout, LayoutInput, LayoutOutput, OofCandidate, OofCandidates, RunMode, SizingMode};
 use crate::util::debug::debug_log;
 use crate::util::sys::{f32_max, f32_min, new_vec_with_capacity, Vec};
 use crate::util::MaybeMath;
@@ -2792,21 +2793,21 @@ fn collect_oof_candidates(
             (AlignContentKeyword::SpaceBetween, false)
             | (AlignContentKeyword::Stretch, false)
             | (AlignContentKeyword::FlexStart, false)
-            | (AlignContentKeyword::FlexEnd, true) => StaticEdge::Start,
+            | (AlignContentKeyword::FlexEnd, true) => AxisStaticEdge::Start,
             (AlignContentKeyword::Start | AlignContentKeyword::End, _) => {
                 if main_start_position {
-                    StaticEdge::Start
+                    AxisStaticEdge::Start
                 } else {
-                    StaticEdge::End
+                    AxisStaticEdge::End
                 }
             }
             (AlignContentKeyword::FlexEnd, false)
             | (AlignContentKeyword::FlexStart, true)
             | (AlignContentKeyword::Stretch, true)
-            | (AlignContentKeyword::SpaceBetween, true) => StaticEdge::End,
+            | (AlignContentKeyword::SpaceBetween, true) => AxisStaticEdge::End,
             (AlignContentKeyword::SpaceEvenly, _)
             | (AlignContentKeyword::SpaceAround, _)
-            | (AlignContentKeyword::Center, _) => StaticEdge::Center,
+            | (AlignContentKeyword::Center, _) => AxisStaticEdge::Center,
         };
 
         // Cross-axis static position (align-self).
@@ -2826,31 +2827,31 @@ fn collect_oof_candidates(
                 // Note: Stretch should be FlexStart not Start when we support both
                 (AlignItemsKeyword::Start | AlignItemsKeyword::End | AlignItemsKeyword::Baseline, _) => {
                     if start_position {
-                        StaticEdge::Start
+                        AxisStaticEdge::Start
                     } else {
-                        StaticEdge::End
+                        AxisStaticEdge::End
                     }
                 }
                 (AlignItemsKeyword::Stretch | AlignItemsKeyword::FlexStart, false)
-                | (AlignItemsKeyword::FlexEnd, true) => StaticEdge::Start,
+                | (AlignItemsKeyword::FlexEnd, true) => AxisStaticEdge::Start,
                 (AlignItemsKeyword::Stretch | AlignItemsKeyword::FlexStart, true)
-                | (AlignItemsKeyword::FlexEnd, false) => StaticEdge::End,
-                (AlignItemsKeyword::Center, _) => StaticEdge::Center,
+                | (AlignItemsKeyword::FlexEnd, false) => AxisStaticEdge::End,
+                (AlignItemsKeyword::Center, _) => AxisStaticEdge::Center,
                 // SelfStart/SelfEnd are resolved to Start/End against the item's own direction
                 // where `align_self` is read above.
                 (AlignItemsKeyword::SelfStart | AlignItemsKeyword::SelfEnd, _) => unreachable!(),
             }
         };
 
-        let cross = StaticPosition {
+        let cross = AxisStaticPosition {
             area: cross_area,
-            align: StaticAlign {
+            align: AxisStaticAlign {
                 keyword: cross_edge_for(align_self.keyword),
                 safety: align_self.safety,
                 fallback: cross_edge_for(resolve_self_alignment_safety(align_self, true)),
             },
         };
-        let main = StaticPosition { area: main_area, align: StaticAlign::from_keyword(main_edge) };
+        let main = AxisStaticPosition { area: main_area, align: AxisStaticAlign::from_keyword(main_edge) };
 
         let static_position = if constants.is_row { Point { x: main, y: cross } } else { Point { x: cross, y: main } };
         candidates.push(OofCandidate { node: child, order: order as u32, position, static_position });

@@ -2,11 +2,11 @@
 use crate::geometry::{Line, Point, Rect, Size};
 use crate::style::{AvailableSpace, CoreStyle, LengthPercentageAuto, Overflow, Position};
 use crate::style_helpers::TaffyMaxContent;
-use crate::tree::{Baselines, CollapsibleMarginSet, Layout, LayoutInput, LayoutOutput, RunMode, SizingMode};
 use crate::tree::{
-    LayoutPartialTree, LayoutPartialTreeExt, NodeId, OofCandidate, OofCandidates, OofPositioningArea, StaticEdge,
-    StaticPosition,
+    AxisStaticEdge, AxisStaticPosition, LayoutPartialTree, LayoutPartialTreeExt, NodeId, OofCandidate, OofCandidates,
+    OofPositioningArea,
 };
+use crate::tree::{Baselines, CollapsibleMarginSet, Layout, LayoutInput, LayoutOutput, RunMode, SizingMode};
 use crate::util::debug::debug_log;
 use crate::util::sys::f32_max;
 use crate::util::sys::Vec;
@@ -767,11 +767,11 @@ fn compute_inner(
                 order: item.order,
                 position: item.position,
                 static_position: Point {
-                    x: StaticPosition::from_edge(
+                    x: AxisStaticPosition::from_edge(
                         item.static_position.x,
-                        if direction.is_rtl() { StaticEdge::End } else { StaticEdge::Start },
+                        if direction.is_rtl() { AxisStaticEdge::End } else { AxisStaticEdge::Start },
                     ),
-                    y: StaticPosition::from_edge(item.static_position.y, StaticEdge::Start),
+                    y: AxisStaticPosition::from_edge(item.static_position.y, AxisStaticEdge::Start),
                 },
             });
         } else if !item.oof_candidates.is_empty() {
