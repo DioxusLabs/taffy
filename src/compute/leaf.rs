@@ -3,7 +3,7 @@
 #[cfg(feature = "content_size")]
 use crate::geometry::Rect;
 use crate::geometry::Size;
-use crate::style::{AvailableSpace, Overflow, Position};
+use crate::style::{AvailableSpace, Overflow};
 use crate::tree::{Baselines, CollapsibleMarginSet, RunMode};
 use crate::tree::{LayoutInput, LayoutOutput, SizingMode};
 use crate::util::debug::debug_log;
@@ -78,7 +78,7 @@ where
     let has_styles_preventing_being_collapsed_through = !style.is_block()
         || style.overflow().x.is_scroll_container()
         || style.overflow().y.is_scroll_container()
-        || style.position() == Position::Absolute
+        || style.position().is_out_of_flow()
         || style.contain().establishes_independent_formatting_context()
         || padding.top > 0.0
         || padding.bottom > 0.0

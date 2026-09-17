@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Breaking
+
+- `Position` gains `Static`, `Fixed` and `Sticky` variants matching the CSS `position` property, and **`Position::Static` replaces `Position::Relative` as the default value** (matching CSS). Statically positioned items are laid out in normal flow like relatively positioned items, but their `inset` styles are ignored: code relying on the old default's inset behavior must explicitly set `position: Position::Relative`. `Position::Fixed` currently behaves identically to `Position::Absolute` (both are taken out of normal flow and positioned relative to their parent); a future release will hoist absolute/fixed boxes to their actual containing block (nearest positioned ancestor for `absolute`, root for `fixed`). `Position::Sticky` is laid out like `Static` (its `inset` is not applied, since sticky insets are scroll thresholds that the caller must apply once the scroll position is known) but, like `Relative`, acts as a containing block for absolutely positioned descendants. `Position` also gains `is_out_of_flow()` and `is_positioned()` helper methods, and the CSS parser (`parse` feature) accepts `static`, `fixed` and `sticky` keywords
+
 ### Changed
 
 - Grid: intrinsic track sizing no longer measures an item's min-/max-content contribution in a step where none of the item's spanned tracks can receive that contribution (e.g. items spanning only `minmax(0, 1fr)` or fixed tracks). This matches Blink and avoids redundant, sometimes very expensive, measurement of large subtrees under a min-content constraint.
