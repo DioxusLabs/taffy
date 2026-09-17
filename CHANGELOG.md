@@ -29,6 +29,7 @@
 
 ### Added
 
+- The CSS `order` property (`Style::order: i32`, plus `FlexboxItemStyle::order()`/`GridItemStyle::order()` trait methods defaulting to `0`) is now supported for flex and grid items. Items are laid out (and, for grid, auto-placed) in *order-modified document order*: stable-sorted by `order`, so items with equal values keep their source order. Out-of-flow (`absolute`/`fixed`) children are not affected. For flex and grid items `Layout::order` is now the item's rank in order-modified document order rather than its child index (see the `Layout::order` docs). Containers whose items all have the default `order: 0` do not sort and their layout is unchanged.
 - `compute_oof_layout_for_area` and `OofLayoutResult` allow integrations to lay out out-of-flow candidates against an explicit positioning area without immediately mutating a layout node's hoisted-child list. This supports containing blocks represented outside Taffy's layout tree.
 
 ### Changed
