@@ -241,13 +241,13 @@ pub trait RoundTree: TraverseTree {
     fn get_unrounded_layout(&self, node_id: NodeId) -> Layout;
     /// Get a reference to the node's final layout
     fn set_final_layout(&mut self, node_id: NodeId, layout: &Layout);
-    /// Whether the node is an out-of-flow (absolute/fixed) box which has been hoisted to its
-    /// containing block (and should therefore be skipped when visited via its parent, being
-    /// instead visited via its containing block's hoisted child list).
+    /// Whether the node is an out-of-flow (absolute/fixed) box. Out-of-flow boxes are hoisted to
+    /// their containing block, so [`round_layout`](crate::round_layout) skips them when visiting a
+    /// node's children and instead visits them via their containing block's hoisted child list.
     ///
     /// This should return `true` for box-generating nodes whose position style is `absolute` or
     /// `fixed`, and `false` otherwise (including for `display: none` nodes).
-    fn is_hoisted(&self, node_id: NodeId) -> bool;
+    fn is_out_of_flow(&self, node_id: NodeId) -> bool;
     /// The number of out-of-flow boxes whose containing block is `node_id`
     /// (as recorded by [`LayoutPartialTree::add_hoisted_children`])
     fn hoisted_child_count(&self, node_id: NodeId) -> usize;

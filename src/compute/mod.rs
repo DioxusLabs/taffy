@@ -319,7 +319,7 @@ pub fn round_layout(tree: &mut impl RoundTree, node_id: NodeId) {
         let child_count = tree.child_count(node_id);
         for index in 0..child_count {
             let child = tree.get_child_id(node_id, index);
-            if !tree.is_hoisted(child) {
+            if !tree.is_out_of_flow(child) {
                 round_layout_inner(tree, child, cumulative_x, cumulative_y);
             }
         }
