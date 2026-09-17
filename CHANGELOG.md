@@ -4,6 +4,8 @@
 
 ### Breaking
 
+- Removed the heapless (neither `std` nor `alloc`) build mode. Taffy now always requires the `alloc` crate: the `arrayvec` dependency and the fixed `MAX_NODE_COUNT`/`MAX_CHILD_COUNT` limits are gone, and `no_std` builds without the `std` feature use `alloc`'s `Vec`/`String`/`BTreeMap` unconditionally. The `alloc` cargo feature is retained as a deprecated no-op so existing `features = ["alloc"]` configurations keep compiling
+
 - `Position` gains `Static`, `Fixed` and `Sticky` variants matching the CSS `position` property, and **`Position::Static` replaces `Position::Relative` as the default value** (matching CSS). Statically positioned items are laid out in normal flow like relatively positioned items, but their `inset` styles are ignored: code relying on the old default's inset behavior must explicitly set `position: Position::Relative`. `Position::Fixed` currently behaves identically to `Position::Absolute` (both are taken out of normal flow and positioned relative to their parent); a future release will hoist absolute/fixed boxes to their actual containing block (nearest positioned ancestor for `absolute`, root for `fixed`). `Position::Sticky` is laid out like `Static` (its `inset` is not applied, since sticky insets are scroll thresholds that the caller must apply once the scroll position is known) but, like `Relative`, acts as a containing block for absolutely positioned descendants. `Position` also gains `is_out_of_flow()` and `is_positioned()` helper methods, and the CSS parser (`parse` feature) accepts `static`, `fixed` and `sticky` keywords
 
 - Out-of-flow (absolute/fixed) boxes are now hoisted to and laid out by their **containing block** — the nearest positioned (non-`static`) ancestor for `position: absolute`, or the root for `position: fixed` — rather than always by their DOM parent, matching CSS. Consequences:
@@ -37,6 +39,8 @@
 - Grid: intrinsic track sizing no longer measures an item's min-/max-content contribution in a step where none of the item's spanned tracks can receive that contribution (e.g. items spanning only `minmax(0, 1fr)` or fixed tracks). This matches Blink and avoids redundant, sometimes very expensive, measurement of large subtrees under a min-content constraint.
 
 ### Fixed
+
+- The `serde` feature now compiles without the `std` feature
 
 - `TaffyTree::remove` and `TaffyTree::clear` now drop the removed nodes' contexts. Both are documented as dropping nodes, but neither touched `node_context_data`, so a node's context outlived the node — for a `TaffyTree` whose context is a measure function, that kept a boxed closure and everything it captured alive indefinitely. It is worst for callers that rebuild their tree every frame.
 - Block: a block container's content width and the stretch width / available width handed to its in-flow and floated children are floored at zero when padding/border or the child's margins exceed the container width. Children (and measure functions) could previously receive negative widths.

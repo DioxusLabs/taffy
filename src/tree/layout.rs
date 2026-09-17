@@ -276,27 +276,16 @@ pub struct OofCandidate {
 
 /// A list of [`OofCandidate`]s.
 ///
-/// When built with the `std` or `alloc` features this is a lazily-allocated heap vector
-/// (an empty list performs no allocation). In heapless builds it is an inline fixed-capacity
-/// vector which panics if more than 16 candidates accumulate in a single list.
+/// This is a lazily-allocated heap vector (an empty list performs no allocation).
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct OofCandidates {
     /// Backing storage for the candidates
-    #[cfg(any(feature = "std", feature = "alloc"))]
     inner: Option<crate::util::sys::Box<crate::util::sys::Vec<OofCandidate>>>,
-    /// Backing storage for the candidates
-    #[cfg(not(any(feature = "std", feature = "alloc")))]
-    inner: arrayvec::ArrayVec<OofCandidate, 16>,
 }
 
 impl OofCandidates {
     /// An empty list of candidates
-    pub const NONE: Self = Self {
-        #[cfg(any(feature = "std", feature = "alloc"))]
-        inner: None,
-        #[cfg(not(any(feature = "std", feature = "alloc")))]
-        inner: arrayvec::ArrayVec::new_const(),
-    };
+    pub const NONE: Self = Self { inner: None };
 
     /// Create a new empty list of candidates
     pub const fn new() -> Self {
@@ -312,28 +301,19 @@ impl OofCandidates {
     /// The candidates as a slice
     #[inline]
     pub fn as_slice(&self) -> &[OofCandidate] {
-        #[cfg(any(feature = "std", feature = "alloc"))]
-        return self.inner.as_ref().map(|boxed| boxed.as_slice()).unwrap_or(&[]);
-        #[cfg(not(any(feature = "std", feature = "alloc")))]
-        return self.inner.as_slice();
+        self.inner.as_ref().map(|boxed| boxed.as_slice()).unwrap_or(&[])
     }
 
     /// The candidates as a mutable slice
     #[inline]
     pub fn as_mut_slice(&mut self) -> &mut [OofCandidate] {
-        #[cfg(any(feature = "std", feature = "alloc"))]
-        return self.inner.as_mut().map(|boxed| boxed.as_mut_slice()).unwrap_or(&mut []);
-        #[cfg(not(any(feature = "std", feature = "alloc")))]
-        return self.inner.as_mut_slice();
+        self.inner.as_mut().map(|boxed| boxed.as_mut_slice()).unwrap_or(&mut [])
     }
 
     /// Append a candidate to the list
     #[inline]
     pub fn push(&mut self, candidate: OofCandidate) {
-        #[cfg(any(feature = "std", feature = "alloc"))]
         self.inner.get_or_insert_with(Default::default).push(candidate);
-        #[cfg(not(any(feature = "std", feature = "alloc")))]
-        self.inner.push(candidate);
     }
 
     /// Move all candidates from `other` into `self`, leaving `other` empty
@@ -342,16 +322,9 @@ impl OofCandidates {
         if other.is_empty() {
             return;
         }
-        #[cfg(any(feature = "std", feature = "alloc"))]
         match &mut self.inner {
             None => self.inner = other.inner.take(),
             Some(vec) => vec.append(other.inner.as_mut().unwrap()),
-        }
-        #[cfg(not(any(feature = "std", feature = "alloc")))]
-        {
-            for candidate in other.inner.drain(..) {
-                self.inner.push(candidate);
-            }
         }
     }
 
@@ -364,12 +337,7 @@ impl OofCandidates {
     /// Remove all candidates from the list
     #[inline]
     pub fn clear(&mut self) {
-        #[cfg(any(feature = "std", feature = "alloc"))]
-        {
-            self.inner = None;
-        }
-        #[cfg(not(any(feature = "std", feature = "alloc")))]
-        self.inner.clear();
+        self.inner = None;
     }
 
     /// Iterate over the candidates
