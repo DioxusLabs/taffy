@@ -417,8 +417,10 @@ mod tests {
         use crate::compute::grid::OriginZeroLine;
         use crate::prelude::*;
         use crate::style::GridAutoFlow;
+        use thin_vec::thin_vec;
 
         use super::super::place_grid_items;
+        use crate::sys::Vec;
 
         type ExpectedPlacement = (i16, i16, i16, i16);
 
@@ -476,7 +478,7 @@ mod tests {
             let explicit_col_count = 2;
             let explicit_row_count = 2;
             let children = {
-                vec![
+                thin_vec![
                     // node, style (grid coords), expected_placement (oz coords)
                     (1, (line(1), auto(), line(1), auto()).into_grid_child(), (0, 1, 0, 1)),
                     (2, (line(-4), auto(), line(-3), auto()).into_grid_child(), (-1, 0, 0, 1)),
@@ -495,7 +497,7 @@ mod tests {
             let explicit_col_count = 2;
             let explicit_row_count = 2;
             let children = {
-                vec![
+                thin_vec![
                     // node, style (grid coords), expected_placement (oz coords)
                     (1, (line(-1), line(-1), line(-1), line(-1)).into_grid_child(), (2, 3, 2, 3)),
                     (2, (line(-1), span(2), line(-1), span(2)).into_grid_child(), (2, 4, 2, 4)),
@@ -515,7 +517,7 @@ mod tests {
             let explicit_row_count = 2;
             let children = {
                 let auto_child = (auto(), auto(), auto(), auto()).into_grid_child();
-                vec![
+                thin_vec![
                     // output order, node, style (grid coords), expected_placement (oz coords)
                     (1, auto_child.clone(), (0, 1, 0, 1)),
                     (2, auto_child.clone(), (1, 2, 0, 1)),
@@ -539,7 +541,7 @@ mod tests {
             let explicit_row_count = 2;
             let children = {
                 let auto_child = (auto(), auto(), auto(), auto()).into_grid_child();
-                vec![
+                thin_vec![
                     // output order, node, style (grid coords), expected_placement (oz coords)
                     (1, auto_child.clone(), (0, 1, 0, 1)),
                     (2, auto_child.clone(), (0, 1, 1, 2)),
@@ -562,7 +564,7 @@ mod tests {
             let explicit_col_count = 2;
             let explicit_row_count = 2;
             let children = {
-                vec![
+                thin_vec![
                     // output order, node, style (grid coords), expected_placement (oz coords)
                     (1, (span(5), auto(), auto(), auto()).into_grid_child(), (0, 5, 0, 1)),
                 ]
@@ -578,7 +580,7 @@ mod tests {
             let explicit_col_count = 2;
             let explicit_row_count = 2;
             let children = {
-                vec![
+                thin_vec![
                     // output order, node, style (grid coords), expected_placement (oz coords)
                     (1, (span(2), auto(), line(1), auto()).into_grid_child(), (0, 2, 0, 1)),
                     (2, (auto(), auto(), line(2), auto()).into_grid_child(), (0, 1, 1, 2)),
@@ -597,7 +599,7 @@ mod tests {
             let explicit_col_count = 2;
             let explicit_row_count = 2;
             let children = {
-                vec![
+                thin_vec![
                     // output order, node, style (grid coords), expected_placement (oz coords)
                     (2, (auto(), auto(), line(2), auto()).into_grid_child(), (0, 1, 1, 2)),
                     (1, (line(-4), auto(), line(2), auto()).into_grid_child(), (-1, 0, 1, 2)),
@@ -615,7 +617,7 @@ mod tests {
             let explicit_col_count = 4;
             let explicit_row_count = 4;
             let children = {
-                vec![
+                thin_vec![
                     // output order, node, style (grid coords), expected_placement (oz coords)
                     (1, (line(2), auto(), line(1), auto()).into_grid_child(), (1, 2, 0, 1)), // Definitely positioned in column 2
                     (2, (span(2), auto(), auto(), auto()).into_grid_child(), (2, 4, 0, 1)), // Spans 2 columns, so positioned after item 1
@@ -633,7 +635,7 @@ mod tests {
             let explicit_col_count = 4;
             let explicit_row_count = 4;
             let children = {
-                vec![
+                thin_vec![
                     // output order, node, style (grid coords), expected_placement (oz coords)
                     (1, (auto(), span(3), auto(), auto()).into_grid_child(), (0, 3, 0, 1)), // Width 3
                     (2, (auto(), span(3), auto(), auto()).into_grid_child(), (0, 3, 1, 2)), // Width 3 (wraps to next row)
@@ -651,7 +653,7 @@ mod tests {
             let explicit_col_count = 2;
             let explicit_row_count = 2;
             let children = {
-                vec![
+                thin_vec![
                     // output order, node, style (grid coords), expected_placement (oz coords)
                     (1, (line(-5), auto(), line(1), auto()).into_grid_child(), (-2, -1, 0, 1)), // Row 1. Definitely positioned in column -2
                     (2, (auto(), auto(), line(2), auto()).into_grid_child(), (-2, -1, 1, 2)), // Row 2. Auto positioned in column -2

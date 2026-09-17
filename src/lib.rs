@@ -126,6 +126,11 @@ pub use crate::util::print_tree;
 #[cfg(feature = "parse")]
 pub use parse::{ParseError, ParseResult};
 
+/// The vector type used for all growable collections in Taffy's public API (e.g. grid track lists).
+#[cfg(any(feature = "std", feature = "alloc"))]
+#[doc(inline)]
+pub use ::thin_vec::{thin_vec, ThinVec};
+
 pub use crate::compute::*;
 pub use crate::geometry::*;
 pub use crate::style::*;

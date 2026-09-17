@@ -1708,19 +1708,19 @@ mod tests {
         assert_type_size::<MinTrackSizingFunction>(8);
         assert_type_size::<MaxTrackSizingFunction>(8);
         assert_type_size::<TrackSizingFunction>(16);
-        assert_type_size::<Vec<TrackSizingFunction>>(24);
-        assert_type_size::<Vec<GridTemplateComponent<S>>>(24);
+        assert_type_size::<crate::sys::Vec<TrackSizingFunction>>(8);
+        assert_type_size::<crate::sys::Vec<GridTemplateComponent<S>>>(8);
 
         // String-type dependent (String)
-        assert_type_size::<GridTemplateComponent<String>>(56);
+        assert_type_size::<GridTemplateComponent<String>>(24);
         assert_type_size::<GridPlacement<String>>(32);
         assert_type_size::<Line<GridPlacement<String>>>(64);
-        assert_type_size::<Style<String>>(560);
+        assert_type_size::<Style<String>>(448);
 
         // String-type dependent (Arc<str>)
-        assert_type_size::<GridTemplateComponent<Arc<str>>>(56);
+        assert_type_size::<GridTemplateComponent<Arc<str>>>(24);
         assert_type_size::<GridPlacement<Arc<str>>>(24);
         assert_type_size::<Line<GridPlacement<Arc<str>>>>(48);
-        assert_type_size::<Style<Arc<str>>>(528);
+        assert_type_size::<Style<Arc<str>>>(416);
     }
 }

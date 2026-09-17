@@ -29,3 +29,6 @@ pub use crate::style_helpers::{
 
 #[cfg(feature = "taffy_tree")]
 pub use crate::TaffyTree;
+
+#[cfg(any(feature = "std", feature = "alloc"))]
+pub use crate::{thin_vec, ThinVec};

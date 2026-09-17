@@ -1812,6 +1812,7 @@ from_str_from_css!(GridAutoTracks);
 mod tests {
     use super::*;
     use crate::sys::DefaultCheapStr;
+    use thin_vec::thin_vec;
 
     #[test]
     fn grid_placement_parser_saturates_numeric_values() {
@@ -1847,7 +1848,7 @@ mod tests {
     fn repetition_track_count_saturates() {
         let repetition = GridTemplateRepetition::<DefaultCheapStr> {
             count: RepetitionCount::Count(1),
-            tracks: vec![TrackSizingFunction::AUTO; u16::MAX as usize + 1],
+            tracks: thin_vec![TrackSizingFunction::AUTO; u16::MAX as usize + 1],
             line_names: Vec::new(),
         };
         assert_eq!((&repetition).track_count(), u16::MAX);

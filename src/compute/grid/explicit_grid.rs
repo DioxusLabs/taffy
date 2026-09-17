@@ -392,6 +392,8 @@ mod test {
     use crate::geometry::AbsoluteAxis;
     use crate::prelude::*;
     use crate::sys::DefaultCheapStr;
+    use crate::sys::Vec;
+    use thin_vec::thin_vec;
 
     #[test]
     fn explicit_grid_sizing_no_repeats() {
@@ -423,8 +425,8 @@ mod test {
         let grid_style: Style<DefaultCheapStr> = Style {
             display: Display::Grid,
             size: Size { width: length(120.0), height: length(80.0) },
-            grid_template_columns: vec![repeat(AutoFill, vec![length(40.0)])],
-            grid_template_rows: vec![repeat(AutoFill, vec![length(20.0)])],
+            grid_template_columns: thin_vec![repeat(AutoFill, thin_vec![length(40.0)])],
+            grid_template_rows: thin_vec![repeat(AutoFill, thin_vec![length(20.0)])],
             ..Default::default()
         };
         let preferred_size = grid_style.size.map(|s| s.into_option());
@@ -454,8 +456,8 @@ mod test {
         let grid_style: Style<DefaultCheapStr> = Style {
             display: Display::Grid,
             size: Size { width: length(140.0), height: length(90.0) },
-            grid_template_columns: vec![repeat(AutoFill, vec![length(40.0)])],
-            grid_template_rows: vec![repeat(AutoFill, vec![length(20.0)])],
+            grid_template_columns: thin_vec![repeat(AutoFill, thin_vec![length(40.0)])],
+            grid_template_rows: thin_vec![repeat(AutoFill, thin_vec![length(20.0)])],
             ..Default::default()
         };
         let preferred_size = grid_style.size.map(|s| s.into_option());
@@ -485,8 +487,8 @@ mod test {
         let grid_style: Style<DefaultCheapStr> = Style {
             display: Display::Grid,
             min_size: Size { width: length(120.0), height: length(80.0) },
-            grid_template_columns: vec![repeat(AutoFill, vec![length(40.0)])],
-            grid_template_rows: vec![repeat(AutoFill, vec![length(20.0)])],
+            grid_template_columns: thin_vec![repeat(AutoFill, thin_vec![length(40.0)])],
+            grid_template_rows: thin_vec![repeat(AutoFill, thin_vec![length(20.0)])],
             ..Default::default()
         };
         let inner_container_size = Size { width: Some(120.0), height: Some(80.0) };
@@ -516,8 +518,8 @@ mod test {
         let grid_style: Style<DefaultCheapStr> = Style {
             display: Display::Grid,
             min_size: Size { width: length(140.0), height: length(90.0) },
-            grid_template_columns: vec![repeat(AutoFill, vec![length(40.0)])],
-            grid_template_rows: vec![repeat(AutoFill, vec![length(20.0)])],
+            grid_template_columns: thin_vec![repeat(AutoFill, thin_vec![length(40.0)])],
+            grid_template_rows: thin_vec![repeat(AutoFill, thin_vec![length(20.0)])],
             ..Default::default()
         };
         let inner_container_size = Size { width: Some(140.0), height: Some(90.0) };
@@ -547,8 +549,8 @@ mod test {
         let grid_style: Style<DefaultCheapStr> = Style {
             display: Display::Grid,
             size: Size { width: length(140.0), height: length(100.0) },
-            grid_template_columns: vec![repeat(AutoFill, vec![length(40.0), length(20.0)])],
-            grid_template_rows: vec![repeat(AutoFill, vec![length(20.0), length(10.0)])],
+            grid_template_columns: thin_vec![repeat(AutoFill, thin_vec![length(40.0), length(20.0)])],
+            grid_template_rows: thin_vec![repeat(AutoFill, thin_vec![length(20.0), length(10.0)])],
             ..Default::default()
         };
         let preferred_size = grid_style.size.map(|s| s.into_option());
@@ -578,8 +580,8 @@ mod test {
         let grid_style: Style<DefaultCheapStr> = Style {
             display: Display::Grid,
             size: Size { width: length(140.0), height: length(100.0) },
-            grid_template_columns: vec![repeat(AutoFill, vec![length(40.0)])],
-            grid_template_rows: vec![repeat(AutoFill, vec![length(20.0)])],
+            grid_template_columns: thin_vec![repeat(AutoFill, thin_vec![length(40.0)])],
+            grid_template_rows: thin_vec![repeat(AutoFill, thin_vec![length(20.0)])],
             gap: length(20.0),
             ..Default::default()
         };
@@ -609,8 +611,8 @@ mod test {
         use RepetitionCount::AutoFill;
         let grid_style: Style<DefaultCheapStr> = Style {
             display: Display::Grid,
-            grid_template_columns: vec![repeat(AutoFill, vec![length(40.0), percent(0.5), length(20.0)])],
-            grid_template_rows: vec![repeat(AutoFill, vec![length(20.0)])],
+            grid_template_columns: thin_vec![repeat(AutoFill, thin_vec![length(40.0), percent(0.5), length(20.0)])],
+            grid_template_rows: thin_vec![repeat(AutoFill, thin_vec![length(20.0)])],
             gap: length(20.0),
             ..Default::default()
         };
@@ -641,8 +643,8 @@ mod test {
         let grid_style: Style<DefaultCheapStr> = Style {
             display: Display::Grid,
             size: Size { width: length(140.0), height: length(100.0) },
-            grid_template_columns: vec![length(20.0), repeat(AutoFill, vec![length(40.0)])],
-            grid_template_rows: vec![length(40.0), repeat(AutoFill, vec![length(20.0)])],
+            grid_template_columns: thin_vec![length(20.0), repeat(AutoFill, thin_vec![length(40.0)])],
+            grid_template_rows: thin_vec![length(40.0), repeat(AutoFill, thin_vec![length(20.0)])],
             gap: length(20.0),
             ..Default::default()
         };
@@ -674,8 +676,8 @@ mod test {
             display: Display::Grid,
             size: Size { width: length(120.0), height: length(120.0) },
             padding: Rect { left: length(10.0), right: length(10.0), top: length(20.0), bottom: length(20.0) },
-            grid_template_columns: vec![repeat(AutoFill, vec![length(20.0)])],
-            grid_template_rows: vec![repeat(AutoFill, vec![length(20.0)])],
+            grid_template_columns: thin_vec![repeat(AutoFill, thin_vec![length(20.0)])],
+            grid_template_rows: thin_vec![repeat(AutoFill, thin_vec![length(20.0)])],
             ..Default::default()
         };
         let inner_container_size = Size { width: Some(100.0), height: Some(80.0) };
@@ -705,7 +707,10 @@ mod test {
 
         let auto_repeat_first: Style<DefaultCheapStr> = Style {
             display: Display::Grid,
-            grid_template_columns: vec![repeat(AutoFill, vec![length(2.0)]), repeat(Count(10_000), vec![length(37.0)])],
+            grid_template_columns: thin_vec![
+                repeat(AutoFill, thin_vec![length(2.0)]),
+                repeat(Count(10_000), thin_vec![length(37.0)])
+            ],
             ..Default::default()
         };
         let (repetitions, track_count) = compute_explicit_grid_size_in_axis(
@@ -730,7 +735,10 @@ mod test {
 
         let auto_repeat_last: Style<DefaultCheapStr> = Style {
             display: Display::Grid,
-            grid_template_columns: vec![repeat(Count(10_000), vec![length(37.0)]), repeat(AutoFill, vec![length(2.0)])],
+            grid_template_columns: thin_vec![
+                repeat(Count(10_000), thin_vec![length(37.0)]),
+                repeat(AutoFill, thin_vec![length(2.0)])
+            ],
             ..Default::default()
         };
         let (repetitions, track_count) = compute_explicit_grid_size_in_axis(
@@ -747,13 +755,13 @@ mod test {
     fn explicit_track_count_accumulation_saturates() {
         use RepetitionCount::{AutoFill, Count};
 
-        let repeated_tracks = vec![length(1.0); 32_769];
+        let repeated_tracks = thin_vec![length(1.0); 32_769];
         let grid_style: Style<DefaultCheapStr> = Style {
             display: Display::Grid,
-            grid_template_columns: vec![
+            grid_template_columns: thin_vec![
                 repeat(Count(u16::MAX), repeated_tracks.clone()),
                 repeat(Count(u16::MAX), repeated_tracks),
-                repeat(AutoFill, vec![length(1.0)]),
+                repeat(AutoFill, thin_vec![length(1.0)]),
             ],
             ..Default::default()
         };
@@ -781,8 +789,8 @@ mod test {
         let grid_style: Style<DefaultCheapStr> = Style {
             display: Display::Grid,
             gap: length(20.0),
-            grid_template_columns: vec![length(100.0), minmax(length(100.0), fr(2.0)), fr(1.0)],
-            grid_auto_columns: vec![auto(), length(100.0)],
+            grid_template_columns: thin_vec![length(100.0), minmax(length(100.0), fr(2.0)), fr(1.0)],
+            grid_auto_columns: thin_vec![auto(), length(100.0)],
             ..Default::default()
         };
         let track_counts = TrackCounts {
@@ -796,7 +804,7 @@ mod test {
         initialize_grid_tracks(&mut tracks, track_counts, &grid_style, AbsoluteAxis::Horizontal, 0, |_| false);
 
         // Assertions
-        let expected = vec![
+        let expected = thin_vec![
             // Gutter
             (GridTrackKind::Gutter, minpx0, maxpx0),
             // Negative implicit tracks
