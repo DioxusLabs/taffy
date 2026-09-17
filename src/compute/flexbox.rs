@@ -2476,7 +2476,7 @@ fn calculate_flex_item(
     let direction = constants.dir;
     let layout_direction = constants.layout_direction;
     let item_known_dimension_definiteness = item_known_dimension_definiteness(constants, item);
-    let layout_output = tree.compute_child_layout(
+    let mut layout_output = tree.compute_child_layout(
         item.node,
         LayoutInput {
             run_mode: RunMode::PerformLayout,
@@ -2489,7 +2489,6 @@ fn calculate_flex_item(
             vertical_margins_are_collapsible: Line::FALSE,
         },
     );
-    let mut layout_output = layout_output;
     let LayoutOutput {
         size,
         #[cfg(feature = "content_size")]
