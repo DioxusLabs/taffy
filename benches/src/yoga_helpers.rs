@@ -206,6 +206,7 @@ fn apply_taffy_style(node: &mut yg::Node, style: &tf::Style) {
         tf::Position::Relative => yg::PositionType::Relative,
         tf::Position::Absolute => yg::PositionType::Absolute,
         tf::Position::Fixed => yg::PositionType::Absolute,
+        tf::Position::Sticky => yg::PositionType::Static,
     });
     // inset
     node.set_position(yg::Edge::Left, into_yg_units(style.inset.left));

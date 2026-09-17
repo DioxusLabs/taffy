@@ -316,6 +316,11 @@ pub enum Position {
     /// The item is taken out of normal flow and positioned relative to the root (viewport),
     /// unless an ancestor overrides containing-block behavior (e.g. via transforms in a full CSS implementation).
     Fixed,
+    /// The item is laid out in normal flow exactly like a statically positioned item: `inset` is *not* applied
+    /// as an offset (in CSS, sticky insets are scroll thresholds, which Taffy has no knowledge of; applying the
+    /// sticky offset is the responsibility of the caller once it knows the scroll position).
+    /// Like `Relative`, a sticky item acts as a containing block for absolutely positioned descendants.
+    Sticky,
 }
 
 impl Position {
@@ -339,6 +344,7 @@ crate::util::parse::impl_parse_for_keyword_enum!(Position,
     "relative" => Relative,
     "absolute" => Absolute,
     "fixed" => Fixed,
+    "sticky" => Sticky,
 );
 
 /// Specifies whether size styles for this node are assigned to the node's "content box" or "border box"

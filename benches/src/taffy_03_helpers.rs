@@ -164,6 +164,7 @@ fn convert_position(input: taffy::style::Position) -> taffy_03::style::Position 
         taffy::style::Position::Relative => taffy_03::style::Position::Relative,
         taffy::style::Position::Absolute => taffy_03::style::Position::Absolute,
         taffy::style::Position::Fixed => taffy_03::style::Position::Absolute,
+        taffy::style::Position::Sticky => taffy_03::style::Position::Relative,
     }
 }
 
