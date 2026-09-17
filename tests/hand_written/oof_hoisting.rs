@@ -283,6 +283,32 @@ mod oof_hoisting {
         assert_eq!(tree.layout(abs).unwrap().location, Point { x: 15.0, y: 20.0 });
     }
 
+    /// When the root's layout is served from the cache, the root positioning pass must not
+    /// re-add fixed boxes to the root's (still valid) hoisted-children list.
+    #[test]
+    fn cached_root_does_not_duplicate_hoisted_children() {
+        let mut tree: TaffyTree<()> = TaffyTree::new();
+        let fixed = tree
+            .new_leaf(Style {
+                position: Position::Fixed,
+                size: Size { width: length(30.0), height: length(30.0) },
+                ..Default::default()
+            })
+            .unwrap();
+        let inner = tree.new_with_children(leaf_style(50.0, 50.0), &[fixed]).unwrap();
+        let root = tree.new_with_children(leaf_style(200.0, 200.0), &[inner]).unwrap();
+
+        tree.compute_layout(root, Size::MAX_CONTENT).unwrap();
+        assert_eq!(tree.hoisted_children(root).unwrap(), &[fixed]);
+
+        tree.compute_layout(root, Size::MAX_CONTENT).unwrap();
+        assert_eq!(tree.hoisted_children(root).unwrap(), &[fixed]);
+
+        tree.mark_dirty(root).unwrap();
+        tree.compute_layout(root, Size::MAX_CONTENT).unwrap();
+        assert_eq!(tree.hoisted_children(root).unwrap(), &[fixed]);
+    }
+
     /// Rounding recurses into hoisted boxes via their containing block, so a hoisted box's
     /// rounded location is computed against the containing block's cumulative offset.
     #[test]
