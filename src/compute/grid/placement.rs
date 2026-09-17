@@ -47,7 +47,7 @@ pub(super) fn place_grid_items<'a, S, ChildIter>(
 
     let map_child_style_to_origin_zero_placement = {
         let explicit_row_count = cell_occupancy_matrix.track_counts(AbsoluteAxis::Vertical).explicit;
-        move |(index, node, style): (usize, NodeId, S)| -> (_, _, _, S) {
+        move |(rank, (index, node, style)): (usize, (usize, NodeId, S))| -> (_, _, _, _, S) {
             let origin_zero_placement = InBothAbsAxis {
                 horizontal: named_line_resolver
                     .resolve_column_names(&style.grid_column())
@@ -56,16 +56,17 @@ pub(super) fn place_grid_items<'a, S, ChildIter>(
                     .resolve_row_names(&style.grid_row())
                     .map(|placement| placement.into_origin_zero_placement(explicit_row_count)),
             };
-            (index, node, origin_zero_placement, style)
+            (rank, index, node, origin_zero_placement, style)
         }
     };
 
     // 1. Place children with definite positions
     let mut idx = 0;
     children_iter()
+        .enumerate()
         .map(map_child_style_to_origin_zero_placement)
-        .filter(|(_, _, placement, _)| placement.horizontal.is_definite() && placement.vertical.is_definite())
-        .for_each(|(index, child_node, child_placement, style)| {
+        .filter(|(_, _, _, placement, _)| placement.horizontal.is_definite() && placement.vertical.is_definite())
+        .for_each(|(rank, index, child_node, child_placement, style)| {
             idx += 1;
             #[cfg(test)]
             println!("Definite Item {idx}\n==============");
@@ -75,6 +76,7 @@ pub(super) fn place_grid_items<'a, S, ChildIter>(
                 cell_occupancy_matrix,
                 items,
                 child_node,
+                rank,
                 index,
                 style,
                 align_items,
@@ -89,11 +91,12 @@ pub(super) fn place_grid_items<'a, S, ChildIter>(
     // 2. Place remaining children with definite secondary axis positions
     let mut idx = 0;
     children_iter()
+        .enumerate()
         .map(map_child_style_to_origin_zero_placement)
-        .filter(|(_, _, placement, _)| {
+        .filter(|(_, _, _, placement, _)| {
             placement.get(secondary_axis).is_definite() && !placement.get(primary_axis).is_definite()
         })
-        .for_each(|(index, child_node, child_placement, style)| {
+        .for_each(|(rank, index, child_node, child_placement, style)| {
             idx += 1;
             #[cfg(test)]
             println!("Definite Secondary Item {idx}\n==============");
@@ -105,6 +108,7 @@ pub(super) fn place_grid_items<'a, S, ChildIter>(
                 cell_occupancy_matrix,
                 items,
                 child_node,
+                rank,
                 index,
                 style,
                 align_items,
@@ -143,9 +147,10 @@ pub(super) fn place_grid_items<'a, S, ChildIter>(
     let mut grid_position = grid_start_position;
     let mut idx = 0;
     children_iter()
+        .enumerate()
         .map(map_child_style_to_origin_zero_placement)
-        .filter(|(_, _, placement, _)| !placement.get(secondary_axis).is_definite())
-        .for_each(|(index, child_node, child_placement, style)| {
+        .filter(|(_, _, _, placement, _)| !placement.get(secondary_axis).is_definite())
+        .for_each(|(rank, index, child_node, child_placement, style)| {
             idx += 1;
             #[cfg(test)]
             println!("\nAuto Item {idx}\n==============");
@@ -163,6 +168,7 @@ pub(super) fn place_grid_items<'a, S, ChildIter>(
                 cell_occupancy_matrix,
                 items,
                 child_node,
+                rank,
                 index,
                 style,
                 align_items,
@@ -354,11 +360,15 @@ fn clamp_span_to_limited_grid(span: Line<OriginZeroLine>) -> Line<OriginZeroLine
 
 /// Record the grid item in both CellOccupancyMatric and the GridItems list
 /// once a definite placement has been determined
+///
+/// `rank` is the item's index within the order-modified document order sequence of grid items
+/// (as yielded by `children_iter`), and `index` is the item's index among its parent's children.
 #[allow(clippy::too_many_arguments)]
 fn record_grid_placement<S: GridItemStyle>(
     cell_occupancy_matrix: &mut CellOccupancyMatrix,
     items: &mut Vec<GridItem>,
     node: NodeId,
+    rank: usize,
     index: usize,
     style: S,
     parent_align_items: AlignItems,
@@ -393,6 +403,7 @@ fn record_grid_placement<S: GridItemStyle>(
         style,
         parent_align_items,
         parent_justify_items,
+        rank as u32,
         index as u16,
     ));
 

@@ -240,20 +240,43 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     // Match items (children) to a definite grid position (row start/end and column start/end position)
     let mut items = Vec::with_capacity(tree.child_count(node));
     let mut cell_occupancy_matrix = CellOccupancyMatrix::with_track_counts(est_col_counts, est_row_counts);
-    // CSS Grid §6.3: Items are placed in order-modified document order.
-    // Collect child indices sorted by (CSS order, source order).
-    let mut sorted_children: Vec<(usize, NodeId)> = tree
-        .child_ids(node)
-        .enumerate()
-        .filter(|(_, child_node)| {
-            let style = tree.get_grid_child_style(*child_node);
-            style.box_generation_mode() != BoxGenerationMode::None && !style.position().is_out_of_flow()
-        })
-        .collect();
-    sorted_children.sort_by_key(|(_, child_node)| tree.get_grid_child_style(*child_node).order());
+    let is_in_flow_item = |style: &Tree::GridItemStyle<'_>| {
+        style.box_generation_mode() != BoxGenerationMode::None && !style.position().is_out_of_flow()
+    };
 
+    // CSS Grid §6.3: items are placed in order-modified document order. In the common case where
+    // no item sets the `order` property, that is simply document order and the children are
+    // iterated lazily. Otherwise the in-flow children are collected and stable-sorted by `order`
+    // (which keeps items with equal `order` values in document order).
+    let has_ordered_item = tree.child_ids(node).any(|child_node| {
+        let style = tree.get_grid_child_style(child_node);
+        style.order() != 0 && is_in_flow_item(&style)
+    });
+    let mut ordered_children: Vec<(i32, usize, NodeId)> = Vec::new();
+    if has_ordered_item {
+        ordered_children.extend(
+            tree.child_ids(node)
+                .enumerate()
+                .map(|(index, child_node)| (index, child_node, tree.get_grid_child_style(child_node)))
+                .filter(|(_, _, style)| is_in_flow_item(style))
+                .map(|(index, child_node, style)| (style.order(), index, child_node)),
+        );
+        ordered_children.sort_by_key(|&(order, _, _)| order);
+    }
+
+    // Yields `(child index, node, style)` for each in-flow child in order-modified document order.
+    // Exactly one of the two chained halves is non-empty depending on `has_ordered_item`.
     let in_flow_children_iter = || {
-        sorted_children.iter().map(|&(index, child_node)| (index, child_node, tree.get_grid_child_style(child_node)))
+        tree.child_ids(node)
+            .take_while(|_| !has_ordered_item)
+            .enumerate()
+            .map(|(index, child_node)| (index, child_node, tree.get_grid_child_style(child_node)))
+            .filter(|(_, _, style)| is_in_flow_item(style))
+            .chain(
+                ordered_children
+                    .iter()
+                    .map(|&(_, index, child_node)| (index, child_node, tree.get_grid_child_style(child_node))),
+            )
     };
     place_grid_items(
         &mut cell_occupancy_matrix,
@@ -264,13 +287,6 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
         justify_items.unwrap_or(AlignItems::STRETCH),
         &name_resolver,
     );
-
-    // Assign visual order reflecting CSS `order`-modified document order.
-    // Items are currently in placement order (which respects CSS `order`).
-    // We assign before track sizing, which re-sorts items by other criteria.
-    for (i, item) in items.iter_mut().enumerate() {
-        item.order = i as u32;
-    }
 
     // Extract track counts from previous step (auto-placement can expand the number of tracks)
     let final_col_counts = *cell_occupancy_matrix.track_counts(AbsoluteAxis::Horizontal);
@@ -662,10 +678,11 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     }
 
     // Position hidden and absolutely positioned children, merging in the candidates bubbled out
-    // of in-flow children's subtrees (`items` is sorted by `source_order`, i.e. child index)
-    let mut order = items.len() as u32;
+    // of in-flow children's subtrees (`items` is sorted by `source_order`, i.e. child index).
+    // Hidden and out-of-flow children are assigned their child index as their `Layout::order`.
     let mut in_flow_items = items.iter_mut().peekable();
     (0..tree.child_count(node)).for_each(|index| {
+        let order = index as u32;
         if let Some(item) = in_flow_items.next_if(|item| item.source_order as usize == index) {
             oof_candidates.append(&mut item.oof_candidates);
             return;
@@ -686,7 +703,6 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
                 SizingMode::InherentSize,
                 Line::FALSE,
             );
-            order += 1;
             return;
         }
 
@@ -783,8 +799,6 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
                     y: static_position_for_axis(y_alignment, Line { start: area.top, end: area.bottom }, false),
                 },
             });
-
-            order += 1;
         }
     });
 

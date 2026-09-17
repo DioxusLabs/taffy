@@ -22,8 +22,9 @@ pub(in super::super) struct GridItem {
     /// for final positioning
     pub source_order: u16,
 
-    /// The visual order of the item, reflecting CSS `order`-modified document order.
-    /// Used for `Layout.order` to inform painting/z-order.
+    /// The order-modified document order rank of the item among the container's grid items
+    /// (its index within the in-flow children after sorting by the `order` property). Assigned
+    /// to `Layout::order`.
     pub order: u32,
 
     /// The item's definite row-start and row-end, as resolved by the placement algorithm
@@ -102,6 +103,7 @@ pub(in super::super) struct GridItem {
 
 impl GridItem {
     /// Create a new item given a concrete placement in both axes
+    #[allow(clippy::too_many_arguments)]
     pub fn new_with_placement_style_and_order<S: GridItemStyle>(
         node: NodeId,
         col_span: Line<OriginZeroLine>,
@@ -109,12 +111,13 @@ impl GridItem {
         style: S,
         parent_align_items: AlignItems,
         parent_justify_items: AlignItems,
+        order: u32,
         source_order: u16,
     ) -> Self {
         GridItem {
             node,
             source_order,
-            order: 0, // Assigned after placement, before final positioning
+            order,
             row: row_span,
             column: col_span,
             is_compressible_replaced: style.is_compressible_replaced(),

@@ -518,6 +518,15 @@ pub struct Layout {
     ///
     /// Nodes with a higher order should be rendered on top of those with a lower order.
     /// This is effectively a topological sort of each tree.
+    ///
+    /// For flex items and grid items this is the item's rank in *order-modified document order*:
+    /// its index among the container's in-flow items after sorting them by the `order` property
+    /// (see <https://www.w3.org/TR/css-display-3/#order-property>). Out-of-flow
+    /// (`position: absolute`/`fixed`) children are not flex/grid items and are assigned their index
+    /// within their parent's children instead, so values are not guaranteed to be unique across
+    /// those categories. Hidden (`display: none`) children are laid out by the hidden layout pass,
+    /// which sets `order` to 0. For children of block containers this is always the child's index
+    /// within its parent's children.
     pub order: u32,
     /// The top-left corner of the node
     pub location: Point<f32>,

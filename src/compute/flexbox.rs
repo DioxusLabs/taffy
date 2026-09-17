@@ -28,8 +28,14 @@ struct FlexItem {
     /// The identifier for the associated node
     node: NodeId,
 
-    /// The order of the node relative to it's siblings
+    /// The order-modified document order rank of the item among the container's flex items
+    /// (its index within the items after sorting by the `order` property). Assigned to
+    /// [`Layout::order`].
     order: u32,
+    /// The index of the node within its parent's children (document order)
+    source_order: u32,
+    /// The value of the item's `order` property
+    css_order: i32,
 
     /// The base size of this item
     size: Size<Option<f32>>,
@@ -722,6 +728,8 @@ fn generate_anonymous_flex_items(
             FlexItem {
                 node: child,
                 order: index as u32,
+                source_order: index as u32,
+                css_order: child_style.order(),
                 size: child_style
                     .size()
                     .maybe_resolve(percent_resolution_size, |val, basis| tree.calc(val, basis))
@@ -789,15 +797,14 @@ fn generate_anonymous_flex_items(
         })
         .collect();
 
-    // CSS Flexbox §5.4: Reorder flex items by the CSS `order` property.
-    // Stable sort preserves source order for items with equal `order` values.
-    flex_items.sort_by(|a, b| {
-        tree.get_flexbox_child_style(a.node).order().cmp(&tree.get_flexbox_child_style(b.node).order())
-    });
-
-    // Reassign rendering order to reflect the new visual sequence.
-    for (i, item) in flex_items.iter_mut().enumerate() {
-        item.order = i as u32;
+    // CSS Flexbox §5.4: lay out items in order-modified document order. The stable sort keeps
+    // items with equal `order` values in document order. Skipped entirely in the common case
+    // where no item sets `order` (the items are already in the correct order).
+    if flex_items.iter().any(|item| item.css_order != 0) {
+        flex_items.sort_by_key(|item| item.css_order);
+    }
+    for (rank, item) in flex_items.iter_mut().enumerate() {
+        item.order = rank as u32;
     }
 
     flex_items
@@ -2741,13 +2748,17 @@ fn collect_oof_candidates(
     flex_lines: &mut [FlexLine],
     candidates: &mut OofCandidates,
 ) {
-    // Lines are contiguous slices of the items in document order (reversal is applied to
-    // positions, not storage), so walking the lines yields items sorted by `order`
-    let mut items = flex_lines
+    // Lines are contiguous slices of the items in order-modified document order (reversal is
+    // applied to positions, not storage). Candidates must be emitted in document order, so the
+    // items holding candidates are sorted back by `source_order` (this is a no-op unless the
+    // `order` property reordered them). This does not allocate when no item holds candidates.
+    let mut items: Vec<&mut FlexItem> = flex_lines
         .iter_mut()
         .flat_map(|line| line.items.iter_mut())
         .filter(|item| !item.oof_candidates.is_empty())
-        .peekable();
+        .collect();
+    items.sort_by_key(|item| item.source_order);
+    let mut items = items.into_iter().peekable();
 
     let dir = constants.dir;
     let container_size = constants.container_size;
@@ -2781,7 +2792,7 @@ fn collect_oof_candidates(
         // In-flow item: merge the candidates bubbled out of its subtree
         if !position.is_out_of_flow() {
             drop(child_style);
-            if let Some(item) = items.next_if(|item| item.order == order as u32) {
+            if let Some(item) = items.next_if(|item| item.source_order == order as u32) {
                 candidates.append(&mut item.oof_candidates);
             }
             continue;

@@ -213,11 +213,67 @@ mod order {
             assert_eq!(taffy.layout(child_b).unwrap().location.x, 0.0, "child_b (order: -1) should be first");
             assert_eq!(taffy.layout(child_a).unwrap().location.x, 50.0, "child_a (order: 0) should be second");
         }
+
+        #[test]
+        fn flex_order_ignores_out_of_flow_children() {
+            let mut taffy = new_test_tree();
+
+            let leaf = |taffy: &mut TaffyTree<_>, order: i32, position: Position| {
+                taffy
+                    .new_leaf(Style {
+                        size: Size { width: Dimension::from_length(50.0), height: Dimension::from_length(50.0) },
+                        position,
+                        order,
+                        ..Default::default()
+                    })
+                    .unwrap()
+            };
+
+            // In-flow: a (order 1), c (order 0). Out-of-flow: b (absolute, order -5), d (fixed, order -5).
+            let child_a = leaf(&mut taffy, 1, Position::Relative);
+            let child_b = leaf(&mut taffy, -5, Position::Absolute);
+            let child_c = leaf(&mut taffy, 0, Position::Relative);
+            let child_d = leaf(&mut taffy, -5, Position::Fixed);
+
+            let container = taffy
+                .new_with_children(
+                    Style {
+                        display: Display::Flex,
+                        flex_direction: FlexDirection::Row,
+                        size: Size { width: Dimension::from_length(300.0), height: Dimension::from_length(100.0) },
+                        ..Default::default()
+                    },
+                    &[child_a, child_b, child_c, child_d],
+                )
+                .unwrap();
+
+            taffy
+                .compute_layout(
+                    container,
+                    Size { width: AvailableSpace::Definite(300.0), height: AvailableSpace::Definite(100.0) },
+                )
+                .unwrap();
+
+            // Only the in-flow items are ordered: c (order 0) then a (order 1)
+            assert_eq!(taffy.layout(child_c).unwrap().location.x, 0.0);
+            assert_eq!(taffy.layout(child_a).unwrap().location.x, 50.0);
+            assert_eq!(taffy.layout(child_c).unwrap().order, 0);
+            assert_eq!(taffy.layout(child_a).unwrap().order, 1);
+
+            // Out-of-flow children are not flex items: `order` does not move them and they keep
+            // their child index as `Layout::order`. Their static position is that of a
+            // hypothetical box at the start of the container.
+            assert_eq!(taffy.layout(child_b).unwrap().location.x, 0.0);
+            assert_eq!(taffy.layout(child_d).unwrap().location.x, 0.0);
+            assert_eq!(taffy.layout(child_b).unwrap().order, 1);
+            assert_eq!(taffy.layout(child_d).unwrap().order, 3);
+        }
     }
 
     #[cfg(feature = "grid")]
     mod grid {
         use super::*;
+        use taffy::Point;
 
         #[test]
         fn grid_order_reorders_auto_placed_items() {
@@ -343,6 +399,123 @@ mod order {
             assert_eq!(taffy.layout(child_a).unwrap().location.x, 0.0);
             assert_eq!(taffy.layout(child_b).unwrap().location.x, 50.0);
             assert_eq!(taffy.layout(child_c).unwrap().location.x, 100.0);
+        }
+
+        #[test]
+        fn grid_order_rank_is_order_modified_document_order_not_placement_order() {
+            let mut taffy = new_test_tree();
+
+            let item = |taffy: &mut TaffyTree<_>, order: i32, row: Line<GridPlacement>| {
+                taffy
+                    .new_leaf(Style {
+                        size: Size { width: Dimension::from_length(50.0), height: Dimension::from_length(50.0) },
+                        grid_row: row,
+                        order,
+                        ..Default::default()
+                    })
+                    .unwrap()
+            };
+
+            // Children in document order:
+            //   a: auto-placed,                order 0
+            //   b: definitely placed (row 2),  order 0
+            //   c: auto-placed,                order -1
+            // Order-modified document order is c, a, b. Placement processes items locked to a
+            // row (b) before auto-placed items (c, a), so placement order is b, c, a.
+            let child_a = item(&mut taffy, 0, Line { start: GridPlacement::Auto, end: GridPlacement::Auto });
+            let child_b =
+                item(&mut taffy, 0, Line { start: GridPlacement::from_line_index(2), end: GridPlacement::Auto });
+            let child_c = item(&mut taffy, -1, Line { start: GridPlacement::Auto, end: GridPlacement::Auto });
+
+            let container = taffy
+                .new_with_children(
+                    Style {
+                        display: Display::Grid,
+                        grid_template_columns: vec![
+                            GridTemplateComponent::from_length(50.0),
+                            GridTemplateComponent::from_length(50.0),
+                            GridTemplateComponent::from_length(50.0),
+                        ],
+                        size: Size { width: Dimension::from_length(150.0), height: Dimension::AUTO },
+                        ..Default::default()
+                    },
+                    &[child_a, child_b, child_c],
+                )
+                .unwrap();
+
+            taffy
+                .compute_layout(
+                    container,
+                    Size { width: AvailableSpace::Definite(150.0), height: AvailableSpace::Definite(200.0) },
+                )
+                .unwrap();
+
+            // b occupies row 2 column 1; auto-placement fills row 1 with c first, then a
+            assert_eq!(taffy.layout(child_b).unwrap().location, Point { x: 0.0, y: 50.0 }, "child_b (row 2)");
+            assert_eq!(taffy.layout(child_c).unwrap().location, Point { x: 0.0, y: 0.0 }, "child_c (order: -1)");
+            assert_eq!(taffy.layout(child_a).unwrap().location, Point { x: 50.0, y: 0.0 }, "child_a (order: 0)");
+
+            // Layout.order is the rank in order-modified document order (c, a, b), not placement order
+            assert_eq!(taffy.layout(child_c).unwrap().order, 0);
+            assert_eq!(taffy.layout(child_a).unwrap().order, 1);
+            assert_eq!(taffy.layout(child_b).unwrap().order, 2);
+        }
+
+        #[test]
+        fn grid_order_ignores_out_of_flow_and_hidden_children() {
+            let mut taffy = new_test_tree();
+
+            let leaf = |taffy: &mut TaffyTree<_>, order: i32, position: Position, display: Display| {
+                taffy
+                    .new_leaf(Style {
+                        display,
+                        size: Size { width: Dimension::from_length(50.0), height: Dimension::from_length(50.0) },
+                        position,
+                        order,
+                        ..Default::default()
+                    })
+                    .unwrap()
+            };
+
+            // In-flow: a (order 1), d (order 0). Out-of-flow: b (absolute, order -5),
+            // c (fixed, order -5). Hidden: e (order -5).
+            let child_a = leaf(&mut taffy, 1, Position::Relative, Display::Block);
+            let child_b = leaf(&mut taffy, -5, Position::Absolute, Display::Block);
+            let child_c = leaf(&mut taffy, -5, Position::Fixed, Display::Block);
+            let child_d = leaf(&mut taffy, 0, Position::Relative, Display::Block);
+            let child_e = leaf(&mut taffy, -5, Position::Relative, Display::None);
+
+            let container = taffy
+                .new_with_children(
+                    Style {
+                        display: Display::Grid,
+                        grid_template_columns: vec![
+                            GridTemplateComponent::from_length(50.0),
+                            GridTemplateComponent::from_length(50.0),
+                        ],
+                        size: Size { width: Dimension::from_length(100.0), height: Dimension::AUTO },
+                        ..Default::default()
+                    },
+                    &[child_a, child_b, child_c, child_d, child_e],
+                )
+                .unwrap();
+
+            taffy
+                .compute_layout(
+                    container,
+                    Size { width: AvailableSpace::Definite(100.0), height: AvailableSpace::Definite(200.0) },
+                )
+                .unwrap();
+
+            // Only the in-flow items are auto-placed in order-modified document order: d then a
+            assert_eq!(taffy.layout(child_d).unwrap().location.x, 0.0);
+            assert_eq!(taffy.layout(child_a).unwrap().location.x, 50.0);
+            assert_eq!(taffy.layout(child_d).unwrap().order, 0);
+            assert_eq!(taffy.layout(child_a).unwrap().order, 1);
+
+            // Out-of-flow children are not grid items: they keep their child index
+            assert_eq!(taffy.layout(child_b).unwrap().order, 1);
+            assert_eq!(taffy.layout(child_c).unwrap().order, 2);
         }
     }
 }
