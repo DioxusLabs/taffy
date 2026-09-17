@@ -1249,6 +1249,22 @@ fn perform_final_layout_on_in_flow_children(
                 location.y += item_non_auto_margin.top;
                 location.x += item_non_auto_margin.left;
 
+                // A relatively positioned float is placed as a float first, then offset by its
+                // inset. The offset does not affect the placement of other content (CSS 2.2 9.4.3).
+                if item.position == Position::Relative {
+                    let inset_percentage_basis =
+                        Size { width: Some(container_inner_width), height: container_percentage_resolution_height };
+                    let inset = item.inset.zip_size(inset_percentage_basis, |p, s| {
+                        p.maybe_resolve(s, |val, basis| tree.calc(val, basis))
+                    });
+                    location.x += if direction.is_rtl() {
+                        inset.right.map(|x| -x).or(inset.left).unwrap_or(0.0)
+                    } else {
+                        inset.left.or(inset.right.map(|x| -x)).unwrap_or(0.0)
+                    };
+                    location.y += inset.top.or(inset.bottom.map(|x| -x)).unwrap_or(0.0);
+                }
+
                 // println!("BLOCK FLOATED BOX ({:?}) {:?}", item.node_id, float_direction);
                 // println!("w:{} h:{} x:{}, y:{}", margin_box.width, margin_box.height, location.x, location.y);
 
