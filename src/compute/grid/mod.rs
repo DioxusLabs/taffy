@@ -629,8 +629,21 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     // by the out-of-flow positioning pass (`compute_oof_layout`), which runs after this algorithm.
     let mut oof_candidates = OofCandidates::new();
 
-    // Sort items back into original order to allow them to be matched up with styles
-    items.sort_by_key(|item| item.source_order);
+    // `items` is in placement order. The passes below that match items up with the container's
+    // children (and `DetailedGridInfo::items`) need them in document order. Rather than sorting the
+    // items themselves, a permutation of indexes is sorted when they are not already in order
+    // (placement order is document order when all items are auto-placed and `order` is unused).
+    let items_in_document_order: Option<Vec<u32>> =
+        if items.windows(2).all(|pair| pair[0].source_order < pair[1].source_order) {
+            None
+        } else {
+            let mut permutation: Vec<u32> = (0..items.len() as u32).collect();
+            permutation.sort_unstable_by_key(|&index| items[index as usize].source_order);
+            Some(permutation)
+        };
+    let item_index_in_document_order = |position: usize| {
+        items_in_document_order.as_ref().map_or(position, |permutation| permutation[position] as usize)
+    };
 
     let container_alignment_styles = InBothAbsAxis { horizontal: justify_items, vertical: align_items };
 
@@ -678,13 +691,14 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     }
 
     // Position hidden and absolutely positioned children, merging in the candidates bubbled out
-    // of in-flow children's subtrees (`items` is sorted by `source_order`, i.e. child index).
+    // of in-flow children's subtrees (visited in document order, i.e. by child index).
     // Hidden and out-of-flow children are assigned their child index as their `Layout::order`.
-    let mut in_flow_items = items.iter_mut().peekable();
+    let mut in_flow_items = (0..items.len()).map(item_index_in_document_order).peekable();
     (0..tree.child_count(node)).for_each(|index| {
         let order = index as u32;
-        if let Some(item) = in_flow_items.next_if(|item| item.source_order as usize == index) {
-            oof_candidates.append(&mut item.oof_candidates);
+        if let Some(item_index) = in_flow_items.next_if(|&item_index| items[item_index].source_order as usize == index)
+        {
+            oof_candidates.append(&mut items[item_index].oof_candidates);
             return;
         }
 
@@ -827,7 +841,10 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
                 columns,
                 detailed_column_line_names,
             ),
-            items: items.iter().map(DetailedGridItemsInfo::from_grid_item).collect(),
+            items: (0..items.len())
+                .map(item_index_in_document_order)
+                .map(|item_index| DetailedGridItemsInfo::from_grid_item(&items[item_index]))
+                .collect(),
         },
     );
 
