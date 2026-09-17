@@ -2727,15 +2727,13 @@ fn collect_oof_candidates(
     flex_lines: &mut [FlexLine],
     candidates: &mut OofCandidates,
 ) {
-    // Items are stored in visual (line / reversed) order; sort those carrying bubbled candidates
-    // back into document order so they can be merged with the direct out-of-flow children
-    let mut items: Vec<&mut FlexItem> = flex_lines
+    // Lines are contiguous slices of the items in document order (reversal is applied to
+    // positions, not storage), so walking the lines yields items sorted by `order`
+    let mut items = flex_lines
         .iter_mut()
         .flat_map(|line| line.items.iter_mut())
         .filter(|item| !item.oof_candidates.is_empty())
-        .collect();
-    items.sort_unstable_by_key(|item| item.order);
-    let mut items = items.into_iter().peekable();
+        .peekable();
 
     let dir = constants.dir;
     let container_size = constants.container_size;
