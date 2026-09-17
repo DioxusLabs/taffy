@@ -77,7 +77,7 @@
 #[macro_use]
 extern crate std;
 
-#[cfg(all(not(feature = "std"), feature = "alloc"))]
+#[cfg(not(feature = "std"))]
 extern crate alloc;
 
 #[cfg_attr(feature = "serde", macro_use)]
