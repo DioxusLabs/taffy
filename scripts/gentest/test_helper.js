@@ -208,7 +208,7 @@ function parseGridPosition(input) {
 // Out-of-flow (absolute/fixed) elements are positioned relative to their containing block:
 // the nearest positioned ancestor, or the test root (which acts as the initial containing
 // block) when there is none. All other elements are positioned relative to their parent.
-function positionReferenceElement(e) {
+function containingBlockElement(e) {
   const position = getComputedStyle(e).position;
   if (e.id !== "test-root" && (position === "absolute" || position === "fixed")) {
     let ancestor = e.parentElement;
@@ -226,7 +226,7 @@ function describeElement(e) {
   // Get precise, unrounded dimensions for the current element and its position reference
   // (parent for in-flow elements, containing block for out-of-flow elements)
   let boundingRect = e.getBoundingClientRect();
-  let parentBoundingRect = positionReferenceElement(e).getBoundingClientRect();
+  let parentBoundingRect = containingBlockElement(e).getBoundingClientRect();
 
   const computedStyle = getComputedStyle(e);
 
