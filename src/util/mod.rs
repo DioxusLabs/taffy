@@ -31,6 +31,6 @@ where
     S: for<'a> From<&'a str>,
     D: serde::Deserializer<'de>,
 {
-    let s: String = serde::Deserialize::deserialize(deserializer)?;
+    let s: crate::util::sys::String = serde::Deserialize::deserialize(deserializer)?;
     Ok(S::from(&s))
 }
