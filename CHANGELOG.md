@@ -42,10 +42,8 @@
 ### Fixed
 
 - The `serde` feature now compiles without the `std` feature
-
 - Flexbox: overflow towards the main-start/cross-start edge of `row-reverse`, `column-reverse` and `wrap-reverse` scroll containers is now reachable scrollable overflow (the scroll origin of a flex container is its main-start cross-start corner per css-overflow-3), matching browsers. Previously it was treated as unreachable and excluded from `scroll_width`/`scroll_height`
 - Leaf nodes: the measured content of RTL leaf scroll containers is now aligned to the inline-start (right) edge, so overflowing content is reported as reachable start-side overflow rather than being lost
-
 - `TaffyTree::remove` and `TaffyTree::clear` now drop the removed nodes' contexts. Both are documented as dropping nodes, but neither touched `node_context_data`, so a node's context outlived the node — for a `TaffyTree` whose context is a measure function, that kept a boxed closure and everything it captured alive indefinitely. It is worst for callers that rebuild their tree every frame.
 - Block: a block container's content width and the stretch width / available width handed to its in-flow and floated children are floored at zero when padding/border or the child's margins exceed the container width. Children (and measure functions) could previously receive negative widths.
 - Flexbox/Grid: the stretch size and available space derived from the container/grid area minus an item's margins are likewise floored at zero. Stretched flex items whose cross-axis margins exceeded the line previously ended up with a negative used cross size (Chrome gives 0).
