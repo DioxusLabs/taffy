@@ -196,20 +196,22 @@ pub trait LayoutPartialTree: TraversePartialTree {
     /// Set the node's unrounded layout
     fn set_unrounded_layout(&mut self, node_id: NodeId, layout: &Layout);
 
-    /// Record the list of out-of-flow (absolute/fixed) boxes whose containing block is `node_id`,
-    /// replacing any previously recorded list.
+    /// Clear the list of out-of-flow (absolute/fixed) boxes whose containing block is `node_id`.
     ///
-    /// This is called (exactly once) for each node laid out with `RunMode::PerformLayout`. The
-    /// recorded lists are consumed by [`round_layout`](crate::round_layout) (out-of-flow boxes
-    /// are rounded via their containing block rather than via their parent), and are also useful
-    /// for consumers implementing paint/hit-testing traversals.
-    fn set_hoisted_children(&mut self, node_id: NodeId, hoisted: &[NodeId]);
+    /// This is called (exactly once) for each node laid out with `RunMode::PerformLayout`, before
+    /// the boxes it lays out are recorded with [`add_hoisted_children`](Self::add_hoisted_children),
+    /// so that lists recorded by previous layout runs do not persist.
+    fn clear_hoisted_children(&mut self, node_id: NodeId);
 
     /// Append to the list of out-of-flow boxes whose containing block is `node_id`.
     ///
-    /// This is used by [`compute_root_layout`](crate::compute_root_layout) to record boxes
-    /// (e.g. `position: fixed` boxes) which are positioned by the final root positioning pass,
-    /// which runs after the root node's own layout algorithm has already recorded its list.
+    /// This is called by each containing block for the boxes it lays out, and by
+    /// [`compute_root_layout`](crate::compute_root_layout) to record boxes (e.g. `position: fixed`
+    /// boxes) which are positioned by the final root positioning pass, which runs after the root
+    /// node's own layout algorithm has already recorded its list. The recorded lists are consumed
+    /// by [`round_layout`](crate::round_layout) (out-of-flow boxes are rounded via their
+    /// containing block rather than via their parent), and are also useful for consumers
+    /// implementing paint/hit-testing traversals.
     ///
     /// Implementations should ignore ids already present in the list: when the root node's
     /// layout is served from the cache, its own list is not rebuilt, and the root positioning
@@ -251,10 +253,10 @@ pub trait RoundTree: TraverseTree {
     /// `fixed`, and `false` otherwise (including for `display: none` nodes).
     fn is_hoisted(&self, node_id: NodeId) -> bool;
     /// The number of out-of-flow boxes whose containing block is `node_id`
-    /// (as recorded by [`LayoutPartialTree::set_hoisted_children`])
+    /// (as recorded by [`LayoutPartialTree::add_hoisted_children`])
     fn hoisted_child_count(&self, node_id: NodeId) -> usize;
     /// Get the nth out-of-flow box whose containing block is `node_id`
-    /// (as recorded by [`LayoutPartialTree::set_hoisted_children`])
+    /// (as recorded by [`LayoutPartialTree::add_hoisted_children`])
     fn get_hoisted_child_id(&self, node_id: NodeId, index: usize) -> NodeId;
 }
 

@@ -156,10 +156,8 @@ impl taffy::LayoutPartialTree for Tree {
         self.node_from_id_mut(node_id).unrounded_layout = *layout;
     }
 
-    fn set_hoisted_children(&mut self, node_id: NodeId, hoisted: &[NodeId]) {
-        let vec = &mut self.node_from_id_mut(node_id).hoisted_children;
-        vec.clear();
-        vec.extend_from_slice(hoisted);
+    fn clear_hoisted_children(&mut self, node_id: NodeId) {
+        self.node_from_id_mut(node_id).hoisted_children.clear();
     }
 
     fn add_hoisted_children(&mut self, node_id: NodeId, hoisted: &[NodeId]) {

@@ -148,10 +148,8 @@ impl LayoutPartialTree for StatelessLayoutTree {
         unsafe { node_from_id_mut(node_id).unrounded_layout = *layout };
     }
 
-    fn set_hoisted_children(&mut self, node_id: NodeId, hoisted: &[NodeId]) {
-        let vec = unsafe { &mut node_from_id_mut(node_id).hoisted_children };
-        vec.clear();
-        vec.extend_from_slice(hoisted);
+    fn clear_hoisted_children(&mut self, node_id: NodeId) {
+        unsafe { node_from_id_mut(node_id).hoisted_children.clear() };
     }
 
     fn add_hoisted_children(&mut self, node_id: NodeId, hoisted: &[NodeId]) {

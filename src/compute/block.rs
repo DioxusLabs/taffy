@@ -800,7 +800,8 @@ fn compute_inner(
         &mut hoisted,
         &mut unclaimed,
     );
-    tree.set_hoisted_children(node_id, &hoisted);
+    tree.clear_hoisted_children(node_id);
+    tree.add_hoisted_children(node_id, &hoisted);
     output.oof_candidates = unclaimed;
 
     #[cfg(feature = "content_size")]
