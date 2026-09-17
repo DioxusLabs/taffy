@@ -60,23 +60,14 @@ use crate::sys::String;
 
 /// Trait that represents a cheaply clonable string. If you're unsure what to use here
 /// consider `Arc<str>` or `string_cache::Atom`.
-#[cfg(any(feature = "alloc", feature = "std"))]
 pub trait CheapCloneStr:
     AsRef<str> + for<'a> From<&'a str> + From<String> + PartialEq + Eq + Clone + Default + Debug + 'static
 {
 }
-#[cfg(any(feature = "alloc", feature = "std"))]
 impl<T> CheapCloneStr for T where
     T: AsRef<str> + for<'a> From<&'a str> + From<String> + PartialEq + Eq + Clone + Default + Debug + 'static
 {
 }
-
-/// Trait that represents a cheaply clonable string. If you're unsure what to use here
-/// consider `Arc<str>` or `string_cache::Atom`.
-#[cfg(not(any(feature = "alloc", feature = "std")))]
-pub trait CheapCloneStr {}
-#[cfg(not(any(feature = "alloc", feature = "std")))]
-impl<T> CheapCloneStr for T {}
 
 /// The core set of styles that are shared between all CSS layout nodes
 ///

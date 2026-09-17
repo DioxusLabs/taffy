@@ -4,8 +4,11 @@
 
 ### Breaking
 
+- Removed the heapless (neither `std` nor `alloc`) build mode. Taffy now always requires the `alloc` crate: the `arrayvec` dependency and the fixed `MAX_NODE_COUNT`/`MAX_CHILD_COUNT` limits are gone, and `no_std` builds without the `std` feature use `alloc`'s `Vec`/`String`/`BTreeMap` unconditionally. The `alloc` cargo feature is retained as a deprecated no-op so existing `features = ["alloc"]` configurations keep compiling
+
 - All growable collections in Taffy's public API (`Style::grid_template_rows/columns`, `grid_auto_rows/columns`, `grid_template_row/column_names`, `GridTemplateAreas::areas`, `GridTemplateRepetition::tracks/line_names`, `GridAutoTracks`, `TaffyTree::children()`, ...) now use [`ThinVec`](https://docs.rs/thin-vec) (re-exported as `taffy::ThinVec`, with the `taffy::thin_vec!` macro also available from the prelude) instead of `std::vec::Vec`. `ThinVec` stores its length and capacity in the heap allocation, so it is a single pointer (8 bytes) on the stack instead of 24 bytes, and an empty `ThinVec` does not allocate; this shrinks `Style<String>` from 560 to 448 bytes and `GridTemplateComponent` from 56 to 24 bytes. Construct values with `thin_vec![...]`, `.collect()`, or `Vec::into()`
 - The MSRV is raised from Rust 1.71 to 1.85 (`thin-vec` 0.2.20 requires Rust 1.85, and its `const_new` feature — needed for `Style::DEFAULT` — requires 1.83)
+
 - `Position` gains `Static`, `Fixed` and `Sticky` variants matching the CSS `position` property, and **`Position::Static` replaces `Position::Relative` as the default value** (matching CSS). Statically positioned items are laid out in normal flow like relatively positioned items, but their `inset` styles are ignored: code relying on the old default's inset behavior must explicitly set `position: Position::Relative`. `Position::Fixed` currently behaves identically to `Position::Absolute` (both are taken out of normal flow and positioned relative to their parent); a future release will hoist absolute/fixed boxes to their actual containing block (nearest positioned ancestor for `absolute`, root for `fixed`). `Position::Sticky` is laid out like `Static` (its `inset` is not applied, since sticky insets are scroll thresholds that the caller must apply once the scroll position is known) but, like `Relative`, acts as a containing block for absolutely positioned descendants. `Position` also gains `is_out_of_flow()` and `is_positioned()` helper methods, and the CSS parser (`parse` feature) accepts `static`, `fixed` and `sticky` keywords
 
 - Out-of-flow (absolute/fixed) boxes are now hoisted to and laid out by their **containing block** — the nearest positioned (non-`static`) ancestor for `position: absolute`, or the root for `position: fixed` — rather than always by their DOM parent, matching CSS. Consequences:
@@ -38,6 +41,8 @@
 - Grid: intrinsic track sizing no longer measures an item's min-/max-content contribution in a step where none of the item's spanned tracks can receive that contribution (e.g. items spanning only `minmax(0, 1fr)` or fixed tracks). This matches Blink and avoids redundant, sometimes very expensive, measurement of large subtrees under a min-content constraint.
 
 ### Fixed
+
+- The `serde` feature now compiles without the `std` feature
 
 - `TaffyTree::remove` and `TaffyTree::clear` now drop the removed nodes' contexts. Both are documented as dropping nodes, but neither touched `node_context_data`, so a node's context outlived the node — for a `TaffyTree` whose context is a measure function, that kept a boxed closure and everything it captured alive indefinitely. It is worst for callers that rebuild their tree every frame.
 - Block: a block container's content width and the stretch width / available width handed to its in-flow and floated children are floored at zero when padding/border or the child's margins exceed the container width. Children (and measure functions) could previously receive negative widths.

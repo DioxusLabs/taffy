@@ -77,7 +77,7 @@
 #[macro_use]
 extern crate std;
 
-#[cfg(all(not(feature = "std"), feature = "alloc"))]
+#[cfg(not(feature = "std"))]
 extern crate alloc;
 
 #[cfg_attr(feature = "serde", macro_use)]
@@ -127,7 +127,6 @@ pub use crate::util::print_tree;
 pub use parse::{ParseError, ParseResult};
 
 /// The vector type used for all growable collections in Taffy's public API (e.g. grid track lists).
-#[cfg(any(feature = "std", feature = "alloc"))]
 #[doc(inline)]
 pub use ::thin_vec::{thin_vec, ThinVec};
 

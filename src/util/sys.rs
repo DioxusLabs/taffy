@@ -4,13 +4,9 @@
 #[cfg(feature = "std")]
 pub(crate) use self::std::*;
 
-// When alloc but not std is enabled, use those types
-#[cfg(all(feature = "alloc", not(feature = "std")))]
+// Otherwise, use the types from the alloc crate
+#[cfg(not(feature = "std"))]
 pub(crate) use self::alloc::*;
-
-// When neither alloc or std is enabled, use a heapless fallback
-#[cfg(all(not(feature = "alloc"), not(feature = "std")))]
-pub(crate) use self::core::*;
 
 /// For when `std` is enabled
 #[cfg(feature = "std")]
@@ -96,11 +92,10 @@ mod std {
     }
 }
 
-/// For when `alloc` but not `std` is enabled
-#[cfg(all(feature = "alloc", not(feature = "std")))]
+/// For when `std` is not enabled
+#[cfg(not(feature = "std"))]
 mod alloc {
     extern crate alloc;
-    use core::cmp::Ordering;
 
     // // Re-exporting a macro_rules macro doesn't work properly, so we wrap
     // // it in a trivial new macro that just forwards it's input to the underlying
@@ -168,66 +163,7 @@ mod alloc {
     }
 }
 
-/// For when neither `alloc` nor `std` is enabled
-#[cfg(all(not(feature = "alloc"), not(feature = "std")))]
-mod core {
-    use core::cmp::Ordering;
-
-    /// The maximum number of nodes in the tree
-    pub const MAX_NODE_COUNT: usize = 256;
-    /// The maximum number of children of any given node
-    pub const MAX_CHILD_COUNT: usize = 16;
-    #[cfg(feature = "grid")]
-    /// The maximum number of children of any given node
-    pub const MAX_GRID_TRACKS: usize = 16;
-
-    /// A string
-    pub(crate) type String = &'static str;
-    /// The default type for representing strings in Taffy styles
-    pub(crate) type DefaultCheapStr = &'static str;
-
-    /// An allocation-backend agnostic vector type
-    pub(crate) type Vec<A> = arrayvec::ArrayVec<A, MAX_NODE_COUNT>;
-    /// A vector of child nodes, whose length cannot exceed [`MAX_CHILD_COUNT`]
-    pub(crate) type ChildrenVec<A> = arrayvec::ArrayVec<A, MAX_CHILD_COUNT>;
-    #[cfg(feature = "grid")]
-    /// A vector of grid tracks
-    pub(crate) type GridTrackVec<A> = arrayvec::ArrayVec<A, MAX_GRID_TRACKS>;
-
-    /// Creates a new map with the capacity for the specified number of items before it must be resized
-    ///
-    /// This vector cannot be resized.
-    #[must_use]
-    pub(crate) fn new_vec_with_capacity<A, const CAP: usize>(_capacity: usize) -> arrayvec::ArrayVec<A, CAP> {
-        arrayvec::ArrayVec::new()
-    }
-
-    /// Creates a new empty `ChildrenVec` in a const context
-    #[must_use]
-    pub(crate) const fn new_const_children_vec<A>() -> ChildrenVec<A> {
-        arrayvec::ArrayVec::new_const()
-    }
-
-    /// Rounds to the nearest whole number
-    pub(crate) use super::polyfill::round;
-
-    /// Computes the absolute value
-    pub(crate) use super::polyfill::abs;
-
-    /// Returns the largest of two f32 values
-    #[inline(always)]
-    pub(crate) fn f32_max(a: f32, b: f32) -> f32 {
-        a.max(b)
-    }
-
-    /// Returns the smallest of two f32 values
-    #[inline(always)]
-    pub(crate) fn f32_min(a: f32, b: f32) -> f32 {
-        a.min(b)
-    }
-}
-
-/// Implementations of float functions for no_std and alloc builds
+/// Implementations of float functions for no_std builds
 /// Copied from `num-traits` crate
 #[cfg(not(feature = "std"))]
 mod polyfill {

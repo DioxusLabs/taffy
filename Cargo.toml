@@ -16,12 +16,11 @@ categories = ["gui"]
 license = "MIT"
 
 [dependencies]
-arrayvec = { version = "0.7", default-features = false }
 document-features = { version = "0.2.7", optional = true }
 serde = { version = "1.0", default-features = false, optional = true, features = ["serde_derive"] }
 slotmap = { version = "1.0.6", default-features = false, optional = true }
 smallvec = { version = "1.13", default-features = false, optional = true }
-thin-vec = { version = "0.2.19", default-features = false, features = ["const_new"], optional = true }
+thin-vec = { version = "0.2.19", default-features = false, features = ["const_new"] }
 cssparser = { version = "0.37.0", default-features = false, optional = true }
 
 [package.metadata.docs.rs]
@@ -59,7 +58,7 @@ flexbox = []
 ## Enables support for `flex-wrap: balance` and `flex-line-count` from [CSS Flexbox Level 2](https://drafts.csswg.org/css-flexbox-2/)
 flexbox_balance = ["flexbox"]
 ## Enables the CSS Grid layout algorithm. See [`compute_grid_layout`](crate::compute_grid_layout).
-grid = ["alloc", "dep:smallvec"]
+grid = ["dep:smallvec"]
 ## Enables calc() values for all layout algorithms
 calc = []
 ## Causes all algorithms to compute and output a content size for each node
@@ -77,15 +76,15 @@ taffy_tree = ["dep:slotmap"]
 #! ### Other
 
 ## Add [`serde`] derives to Style structs
-serde = ["dep:serde", "thin-vec?/serde"]
+serde = ["dep:serde", "serde/alloc", "thin-vec/serde"]
 ## Implement `FromStr` trait for Taffy style types
 parse = ["dep:cssparser"]
 ## Enable the `parse` feature with proc-macro dependent optimisations
 parse_faster = ["parse", "cssparser/fast_match_byte"]
 ## Allow Taffy to depend on the [`Rust Standard Library`](std)
-std = ["serde?/std", "slotmap?/std", "dep:thin-vec", "thin-vec/std"]
-## Allow Taffy to depend on the alloc library
-alloc = ["serde?/alloc", "dep:thin-vec"]
+std = ["serde?/std", "slotmap?/std", "thin-vec/std"]
+## Deprecated no-op: Taffy always depends on the `alloc` library. Retained so that existing `features = ["alloc"]` configurations keep compiling.
+alloc = []
 ## Internal feature for debugging
 debug = ["std"]
 ## Internal feature for profiling
