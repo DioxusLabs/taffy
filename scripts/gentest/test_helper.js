@@ -226,7 +226,7 @@ function describeElement(e) {
   // Get precise, unrounded dimensions for the current element and its position reference
   // (parent for in-flow elements, containing block for out-of-flow elements)
   let boundingRect = e.getBoundingClientRect();
-  let parentBoundingRect = containingBlockElement(e).getBoundingClientRect();
+  let containingBlockElementBoundingRect = containingBlockElement(e).getBoundingClientRect();
 
   const computedStyle = getComputedStyle(e);
 
@@ -340,8 +340,8 @@ function describeElement(e) {
     unroundedLayout: {
       width: boundingRect.width,
       height: boundingRect.height,
-      x: boundingRect.x - parentBoundingRect.x,
-      y: boundingRect.y - parentBoundingRect.y,
+      x: boundingRect.x - containingBlockElementBoundingRect.x,
+      y: boundingRect.y - containingBlockElementBoundingRect.y,
       scrollWidth: e.scrollWidth,
       scrollHeight: e.scrollHeight,
       clientWidth: e.clientWidth,
@@ -367,8 +367,8 @@ function describeElement(e) {
     smartRoundedLayout: {
       width: Math.round(boundingRect.right) - Math.round(boundingRect.left),
       height: Math.round(boundingRect.bottom) - Math.round(boundingRect.top),
-      x: Math.round(boundingRect.x) - Math.round(parentBoundingRect.x),
-      y: Math.round(boundingRect.y) - Math.round(parentBoundingRect.y),
+      x: Math.round(boundingRect.x) - Math.round(containingBlockElementBoundingRect.x),
+      y: Math.round(boundingRect.y) - Math.round(containingBlockElementBoundingRect.y),
       scrollWidth: e.scrollWidth,
       scrollHeight: e.scrollHeight,
       clientWidth: e.clientWidth,
