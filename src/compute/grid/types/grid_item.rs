@@ -19,6 +19,11 @@ pub(in super::super) struct GridItem {
     /// The index of the item in the children array
     pub source_order: u16,
 
+    /// The order-modified document order rank of the item among the container's grid items
+    /// (its index within the in-flow children after sorting by the `order` property). Assigned
+    /// to `Layout::order`. Set by the placement algorithm.
+    pub order: u32,
+
     /// The item's definite row-start and row-end, as resolved by the placement algorithm
     /// (in origin-zero coordinates). Set by the placement algorithm.
     pub row: Line<OriginZeroLine>,
@@ -106,6 +111,7 @@ impl GridItem {
         GridItem {
             node,
             source_order,
+            order: 0,
             row: UNPLACED,
             column: UNPLACED,
             is_compressible_replaced: style.is_compressible_replaced(),

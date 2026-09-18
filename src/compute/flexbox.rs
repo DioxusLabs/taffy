@@ -1,5 +1,6 @@
 //! Computes the [flexbox](https://css-tricks.com/snippets/css/a-guide-to-flexbox/) layout algorithm on [`TaffyTree`](crate::TaffyTree) according to the [spec](https://www.w3.org/TR/css-flexbox-1/)
 use crate::compute::common::alignment::{compute_alignment_offset, resolve_self_alignment_safety};
+use crate::compute::common::order::{apply_permutation, order_modified_permutation};
 use crate::geometry::{Line, Point, Rect, Size};
 use crate::style::{
     AlignContent, AlignContentKeyword, AlignItems, AlignItemsKeyword, AlignSelf, AvailableSpace, Contain,
@@ -28,8 +29,14 @@ struct FlexItem {
     /// The identifier for the associated node
     node: NodeId,
 
-    /// The order of the node relative to it's siblings
+    /// The order-modified document order rank of the item among the container's flex items
+    /// (its index within the items after sorting by the `order` property). Assigned to
+    /// [`Layout::order`].
     order: u32,
+    /// The index of the node within its parent's children (document order)
+    source_order: u32,
+    /// The value of the item's `order` property
+    css_order: i32,
 
     /// The base size of this item
     size: Size<Option<f32>>,
@@ -702,7 +709,8 @@ fn generate_anonymous_flex_items(
         constants.node_inner_size.with_main(constants.dir, None)
     };
 
-    tree.child_ids(node)
+    let mut flex_items: Vec<FlexItem> = tree
+        .child_ids(node)
         .enumerate()
         .map(|(index, child)| (index, child, tree.get_flexbox_child_style(child)))
         .filter(|(_, _, style)| !style.position().is_out_of_flow())
@@ -721,6 +729,8 @@ fn generate_anonymous_flex_items(
             FlexItem {
                 node: child,
                 order: index as u32,
+                source_order: index as u32,
+                css_order: child_style.order(),
                 size: child_style
                     .size()
                     .maybe_resolve(percent_resolution_size, |val, basis| tree.calc(val, basis))
@@ -786,7 +796,21 @@ fn generate_anonymous_flex_items(
                 oof_candidates: OofCandidates::NONE,
             }
         })
-        .collect()
+        .collect();
+
+    // CSS Flexbox §5.4: lay out items in order-modified document order. Skipped entirely in the
+    // common case where no item sets `order` (the items are already in the correct order).
+    // `FlexItem` is large, so a permutation of indexes is computed and then applied rather than
+    // sorting the items themselves.
+    if flex_items.iter().any(|item| item.css_order != 0) {
+        let mut permutation = order_modified_permutation(flex_items.iter().map(|item| item.css_order));
+        apply_permutation(&mut flex_items, &mut permutation);
+    }
+    for (rank, item) in flex_items.iter_mut().enumerate() {
+        item.order = rank as u32;
+    }
+
+    flex_items
 }
 
 /// Determine the available main and cross space for the flex items.
@@ -2727,13 +2751,17 @@ fn collect_oof_candidates(
     flex_lines: &mut [FlexLine],
     candidates: &mut OofCandidates,
 ) {
-    // Lines are contiguous slices of the items in document order (reversal is applied to
-    // positions, not storage), so walking the lines yields items sorted by `order`
-    let mut items = flex_lines
+    // Lines are contiguous slices of the items in order-modified document order (reversal is
+    // applied to positions, not storage). Candidates must be emitted in document order, so the
+    // items holding candidates are sorted back by `source_order` (this is a no-op unless the
+    // `order` property reordered them). This does not allocate when no item holds candidates.
+    let mut items: Vec<&mut FlexItem> = flex_lines
         .iter_mut()
         .flat_map(|line| line.items.iter_mut())
         .filter(|item| !item.oof_candidates.is_empty())
-        .peekable();
+        .collect();
+    items.sort_unstable_by_key(|item| item.source_order);
+    let mut items = items.into_iter().peekable();
 
     let dir = constants.dir;
     let container_size = constants.container_size;
@@ -2767,7 +2795,7 @@ fn collect_oof_candidates(
         // In-flow item: merge the candidates bubbled out of its subtree
         if !position.is_out_of_flow() {
             drop(child_style);
-            if let Some(item) = items.next_if(|item| item.order == order as u32) {
+            if let Some(item) = items.next_if(|item| item.source_order == order as u32) {
                 candidates.append(&mut item.oof_candidates);
             }
             continue;

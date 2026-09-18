@@ -680,6 +680,7 @@ fn generate_node(w: &mut XmlWriter, node: &Value) {
     maybe_write(w, "align-content", get_str_attr(&style["alignContent"], None));
     maybe_write(w, "justify-content", get_str_attr(&style["justifyContent"], None));
 
+    maybe_write(w, "order", get_num_attr(&style["order"], Some(0.0)));
     maybe_write(w, "flex-grow", get_num_attr(&style["flexGrow"], Some(0.0)));
     maybe_write(w, "flex-shrink", get_num_attr(&style["flexShrink"], Some(1.0)));
     maybe_write(w, "flex-basis", get_dim_attr(&style["flexBasis"], Some("auto")));

@@ -1,0 +1,25 @@
+<test name="order_mixed_positive_negative_and_equal__border_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="flex" direction="ltr" position="absolute" width="300px" height="100px">
+      <div direction="ltr" position="relative" order="1" width="30px" height="30px"/>
+      <div direction="ltr" position="relative" order="-2" width="30px" height="40px"/>
+      <div direction="ltr" position="relative" width="30px" height="50px"/>
+      <div direction="ltr" position="relative" order="-1" width="30px" height="60px"/>
+      <div direction="ltr" position="relative" order="1" width="30px" height="70px"/>
+      <div direction="ltr" position="relative" order="3" width="30px" height="80px"/>
+      <div direction="ltr" position="relative" order="-2" width="30px" height="90px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="300" height="100">
+      <node x="120" y="0" width="30" height="30"/>
+      <node x="0" y="0" width="30" height="40"/>
+      <node x="90" y="0" width="30" height="50"/>
+      <node x="60" y="0" width="30" height="60"/>
+      <node x="150" y="0" width="30" height="70"/>
+      <node x="180" y="0" width="30" height="80"/>
+      <node x="30" y="0" width="30" height="90"/>
+    </node>
+  </expectations>
+</test>

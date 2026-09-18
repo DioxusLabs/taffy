@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    Grid auto-placement in order-modified document order
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="display: grid; grid-template-columns: 40px 40px 40px; grid-template-rows: 40px 40px; width: 120px; height: 80px;">
+  <div style="order: 2;"></div>
+  <div style="order: -1;"></div>
+  <div></div>
+  <div style="order: 1;"></div>
+  <div style="order: -1;"></div>
+</div>
+
+</body>
+</html>

@@ -16952,6 +16952,66 @@ mod flex {
     }
 
     #[test]
+    fn order_absolute_child_not_reordered__border_box_ltr() {
+        crate::run_xml_test("flex", "order_absolute_child_not_reordered__border_box_ltr");
+    }
+
+    #[test]
+    fn order_absolute_child_not_reordered__content_box_ltr() {
+        crate::run_xml_test("flex", "order_absolute_child_not_reordered__content_box_ltr");
+    }
+
+    #[test]
+    fn order_absolute_child_not_reordered__border_box_rtl() {
+        crate::run_xml_test("flex", "order_absolute_child_not_reordered__border_box_rtl");
+    }
+
+    #[test]
+    fn order_absolute_child_not_reordered__content_box_rtl() {
+        crate::run_xml_test("flex", "order_absolute_child_not_reordered__content_box_rtl");
+    }
+
+    #[test]
+    fn order_mixed_positive_negative_and_equal__border_box_ltr() {
+        crate::run_xml_test("flex", "order_mixed_positive_negative_and_equal__border_box_ltr");
+    }
+
+    #[test]
+    fn order_mixed_positive_negative_and_equal__content_box_ltr() {
+        crate::run_xml_test("flex", "order_mixed_positive_negative_and_equal__content_box_ltr");
+    }
+
+    #[test]
+    fn order_mixed_positive_negative_and_equal__border_box_rtl() {
+        crate::run_xml_test("flex", "order_mixed_positive_negative_and_equal__border_box_rtl");
+    }
+
+    #[test]
+    fn order_mixed_positive_negative_and_equal__content_box_rtl() {
+        crate::run_xml_test("flex", "order_mixed_positive_negative_and_equal__content_box_rtl");
+    }
+
+    #[test]
+    fn order_wrap_column_reverse__border_box_ltr() {
+        crate::run_xml_test("flex", "order_wrap_column_reverse__border_box_ltr");
+    }
+
+    #[test]
+    fn order_wrap_column_reverse__content_box_ltr() {
+        crate::run_xml_test("flex", "order_wrap_column_reverse__content_box_ltr");
+    }
+
+    #[test]
+    fn order_wrap_column_reverse__border_box_rtl() {
+        crate::run_xml_test("flex", "order_wrap_column_reverse__border_box_rtl");
+    }
+
+    #[test]
+    fn order_wrap_column_reverse__content_box_rtl() {
+        crate::run_xml_test("flex", "order_wrap_column_reverse__content_box_rtl");
+    }
+
+    #[test]
     fn overflow_cross_axis__border_box_ltr() {
         crate::run_xml_test("flex", "overflow_cross_axis__border_box_ltr");
     }
@@ -31207,6 +31267,78 @@ mod grid {
     #[test]
     fn grid_minmax_min_content_percent_indefinite__content_box_rtl() {
         crate::run_xml_test("grid", "grid_minmax_min_content_percent_indefinite__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_order_absolute_child_not_reordered__border_box_ltr() {
+        crate::run_xml_test("grid", "grid_order_absolute_child_not_reordered__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_order_absolute_child_not_reordered__content_box_ltr() {
+        crate::run_xml_test("grid", "grid_order_absolute_child_not_reordered__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_order_absolute_child_not_reordered__border_box_rtl() {
+        crate::run_xml_test("grid", "grid_order_absolute_child_not_reordered__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_order_absolute_child_not_reordered__content_box_rtl() {
+        crate::run_xml_test("grid", "grid_order_absolute_child_not_reordered__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_order_auto_placement__border_box_ltr() {
+        crate::run_xml_test("grid", "grid_order_auto_placement__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_order_auto_placement__content_box_ltr() {
+        crate::run_xml_test("grid", "grid_order_auto_placement__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_order_auto_placement__border_box_rtl() {
+        crate::run_xml_test("grid", "grid_order_auto_placement__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_order_auto_placement__content_box_rtl() {
+        crate::run_xml_test("grid", "grid_order_auto_placement__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_order_definite_and_auto_placed__border_box_ltr() {
+        crate::run_xml_test("grid", "grid_order_definite_and_auto_placed__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_order_definite_and_auto_placed__content_box_ltr() {
+        crate::run_xml_test("grid", "grid_order_definite_and_auto_placed__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_order_definite_and_auto_placed__border_box_rtl() {
+        crate::run_xml_test("grid", "grid_order_definite_and_auto_placed__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_order_definite_and_auto_placed__content_box_rtl() {
+        crate::run_xml_test("grid", "grid_order_definite_and_auto_placed__content_box_rtl");
     }
 
     #[cfg(feature = "grid")]
