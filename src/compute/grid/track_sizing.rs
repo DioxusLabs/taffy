@@ -8,11 +8,13 @@ use crate::tree::{LayoutPartialTree, LayoutPartialTreeExt, SizingMode};
 use crate::util::sys::{f32_max, f32_min, Vec};
 use crate::util::{MaybeMath, ResolveOrZero};
 use crate::CompactLength;
-use core::cmp::Ordering;
 
 /// Takes an axis, and a list of grid items sorted firstly by whether they cross a flex track
 /// in the specified axis (items that don't cross a flex track first) and then by the number
 /// of tracks they cross in specified axis (ascending order).
+///
+/// The list holds references so that the `GridItem`s themselves stay in document order and
+/// only the (pointer-sized) references are sorted.
 struct ItemBatcher {
     /// The axis in which the ItemBatcher is operating. Used when querying properties from items.
     axis: AbstractAxis,
@@ -34,7 +36,10 @@ impl ItemBatcher {
     /// This is basically a manual version of Iterator::next which passes `items`
     /// in as a parameter on each iteration to work around borrow checker rules
     #[inline]
-    fn next<'items>(&mut self, items: &'items mut [GridItem]) -> Option<(&'items mut [GridItem], bool)> {
+    fn next<'items, 'a>(
+        &mut self,
+        items: &'items mut [&'a mut GridItem],
+    ) -> Option<(&'items mut [&'a mut GridItem], bool)> {
         if self.current_is_flex || self.index_offset >= items.len() {
             return None;
         }
@@ -48,7 +53,7 @@ impl ItemBatcher {
         } else {
             items
                 .iter()
-                .position(|item: &GridItem| {
+                .position(|item: &&mut GridItem| {
                     item.crosses_flexible_track(self.axis) || item.span(self.axis) > self.current_span
                 })
                 .unwrap_or(items.len())
@@ -154,27 +159,14 @@ where
     }
 }
 
-/// To make track sizing efficient we want to order tracks
-/// Here a placement is either a Line<i16> representing a row-start/row-end or a column-start/column-end
+/// The order in which the track sizing algorithm visits items in the given axis, packed into a
+/// single integer so that sorting compares keys rather than items: items that don't cross a
+/// flexible track first, then by the number of tracks spanned, then by start line.
 #[inline(always)]
-pub(super) fn cmp_by_cross_flex_then_span_then_start(
-    axis: AbstractAxis,
-) -> impl FnMut(&GridItem, &GridItem) -> Ordering {
-    move |item_a: &GridItem, item_b: &GridItem| -> Ordering {
-        match (item_a.crosses_flexible_track(axis), item_b.crosses_flexible_track(axis)) {
-            (false, true) => Ordering::Less,
-            (true, false) => Ordering::Greater,
-            _ => {
-                let placement_a = item_a.placement(axis);
-                let placement_b = item_b.placement(axis);
-                match placement_a.span().cmp(&placement_b.span()) {
-                    Ordering::Less => Ordering::Less,
-                    Ordering::Greater => Ordering::Greater,
-                    Ordering::Equal => placement_a.start.cmp(&placement_b.start),
-                }
-            }
-        }
-    }
+fn track_sizing_sort_key(item: &GridItem, axis: AbstractAxis) -> u64 {
+    let placement = item.placement(axis);
+    let start = (placement.start.0 as i32 - i16::MIN as i32) as u64;
+    ((item.crosses_flexible_track(axis) as u64) << 32) | ((placement.span() as u64) << 16) | start
 }
 
 /// When applying the track sizing algorithm and estimating the size in the other axis for content sizing items
@@ -467,6 +459,7 @@ fn resolve_item_baselines(
     // Sort items by track in the other axis (row) start position so that we can iterate items in groups which
     // are in the same track in the other axis (row)
     let other_axis = axis.other();
+    let mut items: Vec<&mut GridItem> = items.iter_mut().collect();
     items.sort_by_key(|item| item.placement(other_axis).start);
 
     // Iterate over grid rows
@@ -571,7 +564,9 @@ fn resolve_intrinsic_track_sizes<Tree: LayoutPartialTree>(
     // The track sizing algorithm requires us to iterate through the items in ascending order of the number of
     // tracks they span (first items that span 1 track, then items that span 2 tracks, etc).
     // To avoid having to do multiple iterations of the items, we pre-sort them into this order.
-    items.sort_by(cmp_by_cross_flex_then_span_then_start(axis));
+    let mut items: Vec<&mut GridItem> = items.iter_mut().collect();
+    items.sort_by_key(|item| track_sizing_sort_key(item, axis));
+    let items = items.as_mut_slice();
 
     // Step 2, Step 3 and Step 4
     // 2 & 3. Iterate over items that don't cross a flex track. Items should have already been sorted in ascending order
