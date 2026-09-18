@@ -240,14 +240,15 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     // Match items (children) to a definite grid position (row start/end and column start/end position)
     let mut items = Vec::with_capacity(tree.child_count(node));
     let mut cell_occupancy_matrix = CellOccupancyMatrix::with_track_counts(est_col_counts, est_row_counts);
-    let in_flow_children_iter = || {
-        tree.child_ids(node)
-            .enumerate()
-            .map(|(index, child_node)| (index, child_node, tree.get_grid_child_style(child_node)))
-            .filter(|(_, _, style)| {
-                style.box_generation_mode() != BoxGenerationMode::None && !style.position().is_out_of_flow()
-            })
-    };
+    let in_flow_children_iter = tree
+        .child_ids(node)
+        .enumerate()
+        .map(|(index, child_node)| (index, child_node, tree.get_grid_child_style(child_node)))
+        .filter(|(_, _, style)| {
+            style.box_generation_mode() != BoxGenerationMode::None && !style.position().is_out_of_flow()
+        });
+    // `items` is in document order from here on (placement only fills in each item's grid area). The track
+    // sizing and baseline passes sort references to the items rather than the items themselves.
     place_grid_items(
         &mut cell_occupancy_matrix,
         &mut items,
@@ -257,13 +258,6 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
         justify_items.unwrap_or(AlignItems::STRETCH),
         &name_resolver,
     );
-
-    // Placement pushes items pass by pass (definitely placed items first), so restore document order here.
-    // Everything downstream relies on `items` staying in document order: the track sizing and
-    // baseline passes sort references to the items rather than the items themselves.
-    if !items.windows(2).all(|pair| pair[0].source_order < pair[1].source_order) {
-        items.sort_unstable_by_key(|item| item.source_order);
-    }
 
     // Extract track counts from previous step (auto-placement can expand the number of tracks)
     let final_col_counts = *cell_occupancy_matrix.track_counts(AbsoluteAxis::Horizontal);
