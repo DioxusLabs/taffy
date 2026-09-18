@@ -293,13 +293,6 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
         &name_resolver,
     );
 
-    // Placement pushes items pass by pass (definitely placed items first), so restore document order here.
-    // Everything downstream relies on `items` staying in document order: the track sizing and
-    // baseline passes sort references to the items rather than the items themselves.
-    if !items.windows(2).all(|pair| pair[0].source_order < pair[1].source_order) {
-        items.sort_unstable_by_key(|item| item.source_order);
-    }
-
     // Extract track counts from previous step (auto-placement can expand the number of tracks)
     let final_col_counts = *cell_occupancy_matrix.track_counts(AbsoluteAxis::Horizontal);
     let final_row_counts = *cell_occupancy_matrix.track_counts(AbsoluteAxis::Vertical);
@@ -641,6 +634,27 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     // by the out-of-flow positioning pass (`compute_oof_layout`), which runs after this algorithm.
     let mut oof_candidates = OofCandidates::new();
 
+    // `items` is in placement order. The passes below that match items up with the container's
+    // children (and `DetailedGridInfo::items`) need them in document order. Rather than sorting the
+    // items themselves, a permutation of indexes is built when they are not already in order
+    // (placement order is document order when all items are auto-placed and `order` is unused).
+    // Child indexes are unique, so the permutation is a linear-time bucket fill rather than a sort.
+    let items_in_document_order: Option<Vec<u32>> =
+        if items.windows(2).all(|pair| pair[0].source_order < pair[1].source_order) {
+            None
+        } else {
+            const EMPTY: u32 = u32::MAX;
+            let mut slots: Vec<u32> = core::iter::repeat(EMPTY).take(tree.child_count(node)).collect();
+            for (position, item) in items.iter().enumerate() {
+                slots[item.source_order as usize] = position as u32;
+            }
+            slots.retain(|&position| position != EMPTY);
+            Some(slots)
+        };
+    let item_index_in_document_order = |position: usize| {
+        items_in_document_order.as_ref().map_or(position, |permutation| permutation[position] as usize)
+    };
+
     let container_alignment_styles = InBothAbsAxis { horizontal: justify_items, vertical: align_items };
 
     // Position in-flow children (stored in items vector)
@@ -689,7 +703,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     // Position hidden and absolutely positioned children, merging in the candidates bubbled out
     // of in-flow children's subtrees (visited in document order, i.e. by child index).
     // Hidden and out-of-flow children are assigned their child index as their `Layout::order`.
-    let mut in_flow_items = (0..items.len()).peekable();
+    let mut in_flow_items = (0..items.len()).map(item_index_in_document_order).peekable();
     (0..tree.child_count(node)).for_each(|index| {
         let order = index as u32;
         if let Some(item_index) = in_flow_items.next_if(|&item_index| items[item_index].source_order as usize == index)
@@ -837,7 +851,10 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
                 columns,
                 detailed_column_line_names,
             ),
-            items: items.iter().map(DetailedGridItemsInfo::from_grid_item).collect(),
+            items: (0..items.len())
+                .map(item_index_in_document_order)
+                .map(|item_index| DetailedGridItemsInfo::from_grid_item(&items[item_index]))
+                .collect(),
         },
     );
 
