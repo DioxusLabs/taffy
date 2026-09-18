@@ -240,14 +240,15 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     // Match items (children) to a definite grid position (row start/end and column start/end position)
     let mut items = Vec::with_capacity(tree.child_count(node));
     let mut cell_occupancy_matrix = CellOccupancyMatrix::with_track_counts(est_col_counts, est_row_counts);
-    let in_flow_children_iter = || {
-        tree.child_ids(node)
-            .enumerate()
-            .map(|(index, child_node)| (index, child_node, tree.get_grid_child_style(child_node)))
-            .filter(|(_, _, style)| {
-                style.box_generation_mode() != BoxGenerationMode::None && !style.position().is_out_of_flow()
-            })
-    };
+    let in_flow_children_iter = tree
+        .child_ids(node)
+        .enumerate()
+        .map(|(index, child_node)| (index, child_node, tree.get_grid_child_style(child_node)))
+        .filter(|(_, _, style)| {
+            style.box_generation_mode() != BoxGenerationMode::None && !style.position().is_out_of_flow()
+        });
+    // `items` is in document order from here on (placement only fills in each item's grid area). The track
+    // sizing and baseline passes sort references to the items rather than the items themselves.
     place_grid_items(
         &mut cell_occupancy_matrix,
         &mut items,
@@ -599,9 +600,6 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     // by the out-of-flow positioning pass (`compute_oof_layout`), which runs after this algorithm.
     let mut oof_candidates = OofCandidates::new();
 
-    // Sort items back into original order to allow them to be matched up with styles
-    items.sort_by_key(|item| item.source_order);
-
     let container_alignment_styles = InBothAbsAxis { horizontal: justify_items, vertical: align_items };
 
     // Position in-flow children (stored in items vector)
@@ -829,21 +827,18 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     let grid_container_baseline: Option<f32> = if contain.suppresses_baseline() {
         None
     } else {
-        // Sort items by row start position so that we can iterate items in groups which are in the same row
-        items.sort_by_key(|item| item.row_indexes.start);
-
         // Get the row index of the first row containing items
-        let first_row = items[0].row_indexes.start;
-
-        // Create a slice of all of the items start in this row (taking advantage of the fact that we have just sorted the array)
-        let first_row_items = &items[0..].split(|item| item.row_indexes.start != first_row).next().unwrap();
+        let first_row = items.iter().map(|item| item.row_indexes.start).min().unwrap();
 
         // Check if any items in *this row* participate in baseline alignment
         // (items with an auto block-axis margin do not participate: https://www.w3.org/TR/css-align-3/#baseline-align-self)
-        let item = first_row_items
-            .iter()
-            .find(|item| item.participates_in_baseline_alignment())
-            .unwrap_or(&first_row_items[0]);
+        let mut first_row_items = items.iter().filter(|item| item.row_indexes.start == first_row);
+        let first_item = first_row_items.next().unwrap();
+        let item = if first_item.participates_in_baseline_alignment() {
+            first_item
+        } else {
+            first_row_items.find(|item| item.participates_in_baseline_alignment()).unwrap_or(first_item)
+        };
 
         Some(item.y_position + item.baseline.unwrap_or(item.height))
     };

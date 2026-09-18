@@ -16,17 +16,14 @@ pub(in super::super) struct GridItem {
     /// The id of the node that this item represents
     pub node: NodeId,
 
-    /// The order of the item in the children array
-    ///
-    /// We sort the list of grid items during track sizing. This field allows us to sort back the original order
-    /// for final positioning
+    /// The index of the item in the children array
     pub source_order: u16,
 
     /// The item's definite row-start and row-end, as resolved by the placement algorithm
-    /// (in origin-zero coordinates)
+    /// (in origin-zero coordinates). Set by the placement algorithm.
     pub row: Line<OriginZeroLine>,
     /// The items definite column-start and column-end, as resolved by the placement algorithm
-    /// (in origin-zero coordinates)
+    /// (in origin-zero coordinates). Set by the placement algorithm.
     pub column: Line<OriginZeroLine>,
 
     /// Is it a compressible replaced element?
@@ -97,21 +94,20 @@ pub(in super::super) struct GridItem {
 }
 
 impl GridItem {
-    /// Create a new item given a concrete placement in both axes
-    pub fn new_with_placement_style_and_order<S: GridItemStyle>(
+    /// Create a new item from its style. Its placement (`row`/`column`) is filled in by the placement algorithm.
+    pub fn new_with_style_and_order<S: GridItemStyle>(
         node: NodeId,
-        col_span: Line<OriginZeroLine>,
-        row_span: Line<OriginZeroLine>,
         style: S,
         parent_align_items: AlignItems,
         parent_justify_items: AlignItems,
         source_order: u16,
     ) -> Self {
+        const UNPLACED: Line<OriginZeroLine> = Line { start: OriginZeroLine(0), end: OriginZeroLine(0) };
         GridItem {
             node,
             source_order,
-            row: row_span,
-            column: col_span,
+            row: UNPLACED,
+            column: UNPLACED,
             is_compressible_replaced: style.is_compressible_replaced(),
             overflow: style.overflow(),
             box_sizing: style.box_sizing(),
