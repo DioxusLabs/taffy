@@ -69,7 +69,7 @@ mod caching {
                     display: Display::Grid,
                     // The `auto` column is required to trigger intrinsic (width) sizing of the
                     // items before the row-sizing (height) pass.
-                    grid_template_columns: vec![percent(0.6), auto()],
+                    grid_template_columns: thin_vec![percent(0.6), auto()],
                     size: Size { width: length(1000.0), height: auto() },
                     ..Default::default()
                 },
@@ -107,8 +107,8 @@ mod caching {
                 Style {
                     display: Display::Grid,
                     size: Size { width: length(400.0), height: length(50.0) },
-                    grid_template_columns: vec![length(100.0), minmax(length(0.0), fr(1.0))],
-                    grid_template_rows: vec![length(50.0)],
+                    grid_template_columns: thin_vec![length(100.0), minmax(length(0.0), fr(1.0))],
+                    grid_template_rows: thin_vec![length(50.0)],
                     ..Default::default()
                 },
                 &[leaf],

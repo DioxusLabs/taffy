@@ -30,14 +30,14 @@ mod std {
     /// A map
     pub(crate) type Map<K, V> = std::collections::HashMap<K, V, std::collections::hash_map::RandomState>;
     /// An allocation-backend agnostic vector type
-    pub(crate) type Vec<A> = std::vec::Vec<A>;
+    pub(crate) type Vec<A> = thin_vec::ThinVec<A>;
     /// An allocation-backend agnostic boxed pointer type
     pub(crate) type Box<A> = std::boxed::Box<A>;
     /// A vector of child nodes
-    pub(crate) type ChildrenVec<A> = std::vec::Vec<A>;
+    pub(crate) type ChildrenVec<A> = thin_vec::ThinVec<A>;
     #[cfg(feature = "grid")]
     /// A vector of grid tracks
-    pub(crate) type GridTrackVec<A> = std::vec::Vec<A>;
+    pub(crate) type GridTrackVec<A> = thin_vec::ThinVec<A>;
 
     /// Creates a new vector with the capacity for the specified number of items before it must be resized
     #[must_use]
@@ -117,14 +117,14 @@ mod alloc {
     // TODO: consider using hashbrown
     pub(crate) type Map<K, V> = alloc::collections::BTreeMap<K, V>;
     /// An allocation-backend agnostic vector type
-    pub(crate) type Vec<A> = alloc::vec::Vec<A>;
+    pub(crate) type Vec<A> = thin_vec::ThinVec<A>;
     /// An allocation-backend agnostic boxed pointer type
     pub(crate) type Box<A> = alloc::boxed::Box<A>;
     /// A vector of child nodes
-    pub(crate) type ChildrenVec<A> = alloc::vec::Vec<A>;
+    pub(crate) type ChildrenVec<A> = thin_vec::ThinVec<A>;
     #[cfg(feature = "grid")]
     /// A vector of grid tracks
-    pub(crate) type GridTrackVec<A> = alloc::vec::Vec<A>;
+    pub(crate) type GridTrackVec<A> = thin_vec::ThinVec<A>;
 
     /// Creates a new vector with the capacity for the specified number of items before it must be resized
     #[must_use]
