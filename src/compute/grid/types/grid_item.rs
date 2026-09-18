@@ -18,8 +18,7 @@ pub(in super::super) struct GridItem {
 
     /// The order of the item in the children array
     ///
-    /// We sort the list of grid items during track sizing. This field allows us to sort back the original order
-    /// for final positioning
+    /// Placement records items pass by pass; this field is used to restore document order afterwards
     pub source_order: u16,
 
     /// The order-modified document order rank of the item among the container's grid items
