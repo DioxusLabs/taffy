@@ -33,6 +33,8 @@
 
 - `compute_oof_layout_for_area` and `OofLayoutResult` allow integrations to lay out out-of-flow candidates against an explicit positioning area without immediately mutating a layout node's hoisted-child list. This supports containing blocks represented outside Taffy's layout tree.
 
+- New `LayoutScratch` type and defaulted `LayoutPartialTree::layout_scratch()` method. The flexbox, block and grid algorithms each need several temporary vectors (items, flex lines, grid tracks, etc.) for the duration of a single call; when `layout_scratch()` returns `Some`, the algorithms take these buffers from the `LayoutScratch` and return them (cleared, allocation retained) when done, so that a layout run performs a handful of allocations in total rather than several per container node. `TaffyTree` holds a `LayoutScratch` internally. Custom tree implementations can opt in by storing a `LayoutScratch` and returning it from `layout_scratch()`; the default implementation returns `None`, preserving the previous allocate-per-call behaviour.
+
 ### Changed
 
 - Grid: intrinsic track sizing no longer measures an item's min-/max-content contribution in a step where none of the item's spanned tracks can receive that contribution (e.g. items spanning only `minmax(0, 1fr)` or fixed tracks). This matches Blink and avoids redundant, sometimes very expensive, measurement of large subtrees under a min-content constraint.
