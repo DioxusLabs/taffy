@@ -8,7 +8,7 @@ use crate::tree::{
     LayoutPartialTreeExt, NodeId, OofCandidate, OofCandidates, OofPositioningArea, RunMode, SizingMode,
 };
 use crate::util::debug::debug_log;
-use crate::util::sys::{f32_max, f32_min, GridTrackVec, Vec};
+use crate::util::sys::{f32_max, f32_min, Vec};
 use crate::util::MaybeMath;
 use crate::util::{MaybeResolve, ResolveOrZero};
 use crate::{
@@ -24,9 +24,27 @@ use track_sizing::{
 };
 use types::{CellOccupancyMatrix, GridTrack, NamedLineResolver};
 
+use super::scratch::{self, Pool};
 use crate::sys::{DefaultCheapStr, String};
 use crate::{CheapCloneStr, GridPlacement};
-use types::{GridItem, GridTrackKind, TrackCounts};
+use placement::ItemPlacement;
+use types::{GridItem, GridTrackKind, TrackCounts, TrackIntervals};
+
+/// Scratch buffers reused across calls to the grid algorithm. See [`LayoutScratch`](super::LayoutScratch).
+#[derive(Default)]
+pub(crate) struct GridScratch {
+    /// The list of grid items
+    items: Pool<GridItem>,
+    /// The lists of grid tracks (one is taken for each axis)
+    tracks: Pool<GridTrack>,
+    /// Sorted references to grid items used by the track sizing algorithm
+    /// (stored with an erased lifetime, see [`Pool::take_as`])
+    item_refs: Pool<&'static mut GridItem>,
+    /// The resolved placement styles of each item used during placement
+    placements: Pool<ItemPlacement>,
+    /// The per-track occupancy lists of the [`CellOccupancyMatrix`] (one is taken for each axis)
+    intervals: Pool<TrackIntervals>,
+}
 
 pub(crate) use types::{GridCoordinate, GridLine, OriginZeroLine, MAX_GRID_TRACKS, MAX_OZ_LINE, MIN_OZ_LINE};
 
@@ -51,6 +69,50 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     node: NodeId,
     inputs: LayoutInput,
 ) -> LayoutOutput {
+    let child_count = tree.child_count(node);
+    let mut buffers = GridBuffers {
+        items: scratch::take(tree, |s| &mut s.grid.items, child_count),
+        columns: scratch::take(tree, |s| &mut s.grid.tracks, 0),
+        rows: scratch::take(tree, |s| &mut s.grid.tracks, 0),
+        row_intervals: scratch::take(tree, |s| &mut s.grid.intervals, 0),
+        column_intervals: scratch::take(tree, |s| &mut s.grid.intervals, 0),
+        placements: scratch::take(tree, |s| &mut s.grid.placements, child_count),
+    };
+    let output = compute_grid_layout_inner(tree, node, inputs, &mut buffers);
+    let GridBuffers { items, columns, rows, row_intervals, column_intervals, placements } = buffers;
+    scratch::give(tree, |s| &mut s.grid.placements, placements);
+    scratch::give(tree, |s| &mut s.grid.intervals, column_intervals);
+    scratch::give(tree, |s| &mut s.grid.intervals, row_intervals);
+    scratch::give(tree, |s| &mut s.grid.tracks, rows);
+    scratch::give(tree, |s| &mut s.grid.tracks, columns);
+    scratch::give(tree, |s| &mut s.grid.items, items);
+    output
+}
+
+/// The (initially empty) buffers used by a single run of the grid algorithm
+struct GridBuffers {
+    /// The list of grid items
+    items: Vec<GridItem>,
+    /// The column tracks (and gutters)
+    columns: Vec<GridTrack>,
+    /// The row tracks (and gutters)
+    rows: Vec<GridTrack>,
+    /// Per-row occupancy storage for the [`CellOccupancyMatrix`]
+    row_intervals: Vec<TrackIntervals>,
+    /// Per-column occupancy storage for the [`CellOccupancyMatrix`]
+    column_intervals: Vec<TrackIntervals>,
+    /// The resolved placement styles of each item
+    placements: Vec<ItemPlacement>,
+}
+
+/// Grid layout algorithm. See [`compute_grid_layout`].
+fn compute_grid_layout_inner<Tree: LayoutGridContainer>(
+    tree: &mut Tree,
+    node: NodeId,
+    inputs: LayoutInput,
+    buffers: &mut GridBuffers,
+) -> LayoutOutput {
+    let GridBuffers { items, columns, rows, row_intervals, column_intervals, placements } = buffers;
     let LayoutInput { known_dimensions, parent_size, available_space, run_mode, .. } = inputs;
 
     let style = tree.get_grid_container_style(node);
@@ -238,8 +300,12 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
 
     // 4. Grid Item Placement
     // Match items (children) to a definite grid position (row start/end and column start/end position)
-    let mut items = Vec::with_capacity(tree.child_count(node));
-    let mut cell_occupancy_matrix = CellOccupancyMatrix::with_track_counts(est_col_counts, est_row_counts);
+    let mut cell_occupancy_matrix = CellOccupancyMatrix::with_track_counts_and_buffers(
+        est_col_counts,
+        est_row_counts,
+        core::mem::take(row_intervals),
+        core::mem::take(column_intervals),
+    );
     let in_flow_children_iter = tree
         .child_ids(node)
         .enumerate()
@@ -249,9 +315,10 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
         });
     // `items` is in document order from here on (placement only fills in each item's grid area). The track
     // sizing and baseline passes sort references to the items rather than the items themselves.
-    place_grid_items(
+    *placements = place_grid_items(
         &mut cell_occupancy_matrix,
-        &mut items,
+        items,
+        core::mem::take(placements),
         in_flow_children_iter,
         style.grid_auto_flow(),
         align_items.unwrap_or(AlignItems::STRETCH),
@@ -266,10 +333,8 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     // 5. Initialize Tracks
     // Initialize (explicit and implicit) grid tracks (and gutters)
     // This resolves the min and max track sizing functions for all tracks and gutters
-    let mut columns = GridTrackVec::new();
-    let mut rows = GridTrackVec::new();
     initialize_grid_tracks(
-        &mut columns,
+        columns,
         final_col_counts,
         &style,
         AbsoluteAxis::Horizontal,
@@ -277,13 +342,14 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
         |column_index| cell_occupancy_matrix.column_is_occupied(column_index),
     );
     initialize_grid_tracks(
-        &mut rows,
+        rows,
         final_row_counts,
         &style,
         AbsoluteAxis::Vertical,
         row_auto_repetition_count,
         |row_index| cell_occupancy_matrix.row_is_occupied(row_index),
     );
+    (*row_intervals, *column_intervals) = cell_occupancy_matrix.into_intervals();
 
     drop(grid_template_rows);
     drop(grid_template_columns);
@@ -296,10 +362,10 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     // Convert grid placements in origin-zero coordinates to indexes into the GridTrack (rows and columns) vectors
     // This computation is relatively trivial, but it requires the final number of negative (implicit) tracks in
     // each axis, and doing it up-front here means we don't have to keep repeating that calculation
-    resolve_item_track_indexes(&mut items, final_col_counts, final_row_counts);
+    resolve_item_track_indexes(items, final_col_counts, final_row_counts);
     // For each item, and in each axis, determine whether the item crosses any flexible (fr) tracks
     // Record this as a boolean (per-axis) on each item for later use in the track-sizing algorithm
-    determine_if_item_crosses_flexible_or_intrinsic_tracks(&mut items, &columns, &rows);
+    determine_if_item_crosses_flexible_or_intrinsic_tracks(items, columns, rows);
 
     // Determine if the grid has any baseline aligned items
     let has_baseline_aligned_item = items.iter().any(|item| item.participates_in_baseline_alignment());
@@ -314,9 +380,9 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
         align_content,
         available_grid_space,
         inner_node_size,
-        &mut columns,
-        &mut rows,
-        &mut items,
+        columns,
+        rows,
+        items,
         |track: &GridTrack, parent_size: Option<f32>, tree: &Tree| {
             track.max_track_sizing_function.definite_value(parent_size, |val, basis| tree.calc(val, basis))
         },
@@ -337,9 +403,9 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
         justify_content,
         available_grid_space,
         inner_node_size,
-        &mut rows,
-        &mut columns,
-        &mut items,
+        rows,
+        columns,
+        items,
         |track: &GridTrack, _, _| Some(track.base_size),
         false, // TODO: Support baseline alignment in the vertical axis
     );
@@ -379,7 +445,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     // In the case of an indefinitely sized container these resolve to zero during the "Initialise Tracks" step
     // and therefore need to be re-resolved here based on the content-sized content box of the container
     if !available_grid_space.width.is_definite() {
-        for column in &mut columns {
+        for column in columns.iter_mut() {
             let min: Option<f32> = column
                 .min_track_sizing_function
                 .resolved_percentage_size(container_content_box.width, |val, basis| tree.calc(val, basis));
@@ -390,7 +456,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
         }
     }
     if !available_grid_space.height.is_definite() {
-        for row in &mut rows {
+        for row in rows.iter_mut() {
             let min: Option<f32> = row
                 .min_track_sizing_function
                 .resolved_percentage_size(container_content_box.height, |val, basis| tree.calc(val, basis));
@@ -418,8 +484,8 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
             items.iter_mut().filter(|item| item.crosses_intrinsic_column).any(|item| {
                 let grid_area_size = item.grid_area_size(
                     AbstractAxis::Inline,
-                    &columns,
-                    &rows,
+                    columns,
+                    rows,
                     inner_node_size,
                     |track: &GridTrack, _| Some(track.base_size),
                     &|val, basis| tree.calc(val, basis),
@@ -461,9 +527,9 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
             align_content,
             available_grid_space,
             inner_node_size,
-            &mut columns,
-            &mut rows,
-            &mut items,
+            columns,
+            rows,
+            items,
             |track: &GridTrack, _, _| Some(track.base_size),
             has_baseline_aligned_item,
         );
@@ -482,8 +548,8 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
                 items.iter_mut().filter(|item| item.crosses_intrinsic_column).any(|item| {
                     let grid_area_size = item.grid_area_size(
                         AbstractAxis::Block,
-                        &rows,
-                        &columns,
+                        rows,
+                        columns,
                         inner_node_size,
                         |track: &GridTrack, _| Some(track.base_size),
                         &|val, basis| tree.calc(val, basis),
@@ -523,9 +589,9 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
                 justify_content,
                 available_grid_space,
                 inner_node_size,
-                &mut rows,
-                &mut columns,
-                &mut items,
+                rows,
+                columns,
+                items,
                 |track: &GridTrack, _, _| Some(track.base_size),
                 false, // TODO: Support baseline alignment in the vertical axis
             );
@@ -576,7 +642,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
             end: padding.right + if direction.is_rtl() { 0.0 } else { inline_scrollbar_gutter_for_alignment },
         },
         Line { start: border.left, end: border.right },
-        &mut columns,
+        columns,
         justify_content,
         direction.is_rtl(),
     );
@@ -585,7 +651,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
         container_content_box.get(AbstractAxis::Block),
         Line { start: padding.top, end: padding.bottom },
         Line { start: border.top, end: border.bottom },
-        &mut rows,
+        rows,
         align_content,
         false,
     );
@@ -705,8 +771,8 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
                     &name_resolver,
                     final_row_counts,
                     final_col_counts,
-                    &rows,
-                    &columns,
+                    rows,
+                    columns,
                     direction,
                     border,
                     scrollbar_gutter,
@@ -1152,10 +1218,10 @@ impl<S: CheapCloneStr> DetailedGridTracksInfo<S> {
     /// Construct DetailedGridTracksInfo from TrackCounts and GridTracks
     fn from_grid_tracks_and_track_count(
         track_count: TrackCounts,
-        grid_tracks: Vec<GridTrack>,
+        grid_tracks: &[GridTrack],
         line_names: GridLineNames<S>,
     ) -> Self {
-        let positions = DetailedGridTracksInfo::<S>::positions_from_grid_track_layout(&grid_tracks);
+        let positions = DetailedGridTracksInfo::<S>::positions_from_grid_track_layout(grid_tracks);
         // An axis with no tracks consists of a single gutter whose offset is where the axis'
         // single grid line was positioned by content alignment
         let empty_axis_line = if positions.is_empty() { grid_tracks.first().map(|track| track.offset) } else { None };
