@@ -202,7 +202,7 @@ impl CellOccupancyMatrix {
 
     /// Like [`CellOccupancyMatrix::with_track_counts`], but storing the per-track state in the passed (empty)
     /// vectors. The vectors can be recovered with [`CellOccupancyMatrix::into_intervals`] for reuse.
-    pub fn with_track_counts_and_buffers(
+    pub(in super::super) fn with_track_counts_and_buffers(
         columns: TrackCounts,
         rows: TrackCounts,
         mut row_intervals: Vec<TrackIntervals>,
@@ -216,7 +216,7 @@ impl CellOccupancyMatrix {
     }
 
     /// Consume the matrix, returning its `(row_intervals, column_intervals)` storage
-    pub fn into_intervals(self) -> (Vec<TrackIntervals>, Vec<TrackIntervals>) {
+    pub(in super::super) fn into_intervals(self) -> (Vec<TrackIntervals>, Vec<TrackIntervals>) {
         (self.row_intervals, self.column_intervals)
     }
 
