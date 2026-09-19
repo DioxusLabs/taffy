@@ -87,6 +87,9 @@
 //!
 //!     /// Compute the specified node's size or full layout given the specified constraints
 //!     fn compute_child_layout(&mut self, node_id: NodeId, inputs: LayoutInput) -> LayoutOutput;
+//!
+//!     /// (Optional) Scratch buffers that the layout algorithms reuse across calls
+//!     fn layout_scratch(&mut self) -> Option<&mut LayoutScratch> { None }
 //! }
 //! ```
 //!
@@ -127,6 +130,7 @@
 //! ```
 //!
 use super::{DetailedLayoutInfo, Layout, LayoutInput, LayoutOutput, NodeId, RequestedAxis, RunMode, SizingMode};
+use crate::compute::LayoutScratch;
 use crate::debug::debug_log;
 use crate::geometry::{AbsoluteAxis, Line, Size};
 use crate::style::{AvailableSpace, CoreStyle, OofItemStyle};
@@ -197,6 +201,21 @@ pub trait LayoutPartialTree: TraversePartialTree {
 
     /// Compute the specified node's size or full layout given the specified constraints
     fn compute_child_layout(&mut self, node_id: NodeId, inputs: LayoutInput) -> LayoutOutput;
+
+    /// Scratch buffers which the layout algorithms reuse across calls
+    ///
+    /// Each layout algorithm needs several temporary vectors for the duration of a single call. When this
+    /// method returns `Some`, the algorithms take those vectors from the returned [`LayoutScratch`] and
+    /// return them to it when done, so that the allocations are reused for subsequent nodes rather than
+    /// being made afresh for every node in the tree.
+    ///
+    /// Implementing this method is optional (the default implementation returns `None`, in which case
+    /// the algorithms allocate as needed). To implement it, store a [`LayoutScratch`] alongside your tree
+    /// and return a mutable reference to it.
+    #[inline(always)]
+    fn layout_scratch(&mut self) -> Option<&mut LayoutScratch> {
+        None
+    }
 }
 
 /// Extends [`LayoutPartialTree`] with the operations needed by the out-of-flow positioning pass

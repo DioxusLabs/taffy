@@ -3,7 +3,7 @@ use super::TrackCounts;
 use crate::compute::grid::OriginZeroLine;
 use crate::geometry::AbsoluteAxis;
 use crate::geometry::Line;
-use crate::util::sys::{new_vec_with_capacity, Vec};
+use crate::util::sys::Vec;
 use core::cmp::{max, min};
 use core::fmt::Debug;
 use core::ops::Range;
@@ -42,7 +42,7 @@ impl OccupiedInterval {
 /// OriginZero line coordinates. Gaps between intervals are unoccupied. Touching intervals
 /// with the same state are merged.
 #[derive(Debug, Clone, Default)]
-struct TrackIntervals {
+pub(in super::super) struct TrackIntervals {
     /// The sorted, disjoint list of occupied intervals within the track
     intervals: SmallVec<[OccupiedInterval; 2]>,
 }
@@ -195,12 +195,29 @@ impl Debug for CellOccupancyMatrix {
 impl CellOccupancyMatrix {
     /// Create a CellOccupancyMatrix given a set of provisional track counts. The grid can expand as needed to fit more tracks,
     /// the provisional track counts represent a best effort attempt to avoid the extra allocations this requires.
+    #[cfg(test)]
     pub fn with_track_counts(columns: TrackCounts, rows: TrackCounts) -> Self {
-        let mut row_intervals = new_vec_with_capacity(rows.len());
+        Self::with_track_counts_and_buffers(columns, rows, Vec::new(), Vec::new())
+    }
+
+    /// Like [`CellOccupancyMatrix::with_track_counts`], but storing the per-track state in the passed (empty)
+    /// vectors. The vectors can be recovered with [`CellOccupancyMatrix::into_intervals`] for reuse.
+    pub fn with_track_counts_and_buffers(
+        columns: TrackCounts,
+        rows: TrackCounts,
+        mut row_intervals: Vec<TrackIntervals>,
+        mut column_intervals: Vec<TrackIntervals>,
+    ) -> Self {
+        row_intervals.clear();
         row_intervals.resize(rows.len(), TrackIntervals::default());
-        let mut column_intervals = new_vec_with_capacity(columns.len());
+        column_intervals.clear();
         column_intervals.resize(columns.len(), TrackIntervals::default());
         Self { rows, columns, row_intervals, column_intervals }
+    }
+
+    /// Consume the matrix, returning its `(row_intervals, column_intervals)` storage
+    pub fn into_intervals(self) -> (Vec<TrackIntervals>, Vec<TrackIntervals>) {
+        (self.row_intervals, self.column_intervals)
     }
 
     /// The per-track interval lists for tracks in the specified axis. Each row track's intervals

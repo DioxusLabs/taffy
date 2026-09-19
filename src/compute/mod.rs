@@ -37,8 +37,11 @@ pub(crate) mod flexbox;
 #[cfg(feature = "grid")]
 pub(crate) mod grid;
 
+pub(crate) mod scratch;
+
 pub use leaf::compute_leaf_layout;
 pub use oof::{compute_oof_layout, compute_oof_layout_for_area, resolve_static_offset, OofLayoutResult};
+pub use scratch::LayoutScratch;
 
 #[cfg(feature = "block_layout")]
 pub use self::block::{compute_block_layout, BlockContext, BlockFormattingContext};

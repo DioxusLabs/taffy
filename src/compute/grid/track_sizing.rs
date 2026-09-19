@@ -1,5 +1,6 @@
 //! Implements the track sizing algorithm
 //! <https://www.w3.org/TR/css-grid-1/#layout-algorithm>
+use super::super::scratch;
 use super::types::{GridItem, GridTrack, TrackCounts};
 use crate::geometry::{AbstractAxis, Line, Size};
 use crate::style::{AlignContent, AlignContentKeyword, AvailableSpace};
@@ -459,11 +460,12 @@ fn resolve_item_baselines(
     // Sort items by track in the other axis (row) start position so that we can iterate items in groups which
     // are in the same track in the other axis (row)
     let other_axis = axis.other();
-    let mut items: Vec<&mut GridItem> = items.iter_mut().collect();
-    items.sort_by_key(|item| item.placement(other_axis).start);
+    let mut sorted_items: Vec<&mut GridItem> = scratch::take_as(tree, |s| &mut s.grid.item_refs);
+    sorted_items.extend(items.iter_mut());
+    sorted_items.sort_by_key(|item| item.placement(other_axis).start);
 
     // Iterate over grid rows
-    let mut remaining_items = &mut items[0..];
+    let mut remaining_items = &mut sorted_items[0..];
     while !remaining_items.is_empty() {
         // Get the row index of the current row
         let current_row = remaining_items[0].placement(other_axis).start;
@@ -541,6 +543,8 @@ fn resolve_item_baselines(
             }
         }
     }
+
+    scratch::give_as(tree, |s| &mut s.grid.item_refs, sorted_items);
 }
 
 /// 11.5 Resolve Intrinsic Track Sizes
@@ -564,9 +568,10 @@ fn resolve_intrinsic_track_sizes<Tree: LayoutPartialTree>(
     // The track sizing algorithm requires us to iterate through the items in ascending order of the number of
     // tracks they span (first items that span 1 track, then items that span 2 tracks, etc).
     // To avoid having to do multiple iterations of the items, we pre-sort them into this order.
-    let mut items: Vec<&mut GridItem> = items.iter_mut().collect();
-    items.sort_by_key(|item| track_sizing_sort_key(item, axis));
-    let items = items.as_mut_slice();
+    let mut sorted_items: Vec<&mut GridItem> = scratch::take_as(tree, |s| &mut s.grid.item_refs);
+    sorted_items.extend(items.iter_mut());
+    sorted_items.sort_by_key(|item| track_sizing_sort_key(item, axis));
+    let items = sorted_items.as_mut_slice();
 
     // Step 2, Step 3 and Step 4
     // 2 & 3. Iterate over items that don't cross a flex track. Items should have already been sorted in ascending order
@@ -1012,6 +1017,8 @@ fn resolve_intrinsic_track_sizes<Tree: LayoutPartialTree>(
         .iter_mut()
         .filter(|track| track.growth_limit == f32::INFINITY)
         .for_each(|track| track.growth_limit = track.base_size);
+
+    scratch::give_as(tree, |s| &mut s.grid.item_refs, sorted_items);
 }
 
 /// The sum of the flex factors of the flexible tracks in an item's spanned track range
