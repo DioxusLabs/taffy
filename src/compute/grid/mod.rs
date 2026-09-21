@@ -26,7 +26,7 @@ use types::{CellOccupancyMatrix, GridItem, GridTrack, NamedLineResolver};
 
 use crate::sys::{DefaultCheapStr, String};
 use crate::{CheapCloneStr, GridPlacement};
-use types::{GridItem, GridTrackKind, TrackCounts};
+use types::{GridTrackKind, TrackCounts};
 
 pub(crate) use types::{GridCoordinate, GridLine, OriginZeroLine, MAX_GRID_TRACKS, MAX_OZ_LINE, MIN_OZ_LINE};
 
