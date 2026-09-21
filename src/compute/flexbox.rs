@@ -7,6 +7,7 @@ use crate::style::{
 };
 use crate::style::{CoreStyle, FlexDirection, FlexboxContainerStyle, FlexboxItemStyle};
 use crate::style_helpers::{TaffyMaxContent, TaffyMinContent};
+use crate::tree::ScrollableOverflowRect;
 use crate::tree::{
     AxisStaticAlign, AxisStaticEdge, AxisStaticPosition, LayoutFlexboxContainer, LayoutPartialTreeExt, NodeId,
     OofPositioningArea,
@@ -20,7 +21,9 @@ use crate::{BoxGenerationMode, BoxSizing, Dimension, Direction, RequestedAxis};
 
 use super::common::alignment::apply_alignment_fallback;
 #[cfg(feature = "content_size")]
-use super::common::scrollable_overflow::compute_scrollable_overflow_contribution;
+use super::common::scrollable_overflow::{
+    compute_scrollable_overflow_contribution, finalize_scroll_container_overflow, ScrollOrigin,
+};
 use super::common::sizing_keyword::{resolve_sizing_keyword, SizingKeywordResolution};
 
 /// The intermediate results of a flexbox calculation for a single item
@@ -229,6 +232,59 @@ impl AlgoConstants {
             }
         }
         cross_available_space
+    }
+
+    /// The offset of the container's scrollport (padding box less any scrollbar gutter, which is
+    /// on the inline-start side in RTL) from its border box
+    #[cfg(feature = "content_size")]
+    #[inline]
+    fn scrollport_offset(&self) -> Point<f32> {
+        Point {
+            x: self.border.left + if self.layout_direction.is_rtl() { self.scrollbar_gutter.x } else { 0.0 },
+            y: self.border.top,
+        }
+    }
+
+    /// The container's padding
+    #[cfg(feature = "content_size")]
+    #[inline]
+    fn padding(&self) -> Rect<f32> {
+        let is_rtl = self.layout_direction.is_rtl();
+        let inset = self.content_box_inset;
+        Rect {
+            left: inset.left - self.border.left - if is_rtl { self.scrollbar_gutter.x } else { 0.0 },
+            right: inset.right - self.border.right - if is_rtl { 0.0 } else { self.scrollbar_gutter.x },
+            top: inset.top - self.border.top,
+            bottom: inset.bottom - self.border.bottom - self.scrollbar_gutter.y,
+        }
+    }
+
+    /// Whether the container's scroll origin (its main-start/cross-start corner) is at the end
+    /// (right/bottom) edge in each axis. This is the case when the axis is reversed
+    /// (`row-reverse`/`column-reverse` for the main axis, `wrap-reverse` for the cross axis),
+    /// flipped again for the inline axis of an RTL container.
+    #[inline]
+    fn scroll_origin_at_end(&self) -> Point<bool> {
+        let main_at_end = self.dir.is_reverse();
+        let cross_at_end = self.is_wrap_reverse;
+        let (mut x_at_end, y_at_end) =
+            if self.is_row { (main_at_end, cross_at_end) } else { (cross_at_end, main_at_end) };
+        x_at_end ^= self.layout_direction.is_rtl();
+        Point { x: x_at_end, y: y_at_end }
+    }
+
+    /// The container's scroll origin, if it is a scroll container
+    #[cfg(feature = "content_size")]
+    #[inline]
+    fn scroll_origin(&self) -> Option<ScrollOrigin> {
+        if !self.is_scroll_container {
+            return None;
+        }
+        let scrollbar_gutter = Size { width: self.scrollbar_gutter.x, height: self.scrollbar_gutter.y };
+        Some(ScrollOrigin::new(
+            self.container_size - self.border.sum_axes() - scrollbar_gutter,
+            self.scroll_origin_at_end(),
+        ))
     }
 }
 
@@ -543,12 +599,15 @@ fn compute_preliminary(tree: &mut impl LayoutFlexboxContainer, node: NodeId, inp
 
     let mut output = LayoutOutput::from_sizes_and_baselines(
         constants.container_size,
-        inflow_overflow_rect,
+        ScrollableOverflowRect::new(inflow_overflow_rect),
         Baselines::from_first(first_vertical_baseline),
     );
     output.oof_candidates = candidates;
-    output.oof_positioning_area =
-        Some(OofPositioningArea { size: absolute_position_area, offset: absolute_position_offset });
+    output.oof_positioning_area = Some(OofPositioningArea {
+        size: absolute_position_area,
+        offset: absolute_position_offset,
+        scroll_origin_at_end: constants.scroll_origin_at_end(),
+    });
     output
 }
 
@@ -2468,7 +2527,6 @@ fn calculate_flex_item(
     total_offset_cross: f32,
     line_offset_cross: f32,
     #[cfg(feature = "content_size")] total_overflow_rect: &mut Rect<f32>,
-    #[cfg(feature = "content_size")] border: Rect<f32>,
     constants: &AlgoConstants,
 ) {
     let container_size = constants.container_size;
@@ -2575,18 +2633,15 @@ fn calculate_flex_item(
 
     #[cfg(feature = "content_size")]
     {
-        let contribution_location = if layout_direction.is_rtl() {
-            Point { x: container_size.width - (location.x + size.width) - border.right, y: location.y - border.top }
-        } else {
-            Point { x: location.x - border.left, y: location.y - border.top }
-        };
+        let scrollport_offset = constants.scrollport_offset();
+        let contribution_location = Point { x: location.x - scrollport_offset.x, y: location.y - scrollport_offset.y };
         *total_overflow_rect = total_overflow_rect.union(compute_scrollable_overflow_contribution(
             contribution_location,
             size,
             scrollable_overflow_rect,
             item.overflow,
             item.contain,
-            constants.is_scroll_container,
+            constants.scroll_origin(),
         ));
     }
 }
@@ -2598,7 +2653,6 @@ fn calculate_layout_line(
     line: &mut FlexLine,
     total_offset_cross: &mut f32,
     #[cfg(feature = "content_size")] overflow_rect: &mut Rect<f32>,
-    #[cfg(feature = "content_size")] border: Rect<f32>,
     constants: &AlgoConstants,
 ) {
     let container_size = constants.container_size;
@@ -2627,8 +2681,6 @@ fn calculate_layout_line(
                 line_offset_cross,
                 #[cfg(feature = "content_size")]
                 overflow_rect,
-                #[cfg(feature = "content_size")]
-                border,
                 constants,
             );
         }
@@ -2642,8 +2694,6 @@ fn calculate_layout_line(
                 line_offset_cross,
                 #[cfg(feature = "content_size")]
                 overflow_rect,
-                #[cfg(feature = "content_size")]
-                border,
                 constants,
             );
         }
@@ -2667,8 +2717,10 @@ fn final_layout_pass(
         constants.content_box_inset.cross_start(constants.dir)
     };
 
-    #[cfg_attr(not(feature = "content_size"), allow(unused_mut))]
-    let mut overflow_rect = Rect::ZERO;
+    #[cfg(feature = "content_size")]
+    let mut overflow_rect = ScrollOrigin::initial_rect(constants.scroll_origin());
+    #[cfg(not(feature = "content_size"))]
+    let overflow_rect = Rect::ZERO;
 
     if constants.is_wrap_reverse {
         for line in flex_lines.iter_mut().rev() {
@@ -2678,8 +2730,6 @@ fn final_layout_pass(
                 &mut total_offset_cross,
                 #[cfg(feature = "content_size")]
                 &mut overflow_rect,
-                #[cfg(feature = "content_size")]
-                constants.border,
                 constants,
             );
         }
@@ -2691,25 +2741,14 @@ fn final_layout_pass(
                 &mut total_offset_cross,
                 #[cfg(feature = "content_size")]
                 &mut overflow_rect,
-                #[cfg(feature = "content_size")]
-                constants.border,
                 constants,
             );
         }
     }
 
-    // A scroll container's own padding at the end of the content is part of its scrollable
-    // overflow region, so it is included in the overflow rect. Boxes that are not scroll
-    // containers do not extend their overflow region by their own padding.
     #[cfg(feature = "content_size")]
-    if constants.is_scroll_container {
-        overflow_rect.right += if constants.layout_direction.is_rtl() {
-            constants.content_box_inset.left - constants.border.left - constants.scrollbar_gutter.x
-        } else {
-            constants.content_box_inset.right - constants.border.right - constants.scrollbar_gutter.x
-        };
-        overflow_rect.bottom +=
-            constants.content_box_inset.bottom - constants.border.bottom - constants.scrollbar_gutter.y;
+    if let Some(origin) = constants.scroll_origin() {
+        finalize_scroll_container_overflow(&mut overflow_rect, constants.padding(), origin);
     }
 
     overflow_rect

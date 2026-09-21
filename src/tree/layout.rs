@@ -3,7 +3,7 @@ use crate::geometry::{AbsoluteAxis, Line, Point, Rect, Size};
 use crate::style::{AlignmentSafety, AvailableSpace, CheapCloneStr, Position};
 use crate::style_helpers::TaffyMaxContent;
 use crate::sys::DefaultCheapStr;
-use crate::tree::NodeId;
+use crate::tree::{NodeId, ScrollableOverflowRect};
 use crate::util::sys::{f32_max, f32_min};
 
 /// Whether we are performing a full layout, or we merely need to size the node
@@ -384,6 +384,10 @@ pub struct OofPositioningArea {
     pub size: Size<f32>,
     /// The offset of the area from the container's border box origin
     pub offset: Point<f32>,
+    /// Whether the container's scroll origin (the block-start/inline-start corner of its content:
+    /// the main-start/cross-start corner for a flex container) is at the end (right/bottom) edge of
+    /// the area in each axis. Only meaningful when the container is a scroll container.
+    pub scroll_origin_at_end: Point<bool>,
 }
 
 /// A struct containing the result of laying a single node, which is returned up to the parent node
@@ -399,8 +403,8 @@ pub struct LayoutOutput {
     pub size: Size<f32>,
     #[cfg(feature = "content_size")]
     /// The scrollable overflow rectangle of the node's content
-    /// (see [`Layout::scrollable_overflow_rect`] for the coordinate conventions)
-    pub scrollable_overflow_rect: Rect<f32>,
+    /// (see [`ScrollableOverflowRect`] for the coordinate conventions)
+    pub scrollable_overflow_rect: ScrollableOverflowRect,
     /// The first and last baselines of the node in the horizontal axis, if any
     pub baselines: Baselines,
     /// Top margin that can be collapsed with. This is used for CSS block layout and can be set to
@@ -436,7 +440,7 @@ impl LayoutOutput {
     pub const HIDDEN: Self = Self {
         size: Size::ZERO,
         #[cfg(feature = "content_size")]
-        scrollable_overflow_rect: Rect::ZERO,
+        scrollable_overflow_rect: ScrollableOverflowRect::ZERO,
         baselines: Baselines::NONE,
         top_margin: CollapsibleMarginSet::ZERO,
         bottom_margin: CollapsibleMarginSet::ZERO,
@@ -451,7 +455,8 @@ impl LayoutOutput {
     /// Constructor to create a `LayoutOutput` from just the size, scrollable overflow rectangle and baselines
     pub fn from_sizes_and_baselines(
         size: Size<f32>,
-        #[cfg_attr(not(feature = "content_size"), allow(unused_variables))] scrollable_overflow_rect: Rect<f32>,
+        #[cfg_attr(not(feature = "content_size"), allow(unused_variables))]
+        scrollable_overflow_rect: ScrollableOverflowRect,
         baselines: Baselines,
     ) -> Self {
         Self {
@@ -468,13 +473,13 @@ impl LayoutOutput {
     }
 
     /// Construct a `LayoutOutput` from just the container size and scrollable overflow rectangle
-    pub fn from_sizes(size: Size<f32>, scrollable_overflow_rect: Rect<f32>) -> Self {
+    pub fn from_sizes(size: Size<f32>, scrollable_overflow_rect: ScrollableOverflowRect) -> Self {
         Self::from_sizes_and_baselines(size, scrollable_overflow_rect, Baselines::NONE)
     }
 
     /// Construct a `LayoutOutput` from just the container's size.
     pub fn from_outer_size(size: Size<f32>) -> Self {
-        Self::from_sizes(size, Rect::ZERO)
+        Self::from_sizes(size, ScrollableOverflowRect::ZERO)
     }
 }
 
@@ -492,20 +497,10 @@ pub struct Layout {
     /// The width and height of the node
     pub size: Size<f32>,
     #[cfg(feature = "content_size")]
-    /// The scrollable overflow rectangle of the node: the axis-aligned rectangle containing the
-    /// content of the node (the border boxes of its descendants plus their non-clipped overflow),
-    /// corresponding to the CSS "scrollable overflow rectangle"
-    /// (<https://www.w3.org/TR/css-overflow-3/#scrollable>), except that transforms are not
-    /// accounted for.
-    ///
-    /// Coordinates are measured from the node's *scroll origin*: the corner of the padding box at
-    /// the block-start/inline-start edge (the top-left corner in LTR, the top-*right* corner in
-    /// RTL), with `left`/`right` measuring along the inline axis in the direction of reachable
-    /// scrolling. The rectangle always contains the origin, so `left`/`top` are `<= 0.0` (negative
-    /// values represent overflow before the scroll origin, which is unreachable by scrolling) and
-    /// `right`/`bottom` are `>= 0.0` (representing the reachable extent of the content, which is
-    /// useful for computing a "scroll width/height" for scrollable nodes).
-    pub scrollable_overflow_rect: Rect<f32>,
+    /// The scrollable overflow rectangle of the node (see [`ScrollableOverflowRect`] for the
+    /// coordinate conventions). Use [`Layout::scroll_range`], [`Layout::scroll_size`] etc. to
+    /// derive scroll-related quantities from it.
+    pub scrollable_overflow_rect: ScrollableOverflowRect,
     /// The size of the scrollbars in each dimension. If there is no scrollbar then the size will be zero.
     pub scrollbar_size: Size<f32>,
     /// The size of the borders of the node
@@ -535,7 +530,7 @@ impl Layout {
             location: Point::ZERO,
             size: Size::zero(),
             #[cfg(feature = "content_size")]
-            scrollable_overflow_rect: Rect::ZERO,
+            scrollable_overflow_rect: ScrollableOverflowRect::ZERO,
             scrollbar_size: Size::zero(),
             border: Rect::zero(),
             padding: Rect::zero(),
@@ -554,7 +549,7 @@ impl Layout {
             size: Size::zero(),
             location: Point::ZERO,
             #[cfg(feature = "content_size")]
-            scrollable_overflow_rect: Rect::ZERO,
+            scrollable_overflow_rect: ScrollableOverflowRect::ZERO,
             scrollbar_size: Size::zero(),
             border: Rect::zero(),
             padding: Rect::zero(),
@@ -593,27 +588,45 @@ impl Layout {
 
 #[cfg(feature = "content_size")]
 impl Layout {
-    /// Return the maximum horizontal scroll offset of the node.
-    /// This is the reachable extent of the content less the width of the padding box, floored at zero.
-    pub fn scroll_width(&self) -> f32 {
-        f32_max(
-            0.0,
-            self.scrollable_overflow_rect.right + f32_min(self.scrollbar_size.width, self.size.width) - self.size.width
-                + self.border.left
-                + self.border.right,
-        )
+    /// The size of the node's scrollport: its padding box less any scrollbars (never negative)
+    #[inline]
+    pub fn scrollport_size(&self) -> Size<f32> {
+        Size {
+            width: f32_max(self.size.width - self.border.left - self.border.right - self.scrollbar_size.width, 0.0),
+            height: f32_max(self.size.height - self.border.top - self.border.bottom - self.scrollbar_size.height, 0.0),
+        }
     }
 
-    /// Return the maximum vertical scroll offset of the node.
-    /// This is the reachable extent of the content less the height of the padding box, floored at zero.
+    /// The range of valid scroll offsets of the node in each axis
+    /// (see [`ScrollableOverflowRect::scroll_range`])
+    #[inline]
+    pub fn scroll_range(&self) -> Rect<f32> {
+        self.scrollable_overflow_rect.scroll_range(self.scrollport_size())
+    }
+
+    /// The size of the node's scrollable overflow area (see [`ScrollableOverflowRect::scroll_size`]).
+    /// For a scroll container, this corresponds to the CSSOM `scrollWidth`/`scrollHeight`.
+    #[inline]
+    pub fn scroll_size(&self) -> Size<f32> {
+        self.scrollable_overflow_rect.scroll_size(self.scrollport_size())
+    }
+
+    /// Clamp a scroll offset to the node's [`scroll_range`](Self::scroll_range)
+    #[inline]
+    pub fn clamp_scroll_offset(&self, offset: Point<f32>) -> Point<f32> {
+        self.scrollable_overflow_rect.clamp_scroll_offset(offset, self.scrollport_size())
+    }
+
+    /// Return the total distance that the node can be scrolled horizontally
+    /// (the extent of the horizontal [`scroll_range`](Self::scroll_range))
+    pub fn scroll_width(&self) -> f32 {
+        self.scrollable_overflow_rect.scroll_distance(self.scrollport_size()).width
+    }
+
+    /// Return the total distance that the node can be scrolled vertically
+    /// (the extent of the vertical [`scroll_range`](Self::scroll_range))
     pub fn scroll_height(&self) -> f32 {
-        f32_max(
-            0.0,
-            self.scrollable_overflow_rect.bottom + f32_min(self.scrollbar_size.height, self.size.height)
-                - self.size.height
-                + self.border.top
-                + self.border.bottom,
-        )
+        self.scrollable_overflow_rect.scroll_distance(self.scrollport_size()).height
     }
 }
 

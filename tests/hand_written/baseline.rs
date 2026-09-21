@@ -18,7 +18,11 @@ mod baseline {
         _style: &Style,
     ) -> LayoutOutput {
         let Some(context) = context else { return LayoutOutput::DEFAULT };
-        LayoutOutput::from_sizes_and_baselines(context.size, Rect::ZERO, Baselines::from_first(context.baseline_y))
+        LayoutOutput::from_sizes_and_baselines(
+            context.size,
+            taffy::ScrollableOverflowRect::ZERO,
+            Baselines::from_first(context.baseline_y),
+        )
     }
 
     /// Two flex items with different intrinsic baselines are aligned along their baselines

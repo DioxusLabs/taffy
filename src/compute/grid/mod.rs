@@ -1,8 +1,11 @@
 //! This module is a partial implementation of the CSS Grid Level 1 specification
 //! <https://www.w3.org/TR/css-grid-1>
+#[cfg(feature = "content_size")]
+use super::common::scrollable_overflow::{finalize_scroll_container_overflow, ScrollOrigin};
 use crate::geometry::{AbsoluteAxis, AbstractAxis, InBothAbsAxis};
 use crate::geometry::{Line, Point, Rect, Size};
 use crate::style::{AlignItems, AvailableSpace, Overflow};
+use crate::tree::ScrollableOverflowRect;
 use crate::tree::{
     AxisStaticAlign, AxisStaticEdge, AxisStaticPosition, Baselines, Layout, LayoutInput, LayoutOutput,
     LayoutPartialTreeExt, NodeId, OofCandidate, OofCandidates, OofPositioningArea, RunMode, SizingMode,
@@ -592,8 +595,25 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
 
     // 9. Size, Align, and Position Grid Items
 
-    #[cfg_attr(not(feature = "content_size"), allow(unused_mut))]
-    let mut item_overflow_rect = Rect::ZERO;
+    let absolute_position_inset = border
+        + Rect {
+            left: if direction.is_rtl() { scrollbar_gutter.x } else { 0.0 },
+            right: if direction.is_rtl() { 0.0 } else { scrollbar_gutter.x },
+            top: 0.0,
+            bottom: scrollbar_gutter.y,
+        };
+    let absolute_position_area = container_border_box - absolute_position_inset.sum_axes();
+    let absolute_position_offset = Point { x: absolute_position_inset.left, y: absolute_position_inset.top };
+    // The scroll origin of a grid scroll container is its block-start/inline-start corner: the
+    // top-left corner in LTR and the top-right corner in RTL
+    let scroll_origin_at_end = Point { x: direction.is_rtl(), y: false };
+    #[cfg(feature = "content_size")]
+    let scroll_origin = is_scroll_container.then_some(ScrollOrigin::new(absolute_position_area, scroll_origin_at_end));
+
+    #[cfg(feature = "content_size")]
+    let mut item_overflow_rect = ScrollOrigin::initial_rect(scroll_origin);
+    #[cfg(not(feature = "content_size"))]
+    let item_overflow_rect = Rect::ZERO;
 
     // Out-of-flow candidates in document order: direct out-of-flow children of the grid
     // interleaved with candidates bubbled from in-flow children's subtrees. These are laid out
@@ -630,10 +650,10 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
             container_alignment_styles,
             item.baseline_shim,
             direction,
-            container_border_box.width,
-            border,
             #[cfg(feature = "content_size")]
-            is_scroll_container,
+            absolute_position_offset,
+            #[cfg(feature = "content_size")]
+            scroll_origin,
             &mut item.oof_candidates,
         );
         item.y_position = y_position;
@@ -772,15 +792,6 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
         }
     });
 
-    let absolute_position_inset = border
-        + Rect {
-            left: if direction.is_rtl() { scrollbar_gutter.x } else { 0.0 },
-            right: if direction.is_rtl() { 0.0 } else { scrollbar_gutter.x },
-            top: 0.0,
-            bottom: scrollbar_gutter.y,
-        };
-    let absolute_position_area = container_border_box - absolute_position_inset.sum_axes();
-    let absolute_position_offset = Point { x: absolute_position_inset.left, y: absolute_position_inset.top };
     // Store the detailed grid info before the out-of-flow positioning pass so that the pass can
     // resolve the grid areas of out-of-flow boxes whose containing block is this grid
     name_resolver.populate_detailed_line_resolvers(&mut detailed_row_line_names, &mut detailed_column_line_names);
@@ -801,20 +812,25 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
         },
     );
 
-    let oof_positioning_area =
-        Some(OofPositioningArea { size: absolute_position_area, offset: absolute_position_offset });
+    let oof_positioning_area = Some(OofPositioningArea {
+        size: absolute_position_area,
+        offset: absolute_position_offset,
+        scroll_origin_at_end,
+    });
+
+    #[cfg(feature = "content_size")]
+    let scrollable_overflow_rect = {
+        let mut overflow_rect = item_overflow_rect;
+        if let Some(origin) = scroll_origin {
+            finalize_scroll_container_overflow(&mut overflow_rect, padding, origin);
+        }
+        ScrollableOverflowRect::new(overflow_rect)
+    };
 
     // If there are no in-flow items then return the container size and the overflow (no baseline)
     if items.is_empty() {
         #[cfg(feature = "content_size")]
-        let mut output = {
-            let mut overflow_rect = item_overflow_rect;
-            if is_scroll_container {
-                overflow_rect.right += if direction.is_rtl() { padding.left } else { padding.right };
-                overflow_rect.bottom += padding.bottom;
-            }
-            LayoutOutput::from_sizes(container_border_box, overflow_rect)
-        };
+        let mut output = LayoutOutput::from_sizes(container_border_box, scrollable_overflow_rect);
         #[cfg(not(feature = "content_size"))]
         let mut output = LayoutOutput::from_outer_size(container_border_box);
         output.oof_candidates = oof_candidates;
@@ -843,20 +859,8 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
         Some(item.y_position + item.baseline.unwrap_or(item.height))
     };
 
-    // A scroll container's own padding at the end of the content is part of its scrollable
-    // overflow region, so it is included in the in-flow overflow rect. Boxes that are not
-    // scroll containers do not extend their overflow region by their own padding.
-    #[cfg(feature = "content_size")]
-    let scrollable_overflow_rect = {
-        let mut overflow_rect = item_overflow_rect;
-        if is_scroll_container {
-            overflow_rect.right += if direction.is_rtl() { padding.left } else { padding.right };
-            overflow_rect.bottom += padding.bottom;
-        }
-        overflow_rect
-    };
     #[cfg(not(feature = "content_size"))]
-    let scrollable_overflow_rect = item_overflow_rect;
+    let scrollable_overflow_rect = ScrollableOverflowRect::new(item_overflow_rect);
 
     let mut output = LayoutOutput::from_sizes_and_baselines(
         container_border_box,
