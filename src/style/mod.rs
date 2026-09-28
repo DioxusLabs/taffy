@@ -1200,6 +1200,11 @@ impl<S: CheapCloneStr> BlockItemStyle for Style<S> {
         self.justify_self
     }
 
+    #[inline(always)]
+    fn item_align_content(&self) -> Option<AlignContent> {
+        self.align_content
+    }
+
     #[cfg(feature = "float_layout")]
     #[inline(always)]
     fn float(&self) -> Float {
@@ -1228,6 +1233,11 @@ impl<T: BlockItemStyle> BlockItemStyle for &'_ T {
     #[inline(always)]
     fn justify_self(&self) -> Option<AlignSelf> {
         (*self).justify_self()
+    }
+
+    #[inline(always)]
+    fn item_align_content(&self) -> Option<AlignContent> {
+        (*self).item_align_content()
     }
 
     #[cfg(feature = "float_layout")]
