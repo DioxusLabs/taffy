@@ -1,9 +1,9 @@
 <test name="float_bfc_negative_top_margin_beside_float__border_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="block" direction="rtl" width="100px">
-      <div direction="rtl" float="left" width="50px" height="50px"/>
-      <div display="flow-root" direction="rtl" width="50px" height="50px" margin-top="-25px"/>
+    <div display="block" direction="rtl" position="absolute" width="100px">
+      <div direction="rtl" position="relative" float="left" width="50px" height="50px"/>
+      <div display="flow-root" direction="rtl" position="relative" width="50px" height="50px" margin-top="-25px"/>
     </div>
   </input>
   <expectations>

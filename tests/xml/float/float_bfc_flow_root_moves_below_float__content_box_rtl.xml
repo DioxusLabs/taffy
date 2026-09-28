@@ -1,9 +1,9 @@
 <test name="float_bfc_flow_root_moves_below_float__content_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="block" box-sizing="content-box" direction="rtl" width="100px">
-      <div box-sizing="content-box" direction="rtl" float="right" width="50px" height="40px"/>
-      <div display="flow-root" box-sizing="content-box" direction="rtl" height="60px" margin-left="51px"/>
+    <div display="block" box-sizing="content-box" direction="rtl" position="absolute" width="100px">
+      <div box-sizing="content-box" direction="rtl" position="relative" float="right" width="50px" height="40px"/>
+      <div display="flow-root" box-sizing="content-box" direction="rtl" position="relative" height="60px" margin-left="51px"/>
     </div>
   </input>
   <expectations>

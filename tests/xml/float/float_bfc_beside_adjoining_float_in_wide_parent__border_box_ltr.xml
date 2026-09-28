@@ -1,12 +1,12 @@
 <test name="float_bfc_beside_adjoining_float_in_wide_parent__border_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="block" direction="ltr" overflow-x="hidden" overflow-y="hidden" scrollbar-width="15" width="200px">
-      <div display="block" direction="ltr" width="300px" margin-top="50px">
-        <div display="block" direction="ltr">
-          <div direction="ltr" float="left" width="200px" height="10px"/>
+    <div display="block" direction="ltr" position="absolute" overflow-x="hidden" overflow-y="hidden" scrollbar-width="15" width="200px">
+      <div display="block" direction="ltr" position="relative" width="300px" margin-top="50px">
+        <div display="block" direction="ltr" position="relative">
+          <div direction="ltr" position="relative" float="left" width="200px" height="10px"/>
         </div>
-        <div display="flow-root" direction="ltr" width="100px" height="10px" margin-top="190px"/>
+        <div display="flow-root" direction="ltr" position="relative" width="100px" height="10px" margin-top="190px"/>
       </div>
     </div>
   </input>
