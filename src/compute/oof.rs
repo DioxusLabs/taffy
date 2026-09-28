@@ -356,15 +356,21 @@ pub(crate) fn perform_oof_layout(
         // Expand auto margins to fill available space
         // https://www.w3.org/TR/CSS21/visudet.html#abs-non-replaced-width
         let auto_margin = {
-            // Auto margins for absolutely positioned elements in block containers only resolve
-            // if inset is set. Otherwise they resolve to 0.
-            let absolute_auto_margin_space = Point {
-                x: right.map(|right| area_size.width - right - left.unwrap_or(0.0)).unwrap_or(final_size.width),
-                y: bottom.map(|bottom| area_size.height - bottom - top.unwrap_or(0.0)).unwrap_or(final_size.height),
-            };
+            // Auto margins only absorb free space in an axis where both insets are non-auto.
+            // Otherwise they resolve to 0.
             let free_space = Size {
-                width: absolute_auto_margin_space.x - final_size.width - non_auto_margin.horizontal_axis_sum(),
-                height: absolute_auto_margin_space.y - final_size.height - non_auto_margin.vertical_axis_sum(),
+                width: match (left, right) {
+                    (Some(left), Some(right)) => {
+                        area_size.width - left - right - final_size.width - non_auto_margin.horizontal_axis_sum()
+                    }
+                    _ => 0.0,
+                },
+                height: match (top, bottom) {
+                    (Some(top), Some(bottom)) => {
+                        area_size.height - top - bottom - final_size.height - non_auto_margin.vertical_axis_sum()
+                    }
+                    _ => 0.0,
+                },
             };
 
             let auto_margin_size = Size {
