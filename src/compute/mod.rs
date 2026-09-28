@@ -55,8 +55,8 @@ pub use self::float::{BfcSlot, ContentSlot, FloatContext, FloatIntrinsicWidthCal
 use crate::geometry::{Line, Point, Size};
 use crate::style::{AvailableSpace, ContainingBlockClaims, CoreStyle, Overflow, Position};
 use crate::tree::{
-    Layout, LayoutInput, LayoutOutput, LayoutPartialTree, LayoutPartialTreeExt, NodeId, OofCandidates, RequestedAxis,
-    RoundTree, RunMode, SizingMode,
+    AxisStaticAlign, AxisStaticEdge, AxisStaticPosition, Layout, LayoutInput, LayoutOutput, LayoutPartialTree,
+    LayoutPartialTreeExt, NodeId, OofCandidate, OofCandidates, RequestedAxis, RoundTree, RunMode, SizingMode,
 };
 use crate::util::debug::{debug_log, debug_log_node, debug_pop_node, debug_push_node};
 use crate::util::sys::{round, Vec};
@@ -64,27 +64,137 @@ use crate::util::ResolveOrZero;
 use crate::{CacheTree, MaybeMath, MaybeResolve};
 
 /// Compute layout for the root node in the tree
+///
+/// The root's containing block is the initial containing block (ICB), which has the dimensions of the
+/// viewport (`available_space`) and is anchored at the canvas origin. The root's `position` and `inset`
+/// styles are resolved against it:
+///
+/// - A `position: absolute`/`fixed` root is laid out by the out-of-flow positioning routine used for
+///   every other out-of-flow box (insets, shrink-to-fit sizing, auto margins, ...), with its static
+///   position at the ICB origin. This requires a definite `available_space` in both axes: otherwise there
+///   is no ICB to resolve against and the root is laid out as if it were in flow.
+/// - A `position: relative` root is laid out in flow and then offset by its insets.
 pub fn compute_root_layout(
     tree: &mut (impl crate::tree::LayoutContainingBlock + CacheTree),
     root: NodeId,
     available_space: Size<AvailableSpace>,
 ) {
-    let mut known_dimensions = Size::NONE;
+    let style = tree.get_core_container_style(root);
+    let position = style.position();
+    let direction = style.direction();
+    drop(style);
 
-    // The root's containing block is the initial containing block, which has the dimensions of the viewport
-    let (position, inset) = {
-        let style = tree.get_core_container_style(root);
-        let position = style.position();
-        let inset = style.inset();
-        let icb_size = available_space.into_options();
-        let inset = crate::geometry::Rect {
-            left: inset.left.maybe_resolve(icb_size.width, |val, basis| tree.calc(val, basis)),
-            right: inset.right.maybe_resolve(icb_size.width, |val, basis| tree.calc(val, basis)),
-            top: inset.top.maybe_resolve(icb_size.height, |val, basis| tree.calc(val, basis)),
-            bottom: inset.bottom.maybe_resolve(icb_size.height, |val, basis| tree.calc(val, basis)),
-        };
-        (position, inset)
+    let icb_size = available_space.into_options();
+    let oof_root_area = match (position.is_out_of_flow(), icb_size.width, icb_size.height) {
+        (true, Some(width), Some(height)) => Some(Size { width, height }),
+        _ => None,
     };
+
+    // When the root's layout is served from the cache its layout algorithm does not run, so the
+    // hoisted children it recorded on a previous run (including those added by the root
+    // positioning pass below) are still in place and must not be re-added.
+    let mut root_is_cached = false;
+
+    let (layout, candidates) = if let Some(area_size) = oof_root_area {
+        // The static position of the root places its margin box at the origin of the ICB
+        let (start, end) = if direction.is_rtl() { (area_size.width, area_size.width) } else { (0.0, 0.0) };
+        let candidate = OofCandidate {
+            node: root,
+            order: 0,
+            position,
+            static_position: Point {
+                x: AxisStaticPosition {
+                    area: Line { start, end },
+                    align: AxisStaticAlign::from_keyword(if direction.is_rtl() {
+                        AxisStaticEdge::End
+                    } else {
+                        AxisStaticEdge::Start
+                    }),
+                },
+                y: AxisStaticPosition::from_edge(0.0, AxisStaticEdge::Start),
+            },
+        };
+        let oof::OofBoxLayout { layout, surfaced, .. } = oof::layout_oof_box(
+            tree,
+            candidate,
+            area_size,
+            Point::ZERO,
+            direction,
+            #[cfg(feature = "grid")]
+            None,
+            |tree, inputs| root_is_cached = tree.cache_get(root, inputs).is_some(),
+        );
+        (layout, surfaced)
+    } else {
+        compute_in_flow_root_layout(tree, root, available_space, &mut root_is_cached)
+    };
+
+    // Final positioning pass for out-of-flow boxes with no nearer containing block: the initial
+    // containing block is the containing block for `position: fixed` boxes and for
+    // `position: absolute` boxes with no positioned ancestor.
+    if !candidates.is_empty() {
+        let style = tree.get_core_container_style(root);
+        let is_scroll_container = style.overflow().x.is_scroll_container() || style.overflow().y.is_scroll_container();
+        #[cfg(not(feature = "content_size"))]
+        let _ = is_scroll_container;
+        drop(style);
+
+        // The initial containing block has the dimensions of the viewport (the available space) and is
+        // anchored at the canvas origin. In an axis where the available space is indefinite, fall back
+        // to the root's padding box.
+        let area_inset = layout.border
+            + crate::geometry::Rect {
+                left: 0.0,
+                right: layout.scrollbar_size.width,
+                top: 0.0,
+                bottom: layout.scrollbar_size.height,
+            };
+        let root_padding_box_size =
+            layout.size - Size { width: area_inset.horizontal_axis_sum(), height: area_inset.vertical_axis_sum() };
+        let (area_width, area_x) = match icb_size.width {
+            Some(width) => ((width - layout.scrollbar_size.width).max(0.0), -layout.location.x),
+            None => (root_padding_box_size.width, area_inset.left),
+        };
+        let (area_height, area_y) = match icb_size.height {
+            Some(height) => ((height - layout.scrollbar_size.height).max(0.0), -layout.location.y),
+            None => (root_padding_box_size.height, area_inset.top),
+        };
+        let area_size = Size { width: area_width, height: area_height };
+        let area_offset = Point { x: area_x, y: area_y };
+
+        let mut hoisted: Vec<NodeId> = Vec::new();
+        let mut unclaimed = OofCandidates::new();
+        oof::perform_oof_layout(
+            tree,
+            root,
+            candidates,
+            area_size,
+            area_offset,
+            direction,
+            // The root is the initial containing block and claims all remaining candidates
+            ContainingBlockClaims::ALL,
+            #[cfg(feature = "content_size")]
+            is_scroll_container,
+            &mut hoisted,
+            &mut unclaimed,
+        );
+        debug_assert!(unclaimed.is_empty(), "the root positioning pass must claim all remaining candidates");
+        if !root_is_cached {
+            tree.add_hoisted_children(root, &hoisted);
+        }
+    }
+}
+
+/// Lay out an in-flow (or `position: relative`) root node against the available space, store its layout
+/// and return it along with the out-of-flow candidates bubbled up from its subtree.
+#[inline(always)]
+fn compute_in_flow_root_layout(
+    tree: &mut (impl crate::tree::LayoutContainingBlock + CacheTree),
+    root: NodeId,
+    available_space: Size<AvailableSpace>,
+    root_is_cached: &mut bool,
+) -> (Layout, OofCandidates) {
+    let mut known_dimensions = Size::NONE;
 
     #[cfg(feature = "block_layout")]
     {
@@ -126,23 +236,10 @@ pub fn compute_root_layout(
                 _ => None,
             });
 
-            // In-flow block nodes automatically stretch fit their width to fit available space if available space is
-            // definite. Out-of-flow nodes are shrink-to-fit unless both insets in an axis are set, in which case they
-            // fill the space between them.
-            let available_space_based_size = if position.is_out_of_flow() {
-                Size {
-                    width: inset.left.zip(inset.right).and_then(|(left, right)| {
-                        available_space.width.into_option().maybe_sub(margin.horizontal_axis_sum() + left + right)
-                    }),
-                    height: inset.top.zip(inset.bottom).and_then(|(top, bottom)| {
-                        available_space.height.into_option().maybe_sub(margin.vertical_axis_sum() + top + bottom)
-                    }),
-                }
-            } else {
-                Size {
-                    width: available_space.width.into_option().maybe_sub(margin.horizontal_axis_sum()),
-                    height: None,
-                }
+            // Block nodes automatically stretch fit their width to fit available space if available space is definite
+            let available_space_based_size = Size {
+                width: available_space.width.into_option().maybe_sub(margin.horizontal_axis_sum()),
+                height: None,
             };
 
             let styled_based_known_dimensions = known_dimensions
@@ -165,10 +262,7 @@ pub fn compute_root_layout(
         run_mode: RunMode::PerformLayout,
         vertical_margins_are_collapsible: Line::FALSE,
     };
-    // When the root's layout is served from the cache its layout algorithm does not run, so the
-    // hoisted children it recorded on a previous run (including those added by the root
-    // positioning pass below) are still in place and must not be re-added.
-    let root_is_cached = tree.cache_get(root, &inputs).is_some();
+    *root_is_cached = tree.cache_get(root, &inputs).is_some();
 
     // Recursively compute node layout
     let mut output = tree.compute_child_layout(root, inputs);
@@ -184,113 +278,48 @@ pub fn compute_root_layout(
         height: if style.overflow().x == Overflow::Scroll { style.scrollbar_width() } else { 0.0 },
     };
     let is_rtl = style.direction().is_rtl();
-    drop(style);
 
-    // The root's static position places its margin box at the origin of the initial containing block
-    let static_location = Point {
+    // The root's margin box is placed at the origin of the initial containing block
+    let mut location = Point {
         x: match (is_rtl, available_space.width.into_option()) {
             (true, Some(available_width)) => available_width - output.size.width - margin.right,
             _ => margin.left,
         },
         y: margin.top,
     };
-    let location = match position {
-        Position::Relative => Point {
-            x: static_location.x
-                + if is_rtl {
-                    inset.right.map(|right| -right).or(inset.left).unwrap_or(0.0)
-                } else {
-                    inset.left.or(inset.right.map(|right| -right)).unwrap_or(0.0)
-                },
-            y: static_location.y + inset.top.or(inset.bottom.map(|bottom| -bottom)).unwrap_or(0.0),
-        },
-        Position::Absolute | Position::Fixed => {
-            let from_left = inset.left.map(|left| left + margin.left);
-            let from_right = inset
-                .right
-                .zip(available_space.width.into_option())
-                .map(|(right, available_width)| available_width - output.size.width - right - margin.right);
-            let from_top = inset.top.map(|top| top + margin.top);
-            let from_bottom = inset
-                .bottom
-                .zip(available_space.height.into_option())
-                .map(|(bottom, available_height)| available_height - output.size.height - bottom - margin.bottom);
-            Point {
-                x: if is_rtl { from_right.or(from_left) } else { from_left.or(from_right) }
-                    .unwrap_or(static_location.x),
-                y: from_top.or(from_bottom).unwrap_or(static_location.y),
-            }
-        }
-        Position::Static | Position::Sticky => static_location,
-    };
 
-    tree.set_unrounded_layout(
-        root,
-        &Layout {
-            order: 0,
-            location,
-            size: output.size,
-            #[cfg(feature = "content_size")]
-            scrollable_overflow_rect: output.scrollable_overflow_rect,
-            scrollbar_size,
-            padding,
-            border,
-            // TODO: support auto margins for root node?
-            margin,
-        },
-    );
-
-    // Final positioning pass for out-of-flow boxes with no nearer containing block: the initial
-    // containing block is the containing block for `position: fixed` boxes and for
-    // `position: absolute` boxes with no positioned ancestor.
-    let candidates = output.oof_candidates.take();
-    if !candidates.is_empty() {
-        let style = tree.get_core_container_style(root);
-        let direction = style.direction();
-        let is_scroll_container = style.overflow().x.is_scroll_container() || style.overflow().y.is_scroll_container();
-        #[cfg(not(feature = "content_size"))]
-        let _ = is_scroll_container;
-        drop(style);
-
-        // The initial containing block has the dimensions of the viewport (the available space) and is
-        // anchored at the canvas origin. In an axis where the available space is indefinite, fall back
-        // to the root's padding box.
-        let area_inset = border
-            + crate::geometry::Rect { left: 0.0, right: scrollbar_size.width, top: 0.0, bottom: scrollbar_size.height };
-        let root_padding_box_size =
-            output.size - Size { width: area_inset.horizontal_axis_sum(), height: area_inset.vertical_axis_sum() };
-        let (area_width, area_x) = match available_space.width.into_option() {
-            Some(width) => ((width - scrollbar_size.width).max(0.0), -location.x),
-            None => (root_padding_box_size.width, area_inset.left),
+    // A relatively positioned root is offset by its insets (resolved against the initial containing block)
+    if style.position() == Position::Relative {
+        let icb_size = available_space.into_options();
+        let inset = style.inset();
+        let left = inset.left.maybe_resolve(icb_size.width, |val, basis| tree.calc(val, basis));
+        let right = inset.right.maybe_resolve(icb_size.width, |val, basis| tree.calc(val, basis));
+        let top = inset.top.maybe_resolve(icb_size.height, |val, basis| tree.calc(val, basis));
+        let bottom = inset.bottom.maybe_resolve(icb_size.height, |val, basis| tree.calc(val, basis));
+        location.x += if is_rtl {
+            right.map(|right| -right).or(left).unwrap_or(0.0)
+        } else {
+            left.or(right.map(|right| -right)).unwrap_or(0.0)
         };
-        let (area_height, area_y) = match available_space.height.into_option() {
-            Some(height) => ((height - scrollbar_size.height).max(0.0), -location.y),
-            None => (root_padding_box_size.height, area_inset.top),
-        };
-        let area_size = Size { width: area_width, height: area_height };
-        let area_offset = Point { x: area_x, y: area_y };
-
-        let mut hoisted: Vec<NodeId> = Vec::new();
-        let mut unclaimed = OofCandidates::new();
-        oof::perform_oof_layout(
-            tree,
-            root,
-            candidates,
-            area_size,
-            area_offset,
-            direction,
-            // The root is the initial containing block and claims all remaining candidates
-            ContainingBlockClaims::ALL,
-            #[cfg(feature = "content_size")]
-            is_scroll_container,
-            &mut hoisted,
-            &mut unclaimed,
-        );
-        debug_assert!(unclaimed.is_empty(), "the root positioning pass must claim all remaining candidates");
-        if !root_is_cached {
-            tree.add_hoisted_children(root, &hoisted);
-        }
+        location.y += top.or(bottom.map(|bottom| -bottom)).unwrap_or(0.0);
     }
+    drop(style);
+
+    let layout = Layout {
+        order: 0,
+        location,
+        size: output.size,
+        #[cfg(feature = "content_size")]
+        scrollable_overflow_rect: output.scrollable_overflow_rect,
+        scrollbar_size,
+        padding,
+        border,
+        // TODO: support auto margins for root node?
+        margin,
+    };
+    tree.set_unrounded_layout(root, &layout);
+
+    (layout, output.oof_candidates.take())
 }
 
 /// Attempts to find a cached layout for the specified node and layout inputs.
