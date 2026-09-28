@@ -106,7 +106,7 @@ pub use crate::compute::compute_grid_layout;
 pub use crate::compute::detailed_info::*;
 #[cfg(feature = "block_layout")]
 #[doc(inline)]
-pub use crate::compute::{compute_block_layout, compute_cached_block_child_layout};
+pub use crate::compute::{compute_block_align_content_offset, compute_block_layout, compute_cached_block_child_layout};
 #[doc(inline)]
 pub use crate::compute::{
     compute_cached_layout, compute_hidden_layout, compute_leaf_layout, compute_oof_layout, compute_oof_layout_for_area,
