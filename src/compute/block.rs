@@ -1020,8 +1020,8 @@ fn block_item_known_dimensions(
         // fit-content(...), stretch) resolve their width either directly or by measuring
         // the item under the corresponding available space constraint
         let keyword_width =
-            resolve_sizing_keyword(item.size_style.width, Some(stretch_width), Some(container_inner_width))
-                .map(|resolution| match resolution {
+            resolve_sizing_keyword(item.size_style.width, Some(stretch_width), Some(container_inner_width)).map(
+                |resolution| match resolution {
                     SizingKeywordResolution::Exact(width) => width,
                     SizingKeywordResolution::Measure(item_available_width) => tree.measure_child_size(
                         item.node_id,
@@ -1032,13 +1032,11 @@ fn block_item_known_dimensions(
                         crate::AbsoluteAxis::Horizontal,
                         Line::TRUE,
                     ),
-                });
+                },
+            );
 
-        let keyword_height = resolve_stretch_height(
-            item.size_style.height,
-            container_percentage_resolution_height,
-            vertical_margin_sum,
-        );
+        let keyword_height =
+            resolve_stretch_height(item.size_style.height, container_percentage_resolution_height, vertical_margin_sum);
 
         item.size
             .map_width(|width| {
