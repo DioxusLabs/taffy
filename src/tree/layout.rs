@@ -1,6 +1,6 @@
 //! Final data structures that represent the high-level UI layout
 use crate::geometry::{AbsoluteAxis, Line, Point, Rect, Size};
-use crate::style::{AlignmentSafety, AvailableSpace, CheapCloneStr, Position};
+use crate::style::{AlignItemsKeyword, AlignSelf, AlignmentSafety, AvailableSpace, CheapCloneStr, Direction, Position};
 use crate::style_helpers::TaffyMaxContent;
 use crate::sys::DefaultCheapStr;
 use crate::tree::NodeId;
@@ -227,7 +227,7 @@ pub struct AxisStaticAlign {
 impl AxisStaticAlign {
     /// Create a `AxisStaticAlign` from a keyword with no safe fallback
     pub const fn from_keyword(keyword: AxisStaticEdge) -> Self {
-        Self { keyword, safety: AlignmentSafety::Unsafe, fallback: keyword }
+        Self { keyword, safety: AlignmentSafety::Default, fallback: keyword }
     }
 }
 
@@ -253,6 +253,52 @@ impl AxisStaticPosition {
     /// safe fallback
     pub const fn from_edge(anchor: f32, edge: AxisStaticEdge) -> Self {
         Self { area: Line { start: anchor, end: anchor }, align: AxisStaticAlign::from_keyword(edge) }
+    }
+
+    /// Create a `AxisStaticPosition` which aligns the box within `area` according to its
+    /// self-alignment property in this axis (`justify-self` in the inline axis, `align-self` in
+    /// the block axis), resolved relative to the writing mode of the static-position containing
+    /// block. `None` corresponds to `normal`, which behaves as `start`. This is the static
+    /// position used by block and inline layout.
+    ///
+    /// `item_direction` and `container_direction` are the `direction` of the box and of its
+    /// static-position containing block, which are used to resolve `self-start`/`self-end` and
+    /// to flip the inline axis of a right-to-left container.
+    pub fn from_alignment(
+        alignment: Option<AlignSelf>,
+        area: Line<f32>,
+        item_direction: Direction,
+        container_direction: Direction,
+        axis_is_inline: bool,
+    ) -> Self {
+        let axis_is_rtl = axis_is_inline && container_direction.is_rtl();
+        let edge_for = |keyword: AlignItemsKeyword| {
+            // Stretch does not apply to absolutely positioned items and falls back to
+            // start-alignment for static-position purposes
+            let start_position = !matches!(keyword, AlignItemsKeyword::End | AlignItemsKeyword::FlexEnd) ^ axis_is_rtl;
+            match keyword {
+                AlignItemsKeyword::Center => AxisStaticEdge::Center,
+                _ if start_position => AxisStaticEdge::Start,
+                _ => AxisStaticEdge::End,
+            }
+        };
+        let Some(alignment) = alignment else {
+            return Self { area, align: AxisStaticAlign::from_keyword(edge_for(AlignItemsKeyword::Start)) };
+        };
+        let alignment = alignment.resolve_self_relative(item_direction, container_direction, axis_is_inline);
+        let fallback = if matches!(alignment.safety, AlignmentSafety::Safe) {
+            AlignItemsKeyword::Start
+        } else {
+            alignment.keyword
+        };
+        Self {
+            area,
+            align: AxisStaticAlign {
+                keyword: edge_for(alignment.keyword),
+                safety: alignment.safety,
+                fallback: edge_for(fallback),
+            },
+        }
     }
 }
 
