@@ -768,7 +768,7 @@ pub struct Style<S: CheapCloneStr = DefaultCheapStr> {
     /// Falls back to the parents [`AlignItems`] if not set
     pub align_self: Option<AlignSelf>,
     /// How this node's children should be aligned in the inline axis
-    #[cfg(feature = "grid")]
+    #[cfg(any(feature = "grid", feature = "block_layout"))]
     pub justify_items: Option<AlignItems>,
     /// How this node should be aligned in the inline axis
     /// Falls back to the parents [`JustifyItems`] if not set
@@ -888,7 +888,7 @@ impl<S: CheapCloneStr> Style<S> {
         #[cfg(any(feature = "flexbox", feature = "grid"))]
         align_items: None,
         align_self: None,
-        #[cfg(feature = "grid")]
+        #[cfg(any(feature = "grid", feature = "block_layout"))]
         justify_items: None,
         justify_self: None,
         #[cfg(any(feature = "flexbox", feature = "grid", feature = "block_layout"))]
@@ -1622,11 +1622,9 @@ mod tests {
             flex_line_count: 1,
             #[cfg(any(feature = "flexbox", feature = "grid"))]
             align_items: Default::default(),
-            #[cfg(any(feature = "flexbox", feature = "grid"))]
             align_self: Default::default(),
-            #[cfg(feature = "grid")]
+            #[cfg(any(feature = "grid", feature = "block_layout"))]
             justify_items: Default::default(),
-            #[cfg(feature = "grid")]
             justify_self: Default::default(),
             #[cfg(any(feature = "flexbox", feature = "grid", feature = "block_layout"))]
             align_content: Default::default(),
