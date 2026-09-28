@@ -155,13 +155,13 @@ pub fn compute_root_layout(
         width: if style.overflow().y == Overflow::Scroll { style.scrollbar_width() } else { 0.0 },
         height: if style.overflow().x == Overflow::Scroll { style.scrollbar_width() } else { 0.0 },
     };
+    // The root's margin box is placed at the origin of the initial containing block
     let location = Point {
-        x: if style.direction().is_rtl() {
-            available_space.width.into_option().map_or(0.0, |available_width| available_width - output.size.width)
-        } else {
-            0.0
+        x: match (style.direction().is_rtl(), available_space.width.into_option()) {
+            (true, Some(available_width)) => available_width - output.size.width - margin.right,
+            _ => margin.left,
         },
-        y: 0.0,
+        y: margin.top,
     };
     drop(style);
 
@@ -181,8 +181,8 @@ pub fn compute_root_layout(
         },
     );
 
-    // Final positioning pass for out-of-flow boxes with no nearer containing block: the root
-    // acts as the initial containing block for `position: fixed` boxes and for
+    // Final positioning pass for out-of-flow boxes with no nearer containing block: the initial
+    // containing block is the containing block for `position: fixed` boxes and for
     // `position: absolute` boxes with no positioned ancestor.
     let candidates = output.oof_candidates.take();
     if !candidates.is_empty() {
@@ -193,11 +193,23 @@ pub fn compute_root_layout(
         let _ = is_scroll_container;
         drop(style);
 
+        // The initial containing block has the dimensions of the viewport (the available space) and is
+        // anchored at the canvas origin. In an axis where the available space is indefinite, fall back
+        // to the root's padding box.
         let area_inset = border
             + crate::geometry::Rect { left: 0.0, right: scrollbar_size.width, top: 0.0, bottom: scrollbar_size.height };
-        let area_size =
+        let root_padding_box_size =
             output.size - Size { width: area_inset.horizontal_axis_sum(), height: area_inset.vertical_axis_sum() };
-        let area_offset = Point { x: area_inset.left, y: area_inset.top };
+        let (area_width, area_x) = match available_space.width.into_option() {
+            Some(width) => ((width - scrollbar_size.width).max(0.0), -location.x),
+            None => (root_padding_box_size.width, area_inset.left),
+        };
+        let (area_height, area_y) = match available_space.height.into_option() {
+            Some(height) => ((height - scrollbar_size.height).max(0.0), -location.y),
+            None => (root_padding_box_size.height, area_inset.top),
+        };
+        let area_size = Size { width: area_width, height: area_height };
+        let area_offset = Point { x: area_x, y: area_y };
 
         let mut hoisted: Vec<NodeId> = Vec::new();
         let mut unclaimed = OofCandidates::new();
