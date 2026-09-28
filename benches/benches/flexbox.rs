@@ -31,6 +31,41 @@ impl GenStyle<TaffyStyle> for RandomStyleGenerator {
     }
 }
 
+fn random_inset(rng: &mut impl Rng) -> LengthPercentageAuto {
+    match rng.random_range(0.0..=1.0) {
+        rand if rand < 0.4 => auto(),
+        rand if rand < 0.8 => length(rng.random_range(0.0..500.0)),
+        _ => percent(rng.random_range(0.0..1.0)),
+    }
+}
+
+/// Generates absolutely positioned leaf nodes (with random insets) inside relatively positioned containers,
+/// so that the out-of-flow positioning pass does the bulk of the work.
+#[derive(Clone)]
+pub struct RandomAbsoluteStyleGenerator;
+impl GenStyle<TaffyStyle> for RandomAbsoluteStyleGenerator {
+    fn create_leaf_style(&mut self, rng: &mut impl Rng) -> TaffyStyle {
+        TaffyStyle {
+            position: Position::Absolute,
+            inset: Rect {
+                left: random_inset(rng),
+                right: random_inset(rng),
+                top: random_inset(rng),
+                bottom: random_inset(rng),
+            },
+            size: Size { width: random_dimension(rng), height: random_dimension(rng) },
+            ..Default::default()
+        }
+    }
+    fn create_container_style(&mut self, rng: &mut impl Rng) -> TaffyStyle {
+        TaffyStyle {
+            position: Position::Relative,
+            size: Size { width: random_dimension(rng), height: random_dimension(rng) },
+            ..Default::default()
+        }
+    }
+}
+
 macro_rules! run_benchmark {
     ($TreeBuilder: ty, $tree_builder_name: literal, $benchmark_name: expr, $group: ident, $builder: ident, $params: expr, $generate_style: expr, $generate_tree: expr) => {
         let benchmark_id = BenchmarkId::new(format!("{} {}", $tree_builder_name, $benchmark_name), $params);
@@ -101,6 +136,30 @@ fn wide_benchmarks(c: &mut Criterion) {
             builder,
             node_count,
             || RandomStyleGenerator,
+            builder.build_flat_hierarchy(*node_count)
+        );
+    }
+    group.finish();
+}
+
+fn absolute_benchmarks(c: &mut Criterion) {
+    let node_counts = [
+        #[cfg(feature = "small")]
+        1_000u32,
+        10_000,
+        #[cfg(feature = "large")]
+        100_000,
+    ];
+
+    let mut group = c.benchmark_group("Absolutely positioned leaves");
+    group.sample_size(10); // Decrease sample size, because the tasks take longer
+    for node_count in node_counts.iter() {
+        benchmark_each_library!(
+            "(2-level hierarchy)",
+            group,
+            builder,
+            node_count,
+            || RandomAbsoluteStyleGenerator,
             builder.build_flat_hierarchy(*node_count)
         );
     }
@@ -221,6 +280,7 @@ fn super_deep_benchmarks(c: &mut Criterion) {
 fn taffy_benchmarks(c: &mut Criterion) {
     huge_nested_benchmarks(c);
     wide_benchmarks(c);
+    absolute_benchmarks(c);
     deep_auto_benchmarks(c);
     deep_random_benchmarks(c);
     super_deep_benchmarks(c);

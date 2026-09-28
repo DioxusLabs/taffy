@@ -78,4 +78,26 @@ mod initial_containing_block {
 
         assert_eq!(tree.layout(oof).unwrap().location, Point { x: 5.0, y: 5.0 });
     }
+
+    #[test]
+    fn fixed_root_is_positioned_by_its_insets() {
+        // `position: fixed` roots cannot be covered by the generated tests (Chrome positions them
+        // against the browser window rather than the `.viewport` wrapper), so check that they are
+        // positioned like absolutely positioned roots against the initial containing block.
+        let mut tree: TaffyTree<()> = TaffyTree::new();
+        let root = tree
+            .new_leaf(Style {
+                display: Display::Block,
+                position: Position::Fixed,
+                inset: Rect { left: auto(), top: percent(0.1), right: length(10.0), bottom: auto() },
+                size: Size { width: length(100.0), height: length(50.0) },
+                ..Default::default()
+            })
+            .unwrap();
+        tree.compute_layout(root, VIEWPORT).unwrap();
+
+        let layout = tree.layout(root).unwrap();
+        assert_eq!(layout.location, Point { x: 800.0 - 100.0 - 10.0, y: 60.0 });
+        assert_eq!(layout.size, Size { width: 100.0, height: 50.0 });
+    }
 }

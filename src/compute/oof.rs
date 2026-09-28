@@ -11,8 +11,8 @@ use crate::style::{AvailableSpace, ContainingBlockClaims, CoreStyle};
 #[cfg(feature = "grid")]
 use crate::tree::DetailedLayoutInfo;
 use crate::tree::{
-    Layout, LayoutContainingBlock, LayoutOutput, LayoutPartialTreeExt, NodeId, OofCandidate, OofCandidates,
-    OofPositioningArea, SizingMode,
+    Layout, LayoutContainingBlock, LayoutInput, LayoutOutput, LayoutPartialTreeExt, NodeId, OofCandidate,
+    OofCandidates, OofPositioningArea, RequestedAxis, RunMode, SizingMode,
 };
 use crate::util::sys::{f32_max, Vec};
 use crate::util::{MaybeMath, MaybeResolve, ResolveOrZero};
@@ -145,6 +145,315 @@ pub fn compute_oof_layout_for_area(
     OofLayoutResult { hoisted, unclaimed, scrollable_overflow_rect }
 }
 
+/// The result of laying out a single out-of-flow box with [`layout_oof_box`].
+pub(crate) struct OofBoxLayout {
+    /// The box's final layout (its `location` is relative to the containing block's border box)
+    pub layout: Layout,
+    /// Out-of-flow candidates surfaced from within the box's subtree, with anchors relative to
+    /// the box's own border box
+    pub surfaced: OofCandidates,
+    /// The box's `overflow` style
+    #[cfg(feature = "content_size")]
+    pub overflow: Point<crate::Overflow>,
+    /// The box's `contain` style
+    #[cfg(feature = "content_size")]
+    pub contain: crate::style::Contain,
+}
+
+/// Size and position a single out-of-flow box against its containing block, and store its layout.
+///
+/// - `area_size`/`area_offset` describe the inset-resolution area of the containing block
+///   (border box minus borders and scrollbar gutters), relative to the containing block's border box.
+/// - `grid_owner` is the node whose detailed layout info is consulted for grid placement: if it is
+///   a grid container, the box is positioned relative to the grid area determined by its
+///   grid-placement properties rather than the passed area.
+/// - `before_layout` is called with the inputs of the final layout pass just before it runs, which
+///   allows the caller to inspect the layout cache for the box.
+#[inline(always)]
+pub(crate) fn layout_oof_box<Tree: LayoutContainingBlock>(
+    tree: &mut Tree,
+    candidate: OofCandidate,
+    area_size: Size<f32>,
+    area_offset: Point<f32>,
+    direction: Direction,
+    #[cfg(feature = "grid")] grid_owner: Option<NodeId>,
+    before_layout: impl FnOnce(&mut Tree, &LayoutInput),
+) -> OofBoxLayout {
+    let child_style = tree.get_oof_item_style(candidate.node);
+
+    // If the current node is a grid container then the box is positioned relative to the
+    // grid area determined by its grid-placement properties (which falls back to the passed
+    // area for `auto` placement)
+    #[cfg(feature = "grid")]
+    let (area_size, area_offset) = match grid_owner.map(|owner| tree.get_detailed_layout_info(owner)) {
+        Some(DetailedLayoutInfo::Grid(grid_info)) => {
+            let area_rect = Rect {
+                left: area_offset.x,
+                right: area_offset.x + area_size.width,
+                top: area_offset.y,
+                bottom: area_offset.y + area_size.height,
+            };
+            let grid_area = grid_info.resolve_absolute_grid_area(
+                child_style.grid_row(),
+                child_style.grid_column(),
+                direction,
+                area_rect,
+            );
+            (
+                Size { width: grid_area.right - grid_area.left, height: grid_area.bottom - grid_area.top },
+                Point { x: grid_area.left, y: grid_area.top },
+            )
+        }
+        _ => (area_size, area_offset),
+    };
+    let area_width = area_size.width;
+    let area_height = area_size.height;
+
+    let aspect_ratio = child_style.aspect_ratio();
+    let margin =
+        child_style.margin().map(|margin| margin.resolve_to_option(area_width, |val, basis| tree.calc(val, basis)));
+    let padding = child_style.padding().resolve_or_zero(Some(area_width), |val, basis| tree.calc(val, basis));
+    let border = child_style.border().resolve_or_zero(Some(area_width), |val, basis| tree.calc(val, basis));
+    let padding_border_sum = (padding + border).sum_axes();
+    let box_sizing_adjustment =
+        if child_style.box_sizing() == BoxSizing::ContentBox { padding_border_sum } else { Size::ZERO };
+
+    // Resolve inset
+    let left = child_style.inset().left.maybe_resolve(area_width, |val, basis| tree.calc(val, basis));
+    let right = child_style.inset().right.maybe_resolve(area_width, |val, basis| tree.calc(val, basis));
+    let top = child_style.inset().top.maybe_resolve(area_height, |val, basis| tree.calc(val, basis));
+    let bottom = child_style.inset().bottom.maybe_resolve(area_height, |val, basis| tree.calc(val, basis));
+
+    // Compute known dimensions from min/max/inherent size styles
+    let size_style = child_style.size();
+    let style_size = size_style
+        .maybe_resolve(area_size, |val, basis| tree.calc(val, basis))
+        .maybe_apply_aspect_ratio(aspect_ratio)
+        .maybe_add(box_sizing_adjustment);
+    let min_size = child_style
+        .min_size()
+        .maybe_resolve(area_size, |val, basis| tree.calc(val, basis))
+        .maybe_apply_aspect_ratio(aspect_ratio)
+        .maybe_add(box_sizing_adjustment)
+        .or(padding_border_sum.map(Some))
+        .maybe_max(padding_border_sum);
+    let max_size = child_style
+        .max_size()
+        .maybe_resolve(area_size, |val, basis| tree.calc(val, basis))
+        .maybe_apply_aspect_ratio(aspect_ratio)
+        .maybe_add(box_sizing_adjustment);
+    let mut known_dimensions = style_size.maybe_clamp(min_size, max_size);
+
+    let is_replaced = child_style.is_compressible_replaced();
+    let overflow = child_style.overflow();
+    let scrollbar_width = child_style.scrollbar_width();
+    #[cfg(feature = "content_size")]
+    let contain = child_style.contain();
+
+    drop(child_style);
+
+    // Resolve any sizing keywords (min-content, max-content, fit-content, fit-content(...),
+    // stretch) in the size styles. An explicitly sized axis takes precedence over the
+    // inset-derived size below.
+    if size_style.width.is_sizing_keyword() || size_style.height.is_sizing_keyword() {
+        resolve_absolute_sizing_keywords(
+            tree,
+            candidate.node,
+            &mut known_dimensions,
+            size_style,
+            area_size,
+            Rect { left, right, top, bottom },
+            margin,
+            SizingMode::ContentSize,
+        );
+        known_dimensions = known_dimensions.maybe_apply_aspect_ratio(aspect_ratio).maybe_clamp(min_size, max_size);
+    }
+
+    // Fill in width from left/right and reapply aspect ratio if:
+    //   - Width is not already known
+    //   - Item has both left and right inset properties set
+    //   - Item is not a replaced element (an `auto` size of an absolutely positioned
+    //     replaced element resolves to its intrinsic size rather than being stretched
+    //     between the insets: https://www.w3.org/TR/CSS22/visudet.html#abs-replaced-width)
+    if let (false, None, Some(left), Some(right)) = (is_replaced, known_dimensions.width, left, right) {
+        let new_width_raw = area_width.maybe_sub(margin.left).maybe_sub(margin.right) - left - right;
+        known_dimensions.width = Some(f32_max(new_width_raw, 0.0));
+        known_dimensions = known_dimensions.maybe_apply_aspect_ratio(aspect_ratio).maybe_clamp(min_size, max_size);
+    }
+
+    // Fill in height from top/bottom and reapply aspect ratio if:
+    //   - Height is not already known
+    //   - Item has both top and bottom inset properties set
+    //   - Item is not a replaced element (https://www.w3.org/TR/CSS22/visudet.html#abs-replaced-height)
+    if let (false, None, Some(top), Some(bottom)) = (is_replaced, known_dimensions.height, top, bottom) {
+        let new_height_raw = area_height.maybe_sub(margin.top).maybe_sub(margin.bottom) - top - bottom;
+        known_dimensions.height = Some(f32_max(new_height_raw, 0.0));
+        known_dimensions = known_dimensions.maybe_apply_aspect_ratio(aspect_ratio).maybe_clamp(min_size, max_size);
+    }
+
+    let final_size = match (known_dimensions.width, known_dimensions.height) {
+        (Some(width), Some(height)) => Size { width, height },
+        _ => {
+            let measured_size = tree.measure_child_size_both(
+                candidate.node,
+                known_dimensions,
+                area_size.map(Some),
+                Size {
+                    width: AvailableSpace::Definite(area_width.maybe_clamp(min_size.width, max_size.width)),
+                    height: AvailableSpace::Definite(area_height.maybe_clamp(min_size.height, max_size.height)),
+                },
+                SizingMode::ContentSize,
+                Line::FALSE,
+            );
+            known_dimensions.unwrap_or(measured_size)
+        }
+    }
+    .maybe_clamp(min_size, max_size);
+
+    let layout_input = LayoutInput {
+        known_dimensions: final_size.map(Some),
+        known_dimensions_are_definite: Size { width: true, height: true },
+        parent_size: area_size.map(Some),
+        available_space: Size {
+            width: AvailableSpace::Definite(area_width.maybe_clamp(min_size.width, max_size.width)),
+            height: AvailableSpace::Definite(area_height.maybe_clamp(min_size.height, max_size.height)),
+        },
+        sizing_mode: SizingMode::ContentSize,
+        axis: RequestedAxis::Both,
+        run_mode: RunMode::PerformLayout,
+        vertical_margins_are_collapsible: Line::FALSE,
+    };
+    before_layout(tree, &layout_input);
+    let mut layout_output = tree.compute_child_layout(candidate.node, layout_input);
+
+    let non_auto_margin = Rect {
+        left: if left.is_some() { margin.left.unwrap_or(0.0) } else { 0.0 },
+        right: if right.is_some() { margin.right.unwrap_or(0.0) } else { 0.0 },
+        top: if top.is_some() { margin.top.unwrap_or(0.0) } else { 0.0 },
+        bottom: if bottom.is_some() { margin.bottom.unwrap_or(0.0) } else { 0.0 },
+    };
+
+    // Expand auto margins to fill available space
+    // https://www.w3.org/TR/CSS21/visudet.html#abs-non-replaced-width
+    let auto_margin = {
+        // Auto margins only absorb free space in an axis where both insets are non-auto.
+        // Otherwise they resolve to 0.
+        let free_space = Size {
+            width: match (left, right) {
+                (Some(left), Some(right)) => {
+                    area_size.width - left - right - final_size.width - non_auto_margin.horizontal_axis_sum()
+                }
+                _ => 0.0,
+            },
+            height: match (top, bottom) {
+                (Some(top), Some(bottom)) => {
+                    area_size.height - top - bottom - final_size.height - non_auto_margin.vertical_axis_sum()
+                }
+                _ => 0.0,
+            },
+        };
+
+        let auto_margin_size = Size {
+            // If all three of 'left', 'width', and 'right' are 'auto': First set any 'auto' values for 'margin-left' and 'margin-right' to 0.
+            // Then, if the 'direction' property of the element establishing the static-position containing block is 'ltr' set 'left' to the
+            // static position and apply rule number three below; otherwise, set 'right' to the static position and apply rule number one below.
+            //
+            // If none of the three is 'auto': If both 'margin-left' and 'margin-right' are 'auto', solve the equation under the extra constraint
+            // that the two margins get equal values, unless this would make them negative, in which case when direction of the containing block is
+            // 'ltr' ('rtl'), set 'margin-left' ('margin-right') to zero and solve for 'margin-right' ('margin-left'). If one of 'margin-left' or
+            // 'margin-right' is 'auto', solve the equation for that value. If the values are over-constrained, ignore the value for 'left' (in case
+            // the 'direction' property of the containing block is 'rtl') or 'right' (in case 'direction' is 'ltr') and solve for that value.
+            width: {
+                let auto_margin_count = margin.left.is_none() as u8 + margin.right.is_none() as u8;
+                if auto_margin_count == 2 && free_space.width <= 0.0 {
+                    0.0
+                } else if auto_margin_count > 0 {
+                    free_space.width / auto_margin_count as f32
+                } else {
+                    0.0
+                }
+            },
+            height: {
+                let auto_margin_count = margin.top.is_none() as u8 + margin.bottom.is_none() as u8;
+                if auto_margin_count == 2 && free_space.height <= 0.0 {
+                    0.0
+                } else if auto_margin_count > 0 {
+                    free_space.height / auto_margin_count as f32
+                } else {
+                    0.0
+                }
+            },
+        };
+
+        Rect {
+            left: margin.left.map(|_| 0.0).unwrap_or(auto_margin_size.width),
+            right: margin.right.map(|_| 0.0).unwrap_or(auto_margin_size.width),
+            top: margin.top.map(|_| 0.0).unwrap_or(auto_margin_size.height),
+            bottom: margin.bottom.map(|_| 0.0).unwrap_or(auto_margin_size.height),
+        }
+    };
+
+    let resolved_margin = Rect {
+        left: margin.left.unwrap_or(auto_margin.left),
+        right: margin.right.unwrap_or(auto_margin.right),
+        top: margin.top.unwrap_or(auto_margin.top),
+        bottom: margin.bottom.unwrap_or(auto_margin.bottom),
+    };
+
+    let static_offset = resolve_static_offset(candidate.static_position, final_size, resolved_margin);
+    let static_x = static_offset.x;
+    let static_y = static_offset.y;
+
+    let x_offset = match (left, right) {
+        (Some(left), Some(right)) => {
+            if direction.is_rtl() {
+                area_size.width - final_size.width - right - resolved_margin.right
+            } else {
+                left + resolved_margin.left
+            }
+        }
+        (Some(left), None) => left + resolved_margin.left,
+        (None, Some(right)) => area_size.width - final_size.width - right - resolved_margin.right,
+        (None, None) => static_x - area_offset.x,
+    };
+    let location = Point {
+        x: x_offset + area_offset.x,
+        y: top
+            .map(|top| top + resolved_margin.top)
+            .or(bottom.map(|bottom| area_size.height - final_size.height - bottom - resolved_margin.bottom))
+            .maybe_add(area_offset.y)
+            .unwrap_or(static_y),
+    };
+    // Note: axis intentionally switched here as scrollbars take up space in the opposite axis
+    // to the axis in which scrolling is enabled.
+    let scrollbar_size = Size {
+        width: if overflow.y == crate::Overflow::Scroll { scrollbar_width } else { 0.0 },
+        height: if overflow.x == crate::Overflow::Scroll { scrollbar_width } else { 0.0 },
+    };
+
+    let layout = Layout {
+        order: candidate.order,
+        size: final_size,
+        #[cfg(feature = "content_size")]
+        scrollable_overflow_rect: layout_output.scrollable_overflow_rect,
+        scrollbar_size,
+        location,
+        padding,
+        border,
+        margin: resolved_margin,
+    };
+    tree.set_unrounded_layout(candidate.node, &layout);
+
+    OofBoxLayout {
+        layout,
+        surfaced: layout_output.oof_candidates.take(),
+        #[cfg(feature = "content_size")]
+        overflow,
+        #[cfg(feature = "content_size")]
+        contain,
+    }
+}
+
 /// Perform final layout on the out-of-flow candidates for which the current node is the
 /// containing block, and collect the remainder into `unclaimed` for further bubbling.
 ///
@@ -198,13 +507,6 @@ pub(crate) fn perform_oof_layout(
         }
     }
 
-    #[cfg(feature = "grid")]
-    let area_rect = Rect {
-        left: area_offset.x,
-        right: area_offset.x + area_size.width,
-        top: area_offset.y,
-        bottom: area_offset.y + area_size.height,
-    };
     #[cfg(not(feature = "grid"))]
     let _ = node_id;
 
@@ -214,266 +516,29 @@ pub(crate) fn perform_oof_layout(
         index += 1;
         hoisted.push(candidate.node);
 
-        let child_style = tree.get_oof_item_style(candidate.node);
-
-        // If the current node is a grid container then the box is positioned relative to the
-        // grid area determined by its grid-placement properties (which falls back to the passed
-        // area for `auto` placement)
-        #[cfg(feature = "grid")]
-        let (area_size, area_offset) = match tree.get_detailed_layout_info(node_id) {
-            DetailedLayoutInfo::Grid(grid_info) => {
-                let grid_area = grid_info.resolve_absolute_grid_area(
-                    child_style.grid_row(),
-                    child_style.grid_column(),
-                    direction,
-                    area_rect,
-                );
-                (
-                    Size { width: grid_area.right - grid_area.left, height: grid_area.bottom - grid_area.top },
-                    Point { x: grid_area.left, y: grid_area.top },
-                )
-            }
-            _ => (area_size, area_offset),
-        };
-        let area_width = area_size.width;
-        let area_height = area_size.height;
-
-        let aspect_ratio = child_style.aspect_ratio();
-        let margin =
-            child_style.margin().map(|margin| margin.resolve_to_option(area_width, |val, basis| tree.calc(val, basis)));
-        let padding = child_style.padding().resolve_or_zero(Some(area_width), |val, basis| tree.calc(val, basis));
-        let border = child_style.border().resolve_or_zero(Some(area_width), |val, basis| tree.calc(val, basis));
-        let padding_border_sum = (padding + border).sum_axes();
-        let box_sizing_adjustment =
-            if child_style.box_sizing() == BoxSizing::ContentBox { padding_border_sum } else { Size::ZERO };
-
-        // Resolve inset
-        let left = child_style.inset().left.maybe_resolve(area_width, |val, basis| tree.calc(val, basis));
-        let right = child_style.inset().right.maybe_resolve(area_width, |val, basis| tree.calc(val, basis));
-        let top = child_style.inset().top.maybe_resolve(area_height, |val, basis| tree.calc(val, basis));
-        let bottom = child_style.inset().bottom.maybe_resolve(area_height, |val, basis| tree.calc(val, basis));
-
-        // Compute known dimensions from min/max/inherent size styles
-        let size_style = child_style.size();
-        let style_size = size_style
-            .maybe_resolve(area_size, |val, basis| tree.calc(val, basis))
-            .maybe_apply_aspect_ratio(aspect_ratio)
-            .maybe_add(box_sizing_adjustment);
-        let min_size = child_style
-            .min_size()
-            .maybe_resolve(area_size, |val, basis| tree.calc(val, basis))
-            .maybe_apply_aspect_ratio(aspect_ratio)
-            .maybe_add(box_sizing_adjustment)
-            .or(padding_border_sum.map(Some))
-            .maybe_max(padding_border_sum);
-        let max_size = child_style
-            .max_size()
-            .maybe_resolve(area_size, |val, basis| tree.calc(val, basis))
-            .maybe_apply_aspect_ratio(aspect_ratio)
-            .maybe_add(box_sizing_adjustment);
-        let mut known_dimensions = style_size.maybe_clamp(min_size, max_size);
-
-        let is_replaced = child_style.is_compressible_replaced();
-        let overflow = child_style.overflow();
-        let scrollbar_width = child_style.scrollbar_width();
-        #[cfg(feature = "content_size")]
-        let contain = child_style.contain();
-
-        drop(child_style);
-
-        // Resolve any sizing keywords (min-content, max-content, fit-content, fit-content(...),
-        // stretch) in the size styles. An explicitly sized axis takes precedence over the
-        // inset-derived size below.
-        if size_style.width.is_sizing_keyword() || size_style.height.is_sizing_keyword() {
-            resolve_absolute_sizing_keywords(
-                tree,
-                candidate.node,
-                &mut known_dimensions,
-                size_style,
-                area_size,
-                Rect { left, right, top, bottom },
-                margin,
-                SizingMode::ContentSize,
-            );
-            known_dimensions = known_dimensions.maybe_apply_aspect_ratio(aspect_ratio).maybe_clamp(min_size, max_size);
-        }
-
-        // Fill in width from left/right and reapply aspect ratio if:
-        //   - Width is not already known
-        //   - Item has both left and right inset properties set
-        //   - Item is not a replaced element (an `auto` size of an absolutely positioned
-        //     replaced element resolves to its intrinsic size rather than being stretched
-        //     between the insets: https://www.w3.org/TR/CSS22/visudet.html#abs-replaced-width)
-        if let (false, None, Some(left), Some(right)) = (is_replaced, known_dimensions.width, left, right) {
-            let new_width_raw = area_width.maybe_sub(margin.left).maybe_sub(margin.right) - left - right;
-            known_dimensions.width = Some(f32_max(new_width_raw, 0.0));
-            known_dimensions = known_dimensions.maybe_apply_aspect_ratio(aspect_ratio).maybe_clamp(min_size, max_size);
-        }
-
-        // Fill in height from top/bottom and reapply aspect ratio if:
-        //   - Height is not already known
-        //   - Item has both top and bottom inset properties set
-        //   - Item is not a replaced element (https://www.w3.org/TR/CSS22/visudet.html#abs-replaced-height)
-        if let (false, None, Some(top), Some(bottom)) = (is_replaced, known_dimensions.height, top, bottom) {
-            let new_height_raw = area_height.maybe_sub(margin.top).maybe_sub(margin.bottom) - top - bottom;
-            known_dimensions.height = Some(f32_max(new_height_raw, 0.0));
-            known_dimensions = known_dimensions.maybe_apply_aspect_ratio(aspect_ratio).maybe_clamp(min_size, max_size);
-        }
-
-        let final_size = match (known_dimensions.width, known_dimensions.height) {
-            (Some(width), Some(height)) => Size { width, height },
-            _ => {
-                let measured_size = tree.measure_child_size_both(
-                    candidate.node,
-                    known_dimensions,
-                    area_size.map(Some),
-                    Size {
-                        width: AvailableSpace::Definite(area_width.maybe_clamp(min_size.width, max_size.width)),
-                        height: AvailableSpace::Definite(area_height.maybe_clamp(min_size.height, max_size.height)),
-                    },
-                    SizingMode::ContentSize,
-                    Line::FALSE,
-                );
-                known_dimensions.unwrap_or(measured_size)
-            }
-        }
-        .maybe_clamp(min_size, max_size);
-
-        let mut layout_output = tree.perform_child_layout(
-            candidate.node,
-            final_size.map(Some),
-            area_size.map(Some),
-            Size {
-                width: AvailableSpace::Definite(area_width.maybe_clamp(min_size.width, max_size.width)),
-                height: AvailableSpace::Definite(area_height.maybe_clamp(min_size.height, max_size.height)),
-            },
-            SizingMode::ContentSize,
-            Line::FALSE,
+        let OofBoxLayout {
+            layout,
+            surfaced,
+            #[cfg(feature = "content_size")]
+            overflow,
+            #[cfg(feature = "content_size")]
+            contain,
+        } = layout_oof_box(
+            tree,
+            candidate,
+            area_size,
+            area_offset,
+            direction,
+            #[cfg(feature = "grid")]
+            Some(node_id),
+            |_, _| {},
         );
-
-        let non_auto_margin = Rect {
-            left: if left.is_some() { margin.left.unwrap_or(0.0) } else { 0.0 },
-            right: if right.is_some() { margin.right.unwrap_or(0.0) } else { 0.0 },
-            top: if top.is_some() { margin.top.unwrap_or(0.0) } else { 0.0 },
-            bottom: if bottom.is_some() { margin.bottom.unwrap_or(0.0) } else { 0.0 },
-        };
-
-        // Expand auto margins to fill available space
-        // https://www.w3.org/TR/CSS21/visudet.html#abs-non-replaced-width
-        let auto_margin = {
-            // Auto margins only absorb free space in an axis where both insets are non-auto.
-            // Otherwise they resolve to 0.
-            let free_space = Size {
-                width: match (left, right) {
-                    (Some(left), Some(right)) => {
-                        area_size.width - left - right - final_size.width - non_auto_margin.horizontal_axis_sum()
-                    }
-                    _ => 0.0,
-                },
-                height: match (top, bottom) {
-                    (Some(top), Some(bottom)) => {
-                        area_size.height - top - bottom - final_size.height - non_auto_margin.vertical_axis_sum()
-                    }
-                    _ => 0.0,
-                },
-            };
-
-            let auto_margin_size = Size {
-                // If all three of 'left', 'width', and 'right' are 'auto': First set any 'auto' values for 'margin-left' and 'margin-right' to 0.
-                // Then, if the 'direction' property of the element establishing the static-position containing block is 'ltr' set 'left' to the
-                // static position and apply rule number three below; otherwise, set 'right' to the static position and apply rule number one below.
-                //
-                // If none of the three is 'auto': If both 'margin-left' and 'margin-right' are 'auto', solve the equation under the extra constraint
-                // that the two margins get equal values, unless this would make them negative, in which case when direction of the containing block is
-                // 'ltr' ('rtl'), set 'margin-left' ('margin-right') to zero and solve for 'margin-right' ('margin-left'). If one of 'margin-left' or
-                // 'margin-right' is 'auto', solve the equation for that value. If the values are over-constrained, ignore the value for 'left' (in case
-                // the 'direction' property of the containing block is 'rtl') or 'right' (in case 'direction' is 'ltr') and solve for that value.
-                width: {
-                    let auto_margin_count = margin.left.is_none() as u8 + margin.right.is_none() as u8;
-                    if auto_margin_count == 2 && free_space.width <= 0.0 {
-                        0.0
-                    } else if auto_margin_count > 0 {
-                        free_space.width / auto_margin_count as f32
-                    } else {
-                        0.0
-                    }
-                },
-                height: {
-                    let auto_margin_count = margin.top.is_none() as u8 + margin.bottom.is_none() as u8;
-                    if auto_margin_count == 2 && free_space.height <= 0.0 {
-                        0.0
-                    } else if auto_margin_count > 0 {
-                        free_space.height / auto_margin_count as f32
-                    } else {
-                        0.0
-                    }
-                },
-            };
-
-            Rect {
-                left: margin.left.map(|_| 0.0).unwrap_or(auto_margin_size.width),
-                right: margin.right.map(|_| 0.0).unwrap_or(auto_margin_size.width),
-                top: margin.top.map(|_| 0.0).unwrap_or(auto_margin_size.height),
-                bottom: margin.bottom.map(|_| 0.0).unwrap_or(auto_margin_size.height),
-            }
-        };
-
-        let resolved_margin = Rect {
-            left: margin.left.unwrap_or(auto_margin.left),
-            right: margin.right.unwrap_or(auto_margin.right),
-            top: margin.top.unwrap_or(auto_margin.top),
-            bottom: margin.bottom.unwrap_or(auto_margin.bottom),
-        };
-
-        let static_offset = resolve_static_offset(candidate.static_position, final_size, resolved_margin);
-        let static_x = static_offset.x;
-        let static_y = static_offset.y;
-
-        let x_offset = match (left, right) {
-            (Some(left), Some(right)) => {
-                if direction.is_rtl() {
-                    area_size.width - final_size.width - right - resolved_margin.right
-                } else {
-                    left + resolved_margin.left
-                }
-            }
-            (Some(left), None) => left + resolved_margin.left,
-            (None, Some(right)) => area_size.width - final_size.width - right - resolved_margin.right,
-            (None, None) => static_x - area_offset.x,
-        };
-        let location = Point {
-            x: x_offset + area_offset.x,
-            y: top
-                .map(|top| top + resolved_margin.top)
-                .or(bottom.map(|bottom| area_size.height - final_size.height - bottom - resolved_margin.bottom))
-                .maybe_add(area_offset.y)
-                .unwrap_or(static_y),
-        };
-        // Note: axis intentionally switched here as scrollbars take up space in the opposite axis
-        // to the axis in which scrolling is enabled.
-        let scrollbar_size = Size {
-            width: if overflow.y == crate::Overflow::Scroll { scrollbar_width } else { 0.0 },
-            height: if overflow.x == crate::Overflow::Scroll { scrollbar_width } else { 0.0 },
-        };
-
-        tree.set_unrounded_layout(
-            candidate.node,
-            &Layout {
-                order: candidate.order,
-                size: final_size,
-                #[cfg(feature = "content_size")]
-                scrollable_overflow_rect: layout_output.scrollable_overflow_rect,
-                scrollbar_size,
-                location,
-                padding,
-                border,
-                margin: resolved_margin,
-            },
-        );
+        let location = layout.location;
+        let final_size = layout.size;
 
         // Re-sweep any candidates surfaced from within the box's subtree, translating their
         // anchors so they are relative to this node's border box
-        let mut surfaced = layout_output.oof_candidates.take();
+        let mut surfaced = surfaced;
         if !surfaced.is_empty() {
             surfaced.translate(location);
             for surfaced_candidate in surfaced.iter() {
@@ -499,7 +564,7 @@ pub(crate) fn perform_oof_layout(
             absolute_overflow_rect = absolute_overflow_rect.union(compute_scrollable_overflow_contribution(
                 relative_location,
                 final_size,
-                layout_output.scrollable_overflow_rect,
+                layout.scrollable_overflow_rect,
                 overflow,
                 contain,
                 is_scroll_container,

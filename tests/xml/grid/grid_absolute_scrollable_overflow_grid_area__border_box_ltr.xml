@@ -1,0 +1,17 @@
+<test name="grid_absolute_scrollable_overflow_grid_area__border_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" direction="ltr" position="absolute" overflow-x="scroll" overflow-y="scroll" scrollbar-width="15" width="130px" height="130px" padding-top="10px" padding-left="10px" padding-bottom="10px" padding-right="10px" grid-template-rows="30px 30px 30px" grid-template-columns="30px 30px 30px">
+      <div direction="ltr" position="absolute" width="100px" height="20px" top="0px" left="0px" grid-column-start="3"/>
+      <div direction="ltr" position="absolute" width="100px" height="20px" top="30px" right="0px" grid-column-start="3"/>
+      <div direction="ltr" position="absolute" width="20px" height="100px" top="0px" left="0px" grid-row-start="3"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="130" height="130" scroll_width="55" scroll_height="55" resolved-rows="30px 30px 30px" resolved-columns="30px 30px 30px">
+      <node x="70" y="0" width="100" height="20"/>
+      <node x="15" y="30" width="100" height="20"/>
+      <node x="0" y="70" width="20" height="100"/>
+    </node>
+  </expectations>
+</test>
