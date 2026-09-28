@@ -53,7 +53,7 @@ pub use self::grid::compute_grid_layout;
 pub use self::float::{BfcSlot, ContentSlot, FloatContext, FloatIntrinsicWidthCalculator};
 
 use crate::geometry::{Line, Point, Size};
-use crate::style::{AvailableSpace, ContainingBlockClaims, CoreStyle, Overflow};
+use crate::style::{AvailableSpace, ContainingBlockClaims, CoreStyle, Overflow, Position};
 use crate::tree::{
     Layout, LayoutInput, LayoutOutput, LayoutPartialTree, LayoutPartialTreeExt, NodeId, OofCandidates, RequestedAxis,
     RoundTree, RunMode, SizingMode,
@@ -70,6 +70,16 @@ pub fn compute_root_layout(
     available_space: Size<AvailableSpace>,
 ) {
     let mut known_dimensions = Size::NONE;
+
+    // The root's containing block is the initial containing block, which has the dimensions of the viewport
+    let (position, inset) = {
+        let style = tree.get_core_container_style(root);
+        let position = style.position();
+        let inset = style.inset().zip_size(available_space.into_options(), |inset, basis| {
+            inset.maybe_resolve(basis, |val, basis| tree.calc(val, basis))
+        });
+        (position, inset)
+    };
 
     #[cfg(feature = "block_layout")]
     {
@@ -111,10 +121,23 @@ pub fn compute_root_layout(
                 _ => None,
             });
 
-            // Block nodes automatically stretch fit their width to fit available space if available space is definite
-            let available_space_based_size = Size {
-                width: available_space.width.into_option().maybe_sub(margin.horizontal_axis_sum()),
-                height: None,
+            // In-flow block nodes automatically stretch fit their width to fit available space if available space is
+            // definite. Out-of-flow nodes are shrink-to-fit unless both insets in an axis are set, in which case they
+            // fill the space between them.
+            let available_space_based_size = if position.is_out_of_flow() {
+                Size {
+                    width: inset.left.zip(inset.right).and_then(|(left, right)| {
+                        available_space.width.into_option().maybe_sub(margin.horizontal_axis_sum() + left + right)
+                    }),
+                    height: inset.top.zip(inset.bottom).and_then(|(top, bottom)| {
+                        available_space.height.into_option().maybe_sub(margin.vertical_axis_sum() + top + bottom)
+                    }),
+                }
+            } else {
+                Size {
+                    width: available_space.width.into_option().maybe_sub(margin.horizontal_axis_sum()),
+                    height: None,
+                }
             };
 
             let styled_based_known_dimensions = known_dimensions
@@ -155,15 +178,46 @@ pub fn compute_root_layout(
         width: if style.overflow().y == Overflow::Scroll { style.scrollbar_width() } else { 0.0 },
         height: if style.overflow().x == Overflow::Scroll { style.scrollbar_width() } else { 0.0 },
     };
-    // The root's margin box is placed at the origin of the initial containing block
-    let location = Point {
-        x: match (style.direction().is_rtl(), available_space.width.into_option()) {
+    let is_rtl = style.direction().is_rtl();
+    drop(style);
+
+    // The root's static position places its margin box at the origin of the initial containing block
+    let static_location = Point {
+        x: match (is_rtl, available_space.width.into_option()) {
             (true, Some(available_width)) => available_width - output.size.width - margin.right,
             _ => margin.left,
         },
         y: margin.top,
     };
-    drop(style);
+    let location = match position {
+        Position::Relative => Point {
+            x: static_location.x
+                + if is_rtl {
+                    inset.right.map(|right| -right).or(inset.left).unwrap_or(0.0)
+                } else {
+                    inset.left.or(inset.right.map(|right| -right)).unwrap_or(0.0)
+                },
+            y: static_location.y + inset.top.or(inset.bottom.map(|bottom| -bottom)).unwrap_or(0.0),
+        },
+        Position::Absolute | Position::Fixed => {
+            let from_left = inset.left.map(|left| left + margin.left);
+            let from_right = inset
+                .right
+                .zip(available_space.width.into_option())
+                .map(|(right, available_width)| available_width - output.size.width - right - margin.right);
+            let from_top = inset.top.map(|top| top + margin.top);
+            let from_bottom = inset
+                .bottom
+                .zip(available_space.height.into_option())
+                .map(|(bottom, available_height)| available_height - output.size.height - bottom - margin.bottom);
+            Point {
+                x: if is_rtl { from_right.or(from_left) } else { from_left.or(from_right) }
+                    .unwrap_or(static_location.x),
+                y: from_top.or(from_bottom).unwrap_or(static_location.y),
+            }
+        }
+        Position::Static | Position::Sticky => static_location,
+    };
 
     tree.set_unrounded_layout(
         root,
