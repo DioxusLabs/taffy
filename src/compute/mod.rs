@@ -13,6 +13,7 @@
 //! | [`compute_root_layout`]           | Layout the root node of a tree (regardless of it's layout mode). This function is typically called once to begin a layout run.                                                                     |                                                                      |
 //! | [`compute_hidden_layout`]         | Mark a node as hidden during layout (like `Display::None`)                                                                                                                                         |
 //! | [`compute_cached_layout`]         | Attempts to find a cached layout for the specified node and layout inputs. Uses the provided closure to compute the layout (and then stores the result in the cache) if no cached layout is found. |
+//! | [`compute_cached_block_child_layout`] | Like [`compute_cached_layout`], for a node laid out within an ancestor's Block Formatting Context. Layouts that interact with floats in that context are not cached.                          |
 //!
 //! ### Other functions
 //!
@@ -349,6 +350,66 @@ where
 
     // Cache result
     tree.cache_store(node, &inputs, computed_size_and_baselines.clone());
+
+    debug_log!("RESULT", dbg:computed_size_and_baselines.size);
+    debug_pop_node!();
+
+    computed_size_and_baselines
+}
+
+/// Variant of [`compute_cached_layout`] for a node laid out within an ancestor's Block Formatting Context
+/// (i.e. when a [`BlockContext`] is passed through to it).
+///
+/// The result of such a layout depends on the floats in the Block Formatting Context, which are not part of
+/// the cache key: floats placed by preceding content shorten the node's line boxes, and floats placed by the
+/// node's own subtree are registered with the shared context as a side effect of the layout. A result is
+/// therefore only cached (or read from the cache) when the layout does not interact with any floats.
+#[cfg(feature = "block_layout")]
+#[inline(always)]
+pub fn compute_cached_block_child_layout<Tree: CacheTree + ?Sized, ComputeFunction>(
+    tree: &mut Tree,
+    node: NodeId,
+    inputs: LayoutInput,
+    block_ctx: Option<&mut BlockContext<'_>>,
+    compute_uncached: ComputeFunction,
+) -> LayoutOutput
+where
+    ComputeFunction: FnOnce(&mut Tree, NodeId, LayoutInput, Option<&mut BlockContext<'_>>) -> LayoutOutput,
+{
+    let Some(block_ctx) = block_ctx else {
+        return compute_cached_layout(tree, node, inputs, |tree, node, inputs| {
+            compute_uncached(tree, node, inputs, None)
+        });
+    };
+
+    #[cfg(feature = "float_layout")]
+    let had_floats = block_ctx.has_floats();
+    #[cfg(not(feature = "float_layout"))]
+    let had_floats = false;
+
+    debug_push_node!(node);
+
+    if !had_floats {
+        if let Some(cached_size_and_baselines) = tree.cache_get(node, &inputs) {
+            debug_log_node!(inputs);
+            debug_log!("RESULT (CACHED)", dbg:cached_size_and_baselines.size);
+            debug_pop_node!();
+            return cached_size_and_baselines;
+        }
+    }
+
+    debug_log_node!(inputs);
+
+    let computed_size_and_baselines = compute_uncached(tree, node, inputs, Some(&mut *block_ctx));
+
+    #[cfg(feature = "float_layout")]
+    let has_floats = block_ctx.has_floats();
+    #[cfg(not(feature = "float_layout"))]
+    let has_floats = false;
+
+    if !had_floats && !has_floats {
+        tree.cache_store(node, &inputs, computed_size_and_baselines.clone());
+    }
 
     debug_log!("RESULT", dbg:computed_size_and_baselines.size);
     debug_pop_node!();
