@@ -75,9 +75,14 @@ pub fn compute_root_layout(
     let (position, inset) = {
         let style = tree.get_core_container_style(root);
         let position = style.position();
-        let inset = style.inset().zip_size(available_space.into_options(), |inset, basis| {
-            inset.maybe_resolve(basis, |val, basis| tree.calc(val, basis))
-        });
+        let inset = style.inset();
+        let icb_size = available_space.into_options();
+        let inset = crate::geometry::Rect {
+            left: inset.left.maybe_resolve(icb_size.width, |val, basis| tree.calc(val, basis)),
+            right: inset.right.maybe_resolve(icb_size.width, |val, basis| tree.calc(val, basis)),
+            top: inset.top.maybe_resolve(icb_size.height, |val, basis| tree.calc(val, basis)),
+            bottom: inset.bottom.maybe_resolve(icb_size.height, |val, basis| tree.calc(val, basis)),
+        };
         (position, inset)
     };
 
