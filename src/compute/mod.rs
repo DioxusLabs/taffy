@@ -120,6 +120,8 @@ pub fn compute_root_layout(
             area_size,
             Point::ZERO,
             direction,
+            // The initial containing block is not a scroll container
+            Point { x: Overflow::Visible, y: Overflow::Visible },
             #[cfg(feature = "grid")]
             None,
             |tree, inputs| root_is_cached = tree.cache_get(root, inputs).is_some(),
@@ -133,11 +135,7 @@ pub fn compute_root_layout(
     // containing block is the containing block for `position: fixed` boxes and for
     // `position: absolute` boxes with no positioned ancestor.
     if !candidates.is_empty() {
-        let style = tree.get_core_container_style(root);
-        let is_scroll_container = style.overflow().x.is_scroll_container() || style.overflow().y.is_scroll_container();
-        #[cfg(not(feature = "content_size"))]
-        let _ = is_scroll_container;
-        drop(style);
+        let overflow = tree.get_core_container_style(root).overflow();
 
         // The initial containing block has the dimensions of the viewport (the available space) and is
         // anchored at the canvas origin. In an axis where the available space is indefinite, fall back
@@ -173,8 +171,7 @@ pub fn compute_root_layout(
             direction,
             // The root is the initial containing block and claims all remaining candidates
             ContainingBlockClaims::ALL,
-            #[cfg(feature = "content_size")]
-            is_scroll_container,
+            overflow,
             &mut hoisted,
             &mut unclaimed,
         );
