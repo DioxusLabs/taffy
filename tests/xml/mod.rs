@@ -21157,6 +21157,30 @@ mod grid {
 
     #[cfg(feature = "grid")]
     #[test]
+    fn grid_absolute_scrollable_overflow_grid_area__border_box_ltr() {
+        crate::run_xml_test("grid", "grid_absolute_scrollable_overflow_grid_area__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_absolute_scrollable_overflow_grid_area__content_box_ltr() {
+        crate::run_xml_test("grid", "grid_absolute_scrollable_overflow_grid_area__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_absolute_scrollable_overflow_grid_area__border_box_rtl() {
+        crate::run_xml_test("grid", "grid_absolute_scrollable_overflow_grid_area__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_absolute_scrollable_overflow_grid_area__content_box_rtl() {
+        crate::run_xml_test("grid", "grid_absolute_scrollable_overflow_grid_area__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
     fn grid_absolute_static_container_static_position_content_box__border_box_ltr() {
         crate::run_xml_test("grid", "grid_absolute_static_container_static_position_content_box__border_box_ltr");
     }
