@@ -1,10 +1,10 @@
 <test name="float_zero_width_blocks_bfc_negative_margin__content_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="block" box-sizing="content-box" direction="ltr" width="125px">
-      <div box-sizing="content-box" direction="ltr" float="left" width="0px" height="50px"/>
-      <div box-sizing="content-box" direction="ltr" float="right" clear="left" width="25px" height="50px"/>
-      <div display="block" box-sizing="content-box" direction="ltr" overflow-x="hidden" overflow-y="hidden" scrollbar-width="15" height="100px" margin-left="-50px"/>
+    <div display="block" box-sizing="content-box" direction="ltr" position="absolute" width="125px">
+      <div box-sizing="content-box" direction="ltr" position="relative" float="left" width="0px" height="50px"/>
+      <div box-sizing="content-box" direction="ltr" position="relative" float="right" clear="left" width="25px" height="50px"/>
+      <div display="block" box-sizing="content-box" direction="ltr" position="relative" overflow-x="hidden" overflow-y="hidden" scrollbar-width="15" height="100px" margin-left="-50px"/>
     </div>
   </input>
   <expectations>

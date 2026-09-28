@@ -1,10 +1,10 @@
 <test name="float_bfc_avoids_floats_across_entire_height__border_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="block" direction="rtl" width="125px">
-      <div direction="rtl" float="left" width="20px" height="50px"/>
-      <div direction="rtl" float="right" clear="left" width="25px" height="50px"/>
-      <div display="block" direction="rtl" overflow-x="hidden" overflow-y="hidden" scrollbar-width="15" height="100px"/>
+    <div display="block" direction="rtl" position="absolute" width="125px">
+      <div direction="rtl" position="relative" float="left" width="20px" height="50px"/>
+      <div direction="rtl" position="relative" float="right" clear="left" width="25px" height="50px"/>
+      <div display="block" direction="rtl" position="relative" overflow-x="hidden" overflow-y="hidden" scrollbar-width="15" height="100px"/>
     </div>
   </input>
   <expectations>
