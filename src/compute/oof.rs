@@ -273,6 +273,7 @@ pub(crate) fn perform_oof_layout(
             .maybe_add(box_sizing_adjustment);
         let mut known_dimensions = style_size.maybe_clamp(min_size, max_size);
 
+        let is_replaced = child_style.is_compressible_replaced();
         let overflow = child_style.overflow();
         let scrollbar_width = child_style.scrollbar_width();
         #[cfg(feature = "content_size")]
@@ -300,7 +301,10 @@ pub(crate) fn perform_oof_layout(
         // Fill in width from left/right and reapply aspect ratio if:
         //   - Width is not already known
         //   - Item has both left and right inset properties set
-        if let (None, Some(left), Some(right)) = (known_dimensions.width, left, right) {
+        //   - Item is not a replaced element (an `auto` size of an absolutely positioned
+        //     replaced element resolves to its intrinsic size rather than being stretched
+        //     between the insets: https://www.w3.org/TR/CSS22/visudet.html#abs-replaced-width)
+        if let (false, None, Some(left), Some(right)) = (is_replaced, known_dimensions.width, left, right) {
             let new_width_raw = area_width.maybe_sub(margin.left).maybe_sub(margin.right) - left - right;
             known_dimensions.width = Some(f32_max(new_width_raw, 0.0));
             known_dimensions = known_dimensions.maybe_apply_aspect_ratio(aspect_ratio).maybe_clamp(min_size, max_size);
@@ -309,7 +313,8 @@ pub(crate) fn perform_oof_layout(
         // Fill in height from top/bottom and reapply aspect ratio if:
         //   - Height is not already known
         //   - Item has both top and bottom inset properties set
-        if let (None, Some(top), Some(bottom)) = (known_dimensions.height, top, bottom) {
+        //   - Item is not a replaced element (https://www.w3.org/TR/CSS22/visudet.html#abs-replaced-height)
+        if let (false, None, Some(top), Some(bottom)) = (is_replaced, known_dimensions.height, top, bottom) {
             let new_height_raw = area_height.maybe_sub(margin.top).maybe_sub(margin.bottom) - top - bottom;
             known_dimensions.height = Some(f32_max(new_height_raw, 0.0));
             known_dimensions = known_dimensions.maybe_apply_aspect_ratio(aspect_ratio).maybe_clamp(min_size, max_size);
