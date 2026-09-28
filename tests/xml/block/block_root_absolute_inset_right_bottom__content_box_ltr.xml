@@ -1,0 +1,13 @@
+<test name="block_root_absolute_inset_right_bottom__content_box_ltr" use-rounding="true">
+  <viewport width="400px" height="300px"/>
+  <input>
+    <div display="block" box-sizing="content-box" direction="ltr" position="absolute" width="100px" height="50px" margin-top="5px" margin-left="10px" margin-bottom="5px" margin-right="10px" bottom="20px" right="10%">
+      <div box-sizing="content-box" direction="ltr" position="relative" height="10px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="250" y="225" width="100" height="50">
+      <node x="0" y="0" width="100" height="10"/>
+    </node>
+  </expectations>
+</test>
