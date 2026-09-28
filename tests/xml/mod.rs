@@ -554,6 +554,26 @@ mod block {
     }
 
     #[test]
+    fn block_absolute_margin_auto_bottom_only_inset__border_box_ltr() {
+        crate::run_xml_test("block", "block_absolute_margin_auto_bottom_only_inset__border_box_ltr");
+    }
+
+    #[test]
+    fn block_absolute_margin_auto_bottom_only_inset__content_box_ltr() {
+        crate::run_xml_test("block", "block_absolute_margin_auto_bottom_only_inset__content_box_ltr");
+    }
+
+    #[test]
+    fn block_absolute_margin_auto_bottom_only_inset__border_box_rtl() {
+        crate::run_xml_test("block", "block_absolute_margin_auto_bottom_only_inset__border_box_rtl");
+    }
+
+    #[test]
+    fn block_absolute_margin_auto_bottom_only_inset__content_box_rtl() {
+        crate::run_xml_test("block", "block_absolute_margin_auto_bottom_only_inset__content_box_rtl");
+    }
+
+    #[test]
     fn block_absolute_margin_auto_bottom_with_inset__border_box_ltr() {
         crate::run_xml_test("block", "block_absolute_margin_auto_bottom_with_inset__border_box_ltr");
     }
@@ -782,6 +802,26 @@ mod block {
     }
 
     #[test]
+    fn block_absolute_margin_auto_left_only_inset__border_box_ltr() {
+        crate::run_xml_test("block", "block_absolute_margin_auto_left_only_inset__border_box_ltr");
+    }
+
+    #[test]
+    fn block_absolute_margin_auto_left_only_inset__content_box_ltr() {
+        crate::run_xml_test("block", "block_absolute_margin_auto_left_only_inset__content_box_ltr");
+    }
+
+    #[test]
+    fn block_absolute_margin_auto_left_only_inset__border_box_rtl() {
+        crate::run_xml_test("block", "block_absolute_margin_auto_left_only_inset__border_box_rtl");
+    }
+
+    #[test]
+    fn block_absolute_margin_auto_left_only_inset__content_box_rtl() {
+        crate::run_xml_test("block", "block_absolute_margin_auto_left_only_inset__content_box_rtl");
+    }
+
+    #[test]
     fn block_absolute_margin_auto_left_right_child_bigger_than_parent_with_inset__border_box_ltr() {
         crate::run_xml_test(
             "block",
@@ -926,6 +966,26 @@ mod block {
     }
 
     #[test]
+    fn block_absolute_margin_auto_right_only_inset__border_box_ltr() {
+        crate::run_xml_test("block", "block_absolute_margin_auto_right_only_inset__border_box_ltr");
+    }
+
+    #[test]
+    fn block_absolute_margin_auto_right_only_inset__content_box_ltr() {
+        crate::run_xml_test("block", "block_absolute_margin_auto_right_only_inset__content_box_ltr");
+    }
+
+    #[test]
+    fn block_absolute_margin_auto_right_only_inset__border_box_rtl() {
+        crate::run_xml_test("block", "block_absolute_margin_auto_right_only_inset__border_box_rtl");
+    }
+
+    #[test]
+    fn block_absolute_margin_auto_right_only_inset__content_box_rtl() {
+        crate::run_xml_test("block", "block_absolute_margin_auto_right_only_inset__content_box_rtl");
+    }
+
+    #[test]
     fn block_absolute_margin_auto_right_with_inset__border_box_ltr() {
         crate::run_xml_test("block", "block_absolute_margin_auto_right_with_inset__border_box_ltr");
     }
@@ -983,6 +1043,26 @@ mod block {
     #[test]
     fn block_absolute_margin_auto_top_and_bottom_max_height__content_box_rtl() {
         crate::run_xml_test("block", "block_absolute_margin_auto_top_and_bottom_max_height__content_box_rtl");
+    }
+
+    #[test]
+    fn block_absolute_margin_auto_top_only_inset__border_box_ltr() {
+        crate::run_xml_test("block", "block_absolute_margin_auto_top_only_inset__border_box_ltr");
+    }
+
+    #[test]
+    fn block_absolute_margin_auto_top_only_inset__content_box_ltr() {
+        crate::run_xml_test("block", "block_absolute_margin_auto_top_only_inset__content_box_ltr");
+    }
+
+    #[test]
+    fn block_absolute_margin_auto_top_only_inset__border_box_rtl() {
+        crate::run_xml_test("block", "block_absolute_margin_auto_top_only_inset__border_box_rtl");
+    }
+
+    #[test]
+    fn block_absolute_margin_auto_top_only_inset__content_box_rtl() {
+        crate::run_xml_test("block", "block_absolute_margin_auto_top_only_inset__content_box_rtl");
     }
 
     #[test]
@@ -6911,6 +6991,26 @@ mod flex {
     #[test]
     fn absolute_layout_within_border__content_box_rtl() {
         crate::run_xml_test("flex", "absolute_layout_within_border__content_box_rtl");
+    }
+
+    #[test]
+    fn absolute_margin_auto_right_bottom_only_inset__border_box_ltr() {
+        crate::run_xml_test("flex", "absolute_margin_auto_right_bottom_only_inset__border_box_ltr");
+    }
+
+    #[test]
+    fn absolute_margin_auto_right_bottom_only_inset__content_box_ltr() {
+        crate::run_xml_test("flex", "absolute_margin_auto_right_bottom_only_inset__content_box_ltr");
+    }
+
+    #[test]
+    fn absolute_margin_auto_right_bottom_only_inset__border_box_rtl() {
+        crate::run_xml_test("flex", "absolute_margin_auto_right_bottom_only_inset__border_box_rtl");
+    }
+
+    #[test]
+    fn absolute_margin_auto_right_bottom_only_inset__content_box_rtl() {
+        crate::run_xml_test("flex", "absolute_margin_auto_right_bottom_only_inset__content_box_rtl");
     }
 
     #[test]
@@ -20809,6 +20909,30 @@ mod grid {
     #[test]
     fn grid_absolute_layout_within_border_static__content_box_rtl() {
         crate::run_xml_test("grid", "grid_absolute_layout_within_border_static__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_absolute_margin_auto_right_bottom_only_inset__border_box_ltr() {
+        crate::run_xml_test("grid", "grid_absolute_margin_auto_right_bottom_only_inset__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_absolute_margin_auto_right_bottom_only_inset__content_box_ltr() {
+        crate::run_xml_test("grid", "grid_absolute_margin_auto_right_bottom_only_inset__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_absolute_margin_auto_right_bottom_only_inset__border_box_rtl() {
+        crate::run_xml_test("grid", "grid_absolute_margin_auto_right_bottom_only_inset__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_absolute_margin_auto_right_bottom_only_inset__content_box_rtl() {
+        crate::run_xml_test("grid", "grid_absolute_margin_auto_right_bottom_only_inset__content_box_rtl");
     }
 
     #[cfg(feature = "grid")]
