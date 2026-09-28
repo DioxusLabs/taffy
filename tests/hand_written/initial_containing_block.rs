@@ -79,98 +79,25 @@ mod initial_containing_block {
         assert_eq!(tree.layout(oof).unwrap().location, Point { x: 5.0, y: 5.0 });
     }
 
-    fn positioned_root_style(position: Position, inset: Rect<LengthPercentageAuto>, size: Size<Dimension>) -> Style {
-        Style { display: Display::Block, position, inset, size, border: Rect::length(10.0), ..Default::default() }
-    }
-
     #[test]
-    fn out_of_flow_root_is_positioned_by_left_top_insets() {
-        for position in [Position::Absolute, Position::Fixed] {
-            let mut tree: TaffyTree<()> = TaffyTree::new();
-            let root = tree
-                .new_leaf(positioned_root_style(
-                    position,
-                    Rect { left: length(100.0), top: percent(0.5), right: auto(), bottom: auto() },
-                    Size { width: length(100.0), height: length(100.0) },
-                ))
-                .unwrap();
-            tree.compute_layout(root, VIEWPORT).unwrap();
-
-            let layout = tree.layout(root).unwrap();
-            assert_eq!(layout.location, Point { x: 100.0, y: 300.0 }, "{position:?}");
-            assert_eq!(layout.size, Size { width: 100.0, height: 100.0 }, "{position:?}");
-        }
-    }
-
-    #[test]
-    fn out_of_flow_root_is_positioned_by_right_bottom_insets() {
+    fn fixed_root_is_positioned_by_its_insets() {
+        // `position: fixed` roots cannot be covered by the generated tests (Chrome positions them
+        // against the browser window rather than the `.viewport` wrapper), so check that they are
+        // positioned like absolutely positioned roots against the initial containing block.
         let mut tree: TaffyTree<()> = TaffyTree::new();
         let root = tree
-            .new_leaf(positioned_root_style(
-                Position::Absolute,
-                Rect { left: auto(), top: auto(), right: length(10.0), bottom: length(20.0) },
-                Size { width: length(100.0), height: length(100.0) },
-            ))
+            .new_leaf(Style {
+                display: Display::Block,
+                position: Position::Fixed,
+                inset: Rect { left: auto(), top: percent(0.1), right: length(10.0), bottom: auto() },
+                size: Size { width: length(100.0), height: length(50.0) },
+                ..Default::default()
+            })
             .unwrap();
         tree.compute_layout(root, VIEWPORT).unwrap();
 
         let layout = tree.layout(root).unwrap();
-        assert_eq!(layout.location, Point { x: 800.0 - 100.0 - 10.0, y: 600.0 - 100.0 - 20.0 });
-    }
-
-    #[test]
-    fn out_of_flow_root_is_sized_by_opposing_insets() {
-        let mut tree: TaffyTree<()> = TaffyTree::new();
-        let root = tree.new_leaf(positioned_root_style(Position::Absolute, Rect::length(50.0), Size::auto())).unwrap();
-        tree.compute_layout(root, VIEWPORT).unwrap();
-
-        let layout = tree.layout(root).unwrap();
-        assert_eq!(layout.location, Point { x: 50.0, y: 50.0 });
-        assert_eq!(layout.size, Size { width: 700.0, height: 500.0 });
-    }
-
-    #[test]
-    fn out_of_flow_root_with_auto_insets_is_shrink_to_fit_at_static_position() {
-        let mut tree: TaffyTree<()> = TaffyTree::new();
-        let child = tree
-            .new_leaf(Style { size: Size { width: length(30.0), height: length(40.0) }, ..Default::default() })
-            .unwrap();
-        let root = tree
-            .new_with_children(positioned_root_style(Position::Absolute, Rect::auto(), Size::auto()), &[child])
-            .unwrap();
-        tree.compute_layout(root, VIEWPORT).unwrap();
-
-        let layout = tree.layout(root).unwrap();
-        assert_eq!(layout.location, Point { x: 0.0, y: 0.0 });
-        assert_eq!(layout.size, Size { width: 50.0, height: 60.0 });
-    }
-
-    #[test]
-    fn relative_root_is_offset_by_insets() {
-        let mut tree: TaffyTree<()> = TaffyTree::new();
-        let oof = tree
-            .new_leaf(oof_style(
-                Position::Absolute,
-                Rect { left: length(0.0), top: length(0.0), right: auto(), bottom: auto() },
-                Size { width: length(50.0), height: length(50.0) },
-            ))
-            .unwrap();
-        let root = tree
-            .new_with_children(
-                Style {
-                    position: Position::Relative,
-                    inset: Rect { left: length(100.0), top: auto(), right: auto(), bottom: length(25.0) },
-                    ..root_style()
-                },
-                &[oof],
-            )
-            .unwrap();
-        tree.compute_layout(root, VIEWPORT).unwrap();
-
-        let layout = tree.layout(root).unwrap();
-        assert_eq!(layout.location, Point { x: 10.0 + 100.0, y: 20.0 - 25.0 });
-        assert_eq!(layout.size.width, 780.0);
-        // The relatively positioned root is the containing block for its absolutely positioned child
-        assert_eq!(tree.layout(oof).unwrap().location, Point { x: 5.0, y: 5.0 });
+        assert_eq!(layout.location, Point { x: 800.0 - 100.0 - 10.0, y: 60.0 });
+        assert_eq!(layout.size, Size { width: 100.0, height: 50.0 });
     }
 }

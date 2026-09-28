@@ -4,14 +4,15 @@
   <script src="../../scripts/gentest/test_helper.js"></script>
   <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
   <title>
-    Relatively positioned root is offset by its insets
+    Relatively positioned root is offset by its insets and is the containing block for its absolutely positioned children
   </title>
 </head>
 <body>
 
 <div class="viewport" style="width: 400px; height: 300px;">
-  <div id="test-root" style="display: block; position: relative; left: 25px; bottom: 15px; width: 100px; height: 50px; margin: 10px;">
+  <div id="test-root" style="display: block; position: relative; left: 25px; bottom: 15px; width: 100px; height: 50px; margin: 10px; border: 5px solid black;">
     <div style="height: 10px;"></div>
+    <div style="position: absolute; right: 0; bottom: 10px; width: 20px; height: 20px;"></div>
   </div>
 </div>
 
