@@ -9,6 +9,7 @@ mod hand_written {
     #[cfg(feature = "flexbox_balance")]
     mod flex_line_count;
     mod floats;
+    mod initial_containing_block;
     mod measure;
     mod min_max_overrides;
     mod negative_available_space;
