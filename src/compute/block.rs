@@ -909,7 +909,7 @@ fn generate_item_list(
                 && is_not_floated
                 && !is_scroll_container
                 && !contain.establishes_independent_formatting_context()
-                && child_style.item_align_content().is_none();
+                && child_style.align_content().is_none();
 
             BlockItem {
                 node_id: child_node_id,
