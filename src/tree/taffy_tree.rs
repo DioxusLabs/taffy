@@ -17,18 +17,22 @@ use crate::tree::{
 use crate::util::debug::{debug_log, debug_log_node};
 use crate::util::sys::{new_const_children_vec, new_vec_with_capacity, Box, ChildrenVec, Vec};
 
+#[cfg(not(feature = "block_layout"))]
+use crate::compute::compute_cached_layout;
 use crate::compute::{
-    compute_cached_layout, compute_hidden_layout, compute_leaf_layout, compute_oof_layout, compute_root_layout,
-    round_layout,
+    compute_hidden_layout, compute_leaf_layout, compute_oof_layout, compute_root_layout, round_layout,
 };
 use crate::CacheTree;
 
-#[cfg(feature = "block_layout")]
-use crate::{compute::compute_block_layout, LayoutBlockContainer};
 #[cfg(feature = "flexbox")]
 use crate::{compute::compute_flexbox_layout, LayoutFlexboxContainer};
 #[cfg(feature = "grid")]
 use crate::{compute::compute_grid_layout, LayoutGridContainer};
+#[cfg(feature = "block_layout")]
+use crate::{
+    compute::{compute_block_layout, compute_cached_block_child_layout},
+    LayoutBlockContainer,
+};
 
 #[cfg(feature = "grid")]
 use crate::compute::grid::DetailedGridInfo;
@@ -297,49 +301,69 @@ where
             return compute_hidden_layout(self, node_id);
         }
 
-        // We run the following wrapped in "compute_cached_layout", which will check the cache for an entry matching the node and inputs and:
+        // We run the following wrapped in a cached layout helper, which will check the cache for an entry matching the node and inputs and:
         //   - Return that entry if exists
-        //   - Else call the passed closure (below) to compute the result
+        //   - Else call `compute_child_layout_uncached` to compute the result
         //
         // If there was no cache match and a new result needs to be computed then that result will be added to the cache
-        compute_cached_layout(self, node_id, inputs, |tree, node_id, inputs| {
-            let display_mode = tree.taffy.nodes[node_id.into()].style.display;
-            let has_children = tree.child_count(node_id) > 0;
+        // (unless the layout interacted with floats in an ancestor's Block Formatting Context)
+        #[cfg(feature = "block_layout")]
+        {
+            compute_cached_block_child_layout(self, node_id, inputs, block_ctx, |tree, node_id, inputs, block_ctx| {
+                tree.compute_child_layout_uncached(node_id, inputs, block_ctx)
+            })
+        }
+        #[cfg(not(feature = "block_layout"))]
+        {
+            compute_cached_layout(self, node_id, inputs, |tree, node_id, inputs| {
+                tree.compute_child_layout_uncached(node_id, inputs)
+            })
+        }
+    }
 
-            debug_log!(display_mode);
-            debug_log_node!(inputs);
+    /// Dispatch to a layout algorithm based on the node's display style (bypassing the cache)
+    fn compute_child_layout_uncached(
+        &mut self,
+        node_id: NodeId,
+        inputs: LayoutInput,
+        #[cfg(feature = "block_layout")] block_ctx: Option<&mut BlockContext<'_>>,
+    ) -> LayoutOutput {
+        let display_mode = self.taffy.nodes[node_id.into()].style.display;
+        let has_children = self.child_count(node_id) > 0;
 
-            // Dispatch to a layout algorithm based on the node's display style and whether the node has children or not.
-            let mut output = match (display_mode, has_children) {
-                (Display::None, _) => compute_hidden_layout(tree, node_id),
-                #[cfg(feature = "block_layout")]
-                (Display::Block, true) => compute_block_layout(tree, node_id, inputs, block_ctx),
-                #[cfg(feature = "block_layout")]
-                (Display::FlowRoot, true) => compute_block_layout(tree, node_id, inputs, None),
-                #[cfg(feature = "flexbox")]
-                (Display::Flex, true) => compute_flexbox_layout(tree, node_id, inputs),
-                #[cfg(feature = "grid")]
-                (Display::Grid, true) => compute_grid_layout(tree, node_id, inputs),
-                (_, false) => {
-                    let node_key = node_id.into();
-                    let style = &tree.taffy.nodes[node_key].style;
-                    let has_context = tree.taffy.nodes[node_key].has_context;
-                    let node_context = has_context.then(|| tree.taffy.node_context_data.get_mut(node_key)).flatten();
-                    (tree.measure_function)(inputs, node_id, node_context, style)
-                }
-            };
+        debug_log!(display_mode);
+        debug_log_node!(inputs);
 
-            // Lay out any out-of-flow candidates for which this node is the containing block.
-            // The rest bubble up via `output.oof_candidates`. This runs inside the cache-miss
-            // closure so that cached outputs already contain the processed candidate list.
-            // Only full layout passes run it: measure passes must not write hoisted box layouts
-            // (which would not be rewritten if the final layout pass is a cache hit).
-            if inputs.run_mode == RunMode::PerformLayout {
-                compute_oof_layout(tree, node_id, &mut output);
+        // Dispatch to a layout algorithm based on the node's display style and whether the node has children or not.
+        let mut output = match (display_mode, has_children) {
+            (Display::None, _) => compute_hidden_layout(self, node_id),
+            #[cfg(feature = "block_layout")]
+            (Display::Block, true) => compute_block_layout(self, node_id, inputs, block_ctx),
+            #[cfg(feature = "block_layout")]
+            (Display::FlowRoot, true) => compute_block_layout(self, node_id, inputs, None),
+            #[cfg(feature = "flexbox")]
+            (Display::Flex, true) => compute_flexbox_layout(self, node_id, inputs),
+            #[cfg(feature = "grid")]
+            (Display::Grid, true) => compute_grid_layout(self, node_id, inputs),
+            (_, false) => {
+                let node_key = node_id.into();
+                let style = &self.taffy.nodes[node_key].style;
+                let has_context = self.taffy.nodes[node_key].has_context;
+                let node_context = has_context.then(|| self.taffy.node_context_data.get_mut(node_key)).flatten();
+                (self.measure_function)(inputs, node_id, node_context, style)
             }
+        };
 
-            output
-        })
+        // Lay out any out-of-flow candidates for which this node is the containing block.
+        // The rest bubble up via `output.oof_candidates`. This runs inside the cache-miss
+        // closure so that cached outputs already contain the processed candidate list.
+        // Only full layout passes run it: measure passes must not write hoisted box layouts
+        // (which would not be rewritten if the final layout pass is a cache hit).
+        if inputs.run_mode == RunMode::PerformLayout {
+            compute_oof_layout(self, node_id, &mut output);
+        }
+
+        output
     }
 }
 

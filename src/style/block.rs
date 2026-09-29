@@ -47,6 +47,16 @@ pub trait BlockItemStyle: CoreStyle {
         None
     }
 
+    /// The `align-content` of the item (if it is itself a block container). A non-`normal`
+    /// value makes the item establish an independent formatting context, so that it is laid
+    /// out next to (rather than underneath) floats and does not collapse margins with its
+    /// parent (<https://www.w3.org/TR/css-align-3/#distribution-block>).
+    /// `None` corresponds to `normal`.
+    #[inline(always)]
+    fn align_content(&self) -> Option<AlignContent> {
+        None
+    }
+
     /// Whether the item is a floated
     #[cfg(feature = "float_layout")]
     #[inline(always)]
