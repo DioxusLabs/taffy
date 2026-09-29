@@ -4,16 +4,16 @@ use crate::geometry::{AbsoluteAxis, AbstractAxis, InBothAbsAxis};
 use crate::geometry::{Line, Point, Rect, Size};
 use crate::style::{AlignItems, AvailableSpace, Overflow};
 use crate::tree::{
-    AxisStaticAlign, AxisStaticEdge, AxisStaticPosition, Baselines, Layout, LayoutInput, LayoutOutput,
-    LayoutPartialTreeExt, NodeId, OofCandidate, OofCandidates, OofPositioningArea, RunMode, SizingMode,
+    AxisStaticPosition, Baselines, Layout, LayoutInput, LayoutOutput, LayoutPartialTreeExt, NodeId, OofCandidate,
+    OofCandidates, OofPositioningArea, RunMode, SizingMode,
 };
 use crate::util::debug::debug_log;
 use crate::util::sys::{f32_max, f32_min, GridTrackVec, Vec};
 use crate::util::MaybeMath;
 use crate::util::{MaybeResolve, ResolveOrZero};
 use crate::{
-    style_helpers::*, AlignContent, AlignItemsKeyword, AlignSelf, BoxGenerationMode, BoxSizing, CoreStyle, Direction,
-    GridContainerStyle, GridItemStyle, JustifyContent, LayoutGridContainer, RequestedAxis,
+    style_helpers::*, AlignContent, BoxGenerationMode, BoxSizing, CoreStyle, Direction, GridContainerStyle,
+    GridItemStyle, JustifyContent, LayoutGridContainer, RequestedAxis,
 };
 use alignment::{align_and_position_item, align_tracks};
 use explicit_grid::{compute_explicit_grid_size_in_axis, initialize_grid_tracks, AutoRepeatStrategy};
@@ -671,17 +671,8 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
         if child_style.position().is_out_of_flow() {
             let position = child_style.position();
             let item_direction = child_style.direction();
-            let justify_self =
-                child_style.justify_self().map(|align| align.resolve_self_relative(item_direction, direction, true));
-            let align_self =
-                child_style.align_self().map(|align| align.resolve_self_relative(item_direction, direction, false));
-
-            let x_alignment = justify_self
-                .or(justify_items.map(|align| align.resolve_self_relative(item_direction, direction, true)))
-                .unwrap_or(AlignSelf::START);
-            let y_alignment = align_self
-                .or(align_items.map(|align| align.resolve_self_relative(item_direction, direction, false)))
-                .unwrap_or(AlignSelf::START);
+            let justify_self = child_style.justify_self().or(justify_items);
+            let align_self = child_style.align_self().or(align_items);
 
             // The static-position rectangle: the grid area determined by the grid-placement
             // properties when this grid is the child's containing block, and otherwise the
@@ -715,46 +706,25 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
             };
             drop(child_style);
 
-            /// Compute the static position for a single axis
-            fn static_position_for_axis(
-                alignment: AlignSelf,
-                area: Line<f32>,
-                axis_is_rtl: bool,
-            ) -> AxisStaticPosition {
-                let edge_for = |keyword: AlignItemsKeyword| {
-                    // Stretch does not apply to absolutely positioned items and falls
-                    // back to start-alignment for static-position purposes
-                    let start_position =
-                        !matches!(keyword, AlignItemsKeyword::End | AlignItemsKeyword::FlexEnd) ^ axis_is_rtl;
-                    match keyword {
-                        AlignItemsKeyword::Center => AxisStaticEdge::Center,
-                        _ if start_position => AxisStaticEdge::Start,
-                        _ => AxisStaticEdge::End,
-                    }
-                };
-                AxisStaticPosition {
-                    area,
-                    align: AxisStaticAlign {
-                        keyword: edge_for(alignment.keyword),
-                        safety: alignment.safety,
-                        fallback: edge_for(crate::compute::common::alignment::resolve_self_alignment_safety(
-                            alignment, true,
-                        )),
-                    },
-                }
-            }
-
             oof_candidates.push(OofCandidate {
                 node: child,
                 order,
                 position,
                 static_position: Point {
-                    x: static_position_for_axis(
-                        x_alignment,
+                    x: AxisStaticPosition::from_alignment(
+                        justify_self,
                         Line { start: area.left, end: area.right },
-                        direction.is_rtl(),
+                        item_direction,
+                        direction,
+                        true,
                     ),
-                    y: static_position_for_axis(y_alignment, Line { start: area.top, end: area.bottom }, false),
+                    y: AxisStaticPosition::from_alignment(
+                        align_self,
+                        Line { start: area.top, end: area.bottom },
+                        item_direction,
+                        direction,
+                        false,
+                    ),
                 },
             });
 
