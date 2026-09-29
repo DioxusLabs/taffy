@@ -53,7 +53,7 @@ pub trait BlockItemStyle: CoreStyle {
     /// parent (<https://www.w3.org/TR/css-align-3/#distribution-block>).
     /// `None` corresponds to `normal`.
     #[inline(always)]
-    fn item_align_content(&self) -> Option<AlignContent> {
+    fn align_content(&self) -> Option<AlignContent> {
         None
     }
 
