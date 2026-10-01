@@ -12468,6 +12468,26 @@ mod flex {
     }
 
     #[test]
+    fn flex_column_intrinsic_height_measures_child_at_max_width__border_box_ltr() {
+        crate::run_xml_test("flex", "flex_column_intrinsic_height_measures_child_at_max_width__border_box_ltr");
+    }
+
+    #[test]
+    fn flex_column_intrinsic_height_measures_child_at_max_width__content_box_ltr() {
+        crate::run_xml_test("flex", "flex_column_intrinsic_height_measures_child_at_max_width__content_box_ltr");
+    }
+
+    #[test]
+    fn flex_column_intrinsic_height_measures_child_at_max_width__border_box_rtl() {
+        crate::run_xml_test("flex", "flex_column_intrinsic_height_measures_child_at_max_width__border_box_rtl");
+    }
+
+    #[test]
+    fn flex_column_intrinsic_height_measures_child_at_max_width__content_box_rtl() {
+        crate::run_xml_test("flex", "flex_column_intrinsic_height_measures_child_at_max_width__content_box_rtl");
+    }
+
+    #[test]
     fn flex_column_relative_all_sides__border_box_ltr() {
         crate::run_xml_test("flex", "flex_column_relative_all_sides__border_box_ltr");
     }
