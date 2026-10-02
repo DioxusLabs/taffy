@@ -24,7 +24,6 @@ fn container_style(display: Display, depth: usize) -> Style {
     Style {
         display,
         flex_direction: [FlexDirection::Column, FlexDirection::Row][depth % 2],
-        flex_wrap: FlexWrap::Wrap,
         grid_template_columns: vec![auto(), auto()],
         padding: Rect::length(1.0),
         ..Default::default()
@@ -54,6 +53,8 @@ fn build_subtree(
 
 fn build_tree(containers: Containers, fanout: usize, max_depth: usize) -> (TaffyTree, NodeId, NodeId) {
     let mut taffy = TaffyTree::new();
+    // Rounding visits every node of the tree on every layout, which would dominate these benchmarks
+    taffy.disable_rounding();
     let mut first_leaf = None;
     let root = build_subtree(&mut taffy, containers, fanout, 0, max_depth, &mut first_leaf);
     taffy.compute_layout(root, Size { width: length(2000.0), height: max_content() }).unwrap();
