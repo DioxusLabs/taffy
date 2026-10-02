@@ -206,9 +206,9 @@ fn run_xml_test(group: &str, name: &str) {
 
     tree.compute_layout_with_measure(root_node_id, available_space, test_measure_function).unwrap();
 
-    // The layout cache of a node only holds results computed with a single `sizing_mode` and
-    // `vertical_margins_are_collapsible`, so laying a node out with more than one combination
-    // of the two in a single pass would make it throw its cache away on every change.
+    // The layout cache of a node only holds results computed with a single value of
+    // `vertical_margins_are_collapsible`, so laying a node out with more than one value
+    // of it in a single pass would make it throw its cache away on every change.
     #[cfg(all(debug_assertions, feature = "std"))]
     assert_eq!(
         taffy::tree::cache_mode_change_evictions(),

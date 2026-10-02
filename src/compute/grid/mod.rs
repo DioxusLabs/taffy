@@ -78,15 +78,6 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
         .maybe_resolve(parent_size, |val, basis| tree.calc(val, basis))
         .maybe_apply_aspect_ratio(aspect_ratio)
         .maybe_add(box_sizing_adjustment);
-    let preferred_size = if inputs.sizing_mode == SizingMode::InherentSize {
-        style
-            .size()
-            .maybe_resolve(parent_size, |val, basis| tree.calc(val, basis))
-            .maybe_apply_aspect_ratio(style.aspect_ratio())
-            .maybe_add(box_sizing_adjustment)
-    } else {
-        Size::NONE
-    };
 
     // Scrollbar gutters are reserved when the `overflow` property is set to `Overflow::Scroll`.
     // However, the axis are switched (transposed) because a node that scrolls vertically needs
@@ -121,7 +112,6 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     let grid_auto_rows = style.grid_auto_rows();
 
     let constrained_available_space = known_dimensions
-        .or(preferred_size)
         .map(|size| size.map(AvailableSpace::Definite))
         .unwrap_or(available_space)
         .maybe_clamp(min_size, max_size)
@@ -136,8 +126,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
             .map_definite_value(|space| space - content_box_inset.vertical_axis_sum()),
     };
 
-    let outer_node_size =
-        known_dimensions.or(preferred_size).maybe_clamp(min_size, max_size).maybe_max(padding_border_size);
+    let outer_node_size = known_dimensions.maybe_clamp(min_size, max_size).maybe_max(padding_border_size);
 
     // The track sizing algorithm operates on the grid container's content box, so the min/max sizes
     // (which are border-box sizes) need converting to content-box sizes before being passed to it
@@ -362,7 +351,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     debug_log!(dbg: rows.iter().map(|track| track.base_size).collect::<Vec<_>>());
 
     // 6. Compute container size
-    let resolved_style_size = known_dimensions.or(preferred_size);
+    let resolved_style_size = known_dimensions;
     let mut container_border_box = Size {
         width: resolved_style_size
             .get(AbstractAxis::Inline)

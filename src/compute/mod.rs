@@ -56,7 +56,7 @@ use crate::geometry::{Line, Point, Size};
 use crate::style::{AvailableSpace, ContainingBlockClaims, CoreStyle, Overflow, Position};
 use crate::tree::{
     AxisStaticAlign, AxisStaticEdge, AxisStaticPosition, Layout, LayoutInput, LayoutOutput, LayoutPartialTree,
-    LayoutPartialTreeExt, NodeId, OofCandidate, OofCandidates, RequestedAxis, RoundTree, RunMode, SizingMode,
+    LayoutPartialTreeExt, NodeId, OofCandidate, OofCandidates, RequestedAxis, RoundTree, RunMode,
 };
 use crate::util::debug::{debug_log, debug_log_node, debug_pop_node, debug_push_node};
 use crate::util::sys::{round, Vec};
@@ -252,20 +252,21 @@ fn compute_in_flow_root_layout(
         }
     }
 
-    let inputs = LayoutInput {
+    let mut inputs = LayoutInput {
         known_dimensions,
         known_dimensions_are_definite: Size { width: true, height: true },
         parent_size: available_space.into_options(),
         available_space,
-        sizing_mode: SizingMode::InherentSize,
         axis: RequestedAxis::Both,
         run_mode: RunMode::PerformLayout,
         vertical_margins_are_collapsible: Line::FALSE,
     };
+    let root_style_constraints = tree.resolve_child_style_sizes(root, &mut inputs);
     *root_is_cached = tree.cache_get(root, &inputs).is_some();
 
     // Recursively compute node layout
     let mut output = tree.compute_child_layout(root, inputs);
+    root_style_constraints.apply(&mut output);
     let style = tree.get_core_container_style(root);
     let padding =
         style.padding().resolve_or_zero(available_space.width.into_option(), |val, basis| tree.calc(val, basis));
