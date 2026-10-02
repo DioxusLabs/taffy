@@ -11,7 +11,7 @@ use crate::tree::{
     AxisStaticAlign, AxisStaticEdge, AxisStaticPosition, LayoutFlexboxContainer, LayoutPartialTreeExt, NodeId,
     OofPositioningArea,
 };
-use crate::tree::{Baselines, Layout, LayoutInput, LayoutOutput, OofCandidate, OofCandidates, RunMode, SizingMode};
+use crate::tree::{Baselines, Layout, LayoutInput, LayoutOutput, OofCandidate, OofCandidates, RunMode};
 use crate::util::debug::debug_log;
 use crate::util::sys::{f32_max, f32_min, new_vec_with_capacity, Vec};
 use crate::util::MaybeMath;
@@ -210,6 +210,9 @@ struct AlgoConstants {
 
     /// The size of the virtual container containing the flex items.
     container_size: Size<f32>,
+    /// The size that the container's content gives it in the main axis, before the container's
+    /// own min and max sizes are applied. Only set if the main size is determined from content.
+    content_based_main_size: Option<f32>,
     /// The size of the internal container
     inner_container_size: Size<f32>,
 }
@@ -421,7 +424,7 @@ fn compute_preliminary(tree: &mut impl LayoutFlexboxContainer, node: NodeId, inp
 
     // 8. Calculate the cross size of each flex line.
     debug_log!("calculate_cross_size");
-    calculate_cross_size(&mut flex_lines, known_dimensions, &constants);
+    let content_based_inner_cross_size = calculate_cross_size(&mut flex_lines, known_dimensions, &constants);
 
     // 9. Handle 'align-content: stretch'.
     debug_log!("handle_align_content_stretch");
@@ -465,7 +468,24 @@ fn compute_preliminary(tree: &mut impl LayoutFlexboxContainer, node: NodeId, inp
     // We have the container size.
     // If our caller does not care about performing layout we are done now.
     if run_mode == RunMode::ComputeSize {
-        return LayoutOutput::from_outer_size(constants.container_size);
+        // When only the container's size is being computed, the container's own min and max sizes are
+        // not applied to the size that it reports in any axis in which that size is determined by its
+        // content: the container's parent is responsible for applying them. This is what allows a flex
+        // container parent to use the content size as a flex base size (which is not clamped).
+        let dir = constants.dir;
+        let mut size = constants.container_size;
+        if let Some(main_size) = constants.content_based_main_size {
+            let min_main_size = constants.content_box_inset.main_axis_sum(dir) - constants.scrollbar_gutter.main(dir);
+            size.set_main(dir, f32_max(main_size, min_main_size));
+        }
+        if known_dimensions.cross(dir).is_none() {
+            if let Some(inner_cross_size) = content_based_inner_cross_size {
+                let padding_border_sum = constants.content_box_inset.cross_axis_sum(dir);
+                let min_cross_size = padding_border_sum - constants.scrollbar_gutter.cross(dir);
+                size.set_cross(dir, f32_max(inner_cross_size + padding_border_sum, min_cross_size));
+            }
+        }
+        return LayoutOutput::from_outer_size(size);
     }
 
     // 16. Align all flex lines per align-content.
@@ -498,14 +518,7 @@ fn compute_preliminary(tree: &mut impl LayoutFlexboxContainer, node: NodeId, inp
         let child = tree.get_child_id(node, order);
         if tree.get_flexbox_child_style(child).box_generation_mode() == BoxGenerationMode::None {
             tree.set_unrounded_layout(child, &Layout::with_order(order as u32));
-            tree.perform_child_layout(
-                child,
-                Size::NONE,
-                Size::NONE,
-                Size::MAX_CONTENT,
-                SizingMode::ContentSize,
-                Line::FALSE,
-            );
+            tree.perform_child_layout(child, Size::NONE, Size::NONE, Size::MAX_CONTENT, Line::FALSE);
         }
     }
 
@@ -645,6 +658,7 @@ fn compute_constants(
         has_definite_cross_size,
         cross_axis_available_space_is_definite,
         container_size,
+        content_based_main_size: None,
         inner_container_size,
     }
 }
@@ -1050,7 +1064,6 @@ fn determine_flex_base_size(
                 child_known_dimensions,
                 child_parent_size,
                 child_available_space,
-                SizingMode::ContentSize,
                 dir.main_axis(),
                 Line::FALSE,
             );
@@ -1093,7 +1106,6 @@ fn determine_flex_base_size(
                     child_known_dimensions,
                     child_parent_size,
                     child_available_space,
-                    SizingMode::ContentSize,
                     dir.main_axis(),
                     Line::FALSE,
                 )
@@ -1543,7 +1555,6 @@ fn determine_container_main_size(
                                     child_known_dimensions,
                                     constants.node_inner_size,
                                     child_available_space,
-                                    SizingMode::ContentSize,
                                     dir.main_axis(),
                                     Line::FALSE,
                                 );
@@ -1644,6 +1655,7 @@ fn determine_container_main_size(
         }
     });
 
+    constants.content_based_main_size = Some(outer_main_size);
     let outer_main_size = outer_main_size
         .maybe_clamp(constants.min_size.main(constants.dir), constants.max_size.main(constants.dir))
         .max(main_content_box_inset - constants.scrollbar_gutter.main(constants.dir));
@@ -2022,7 +2034,11 @@ fn calculate_children_base_lines(
 ///
 /// - [**Calculate the cross size of each flex line**](https://www.w3.org/TR/css-flexbox-1/#algo-cross-line).
 #[inline]
-fn calculate_cross_size(flex_lines: &mut [FlexLine], node_size: Size<Option<f32>>, constants: &AlgoConstants) {
+fn calculate_cross_size(
+    flex_lines: &mut [FlexLine],
+    node_size: Size<Option<f32>>,
+    constants: &AlgoConstants,
+) -> Option<f32> {
     // If the flex container is single-line and has a definite cross size,
     // the cross size of the flex line is the flex container’s inner cross size.
     if !constants.is_wrap && node_size.cross(constants.dir).is_some() {
@@ -2035,6 +2051,7 @@ fn calculate_cross_size(flex_lines: &mut [FlexLine], node_size: Size<Option<f32>
             .maybe_sub(cross_axis_padding_border)
             .maybe_max(0.0)
             .unwrap_or(0.0);
+        None
     } else {
         // Otherwise, for each flex line:
         //
@@ -2064,6 +2081,9 @@ fn calculate_cross_size(flex_lines: &mut [FlexLine], node_size: Size<Option<f32>
                 .fold(0.0, |acc, x| acc.max(x));
         }
 
+        let content_based_inner_cross_size = flex_lines.iter().map(|line| line.cross_size).sum::<f32>()
+            + sum_axis_gaps(constants.gap.cross(constants.dir), flex_lines.len());
+
         // If the flex container is single-line, then clamp the line’s cross-size to be within the container’s computed min and max cross sizes.
         // Note that if CSS 2.1’s definition of min/max-width/height applied more generally, this behavior would fall out automatically.
         if !constants.is_wrap {
@@ -2075,6 +2095,8 @@ fn calculate_cross_size(flex_lines: &mut [FlexLine], node_size: Size<Option<f32>
                 cross_max_size.maybe_sub(cross_axis_padding_border),
             );
         }
+
+        Some(content_based_inner_cross_size)
     }
 }
 
