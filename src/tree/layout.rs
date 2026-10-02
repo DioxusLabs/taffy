@@ -19,21 +19,6 @@ pub enum RunMode {
     PerformHiddenLayout,
 }
 
-/// Whether a parent applies a child's own sizing styles when it sizes or lays out that child.
-///
-/// A node never applies its own preferred size (`size`) styles, and leaf nodes do not apply
-/// their own `min_size`, `max_size` or `aspect_ratio` styles either. The parent of a node is
-/// responsible for applying those styles, and this enum allows the parent to choose between
-/// applying them itself (`ContentSize`) or having them applied by a generic helper (`InherentSize`).
-#[derive(Copy, Clone, Debug, PartialEq, Eq)]
-pub(crate) enum SizingMode {
-    /// The child's own sizing styles are not applied: the size returned is determined by the
-    /// child's content and the known dimensions passed to it.
-    ContentSize,
-    /// The child's own sizing styles are applied on the child's behalf
-    InherentSize,
-}
-
 /// A set of margins that are available for collapsing with for block layout's margin collapsing
 #[derive(Copy, Clone, Debug, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize))]

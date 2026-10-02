@@ -265,12 +265,12 @@ fn compute_in_flow_root_layout(
         run_mode: RunMode::PerformLayout,
         vertical_margins_are_collapsible: Line::FALSE,
     };
-    let root_style_constraints = tree.resolve_child_style_sizes(root, &mut inputs);
+    let (root_style_constraints, root_auto_axes) = tree.resolve_child_style_sizes(root, &mut inputs);
     *root_is_cached = tree.cache_get(root, &inputs).is_some();
 
     // Recursively compute node layout
     let mut output = tree.compute_child_layout(root, inputs);
-    root_style_constraints.apply(&mut output);
+    root_style_constraints.apply_to_output(root_auto_axes, &mut output);
     let style = tree.get_core_container_style(root);
     let padding =
         style.padding().resolve_or_zero(available_space.width.into_option(), |val, basis| tree.calc(val, basis));

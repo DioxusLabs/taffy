@@ -4,7 +4,7 @@ use super::types::{GridItem, GridTrack, TrackCounts};
 use crate::geometry::{AbstractAxis, Line, Size};
 use crate::style::{AlignContent, AlignContentKeyword, AvailableSpace};
 use crate::style_helpers::TaffyMinContent;
-use crate::tree::{LayoutPartialTree, LayoutPartialTreeExt, SizingMode};
+use crate::tree::{LayoutPartialTree, LayoutPartialTreeExt};
 use crate::util::sys::{f32_max, f32_min, Vec};
 use crate::util::{FrontBackVecBuilder, MaybeMath, ResolveOrZero};
 use crate::CompactLength;
@@ -490,12 +490,11 @@ fn resolve_item_baselines(
                 continue;
             }
 
-            let measured_size_and_baselines = tree.perform_child_layout(
+            let measured_size_and_baselines = tree.perform_child_layout_with_styles(
                 item.node,
                 Size::NONE,
                 inner_node_size,
                 Size::MIN_CONTENT,
-                SizingMode::InherentSize,
                 Line::FALSE,
             );
 

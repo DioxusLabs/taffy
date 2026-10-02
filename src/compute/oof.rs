@@ -12,7 +12,7 @@ use crate::style::{AvailableSpace, ContainingBlockClaims, CoreStyle};
 use crate::tree::DetailedLayoutInfo;
 use crate::tree::{
     Layout, LayoutContainingBlock, LayoutInput, LayoutOutput, LayoutPartialTreeExt, NodeId, OofCandidate,
-    OofCandidates, OofPositioningArea, RequestedAxis, RunMode, SizingMode,
+    OofCandidates, OofPositioningArea, RequestedAxis, RunMode,
 };
 use crate::util::sys::{f32_max, Vec};
 use crate::util::{MaybeMath, MaybeResolve, ResolveOrZero};
@@ -264,7 +264,6 @@ pub(crate) fn layout_oof_box<Tree: LayoutContainingBlock>(
             area_size,
             Rect { left, right, top, bottom },
             margin,
-            SizingMode::ContentSize,
         );
         known_dimensions = known_dimensions.maybe_apply_aspect_ratio(aspect_ratio).maybe_clamp(min_size, max_size);
     }
@@ -322,7 +321,6 @@ pub(crate) fn layout_oof_box<Tree: LayoutContainingBlock>(
                 known_dimensions,
                 area_size.map(Some),
                 available_space,
-                SizingMode::ContentSize,
                 Line::FALSE,
             );
             known_dimensions.unwrap_or(measured_size)
