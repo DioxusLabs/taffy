@@ -969,7 +969,8 @@ fn determine_content_based_container_width(
                 Size { width: item_available_width, height: available_space.height },
                 SizingMode::InherentSize,
                 crate::AbsoluteAxis::Horizontal,
-                Line::TRUE,
+                // Must match the value passed when laying the item out (see `Cache`)
+                if item.is_in_same_bfc { Line::TRUE } else { Line::FALSE },
             )
         });
 
@@ -1286,7 +1287,8 @@ fn perform_final_layout_on_in_flow_children(
                                 Size { width: item_available_width, height: AvailableSpace::MaxContent },
                                 SizingMode::InherentSize,
                                 crate::AbsoluteAxis::Horizontal,
-                                Line::TRUE,
+                                // Must match the value passed when laying the item out (see `Cache`)
+                                if item.is_in_same_bfc { Line::TRUE } else { Line::FALSE },
                             ),
                         });
 
