@@ -318,7 +318,6 @@ pub(crate) fn layout_oof_box<Tree: LayoutContainingBlock>(
             width: AvailableSpace::Definite(area_width.maybe_clamp(min_size.width, max_size.width)),
             height: AvailableSpace::Definite(area_height.maybe_clamp(min_size.height, max_size.height)),
         },
-        sizing_mode: SizingMode::ContentSize,
         axis: RequestedAxis::Both,
         run_mode: RunMode::PerformLayout,
         vertical_margins_are_collapsible: Line::FALSE,

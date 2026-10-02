@@ -495,8 +495,8 @@ fn relayout_block_parent_as(container: Style) {
     assert_eq!(relaid, fresh);
 }
 
-/// A flex container lays its items out with `SizingMode::ContentSize` and without collapsible
-/// margins. The block container it was before used `SizingMode::InherentSize` and collapsible margins.
+/// A flex container lays its items out without collapsible margins.
+/// The block container it was before used collapsible margins.
 #[test]
 #[cfg(all(feature = "block_layout", feature = "flexbox"))]
 fn block_child_does_not_keep_collapsed_margin_as_flex_item() {
@@ -507,8 +507,8 @@ fn block_child_does_not_keep_collapsed_margin_as_flex_item() {
     });
 }
 
-/// A grid container lays its items out with `SizingMode::InherentSize`, as the block container it
-/// was before did: only `vertical_margins_are_collapsible` differs between the two layout inputs.
+/// A grid container lays its items out without collapsible margins.
+/// The block container it was before used collapsible margins.
 #[test]
 #[cfg(all(feature = "block_layout", feature = "flexbox", feature = "grid"))]
 fn block_child_does_not_keep_collapsed_margin_as_grid_item() {
@@ -522,13 +522,13 @@ fn block_child_does_not_keep_collapsed_margin_as_grid_item() {
 /// </div>
 /// ```
 ///
-/// The outer box then becomes `display: flex`. The grid container measured the first item with
-/// `SizingMode::InherentSize`, which applies the item's `min-width`. The flex container measures
-/// the same item's flex base size with `SizingMode::ContentSize`, which does not: both items
-/// have a flex base size of zero and grow equally.
+/// The outer box then becomes `display: flex`. The grid container measures the first item's
+/// contribution, which includes the item's `min-width`. The flex container measures the same
+/// item's flex base size, which does not: both items have a flex base size of zero and grow
+/// equally. The item's cached measurements must not depend on which kind of container asked.
 #[test]
 #[cfg(all(feature = "block_layout", feature = "flexbox", feature = "grid"))]
-fn flex_base_size_is_not_answered_by_an_inherent_size_measurement() {
+fn flex_base_size_is_not_answered_by_a_grid_contribution_measurement() {
     let container =
         |display| Style { display, size: Size { width: length(100.0), height: auto() }, ..Default::default() };
 
