@@ -1,0 +1,17 @@
+<test name="aspect_ratio_min_height_transfers_to_width_height_auto_width_auto__border_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="block" direction="ltr" position="absolute" width="800px">
+      <div display="block" direction="ltr" position="relative" width="400px">
+        <div display="block" direction="ltr" position="relative" min-height="300px" aspect-ratio="2"/>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="800" height="300">
+      <node x="0" y="0" width="400" height="300">
+        <node x="0" y="0" width="600" height="300"/>
+      </node>
+    </node>
+  </expectations>
+</test>

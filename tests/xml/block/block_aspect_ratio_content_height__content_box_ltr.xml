@@ -1,0 +1,17 @@
+<test name="block_aspect_ratio_content_height__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="block" box-sizing="content-box" direction="ltr" position="absolute" width="400px">
+      <div display="block" box-sizing="content-box" direction="ltr" position="relative" width="200px" aspect-ratio="2">
+        <div display="block" box-sizing="content-box" direction="ltr" position="relative" height="150px"/>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="400" height="150">
+      <node x="0" y="0" width="200" height="150">
+        <node x="0" y="0" width="200" height="150"/>
+      </node>
+    </node>
+  </expectations>
+</test>

@@ -270,6 +270,10 @@ use super::common::alignment::{apply_alignment_fallback, compute_alignment_offse
 #[cfg(feature = "content_size")]
 use super::common::scrollable_overflow::compute_scrollable_overflow_contribution;
 use super::common::sizing_keyword::{resolve_sizing_keyword, SizingKeywordResolution};
+use super::ratio::{
+    derived_height_is_minimum, derived_width_has_content_minimum, percentage_basis_height, sizes_through_ratio,
+    BoxSizes, Ratio,
+};
 
 /// Per-child data that is accumulated and modified over the course of the layout algorithm
 struct BlockItem {
@@ -311,6 +315,10 @@ struct BlockItem {
     min_size: Size<Option<f32>>,
     /// The maximum allowable size of this item
     max_size: Size<Option<f32>>,
+    /// Whether the item's width is derived from its height by its preferred aspect ratio, and its
+    /// automatic minimum width is therefore its min-content width. If so, this is the item's
+    /// resolved `max-width` style, which limits that minimum.
+    content_minimum_width_limit: Option<Option<f32>>,
 
     /// The overflow style of the item
     overflow: Point<Overflow>,
@@ -369,30 +377,27 @@ pub fn compute_block_layout(
     // <https://drafts.csswg.org/css-contain-2/#containment-layout>
     let establishes_new_bfc =
         is_scroll_container || style.align_content().is_some() || contain.establishes_independent_formatting_context();
-    let aspect_ratio = style.aspect_ratio();
     let padding = style.padding().resolve_or_zero(parent_size.width, |val, basis| tree.calc(val, basis));
     let border = style.border().resolve_or_zero(parent_size.width, |val, basis| tree.calc(val, basis));
     let padding_border_size = (padding + border).sum_axes();
     let box_sizing_adjustment =
         if style.box_sizing() == BoxSizing::ContentBox { padding_border_size } else { Size::ZERO };
 
-    let min_size = style
-        .min_size()
-        .maybe_resolve(parent_size, |val, basis| tree.calc(val, basis))
-        .maybe_apply_aspect_ratio(aspect_ratio)
-        .maybe_add(box_sizing_adjustment);
-    let max_size = style
-        .max_size()
-        .maybe_resolve(parent_size, |val, basis| tree.calc(val, basis))
-        .maybe_apply_aspect_ratio(aspect_ratio)
-        .maybe_add(box_sizing_adjustment);
-    let clamped_style_size = if inputs.sizing_mode == SizingMode::InherentSize {
+    let BoxSizes { size: style_size, min_size, max_size } = sizes_through_ratio(
+        &style,
+        padding_border_size,
+        style.size().maybe_resolve(parent_size, |val, basis| tree.calc(val, basis)).maybe_add(box_sizing_adjustment),
         style
-            .size()
+            .min_size()
             .maybe_resolve(parent_size, |val, basis| tree.calc(val, basis))
-            .maybe_apply_aspect_ratio(aspect_ratio)
-            .maybe_add(box_sizing_adjustment)
-            .maybe_clamp(min_size, max_size)
+            .maybe_add(box_sizing_adjustment),
+        style
+            .max_size()
+            .maybe_resolve(parent_size, |val, basis| tree.calc(val, basis))
+            .maybe_add(box_sizing_adjustment),
+    );
+    let clamped_style_size = if inputs.sizing_mode == SizingMode::InherentSize {
+        style_size.maybe_clamp(min_size, max_size)
     } else {
         Size::NONE
     };
@@ -467,7 +472,6 @@ fn compute_inner(
     let raw_padding = style.padding();
     let raw_border = style.border();
     let raw_margin = style.margin();
-    let aspect_ratio = style.aspect_ratio();
     let padding = raw_padding.resolve_or_zero(parent_size.width, |val, basis| tree.calc(val, basis));
     let border = raw_border.resolve_or_zero(parent_size.width, |val, basis| tree.calc(val, basis));
     let direction = style.direction();
@@ -495,36 +499,44 @@ fn compute_inner(
 
     let box_sizing_adjustment =
         if style.box_sizing() == BoxSizing::ContentBox { padding_border_size } else { Size::ZERO };
-    let size = style
-        .size()
-        .maybe_resolve(parent_size, |val, basis| tree.calc(val, basis))
-        .maybe_apply_aspect_ratio(aspect_ratio)
-        .maybe_add(box_sizing_adjustment);
-    let min_size = style
+    let style_min_size = style
         .min_size()
         .maybe_resolve(parent_size, |val, basis| tree.calc(val, basis))
-        .maybe_apply_aspect_ratio(aspect_ratio)
         .maybe_add(box_sizing_adjustment);
-    let max_size = style
+    let style_max_size = style
         .max_size()
         .maybe_resolve(parent_size, |val, basis| tree.calc(val, basis))
-        .maybe_apply_aspect_ratio(aspect_ratio)
         .maybe_add(box_sizing_adjustment);
+    let BoxSizes { size, .. } = sizes_through_ratio(
+        &style,
+        padding_border_size,
+        style.size().maybe_resolve(parent_size, |val, basis| tree.calc(val, basis)).maybe_add(box_sizing_adjustment),
+        style_min_size,
+        style_max_size,
+    );
 
     // css-sizing-4: a definite size in one axis transfers through `aspect-ratio`
     // to make the other definite. Deriving it from `known_dimensions` self-gates
     // the transfer — a block parent fills an axis only when it's a real
     // constraint (e.g. the stretched width at final layout) and leaves it None
     // while probing intrinsic sizes, so measure passes stay content-based. Only a
-    // newly-filled axis is adopted (and clamped); an incoming known size is left
-    // as the parent resolved it (re-clamping would undo padding/border overrides).
-    let known_dimensions = {
-        let derived = known_dimensions.maybe_apply_aspect_ratio(aspect_ratio).maybe_clamp(min_size, max_size);
-        Size { width: known_dimensions.width.or(derived.width), height: known_dimensions.height.or(derived.height) }
-    };
+    // newly-filled axis is adopted: an incoming known size is left as the parent
+    // resolved it (re-clamping would undo padding/border overrides). A height
+    // derived from the width may instead be returned as a minimum height, which
+    // the content of the box can exceed.
+    let neither_dimension_is_known = known_dimensions.width.is_none() && known_dimensions.height.is_none();
+    let BoxSizes { size: known_dimensions, min_size, max_size } =
+        sizes_through_ratio(&style, padding_border_size, known_dimensions, style_min_size, style_max_size);
+    let ratio = Ratio::of(&style, padding_border_size).filter(|_| neither_dimension_is_known);
+    let derived_height_is_minimum = derived_height_is_minimum(&style, style_min_size.height);
     let percentage_basis_dimensions = Size {
         width: known_dimensions.width,
-        height: known_dimensions.height.filter(|_| inputs.known_dimensions_are_definite.height),
+        // Percentages resolve against the height that the ratio derives from the width, even if
+        // the content of the box then makes it taller than that
+        height: known_dimensions
+            .height
+            .filter(|_| inputs.known_dimensions_are_definite.height)
+            .or_else(|| percentage_basis_height(&style, padding_border_size, known_dimensions.width)),
     };
     let container_content_box_size = percentage_basis_dimensions.maybe_sub(content_box_inset.sum_axes());
 
@@ -571,6 +583,24 @@ fn compute_inner(
             + content_box_inset.horizontal_axis_sum();
         intrinsic_width.maybe_clamp(min_size.width, max_size.width).maybe_max(Some(padding_border_size.width))
     });
+
+    // If neither dimension was known then the width has just been determined from the container's
+    // content, and the container's aspect ratio derives its height from that width
+    let (known_dimensions, min_size) = match ratio {
+        Some(ratio) => {
+            let resolved = ratio.resolve(
+                Size { width: Some(container_outer_width), height: None },
+                style_min_size,
+                style_max_size,
+                derived_height_is_minimum,
+            );
+            (
+                Size { width: None, height: resolved.size.height },
+                Size { width: min_size.width, height: resolved.min_size.height },
+            )
+        }
+        None => (known_dimensions, min_size),
+    };
 
     // Short-circuit if computing size and both dimensions known
     if let (RunMode::ComputeSize, Some(container_outer_height)) = (run_mode, known_dimensions.height) {
@@ -837,7 +867,6 @@ fn generate_item_list(
         .filter(|(_, style)| style.box_generation_mode() != BoxGenerationMode::None)
         .enumerate()
         .map(|(order, (child_node_id, child_style))| {
-            let aspect_ratio = child_style.aspect_ratio();
             let padding =
                 child_style.padding().resolve_or_zero(node_inner_size.width, |val, basis| tree.calc(val, basis));
             let border =
@@ -845,6 +874,26 @@ fn generate_item_list(
             let pb_sum = (padding + border).sum_axes();
             let box_sizing_adjustment =
                 if child_style.box_sizing() == BoxSizing::ContentBox { pb_sum } else { Size::ZERO };
+            let style_size = child_style
+                .size()
+                .maybe_resolve(node_inner_size, |val, basis| tree.calc(val, basis))
+                .maybe_add(box_sizing_adjustment);
+            let style_max_size = child_style
+                .max_size()
+                .maybe_resolve(node_inner_size, |val, basis| tree.calc(val, basis))
+                .maybe_add(box_sizing_adjustment);
+            let BoxSizes { size, min_size, max_size } = sizes_through_ratio(
+                &child_style,
+                pb_sum,
+                style_size,
+                child_style
+                    .min_size()
+                    .maybe_resolve(node_inner_size, |val, basis| tree.calc(val, basis))
+                    .maybe_add(box_sizing_adjustment),
+                style_max_size,
+            );
+            let content_minimum_width_limit =
+                derived_width_has_content_minimum(&child_style, style_size.height).then_some(style_max_size.width);
 
             let position = child_style.position();
             let overflow = child_style.overflow();
@@ -881,21 +930,10 @@ fn generate_item_list(
                 #[cfg(feature = "float_layout")]
                 clear: child_style.clear(),
                 size_style: child_style.size(),
-                size: child_style
-                    .size()
-                    .maybe_resolve(node_inner_size, |val, basis| tree.calc(val, basis))
-                    .maybe_apply_aspect_ratio(aspect_ratio)
-                    .maybe_add(box_sizing_adjustment),
-                min_size: child_style
-                    .min_size()
-                    .maybe_resolve(node_inner_size, |val, basis| tree.calc(val, basis))
-                    .maybe_apply_aspect_ratio(aspect_ratio)
-                    .maybe_add(box_sizing_adjustment),
-                max_size: child_style
-                    .max_size()
-                    .maybe_resolve(node_inner_size, |val, basis| tree.calc(val, basis))
-                    .maybe_apply_aspect_ratio(aspect_ratio)
-                    .maybe_add(box_sizing_adjustment),
+                size,
+                min_size,
+                max_size,
+                content_minimum_width_limit,
                 overflow,
                 contain,
                 scrollbar_width: child_style.scrollbar_width(),
@@ -1309,7 +1347,24 @@ fn perform_final_layout_on_in_flow_children(
                     .maybe_clamp(item.min_size, item.max_size)
             };
 
-            //
+            // If the item's width is derived from its height by its preferred aspect ratio then
+            // its automatic minimum width is its min-content width (limited by its max-width)
+            // https://www.w3.org/TR/css-sizing-4/#aspect-ratio-minimum
+            let known_dimensions = match item.content_minimum_width_limit {
+                Some(max_width) => {
+                    let min_content_width = tree.measure_child_size(
+                        item.node_id,
+                        Size::NONE,
+                        parent_size,
+                        Size { width: AvailableSpace::MinContent, height: AvailableSpace::MinContent },
+                        SizingMode::ContentSize,
+                        crate::AbsoluteAxis::Horizontal,
+                        Line::FALSE,
+                    );
+                    known_dimensions.map_width(|width| width.maybe_max(min_content_width.maybe_min(max_width)))
+                }
+                None => known_dimensions,
+            };
 
             let inputs = LayoutInput {
                 run_mode,

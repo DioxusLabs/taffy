@@ -1,0 +1,9 @@
+<test name="aspect_ratio_plain_border_box_padding__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="block" position="absolute" direction="ltr" width="200px" padding-left="10px" padding-right="10px" padding-top="10px" padding-bottom="10px" aspect-ratio="2" box-sizing="content-box"/>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="220" height="120"/>
+  </expectations>
+</test>

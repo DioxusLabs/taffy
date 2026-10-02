@@ -3,6 +3,7 @@ use super::types::GridTrack;
 use crate::compute::common::alignment::{
     apply_alignment_fallback, compute_alignment_offset, resolve_self_alignment_safety,
 };
+use crate::compute::ratio::{derived_height_is_minimum, resolve_through, BoxSizes, Ratio};
 use crate::geometry::{InBothAbsAxis, Line, Point, Rect, Size};
 use crate::style::{
     AlignContent, AlignItems, AlignItemsKeyword, AlignSelf, AvailableSpace, CoreStyle, GridItemStyle, Overflow,
@@ -140,22 +141,22 @@ pub(super) fn align_and_position_item(
         if style.box_sizing() == BoxSizing::ContentBox { padding_border_size } else { Size::ZERO };
 
     let size_style = style.size();
-    let inherent_size = size_style
-        .maybe_resolve(grid_area_size, |val, basis| tree.calc(val, basis))
-        .maybe_apply_aspect_ratio(aspect_ratio)
-        .maybe_add(box_sizing_adjustment);
-    let min_size = style
+    let ratio = Ratio::of(&style, padding_border_size);
+    let raw_min_size = style
         .min_size()
         .maybe_resolve(grid_area_size, |val, basis| tree.calc(val, basis))
-        .maybe_add(box_sizing_adjustment)
-        .or(padding_border_size.map(Some))
-        .maybe_max(padding_border_size)
-        .maybe_apply_aspect_ratio(aspect_ratio);
-    let max_size = style
-        .max_size()
-        .maybe_resolve(grid_area_size, |val, basis| tree.calc(val, basis))
-        .maybe_apply_aspect_ratio(aspect_ratio)
         .maybe_add(box_sizing_adjustment);
+    let floors = derived_height_is_minimum(&style, raw_min_size.height);
+    let BoxSizes { size: inherent_size, min_size, max_size } = resolve_through(
+        ratio,
+        size_style.maybe_resolve(grid_area_size, |val, basis| tree.calc(val, basis)).maybe_add(box_sizing_adjustment),
+        raw_min_size,
+        style
+            .max_size()
+            .maybe_resolve(grid_area_size, |val, basis| tree.calc(val, basis))
+            .maybe_add(box_sizing_adjustment),
+        floors,
+    );
 
     // Resolve default alignment styles if they are set on neither the parent or the node itself
     // Note: if the child has a preferred aspect ratio but neither width or height are set, then the width is stretched
@@ -273,7 +274,8 @@ pub(super) fn align_and_position_item(
     });
 
     // Reapply aspect ratio after stretch and absolute position width adjustments
-    let Size { width, height } = Size { width, height: inherent_size.height }.maybe_apply_aspect_ratio(aspect_ratio);
+    let BoxSizes { size: Size { width, height }, min_size, max_size } =
+        resolve_through(ratio, Size { width, height: inherent_size.height }, min_size, max_size, floors);
 
     let height = height.or_else(|| {
         if position.is_out_of_flow() {
@@ -321,7 +323,9 @@ pub(super) fn align_and_position_item(
         None
     });
     // Reapply aspect ratio after stretch and absolute position height adjustments
-    let Size { width, height } = Size { width, height }.maybe_apply_aspect_ratio(aspect_ratio);
+    let BoxSizes { size: Size { width, height }, min_size, max_size } =
+        resolve_through(ratio, Size { width, height }, min_size, max_size, floors);
+    let min_size = min_size.or(padding_border_size.map(Some)).maybe_max(padding_border_size);
 
     // Clamp size by min and max width/height
     let Size { width, height } = Size { width, height }.maybe_clamp(min_size, max_size);
@@ -341,6 +345,8 @@ pub(super) fn align_and_position_item(
         Size { width, height }
     };
 
+    let ratio_min = crate::compute::ratio::minimum_ratio_width(tree, node, grid_area_size.map(Some));
+    let size = size.map_width(|width| width.maybe_max(ratio_min));
     let mut layout_output = tree.perform_child_layout(
         node,
         size,

@@ -1,0 +1,19 @@
+<test name="aspect_ratio_flex_row_two_growing_items__border_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="block" direction="ltr" position="absolute" width="800px">
+      <div display="flex" direction="ltr" position="relative" width="400px">
+        <div display="block" direction="ltr" position="relative" flex-grow="1" aspect-ratio="2"/>
+        <div display="block" direction="ltr" position="relative" flex-grow="1" height="10px"/>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="800" height="100">
+      <node x="0" y="0" width="400" height="100">
+        <node x="0" y="0" width="200" height="100"/>
+        <node x="200" y="0" width="200" height="10"/>
+      </node>
+    </node>
+  </expectations>
+</test>

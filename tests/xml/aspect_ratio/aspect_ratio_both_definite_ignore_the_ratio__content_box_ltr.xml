@@ -1,0 +1,17 @@
+<test name="aspect_ratio_both_definite_ignore_the_ratio__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="block" box-sizing="content-box" direction="ltr" position="absolute" width="800px">
+      <div display="block" box-sizing="content-box" direction="ltr" position="relative" width="400px">
+        <div display="block" box-sizing="content-box" direction="ltr" position="relative" width="200px" height="50px" aspect-ratio="2"/>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="800" height="50">
+      <node x="0" y="0" width="400" height="50">
+        <node x="0" y="0" width="200" height="50"/>
+      </node>
+    </node>
+  </expectations>
+</test>

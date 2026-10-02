@@ -1,0 +1,21 @@
+<test name="aspect_ratio_ratio_inline_limits_grid_overflow_hidden__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="block" box-sizing="content-box" direction="ltr" position="absolute" width="800px">
+      <div display="grid" box-sizing="content-box" direction="ltr" width="400px">
+        <div display="block" box-sizing="content-box" direction="ltr" overflow-x="hidden" overflow-y="hidden" scrollbar-width="15" height="50px" aspect-ratio="1">
+          <div display="block" box-sizing="content-box" direction="ltr" width="100px" height="10px"/>
+        </div>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="800" height="50">
+      <node x="0" y="0" width="400" height="50" resolved-rows="50px" resolved-columns="400px">
+        <node x="0" y="0" width="50" height="50" scroll_width="50" scroll_height="0">
+          <node x="0" y="0" width="100" height="10"/>
+        </node>
+      </node>
+    </node>
+  </expectations>
+</test>

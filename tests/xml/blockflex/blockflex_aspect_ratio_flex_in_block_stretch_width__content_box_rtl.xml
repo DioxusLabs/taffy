@@ -1,0 +1,17 @@
+<test name="blockflex_aspect_ratio_flex_in_block_stretch_width__content_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="block" box-sizing="content-box" direction="rtl" position="absolute" width="400px">
+      <div display="flex" box-sizing="content-box" direction="rtl" position="relative" aspect-ratio="2">
+        <div display="block" box-sizing="content-box" direction="rtl" position="relative" width="10px" height="10px"/>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="400" height="200">
+      <node x="0" y="0" width="400" height="200">
+        <node x="390" y="0" width="10" height="10"/>
+      </node>
+    </node>
+  </expectations>
+</test>

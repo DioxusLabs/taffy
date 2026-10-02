@@ -1,0 +1,13 @@
+<test name="aspect_ratio_flex_column_shrink_leaf_height_ratio__content_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="flex" box-sizing="content-box" direction="rtl" position="absolute" flex-direction="column" width="300px" height="50px">
+      <div box-sizing="content-box" direction="rtl" position="relative" height="100px" aspect-ratio="1"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="300" height="50">
+      <node x="0" y="0" width="300" height="100"/>
+    </node>
+  </expectations>
+</test>

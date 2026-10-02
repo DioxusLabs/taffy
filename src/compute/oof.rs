@@ -4,6 +4,7 @@
 //! child's containing block). Instead they emit [`OofCandidate`] records which bubble up the tree
 //! via [`LayoutOutput::oof_candidates`](crate::LayoutOutput) until they reach the box's containing
 //! block, which lays the box out using the routine in this module.
+use super::ratio::{derived_height_is_minimum, minimum_ratio_width, BoxSizes, Ratio};
 use crate::geometry::{Line, Point, Rect, Size};
 #[cfg(feature = "grid")]
 use crate::style::OofItemStyle;
@@ -209,7 +210,6 @@ pub(crate) fn layout_oof_box<Tree: LayoutContainingBlock>(
     let area_width = area_size.width;
     let area_height = area_size.height;
 
-    let aspect_ratio = child_style.aspect_ratio();
     let margin =
         child_style.margin().map(|margin| margin.resolve_to_option(area_width, |val, basis| tree.calc(val, basis)));
     let padding = child_style.padding().resolve_or_zero(Some(area_width), |val, basis| tree.calc(val, basis));
@@ -226,22 +226,18 @@ pub(crate) fn layout_oof_box<Tree: LayoutContainingBlock>(
 
     // Compute known dimensions from min/max/inherent size styles
     let size_style = child_style.size();
-    let style_size = size_style
-        .maybe_resolve(area_size, |val, basis| tree.calc(val, basis))
-        .maybe_apply_aspect_ratio(aspect_ratio)
-        .maybe_add(box_sizing_adjustment);
-    let min_size = child_style
+    let style_size =
+        size_style.maybe_resolve(area_size, |val, basis| tree.calc(val, basis)).maybe_add(box_sizing_adjustment);
+    let mut min_size = child_style
         .min_size()
         .maybe_resolve(area_size, |val, basis| tree.calc(val, basis))
-        .maybe_apply_aspect_ratio(aspect_ratio)
-        .maybe_add(box_sizing_adjustment)
-        .or(padding_border_sum.map(Some))
-        .maybe_max(padding_border_sum);
-    let max_size = child_style
+        .maybe_add(box_sizing_adjustment);
+    let mut max_size = child_style
         .max_size()
         .maybe_resolve(area_size, |val, basis| tree.calc(val, basis))
-        .maybe_apply_aspect_ratio(aspect_ratio)
         .maybe_add(box_sizing_adjustment);
+    let ratio = Ratio::of(&child_style, padding_border_sum);
+    let ratio_floors_height = derived_height_is_minimum(&child_style, min_size.height);
     let mut known_dimensions = style_size.maybe_clamp(min_size, max_size);
 
     let is_replaced = child_style.is_compressible_replaced();
@@ -266,30 +262,78 @@ pub(crate) fn layout_oof_box<Tree: LayoutContainingBlock>(
             margin,
             SizingMode::ContentSize,
         );
-        known_dimensions = known_dimensions.maybe_apply_aspect_ratio(aspect_ratio).maybe_clamp(min_size, max_size);
+        known_dimensions = known_dimensions.maybe_clamp(min_size, max_size);
     }
 
-    // Fill in width from left/right and reapply aspect ratio if:
-    //   - Width is not already known
-    //   - Item has both left and right inset properties set
-    //   - Item is not a replaced element (an `auto` size of an absolutely positioned
-    //     replaced element resolves to its intrinsic size rather than being stretched
-    //     between the insets: https://www.w3.org/TR/CSS22/visudet.html#abs-replaced-width)
-    if let (false, None, Some(left), Some(right)) = (is_replaced, known_dimensions.width, left, right) {
-        let new_width_raw = area_width.maybe_sub(margin.left).maybe_sub(margin.right) - left - right;
-        known_dimensions.width = Some(f32_max(new_width_raw, 0.0));
-        known_dimensions = known_dimensions.maybe_apply_aspect_ratio(aspect_ratio).maybe_clamp(min_size, max_size);
-    }
+    if let Some(ratio) = ratio {
+        if let Some(minimum) = minimum_ratio_width(tree, candidate.node, area_size.map(Some)) {
+            min_size.width = Some(min_size.width.map_or(minimum, |width| width.max(minimum)));
+        }
+        if known_dimensions.width.is_none() && known_dimensions.height.is_none() && !is_replaced {
+            let bounds = ratio.resolve(known_dimensions, min_size, max_size, false);
+            max_size = bounds.max_size;
+            if let (Some(left), Some(right)) = (left, right) {
+                known_dimensions.width = Some(
+                    (area_width.maybe_sub(margin.left).maybe_sub(margin.right) - left - right)
+                        .max(0.0)
+                        .maybe_clamp(bounds.min_size.width, bounds.max_size.width),
+                );
+            } else if let (Some(top), Some(bottom)) = (top, bottom) {
+                known_dimensions.height = Some(
+                    (area_height.maybe_sub(margin.top).maybe_sub(margin.bottom) - top - bottom)
+                        .max(0.0)
+                        .maybe_clamp(bounds.min_size.height, bounds.max_size.height),
+                );
+            } else {
+                known_dimensions.width = Some(
+                    tree.measure_child_size(
+                        candidate.node,
+                        Size::NONE,
+                        area_size.map(Some),
+                        Size {
+                            width: AvailableSpace::Definite(
+                                area_width.maybe_clamp(bounds.min_size.width, bounds.max_size.width),
+                            ),
+                            height: AvailableSpace::Definite(area_height),
+                        },
+                        SizingMode::ContentSize,
+                        crate::AbsoluteAxis::Horizontal,
+                        Line::FALSE,
+                    )
+                    .maybe_clamp(bounds.min_size.width, bounds.max_size.width),
+                );
+            }
+        }
+        let BoxSizes { size, min_size: resolved_min, max_size: resolved_max } =
+            ratio.resolve(known_dimensions, min_size, max_size, ratio_floors_height);
+        known_dimensions = size;
+        min_size = resolved_min;
+        max_size = resolved_max;
+    } else {
+        // Fill in width from left/right and reapply aspect ratio if:
+        //   - Width is not already known
+        //   - Item has both left and right inset properties set
+        //   - Item is not a replaced element (an `auto` size of an absolutely positioned
+        //     replaced element resolves to its intrinsic size rather than being stretched
+        //     between the insets: https://www.w3.org/TR/CSS22/visudet.html#abs-replaced-width)
+        if let (false, None, Some(left), Some(right)) = (is_replaced, known_dimensions.width, left, right) {
+            let new_width_raw = area_width.maybe_sub(margin.left).maybe_sub(margin.right) - left - right;
+            known_dimensions.width = Some(f32_max(new_width_raw, 0.0));
+            known_dimensions = known_dimensions.maybe_clamp(min_size, max_size);
+        }
 
-    // Fill in height from top/bottom and reapply aspect ratio if:
-    //   - Height is not already known
-    //   - Item has both top and bottom inset properties set
-    //   - Item is not a replaced element (https://www.w3.org/TR/CSS22/visudet.html#abs-replaced-height)
-    if let (false, None, Some(top), Some(bottom)) = (is_replaced, known_dimensions.height, top, bottom) {
-        let new_height_raw = area_height.maybe_sub(margin.top).maybe_sub(margin.bottom) - top - bottom;
-        known_dimensions.height = Some(f32_max(new_height_raw, 0.0));
-        known_dimensions = known_dimensions.maybe_apply_aspect_ratio(aspect_ratio).maybe_clamp(min_size, max_size);
+        // Fill in height from top/bottom and reapply aspect ratio if:
+        //   - Height is not already known
+        //   - Item has both top and bottom inset properties set
+        //   - Item is not a replaced element (https://www.w3.org/TR/CSS22/visudet.html#abs-replaced-height)
+        if let (false, None, Some(top), Some(bottom)) = (is_replaced, known_dimensions.height, top, bottom) {
+            let new_height_raw = area_height.maybe_sub(margin.top).maybe_sub(margin.bottom) - top - bottom;
+            known_dimensions.height = Some(f32_max(new_height_raw, 0.0));
+            known_dimensions = known_dimensions.maybe_clamp(min_size, max_size);
+        }
     }
+    min_size = min_size.or(padding_border_sum.map(Some)).maybe_max(padding_border_sum);
+    known_dimensions = known_dimensions.maybe_clamp(min_size, max_size);
 
     let final_size = match (known_dimensions.width, known_dimensions.height) {
         (Some(width), Some(height)) => Size { width, height },
@@ -312,7 +356,10 @@ pub(crate) fn layout_oof_box<Tree: LayoutContainingBlock>(
 
     let layout_input = LayoutInput {
         known_dimensions: final_size.map(Some),
-        known_dimensions_are_definite: Size { width: true, height: true },
+        known_dimensions_are_definite: Size {
+            width: true,
+            height: ratio.is_none() || !ratio_floors_height || style_size.height.is_some(),
+        },
         parent_size: area_size.map(Some),
         available_space: Size {
             width: AvailableSpace::Definite(area_width.maybe_clamp(min_size.width, max_size.width)),

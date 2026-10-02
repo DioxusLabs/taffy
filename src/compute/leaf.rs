@@ -1,5 +1,6 @@
 //! Computes size using styles and measure functions
 
+use crate::compute::ratio::{derived_height_is_minimum, BoxSizes, Ratio};
 #[cfg(feature = "content_size")]
 use crate::geometry::Rect;
 use crate::geometry::Size;
@@ -36,31 +37,29 @@ where
 
     // Resolve node's preferred/min/max sizes (width/heights) against the available space (percentages resolve to pixel values)
     // For ContentSize mode, we pretend that the node has no size styles as these should be ignored.
-    let (node_size, node_min_size, node_max_size, aspect_ratio) = match sizing_mode {
-        SizingMode::ContentSize => {
-            let node_size = known_dimensions;
-            let node_min_size = Size::NONE;
-            let node_max_size = Size::NONE;
-            (node_size, node_min_size, node_max_size, None)
-        }
+    let (given_size, style_min_size, style_max_size) = match sizing_mode {
+        SizingMode::ContentSize => (known_dimensions, Size::NONE, Size::NONE),
         SizingMode::InherentSize => {
-            let aspect_ratio = style.aspect_ratio();
-            let style_size = style
-                .size()
-                .maybe_resolve(parent_size, &resolve_calc_value)
-                .maybe_apply_aspect_ratio(aspect_ratio)
-                .maybe_add(box_sizing_adjustment);
-            let style_min_size = style
-                .min_size()
-                .maybe_resolve(parent_size, &resolve_calc_value)
-                .maybe_apply_aspect_ratio(aspect_ratio)
-                .maybe_add(box_sizing_adjustment);
+            let style_size =
+                style.size().maybe_resolve(parent_size, &resolve_calc_value).maybe_add(box_sizing_adjustment);
+            let style_min_size =
+                style.min_size().maybe_resolve(parent_size, &resolve_calc_value).maybe_add(box_sizing_adjustment);
             let style_max_size =
                 style.max_size().maybe_resolve(parent_size, &resolve_calc_value).maybe_add(box_sizing_adjustment);
-
-            let node_size = known_dimensions.or(style_size);
-            (node_size, style_min_size, style_max_size, aspect_ratio)
+            (known_dimensions.or(style_size), style_min_size, style_max_size)
         }
+    };
+
+    // Resolve the sizes through the node's preferred aspect ratio (if it has one). As with the size
+    // styles, the ratio is ignored in ContentSize mode.
+    let ratio = match sizing_mode {
+        SizingMode::ContentSize => None,
+        SizingMode::InherentSize => Ratio::of(style, pb_sum),
+    };
+    let derived_height_is_minimum = derived_height_is_minimum(style, style_min_size.height);
+    let BoxSizes { size: node_size, min_size: node_min_size, max_size: node_max_size } = match ratio {
+        Some(ratio) => ratio.resolve(given_size, style_min_size, style_max_size, derived_height_is_minimum),
+        None => BoxSizes { size: given_size, min_size: style_min_size, max_size: style_max_size },
     };
 
     // Scrollbar gutters are reserved when the `overflow` property is set to `Overflow::Scroll`.
@@ -112,6 +111,22 @@ where
         };
     }
 
+    // A ratio-derived height is the preferred wrapping offer even when the
+    // automatic content minimum may make the final box taller. In particular,
+    // vertical text must not choose its inline extent from an unrelated parent's
+    // height offer. Keep this a measurement offer, not a maximum on content.
+    let measurement_height = node_size.height.or_else(|| {
+        if derived_height_is_minimum {
+            ratio.zip(node_size.width).map(|(ratio, width)| {
+                ratio
+                    .height(width.maybe_clamp(node_min_size.width, node_max_size.width))
+                    .maybe_min(node_max_size.height)
+            })
+        } else {
+            None
+        }
+    });
+
     // Compute available space
     let available_space = Size {
         width: known_dimensions
@@ -130,7 +145,7 @@ where
             .unwrap_or(available_space.height)
             .maybe_sub(margin.vertical_axis_sum())
             .maybe_set(known_dimensions.height)
-            .maybe_set(node_size.height)
+            .maybe_set(measurement_height)
             .map_definite_value(|size| {
                 size.maybe_clamp(node_min_size.height, node_max_size.height) - content_box_inset.vertical_axis_sum()
             }),
@@ -149,9 +164,22 @@ where
         .or(node_size)
         .unwrap_or(measured_size + content_box_inset.sum_axes())
         .maybe_clamp(node_min_size, node_max_size);
-    let size = Size {
-        width: clamped_size.width,
-        height: f32_max(clamped_size.height, aspect_ratio.map(|ratio| clamped_size.width / ratio).unwrap_or(0.0)),
+    // If the node has a preferred aspect ratio and neither of its dimensions are given, then its
+    // height is derived from its content-based width. (A given dimension has already been resolved
+    // through the ratio above.)
+    let size = match ratio {
+        Some(ratio) if node_size.width.is_none() && node_size.height.is_none() => {
+            let derived_height = ratio.height(clamped_size.width);
+            let height = if derived_height_is_minimum {
+                f32_max(clamped_size.height, derived_height.maybe_min(node_max_size.height))
+            } else if style.is_compressible_replaced() {
+                f32_max(clamped_size.height, derived_height)
+            } else {
+                derived_height
+            };
+            Size { width: clamped_size.width, height: height.maybe_clamp(node_min_size.height, node_max_size.height) }
+        }
+        _ => clamped_size,
     };
     let size = size.maybe_max(padding_border.sum_axes().map(Some));
 

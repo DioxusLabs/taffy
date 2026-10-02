@@ -1,0 +1,17 @@
+<test name="aspect_ratio_grid_in_flex_row_width_ratio_padding_content_box__content_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="block" box-sizing="content-box" direction="rtl" position="absolute" width="800px">
+      <div display="flex" box-sizing="content-box" direction="rtl" position="relative" width="400px">
+        <div display="grid" box-sizing="content-box" direction="rtl" position="relative" width="100px" aspect-ratio="1" padding-top="10px" padding-left="10px"/>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="800" height="110">
+      <node x="400" y="0" width="400" height="110">
+        <node x="290" y="0" width="110" height="110" resolved-rows="none" resolved-columns="none"/>
+      </node>
+    </node>
+  </expectations>
+</test>

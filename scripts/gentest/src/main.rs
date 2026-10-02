@@ -692,6 +692,7 @@ fn generate_node(w: &mut XmlWriter, node: &Value) {
     maybe_write(w, "max-height", get_dim_attr(&style["maxSize"]["height"], Some("auto")));
 
     maybe_write(w, "aspect-ratio", get_num_attr(&style["aspectRatio"], None));
+    maybe_write(w, "aspect-ratio-content-box", style["aspectRatioContentBox"].as_bool().filter(|value| *value));
 
     // TODO: null check in no gap case
     maybe_write(w, "row-gap", get_dim_attr(&style["gap"]["row"], None));

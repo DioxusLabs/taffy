@@ -1,0 +1,13 @@
+<test name="aspect_ratio_flex_container_content_height__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="flex" direction="rtl" position="absolute" width="200px" aspect-ratio="2">
+      <div display="block" direction="rtl" position="relative" width="10px" height="150px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="200" height="150">
+      <node x="190" y="0" width="10" height="150"/>
+    </node>
+  </expectations>
+</test>

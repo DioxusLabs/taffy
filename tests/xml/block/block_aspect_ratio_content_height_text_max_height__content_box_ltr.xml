@@ -1,0 +1,15 @@
+<test name="block_aspect_ratio_content_height_text_max_height__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="block" box-sizing="content-box" direction="ltr" position="absolute" width="400px">
+      <text display="block" box-sizing="content-box" direction="ltr" position="relative" width="20px" max-height="40px" aspect-ratio="1">
+        XX​XX​XX​XX​XX
+      </text>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="400" height="40">
+      <node x="0" y="0" width="20" height="40"/>
+    </node>
+  </expectations>
+</test>
