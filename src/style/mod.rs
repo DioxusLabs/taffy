@@ -171,6 +171,13 @@ pub trait CoreStyle {
         Style::<Self::CustomIdent>::DEFAULT.aspect_ratio
     }
 
+    /// Whether the preferred ratio relates content-box sizes regardless of `box_sizing`.
+    /// This is true for natural ratios and CSS `aspect-ratio: auto <ratio>`.
+    #[inline(always)]
+    fn aspect_ratio_content_box(&self) -> bool {
+        false
+    }
+
     // Spacing Properties
     /// How large should the margin be on each side?
     #[inline(always)]
@@ -730,6 +737,9 @@ pub struct Style<S: CheapCloneStr = DefaultCheapStr> {
     ///
     /// The ratio is calculated as width divided by height.
     pub aspect_ratio: Option<f32>,
+    /// Whether `aspect_ratio` relates content-box sizes even under `BoxSizing::BorderBox`.
+    /// See [`CoreStyle::aspect_ratio_content_box`]. Size styles still use `box_sizing`.
+    pub aspect_ratio_content_box: bool,
 
     // Spacing Properties
     /// How large should the margin be on each side?
@@ -866,6 +876,7 @@ impl<S: CheapCloneStr> Style<S> {
         min_size: Size::auto(),
         max_size: Size::auto(),
         aspect_ratio: None,
+        aspect_ratio_content_box: false,
         #[cfg(any(feature = "flexbox", feature = "grid"))]
         gap: Size::zero(),
         // Alignment
@@ -987,6 +998,10 @@ impl<S: CheapCloneStr> CoreStyle for Style<S> {
         self.aspect_ratio
     }
     #[inline(always)]
+    fn aspect_ratio_content_box(&self) -> bool {
+        self.aspect_ratio_content_box
+    }
+    #[inline(always)]
     fn margin(&self) -> Rect<LengthPercentageAuto> {
         self.margin
     }
@@ -1077,6 +1092,10 @@ impl<T: CoreStyle> CoreStyle for &'_ T {
     #[inline(always)]
     fn aspect_ratio(&self) -> Option<f32> {
         (*self).aspect_ratio()
+    }
+    #[inline(always)]
+    fn aspect_ratio_content_box(&self) -> bool {
+        (*self).aspect_ratio_content_box()
     }
     #[inline(always)]
     fn margin(&self) -> Rect<LengthPercentageAuto> {
@@ -1581,6 +1600,7 @@ mod tests {
             min_size: Size::auto(),
             max_size: Size::auto(),
             aspect_ratio: Default::default(),
+            aspect_ratio_content_box: false,
             #[cfg(feature = "grid")]
             grid_template_rows: Default::default(),
             #[cfg(feature = "grid")]

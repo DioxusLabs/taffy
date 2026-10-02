@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    A scroll container in the ratio-dependent axis takes no content-based automatic minimum: overflow is the point of the box.
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="display: block; width: 100px;">
+  <div style="display: block; aspect-ratio: 0.85; overflow-y: hidden;">
+    <div style="display: block; height: 300px;"></div>
+  </div>
+</div>
+
+</body>
+</html>

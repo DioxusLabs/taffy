@@ -1,0 +1,17 @@
+<test name="blockgrid_aspect_ratio_grid_in_block_content_height__border_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="block" direction="ltr" position="absolute" width="400px">
+      <div display="grid" direction="ltr" position="relative" width="100px" aspect-ratio="2">
+        <div display="block" direction="ltr" position="relative" width="10px" height="150px"/>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="400" height="150">
+      <node x="0" y="0" width="100" height="150" resolved-rows="150px" resolved-columns="100px">
+        <node x="0" y="0" width="10" height="150"/>
+      </node>
+    </node>
+  </expectations>
+</test>

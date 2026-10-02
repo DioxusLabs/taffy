@@ -1,0 +1,17 @@
+<test name="aspect_ratio_flex_row_shrink_block_width_ratio_align_start__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="flex" direction="rtl" position="absolute" align-items="flex-start" width="50px" height="300px">
+      <div display="block" direction="rtl" position="relative" width="100px" aspect-ratio="1">
+        <div display="block" direction="rtl" position="relative" width="10px" height="10px"/>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="50" height="300">
+      <node x="0" y="0" width="50" height="50">
+        <node x="40" y="0" width="10" height="10"/>
+      </node>
+    </node>
+  </expectations>
+</test>

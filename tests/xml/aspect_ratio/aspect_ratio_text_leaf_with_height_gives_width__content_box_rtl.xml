@@ -1,0 +1,19 @@
+<test name="aspect_ratio_text_leaf_with_height_gives_width__content_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="block" box-sizing="content-box" direction="rtl" position="absolute" width="800px">
+      <div display="block" box-sizing="content-box" direction="rtl" position="relative" width="400px">
+        <text display="block" box-sizing="content-box" direction="rtl" position="relative" height="36px" aspect-ratio="5">
+          X​X
+        </text>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="800" height="36">
+      <node x="400" y="0" width="400" height="36">
+        <node x="220" y="0" width="180" height="36"/>
+      </node>
+    </node>
+  </expectations>
+</test>

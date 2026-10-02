@@ -1,0 +1,9 @@
+<test name="aspect_ratio_auto_border_box_padding__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="block" position="absolute" direction="rtl" width="200px" padding-left="10px" padding-right="10px" padding-top="10px" padding-bottom="10px" aspect-ratio="2" aspect-ratio-content-box="true"/>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="200" height="110"/>
+  </expectations>
+</test>

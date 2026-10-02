@@ -1,5 +1,6 @@
 //! This module is a partial implementation of the CSS Grid Level 1 specification
 //! <https://www.w3.org/TR/css-grid-1>
+use crate::compute::ratio::{sizes_through_ratio, BoxSizes};
 use crate::geometry::{AbsoluteAxis, AbstractAxis, InBothAbsAxis};
 use crate::geometry::{Line, Point, Rect, Size};
 use crate::style::{AlignItems, AvailableSpace, Overflow};
@@ -60,7 +61,6 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
 
     // 1. Compute "available grid space"
     // https://www.w3.org/TR/css-grid-1/#available-grid-space
-    let aspect_ratio = style.aspect_ratio();
     let padding = style.padding().resolve_or_zero(parent_size.width, |val, basis| tree.calc(val, basis));
     let border = style.border().resolve_or_zero(parent_size.width, |val, basis| tree.calc(val, basis));
     let padding_border = padding + border;
@@ -68,25 +68,28 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     let box_sizing_adjustment =
         if style.box_sizing() == BoxSizing::ContentBox { padding_border_size } else { Size::ZERO };
 
-    let min_size = style
-        .min_size()
-        .maybe_resolve(parent_size, |val, basis| tree.calc(val, basis))
-        .maybe_apply_aspect_ratio(aspect_ratio)
-        .maybe_add(box_sizing_adjustment);
-    let max_size = style
-        .max_size()
-        .maybe_resolve(parent_size, |val, basis| tree.calc(val, basis))
-        .maybe_apply_aspect_ratio(aspect_ratio)
-        .maybe_add(box_sizing_adjustment);
-    let preferred_size = if inputs.sizing_mode == SizingMode::InherentSize {
-        style
-            .size()
-            .maybe_resolve(parent_size, |val, basis| tree.calc(val, basis))
-            .maybe_apply_aspect_ratio(style.aspect_ratio())
-            .maybe_add(box_sizing_adjustment)
+    // The container's sizes are resolved through its aspect ratio, given the dimensions that are
+    // already known and those given by its own size styles. A height that the ratio derives from a
+    // width is a minimum height (which the container's content can exceed) rather than a size.
+    let style_size = if inputs.sizing_mode == SizingMode::InherentSize {
+        style.size().maybe_resolve(parent_size, |val, basis| tree.calc(val, basis)).maybe_add(box_sizing_adjustment)
     } else {
         Size::NONE
     };
+    let ratio_floors_height = super::ratio::derived_height_is_minimum(&style, None);
+    let BoxSizes { size: preferred_size, min_size, max_size } = sizes_through_ratio(
+        &style,
+        padding_border_size,
+        known_dimensions.or(style_size),
+        style
+            .min_size()
+            .maybe_resolve(parent_size, |val, basis| tree.calc(val, basis))
+            .maybe_add(box_sizing_adjustment),
+        style
+            .max_size()
+            .maybe_resolve(parent_size, |val, basis| tree.calc(val, basis))
+            .maybe_add(box_sizing_adjustment),
+    );
 
     // Scrollbar gutters are reserved when the `overflow` property is set to `Overflow::Scroll`.
     // However, the axis are switched (transposed) because a node that scrolls vertically needs
@@ -325,6 +328,21 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     let initial_column_sum = columns.iter().map(|track| track.base_size).sum::<f32>();
     inner_node_size.width = inner_node_size.width.or_else(|| initial_column_sum.into());
 
+    let transferred_height = if inner_node_size.height.is_none() {
+        let style = tree.get_grid_container_style(node);
+        super::ratio::Ratio::of(&style, padding_border_size).zip(inner_node_size.width).map(|(ratio, width)| {
+            ratio
+                .height(width + content_box_inset.horizontal_axis_sum())
+                .maybe_clamp(min_size.height, max_size.height)
+                .max(padding_border_size.height)
+        })
+    } else {
+        None
+    };
+    inner_node_size.height = inner_node_size
+        .height
+        .or_else(|| transferred_height.map(|height| height - content_box_inset.vertical_axis_sum()));
+
     items.iter_mut().for_each(|item| item.grid_area_size_cache = None);
 
     // Run track sizing algorithm for Block axis
@@ -361,6 +379,13 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
             .max(padding_border_size.width),
         height: resolved_style_size
             .get(AbstractAxis::Block)
+            .or(transferred_height.map(|height| {
+                if ratio_floors_height {
+                    height.max(initial_row_sum + content_box_inset.vertical_axis_sum())
+                } else {
+                    height
+                }
+            }))
             .unwrap_or_else(|| initial_row_sum + content_box_inset.vertical_axis_sum())
             .maybe_clamp(min_size.height, max_size.height)
             .max(padding_border_size.height),

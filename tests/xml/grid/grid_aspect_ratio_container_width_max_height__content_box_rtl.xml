@@ -1,0 +1,13 @@
+<test name="grid_aspect_ratio_container_width_max_height__content_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" box-sizing="content-box" direction="rtl" position="absolute" width="200px" max-height="50px" aspect-ratio="1">
+      <div display="block" box-sizing="content-box" direction="rtl" position="relative" width="10px" height="10px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="200" height="50" resolved-rows="50px" resolved-columns="200px">
+      <node x="190" y="0" width="10" height="10"/>
+    </node>
+  </expectations>
+</test>

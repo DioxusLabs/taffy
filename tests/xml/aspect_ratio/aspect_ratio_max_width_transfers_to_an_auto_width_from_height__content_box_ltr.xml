@@ -1,0 +1,17 @@
+<test name="aspect_ratio_max_width_transfers_to_an_auto_width_from_height__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="block" box-sizing="content-box" direction="ltr" position="absolute" width="800px">
+      <div display="block" box-sizing="content-box" direction="ltr" position="relative" width="400px">
+        <div display="block" box-sizing="content-box" direction="ltr" position="relative" height="100px" max-width="200px" aspect-ratio="4"/>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="800" height="100">
+      <node x="0" y="0" width="400" height="100">
+        <node x="0" y="0" width="200" height="100"/>
+      </node>
+    </node>
+  </expectations>
+</test>

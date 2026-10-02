@@ -137,6 +137,7 @@ function parseNumber(input) {
 
 function parseRatio(input) {
   if (!input) return undefined;
+  input = input.replace(/\bauto\b/g, "").trim();
 
   if (input.includes('/')) {
     let [width, height] = input.split("/").map(part => parseFloat(part.trim()));
@@ -288,6 +289,7 @@ function describeElement(e) {
       minSize: parseSize({ width: e.style.minWidth, height: e.style.minHeight }),
       maxSize: parseSize({ width: e.style.maxWidth, height: e.style.maxHeight }),
       aspectRatio: parseRatio(e.style.aspectRatio),
+      aspectRatioContentBox: /\bauto\b/.test(e.style.aspectRatio) || undefined,
 
       margin: parseEdges({
         left: e.style.marginLeft,

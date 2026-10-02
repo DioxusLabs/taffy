@@ -1,0 +1,19 @@
+<test name="aspect_ratio_grid_absolute_ratio_content_taller_min_height_0__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="block" box-sizing="content-box" direction="ltr" position="absolute" width="800px">
+      <div display="grid" box-sizing="content-box" direction="ltr" position="relative" width="400px" height="100px">
+        <text display="block" box-sizing="content-box" direction="ltr" position="absolute" width="20px" min-height="0px" aspect-ratio="1">
+          X​X​X​X​X
+        </text>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="800" height="100">
+      <node x="0" y="0" width="400" height="100" resolved-rows="none" resolved-columns="none">
+        <node x="0" y="0" width="20" height="20"/>
+      </node>
+    </node>
+  </expectations>
+</test>
