@@ -2,9 +2,9 @@
 
 #![allow(clippy::unusual_byte_groupings)]
 
-use crate::geometry::Size;
+use crate::geometry::{Line, Size};
 use crate::style::AvailableSpace;
-use crate::tree::{CollapsibleMarginSet, LayoutInput, LayoutOutput, RunMode};
+use crate::tree::{CollapsibleMarginSet, LayoutInput, LayoutOutput, RunMode, SizingMode};
 use crate::RequestedAxis;
 
 /// The number of cache entries for each node in the tree
@@ -92,6 +92,14 @@ struct CacheKey {
     /// Whether each known dimension is definite. Normalized such that an axis
     /// without a known dimension is always `true`.
     known_dimensions_are_definite: Size<bool>,
+    /// Whether the node's vertical margins can collapse with its parent's (whether the node is
+    /// laid out as part of its parent's block formatting context). This determines whether the
+    /// margins of the node's first and last children collapse through the node, which affects
+    /// the node's size, the position of its children and the margins that it reports.
+    vertical_margins_are_collapsible: Line<bool>,
+    /// Whether the node's own size styles are applied (`InherentSize`) or ignored (`ContentSize`).
+    /// The same known dimensions and available space can result in different sizes in each mode.
+    sizing_mode: SizingMode,
 }
 
 impl CacheKey {
@@ -137,6 +145,8 @@ impl From<&LayoutInput> for CacheKey {
             known_dimensions_are_definite: input
                 .known_dimensions_are_definite
                 .zip_map(input.known_dimensions, |is_definite, kd| is_definite || kd.is_none()),
+            vertical_margins_are_collapsible: input.vertical_margins_are_collapsible,
+            sizing_mode: input.sizing_mode,
         }
     }
 }
@@ -200,6 +210,8 @@ impl Cache {
                     let Some(entry) = entry else { continue };
                     if entry.key.kd_available_space == key.kd_available_space
                         && entry.key.known_dimensions_are_definite == key.known_dimensions_are_definite
+                        && entry.key.vertical_margins_are_collapsible == key.vertical_margins_are_collapsible
+                        && entry.key.sizing_mode == key.sizing_mode
                         && (entry.key.x_axis_parent_size() == key.x_axis_parent_size())
                         && entry.key.size_is_valid_for(&key)
                     {
@@ -292,8 +304,6 @@ pub enum ClearState {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::geometry::Line;
-    use crate::tree::SizingMode;
 
     fn input(width: f32) -> LayoutInput {
         LayoutInput {
@@ -364,5 +374,45 @@ mod tests {
         assert_eq!(cache.get(&input(1.0)), Some(output(1.0)));
         assert_eq!(cache.measure_entries, entries);
         assert_ne!(cache.recently_used_entries, 0);
+    }
+
+    fn perform_layout_input(width: f32, height: f32) -> LayoutInput {
+        LayoutInput {
+            run_mode: RunMode::PerformLayout,
+            known_dimensions: Size { width: Some(width), height: Some(height) },
+            parent_size: Size { width: Some(width), height: Some(height) },
+            ..input(width)
+        }
+    }
+
+    #[test]
+    fn entries_are_keyed_on_margin_collapsibility() {
+        let mut cache = Cache::new();
+
+        let collapsible =
+            LayoutInput { vertical_margins_are_collapsible: Line::TRUE, ..perform_layout_input(100.0, 50.0) };
+        cache.store(&collapsible, output(1.0));
+        assert_eq!(cache.get(&perform_layout_input(100.0, 50.0)), None);
+        assert_eq!(cache.get(&collapsible), Some(output(1.0)));
+
+        let collapsible_measure = LayoutInput { vertical_margins_are_collapsible: Line::TRUE, ..input(1.0) };
+        cache.store(&collapsible_measure, output(2.0));
+        assert_eq!(cache.get(&input(1.0)), None);
+        assert_eq!(cache.get(&collapsible_measure), Some(output(2.0)));
+    }
+
+    #[test]
+    fn entries_are_keyed_on_sizing_mode() {
+        let mut cache = Cache::new();
+
+        let content_size = LayoutInput { sizing_mode: SizingMode::ContentSize, ..perform_layout_input(100.0, 50.0) };
+        cache.store(&perform_layout_input(100.0, 50.0), output(1.0));
+        assert_eq!(cache.get(&content_size), None);
+        assert_eq!(cache.get(&perform_layout_input(100.0, 50.0)), Some(output(1.0)));
+
+        let content_size_measure = LayoutInput { sizing_mode: SizingMode::ContentSize, ..input(1.0) };
+        cache.store(&input(1.0), output(2.0));
+        assert_eq!(cache.get(&content_size_measure), None);
+        assert_eq!(cache.get(&input(1.0)), Some(output(2.0)));
     }
 }

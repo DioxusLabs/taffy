@@ -422,3 +422,190 @@ fn relayout_is_stable_with_rounding() {
         assert_eq!(initial_inner_layout.size.height, inner_layout.size.height);
     }
 }
+
+/// Lays out the tree that `build` makes with `before`, restyles the node that `build` returns first
+/// with `after` and lays the tree out again. Returns the unrounded layout of every node that `build`
+/// returns, alongside those of a fresh tree built with `after` directly. `build` returns the root last.
+#[cfg(all(feature = "block_layout", feature = "flexbox"))]
+fn relayout_and_fresh(
+    before: Style,
+    after: Style,
+    build: fn(&mut TaffyTree<taffy_test_helpers::TestNodeContext>, Style) -> Vec<NodeId>,
+) -> (Vec<taffy::Layout>, Vec<taffy::Layout>) {
+    let layouts = |tree: &TaffyTree<taffy_test_helpers::TestNodeContext>, ids: &[NodeId]| {
+        ids.iter().map(|&id| *tree.unrounded_layout(id)).collect::<Vec<_>>()
+    };
+
+    let mut tree = new_test_tree();
+    let ids = build(&mut tree, before);
+    let root = *ids.last().unwrap();
+    tree.compute_layout(root, Size::MAX_CONTENT).unwrap();
+    tree.set_style(ids[0], after.clone()).unwrap();
+    tree.compute_layout(root, Size::MAX_CONTENT).unwrap();
+
+    let mut fresh = new_test_tree();
+    let fresh_ids = build(&mut fresh, after);
+    fresh.compute_layout(*fresh_ids.last().unwrap(), Size::MAX_CONTENT).unwrap();
+
+    (layouts(&tree, &ids), layouts(&fresh, &fresh_ids))
+}
+
+/// ```html
+/// <div style="display: block; width: 100px; height: 200px">
+///   <div style="display: block; height: 50px">
+///     <div style="display: block; height: 10px; margin-top: 20px"></div>
+///   </div>
+/// </div>
+/// ```
+///
+/// The outer box then becomes `container`. The inner box's margin collapses through the middle box
+/// only while the middle box is in a block formatting context with its parent: as a flex or grid item
+/// the middle box establishes an independent formatting context, which contains the margin.
+#[cfg(all(feature = "block_layout", feature = "flexbox"))]
+fn relayout_block_parent_as(container: Style) {
+    let size = Size { width: length(100.0), height: length(200.0) };
+    let block = Style { display: Display::Block, size, ..Default::default() };
+    let container = Style { size, ..container };
+
+    let (relaid, fresh) = relayout_and_fresh(block, container, |tree, root_style| {
+        let inner = tree
+            .new_leaf(Style {
+                display: Display::Block,
+                size: Size { width: auto(), height: length(10.0) },
+                margin: Rect { top: length(20.0), ..Rect::zero() },
+                ..Default::default()
+            })
+            .unwrap();
+        let middle = tree
+            .new_with_children(
+                Style {
+                    display: Display::Block,
+                    size: Size { width: auto(), height: length(50.0) },
+                    ..Default::default()
+                },
+                &[inner],
+            )
+            .unwrap();
+        let root = tree.new_with_children(root_style, &[middle]).unwrap();
+        vec![root, middle, inner, root]
+    });
+
+    assert_eq!(fresh[1].location.y, 0.0, "the item is at the top of its container");
+    assert_eq!(fresh[2].location.y, 20.0, "the item contains its child's margin");
+    assert_eq!(relaid, fresh);
+}
+
+/// A flex container lays its items out with `SizingMode::ContentSize` and without collapsible
+/// margins. The block container it was before used `SizingMode::InherentSize` and collapsible margins.
+#[test]
+#[cfg(all(feature = "block_layout", feature = "flexbox"))]
+fn block_child_does_not_keep_collapsed_margin_as_flex_item() {
+    relayout_block_parent_as(Style {
+        display: Display::Flex,
+        flex_direction: FlexDirection::Column,
+        ..Default::default()
+    });
+}
+
+/// A grid container lays its items out with `SizingMode::InherentSize`, as the block container it
+/// was before did: only `vertical_margins_are_collapsible` differs between the two layout inputs.
+#[test]
+#[cfg(all(feature = "block_layout", feature = "flexbox", feature = "grid"))]
+fn block_child_does_not_keep_collapsed_margin_as_grid_item() {
+    relayout_block_parent_as(Style { display: Display::Grid, ..Default::default() });
+}
+
+/// ```html
+/// <div style="display: grid; width: 100px">
+///   <div style="display: grid; flex-grow: 1; min-width: 40px; height: 20px"></div>
+///   <div style="display: block; flex-grow: 1; height: 20px"></div>
+/// </div>
+/// ```
+///
+/// The outer box then becomes `display: flex`. The grid container measured the first item with
+/// `SizingMode::InherentSize`, which applies the item's `min-width`. The flex container measures
+/// the same item's flex base size with `SizingMode::ContentSize`, which does not: both items
+/// have a flex base size of zero and grow equally.
+#[test]
+#[cfg(all(feature = "block_layout", feature = "flexbox", feature = "grid"))]
+fn flex_base_size_is_not_answered_by_an_inherent_size_measurement() {
+    let container =
+        |display| Style { display, size: Size { width: length(100.0), height: auto() }, ..Default::default() };
+
+    let (relaid, fresh) = relayout_and_fresh(container(Display::Grid), container(Display::Flex), |tree, root_style| {
+        let first = tree
+            .new_leaf(Style {
+                display: Display::Grid,
+                flex_grow: 1.0,
+                size: Size { width: auto(), height: length(20.0) },
+                min_size: Size { width: length(40.0), height: auto() },
+                ..Default::default()
+            })
+            .unwrap();
+        let second = tree
+            .new_leaf(Style {
+                display: Display::Block,
+                flex_grow: 1.0,
+                size: Size { width: auto(), height: length(20.0) },
+                ..Default::default()
+            })
+            .unwrap();
+        let root = tree.new_with_children(root_style, &[first, second]).unwrap();
+        vec![root, first, second, root]
+    });
+
+    assert_eq!(fresh[1].size.width, 50.0);
+    assert_eq!(fresh[2].size.width, 50.0);
+    assert_eq!(relaid, fresh);
+}
+
+#[test]
+#[cfg(all(feature = "block_layout", feature = "flexbox"))]
+fn a_percentage_height_is_not_reused_after_its_containing_block_loses_its_height() {
+    use taffy::style::{Dimension, Display, FlexDirection};
+    // <div style="display:flex;flex-direction:column;width:78px">
+    //   <div style="width:78px;height:62px">
+    //     <div style="display:flex;width:31px;height:86%"> <div style="height:19px"></div>
+    // </div></div></div>, then the middle block's height becomes auto: the item's
+    // percentage no longer resolves (CSS 2.1 §10.5) and it is 19px tall, not 53.32px.
+    let block = |height| Style {
+        display: Display::Block,
+        size: Size { width: Dimension::length(78.0), height },
+        ..Style::default()
+    };
+    let (incremental, fresh) =
+        relayout_and_fresh(block(Dimension::length(62.0)), block(Dimension::auto()), |tree, middle_style| {
+            let leaf = tree
+                .new_leaf(Style {
+                    display: Display::Block,
+                    size: Size { width: Dimension::auto(), height: Dimension::length(19.0) },
+                    ..Style::default()
+                })
+                .unwrap();
+            let item = tree
+                .new_with_children(
+                    Style {
+                        display: Display::Flex,
+                        size: Size { width: Dimension::length(31.0), height: Dimension::percent(0.86) },
+                        ..Style::default()
+                    },
+                    &[leaf],
+                )
+                .unwrap();
+            let middle = tree.new_with_children(middle_style, &[item]).unwrap();
+            let root = tree
+                .new_with_children(
+                    Style {
+                        display: Display::Flex,
+                        flex_direction: FlexDirection::Column,
+                        size: Size { width: Dimension::length(78.0), height: Dimension::auto() },
+                        ..Style::default()
+                    },
+                    &[middle],
+                )
+                .unwrap();
+            vec![middle, item, leaf, root]
+        });
+    assert_eq!(fresh[1].size.height, 19.0);
+    assert_eq!(incremental, fresh);
+}
