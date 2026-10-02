@@ -1520,6 +1520,20 @@ fn determine_container_main_size(
                                 // Known dimensions for child sizing
                                 let child_known_dimensions = {
                                     let mut ckd = item.size.with_main(dir, None);
+                                    // Clamp the definite cross size by the cross min/max sizes, as
+                                    // `determine_flex_base_size` does: an item measured wider than its
+                                    // max-width wraps onto fewer lines and under-reports its height.
+                                    let transferred_min_size =
+                                        item.min_size.maybe_apply_aspect_ratio(item.aspect_ratio);
+                                    let transferred_max_size =
+                                        item.max_size.maybe_apply_aspect_ratio(item.aspect_ratio);
+                                    ckd.set_cross(
+                                        dir,
+                                        ckd.cross(dir).maybe_clamp(
+                                            transferred_min_size.cross(dir),
+                                            transferred_max_size.cross(dir),
+                                        ),
+                                    );
                                     if item.align_self == AlignSelf::STRETCH && ckd.cross(dir).is_none() {
                                         ckd.set_cross(
                                             dir,
