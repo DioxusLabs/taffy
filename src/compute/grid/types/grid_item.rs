@@ -5,18 +5,21 @@ use crate::compute::grid::OriginZeroLine;
 use crate::geometry::AbstractAxis;
 use crate::geometry::{Line, Point, Rect, Size};
 use crate::style::{AlignItems, AlignSelf, AvailableSpace, Dimension, LengthPercentageAuto, Overflow};
-use crate::tree::{LayoutPartialTree, LayoutPartialTreeExt, NodeId, OofCandidates, SizingMode};
+use crate::tree::traits::ChildStyleConstraints;
+use crate::tree::{LayoutInput, LayoutPartialTree, LayoutPartialTreeExt, NodeId, OofCandidates, RunMode};
 use crate::util::{MaybeMath, MaybeResolve, ResolveOrZero};
 use crate::{AlignItemsKeyword, BoxSizing, GridItemStyle, LengthPercentage};
 use core::ops::Range;
 
-/// The known_dimensions computed for a grid item for a given grid area size
+/// The known_dimensions (and style constraints) computed for a grid item for a given grid area size
 #[derive(Debug, Clone, Copy)]
 pub(in super::super) struct KnownDimensionsCacheEntry {
     /// The grid area size that `known_dimensions` was computed for
     grid_area_size: Size<Option<f32>>,
     /// The cached known_dimensions
     known_dimensions: Size<Option<f32>>,
+    /// The cached constraints that the item's own sizing styles place on the size that the item reports
+    constraints: ChildStyleConstraints,
 }
 
 /// Represents a single grid item
@@ -295,25 +298,27 @@ impl GridItem {
         &mut self,
         tree: &mut impl LayoutPartialTree,
         grid_area_size: Size<Option<f32>>,
-    ) -> Size<Option<f32>> {
+    ) -> (Size<Option<f32>>, ChildStyleConstraints) {
         if let Some(entry) = self.known_dimensions_cache {
             if entry.grid_area_size == grid_area_size {
-                return entry.known_dimensions;
+                return (entry.known_dimensions, entry.constraints);
             }
         }
-        let known_dimensions = self.known_dimensions(tree, grid_area_size);
-        self.known_dimensions_cache = Some(KnownDimensionsCacheEntry { grid_area_size, known_dimensions });
-        known_dimensions
+        let (known_dimensions, constraints) = self.known_dimensions(tree, grid_area_size);
+        self.known_dimensions_cache = Some(KnownDimensionsCacheEntry { grid_area_size, known_dimensions, constraints });
+        (known_dimensions, constraints)
     }
 
     /// Compute the known_dimensions to be passed to the child sizing functions
     /// The key thing that is being done here is applying stretch alignment, which is necessary to
     /// allow percentage sizes further down the tree to resolve properly in some cases
+    ///
+    /// Also returns the constraints that the item's own sizing styles place on the size that the item reports
     fn known_dimensions(
         &self,
         tree: &mut impl LayoutPartialTree,
         grid_area_size: Size<Option<f32>>,
-    ) -> Size<Option<f32>> {
+    ) -> (Size<Option<f32>>, ChildStyleConstraints) {
         let margins = self.margins_axis_sums_with_baseline_shims(grid_area_size.width, tree);
 
         let aspect_ratio = self.aspect_ratio;
@@ -337,15 +342,10 @@ impl GridItem {
             .min_size
             .maybe_resolve(grid_area_size, |val, basis| tree.calc(val, basis))
             .maybe_apply_aspect_ratio(aspect_ratio)
-            .maybe_add(box_sizing_adjustment)
-            // The size of the item is floored by its padding and border
-            .or(padding_border_size.map(Some))
-            .maybe_max(padding_border_size);
-        let max_size = self
-            .max_size
-            .maybe_resolve(grid_area_size, |val, basis| tree.calc(val, basis))
-            .maybe_apply_aspect_ratio(aspect_ratio)
             .maybe_add(box_sizing_adjustment);
+        let resolved_max_size = self.max_size.maybe_resolve(grid_area_size, |val, basis| tree.calc(val, basis));
+        let untransferred_max_size = resolved_max_size.maybe_add(box_sizing_adjustment);
+        let max_size = resolved_max_size.maybe_apply_aspect_ratio(aspect_ratio).maybe_add(box_sizing_adjustment);
 
         let grid_area_minus_item_margins_size = grid_area_size.maybe_sub(margins).maybe_max(Size::ZERO);
 
@@ -406,10 +406,23 @@ impl GridItem {
         // Reapply aspect ratio after stretch and absolute position height adjustments
         let Size { width, height } = Size { width, height }.maybe_apply_aspect_ratio(aspect_ratio);
 
-        // Clamp size by min and max width/height
-        let Size { width, height } = Size { width, height }.maybe_clamp(min_size, max_size);
+        // Clamp size by min and max width/height. The size of the item is also floored by its padding and border
+        let Size { width, height } =
+            Size { width, height }.maybe_clamp(min_size, max_size).maybe_max(padding_border_size);
 
-        Size { width, height }
+        let constraints = ChildStyleConstraints {
+            min_size,
+            max_size,
+            untransferred_max_size,
+            aspect_ratio,
+            padding_border_size,
+            margin_size: self
+                .margin
+                .resolve_or_zero(grid_area_size.width, |val, basis| tree.calc(val, basis))
+                .sum_axes(),
+        };
+
+        (Size { width, height }, constraints)
     }
 
     /// Returns the grid area's size in the specified axis when every spanned track has a definite fixed size.
@@ -521,7 +534,7 @@ impl GridItem {
         grid_area_size: Size<Option<f32>>,
         available_space: Size<Option<f32>>,
     ) -> f32 {
-        let known_dimensions = self.known_dimensions_cached(tree, grid_area_size);
+        let (known_dimensions, constraints) = self.known_dimensions_cached(tree, grid_area_size);
         // If the item's size in the axis being measured is already known then that size is its contribution,
         // and we can avoid calling into the child entirely.
         if let Some(size) = known_dimensions.get(axis) {
@@ -532,22 +545,30 @@ impl GridItem {
         // Spec:
         // https://www.w3.org/TR/css-grid-1/#grid-item-sizing
         // https://www.w3.org/TR/css-grid-1/#algo-overview
-        tree.measure_child_size(
-            self.node,
-            known_dimensions,
+        let available_space = self.keyword_adjusted_available_space(
             grid_area_size,
-            self.keyword_adjusted_available_space(
-                grid_area_size,
-                available_space.map(|opt| match opt {
-                    Some(size) => AvailableSpace::Definite(size),
-                    None => AvailableSpace::MinContent,
-                }),
-                tree,
-            ),
-            SizingMode::InherentSize,
-            axis.as_abs_naive(),
-            Line::FALSE,
+            available_space.map(|opt| match opt {
+                Some(size) => AvailableSpace::Definite(size),
+                None => AvailableSpace::MinContent,
+            }),
+            tree,
+        );
+        let axis = axis.as_abs_naive();
+        tree.compute_child_layout_with_constraints(
+            self.node,
+            LayoutInput {
+                known_dimensions,
+                known_dimensions_are_definite: Size { width: true, height: true },
+                parent_size: grid_area_size,
+                available_space,
+                axis: axis.into(),
+                run_mode: RunMode::ComputeSize,
+                vertical_margins_are_collapsible: Line::FALSE,
+            },
+            &constraints,
         )
+        .size
+        .get_abs(axis)
     }
 
     /// Retrieve the item's min content contribution from the cache or compute it using the provided parameters
@@ -574,7 +595,7 @@ impl GridItem {
         grid_area_size: Size<Option<f32>>,
         available_space: Size<Option<f32>>,
     ) -> f32 {
-        let known_dimensions = self.known_dimensions_cached(tree, grid_area_size);
+        let (known_dimensions, constraints) = self.known_dimensions_cached(tree, grid_area_size);
         // If the item's size in the axis being measured is already known then that size is its contribution,
         // and we can avoid calling into the child entirely.
         if let Some(size) = known_dimensions.get(axis) {
@@ -583,22 +604,30 @@ impl GridItem {
         // See the min-content path above. Max-content measurement uses the same containing-block
         // basis so percentage-dependent item geometry is measured from the grid area rather than
         // from the container.
-        tree.measure_child_size(
-            self.node,
-            known_dimensions,
+        let available_space = self.keyword_adjusted_available_space(
             grid_area_size,
-            self.keyword_adjusted_available_space(
-                grid_area_size,
-                available_space.map(|opt| match opt {
-                    Some(size) => AvailableSpace::Definite(size),
-                    None => AvailableSpace::MaxContent,
-                }),
-                tree,
-            ),
-            SizingMode::InherentSize,
-            axis.as_abs_naive(),
-            Line::FALSE,
+            available_space.map(|opt| match opt {
+                Some(size) => AvailableSpace::Definite(size),
+                None => AvailableSpace::MaxContent,
+            }),
+            tree,
+        );
+        let axis = axis.as_abs_naive();
+        tree.compute_child_layout_with_constraints(
+            self.node,
+            LayoutInput {
+                known_dimensions,
+                known_dimensions_are_definite: Size { width: true, height: true },
+                parent_size: grid_area_size,
+                available_space,
+                axis: axis.into(),
+                run_mode: RunMode::ComputeSize,
+                vertical_margins_are_collapsible: Line::FALSE,
+            },
+            &constraints,
         )
+        .size
+        .get_abs(axis)
     }
 
     /// Override the available space in each axis whose size style is a sizing keyword that
