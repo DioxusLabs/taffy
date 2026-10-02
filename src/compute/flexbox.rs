@@ -1058,7 +1058,9 @@ fn determine_flex_base_size(
             child_known_dimensions
         };
 
-        let container_width = constants.node_inner_size.main(dir);
+        // Percentage padding and border resolve against the container's inline size (its width),
+        // whichever axis is the main axis
+        let container_width = constants.node_inner_size.width;
         let box_sizing_adjustment = if child_style.box_sizing() == BoxSizing::ContentBox {
             let padding = child_style.padding().resolve_or_zero(container_width, |val, basis| tree.calc(val, basis));
             let border = child_style.border().resolve_or_zero(container_width, |val, basis| tree.calc(val, basis));
@@ -1678,6 +1680,21 @@ fn determine_container_main_size(
                                 // Known dimensions for child sizing
                                 let child_known_dimensions = {
                                     let mut ckd = item.size.with_main(dir, None);
+                                    // Clamp the definite cross size by the cross min/max sizes, as
+                                    // `determine_flex_base_size` does: an item measured wider than its
+                                    // max-width wraps onto fewer lines and under-reports its height.
+                                    let sized = item.size_style.map(|dimension| !dimension.is_auto());
+                                    let transferred_min_size =
+                                        transfer_into_unsized(item.min_size, item.ratio(), sized);
+                                    let transferred_max_size =
+                                        transfer_into_unsized(item.max_size, item.ratio(), sized);
+                                    ckd.set_cross(
+                                        dir,
+                                        ckd.cross(dir).maybe_clamp(
+                                            transferred_min_size.cross(dir),
+                                            transferred_max_size.cross(dir),
+                                        ),
+                                    );
                                     if item.align_self == AlignSelf::STRETCH && ckd.cross(dir).is_none() {
                                         ckd.set_cross(
                                             dir,
@@ -2330,12 +2347,14 @@ fn determine_used_cross_size(
                     // For some reason this particular usage of max_width is an exception to the rule that max_width's transfer
                     // using the aspect_ratio (if set). Both Chrome and Firefox agree on this. And reading the spec, it seems like
                     // a reasonable interpretation. Although it seems to me that the spec *should* apply aspect_ratio here.
+                    // Percentage padding and border resolve against the container's inline size
+                    // (its width) on all four sides, not against its height for the top/bottom sides
                     let padding = child_style
                         .padding()
-                        .resolve_or_zero(constants.node_inner_size, |val, basis| tree.calc(val, basis));
+                        .resolve_or_zero(constants.node_inner_size.width, |val, basis| tree.calc(val, basis));
                     let border = child_style
                         .border()
-                        .resolve_or_zero(constants.node_inner_size, |val, basis| tree.calc(val, basis));
+                        .resolve_or_zero(constants.node_inner_size.width, |val, basis| tree.calc(val, basis));
                     let pb_sum = (padding + border).sum_axes();
                     let box_sizing_adjustment =
                         if child_style.box_sizing() == BoxSizing::ContentBox { pb_sum } else { Size::ZERO };

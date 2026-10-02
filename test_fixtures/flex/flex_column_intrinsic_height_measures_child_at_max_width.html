@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    A column's content height measures a flex-basis: 0 child at its max-width-clamped width
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="flex-direction: column; width: 300px;">
+  <div style="flex: 1 1 0; width: 100%; max-width: 200px;">HHHHHHHHHHHH&#8203;HHHHHHHHHHHH&#8203;HHHHHHHHHHHH</div>
+</div>
+
+</body>
+</html>
