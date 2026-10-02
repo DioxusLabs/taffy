@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    A float beside a shorter float on the opposite side still narrows content below the shorter float
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="display: flow-root; width: 300px;">
+  <div style="float: left; width: 100px; height: 20px;"></div>
+  <div style="float: right; width: 50px; height: 40px;"></div>
+  <div style="display: block; height: 25px;"></div>
+  <div style="display: flow-root; height: 10px;"></div>
+</div>
+
+</body>
+</html>
