@@ -260,16 +260,6 @@ pub fn compute_flexbox_layout(
         .maybe_resolve(parent_size, |val, basis| tree.calc(val, basis))
         .maybe_apply_aspect_ratio(aspect_ratio)
         .maybe_add(box_sizing_adjustment);
-    let clamped_style_size = if inputs.sizing_mode == SizingMode::InherentSize {
-        style
-            .size()
-            .maybe_resolve(parent_size, |val, basis| tree.calc(val, basis))
-            .maybe_apply_aspect_ratio(aspect_ratio)
-            .maybe_add(box_sizing_adjustment)
-            .maybe_clamp(min_size, max_size)
-    } else {
-        Size::NONE
-    };
 
     // If both min and max in a given axis are set and max <= min then this determines the size in that axis
     let min_max_definite_size = min_size.zip_map(max_size, |min, max| match (min, max) {
@@ -278,8 +268,7 @@ pub fn compute_flexbox_layout(
     });
 
     // The size of the container should be floored by the padding and border
-    let styled_based_known_dimensions =
-        known_dimensions.or(min_max_definite_size.or(clamped_style_size).maybe_max(padding_border_sum));
+    let styled_based_known_dimensions = known_dimensions.or(min_max_definite_size.maybe_max(padding_border_sum));
 
     // Short-circuit layout if the container's size is fully determined by the container's size and the run mode
     // is ComputeSize (and thus the container's size is all that we're interested in)
@@ -1919,7 +1908,6 @@ fn determine_hypothetical_cross_size(
                 child.node,
                 LayoutInput {
                     run_mode: RunMode::ComputeSize,
-                    sizing_mode: SizingMode::ContentSize,
                     axis: constants.dir.cross_axis().into(),
                     known_dimensions: Size {
                         width: if constants.is_row { child.target_size.width.into() } else { child_cross },
@@ -1980,7 +1968,6 @@ fn calculate_children_base_lines(
                 child.node,
                 LayoutInput {
                     run_mode: RunMode::PerformLayout,
-                    sizing_mode: SizingMode::ContentSize,
                     axis: RequestedAxis::Both,
                     known_dimensions: Size {
                         width: if constants.is_row {
@@ -2498,7 +2485,6 @@ fn calculate_flex_item(
         item.node,
         LayoutInput {
             run_mode: RunMode::PerformLayout,
-            sizing_mode: SizingMode::ContentSize,
             axis: RequestedAxis::Both,
             known_dimensions: item.target_size.map(|s| s.into()),
             known_dimensions_are_definite: item_known_dimension_definiteness,

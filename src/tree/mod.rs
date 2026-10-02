@@ -13,9 +13,10 @@ pub mod traits;
 #[cfg(all(debug_assertions, feature = "std"))]
 pub use cache::cache_mode_change_evictions;
 pub use cache::{Cache, ClearState};
+pub(crate) use layout::SizingMode;
 pub use layout::{
     AxisStaticAlign, AxisStaticEdge, AxisStaticPosition, Baselines, CollapsibleMarginSet, Layout, LayoutInput,
-    LayoutOutput, OofCandidate, OofCandidates, OofPositioningArea, RequestedAxis, RunMode, SizingMode,
+    LayoutOutput, OofCandidate, OofCandidates, OofPositioningArea, RequestedAxis, RunMode,
 };
 pub use node::NodeId;
 pub(crate) use traits::LayoutPartialTreeExt;
