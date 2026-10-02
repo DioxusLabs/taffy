@@ -18084,6 +18084,52 @@ mod flex {
     }
 
     #[test]
+    fn percentage_padding_flex_basis_column__border_box_ltr() {
+        crate::run_xml_test("flex", "percentage_padding_flex_basis_column__border_box_ltr");
+    }
+
+    #[test]
+    fn percentage_padding_flex_basis_column__content_box_ltr() {
+        crate::run_xml_test("flex", "percentage_padding_flex_basis_column__content_box_ltr");
+    }
+
+    #[test]
+    fn percentage_padding_flex_basis_column__border_box_rtl() {
+        crate::run_xml_test("flex", "percentage_padding_flex_basis_column__border_box_rtl");
+    }
+
+    #[test]
+    fn percentage_padding_flex_basis_column__content_box_rtl() {
+        crate::run_xml_test("flex", "percentage_padding_flex_basis_column__content_box_rtl");
+    }
+
+    #[test]
+    fn percentage_padding_flex_basis_column_indefinite_container_height__border_box_ltr() {
+        crate::run_xml_test("flex", "percentage_padding_flex_basis_column_indefinite_container_height__border_box_ltr");
+    }
+
+    #[test]
+    fn percentage_padding_flex_basis_column_indefinite_container_height__content_box_ltr() {
+        crate::run_xml_test(
+            "flex",
+            "percentage_padding_flex_basis_column_indefinite_container_height__content_box_ltr",
+        );
+    }
+
+    #[test]
+    fn percentage_padding_flex_basis_column_indefinite_container_height__border_box_rtl() {
+        crate::run_xml_test("flex", "percentage_padding_flex_basis_column_indefinite_container_height__border_box_rtl");
+    }
+
+    #[test]
+    fn percentage_padding_flex_basis_column_indefinite_container_height__content_box_rtl() {
+        crate::run_xml_test(
+            "flex",
+            "percentage_padding_flex_basis_column_indefinite_container_height__content_box_rtl",
+        );
+    }
+
+    #[test]
     fn percentage_padding_should_calculate_based_only_on_width__border_box_ltr() {
         crate::run_xml_test("flex", "percentage_padding_should_calculate_based_only_on_width__border_box_ltr");
     }
@@ -18101,6 +18147,58 @@ mod flex {
     #[test]
     fn percentage_padding_should_calculate_based_only_on_width__content_box_rtl() {
         crate::run_xml_test("flex", "percentage_padding_should_calculate_based_only_on_width__content_box_rtl");
+    }
+
+    #[test]
+    fn percentage_padding_stretch_max_height__border_box_ltr() {
+        crate::run_xml_test("flex", "percentage_padding_stretch_max_height__border_box_ltr");
+    }
+
+    #[test]
+    fn percentage_padding_stretch_max_height__content_box_ltr() {
+        crate::run_xml_test("flex", "percentage_padding_stretch_max_height__content_box_ltr");
+    }
+
+    #[test]
+    fn percentage_padding_stretch_max_height__border_box_rtl() {
+        crate::run_xml_test("flex", "percentage_padding_stretch_max_height__border_box_rtl");
+    }
+
+    #[test]
+    fn percentage_padding_stretch_max_height__content_box_rtl() {
+        crate::run_xml_test("flex", "percentage_padding_stretch_max_height__content_box_rtl");
+    }
+
+    #[test]
+    fn percentage_padding_stretch_max_height_indefinite_container_height__border_box_ltr() {
+        crate::run_xml_test(
+            "flex",
+            "percentage_padding_stretch_max_height_indefinite_container_height__border_box_ltr",
+        );
+    }
+
+    #[test]
+    fn percentage_padding_stretch_max_height_indefinite_container_height__content_box_ltr() {
+        crate::run_xml_test(
+            "flex",
+            "percentage_padding_stretch_max_height_indefinite_container_height__content_box_ltr",
+        );
+    }
+
+    #[test]
+    fn percentage_padding_stretch_max_height_indefinite_container_height__border_box_rtl() {
+        crate::run_xml_test(
+            "flex",
+            "percentage_padding_stretch_max_height_indefinite_container_height__border_box_rtl",
+        );
+    }
+
+    #[test]
+    fn percentage_padding_stretch_max_height_indefinite_container_height__content_box_rtl() {
+        crate::run_xml_test(
+            "flex",
+            "percentage_padding_stretch_max_height_indefinite_container_height__content_box_rtl",
+        );
     }
 
     #[test]
