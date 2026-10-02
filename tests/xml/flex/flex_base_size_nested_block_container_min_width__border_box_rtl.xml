@@ -1,0 +1,19 @@
+<test name="flex_base_size_nested_block_container_min_width__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="flex" direction="rtl" position="absolute" width="500px">
+      <div display="block" direction="rtl" position="relative" flex-grow="1" min-width="200px">
+        <div direction="rtl" position="relative" width="50px" height="20px"/>
+      </div>
+      <div direction="rtl" position="relative" flex-grow="1" flex-basis="100px" height="20px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="500" height="20">
+      <node x="275" y="0" width="225" height="20">
+        <node x="175" y="0" width="50" height="20"/>
+      </node>
+      <node x="0" y="0" width="275" height="20"/>
+    </node>
+  </expectations>
+</test>
