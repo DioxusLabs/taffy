@@ -521,9 +521,19 @@ impl FloatContext {
 
         let end_idx = match end {
             None => {
+                // The float starts inside an existing segment and reaches below the last one. Add a segment
+                // from the end of the last segment to the bottom of the float, so that the part of the float
+                // below the earlier floats is recorded too. Like the segment created for a float placed below
+                // all others, it starts out with the insets of the containing block. The loop below then
+                // sets the inset on the float's side.
                 let last_y_end = self.segments.last().map(|seg| seg.y.end).unwrap_or(0.0);
-                if min_y > last_y_end {
-                    self.segments.push(Segment { y: last_y_end..min_y, insets: [0.0, 0.0], has_float: [false; 2] });
+                let end_y = start_y + floated_box.height;
+                if end_y > last_y_end {
+                    self.segments.push(Segment {
+                        y: last_y_end..end_y,
+                        insets: containing_block_insets,
+                        has_float: [false; 2],
+                    });
                 }
                 self.segments.len() - 1
             }
@@ -793,5 +803,47 @@ impl FloatIntrinsicWidthCalculator {
             AvailableSpace::Definite(available_width) => self.contribution.min(available_width).max(self.widest),
             _ => self.contribution,
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const CONTAINING_BLOCK_INSETS: [f32; 2] = [0.0, 0.0];
+
+    fn place(ctx: &mut FloatContext, width: f32, height: f32, min_y: f32, direction: FloatDirection) -> Point<f32> {
+        ctx.place_floated_box(Size { width, height }, min_y, CONTAINING_BLOCK_INSETS, direction, Clear::None)
+    }
+
+    /// A float that starts beside an earlier float and reaches below it keeps narrowing the content below the
+    /// earlier float
+    #[test]
+    fn float_reaching_below_earlier_float_on_opposite_side_keeps_its_tail() {
+        let mut ctx = FloatContext::new();
+        ctx.set_width(300.0);
+        place(&mut ctx, 100.0, 20.0, 0.0, FloatDirection::Left);
+        let right = place(&mut ctx, 50.0, 40.0, 0.0, FloatDirection::Right);
+        assert_eq!((right.x, right.y), (250.0, 0.0));
+
+        assert!(ctx.has_active_floats(30.0));
+        let slot = ctx.find_content_slot(30.0, CONTAINING_BLOCK_INSETS, Clear::None, None);
+        assert_eq!((slot.x, slot.width), (0.0, 250.0));
+        assert!(!ctx.has_active_floats(40.0));
+    }
+
+    /// The same, for a float stacked on the same side: later floats are placed beside the tail
+    #[test]
+    fn float_reaching_below_earlier_float_on_same_side_keeps_its_tail() {
+        let mut ctx = FloatContext::new();
+        ctx.set_width(300.0);
+        place(&mut ctx, 100.0, 20.0, 0.0, FloatDirection::Left);
+        let second = place(&mut ctx, 30.0, 40.0, 0.0, FloatDirection::Left);
+        assert_eq!((second.x, second.y), (100.0, 0.0));
+
+        let slot = ctx.find_content_slot(30.0, CONTAINING_BLOCK_INSETS, Clear::None, None);
+        assert_eq!((slot.x, slot.width), (130.0, 170.0));
+        let third = place(&mut ctx, 20.0, 10.0, 25.0, FloatDirection::Left);
+        assert_eq!((third.x, third.y), (130.0, 25.0));
     }
 }
