@@ -19,13 +19,18 @@ pub enum RunMode {
     PerformHiddenLayout,
 }
 
-/// Whether styles should be taken into account when computing size
+/// Whether a parent applies a child's own sizing styles when it sizes or lays out that child.
+///
+/// A node never applies its own preferred size (`size`) styles, and leaf nodes do not apply
+/// their own `min_size`, `max_size` or `aspect_ratio` styles either. The parent of a node is
+/// responsible for applying those styles, and this enum allows the parent to choose between
+/// applying them itself (`ContentSize`) or having them applied by a generic helper (`InherentSize`).
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
-#[cfg_attr(feature = "serde", derive(Serialize))]
-pub enum SizingMode {
-    /// Only content contributions should be taken into account
+pub(crate) enum SizingMode {
+    /// The child's own sizing styles are not applied: the size returned is determined by the
+    /// child's content and the known dimensions passed to it.
     ContentSize,
-    /// Inherent size styles should be taken into account in addition to content contributions
+    /// The child's own sizing styles are applied on the child's behalf
     InherentSize,
 }
 
@@ -113,8 +118,6 @@ impl TryFrom<RequestedAxis> for AbsoluteAxis {
 pub struct LayoutInput {
     /// Whether we only need to know the Node's size, or whether we need to perform a full layout
     pub run_mode: RunMode,
-    /// Whether a Node's style sizes should be taken into account or ignored
-    pub sizing_mode: SizingMode,
     /// Which axis we need the size of
     pub axis: RequestedAxis,
 
@@ -161,7 +164,6 @@ impl LayoutInput {
         known_dimensions_are_definite: Size { width: true, height: true },
         parent_size: Size::NONE,
         available_space: Size::MAX_CONTENT,
-        sizing_mode: SizingMode::InherentSize,
         axis: RequestedAxis::Both,
         vertical_margins_are_collapsible: Line::FALSE,
     };

@@ -386,16 +386,6 @@ pub fn compute_block_layout(
         .maybe_resolve(parent_size, |val, basis| tree.calc(val, basis))
         .maybe_apply_aspect_ratio(aspect_ratio)
         .maybe_add(box_sizing_adjustment);
-    let clamped_style_size = if inputs.sizing_mode == SizingMode::InherentSize {
-        style
-            .size()
-            .maybe_resolve(parent_size, |val, basis| tree.calc(val, basis))
-            .maybe_apply_aspect_ratio(aspect_ratio)
-            .maybe_add(box_sizing_adjustment)
-            .maybe_clamp(min_size, max_size)
-    } else {
-        Size::NONE
-    };
 
     drop(style);
 
@@ -405,8 +395,7 @@ pub fn compute_block_layout(
         _ => None,
     });
 
-    let styled_based_known_dimensions =
-        known_dimensions.or(min_max_definite_size).or(clamped_style_size).maybe_max(padding_border_size);
+    let styled_based_known_dimensions = known_dimensions.or(min_max_definite_size).maybe_max(padding_border_size);
 
     // Short-circuit layout if the container's size is fully determined by the container's size and the run mode
     // is ComputeSize (and thus the container's size is all that we're interested in)
@@ -582,13 +571,12 @@ fn compute_inner(
         return LayoutOutput::from_outer_size(Size { width: container_outer_width, height: 0.0 });
     }
 
-    // Under `SizingMode::ContentSize` the container's own `height`/`min-height` are ignored,
-    // so they cannot serve as the percentage basis for children either
+    // The container's own `height`/`min-height` styles are never applied by the container itself
+    // (a definite height is passed down by the parent as a known dimension), so they cannot serve
+    // as the percentage basis for children either
     // (https://drafts.csswg.org/css-flexbox/#min-size-auto: the content size suggestion
     // must not be influenced by the item's specified height).
-    let container_percentage_resolution_height = percentage_basis_dimensions
-        .height
-        .or(if inputs.sizing_mode == SizingMode::InherentSize { size.height.maybe_max(min_size.height) } else { None });
+    let container_percentage_resolution_height = percentage_basis_dimensions.height;
 
     // 3. Perform final item layout and return content height
     //
@@ -1313,9 +1301,8 @@ fn perform_final_layout_on_in_flow_children(
 
             //
 
-            let inputs = LayoutInput {
+            let mut inputs = LayoutInput {
                 run_mode,
-                sizing_mode: SizingMode::InherentSize,
                 axis: RequestedAxis::Both,
                 known_dimensions,
                 known_dimensions_are_definite: Size { width: true, height: true },
@@ -1331,6 +1318,7 @@ fn perform_final_layout_on_in_flow_children(
             #[cfg(not(feature = "float_layout"))]
             let clear_pos = f32::NEG_INFINITY;
 
+            let item_style_constraints = tree.resolve_child_style_sizes(item.node_id, &mut inputs);
             let mut item_layout = if item.is_in_same_bfc {
                 // Replaced elements may not have a known width (they are sized by their
                 // measure function rather than stretch-sized)
@@ -1361,6 +1349,7 @@ fn perform_final_layout_on_in_flow_children(
             } else {
                 tree.compute_child_layout(item.node_id, inputs)
             };
+            item_style_constraints.apply(&mut item_layout);
             item.oof_candidates = item_layout.oof_candidates.take();
             let final_size = item_layout.size;
 

@@ -5,12 +5,11 @@ use crate::geometry::Rect;
 use crate::geometry::Size;
 use crate::style::{AvailableSpace, Overflow};
 use crate::tree::{Baselines, CollapsibleMarginSet, RunMode};
-use crate::tree::{LayoutInput, LayoutOutput, SizingMode};
+use crate::tree::{LayoutInput, LayoutOutput};
 use crate::util::debug::debug_log;
-use crate::util::sys::f32_max;
 use crate::util::MaybeMath;
-use crate::util::{MaybeResolve, ResolveOrZero};
-use crate::{BoxSizing, CoreStyle};
+use crate::util::ResolveOrZero;
+use crate::CoreStyle;
 use core::unreachable;
 
 /// Compute the size of a leaf node (node with no children)
@@ -26,44 +25,19 @@ pub fn compute_leaf_layout<MeasureFunction>(
 where
     MeasureFunction: FnOnce(Size<Option<f32>>, Size<AvailableSpace>) -> Size<f32>,
 {
-    let LayoutInput { known_dimensions, parent_size, available_space, sizing_mode, run_mode, .. } = inputs;
+    let LayoutInput { known_dimensions, parent_size, available_space, run_mode, .. } = inputs;
 
     // Note: both horizontal and vertical percentage padding/borders are resolved against the container's inline size (i.e. width).
     // This is not a bug, but is how CSS is specified (see: https://developer.mozilla.org/en-US/docs/Web/CSS/padding#values)
     let padding = style.padding().resolve_or_zero(parent_size.width, &resolve_calc_value);
     let border = style.border().resolve_or_zero(parent_size.width, &resolve_calc_value);
     let padding_border = padding + border;
-    let pb_sum = padding_border.sum_axes();
-    let box_sizing_adjustment = if style.box_sizing() == BoxSizing::ContentBox { pb_sum } else { Size::ZERO };
-
-    // Resolve node's preferred/min/max sizes (width/heights) against the available space (percentages resolve to pixel values)
-    // For ContentSize mode, we pretend that the node has no size styles as these should be ignored.
-    let (node_size, node_min_size, node_max_size, aspect_ratio) = match sizing_mode {
-        SizingMode::ContentSize => {
-            let node_size = known_dimensions;
-            let node_min_size = Size::NONE;
-            let node_max_size = Size::NONE;
-            (node_size, node_min_size, node_max_size, None)
-        }
-        SizingMode::InherentSize => {
-            let aspect_ratio = style.aspect_ratio();
-            let style_size = style
-                .size()
-                .maybe_resolve(parent_size, &resolve_calc_value)
-                .maybe_apply_aspect_ratio(aspect_ratio)
-                .maybe_add(box_sizing_adjustment);
-            let style_min_size = style
-                .min_size()
-                .maybe_resolve(parent_size, &resolve_calc_value)
-                .maybe_apply_aspect_ratio(aspect_ratio)
-                .maybe_add(box_sizing_adjustment);
-            let style_max_size =
-                style.max_size().maybe_resolve(parent_size, &resolve_calc_value).maybe_add(box_sizing_adjustment);
-
-            let node_size = known_dimensions.or(style_size);
-            (node_size, style_min_size, style_max_size, aspect_ratio)
-        }
-    };
+    // A leaf node never applies its own preferred/min/max size or aspect-ratio styles: these are
+    // resolved by its parent, which passes the result down as known dimensions and clamps the
+    // size that the leaf reports.
+    //
+    // Consequently the only sizes that a leaf node knows about are the known dimensions that it
+    // is passed and the size of its content (as determined by the measure function).
 
     // Scrollbar gutters are reserved when the `overflow` property is set to `Overflow::Scroll`.
     // However, the axis are switched (transposed) because a node that scrolls vertically needs
@@ -86,20 +60,15 @@ where
         || padding.bottom > 0.0
         || border.top > 0.0
         || border.bottom > 0.0
-        || matches!(node_size.height, Some(h) if h > 0.0)
-        || matches!(node_min_size.height, Some(h) if h > 0.0);
+        || matches!(known_dimensions.height, Some(h) if h > 0.0);
 
     debug_log!("LEAF");
-    debug_log!("node_size", dbg:node_size);
-    debug_log!("min_size ", dbg:node_min_size);
-    debug_log!("max_size ", dbg:node_max_size);
+    debug_log!("known_dimensions", dbg:known_dimensions);
 
     // Return early if both width and height are known
     if run_mode == RunMode::ComputeSize && has_styles_preventing_being_collapsed_through {
-        if let Size { width: Some(width), height: Some(height) } = node_size {
-            let size = Size { width, height }
-                .maybe_clamp(node_min_size, node_max_size)
-                .maybe_max(padding_border.sum_axes().map(Some));
+        if let Size { width: Some(width), height: Some(height) } = known_dimensions {
+            let size = Size { width, height }.maybe_max(padding_border.sum_axes().map(Some));
             return LayoutOutput {
                 size,
                 #[cfg(feature = "content_size")]
@@ -121,19 +90,13 @@ where
             .map(AvailableSpace::from)
             .unwrap_or(available_space.width)
             .maybe_set(known_dimensions.width)
-            .maybe_set(node_size.width)
-            .map_definite_value(|size| {
-                size.maybe_clamp(node_min_size.width, node_max_size.width) - content_box_inset.horizontal_axis_sum()
-            }),
+            .map_definite_value(|size| size - content_box_inset.horizontal_axis_sum()),
         height: known_dimensions
             .height
             .map(AvailableSpace::from)
             .unwrap_or(available_space.height)
             .maybe_set(known_dimensions.height)
-            .maybe_set(node_size.height)
-            .map_definite_value(|size| {
-                size.maybe_clamp(node_min_size.height, node_max_size.height) - content_box_inset.vertical_axis_sum()
-            }),
+            .map_definite_value(|size| size - content_box_inset.vertical_axis_sum()),
     };
 
     // Measure node
@@ -145,15 +108,9 @@ where
         },
         available_space,
     );
-    let clamped_size = known_dimensions
-        .or(node_size)
+    let size = known_dimensions
         .unwrap_or(measured_size + content_box_inset.sum_axes())
-        .maybe_clamp(node_min_size, node_max_size);
-    let size = Size {
-        width: clamped_size.width,
-        height: f32_max(clamped_size.height, aspect_ratio.map(|ratio| clamped_size.width / ratio).unwrap_or(0.0)),
-    };
-    let size = size.maybe_max(padding_border.sum_axes().map(Some));
+        .maybe_max(padding_border.sum_axes().map(Some));
 
     // A scroll container's own padding at the end of the content is part of its scrollable
     // overflow region, so it is included in the overflow rect. Boxes that are not scroll

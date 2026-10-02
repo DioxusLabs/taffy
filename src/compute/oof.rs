@@ -335,7 +335,6 @@ pub(crate) fn layout_oof_box<Tree: LayoutContainingBlock>(
         known_dimensions_are_definite: Size { width: true, height: true },
         parent_size: area_size.map(Some),
         available_space,
-        sizing_mode: SizingMode::ContentSize,
         axis: RequestedAxis::Both,
         run_mode: RunMode::PerformLayout,
         vertical_margins_are_collapsible: Line::FALSE,
