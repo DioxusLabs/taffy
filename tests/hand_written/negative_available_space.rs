@@ -31,7 +31,7 @@ mod negative_available_space {
                     display,
                     flex_direction,
                     size: Size { width: length(20.0), height: auto() },
-                    grid_template_columns: vec![length(20.0)],
+                    grid_template_columns: thin_vec![length(20.0)],
                     ..Default::default()
                 },
                 &[leaf],

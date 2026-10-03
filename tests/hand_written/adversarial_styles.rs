@@ -31,7 +31,7 @@ mod adversarial_styles {
                 .new_with_children(
                     Style {
                         display: Display::Grid,
-                        grid_template_columns: vec![GridTemplateComponent::Single(TrackSizingFunction {
+                        grid_template_columns: thin_vec![GridTemplateComponent::Single(TrackSizingFunction {
                             min: MinTrackSizingFunction::AUTO,
                             max: MaxTrackSizingFunction::from_fr(flex_factor),
                         })],
@@ -57,7 +57,7 @@ mod adversarial_styles {
                     Style {
                         display: Display::Grid,
                         size: Size { width: Dimension::from_length(width), height: Dimension::from_length(100.0) },
-                        grid_template_columns: vec![repeat(2, vec![fr(1.0)])],
+                        grid_template_columns: thin_vec![repeat(2, thin_vec![fr(1.0)])],
                         ..Default::default()
                     },
                     &[child],
@@ -86,8 +86,8 @@ mod adversarial_styles {
                 Style {
                     display: Display::Grid,
                     size: Size { width: Dimension::from_length(100.0), height: Dimension::from_length(100.0) },
-                    grid_template_columns: vec![repeat(2, vec![length(10.0)]), length(10.0)],
-                    grid_template_column_names: vec![vec![], vec![], vec!["c".into()]],
+                    grid_template_columns: thin_vec![repeat(2, thin_vec![length(10.0)]), length(10.0)],
+                    grid_template_column_names: thin_vec![thin_vec![], thin_vec![], thin_vec!["c".into()]],
                     ..Default::default()
                 },
                 &[child],
@@ -137,12 +137,12 @@ mod adversarial_styles {
             .new_with_children(
                 Style {
                     display: Display::Grid,
-                    grid_template_columns: vec![GridTemplateComponent::Repeat(GridTemplateRepetition {
+                    grid_template_columns: thin_vec![GridTemplateComponent::Repeat(GridTemplateRepetition {
                         count: RepetitionCount::Count(2),
-                        tracks: vec![length(10.0)],
-                        line_names: vec![vec!["a".into()]],
+                        tracks: thin_vec![length(10.0)],
+                        line_names: thin_vec![thin_vec!["a".into()]],
                     })],
-                    grid_template_column_names: vec![vec![], vec![]],
+                    grid_template_column_names: thin_vec![thin_vec![], thin_vec![]],
                     ..Default::default()
                 },
                 &[child],

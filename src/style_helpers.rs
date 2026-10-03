@@ -589,6 +589,7 @@ pub trait FromFr {
 mod repeat_fn_tests {
     type S = crate::sys::DefaultCheapStr;
     use super::repeat;
+    use crate::sys::Vec;
     use crate::{
         style::{GridTemplateComponent, RepetitionCount, TrackSizingFunction},
         GridTemplateRepetition,

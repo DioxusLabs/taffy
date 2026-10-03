@@ -674,6 +674,7 @@ mod tests {
     use crate::sys::DefaultCheapStr;
     use crate::GridTemplateAreas;
     use crate::Style;
+    use thin_vec::thin_vec;
 
     fn resolver(explicit_track_count: u16) -> NamedLineResolver<DefaultCheapStr> {
         let mut resolver = NamedLineResolver::new(&Style::DEFAULT, 0, 0);
@@ -722,7 +723,7 @@ mod tests {
     fn area_lines_saturate_when_converted_to_grid_lines() {
         let style = Style {
             grid_template_areas: Some(GridTemplateAreas {
-                areas: vec![GridTemplateArea {
+                areas: thin_vec![GridTemplateArea {
                     name: DefaultCheapStr::from("area"),
                     row_start: 1,
                     row_end: 2,
