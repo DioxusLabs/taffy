@@ -13,12 +13,94 @@ pub mod yoga_helpers;
 #[cfg(feature = "yoga")]
 pub use yoga_helpers::YogaTreeBuilder;
 
+use criterion::measurement::WallTime;
+use criterion::{Bencher, BenchmarkGroup, Criterion, SamplingMode};
 use rand::distr::uniform::SampleRange;
 use rand::{Rng, SeedableRng};
 use rand_chacha::ChaCha8Rng;
+use std::time::{Duration, Instant};
 use taffy::style::Style as TaffyStyle;
+use taffy::{NodeId, TaffyTree};
 
 pub const STANDARD_RNG_SEED: u64 = 12345;
+
+/// The Criterion configuration shared by all of the benchmarks.
+///
+/// The benchmarks are deterministic and each iteration is timed individually (see [`iter_timed`]), so a few short
+/// samples are enough. Criterion's defaults (100 samples over a 3s warm-up and 5s of measurement) make the
+/// suite take several minutes. These can still be overridden from the command line
+/// (e.g. `cargo bench -- --measurement-time 5`).
+pub fn criterion_config() -> Criterion {
+    Criterion::default()
+        .warm_up_time(Duration::from_millis(300))
+        .measurement_time(Duration::from_secs(1))
+        .sample_size(10)
+}
+
+/// Create a benchmark group which runs the same number of iterations in every sample.
+///
+/// Criterion's default "linear" sampling exists to regress out per-sample overhead. We time every iteration
+/// individually (see [`iter_timed`]) so there is no such overhead, and it would only make the samples unequal.
+pub fn benchmark_group<'a>(c: &'a mut Criterion, name: &str) -> BenchmarkGroup<'a, WallTime> {
+    let mut group = c.benchmark_group(name);
+    group.sampling_mode(SamplingMode::Flat);
+    group
+}
+
+/// Runs `timed_run` once per iteration and reports the mean of the times that it returns.
+///
+/// `timed_run` returns the time taken by the part of the run that is being benchmarked, which keeps setup and
+/// teardown (building, invalidating and dropping trees) out of the measurement.
+pub fn iter_timed(b: &mut Bencher, mut timed_run: impl FnMut() -> Duration) {
+    b.iter_custom(|iters| (0..iters).map(|_| timed_run()).sum())
+}
+
+/// Benchmark laying out a tree from scratch (with no cached layout results).
+///
+/// The tree is only built once (by `build`, the first time that Criterion runs the benchmark) and is then reused
+/// for every iteration, with `invalidate` being called before each iteration to throw away the results of the
+/// previous one. Only `layout` is timed.
+pub fn bench_layout<T>(
+    b: &mut Bencher,
+    tree: &mut Option<T>,
+    build: impl FnOnce() -> T,
+    mut invalidate: impl FnMut(&mut T),
+    mut layout: impl FnMut(&mut T),
+) {
+    let tree = tree.get_or_insert_with(build);
+    iter_timed(b, || {
+        invalidate(tree);
+        let start = Instant::now();
+        layout(tree);
+        start.elapsed()
+    })
+}
+
+/// A [`TaffyTree`] along with what is needed to lay it out from scratch repeatedly
+pub struct TaffyLayoutTree<NodeContext = ()> {
+    pub tree: TaffyTree<NodeContext>,
+    pub root: NodeId,
+    nodes: Vec<NodeId>,
+}
+
+impl<NodeContext> TaffyLayoutTree<NodeContext> {
+    pub fn new((tree, root): (TaffyTree<NodeContext>, NodeId)) -> Self {
+        let mut nodes = vec![root];
+        let mut next = 0;
+        while let Some(&node) = nodes.get(next) {
+            nodes.extend(tree.children(node).unwrap());
+            next += 1;
+        }
+        Self { tree, root, nodes }
+    }
+
+    /// Clear the cached layout of every node in the tree
+    pub fn mark_all_dirty(&mut self) {
+        for &node in &self.nodes {
+            self.tree.mark_dirty(node).unwrap();
+        }
+    }
+}
 
 pub trait GenStyle<Style: Default>: Clone {
     fn create_leaf_style(&mut self, rng: &mut impl Rng) -> Style;
@@ -47,6 +129,8 @@ pub trait BuildTree<R: Rng, G: GenStyle<TaffyStyle>> {
     fn with_rng(rng: R, style_generator: G) -> Self;
 
     fn compute_layout_inner(&mut self, available_width: Option<f32>, available_height: Option<f32>);
+    /// Discard any cached layout results so that the next layout recomputes the entire tree
+    fn mark_all_dirty(&mut self);
     fn random_usize(&mut self, range: impl SampleRange<usize>) -> usize;
     fn create_leaf_node(&mut self) -> Self::Node;
     fn create_container_node(&mut self, children: &[Self::Node]) -> Self::Node;

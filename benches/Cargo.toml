@@ -32,6 +32,11 @@ strict_provenance = ["taffy/strict_provenance"]
 small = []
 large = []
 
+# The library only contains helpers for the benchmarks. Disabling the default `libtest` bench harness for it
+# allows Criterion's CLI options to be passed straight through (e.g. `cargo bench -- --save-baseline main`).
+[lib]
+bench = false
+
 [[bench]]
 name = "tree_creation"
 path = "benches/tree_creation.rs"

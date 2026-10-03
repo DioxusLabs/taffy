@@ -5,6 +5,7 @@ use rand_chacha::ChaCha8Rng;
 use std::iter;
 use taffy::prelude::*;
 use taffy::style::Style;
+use taffy_benchmarks::{bench_layout, benchmark_group, TaffyLayoutTree};
 
 pub const LOREM_IPSUM : &str = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.";
 
@@ -128,8 +129,7 @@ fn build_mixed_tree(
 fn mixed_benchmark(c: &mut Criterion) {
     let layout_ctx = std::cell::RefCell::new(LayoutContext::new());
     let font_ctx = std::cell::RefCell::new(FontContext::new());
-    let mut group = c.benchmark_group("mixed_flex_grid");
-    group.sample_size(40);
+    let mut group = benchmark_group(c, "mixed_flex_grid");
 
     let depths = [2, 4];
     let widths = [4, 8];
@@ -137,8 +137,11 @@ fn mixed_benchmark(c: &mut Criterion) {
     for &depth in &depths {
         for &width in &widths {
             let benchmark_id = BenchmarkId::new("mixed", format!("depth_{}_width_{}", depth, width));
+            let mut tree = None;
             group.bench_with_input(benchmark_id, &(depth, width), |b, &(depth, width)| {
-                b.iter_batched(
+                bench_layout(
+                    b,
+                    &mut tree,
                     || {
                         let mut taffy = TaffyTree::new();
                         let mut rng = ChaCha8Rng::seed_from_u64(12345);
@@ -151,12 +154,13 @@ fn mixed_benchmark(c: &mut Criterion) {
                             &mut rng,
                             true,
                         );
-                        (taffy, root)
+                        TaffyLayoutTree::new((taffy, root))
                     },
-                    |(mut taffy, root)| {
-                        taffy
+                    |tree| tree.mark_all_dirty(),
+                    |tree| {
+                        tree.tree
                             .compute_layout_with_measure(
-                                root,
+                                tree.root,
                                 Size::MAX_CONTENT,
                                 |inputs, _node_id, node_context, style| {
                                     taffy::compute_leaf_layout(
@@ -171,7 +175,6 @@ fn mixed_benchmark(c: &mut Criterion) {
                             )
                             .unwrap();
                     },
-                    criterion::BatchSize::SmallInput,
                 )
             });
         }
@@ -179,5 +182,5 @@ fn mixed_benchmark(c: &mut Criterion) {
     group.finish();
 }
 
-criterion_group!(benches, mixed_benchmark);
+criterion_group!(name = benches; config = taffy_benchmarks::criterion_config(); targets = mixed_benchmark);
 criterion_main!(benches);

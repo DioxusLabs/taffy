@@ -5,6 +5,7 @@ use rand_chacha::ChaCha8Rng;
 use std::iter;
 use taffy::prelude::*;
 use taffy::style::Style;
+use taffy_benchmarks::{bench_layout, benchmark_group, TaffyLayoutTree};
 
 /// Build a random leaf node
 fn build_random_leaf(taffy: &mut TaffyTree, _rng: &mut ChaCha8Rng) -> NodeId {
@@ -101,54 +102,60 @@ fn build_taffy_deep_grid_hierarchy(levels: usize, track_count: usize) -> (TaffyT
 }
 
 fn taffy_benchmarks(c: &mut Criterion) {
-    let mut group = c.benchmark_group("grid/wide");
-    group.sample_size(10);
+    let mut group = benchmark_group(c, "grid/wide");
     for track_count in [31usize, 100, 316].iter() {
+        let mut tree = None;
         group.bench_with_input(
             BenchmarkId::new(format!("{c}x{c}", c = track_count), track_count.pow(2)),
             track_count,
             |b, &track_count| {
-                b.iter_batched(
-                    || build_grid_flat_hierarchy(track_count, track_count),
-                    |(mut taffy, root)| taffy.compute_layout(root, length(12000.0)).unwrap(),
-                    criterion::BatchSize::SmallInput,
+                bench_layout(
+                    b,
+                    &mut tree,
+                    || TaffyLayoutTree::new(build_grid_flat_hierarchy(track_count, track_count)),
+                    |tree| tree.mark_all_dirty(),
+                    |tree| tree.tree.compute_layout(tree.root, length(12000.0)).unwrap(),
                 )
             },
         );
     }
     group.finish();
 
-    let mut group = c.benchmark_group("grid/deep");
-    group.sample_size(10);
+    let mut group = benchmark_group(c, "grid/deep");
     for (tracks, levels) in [(2, 5), (3, 4), (2, 7) /*, (3, 5)*/].iter() {
         let children_per_level: usize = tracks * tracks;
+        let mut tree = None;
         group.bench_with_input(
             BenchmarkId::new(format!("{c}x{c}", c = tracks), children_per_level.pow(*levels as u32)),
             &(*levels, *tracks),
             |b, &(levels, tracks)| {
-                b.iter_batched(
-                    || build_taffy_deep_grid_hierarchy(levels, tracks),
-                    |(mut taffy, root)| taffy.compute_layout(root, length(12000.0)).unwrap(),
-                    criterion::BatchSize::SmallInput,
+                bench_layout(
+                    b,
+                    &mut tree,
+                    || TaffyLayoutTree::new(build_taffy_deep_grid_hierarchy(levels, tracks)),
+                    |tree| tree.mark_all_dirty(),
+                    |tree| tree.tree.compute_layout(tree.root, length(12000.0)).unwrap(),
                 )
             },
         );
     }
     group.finish();
 
-    let mut group = c.benchmark_group("grid/superdeep");
-    group.sample_size(10);
+    let mut group = benchmark_group(c, "grid/superdeep");
     for levels in [100, 1000].iter() {
+        let mut tree = None;
         group.bench_with_input(BenchmarkId::new("1x1", levels), levels, |b, &levels| {
-            b.iter_batched(
-                || build_taffy_deep_grid_hierarchy(levels, 1),
-                |(mut taffy, root)| taffy.compute_layout(root, max_content()).unwrap(),
-                criterion::BatchSize::SmallInput,
+            bench_layout(
+                b,
+                &mut tree,
+                || TaffyLayoutTree::new(build_taffy_deep_grid_hierarchy(levels, 1)),
+                |tree| tree.mark_all_dirty(),
+                |tree| tree.tree.compute_layout(tree.root, max_content()).unwrap(),
             )
         });
     }
     group.finish();
 }
 
-criterion_group!(benches, taffy_benchmarks);
+criterion_group!(name = benches; config = taffy_benchmarks::criterion_config(); targets = taffy_benchmarks);
 criterion_main!(benches);
