@@ -174,5 +174,11 @@ fn cache_benchmarks(c: &mut Criterion) {
     group.finish();
 }
 
-criterion_group!(benches, relayout_benchmarks, cache_benchmarks);
+// These benchmarks time many iterations per sample (with `Bencher::iter`), as an iteration can take only a few
+// nanoseconds. Samples are cheap to collect, so we take more of them than the other benchmarks do.
+criterion_group!(
+    name = benches;
+    config = taffy_benchmarks::criterion_config().sample_size(50);
+    targets = relayout_benchmarks, cache_benchmarks
+);
 criterion_main!(benches);
