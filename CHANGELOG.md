@@ -33,6 +33,8 @@
 
 - `compute_oof_layout_for_area` and `OofLayoutResult` allow integrations to lay out out-of-flow candidates against an explicit positioning area without immediately mutating a layout node's hoisted-child list. This supports containing blocks represented outside Taffy's layout tree.
 
+- Grid: the result of the grid item placement algorithm can now be cached, so that it is run once rather than every time that a grid container is sized or laid out (which typically happens several times per layout pass when the container is nested in content-sized containers). The new `GridPlacementCache` type holds the result, and `LayoutGridContainer` gains defaulted `get_grid_placement_cache`/`set_grid_placement_cache` methods which custom tree implementations can implement to store it. Unlike the layout cache, a stored placement stays valid when the size or content of the container or its descendants changes: it only needs to be discarded when the container's own styles, its list of children, or the `grid_row`/`grid_column`/`position`/`display` styles of a child change (see the docs of `get_grid_placement_cache`). In debug builds, Taffy checks every cached placement that it uses against the result of running the placement algorithm and panics if they differ. `TaffyTree` implements the new methods, so grid item placement is now also reused across layout passes (including after `mark_dirty`)
+
 ### Changed
 
 - Grid: intrinsic track sizing no longer measures an item's min-/max-content contribution in a step where none of the item's spanned tracks can receive that contribution (e.g. items spanning only `minmax(0, 1fr)` or fixed tracks). This matches Blink and avoids redundant, sometimes very expensive, measurement of large subtrees under a min-content constraint.

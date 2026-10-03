@@ -20,7 +20,7 @@ use rand::{Rng, SeedableRng};
 use rand_chacha::ChaCha8Rng;
 use std::time::{Duration, Instant};
 use taffy::style::Style as TaffyStyle;
-use taffy::{NodeId, TaffyTree};
+use taffy::{Display, NodeId, TaffyTree};
 
 pub const STANDARD_RNG_SEED: u64 = 12345;
 
@@ -94,8 +94,23 @@ impl<NodeContext> TaffyLayoutTree<NodeContext> {
         Self { tree, root, nodes }
     }
 
-    /// Clear the cached layout of every node in the tree
+    /// Clear everything that is cached for every node in the tree: both the cached layout of each node and the
+    /// cached grid item placement of each grid container, so that the next layout is a layout from scratch
     pub fn mark_all_dirty(&mut self) {
+        for &node in &self.nodes {
+            // The cached grid item placement of a node survives `mark_dirty`, but not its style being set
+            let style = self.tree.style(node).unwrap();
+            if style.display == Display::Grid {
+                let style = style.clone();
+                self.tree.set_style(node, style).unwrap();
+            }
+            self.tree.mark_dirty(node).unwrap();
+        }
+    }
+
+    /// Clear the cached layout of every node in the tree, keeping the cached grid item placement of each
+    /// grid container (which is what happens when a tree is laid out again after its content has changed)
+    pub fn mark_all_layouts_dirty(&mut self) {
         for &node in &self.nodes {
             self.tree.mark_dirty(node).unwrap();
         }

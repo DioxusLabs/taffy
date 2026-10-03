@@ -936,11 +936,11 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
         };
     let absolute_position_area = container_border_box - absolute_position_inset.sum_axes();
     let absolute_position_offset = Point { x: absolute_position_inset.left, y: absolute_position_inset.top };
-    // Store the detailed grid info before the out-of-flow positioning pass so that the pass can
-    // resolve the grid areas of out-of-flow boxes whose containing block is this grid
     // Build the per-line names of the explicit grid from the name resolver's collected pairs
     let mut detailed_column_line_names = name_resolver.detailed_line_names(AbsoluteAxis::Horizontal);
     let mut detailed_row_line_names = name_resolver.detailed_line_names(AbsoluteAxis::Vertical);
+    // Store the detailed grid info before the out-of-flow positioning pass so that the pass can
+    // resolve the grid areas of out-of-flow boxes whose containing block is this grid
     name_resolver.populate_detailed_line_resolvers(&mut detailed_row_line_names, &mut detailed_column_line_names);
     tree.set_detailed_grid_info(
         node,
