@@ -25,6 +25,7 @@ use track_sizing::{
 use types::{CellOccupancyMatrix, GridTrack, NamedLineResolver};
 
 use crate::sys::{DefaultCheapStr, String};
+use crate::tree::traits::{AutoAxes, ChildStyleConstraints};
 use crate::{CheapCloneStr, GridPlacement};
 use types::{GridItem, GridTrackKind, TrackCounts};
 
@@ -39,6 +40,15 @@ mod placement;
 mod track_sizing;
 mod types;
 mod util;
+
+/// Resolve the sizing styles of a grid container's child from the child's grid item style
+pub(super) fn resolve_grid_child_style_constraints<Tree: LayoutGridContainer>(
+    tree: &Tree,
+    node_id: NodeId,
+    inputs: &mut LayoutInput,
+) -> (ChildStyleConstraints, AutoAxes) {
+    ChildStyleConstraints::resolve(&tree.get_grid_child_style(node_id), inputs, |val, basis| tree.calc(val, basis))
+}
 
 /// Grid layout algorithm
 /// This consists of a few phases:
