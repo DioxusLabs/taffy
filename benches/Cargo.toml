@@ -51,3 +51,8 @@ harness = false
 name = "mixed"
 path = "benches/mixed.rs"
 harness = false
+
+[[bench]]
+name = "relayout"
+path = "benches/relayout.rs"
+harness = false
