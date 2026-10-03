@@ -159,16 +159,6 @@ where
     }
 }
 
-/// The order in which the track sizing algorithm visits items in the given axis, packed into a
-/// single integer so that sorting compares keys rather than items: items that don't cross a
-/// flexible track first, then by the number of tracks spanned, then by start line.
-#[inline(always)]
-fn track_sizing_sort_key(item: &GridItem, axis: AbstractAxis) -> u64 {
-    let placement = item.placement(axis);
-    let start = (placement.start.0 as i32 - i16::MIN as i32) as u64;
-    ((item.crosses_flexible_track(axis) as u64) << 32) | ((placement.span() as u64) << 16) | start
-}
-
 /// When applying the track sizing algorithm and estimating the size in the other axis for content sizing items
 /// we should take into account align-content/justify-content if both the grid container and all items in the
 /// other axis have definite sizes. This function computes such a per-gutter additional size adjustment.
@@ -564,8 +554,31 @@ fn resolve_intrinsic_track_sizes<Tree: LayoutPartialTree>(
     // The track sizing algorithm requires us to iterate through the items in ascending order of the number of
     // tracks they span (first items that span 1 track, then items that span 2 tracks, etc).
     // To avoid having to do multiple iterations of the items, we pre-sort them into this order.
-    let mut items: Vec<&mut GridItem> = items.iter_mut().collect();
-    items.sort_by_key(|item| track_sizing_sort_key(item, axis));
+    //
+    // Items that cross a flexible track are all processed together in a single batch (regardless of their span), so
+    // they only need to be moved to the end of the list. And the order in which items within a batch are processed
+    // does not affect the result, so the remaining items only need to be sorted if any of them span more than one track.
+    let item_count = items.len();
+    let flex_item_count = items.iter().filter(|item| item.crosses_flexible_track(axis)).count();
+    let mut items: Vec<&mut GridItem> = if flex_item_count == 0 || flex_item_count == item_count {
+        items.iter_mut().collect()
+    } else {
+        let mut non_flex_items: Vec<&mut GridItem> = Vec::with_capacity(item_count);
+        let mut flex_items: Vec<&mut GridItem> = Vec::with_capacity(flex_item_count);
+        for item in items.iter_mut() {
+            if item.crosses_flexible_track(axis) {
+                flex_items.push(item);
+            } else {
+                non_flex_items.push(item);
+            }
+        }
+        non_flex_items.append(&mut flex_items);
+        non_flex_items
+    };
+    let non_flex_items = &mut items[..(item_count - flex_item_count)];
+    if non_flex_items.iter().any(|item| item.span(axis) > 1) {
+        non_flex_items.sort_by_key(|item| item.span(axis));
+    }
     let items = items.as_mut_slice();
 
     // Step 2, Step 3 and Step 4
