@@ -1,4 +1,5 @@
 //! Alignment of tracks and final positioning of items
+use super::resolve_grid_child_style_constraints;
 use super::types::GridTrack;
 use crate::compute::common::alignment::{
     apply_alignment_fallback, compute_alignment_offset, resolve_self_alignment_safety,
@@ -8,7 +9,7 @@ use crate::style::{
     AlignContent, AlignItems, AlignItemsKeyword, AlignSelf, AvailableSpace, CoreStyle, GridItemStyle, Overflow,
     Position,
 };
-use crate::tree::{Layout, LayoutPartialTreeExt, NodeId, OofCandidates, SizingMode};
+use crate::tree::{Layout, LayoutPartialTreeExt, NodeId, OofCandidates};
 use crate::util::sys::f32_max;
 use crate::util::{MaybeMath, MaybeResolve, ResolveOrZero};
 
@@ -214,13 +215,13 @@ pub(super) fn align_and_position_item(
             Some(Some(SizingKeywordResolution::Measure(available_width))),
             Some(Some(SizingKeywordResolution::Measure(available_height))),
         ) if !position.is_out_of_flow() => tree
-            .measure_child_size_both(
+            .measure_child_size_both_with_styles(
                 node,
                 Size::NONE,
                 grid_area_size.map(Option::Some),
                 Size { width: *available_width, height: *available_height },
-                SizingMode::InherentSize,
                 Line::FALSE,
+                resolve_grid_child_style_constraints,
             )
             .map(Option::Some),
         _ => Size::NONE,
@@ -241,7 +242,7 @@ pub(super) fn align_and_position_item(
             return Some(match resolution {
                 SizingKeywordResolution::Exact(width) => width,
                 SizingKeywordResolution::Measure(available_width) => keyword_measured_size.width.unwrap_or_else(|| {
-                    tree.measure_child_size(
+                    tree.measure_child_size_with_styles(
                         node,
                         Size::NONE,
                         grid_area_size.map(Option::Some),
@@ -249,9 +250,9 @@ pub(super) fn align_and_position_item(
                             width: available_width,
                             height: AvailableSpace::Definite(grid_area_minus_item_margins_size.height),
                         },
-                        SizingMode::InherentSize,
                         AbsoluteAxis::Horizontal,
                         Line::FALSE,
+                        resolve_grid_child_style_constraints,
                     )
                 }),
             });
@@ -287,7 +288,7 @@ pub(super) fn align_and_position_item(
                 SizingKeywordResolution::Exact(height) => height,
                 SizingKeywordResolution::Measure(available_height) => {
                     keyword_measured_size.height.unwrap_or_else(|| {
-                        tree.measure_child_size(
+                        tree.measure_child_size_with_styles(
                             node,
                             Size { width, height: None },
                             grid_area_size.map(Option::Some),
@@ -297,9 +298,9 @@ pub(super) fn align_and_position_item(
                                     .unwrap_or(AvailableSpace::Definite(grid_area_minus_item_margins_size.width)),
                                 height: available_height,
                             },
-                            SizingMode::InherentSize,
                             AbsoluteAxis::Vertical,
                             Line::FALSE,
+                            resolve_grid_child_style_constraints,
                         )
                     })
                 }
@@ -328,26 +329,26 @@ pub(super) fn align_and_position_item(
 
     // Layout node
     let size = if position.is_out_of_flow() && (width.is_none() || height.is_none()) {
-        tree.measure_child_size_both(
+        tree.measure_child_size_both_with_styles(
             node,
             Size { width, height },
             grid_area_size.map(Option::Some),
             grid_area_minus_item_margins_size.map(AvailableSpace::Definite),
-            SizingMode::InherentSize,
             Line::FALSE,
+            resolve_grid_child_style_constraints,
         )
         .map(Some)
     } else {
         Size { width, height }
     };
 
-    let mut layout_output = tree.perform_child_layout(
+    let mut layout_output = tree.perform_child_layout_with_styles(
         node,
         size,
         grid_area_size.map(Option::Some),
         grid_area_minus_item_margins_size.map(AvailableSpace::Definite),
-        SizingMode::InherentSize,
         Line::FALSE,
+        resolve_grid_child_style_constraints,
     );
 
     // Resolve final size

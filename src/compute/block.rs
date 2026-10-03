@@ -2,11 +2,11 @@
 use crate::geometry::{Line, Point, Rect, Size};
 use crate::style::{AvailableSpace, CoreStyle, LengthPercentageAuto, Overflow, Position};
 use crate::style_helpers::TaffyMaxContent;
+use crate::tree::traits::{AutoAxes, ChildStyleConstraints};
 use crate::tree::{
-    AxisStaticEdge, AxisStaticPosition, LayoutPartialTree, LayoutPartialTreeExt, NodeId, OofCandidate, OofCandidates,
-    OofPositioningArea,
+    AxisStaticEdge, AxisStaticPosition, LayoutPartialTreeExt, NodeId, OofCandidate, OofCandidates, OofPositioningArea,
 };
-use crate::tree::{Baselines, CollapsibleMarginSet, Layout, LayoutInput, LayoutOutput, RunMode, SizingMode};
+use crate::tree::{Baselines, CollapsibleMarginSet, Layout, LayoutInput, LayoutOutput, RunMode};
 use crate::util::debug::debug_log;
 use crate::util::sys::f32_max;
 use crate::util::sys::Vec;
@@ -349,7 +349,7 @@ struct BlockItem {
     oof_candidates: OofCandidates,
 }
 
-/// Computes the layout of [`LayoutPartialTree`] according to the block layout algorithm
+/// Computes the layout of [`LayoutBlockContainer`] according to the block layout algorithm
 pub fn compute_block_layout(
     tree: &mut impl LayoutBlockContainer,
     node_id: NodeId,
@@ -386,16 +386,6 @@ pub fn compute_block_layout(
         .maybe_resolve(parent_size, |val, basis| tree.calc(val, basis))
         .maybe_apply_aspect_ratio(aspect_ratio)
         .maybe_add(box_sizing_adjustment);
-    let clamped_style_size = if inputs.sizing_mode == SizingMode::InherentSize {
-        style
-            .size()
-            .maybe_resolve(parent_size, |val, basis| tree.calc(val, basis))
-            .maybe_apply_aspect_ratio(aspect_ratio)
-            .maybe_add(box_sizing_adjustment)
-            .maybe_clamp(min_size, max_size)
-    } else {
-        Size::NONE
-    };
 
     drop(style);
 
@@ -405,8 +395,7 @@ pub fn compute_block_layout(
         _ => None,
     });
 
-    let styled_based_known_dimensions =
-        known_dimensions.or(min_max_definite_size).or(clamped_style_size).maybe_max(padding_border_size);
+    let styled_based_known_dimensions = known_dimensions.or(min_max_definite_size).maybe_max(padding_border_size);
 
     // Short-circuit layout if the container's size is fully determined by the container's size and the run mode
     // is ComputeSize (and thus the container's size is all that we're interested in)
@@ -450,6 +439,15 @@ pub fn compute_block_layout(
     }
 
     output
+}
+
+/// Resolve the sizing styles of a block container's child from the child's block item style
+fn resolve_block_child_style_constraints<Tree: LayoutBlockContainer>(
+    tree: &Tree,
+    node_id: NodeId,
+    inputs: &mut LayoutInput,
+) -> (ChildStyleConstraints, AutoAxes) {
+    ChildStyleConstraints::resolve(&tree.get_block_child_style(node_id), inputs, |val, basis| tree.calc(val, basis))
 }
 
 /// Computes the layout of [`LayoutBlockContainer`] according to the block layout algorithm
@@ -565,30 +563,40 @@ fn compute_inner(
     let mut items = generate_item_list(tree, node_id, container_content_box_size);
 
     // 2. Compute container width
-    let container_outer_width = known_dimensions.width.unwrap_or_else(|| {
+    let content_based_width = known_dimensions.width.is_none().then(|| {
         let available_width = available_space.width.maybe_sub(content_box_inset.horizontal_axis_sum());
-        let intrinsic_width = determine_content_based_container_width(tree, &items, available_width)
-            + content_box_inset.horizontal_axis_sum();
-        intrinsic_width.maybe_clamp(min_size.width, max_size.width).maybe_max(Some(padding_border_size.width))
+        determine_content_based_container_width(tree, &items, available_width) + content_box_inset.horizontal_axis_sum()
     });
+    let container_outer_width = known_dimensions.width.unwrap_or_else(|| {
+        content_based_width
+            .unwrap_or(0.0)
+            .maybe_clamp(min_size.width, max_size.width)
+            .maybe_max(Some(padding_border_size.width))
+    });
+
+    // When only the container's size is being computed, the container's own min and max sizes are
+    // not applied to the size that it reports in any axis in which that size is determined by its
+    // content: the container's parent is responsible for applying them. (The children are still
+    // laid out at the clamped width, as that determines the container's content-based height).
+    let reported_width =
+        content_based_width.map(|width| f32_max(width, padding_border_size.width)).unwrap_or(container_outer_width);
 
     // Short-circuit if computing size and both dimensions known
     if let (RunMode::ComputeSize, Some(container_outer_height)) = (run_mode, known_dimensions.height) {
-        return LayoutOutput::from_outer_size(Size { width: container_outer_width, height: container_outer_height });
+        return LayoutOutput::from_outer_size(Size { width: reported_width, height: container_outer_height });
     }
 
     // We can also short-circuit if the width is known and only the width has been requested.
     if run_mode == RunMode::ComputeSize && inputs.axis == RequestedAxis::Horizontal {
-        return LayoutOutput::from_outer_size(Size { width: container_outer_width, height: 0.0 });
+        return LayoutOutput::from_outer_size(Size { width: reported_width, height: 0.0 });
     }
 
-    // Under `SizingMode::ContentSize` the container's own `height`/`min-height` are ignored,
-    // so they cannot serve as the percentage basis for children either
+    // The container's own `height`/`min-height` styles are never applied by the container itself
+    // (a definite height is passed down by the parent as a known dimension), so they cannot serve
+    // as the percentage basis for children either
     // (https://drafts.csswg.org/css-flexbox/#min-size-auto: the content size suggestion
     // must not be influenced by the item's specified height).
-    let container_percentage_resolution_height = percentage_basis_dimensions
-        .height
-        .or(if inputs.sizing_mode == SizingMode::InherentSize { size.height.maybe_max(min_size.height) } else { None });
+    let container_percentage_resolution_height = percentage_basis_dimensions.height;
 
     // 3. Perform final item layout and return content height
     //
@@ -746,6 +754,12 @@ fn compute_inner(
     // Note: it is important that we return the margin-collapsing related outputs here as Parent block containers
     // rely on the `top_margin`/`bottom_margin` of their children to compute their own intrinsic height.
     if run_mode == RunMode::ComputeSize {
+        output.size = Size {
+            width: reported_width,
+            height: known_dimensions
+                .height
+                .unwrap_or_else(|| f32_max(intrinsic_outer_height, padding_border_size.height)),
+        };
         return output;
     }
 
@@ -811,14 +825,7 @@ fn compute_inner(
         if child_style.box_generation_mode() == BoxGenerationMode::None {
             drop(child_style);
             tree.set_unrounded_layout(child, &Layout::with_order(order as u32));
-            tree.perform_child_layout(
-                child,
-                Size::NONE,
-                Size::NONE,
-                Size::MAX_CONTENT,
-                SizingMode::InherentSize,
-                Line::FALSE,
-            );
+            tree.perform_child_layout(child, Size::NONE, Size::NONE, Size::MAX_CONTENT, Line::FALSE);
         }
     }
 
@@ -940,7 +947,7 @@ fn resolve_stretch_height(
 /// Compute the content-based width in the case that the width of the container is not known
 #[inline]
 fn determine_content_based_container_width(
-    tree: &mut impl LayoutPartialTree,
+    tree: &mut impl LayoutBlockContainer,
     items: &[BlockItem],
     available_width: AvailableSpace,
 ) -> f32 {
@@ -962,15 +969,15 @@ fn determine_content_based_container_width(
                 Some(SizingKeywordResolution::Exact(width)) => AvailableSpace::Definite(width),
                 None => available_space.width.maybe_sub(item_x_margin_sum),
             };
-            tree.measure_child_size(
+            tree.measure_child_size_with_styles(
                 item.node_id,
                 known_dimensions,
                 Size::NONE,
                 Size { width: item_available_width, height: available_space.height },
-                SizingMode::InherentSize,
                 crate::AbsoluteAxis::Horizontal,
                 // Must match the value passed when laying the item out (see `Cache`)
                 if item.is_in_same_bfc { Line::TRUE } else { Line::FALSE },
+                resolve_block_child_style_constraints,
             )
         });
 
@@ -1100,15 +1107,15 @@ fn perform_final_layout_on_in_flow_children(
                     container_percentage_resolution_height,
                     item_non_auto_margin.vertical_axis_sum(),
                 );
-                let mut item_layout = tree.perform_child_layout(
+                let mut item_layout = tree.perform_child_layout_with_styles(
                     item.node_id,
                     Size { width: item_known_width, height: item_known_height },
                     parent_size,
                     Size { width: item_available_width, height: AvailableSpace::MaxContent },
-                    SizingMode::InherentSize,
                     // A float establishes a new block formatting context: its margins do not
                     // collapse with the margins of its children
                     Line::FALSE,
+                    resolve_block_child_style_constraints,
                 );
                 item.oof_candidates = item_layout.oof_candidates.take();
                 let margin_box = item_layout.size + item_non_auto_margin.sum_axes();
@@ -1280,16 +1287,17 @@ fn perform_final_layout_on_in_flow_children(
                     resolve_sizing_keyword(item.size_style.width, Some(stretch_width), Some(container_inner_width))
                         .map(|resolution| match resolution {
                             SizingKeywordResolution::Exact(width) => width,
-                            SizingKeywordResolution::Measure(item_available_width) => tree.measure_child_size(
-                                item.node_id,
-                                Size::NONE,
-                                parent_size,
-                                Size { width: item_available_width, height: AvailableSpace::MaxContent },
-                                SizingMode::InherentSize,
-                                crate::AbsoluteAxis::Horizontal,
-                                // Must match the value passed when laying the item out (see `Cache`)
-                                if item.is_in_same_bfc { Line::TRUE } else { Line::FALSE },
-                            ),
+                            SizingKeywordResolution::Measure(item_available_width) => tree
+                                .measure_child_size_with_styles(
+                                    item.node_id,
+                                    Size::NONE,
+                                    parent_size,
+                                    Size { width: item_available_width, height: AvailableSpace::MaxContent },
+                                    crate::AbsoluteAxis::Horizontal,
+                                    // Must match the value passed when laying the item out (see `Cache`)
+                                    if item.is_in_same_bfc { Line::TRUE } else { Line::FALSE },
+                                    resolve_block_child_style_constraints,
+                                ),
                         });
 
                 let keyword_height = resolve_stretch_height(
@@ -1313,9 +1321,8 @@ fn perform_final_layout_on_in_flow_children(
 
             //
 
-            let inputs = LayoutInput {
+            let mut inputs = LayoutInput {
                 run_mode,
-                sizing_mode: SizingMode::InherentSize,
                 axis: RequestedAxis::Both,
                 known_dimensions,
                 known_dimensions_are_definite: Size { width: true, height: true },
@@ -1331,6 +1338,8 @@ fn perform_final_layout_on_in_flow_children(
             #[cfg(not(feature = "float_layout"))]
             let clear_pos = f32::NEG_INFINITY;
 
+            let (item_style_constraints, item_auto_axes) =
+                resolve_block_child_style_constraints(tree, item.node_id, &mut inputs);
             let mut item_layout = if item.is_in_same_bfc {
                 // Replaced elements may not have a known width (they are sized by their
                 // measure function rather than stretch-sized)
@@ -1361,6 +1370,7 @@ fn perform_final_layout_on_in_flow_children(
             } else {
                 tree.compute_child_layout(item.node_id, inputs)
             };
+            item_style_constraints.apply_to_output(item_auto_axes, &mut item_layout);
             item.oof_candidates = item_layout.oof_candidates.take();
             let final_size = item_layout.size;
 

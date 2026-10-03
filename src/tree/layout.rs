@@ -19,16 +19,6 @@ pub enum RunMode {
     PerformHiddenLayout,
 }
 
-/// Whether styles should be taken into account when computing size
-#[derive(Copy, Clone, Debug, PartialEq, Eq)]
-#[cfg_attr(feature = "serde", derive(Serialize))]
-pub enum SizingMode {
-    /// Only content contributions should be taken into account
-    ContentSize,
-    /// Inherent size styles should be taken into account in addition to content contributions
-    InherentSize,
-}
-
 /// A set of margins that are available for collapsing with for block layout's margin collapsing
 #[derive(Copy, Clone, Debug, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize))]
@@ -113,8 +103,6 @@ impl TryFrom<RequestedAxis> for AbsoluteAxis {
 pub struct LayoutInput {
     /// Whether we only need to know the Node's size, or whether we need to perform a full layout
     pub run_mode: RunMode,
-    /// Whether a Node's style sizes should be taken into account or ignored
-    pub sizing_mode: SizingMode,
     /// Which axis we need the size of
     pub axis: RequestedAxis,
 
@@ -158,7 +146,6 @@ impl LayoutInput {
         known_dimensions_are_definite: Size { width: true, height: true },
         parent_size: Size::NONE,
         available_space: Size::MAX_CONTENT,
-        sizing_mode: SizingMode::InherentSize,
         axis: RequestedAxis::Both,
         vertical_margins_are_collapsible: Line::FALSE,
     };

@@ -5,7 +5,7 @@ use crate::geometry::{Line, Point, Rect, Size};
 use crate::style::{AlignItems, AvailableSpace, Overflow};
 use crate::tree::{
     AxisStaticAlign, AxisStaticEdge, AxisStaticPosition, Baselines, Layout, LayoutInput, LayoutOutput,
-    LayoutPartialTreeExt, NodeId, OofCandidate, OofCandidates, OofPositioningArea, RunMode, SizingMode,
+    LayoutPartialTreeExt, NodeId, OofCandidate, OofCandidates, OofPositioningArea, RunMode,
 };
 use crate::util::debug::debug_log;
 use crate::util::sys::{f32_max, f32_min, GridTrackVec, Vec};
@@ -25,6 +25,7 @@ use track_sizing::{
 use types::{CellOccupancyMatrix, GridTrack, NamedLineResolver};
 
 use crate::sys::{DefaultCheapStr, String};
+use crate::tree::traits::{AutoAxes, ChildStyleConstraints};
 use crate::{CheapCloneStr, GridPlacement};
 use types::{GridItem, GridTrackKind, TrackCounts};
 
@@ -39,6 +40,15 @@ mod placement;
 mod track_sizing;
 mod types;
 mod util;
+
+/// Resolve the sizing styles of a grid container's child from the child's grid item style
+pub(super) fn resolve_grid_child_style_constraints<Tree: LayoutGridContainer>(
+    tree: &Tree,
+    node_id: NodeId,
+    inputs: &mut LayoutInput,
+) -> (ChildStyleConstraints, AutoAxes) {
+    ChildStyleConstraints::resolve(&tree.get_grid_child_style(node_id), inputs, |val, basis| tree.calc(val, basis))
+}
 
 /// Grid layout algorithm
 /// This consists of a few phases:
@@ -78,15 +88,6 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
         .maybe_resolve(parent_size, |val, basis| tree.calc(val, basis))
         .maybe_apply_aspect_ratio(aspect_ratio)
         .maybe_add(box_sizing_adjustment);
-    let preferred_size = if inputs.sizing_mode == SizingMode::InherentSize {
-        style
-            .size()
-            .maybe_resolve(parent_size, |val, basis| tree.calc(val, basis))
-            .maybe_apply_aspect_ratio(style.aspect_ratio())
-            .maybe_add(box_sizing_adjustment)
-    } else {
-        Size::NONE
-    };
 
     // Scrollbar gutters are reserved when the `overflow` property is set to `Overflow::Scroll`.
     // However, the axis are switched (transposed) because a node that scrolls vertically needs
@@ -121,7 +122,6 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     let grid_auto_rows = style.grid_auto_rows();
 
     let constrained_available_space = known_dimensions
-        .or(preferred_size)
         .map(|size| size.map(AvailableSpace::Definite))
         .unwrap_or(available_space)
         .maybe_clamp(min_size, max_size)
@@ -136,8 +136,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
             .map_definite_value(|space| space - content_box_inset.vertical_axis_sum()),
     };
 
-    let outer_node_size =
-        known_dimensions.or(preferred_size).maybe_clamp(min_size, max_size).maybe_max(padding_border_size);
+    let outer_node_size = known_dimensions.maybe_clamp(min_size, max_size).maybe_max(padding_border_size);
 
     // The track sizing algorithm operates on the grid container's content box, so the min/max sizes
     // (which are border-box sizes) need converting to content-box sizes before being passed to it
@@ -352,7 +351,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     debug_log!(dbg: rows.iter().map(|track| track.base_size).collect::<Vec<_>>());
 
     // 6. Compute container size
-    let resolved_style_size = known_dimensions.or(preferred_size);
+    let resolved_style_size = known_dimensions;
     let mut container_border_box = Size {
         width: resolved_style_size
             .get(AbstractAxis::Inline)
@@ -662,14 +661,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
         if child_style.box_generation_mode() == BoxGenerationMode::None {
             drop(child_style);
             tree.set_unrounded_layout(child, &Layout::with_order(order));
-            tree.perform_child_layout(
-                child,
-                Size::NONE,
-                Size::NONE,
-                Size::MAX_CONTENT,
-                SizingMode::InherentSize,
-                Line::FALSE,
-            );
+            tree.perform_child_layout(child, Size::NONE, Size::NONE, Size::MAX_CONTENT, Line::FALSE);
             order += 1;
             return;
         }

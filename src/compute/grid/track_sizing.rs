@@ -1,10 +1,11 @@
 //! Implements the track sizing algorithm
 //! <https://www.w3.org/TR/css-grid-1/#layout-algorithm>
+use super::resolve_grid_child_style_constraints;
 use super::types::{GridItem, GridTrack, TrackCounts};
 use crate::geometry::{AbstractAxis, Line, Size};
 use crate::style::{AlignContent, AlignContentKeyword, AvailableSpace};
 use crate::style_helpers::TaffyMinContent;
-use crate::tree::{LayoutPartialTree, LayoutPartialTreeExt, SizingMode};
+use crate::tree::{LayoutPartialTree, LayoutPartialTreeExt};
 use crate::util::sys::{f32_max, f32_min, Vec};
 use crate::util::{MaybeMath, ResolveOrZero};
 use crate::CompactLength;
@@ -262,7 +263,7 @@ pub(super) fn determine_if_item_crosses_flexible_or_intrinsic_tracks(
 /// Track sizing algorithm
 /// Note: Gutters are treated as empty fixed-size tracks for the purpose of the track sizing algorithm.
 #[allow(clippy::too_many_arguments)]
-pub(super) fn track_sizing_algorithm<Tree: LayoutPartialTree>(
+pub(super) fn track_sizing_algorithm<Tree: crate::LayoutGridContainer>(
     tree: &mut Tree,
     axis: AbstractAxis,
     axis_min_size: Option<f32>,
@@ -451,7 +452,7 @@ fn initialize_track_sizes(
 
 /// 11.5.1 Shim baseline-aligned items so their intrinsic size contributions reflect their baseline alignment.
 fn resolve_item_baselines(
-    tree: &mut impl LayoutPartialTree,
+    tree: &mut impl crate::LayoutGridContainer,
     axis: AbstractAxis,
     items: &mut [GridItem],
     inner_node_size: Size<Option<f32>>,
@@ -500,13 +501,13 @@ fn resolve_item_baselines(
                 continue;
             }
 
-            let measured_size_and_baselines = tree.perform_child_layout(
+            let measured_size_and_baselines = tree.perform_child_layout_with_styles(
                 item.node,
                 Size::NONE,
                 inner_node_size,
                 Size::MIN_CONTENT,
-                SizingMode::InherentSize,
                 Line::FALSE,
+                resolve_grid_child_style_constraints,
             );
 
             let baseline = measured_size_and_baselines.baselines.first;

@@ -1,0 +1,25 @@
+<test name="float_flex_wrap_max_width_border__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="block" box-sizing="content-box" direction="ltr" position="absolute" width="400px">
+      <div display="flex" box-sizing="content-box" direction="ltr" position="relative" float="left" flex-wrap="wrap" height="12px" max-width="120px" border-top="1px" border-left="1px" border-bottom="1px" border-right="1px">
+        <div box-sizing="content-box" direction="ltr" position="relative" width="30px" border-top="1px" border-left="1px" border-bottom="1px" border-right="1px"/>
+        <div box-sizing="content-box" direction="ltr" position="relative" width="30px" border-top="1px" border-left="1px" border-bottom="1px" border-right="1px"/>
+        <div box-sizing="content-box" direction="ltr" position="relative" width="30px" border-top="1px" border-left="1px" border-bottom="1px" border-right="1px"/>
+        <div box-sizing="content-box" direction="ltr" position="relative" width="30px" border-top="1px" border-left="1px" border-bottom="1px" border-right="1px"/>
+        <div box-sizing="content-box" direction="ltr" position="relative" width="30px" border-top="1px" border-left="1px" border-bottom="1px" border-right="1px"/>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="400" height="14">
+      <node x="0" y="0" width="122" height="14">
+        <node x="1" y="1" width="32" height="6"/>
+        <node x="33" y="1" width="32" height="6"/>
+        <node x="65" y="1" width="32" height="6"/>
+        <node x="1" y="7" width="32" height="6"/>
+        <node x="33" y="7" width="32" height="6"/>
+      </node>
+    </node>
+  </expectations>
+</test>

@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    A shrink-to-fit multi-line flex container fills the space available to it (limited by its max-width),
+    including its own border.
+    Reduced from WPT css/css-flexbox/flexbox-flex-wrap-horiz-002.html
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="display: block; width: 400px;">
+  <div style="display: flex; flex-wrap: wrap; float: left; border: 1px solid; max-width: 120px; height: 12px;">
+    <div style="width: 30px; border: 1px solid;"></div>
+    <div style="width: 30px; border: 1px solid;"></div>
+    <div style="width: 30px; border: 1px solid;"></div>
+    <div style="width: 30px; border: 1px solid;"></div>
+    <div style="width: 30px; border: 1px solid;"></div>
+  </div>
+</div>
+
+</body>
+</html>

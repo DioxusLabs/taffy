@@ -2,7 +2,7 @@
 //! `fit-content(...)`, and `stretch`) on the `width`/`height` style properties
 use crate::geometry::{AbsoluteAxis, Line, Rect, Size};
 use crate::style::AvailableSpace;
-use crate::tree::{LayoutPartialTree, LayoutPartialTreeExt, NodeId, SizingMode};
+use crate::tree::{LayoutPartialTree, LayoutPartialTreeExt, NodeId};
 use crate::util::sys::f32_max;
 use crate::{CompactLength, Dimension};
 
@@ -63,7 +63,6 @@ pub(crate) fn resolve_absolute_sizing_keywords(
     area_size: Size<f32>,
     inset: Rect<Option<f32>>,
     margin: Rect<Option<f32>>,
-    sizing_mode: SizingMode,
 ) {
     let stretch_size = Size {
         width: f32_max(
@@ -106,7 +105,6 @@ pub(crate) fn resolve_absolute_sizing_keywords(
                 Size::NONE,
                 area_size.map(Some),
                 Size { width: available_width, height: available_height },
-                sizing_mode,
                 Line::FALSE,
             );
             *known_dimensions = measured_size.map(Some);
@@ -120,7 +118,6 @@ pub(crate) fn resolve_absolute_sizing_keywords(
                         *known_dimensions,
                         area_size.map(Some),
                         Size { width: available_width, height: AvailableSpace::Definite(stretch_size.height) },
-                        sizing_mode,
                         AbsoluteAxis::Horizontal,
                         Line::FALSE,
                     ),
@@ -140,7 +137,6 @@ pub(crate) fn resolve_absolute_sizing_keywords(
                                 .unwrap_or(AvailableSpace::Definite(stretch_size.width)),
                             height: available_height,
                         },
-                        sizing_mode,
                         AbsoluteAxis::Vertical,
                         Line::FALSE,
                     ),
