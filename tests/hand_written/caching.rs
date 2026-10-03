@@ -38,6 +38,33 @@ mod caching {
         assert_eq!(taffy.get_node_context_mut(leaf).unwrap().count, 7);
     }
 
+    /// A grid container that is only asked for its width (e.g. because it is an item of another
+    /// grid whose columns are being sized) must not size its rows, as that measures the height of
+    /// all of its items and, recursively, of everything below them.
+    #[test]
+    #[cfg(feature = "grid")]
+    fn measure_count_nested_grid() {
+        let mut taffy = new_test_tree();
+
+        let style = || Style { display: Display::Grid, ..Default::default() };
+        // The leaf's min-content width (20), max-content width (80) and final width (50) all differ, so
+        // measuring its height at each of the first two widths can never be served from the cache.
+        let text = TestNodeContext::ahem_text(
+            "HH\u{200B}HH\u{200B}HH\u{200B}HH".to_string(),
+            taffy_test_helpers::WritingMode::Horizontal,
+        );
+        let leaf = taffy.new_leaf_with_context(Style::default(), text).unwrap();
+        let inner = taffy.new_with_children(style(), &[leaf]).unwrap();
+        let middle = taffy.new_with_children(style(), &[inner]).unwrap();
+        let outer = taffy
+            .new_with_children(Style { size: Size { width: length(50.0), height: auto() }, ..style() }, &[middle])
+            .unwrap();
+
+        taffy.compute_layout_with_measure(outer, Size::MAX_CONTENT, test_measure_function).unwrap();
+        assert_eq!(taffy.layout(leaf).unwrap().size, Size { width: 50.0, height: 20.0 });
+        assert_eq!(taffy.get_node_context_mut(leaf).unwrap().count, 6);
+    }
+
     /// A node's size measured for one axis must not be returned from the cache when the other
     /// axis is queried, as the size in the non-requested axis is not guaranteed to be valid.
     #[test]
