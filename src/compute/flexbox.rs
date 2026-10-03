@@ -334,7 +334,41 @@ pub fn compute_flexbox_layout(
     }
 
     debug_log!("FLEX:", dbg:style.flex_direction());
+    // The height that the ratio derives from the container's width
+    let ratio_derived_height = match (styled_based_known_dimensions.width, styled_based_known_dimensions.height) {
+        (Some(width), None) if super::ratio::derived_height_is_minimum(&style, style_min_size.height) => {
+            Ratio::of(&style, padding_border_sum).map(|ratio| {
+                ratio
+                    .height(width)
+                    .maybe_clamp(style_min_size.height, style_max_size.height)
+                    .max(padding_border_sum.height)
+            })
+        }
+        _ => None,
+    };
     drop(style);
+
+    // A ratio-derived height is the container's height unless its content is taller than that
+    let mut styled_based_known_dimensions = styled_based_known_dimensions;
+    if let Some(derived_height) = ratio_derived_height {
+        let content_height = compute_preliminary(
+            tree,
+            node,
+            LayoutInput {
+                run_mode: RunMode::ComputeSize,
+                axis: RequestedAxis::Vertical,
+                known_dimensions: styled_based_known_dimensions,
+                available_space: Size { width: inputs.available_space.width, height: AvailableSpace::MinContent },
+                ..inputs
+            },
+        )
+        .size
+        .height;
+        if content_height <= derived_height {
+            styled_based_known_dimensions.height = Some(derived_height);
+        }
+    }
+    let known_dimensions = known_dimensions.or(styled_based_known_dimensions);
 
     // Normalize the definiteness flags: they only apply to dimensions which were passed in as known
     // by the parent. Dimensions resolved from the node's own style are always definite.
@@ -381,7 +415,7 @@ fn compute_preliminary(tree: &mut impl LayoutFlexboxContainer, node: NodeId, inp
     // If an item's width is derived from its height by its aspect ratio then its automatic minimum
     // width is its min-content width (limited by its max-width)
     // https://www.w3.org/TR/css-sizing-4/#aspect-ratio-minimum
-    for item in flex_items.iter_mut().filter(|item| item.width_has_content_minimum) {
+    for item in flex_items.iter_mut().filter(|item| item.width_has_content_minimum && !constants.is_row) {
         let min_content_width = tree.measure_child_size(
             item.node,
             Size::NONE,
@@ -1231,7 +1265,7 @@ fn determine_flex_base_size(
                 debug_log!("COMPUTE CHILD MIN SIZE:");
                 tree.measure_child_size(
                     child.node,
-                    measure_known_dimensions,
+                    if child.width_has_content_minimum && dir.is_row() { Size::NONE } else { measure_known_dimensions },
                     child_parent_size,
                     child_available_space,
                     SizingMode::ContentSize,
@@ -1266,7 +1300,7 @@ fn determine_flex_base_size(
             };
             let clamped_min_content_size = min_content_main_size
                 .maybe_clamp(converted_min_main, converted_max_main)
-                .maybe_min(child.size.main(dir));
+                .maybe_min(child.size.main(dir).filter(|_| !child.size_style.main(dir).is_auto()));
             clamped_min_content_size.maybe_max(padding_border_axes_sums.main(dir))
         });
 
