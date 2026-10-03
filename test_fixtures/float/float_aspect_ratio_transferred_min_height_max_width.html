@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    A min-height transferred through the aspect ratio does not take precedence over a max-width.
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="display: block; width: 100px;">
+  <div style="float: left; aspect-ratio: 2; min-height: 5px; max-width: 0px;"></div>
+</div>
+
+</body>
+</html>
