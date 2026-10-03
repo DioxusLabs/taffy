@@ -65,6 +65,32 @@ mod caching {
         assert_eq!(taffy.get_node_context_mut(leaf).unwrap().count, 6);
     }
 
+    /// A grid item whose size in the axis being measured is already known (here: a definite width) does not
+    /// need to be measured to determine its contribution to the size of the tracks in that axis.
+    /// (Without that short-circuit the leaf is measured 5 times)
+    #[test]
+    #[cfg(feature = "grid")]
+    fn measure_count_grid_item_with_known_width() {
+        let mut taffy = new_test_tree();
+
+        let text = TestNodeContext::ahem_text(
+            "HH\u{200B}HH\u{200B}HH\u{200B}HH".to_string(),
+            taffy_test_helpers::WritingMode::Horizontal,
+        );
+        let leaf = taffy
+            .new_leaf_with_context(
+                Style { size: Size { width: length(40.0), height: auto() }, ..Default::default() },
+                text,
+            )
+            .unwrap();
+        let grid = taffy.new_with_children(Style { display: Display::Grid, ..Default::default() }, &[leaf]).unwrap();
+
+        taffy.compute_layout_with_measure(grid, Size::MAX_CONTENT, test_measure_function).unwrap();
+        assert_eq!(taffy.layout(grid).unwrap().size, Size { width: 40.0, height: 20.0 });
+        assert_eq!(taffy.layout(leaf).unwrap().size, Size { width: 40.0, height: 20.0 });
+        assert_eq!(taffy.get_node_context_mut(leaf).unwrap().count, 3);
+    }
+
     /// A flex container that is only asked for its main size (e.g. because it is an item of a grid
     /// whose tracks are being sized) must not measure the cross size of its items.
     /// (Without that short-circuit the leaf is measured 13 times in the row case and 12 times in the column case)

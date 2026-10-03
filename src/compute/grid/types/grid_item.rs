@@ -306,7 +306,10 @@ impl GridItem {
             .min_size
             .maybe_resolve(grid_area_size, |val, basis| tree.calc(val, basis))
             .maybe_apply_aspect_ratio(aspect_ratio)
-            .maybe_add(box_sizing_adjustment);
+            .maybe_add(box_sizing_adjustment)
+            // The size of the item is floored by its padding and border
+            .or(padding_border_size.map(Some))
+            .maybe_max(padding_border_size);
         let max_size = self
             .max_size
             .maybe_resolve(grid_area_size, |val, basis| tree.calc(val, basis))
@@ -488,6 +491,11 @@ impl GridItem {
         available_space: Size<Option<f32>>,
     ) -> f32 {
         let known_dimensions = self.known_dimensions(tree, grid_area_size);
+        // If the item's size in the axis being measured is already known then that size is its contribution,
+        // and we can avoid calling into the child entirely.
+        if let Some(size) = known_dimensions.get(axis) {
+            return size;
+        }
         // The child sees the grid area as its containing block during intrinsic measurement, so
         // percentage box properties resolve against the grid area when that size is definite.
         // Spec:
@@ -536,6 +544,11 @@ impl GridItem {
         available_space: Size<Option<f32>>,
     ) -> f32 {
         let known_dimensions = self.known_dimensions(tree, grid_area_size);
+        // If the item's size in the axis being measured is already known then that size is its contribution,
+        // and we can avoid calling into the child entirely.
+        if let Some(size) = known_dimensions.get(axis) {
+            return size;
+        }
         // See the min-content path above. Max-content measurement uses the same containing-block
         // basis so percentage-dependent item geometry is measured from the grid area rather than
         // from the container.
