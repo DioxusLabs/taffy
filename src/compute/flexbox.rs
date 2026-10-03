@@ -1424,11 +1424,15 @@ fn determine_container_main_size(
                         index += count;
                     }
                     let max_content_size = widest_line_length + main_content_box_inset;
-                    return f32_max(size, f32_min(max_content_size, main_axis_available_space));
+                    return f32_max(
+                        size,
+                        f32_min(max_content_size, main_axis_available_space + main_content_box_inset),
+                    );
                 }
 
                 if lines.len() > 1 {
-                    f32_max(size, main_axis_available_space)
+                    // `main_axis_available_space` is the space available to the container's content
+                    f32_max(size, main_axis_available_space + main_content_box_inset)
                 } else {
                     size
                 }

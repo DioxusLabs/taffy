@@ -1,4 +1,5 @@
 //! Alignment of tracks and final positioning of items
+use super::resolve_grid_child_style_constraints;
 use super::types::GridTrack;
 use crate::compute::common::alignment::{
     apply_alignment_fallback, compute_alignment_offset, resolve_self_alignment_safety,
@@ -220,6 +221,7 @@ pub(super) fn align_and_position_item(
                 grid_area_size.map(Option::Some),
                 Size { width: *available_width, height: *available_height },
                 Line::FALSE,
+                resolve_grid_child_style_constraints,
             )
             .map(Option::Some),
         _ => Size::NONE,
@@ -250,6 +252,7 @@ pub(super) fn align_and_position_item(
                         },
                         AbsoluteAxis::Horizontal,
                         Line::FALSE,
+                        resolve_grid_child_style_constraints,
                     )
                 }),
             });
@@ -297,6 +300,7 @@ pub(super) fn align_and_position_item(
                             },
                             AbsoluteAxis::Vertical,
                             Line::FALSE,
+                            resolve_grid_child_style_constraints,
                         )
                     })
                 }
@@ -331,6 +335,7 @@ pub(super) fn align_and_position_item(
             grid_area_size.map(Option::Some),
             grid_area_minus_item_margins_size.map(AvailableSpace::Definite),
             Line::FALSE,
+            resolve_grid_child_style_constraints,
         )
         .map(Some)
     } else {
@@ -343,6 +348,7 @@ pub(super) fn align_and_position_item(
         grid_area_size.map(Option::Some),
         grid_area_minus_item_margins_size.map(AvailableSpace::Definite),
         Line::FALSE,
+        resolve_grid_child_style_constraints,
     );
 
     // Resolve final size
