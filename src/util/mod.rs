@@ -6,6 +6,11 @@ pub(crate) mod sys;
 pub use math::MaybeMath;
 pub use resolve::{MaybeResolve, ResolveOrZero};
 
+#[cfg(feature = "grid")]
+mod front_back_vec;
+#[cfg(feature = "grid")]
+pub(crate) use front_back_vec::FrontBackVec;
+
 #[doc(hidden)]
 #[macro_use]
 pub(crate) mod debug;

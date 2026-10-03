@@ -6,7 +6,7 @@ use crate::style::{AlignContent, AlignContentKeyword, AvailableSpace};
 use crate::style_helpers::TaffyMinContent;
 use crate::tree::{LayoutPartialTree, LayoutPartialTreeExt, SizingMode};
 use crate::util::sys::{f32_max, f32_min, Vec};
-use crate::util::{MaybeMath, ResolveOrZero};
+use crate::util::{FrontBackVec, MaybeMath, ResolveOrZero};
 use crate::CompactLength;
 
 /// Takes an axis, and a list of grid items sorted firstly by whether they cross a flex track
@@ -559,26 +559,19 @@ fn resolve_intrinsic_track_sizes<Tree: LayoutPartialTree>(
     // Items that cross a flexible track are all processed together in a single batch (regardless of their span), so
     // they only need to be moved to the end of the list. And the order in which items within a batch are processed
     // does not affect the result, so the remaining items only need to be sorted if any of them span more than one track.
-    let item_count = items.len();
-    let flex_item_count = items.iter().filter(|item| item.crosses_flexible_track(axis)).count();
-    let mut items: Vec<&mut GridItem> = if flex_item_count == 0 || flex_item_count == item_count {
-        items.iter_mut().collect()
-    } else {
-        let mut non_flex_items: Vec<&mut GridItem> = Vec::with_capacity(item_count);
-        let mut flex_items: Vec<&mut GridItem> = Vec::with_capacity(flex_item_count);
-        for item in items.iter_mut() {
-            if item.crosses_flexible_track(axis) {
-                flex_items.push(item);
-            } else {
-                non_flex_items.push(item);
-            }
+    let mut partitioned_items: FrontBackVec<&mut GridItem> = FrontBackVec::with_capacity(items.len());
+    let mut needs_sort = false;
+    for item in items.iter_mut() {
+        if item.crosses_flexible_track(axis) {
+            partitioned_items.push_back(item);
+        } else {
+            needs_sort |= item.span(axis) > 1;
+            partitioned_items.push_front(item);
         }
-        non_flex_items.append(&mut flex_items);
-        non_flex_items
-    };
-    let non_flex_items = &mut items[..(item_count - flex_item_count)];
-    if non_flex_items.iter().any(|item| item.span(axis) > 1) {
-        non_flex_items.sort_by_key(|item| item.span(axis));
+    }
+    let (mut items, non_flex_item_count) = partitioned_items.into_vec();
+    if needs_sort {
+        items[..non_flex_item_count].sort_by_key(|item| item.span(axis));
     }
     let items = items.as_mut_slice();
 
