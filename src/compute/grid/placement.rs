@@ -25,7 +25,7 @@ fn resolve_indefinite_grid_span(position: OriginZeroLine, span: u16) -> Line<Ori
 }
 
 /// A grid item's placement styles (`grid-row`/`grid-column`) resolved to origin-zero coordinates
-type ItemPlacement = InBothAbsAxis<Line<OriginZeroGridPlacement>>;
+pub(super) type ItemPlacement = InBothAbsAxis<Line<OriginZeroGridPlacement>>;
 
 /// 8.5. Grid Item Placement Algorithm
 /// Place items into the grid, generating new rows/column into the implicit grid as required
@@ -34,17 +34,22 @@ type ItemPlacement = InBothAbsAxis<Line<OriginZeroGridPlacement>>;
 /// pushed to `items` (which is expected to be empty). Each child's style is read and its placement styles resolved exactly once. The
 /// placement passes then run over the (small) resolved placements rather than re-walking the children.
 ///
+/// `placements` is an empty buffer used to hold the resolved placements. It is returned (cleared) so that
+/// its allocation can be reused.
+///
 /// [Specification](https://www.w3.org/TR/css-grid-2/#auto-placement-algo)
 #[allow(clippy::too_many_arguments)]
 pub(super) fn place_grid_items<'a, S>(
     cell_occupancy_matrix: &mut CellOccupancyMatrix,
     items: &mut Vec<GridItem>,
+    mut placements: Vec<ItemPlacement>,
     children_iter: impl Iterator<Item = (usize, NodeId, S)>,
     grid_auto_flow: GridAutoFlow,
     align_items: AlignItems,
     justify_items: AlignItems,
     named_line_resolver: &NamedLineResolver<<S as CoreStyle>::CustomIdent>,
-) where
+) -> Vec<ItemPlacement>
+where
     S: GridItemStyle + 'a,
 {
     let primary_axis = grid_auto_flow.primary_axis();
@@ -53,7 +58,7 @@ pub(super) fn place_grid_items<'a, S>(
     let explicit_row_count = cell_occupancy_matrix.track_counts(AbsoluteAxis::Vertical).explicit;
 
     // 0. Create the items (in document order) and resolve their placement styles
-    let mut placements: Vec<ItemPlacement> = Vec::with_capacity(children_iter.size_hint().0);
+    placements.reserve(children_iter.size_hint().0);
     for (index, node, style) in children_iter {
         placements.push(InBothAbsAxis {
             horizontal: named_line_resolver
@@ -159,6 +164,9 @@ pub(super) fn place_grid_items<'a, S>(
             false => (primary_span.end, secondary_span.start),
         };
     }
+
+    placements.clear();
+    placements
 }
 
 /// 8.5. Grid Item Placement Algorithm
@@ -411,6 +419,7 @@ mod tests {
             place_grid_items(
                 &mut cell_occupancy_matrix,
                 &mut items,
+                Vec::new(),
                 children_iter,
                 flow,
                 AlignSelf::START,
@@ -647,6 +656,7 @@ mod tests {
             place_grid_items(
                 &mut cell_occupancy_matrix,
                 &mut items,
+                Vec::new(),
                 children.iter().map(|(index, style)| (*index, NodeId::from(*index), style)),
                 GridAutoFlow::Row,
                 AlignSelf::START,

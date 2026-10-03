@@ -7,7 +7,7 @@ mod grid_track_counts;
 mod named;
 
 // Publish only locally in the grid module
-pub(super) use cell_occupancy::{CellOccupancyMatrix, CellOccupancyState};
+pub(super) use cell_occupancy::{CellOccupancyMatrix, CellOccupancyState, TrackIntervals};
 pub(crate) use coordinates::{GridCoordinate, GridLine, OriginZeroLine, MAX_GRID_TRACKS, MAX_OZ_LINE, MIN_OZ_LINE};
 pub(super) use grid_item::GridItem;
 pub(super) use grid_track::GridTrack;

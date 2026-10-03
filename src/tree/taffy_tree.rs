@@ -19,7 +19,7 @@ use crate::util::sys::{new_const_children_vec, new_vec_with_capacity, Box, Child
 
 use crate::compute::{
     compute_cached_layout, compute_hidden_layout, compute_leaf_layout, compute_oof_layout, compute_root_layout,
-    round_layout,
+    round_layout, LayoutScratch,
 };
 use crate::CacheTree;
 
@@ -166,6 +166,9 @@ pub struct TaffyTree<NodeContext = ()> {
 
     /// Layout mode configuration
     config: TaffyConfig,
+
+    /// Scratch buffers reused by the layout algorithms across layout runs
+    scratch: LayoutScratch,
 }
 
 impl Default for TaffyTree {
@@ -411,6 +414,11 @@ where
             None,
         )
     }
+
+    #[inline(always)]
+    fn layout_scratch(&mut self) -> Option<&mut LayoutScratch> {
+        Some(&mut self.taffy.scratch)
+    }
 }
 
 impl<NodeContext, MeasureFunction> LayoutContainingBlock for TaffyView<'_, NodeContext, MeasureFunction>
@@ -603,6 +611,7 @@ impl<NodeContext> TaffyTree<NodeContext> {
             parents: SlotMap::with_capacity(capacity),
             node_context_data: SecondaryMap::with_capacity(capacity),
             config: TaffyConfig::default(),
+            scratch: LayoutScratch::new(),
         }
     }
 
