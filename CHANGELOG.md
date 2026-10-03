@@ -40,6 +40,8 @@
 ### Fixed
 
 - The `serde` feature now compiles without the `std` feature
+- Flexbox: the content size suggestion used for the automatic minimum size of a flex item with an aspect ratio is now clamped by min/max cross sizes transferred through the aspect ratio, per [css-sizing-3 §5.1](https://www.w3.org/TR/css-sizing-3/#min-content-zero). Previously only the transferred max size was applied ([WPT: flexbox-min-height-auto-002b](https://wpt.live/css/css-flexbox/flexbox-min-height-auto-002b.html))
+- Flexbox: the used cross size of a flex item whose cross size is transferred from its main size through its aspect ratio is now re-derived from the used (post-flexing) main size, instead of being transferred from the flex base size before flexing
 
 - `TaffyTree::remove` and `TaffyTree::clear` now drop the removed nodes' contexts. Both are documented as dropping nodes, but neither touched `node_context_data`, so a node's context outlived the node — for a `TaffyTree` whose context is a measure function, that kept a boxed closure and everything it captured alive indefinitely. It is worst for callers that rebuild their tree every frame.
 - Block: a block container's content width and the stretch width / available width handed to its in-flow and floated children are floored at zero when padding/border or the child's margins exceed the container width. Children (and measure functions) could previously receive negative widths.
@@ -171,6 +173,8 @@ Taffy now supports `self-start` and `self-end` alignment for in-flow and absolut
 - Block/float: correct placement and margin behavior for zero-width, overflowing, and formatting-context-establishing floats (#988, #1056, #1062, #1064, #1065).
 - Block/float: use definite available widths when laying out floats (#994).
 - Block/float: include floats when calculating intrinsic width under definite available space (#1055).
+- Flexbox: clamp the cross-axis available space by the item's own cross-axis margins rather than the container's margins when sizing flex items; previously a container margin could inflate a stretched item's cross size beyond the container
+- Block/float: floated flex and grid containers with `width: auto` are now shrink-to-fit (fit-content) sized; previously they treated the definite available space as stretch-fit
 
 ## 0.12.2
 
