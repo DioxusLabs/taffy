@@ -414,12 +414,12 @@ fn compute_preliminary(tree: &mut impl LayoutFlexboxContainer, node: NodeId, inp
     // If only the container's main size has been requested then we are done, as nothing below changes it. This
     // avoids measuring the cross size of every item.
     if run_mode == RunMode::ComputeSize {
-        let main_axis_is_requested = match inputs.axis {
+        let main_axis_is_requested_axis = match inputs.axis {
             RequestedAxis::Horizontal => constants.dir.is_row(),
             RequestedAxis::Vertical => constants.dir.is_column(),
             RequestedAxis::Both => false,
         };
-        if main_axis_is_requested {
+        if main_axis_is_requested_axis {
             let size = Size::ZERO.with_main(constants.dir, constants.container_size.main(constants.dir));
             return LayoutOutput::from_outer_size(size);
         }
