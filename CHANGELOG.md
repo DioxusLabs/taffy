@@ -29,8 +29,13 @@
   - Which candidates a node claims is decided by `CoreStyle::is_containing_block()` — the same policy the grid algorithm uses to decide whether an out-of-flow child's static position is derived from its grid area — so the two can never disagree
   - The container layout algorithms no longer require the `LayoutContainingBlock` bound (only `compute_oof_layout` and `compute_root_layout` do)
 
+- `AlignmentSafety` gains a `Default` variant representing the absence of an overflow-position keyword (`safe`/`unsafe`), which is now the safety of the bare alignment constants (`AlignItems::START`, `AlignContent::CENTER`, ...) and of parsed bare keywords. `Default` behaves like `Unsafe` everywhere except for absolutely positioned boxes, where it triggers the overflow-minimizing behaviour of [css-align §4.4.1.2](https://www.w3.org/TR/css-align-3/#auto-safety-position). Code matching on `AlignmentSafety::Unsafe` to detect "not safe" should match on `!is_safe()` (or `Default | Unsafe`) instead
+- `Style::align_self` and `Style::justify_self` are no longer gated behind the `flexbox`/`grid` features, and `Style::justify_items` is also available with `block_layout`. `OofItemStyle` gains defaulted `align_self()`, `justify_self()` and `is_table()` methods, and `BlockItemStyle` gains defaulted `align_self()`/`justify_self()` methods and `BlockContainerStyle` a defaulted `justify_items()` method, which are read by the out-of-flow positioning pass and by block layout to compute static positions
+
 ### Added
 
+- Absolutely positioned boxes now support self-alignment (`align-self`/`justify-self`) per [css-position §3.8](https://www.w3.org/TR/css-position-3/#abspos-alignment): a box with non-`auto` insets in both directions of an axis is aligned within its inset-modified containing block according to its self-alignment property, an `auto` size is stretch-fit only for `normal`/`stretch` alignment (and never for replaced or table boxes) and otherwise fit-content, `safe`/`unsafe`/default overflow positioning is honoured, and the static positions computed by block layout respect the child's `align-self`/`justify-self` (falling back to the container's `justify-items`). `AxisStaticPosition::from_alignment` constructs such an alignment-aware static position from an `AlignSelf` value
+- `AlignItems::with_safety` / `AlignContent::with_safety` return a copy of the alignment with a different overflow-position modifier
 - `compute_oof_layout_for_area` and `OofLayoutResult` allow integrations to lay out out-of-flow candidates against an explicit positioning area without immediately mutating a layout node's hoisted-child list. This supports containing blocks represented outside Taffy's layout tree.
 
 ### Changed
