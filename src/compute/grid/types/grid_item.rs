@@ -10,6 +10,15 @@ use crate::util::{MaybeMath, MaybeResolve, ResolveOrZero};
 use crate::{AlignItemsKeyword, BoxSizing, GridItemStyle, LengthPercentage};
 use core::ops::Range;
 
+/// The known_dimensions computed for a grid item for a given grid area size
+#[derive(Debug, Clone, Copy)]
+pub(in super::super) struct KnownDimensionsCacheEntry {
+    /// The grid area size that `known_dimensions` was computed for
+    grid_area_size: Size<Option<f32>>,
+    /// The cached known_dimensions
+    known_dimensions: Size<Option<f32>>,
+}
+
 /// Represents a single grid item
 #[derive(Debug)]
 pub(in super::super) struct GridItem {
@@ -76,6 +85,9 @@ pub(in super::super) struct GridItem {
     // Caches for intrinsic size computation. These caches are only valid for a single run of the track-sizing algorithm.
     /// Cache for the known_dimensions input to intrinsic sizing computation
     pub grid_area_size_cache: Option<Size<Option<f32>>>,
+    /// Cache for the known_dimensions passed to the child when computing its intrinsic contributions, stored along with
+    /// the grid area size it was computed for. Must be cleared whenever `baseline_shim` changes.
+    pub known_dimensions_cache: Option<KnownDimensionsCacheEntry>,
     /// Cache for the min-content size
     pub min_content_contribution_cache: Size<Option<f32>>,
     /// Cache for the minimum contribution
@@ -131,6 +143,7 @@ impl GridItem {
             grid_area_size_cache: None,
             min_content_contribution_cache: Size::NONE,
             max_content_contribution_cache: Size::NONE,
+            known_dimensions_cache: None,
             minimum_contribution_cache: Size::NONE,
             y_position: 0.0,
             height: 0.0,
@@ -273,6 +286,24 @@ impl GridItem {
         } else {
             None
         }
+    }
+
+    /// Retrieve the known_dimensions for the given grid area size from the cache or compute them.
+    /// The min-content and max-content contributions of an item are both computed from the same known_dimensions.
+    #[inline(always)]
+    fn known_dimensions_cached(
+        &mut self,
+        tree: &mut impl LayoutPartialTree,
+        grid_area_size: Size<Option<f32>>,
+    ) -> Size<Option<f32>> {
+        if let Some(entry) = self.known_dimensions_cache {
+            if entry.grid_area_size == grid_area_size {
+                return entry.known_dimensions;
+            }
+        }
+        let known_dimensions = self.known_dimensions(tree, grid_area_size);
+        self.known_dimensions_cache = Some(KnownDimensionsCacheEntry { grid_area_size, known_dimensions });
+        known_dimensions
     }
 
     /// Compute the known_dimensions to be passed to the child sizing functions
@@ -484,13 +515,13 @@ impl GridItem {
 
     /// Compute the item's min content contribution from the provided parameters
     pub fn min_content_contribution(
-        &self,
+        &mut self,
         axis: AbstractAxis,
         tree: &mut impl LayoutPartialTree,
         grid_area_size: Size<Option<f32>>,
         available_space: Size<Option<f32>>,
     ) -> f32 {
-        let known_dimensions = self.known_dimensions(tree, grid_area_size);
+        let known_dimensions = self.known_dimensions_cached(tree, grid_area_size);
         // If the item's size in the axis being measured is already known then that size is its contribution,
         // and we can avoid calling into the child entirely.
         if let Some(size) = known_dimensions.get(axis) {
@@ -537,13 +568,13 @@ impl GridItem {
 
     /// Compute the item's max content contribution from the provided parameters
     pub fn max_content_contribution(
-        &self,
+        &mut self,
         axis: AbstractAxis,
         tree: &mut impl LayoutPartialTree,
         grid_area_size: Size<Option<f32>>,
         available_space: Size<Option<f32>>,
     ) -> f32 {
-        let known_dimensions = self.known_dimensions(tree, grid_area_size);
+        let known_dimensions = self.known_dimensions_cached(tree, grid_area_size);
         // If the item's size in the axis being measured is already known then that size is its contribution,
         // and we can avoid calling into the child entirely.
         if let Some(size) = known_dimensions.get(axis) {
