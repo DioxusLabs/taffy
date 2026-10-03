@@ -680,17 +680,18 @@ pub(crate) trait LayoutPartialTreeExt: LayoutPartialTree {
 
     /// Compute the layout of a child whose own sizing styles have already been resolved by the caller:
     /// the child's preferred size must already be included in the known dimensions of `inputs`.
+    /// `constraints` may be `None` if both of the child's dimensions are known.
     #[inline(always)]
     fn compute_child_layout_with_constraints(
         &mut self,
         node_id: NodeId,
         mut inputs: LayoutInput,
-        constraints: &ChildStyleConstraints,
+        constraints: Option<&ChildStyleConstraints>,
     ) -> LayoutOutput {
         // The child's own sizing styles only affect axes in which its size is not already known
-        if inputs.known_dimensions.both_axis_defined() {
+        let Some(constraints) = constraints else {
             return self.compute_child_layout(node_id, inputs);
-        }
+        };
         let auto_axes = constraints.apply_to_inputs(&mut inputs);
         let mut output = self.compute_child_layout(node_id, inputs);
         constraints.apply_to_output(auto_axes, &mut output);
