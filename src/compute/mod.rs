@@ -54,6 +54,7 @@ pub use self::float::{BfcSlot, ContentSlot, FloatContext, FloatIntrinsicWidthCal
 
 use crate::geometry::{Line, Point, Size};
 use crate::style::{AvailableSpace, ContainingBlockClaims, CoreStyle, Overflow, Position};
+use crate::tree::traits::resolve_core_style_constraints;
 use crate::tree::{
     AxisStaticAlign, AxisStaticEdge, AxisStaticPosition, Layout, LayoutInput, LayoutOutput, LayoutPartialTree,
     LayoutPartialTreeExt, NodeId, OofCandidate, OofCandidates, RequestedAxis, RoundTree, RunMode,
@@ -265,7 +266,7 @@ fn compute_in_flow_root_layout(
         run_mode: RunMode::PerformLayout,
         vertical_margins_are_collapsible: Line::FALSE,
     };
-    let (root_style_constraints, root_auto_axes) = tree.resolve_child_style_sizes(root, &mut inputs);
+    let (root_style_constraints, root_auto_axes) = resolve_core_style_constraints(tree, root, &mut inputs);
     *root_is_cached = tree.cache_get(root, &inputs).is_some();
 
     // Recursively compute node layout
@@ -346,7 +347,7 @@ pub fn compute_child_layout_with_styles(
     node_id: NodeId,
     inputs: LayoutInput,
 ) -> LayoutOutput {
-    LayoutPartialTreeExt::compute_child_layout_with_styles(tree, node_id, inputs)
+    LayoutPartialTreeExt::compute_child_layout_with_styles(tree, node_id, inputs, resolve_core_style_constraints)
 }
 
 /// Attempts to find a cached layout for the specified node and layout inputs.

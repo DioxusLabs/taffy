@@ -1,5 +1,6 @@
 //! Implements the track sizing algorithm
 //! <https://www.w3.org/TR/css-grid-1/#layout-algorithm>
+use super::resolve_grid_child_style_constraints;
 use super::types::{GridItem, GridTrack, TrackCounts};
 use crate::geometry::{AbstractAxis, Line, Size};
 use crate::style::{AlignContent, AlignContentKeyword, AvailableSpace};
@@ -252,7 +253,7 @@ pub(super) fn determine_if_item_crosses_flexible_or_intrinsic_tracks(
 /// Track sizing algorithm
 /// Note: Gutters are treated as empty fixed-size tracks for the purpose of the track sizing algorithm.
 #[allow(clippy::too_many_arguments)]
-pub(super) fn track_sizing_algorithm<Tree: LayoutPartialTree>(
+pub(super) fn track_sizing_algorithm<Tree: crate::LayoutGridContainer>(
     tree: &mut Tree,
     axis: AbstractAxis,
     axis_min_size: Option<f32>,
@@ -441,7 +442,7 @@ fn initialize_track_sizes(
 
 /// 11.5.1 Shim baseline-aligned items so their intrinsic size contributions reflect their baseline alignment.
 fn resolve_item_baselines(
-    tree: &mut impl LayoutPartialTree,
+    tree: &mut impl crate::LayoutGridContainer,
     axis: AbstractAxis,
     items: &mut [GridItem],
     inner_node_size: Size<Option<f32>>,
@@ -496,6 +497,7 @@ fn resolve_item_baselines(
                 inner_node_size,
                 Size::MIN_CONTENT,
                 Line::FALSE,
+                resolve_grid_child_style_constraints,
             );
 
             let baseline = measured_size_and_baselines.baselines.first;

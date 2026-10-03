@@ -2,9 +2,9 @@
 use crate::geometry::{Line, Point, Rect, Size};
 use crate::style::{AvailableSpace, CoreStyle, LengthPercentageAuto, Overflow, Position};
 use crate::style_helpers::TaffyMaxContent;
+use crate::tree::traits::{AutoAxes, ChildStyleConstraints};
 use crate::tree::{
-    AxisStaticEdge, AxisStaticPosition, LayoutPartialTree, LayoutPartialTreeExt, NodeId, OofCandidate, OofCandidates,
-    OofPositioningArea,
+    AxisStaticEdge, AxisStaticPosition, LayoutPartialTreeExt, NodeId, OofCandidate, OofCandidates, OofPositioningArea,
 };
 use crate::tree::{Baselines, CollapsibleMarginSet, Layout, LayoutInput, LayoutOutput, RunMode};
 use crate::util::debug::debug_log;
@@ -349,7 +349,7 @@ struct BlockItem {
     oof_candidates: OofCandidates,
 }
 
-/// Computes the layout of [`LayoutPartialTree`] according to the block layout algorithm
+/// Computes the layout of [`LayoutBlockContainer`] according to the block layout algorithm
 pub fn compute_block_layout(
     tree: &mut impl LayoutBlockContainer,
     node_id: NodeId,
@@ -439,6 +439,15 @@ pub fn compute_block_layout(
     }
 
     output
+}
+
+/// Resolve the sizing styles of a block container's child from the child's block item style
+fn resolve_block_child_style_constraints<Tree: LayoutBlockContainer>(
+    tree: &Tree,
+    node_id: NodeId,
+    inputs: &mut LayoutInput,
+) -> (ChildStyleConstraints, AutoAxes) {
+    ChildStyleConstraints::resolve(&tree.get_block_child_style(node_id), inputs, |val, basis| tree.calc(val, basis))
 }
 
 /// Computes the layout of [`LayoutBlockContainer`] according to the block layout algorithm
@@ -938,7 +947,7 @@ fn resolve_stretch_height(
 /// Compute the content-based width in the case that the width of the container is not known
 #[inline]
 fn determine_content_based_container_width(
-    tree: &mut impl LayoutPartialTree,
+    tree: &mut impl LayoutBlockContainer,
     items: &[BlockItem],
     available_width: AvailableSpace,
 ) -> f32 {
@@ -968,6 +977,7 @@ fn determine_content_based_container_width(
                 crate::AbsoluteAxis::Horizontal,
                 // Must match the value passed when laying the item out (see `Cache`)
                 if item.is_in_same_bfc { Line::TRUE } else { Line::FALSE },
+                resolve_block_child_style_constraints,
             )
         });
 
@@ -1105,6 +1115,7 @@ fn perform_final_layout_on_in_flow_children(
                     // A float establishes a new block formatting context: its margins do not
                     // collapse with the margins of its children
                     Line::FALSE,
+                    resolve_block_child_style_constraints,
                 );
                 item.oof_candidates = item_layout.oof_candidates.take();
                 let margin_box = item_layout.size + item_non_auto_margin.sum_axes();
@@ -1285,6 +1296,7 @@ fn perform_final_layout_on_in_flow_children(
                                     crate::AbsoluteAxis::Horizontal,
                                     // Must match the value passed when laying the item out (see `Cache`)
                                     if item.is_in_same_bfc { Line::TRUE } else { Line::FALSE },
+                                    resolve_block_child_style_constraints,
                                 ),
                         });
 
@@ -1326,7 +1338,8 @@ fn perform_final_layout_on_in_flow_children(
             #[cfg(not(feature = "float_layout"))]
             let clear_pos = f32::NEG_INFINITY;
 
-            let (item_style_constraints, item_auto_axes) = tree.resolve_child_style_sizes(item.node_id, &mut inputs);
+            let (item_style_constraints, item_auto_axes) =
+                resolve_block_child_style_constraints(tree, item.node_id, &mut inputs);
             let mut item_layout = if item.is_in_same_bfc {
                 // Replaced elements may not have a known width (they are sized by their
                 // measure function rather than stretch-sized)
