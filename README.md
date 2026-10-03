@@ -104,26 +104,33 @@ If you are interested in guide-level documentation on CSS layout, then we recomm
 
 - Run on a 2021 MacBook Pro with M1 Pro processor using [criterion](https://github.com/bheisler/criterion.rs)
 - The benchmarks measure layout computation only. They do not measure tree creation.
-- Yoga benchmarks were run via the [yoga](https://github.com/bschwind/yoga-rs) crate (Rust bindings)
+- Yoga benchmarks were run via the [yoga](https://github.com/bschwind/yoga-rs) crate (Rust bindings), version 0.5.0
 - Most popular websites seem to have between 3,000 and 10,000 nodes (although they also require text layout, which neither yoga nor taffy implement).
 
-Note that the table below contains multiple different units (milliseconds vs. microseconds)
+Note that the table below contains multiple different units (seconds vs. milliseconds vs. microseconds)
 
-| Benchmark          | Node Count | Depth | Yoga ([ba27f9d]) | Taffy ([71027a8]) |
-| ---                | ---        | ---   | ---              | ---               |
-| yoga 'huge nested' | 1,000      | 3     | 364.60 µs        | 329.04 µs         |
-| yoga 'huge nested' | 10,000     | 4     | 4.1988 ms        | 4.3486 ms         |
-| yoga 'huge nested' | 100,000    | 5     | 45.804 ms        | 38.559 ms         |
-| big trees (wide)   | 1,000      | 1     | 737.77 µs        | 505.99 µs         |
-| big trees (wide)   | 10,000     | 1     | 7.1007 ms        | 8.3395 ms         |
-| big trees (wide)   | 100,000    | 1     | 135.78 ms        | 247.42 ms         |
-| big trees (deep)   | 4,000      | 12    | 2.2333 ms        | 1.7400 ms         |
-| big trees (deep)   | 10,000     | 14    | 5.9477 ms        | 4.4445 ms         |
-| big trees (deep)   | 100,000    | 17    | 76.755 ms        | 63.778 ms         |
-| super deep         | 1,000      | 1,000 | 555.32 µs        | 472.85 µs         |
+| Benchmark                     | Node Count | Depth | Yoga ([v3.2.1])        | Taffy ([e747f6e]) |
+| ---                           | ---        | ---   | ---                    | ---               |
+| yoga 'huge nested'            | 1,000      | 3     | 328.24 µs              | 250.23 µs         |
+| yoga 'huge nested'            | 10,000     | 4     | 3.2892 ms              | 2.6947 ms         |
+| yoga 'huge nested'            | 100,000    | 5     | 41.686 ms              | 32.871 ms         |
+| big trees (wide)              | 1,000      | 2     | 468.66 µs              | 471.14 µs         |
+| big trees (wide)              | 10,000     | 2     | 4.8667 ms              | 4.8032 ms         |
+| big trees (wide)              | 100,000    | 2     | 63.304 ms              | 58.111 ms         |
+| absolutely positioned leaves  | 1,000      | 2     | 408.51 µs              | 259.91 µs         |
+| absolutely positioned leaves  | 10,000     | 2     | 4.3898 ms              | 2.7890 ms         |
+| absolutely positioned leaves  | 100,000    | 2     | 56.490 ms              | 41.270 ms         |
+| big trees (deep, random size) | 4,000      | 12    | 1.7937 ms              | 1.8160 ms         |
+| big trees (deep, random size) | 10,000     | 14    | 4.4436 ms              | 4.5843 ms         |
+| big trees (deep, random size) | 100,000    | 17    | 63.555 ms              | 69.952 ms         |
+| big trees (deep, auto size)   | 4,000      | 12    | 32.872 ms              | 4.7357 ms         |
+| big trees (deep, auto size)   | 10,000     | 14    | 103.19 ms              | 11.894 ms         |
+| big trees (deep, auto size)   | 100,000    | 17    | 2.3502 s               | 164.24 ms         |
+| super deep                    | 150        | 50    | 61.132 ms              | 179.02 µs         |
+| super deep                    | 300        | 100   | did not finish (>9min) | 366.89 µs         |
 
-[ba27f9d]: https://github.com/facebook/yoga/commit/ba27f9d1ecfa7518019845b84b035d3d4a2a6658
-[71027a8]: https://github.com/DioxusLabs/taffy/commit/71027a8de03b343e120852b84bb7dca9fb4651c5
+[v3.2.1]: https://github.com/facebook/yoga/commit/042f5013152eb81c1552dec945b88f7b95ca350f
+[e747f6e]: https://github.com/DioxusLabs/taffy/commit/e747f6e5b94e7b0586d807aeb681b48f9a005f04
 
 ## Contributions
 

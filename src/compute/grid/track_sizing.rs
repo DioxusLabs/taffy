@@ -528,6 +528,7 @@ fn resolve_item_baselines(
         for item in row_items.iter_mut() {
             if item.participates_in_baseline_alignment() {
                 item.baseline_shim = row_max_baseline - item.baseline.unwrap_or(0.0);
+                item.known_dimensions_cache = None;
             }
         }
     }
