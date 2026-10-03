@@ -37,9 +37,12 @@
 
 - Grid: intrinsic track sizing no longer measures an item's min-/max-content contribution in a step where none of the item's spanned tracks can receive that contribution (e.g. items spanning only `minmax(0, 1fr)` or fixed tracks). This matches Blink and avoids redundant, sometimes very expensive, measurement of large subtrees under a min-content constraint.
 
+- Block/float: `FloatContext::find_bfc_slot` and `BlockContext::find_bfc_slot` take an additional `height: Option<f32>` parameter. When provided, the returned slot accounts for the floats beside all segments that a box of that height would span, not just the segment at the box's top edge
+
 ### Fixed
 
 - The `serde` feature now compiles without the `std` feature
+- Block/float: a box that establishes an independent formatting context now avoids floats across its entire height, not just at its top edge. The box is laid out, and if floats lower down intrude on the space it occupies, its position/width are re-resolved using its actual height (up to 4 attempts)
 
 - `TaffyTree::remove` and `TaffyTree::clear` now drop the removed nodes' contexts. Both are documented as dropping nodes, but neither touched `node_context_data`, so a node's context outlived the node — for a `TaffyTree` whose context is a measure function, that kept a boxed closure and everything it captured alive indefinitely. It is worst for callers that rebuild their tree every frame.
 - Block: a block container's content width and the stretch width / available width handed to its in-flow and floated children are floored at zero when padding/border or the child's margins exceed the container width. Children (and measure functions) could previously receive negative widths.

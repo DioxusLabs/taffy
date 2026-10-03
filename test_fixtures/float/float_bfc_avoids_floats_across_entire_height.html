@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    An auto-width BFC root must not overlap floats across its entire height, not just at
+    its top edge: its width accounts for a float that only intrudes lower down.
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="display: block; width: 125px;">
+  <div style="float: left; width: 20px; height: 50px;"></div>
+  <div style="float: right; clear: left; width: 25px; height: 50px;"></div>
+  <div style="display: block; overflow: hidden; height: 100px;"></div>
+</div>
+
+</body>
+</html>
