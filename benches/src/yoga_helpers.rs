@@ -48,6 +48,16 @@ impl<R: Rng, G: GenStyle<TaffyStyle>> BuildTree<R, G> for YogaTreeBuilder<R, G> 
         )
     }
 
+    fn mark_all_dirty(&mut self) {
+        // Yoga only allows nodes with a measure function to be marked as dirty directly. But it also marks nodes
+        // as dirty when their style changes, so we change a style and then immediately change it back.
+        for node in self.tree.values_mut() {
+            let flex_grow = node.get_flex_grow();
+            node.set_flex_grow(flex_grow + 1.0);
+            node.set_flex_grow(flex_grow);
+        }
+    }
+
     fn random_usize(&mut self, range: impl SampleRange<usize>) -> usize {
         self.rng.random_range(range)
     }

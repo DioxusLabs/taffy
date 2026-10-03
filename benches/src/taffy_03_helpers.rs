@@ -10,6 +10,7 @@ pub struct Taffy03TreeBuilder<R: Rng, G: GenStyle<TaffyStyle>> {
     style_generator: G,
     tree: taffy_03::Taffy,
     root: taffy_03::prelude::Node,
+    nodes: Vec<taffy_03::prelude::Node>,
 }
 
 // Implement the BuildTree trait
@@ -21,7 +22,7 @@ impl<R: Rng, G: GenStyle<TaffyStyle>> BuildTree<R, G> for Taffy03TreeBuilder<R, 
     fn with_rng(mut rng: R, mut style_generator: G) -> Self {
         let mut tree = taffy_03::Taffy::new();
         let root = tree.new_leaf(convert_style(style_generator.create_root_style(&mut rng))).unwrap();
-        Taffy03TreeBuilder { rng, style_generator, tree, root }
+        Taffy03TreeBuilder { rng, style_generator, tree, root, nodes: vec![root] }
     }
 
     fn compute_layout_inner(&mut self, available_width: Option<f32>, available_height: Option<f32>) {
@@ -30,18 +31,28 @@ impl<R: Rng, G: GenStyle<TaffyStyle>> BuildTree<R, G> for Taffy03TreeBuilder<R, 
         self.tree.compute_layout(self.root, available_space).unwrap();
     }
 
+    fn mark_all_dirty(&mut self) {
+        for &node in &self.nodes {
+            self.tree.mark_dirty(node).unwrap();
+        }
+    }
+
     fn random_usize(&mut self, range: impl SampleRange<usize>) -> usize {
         self.rng.random_range(range)
     }
 
     fn create_leaf_node(&mut self) -> Self::Node {
         let style = self.style_generator.create_leaf_style(&mut self.rng);
-        self.tree.new_leaf(convert_style(style)).unwrap()
+        let node = self.tree.new_leaf(convert_style(style)).unwrap();
+        self.nodes.push(node);
+        node
     }
 
     fn create_container_node(&mut self, children: &[Self::Node]) -> Self::Node {
         let style = self.style_generator.create_container_style(&mut self.rng);
-        self.tree.new_with_children(convert_style(style), children).unwrap()
+        let node = self.tree.new_with_children(convert_style(style), children).unwrap();
+        self.nodes.push(node);
+        node
     }
 
     fn total_node_count(&mut self) -> usize {

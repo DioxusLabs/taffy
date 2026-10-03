@@ -1,9 +1,12 @@
 //! This file includes benchmarks for tree creation
-use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
+use criterion::{criterion_group, criterion_main, Bencher, BenchmarkId, Criterion};
 use rand::prelude::*;
 use rand_chacha::ChaCha8Rng;
+use std::hint::black_box;
+use std::time::Instant;
 use taffy::prelude::*;
 use taffy::style::Style;
+use taffy_benchmarks::{benchmark_group, iter_timed};
 
 #[cfg(feature = "yoga")]
 use slotmap::SlotMap;
@@ -60,39 +63,38 @@ fn build_yoga_flat_hierarchy(total_node_count: u32) -> (yg::YogaTree, yg::NodeId
     (tree, root)
 }
 
+/// Benchmark creating a tree, without also timing how long it takes to drop it
+fn bench_creation<T>(b: &mut Bencher, build: impl Fn() -> T) {
+    iter_timed(b, || {
+        let start = Instant::now();
+        let tree = black_box(build());
+        let elapsed = start.elapsed();
+        drop(tree);
+        elapsed
+    })
+}
+
 fn taffy_benchmarks(c: &mut Criterion) {
-    let mut group = c.benchmark_group("Tree creation");
+    let mut group = benchmark_group(c, "Tree creation");
     for node_count in [1_000u32, 10_000, 100_000].iter() {
         #[cfg(feature = "yoga")]
         let benchmark_id = BenchmarkId::new(format!("Yoga"), node_count);
         #[cfg(feature = "yoga")]
         group.bench_with_input(benchmark_id, node_count, |b, &node_count| {
-            b.iter(|| {
-                let (taffy, root) = build_yoga_flat_hierarchy(node_count);
-                std::hint::black_box(taffy);
-                std::hint::black_box(root);
-            })
+            bench_creation(b, || build_yoga_flat_hierarchy(node_count))
         });
         let benchmark_id = BenchmarkId::new("TaffyTree::new".to_string(), node_count);
         group.bench_with_input(benchmark_id, node_count, |b, &node_count| {
-            b.iter(|| {
-                let (tree, root) = build_taffy_flat_hierarchy(node_count, false);
-                std::hint::black_box(tree);
-                std::hint::black_box(root);
-            })
+            bench_creation(b, || build_taffy_flat_hierarchy(node_count, false))
         });
 
         let benchmark_id = BenchmarkId::new("TaffyTree::with_capacity".to_string(), node_count);
         group.bench_with_input(benchmark_id, node_count, |b, &node_count| {
-            b.iter(|| {
-                let (tree, root) = build_taffy_flat_hierarchy(node_count, true);
-                std::hint::black_box(tree);
-                std::hint::black_box(root);
-            })
+            bench_creation(b, || build_taffy_flat_hierarchy(node_count, true))
         });
     }
     group.finish();
 }
 
-criterion_group!(benches, taffy_benchmarks);
+criterion_group!(name = benches; config = taffy_benchmarks::criterion_config(); targets = taffy_benchmarks);
 criterion_main!(benches);
