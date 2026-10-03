@@ -9,6 +9,8 @@ mod hand_written {
     #[cfg(feature = "flexbox_balance")]
     mod flex_line_count;
     mod floats;
+    #[cfg(all(feature = "grid", feature = "std"))]
+    mod grid_placement_cache;
     mod initial_containing_block;
     mod measure;
     mod min_max_overrides;

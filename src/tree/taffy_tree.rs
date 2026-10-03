@@ -31,7 +31,7 @@ use crate::{compute::compute_flexbox_layout, LayoutFlexboxContainer};
 use crate::{compute::compute_grid_layout, LayoutGridContainer};
 
 #[cfg(feature = "grid")]
-use crate::compute::grid::DetailedGridInfo;
+use crate::compute::grid::{DetailedGridInfo, GridPlacementCache};
 use crate::tree::layout::DetailedLayoutInfo;
 
 /// The error Taffy generates on invalid operations
@@ -116,6 +116,12 @@ struct NodeData {
 
     /// The computation result from layout algorithm
     pub(crate) detailed_layout_info: DetailedLayoutInfo,
+
+    /// The cached result of the grid item placement algorithm (for grid containers that have been laid out).
+    /// Unlike `cache`, this remains valid when the node is marked as dirty: it is only discarded when an input
+    /// to the node's grid item placement changes (see `TaffyTree::invalidate_grid_placement`).
+    #[cfg(feature = "grid")]
+    pub(crate) grid_placement_cache: Option<Box<GridPlacementCache>>,
 }
 
 impl NodeData {
@@ -130,6 +136,8 @@ impl NodeData {
             has_context: false,
             hoisted_children: new_const_children_vec(),
             detailed_layout_info: DetailedLayoutInfo::None,
+            #[cfg(feature = "grid")]
+            grid_placement_cache: None,
         }
     }
 
@@ -548,6 +556,16 @@ where
     fn set_detailed_grid_info(&mut self, node_id: NodeId, detailed_grid_info: DetailedGridInfo) {
         self.taffy.nodes[node_id.into()].detailed_layout_info = DetailedLayoutInfo::Grid(Box::new(detailed_grid_info));
     }
+
+    #[inline(always)]
+    fn get_grid_placement_cache(&self, node_id: NodeId) -> Option<&GridPlacementCache> {
+        self.taffy.nodes[node_id.into()].grid_placement_cache.as_deref()
+    }
+
+    #[inline(always)]
+    fn set_grid_placement_cache(&mut self, node_id: NodeId, grid_placement_cache: GridPlacementCache) {
+        self.taffy.nodes[node_id.into()].grid_placement_cache = Some(Box::new(grid_placement_cache));
+    }
 }
 
 // RoundTree impl for TaffyView
@@ -675,6 +693,7 @@ impl<NodeContext> TaffyTree<NodeContext> {
             if let Some(children) = self.children.get_mut(parent.into()) {
                 children.retain(|f| *f != node);
             }
+            self.invalidate_grid_placement(parent);
             self.mark_dirty(parent)?;
         }
 
@@ -736,6 +755,7 @@ impl<NodeContext> TaffyTree<NodeContext> {
         let child_key = child.into();
         self.parents[child_key] = Some(parent);
         self.children[parent_key].push(child);
+        self.invalidate_grid_placement(parent);
         self.mark_dirty(parent)?;
 
         Ok(())
@@ -752,6 +772,7 @@ impl<NodeContext> TaffyTree<NodeContext> {
 
         self.parents[child.into()] = Some(parent);
         self.children[parent_key].insert(child_index, child);
+        self.invalidate_grid_placement(parent);
         self.mark_dirty(parent)?;
 
         Ok(())
@@ -779,6 +800,7 @@ impl<NodeContext> TaffyTree<NodeContext> {
         parent_children.clear();
         children.iter().for_each(|child| parent_children.push(*child));
 
+        self.invalidate_grid_placement(parent);
         self.mark_dirty(parent)?;
 
         Ok(())
@@ -805,6 +827,7 @@ impl<NodeContext> TaffyTree<NodeContext> {
         let child = self.children[parent_key].remove(child_index);
         self.parents[child.into()] = None;
 
+        self.invalidate_grid_placement(parent);
         self.mark_dirty(parent)?;
 
         Ok(child)
@@ -824,6 +847,7 @@ impl<NodeContext> TaffyTree<NodeContext> {
             self.parents[child.into()] = None;
         }
 
+        self.invalidate_grid_placement(parent);
         self.mark_dirty(parent)?;
         Ok(())
     }
@@ -848,6 +872,7 @@ impl<NodeContext> TaffyTree<NodeContext> {
         let old_child = core::mem::replace(&mut self.children[parent_key][child_index], new_child);
         self.parents[old_child.into()] = None;
 
+        self.invalidate_grid_placement(parent);
         self.mark_dirty(parent)?;
 
         Ok(old_child)
@@ -895,7 +920,29 @@ impl<NodeContext> TaffyTree<NodeContext> {
     /// Sets the [`Style`] of the provided `node`
     #[inline]
     pub fn set_style(&mut self, node: NodeId, style: Style) -> TaffyResult<()> {
+        // The grid item placement of the node's parent depends on these styles of the node
+        #[cfg(feature = "grid")]
+        let parent_grid_placement_is_affected = {
+            let old_style = &self.nodes[node.into()].style;
+            old_style.grid_row != style.grid_row
+                || old_style.grid_column != style.grid_column
+                || old_style.position != style.position
+                || old_style.display != style.display
+        };
+
         self.nodes[node.into()].style = style;
+
+        #[cfg(feature = "grid")]
+        {
+            // The node's own grid item placement depends on its grid container styles
+            self.invalidate_grid_placement(node);
+            if parent_grid_placement_is_affected {
+                if let Some(parent) = self.parents[node.into()] {
+                    self.invalidate_grid_placement(parent);
+                }
+            }
+        }
+
         self.mark_dirty(node)?;
         Ok(())
     }
@@ -929,6 +976,21 @@ impl<NodeContext> TaffyTree<NodeContext> {
     #[inline]
     pub fn detailed_layout_info(&self, node_id: NodeId) -> &DetailedLayoutInfo {
         &self.nodes[node_id.into()].detailed_layout_info
+    }
+
+    /// Discards the cached result of the grid item placement algorithm for `node` (if it has one).
+    ///
+    /// Unlike the layout cache (see [`mark_dirty`](Self::mark_dirty)), the result of grid item placement depends
+    /// only on `node`'s own styles, the list of its children, and the placement-related styles of those children
+    /// (not on the size or content of any node). So this is called for a node when its style is set, for the parent
+    /// of a node whose placement-related styles change, and for the parent of a node that is added or removed.
+    #[inline]
+    #[allow(unused_variables)]
+    fn invalidate_grid_placement(&mut self, node: NodeId) {
+        #[cfg(feature = "grid")]
+        {
+            self.nodes[node.into()].grid_placement_cache = None;
+        }
     }
 
     /// Marks the layout of this node and its ancestors as outdated

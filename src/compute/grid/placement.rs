@@ -1,6 +1,6 @@
 //! Implements placing items in the grid and resolving the implicit grid.
 //! <https://www.w3.org/TR/css-grid-1/#placement>
-use super::types::{CellOccupancyMatrix, CellOccupancyState, GridItem};
+use super::types::{CellOccupancyMatrix, CellOccupancyState, GridItem, TrackCounts};
 use super::{NamedLineResolver, OriginZeroLine, MAX_OZ_LINE, MIN_OZ_LINE};
 use crate::geometry::Line;
 use crate::geometry::{AbsoluteAxis, InBothAbsAxis};
@@ -26,6 +26,129 @@ fn resolve_indefinite_grid_span(position: OriginZeroLine, span: u16) -> Line<Ori
 
 /// A grid item's placement styles (`grid-row`/`grid-column`) resolved to origin-zero coordinates
 type ItemPlacement = InBothAbsAxis<Line<OriginZeroGridPlacement>>;
+
+/// The grid area that the placement algorithm placed an item in (in origin-zero coordinates)
+#[derive(Debug, Clone, Copy, PartialEq)]
+struct PlacedArea {
+    /// The item's row placement
+    row: Line<OriginZeroLine>,
+    /// The item's column placement
+    column: Line<OriginZeroLine>,
+}
+
+/// The cached output of the [grid item placement algorithm](https://www.w3.org/TR/css-grid-2/#placement)
+/// for a single grid container: the grid area of each of its in-flow children and the size of its implicit grid.
+///
+/// Placement does not depend on the sizes of the container or its items (with the exception of the number of
+/// `auto-fill`/`auto-fit` repetitions, which is recorded in the cache and checked when it is used), but it is run
+/// every time a grid container is sized or laid out. Storing a `GridPlacementCache` for each grid container via
+/// [`LayoutGridContainer::set_grid_placement_cache`](crate::LayoutGridContainer::set_grid_placement_cache) and
+/// returning it from
+/// [`LayoutGridContainer::get_grid_placement_cache`](crate::LayoutGridContainer::get_grid_placement_cache) allows
+/// Taffy to run placement once and then reuse the result, both across the multiple times that a grid container is
+/// typically sized during a single layout pass and across layout passes.
+///
+/// See [`LayoutGridContainer::get_grid_placement_cache`](crate::LayoutGridContainer::get_grid_placement_cache)
+/// for the conditions under which a stored cache must be discarded.
+#[derive(Debug, Clone, PartialEq)]
+pub struct GridPlacementCache {
+    /// The number of repetitions of the column template's `auto-fill`/`auto-fit` track list that placement was run with
+    col_auto_repetition_count: u16,
+    /// The number of repetitions of the row template's `auto-fill`/`auto-fit` track list that placement was run with
+    row_auto_repetition_count: u16,
+    /// The number of columns in the grid (as determined by placement)
+    column_counts: TrackCounts,
+    /// The number of rows in the grid (as determined by placement)
+    row_counts: TrackCounts,
+    /// The grid area of each in-flow child of the grid container, in document order
+    areas: Vec<PlacedArea>,
+}
+
+impl GridPlacementCache {
+    /// Record the result of running the placement algorithm
+    pub(super) fn new(
+        col_auto_repetition_count: u16,
+        row_auto_repetition_count: u16,
+        column_counts: TrackCounts,
+        row_counts: TrackCounts,
+        items: &[GridItem],
+    ) -> Self {
+        Self {
+            col_auto_repetition_count,
+            row_auto_repetition_count,
+            column_counts,
+            row_counts,
+            areas: items.iter().map(|item| PlacedArea { row: item.row, column: item.column }).collect(),
+        }
+    }
+
+    /// Whether placement was run with the passed numbers of `auto-fill`/`auto-fit` repetitions.
+    /// These are the only inputs to placement that depend on the size of the grid container.
+    #[inline]
+    pub(super) fn is_for_auto_repetition_counts(&self, columns: u16, rows: u16) -> bool {
+        self.col_auto_repetition_count == columns && self.row_auto_repetition_count == rows
+    }
+
+    /// The number of tracks in the grid in the passed axis (as determined by placement)
+    #[inline]
+    pub(super) fn track_counts(&self, axis: AbsoluteAxis) -> TrackCounts {
+        match axis {
+            AbsoluteAxis::Horizontal => self.column_counts,
+            AbsoluteAxis::Vertical => self.row_counts,
+        }
+    }
+}
+
+/// The equivalent of [`place_grid_items`] for a grid container whose placement has been cached.
+///
+/// A `GridItem` is created for each child yielded by `children_iter` in the same way, but each item's grid area
+/// is read from `cache` rather than being computed.
+///
+/// Returns `false` (leaving `items` empty) if the number of children does not match the number of cached grid
+/// areas, which means that the cache is stale: the caller must then fall back to running placement.
+pub(super) fn place_grid_items_from_cache<S: GridItemStyle>(
+    cache: &GridPlacementCache,
+    items: &mut Vec<GridItem>,
+    children_iter: impl Iterator<Item = (usize, NodeId, S)>,
+    align_items: AlignItems,
+    justify_items: AlignItems,
+) -> bool {
+    let mut areas = cache.areas.iter();
+    for (index, node, style) in children_iter {
+        let Some(area) = areas.next() else {
+            items.clear();
+            return false;
+        };
+        let mut item = GridItem::new_with_style_and_order(node, style, align_items, justify_items, index as u16);
+        item.row = area.row;
+        item.column = area.column;
+        items.push(item);
+    }
+    if areas.next().is_some() {
+        items.clear();
+        return false;
+    }
+    true
+}
+
+/// For each track of the grid in the passed axis (indexed like the `CellOccupancyMatrix`), whether any
+/// of the (already placed) items occupies that track.
+pub(super) fn tracks_with_items(items: &[GridItem], axis: AbsoluteAxis, track_counts: TrackCounts) -> Vec<bool> {
+    let track_count = track_counts.len();
+    let mut has_items = Vec::new();
+    has_items.resize(track_count, false);
+    for item in items {
+        let placement = match axis {
+            AbsoluteAxis::Horizontal => item.column,
+            AbsoluteAxis::Vertical => item.row,
+        };
+        let track_range = track_counts.oz_line_range_to_track_range(placement);
+        let start = (track_range.start.max(0) as usize).min(track_count);
+        let end = (track_range.end.max(0) as usize).min(track_count);
+        has_items[start..end.max(start)].fill(true);
+    }
+    has_items
+}
 
 /// 8.5. Grid Item Placement Algorithm
 /// Place items into the grid, generating new rows/column into the implicit grid as required
