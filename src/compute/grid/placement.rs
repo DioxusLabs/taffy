@@ -2,6 +2,7 @@
 //! <https://www.w3.org/TR/css-grid-1/#placement>
 use super::types::{CellOccupancyMatrix, CellOccupancyState, GridItem};
 use super::{NamedLineResolver, OriginZeroLine, MAX_OZ_LINE, MIN_OZ_LINE};
+use crate::compute::common::order::order_modified_permutation;
 use crate::geometry::Line;
 use crate::geometry::{AbsoluteAxis, InBothAbsAxis};
 use crate::style::{AlignItems, GridAutoFlow, OriginZeroGridPlacement};
@@ -54,7 +55,18 @@ pub(super) fn place_grid_items<'a, S>(
 
     // 0. Create the items (in document order) and resolve their placement styles
     let mut placements: Vec<ItemPlacement> = Vec::with_capacity(children_iter.size_hint().0);
+    let mut orders: Vec<i32> = Vec::new();
+    let mut has_ordered_item = false;
     for (index, node, style) in children_iter {
+        let order = style.order();
+        if order != 0 && !has_ordered_item {
+            has_ordered_item = true;
+            orders.reserve_exact(placements.capacity());
+            orders.resize(placements.len(), 0);
+        }
+        if has_ordered_item {
+            orders.push(order);
+        }
         placements.push(InBothAbsAxis {
             horizontal: named_line_resolver
                 .resolve_column_names(&style.grid_column())
@@ -66,10 +78,35 @@ pub(super) fn place_grid_items<'a, S>(
         items.push(GridItem::new_with_style_and_order(node, style, align_items, justify_items, index as u16));
     }
 
+    // CSS Grid §6.3: items are placed in order-modified document order. In the common case where
+    // no item sets the `order` property that is simply document order (the order of `items`).
+    // Otherwise a permutation of item indexes arranged by `order` is computed (keeping items with
+    // equal `order` values in document order) and the placement passes below visit items through it.
+    let order_modified_sequence: Option<Vec<u32>> = if has_ordered_item {
+        let sequence = order_modified_permutation(orders.iter().copied());
+        for (rank, &position) in sequence.iter().enumerate() {
+            items[position as usize].order = rank as u32;
+        }
+        Some(sequence)
+    } else {
+        for (rank, item) in items.iter_mut().enumerate() {
+            item.order = rank as u32;
+        }
+        None
+    };
+    let mut for_each_item_in_order =
+        |visit: &mut dyn FnMut(&mut GridItem, ItemPlacement)| match &order_modified_sequence {
+            None => items.iter_mut().zip(placements.iter()).for_each(|(item, &placement)| visit(item, placement)),
+            Some(sequence) => sequence.iter().for_each(|&position| {
+                let position = position as usize;
+                visit(&mut items[position], placements[position])
+            }),
+        };
+
     // 1. Place children with definite positions
-    for (item, &placement) in items.iter_mut().zip(placements.iter()) {
+    for_each_item_in_order(&mut |item, placement| {
         if !(placement.horizontal.is_definite() && placement.vertical.is_definite()) {
-            continue;
+            return;
         }
         #[cfg(test)]
         println!("Definite Item {}\n==============", item.source_order);
@@ -83,12 +120,12 @@ pub(super) fn place_grid_items<'a, S>(
             col_span,
             CellOccupancyState::DefinitelyPlaced,
         );
-    }
+    });
 
     // 2. Place remaining children with definite secondary axis positions
-    for (item, &placement) in items.iter_mut().zip(placements.iter()) {
+    for_each_item_in_order(&mut |item, placement| {
         if !(placement.get(secondary_axis).is_definite() && !placement.get(primary_axis).is_definite()) {
-            continue;
+            return;
         }
         #[cfg(test)]
         println!("Definite Secondary Item {}\n==============", item.source_order);
@@ -104,7 +141,7 @@ pub(super) fn place_grid_items<'a, S>(
             secondary_span,
             CellOccupancyState::AutoPlaced,
         );
-    }
+    });
 
     // 3. Determine the number of columns in the implicit grid
     // By the time we get to this point in the execution, this is actually already accounted for:
@@ -131,9 +168,9 @@ pub(super) fn place_grid_items<'a, S>(
     let secondary_axis_grid_start_line = cell_occupancy_matrix.track_counts(secondary_axis).implicit_start_line();
     let grid_start_position = (primary_axis_grid_start_line, secondary_axis_grid_start_line);
     let mut grid_position = grid_start_position;
-    for (item, &placement) in items.iter_mut().zip(placements.iter()) {
+    for_each_item_in_order(&mut |item, placement| {
         if placement.get(secondary_axis).is_definite() {
-            continue;
+            return;
         }
         #[cfg(test)]
         println!("\nAuto Item {}\n==============", item.source_order);
@@ -158,7 +195,7 @@ pub(super) fn place_grid_items<'a, S>(
             true => grid_start_position,
             false => (primary_span.end, secondary_span.start),
         };
-    }
+    });
 }
 
 /// 8.5. Grid Item Placement Algorithm

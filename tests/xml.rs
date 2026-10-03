@@ -400,6 +400,7 @@ fn build_style<S: CheapCloneStr>(xnode: roxmltree::Node) -> taffy::Style<S> {
         aspect_ratio: maybe_parse(xnode.attribute("aspect-ratio")),
         align_items: maybe_parse(xnode.attribute("align-items")),
         align_self: maybe_parse(xnode.attribute("align-self")),
+        order: parse_or_default(xnode.attribute("order")),
         justify_items: maybe_parse(xnode.attribute("justify-items")),
         justify_self: maybe_parse(xnode.attribute("justify-self")),
         align_content: maybe_parse(xnode.attribute("align-content")),

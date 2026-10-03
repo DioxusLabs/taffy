@@ -265,6 +265,7 @@ function describeElement(e) {
       alignContent: parseEnum(e.style.alignContent),
       justifyContent: parseEnum(e.style.justifyContent),
 
+      order: parseNumber(e.style.order),
       flexGrow: parseNumber(e.style.flexGrow),
       flexShrink: parseNumber(e.style.flexShrink),
       flexBasis: parseDimension(e.style.flexBasis),

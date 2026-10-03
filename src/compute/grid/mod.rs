@@ -603,7 +603,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     let container_alignment_styles = InBothAbsAxis { horizontal: justify_items, vertical: align_items };
 
     // Position in-flow children (stored in items vector)
-    for (index, item) in items.iter_mut().enumerate() {
+    for item in items.iter_mut() {
         // Tracks are stored in logical order. In RTL the physical offsets are assigned
         // right-to-left, so an item's physical left edge is derived from its logical end
         // line and its physical right edge from its logical start line.
@@ -625,7 +625,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
         let (overflow_contribution, y_position, height) = align_and_position_item(
             tree,
             item.node,
-            index as u32,
+            item.order,
             grid_area,
             container_alignment_styles,
             item.baseline_shim,
@@ -646,10 +646,11 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     }
 
     // Position hidden and absolutely positioned children, merging in the candidates bubbled out
-    // of in-flow children's subtrees (`items` is sorted by `source_order`, i.e. child index)
-    let mut order = items.len() as u32;
+    // of in-flow children's subtrees (`items` is in document order, i.e. by child index).
+    // Hidden and out-of-flow children are assigned their child index as their `Layout::order`.
     let mut in_flow_items = items.iter_mut().peekable();
     (0..tree.child_count(node)).for_each(|index| {
+        let order = index as u32;
         if let Some(item) = in_flow_items.next_if(|item| item.source_order as usize == index) {
             oof_candidates.append(&mut item.oof_candidates);
             return;
@@ -670,7 +671,6 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
                 SizingMode::InherentSize,
                 Line::FALSE,
             );
-            order += 1;
             return;
         }
 
@@ -767,8 +767,6 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
                     y: static_position_for_axis(y_alignment, Line { start: area.top, end: area.bottom }, false),
                 },
             });
-
-            order += 1;
         }
     });
 
