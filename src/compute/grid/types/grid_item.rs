@@ -281,11 +281,12 @@ impl GridItem {
     /// allow percentage sizes further down the tree to resolve properly in some cases
     ///
     /// Also returns the constraints that the item's own sizing styles place on the size that the item reports
+    /// (if any of the item's dimensions are not known)
     fn known_dimensions(
         &self,
         tree: &mut impl LayoutPartialTree,
         grid_area_size: Size<Option<f32>>,
-    ) -> (Size<Option<f32>>, ChildStyleConstraints) {
+    ) -> (Size<Option<f32>>, Option<ChildStyleConstraints>) {
         let margins = self.margins_axis_sums_with_baseline_shims(grid_area_size.width, tree);
 
         let aspect_ratio = self.aspect_ratio;
@@ -376,7 +377,10 @@ impl GridItem {
         // Clamp size by min and max width/height
         let Size { width, height } = Size { width, height }.maybe_clamp(min_size, max_size);
 
-        let constraints = ChildStyleConstraints {
+        // The item's own sizing styles only constrain the size that it reports in axes in which
+        // its size is not already known
+        let known_dimensions = Size { width, height };
+        let constraints = (!known_dimensions.both_axis_defined()).then(|| ChildStyleConstraints {
             min_size,
             max_size,
             untransferred_max_size,
@@ -386,9 +390,9 @@ impl GridItem {
                 .margin
                 .resolve_or_zero(grid_area_size.width, |val, basis| tree.calc(val, basis))
                 .sum_axes(),
-        };
+        });
 
-        (Size { width, height }, constraints)
+        (known_dimensions, constraints)
     }
 
     /// Returns the grid area's size in the specified axis when every spanned track has a definite fixed size.
@@ -526,7 +530,7 @@ impl GridItem {
                 run_mode: RunMode::ComputeSize,
                 vertical_margins_are_collapsible: Line::FALSE,
             },
-            &constraints,
+            constraints.as_ref(),
         )
         .size
         .get_abs(axis)
@@ -580,7 +584,7 @@ impl GridItem {
                 run_mode: RunMode::ComputeSize,
                 vertical_margins_are_collapsible: Line::FALSE,
             },
-            &constraints,
+            constraints.as_ref(),
         )
         .size
         .get_abs(axis)
