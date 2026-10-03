@@ -327,6 +327,28 @@ fn compute_in_flow_root_layout(
     (layout, output.oof_candidates.take())
 }
 
+/// Compute the layout of a child node, resolving and applying the child's own sizing styles on its behalf.
+///
+/// A node never applies its own `size` style (and leaf nodes do not apply their own `min_size`, `max_size`
+/// or `aspect_ratio` styles either): the node's parent is responsible for applying them. This function
+/// is for parents that do not have their own rules for resolving those styles. It:
+///
+///   - Resolves the child's `size` style (clamped by its `min_size` and `max_size` styles) into the known
+///     dimensions of `inputs`, in any axis for which `inputs` does not already contain a known dimension
+///   - Calls [`LayoutPartialTree::compute_child_layout`] with the resulting inputs
+///   - Applies the child's `min_size`, `max_size` and `aspect_ratio` styles to the size that the child
+///     reports, in any axis in which the child's size was not known
+///
+/// This is how Taffy's block and grid algorithms and [`compute_root_layout`] lay out the nodes that they
+/// are responsible for. Custom layout algorithms which lay out children can use it to do the same.
+pub fn compute_child_layout_with_styles(
+    tree: &mut impl LayoutPartialTree,
+    node_id: NodeId,
+    inputs: LayoutInput,
+) -> LayoutOutput {
+    LayoutPartialTreeExt::compute_child_layout_with_styles(tree, node_id, inputs)
+}
+
 /// Attempts to find a cached layout for the specified node and layout inputs.
 ///
 /// Uses the provided closure to compute the layout (and then stores the result in the cache) if no cached layout is found.
