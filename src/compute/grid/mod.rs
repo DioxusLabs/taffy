@@ -325,6 +325,16 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     let initial_column_sum = columns.iter().map(|track| track.base_size).sum::<f32>();
     inner_node_size.width = inner_node_size.width.or_else(|| initial_column_sum.into());
 
+    // If only the container's width has been requested then we can skip sizing the rows entirely (which avoids
+    // measuring the height of every item), as column sizing is not re-run when only computing the container's size.
+    // Note: the short-circuit above has already handled the case where the container's width is known.
+    if run_mode == RunMode::ComputeSize && inputs.axis == RequestedAxis::Horizontal {
+        let width = (initial_column_sum + content_box_inset.horizontal_axis_sum())
+            .maybe_clamp(min_size.width, max_size.width)
+            .max(padding_border_size.width);
+        return LayoutOutput::from_outer_size(Size { width, height: 0.0 });
+    }
+
     items.iter_mut().for_each(|item| item.grid_area_size_cache = None);
 
     // Run track sizing algorithm for Block axis

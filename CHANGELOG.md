@@ -36,6 +36,7 @@
 ### Changed
 
 - Grid: intrinsic track sizing no longer measures an item's min-/max-content contribution in a step where none of the item's spanned tracks can receive that contribution (e.g. items spanning only `minmax(0, 1fr)` or fixed tracks). This matches Blink and avoids redundant, sometimes very expensive, measurement of large subtrees under a min-content constraint.
+- Grid: a grid container that is only asked for its width (`RunMode::ComputeSize` with `RequestedAxis::Horizontal`) now returns as soon as its columns have been sized rather than going on to size its rows, which measured the height of each of its items for no benefit. This makes the layout of nested grids considerably faster (15-30% in Taffy's `grid/deep` benchmarks).
 
 ### Fixed
 
