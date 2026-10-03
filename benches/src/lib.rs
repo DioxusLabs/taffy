@@ -47,12 +47,19 @@ pub fn benchmark_group<'a>(c: &'a mut Criterion, name: &str) -> BenchmarkGroup<'
     group
 }
 
-/// Runs `timed_run` once per iteration and reports the mean of the times that it returns.
+/// Runs `timed_run` once per iteration and reports the *fastest* run as the time per iteration of the sample.
 ///
 /// `timed_run` returns the time taken by the part of the run that is being benchmarked, which keeps setup and
 /// teardown (building, invalidating and dropping trees) out of the measurement.
+///
+/// The benchmarked code is deterministic, so noise (preemption, interrupts, frequency scaling, a noisy neighbour
+/// evicting our caches, etc) only ever makes a run slower. The fastest run is therefore a more repeatable estimate
+/// of the cost of the code than the mean, but it is a best case rather than a typical one.
 pub fn iter_timed(b: &mut Bencher, mut timed_run: impl FnMut() -> Duration) {
-    b.iter_custom(|iters| (0..iters).map(|_| timed_run()).sum())
+    b.iter_custom(|iters| {
+        let fastest = (0..iters).map(|_| timed_run()).min().unwrap_or_default();
+        fastest.saturating_mul(iters.try_into().unwrap_or(u32::MAX))
+    })
 }
 
 /// Benchmark laying out a tree from scratch (with no cached layout results).
