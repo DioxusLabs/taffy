@@ -22,10 +22,7 @@ use super::common::alignment::apply_alignment_fallback;
 #[cfg(feature = "content_size")]
 use super::common::scrollable_overflow::compute_scrollable_overflow_contribution;
 use super::common::sizing_keyword::{resolve_sizing_keyword, SizingKeywordResolution};
-use super::ratio::{
-    derived_width_has_content_minimum, percentage_basis_height, sizes_through_ratio, transfer_into_unsized, BoxSizes,
-    Ratio,
-};
+use super::ratio::{derived_width_has_content_minimum, sizes_through_ratio, transfer_into_unsized, BoxSizes, Ratio};
 
 /// The intermediate results of a flexbox calculation for a single item
 struct FlexItem {
@@ -144,6 +141,17 @@ impl FlexItem {
     /// Returns true if the item is a <https://www.w3.org/TR/css-overflow-3/#scroll-container>
     fn is_scroll_container(&self) -> bool {
         self.overflow.x.is_scroll_container() | self.overflow.y.is_scroll_container()
+    }
+
+    /// Returns true if the item is stretched to the cross size of its flex line: its cross size is
+    /// `stretch`, or it is `auto` with `align-self: stretch`, and neither of its cross-axis margins
+    /// are `auto`.
+    /// See <https://www.w3.org/TR/css-flexbox-1/#algo-stretch>
+    fn stretches_to_line(&self, dir: FlexDirection) -> bool {
+        let cross_size = self.size_style.cross(dir);
+        !self.margin_is_auto.cross_start(dir)
+            && !self.margin_is_auto.cross_end(dir)
+            && (cross_size.is_stretch() || (self.align_self == AlignSelf::STRETCH && cross_size.is_auto()))
     }
 
     /// Returns true if the item participates in baseline alignment: it has `align-self: baseline`
@@ -334,8 +342,12 @@ pub fn compute_flexbox_layout(
     }
 
     debug_log!("FLEX:", dbg:style.flex_direction());
-    // The height that the ratio derives from the container's width
-    let ratio_derived_height = match (styled_based_known_dimensions.width, styled_based_known_dimensions.height) {
+    // If the container's height is derived from its width by its aspect ratio, and that height is
+    // one that the container's content can exceed, then it is the container's height as far as its
+    // items are concerned (it is the limit that a column's lines wrap against, and a definite
+    // cross size for the items of a row), but the container still grows to fit taller content.
+    // https://www.w3.org/TR/css-sizing-4/#aspect-ratio-minimum
+    let content_floored_height = match (styled_based_known_dimensions.width, styled_based_known_dimensions.height) {
         (Some(width), None) if super::ratio::derived_height_is_minimum(&style, style_min_size.height) => {
             Ratio::of(&style, padding_border_sum).map(|ratio| {
                 ratio
@@ -348,38 +360,25 @@ pub fn compute_flexbox_layout(
     };
     drop(style);
 
-    // A ratio-derived height is the container's height unless its content is taller than that
-    let mut styled_based_known_dimensions = styled_based_known_dimensions;
-    if let Some(derived_height) = ratio_derived_height {
-        let content_height = compute_preliminary(
-            tree,
-            node,
-            LayoutInput {
-                run_mode: RunMode::ComputeSize,
-                axis: RequestedAxis::Vertical,
-                known_dimensions: styled_based_known_dimensions,
-                available_space: Size { width: inputs.available_space.width, height: AvailableSpace::MinContent },
-                ..inputs
-            },
-        )
-        .size
-        .height;
-        if content_height <= derived_height {
-            styled_based_known_dimensions.height = Some(derived_height);
-        }
-    }
-    let known_dimensions = known_dimensions.or(styled_based_known_dimensions);
-
     // Normalize the definiteness flags: they only apply to dimensions which were passed in as known
     // by the parent. Dimensions resolved from the node's own style are always definite.
-    let known_dimensions_are_definite = inputs
+    let mut known_dimensions_are_definite = inputs
         .known_dimensions_are_definite
         .zip_map(known_dimensions, |is_definite, known_dimension| is_definite || known_dimension.is_none());
+    // A height derived from the width is as definite as the width is
+    if content_floored_height.is_some() {
+        known_dimensions_are_definite.height = known_dimensions_are_definite.width;
+    }
 
     let mut output = compute_preliminary(
         tree,
         node,
-        LayoutInput { known_dimensions: styled_based_known_dimensions, known_dimensions_are_definite, ..inputs },
+        LayoutInput {
+            known_dimensions: styled_based_known_dimensions.map_height(|height| height.or(content_floored_height)),
+            known_dimensions_are_definite,
+            ..inputs
+        },
+        content_floored_height.is_some(),
     );
 
     // Layout containment suppresses the box's baseline for baseline-alignment purposes
@@ -391,8 +390,17 @@ pub fn compute_flexbox_layout(
 }
 
 /// Compute a preliminary size for an item
-fn compute_preliminary(tree: &mut impl LayoutFlexboxContainer, node: NodeId, inputs: LayoutInput) -> LayoutOutput {
+///
+/// `height_is_content_floored` is whether the known height is one that the container's aspect ratio
+/// derives from its width, which the container's content can exceed.
+fn compute_preliminary(
+    tree: &mut impl LayoutFlexboxContainer,
+    node: NodeId,
+    inputs: LayoutInput,
+    height_is_content_floored: bool,
+) -> LayoutOutput {
     let LayoutInput { known_dimensions, parent_size, available_space, run_mode, .. } = inputs;
+    let outer_available_space = available_space;
 
     // Define some general constants we will need for the remainder of the algorithm.
     let mut constants = compute_constants(
@@ -403,6 +411,15 @@ fn compute_preliminary(tree: &mut impl LayoutFlexboxContainer, node: NodeId, inp
         parent_size,
         available_space,
     );
+
+    // The container's own size is determined as if its height was not known and the height derived
+    // from its width was its minimum height, so that content taller than that makes it taller.
+    let size_determining_known_dimensions = if height_is_content_floored {
+        constants.min_size.height = known_dimensions.height.maybe_max(constants.min_size.height);
+        Size { height: None, ..known_dimensions }
+    } else {
+        known_dimensions
+    };
 
     // 9. Flex Layout Algorithm
 
@@ -477,6 +494,7 @@ fn compute_preliminary(tree: &mut impl LayoutFlexboxContainer, node: NodeId, inp
                 known_dimensions_are_definite: Size { width: true, ..inputs.known_dimensions_are_definite },
                 ..inputs
             },
+            height_is_content_floored,
         );
     }
 
@@ -512,7 +530,16 @@ fn compute_preliminary(tree: &mut impl LayoutFlexboxContainer, node: NodeId, inp
     // If container size is undefined, determine the container's main size
     // and then re-resolve gaps based on newly determined size
     debug_log!("determine_container_main_size");
-    if let Some(inner_main_size) = constants.node_inner_size.main(constants.dir) {
+    if height_is_content_floored && constants.is_column {
+        // The lines have been collected against the height derived from the container's width.
+        // The container's height is that height, or the height of its longest line if that is taller.
+        constants.node_outer_size.height = None;
+        let available_space =
+            determine_available_space(size_determining_known_dimensions, outer_available_space, &constants);
+        determine_container_main_size(tree, available_space, &mut flex_lines, &mut constants);
+        constants.node_inner_size.height = Some(constants.inner_container_size.height);
+        constants.node_outer_size.height = Some(constants.container_size.height);
+    } else if let Some(inner_main_size) = constants.node_inner_size.main(constants.dir) {
         let outer_main_size = inner_main_size + constants.content_box_inset.main_axis_sum(constants.dir);
         constants.inner_container_size.set_main(constants.dir, inner_main_size);
         constants.container_size.set_main(constants.dir, outer_main_size);
@@ -557,11 +584,11 @@ fn compute_preliminary(tree: &mut impl LayoutFlexboxContainer, node: NodeId, inp
 
     // 8. Calculate the cross size of each flex line.
     debug_log!("calculate_cross_size");
-    calculate_cross_size(&mut flex_lines, known_dimensions, &constants);
+    calculate_cross_size(&mut flex_lines, size_determining_known_dimensions, height_is_content_floored, &constants);
 
     // 9. Handle 'align-content: stretch'.
     debug_log!("handle_align_content_stretch");
-    handle_align_content_stretch(&mut flex_lines, known_dimensions, &constants);
+    handle_align_content_stretch(&mut flex_lines, size_determining_known_dimensions, &constants);
 
     // 10. Collapse visibility:collapse items. If any flex items have visibility: collapse,
     //     note the cross size of the line they’re in as the item’s strut size, and restart
@@ -596,7 +623,8 @@ fn compute_preliminary(tree: &mut impl LayoutFlexboxContainer, node: NodeId, inp
 
     // 15. Determine the flex container’s used cross size.
     debug_log!("determine_container_cross_size");
-    let total_line_cross_size = determine_container_cross_size(&flex_lines, known_dimensions, &mut constants);
+    let total_line_cross_size =
+        determine_container_cross_size(&flex_lines, size_determining_known_dimensions, &mut constants);
 
     // We have the container size.
     // If our caller does not care about performing layout we are done now.
@@ -731,13 +759,7 @@ fn compute_constants(
     };
 
     let node_outer_size = known_dimensions;
-    // Percentages resolve against the height that the container's aspect ratio derives from its
-    // width, even if the content of the container then makes it taller than that
-    let node_inner_size = node_outer_size
-        .map_height(|height| {
-            height.or_else(|| percentage_basis_height(&style, padding_border_sum, node_outer_size.width))
-        })
-        .maybe_sub(content_box_inset.sum_axes());
+    let node_inner_size = node_outer_size.maybe_sub(content_box_inset.sum_axes());
     let known_main_size_is_definite = known_dimensions_are_definite.main(dir);
     let has_definite_main_size = known_main_size_is_definite && known_dimensions.main(dir).is_some();
     let has_definite_cross_size = known_dimensions_are_definite.cross(dir) && known_dimensions.cross(dir).is_some();
@@ -2257,7 +2279,18 @@ fn calculate_children_base_lines(
 ///
 /// - [**Calculate the cross size of each flex line**](https://www.w3.org/TR/css-flexbox-1/#algo-cross-line).
 #[inline]
-fn calculate_cross_size(flex_lines: &mut [FlexLine], node_size: Size<Option<f32>>, constants: &AlgoConstants) {
+fn calculate_cross_size(
+    flex_lines: &mut [FlexLine],
+    node_size: Size<Option<f32>>,
+    height_is_content_floored: bool,
+    constants: &AlgoConstants,
+) {
+    // The line of a single-line row container whose height is derived from its width by its aspect
+    // ratio is at least that height (which is the container's minimum cross size). The items that
+    // stretch to the line are sized by that line rather than sizing it, so only the others can make
+    // the line (and so the container) taller than the derived height.
+    let stretched_items_size_line = !(height_is_content_floored && constants.is_row && !constants.is_wrap);
+
     // If the flex container is single-line and has a definite cross size,
     // the cross size of the flex line is the flex container’s inner cross size.
     if !constants.is_wrap && node_size.cross(constants.dir).is_some() {
@@ -2289,6 +2322,7 @@ fn calculate_cross_size(flex_lines: &mut [FlexLine], node_size: Size<Option<f32>
             line.cross_size = line
                 .items
                 .iter()
+                .filter(|child| stretched_items_size_line || !child.stretches_to_line(constants.dir))
                 .map(|child| {
                     if child.participates_in_baseline_alignment(constants.dir) {
                         max_baseline - child.baseline + child.hypothetical_outer_size.cross(constants.dir)
@@ -2369,15 +2403,9 @@ fn determine_used_cross_size(
             let child_style = tree.get_flexbox_child_style(child.node);
             // A cross size of `stretch` stretches to the flex line like align-self: stretch
             // (but regardless of the alignment style)
-            let cross_is_stretch = child.size_style.cross(constants.dir).is_stretch();
             child.target_size.set_cross(
                 constants.dir,
-                if !child.margin_is_auto.cross_start(constants.dir)
-                    && !child.margin_is_auto.cross_end(constants.dir)
-                    && (cross_is_stretch
-                        || (child.align_self == AlignSelf::STRETCH
-                            && child_style.size().cross(constants.dir).is_auto()))
-                {
+                if child.stretches_to_line(constants.dir) {
                     // For some reason this particular usage of max_width is an exception to the rule that max_width's transfer
                     // using the aspect_ratio (if set). Both Chrome and Firefox agree on this. And reading the spec, it seems like
                     // a reasonable interpretation. Although it seems to me that the spec *should* apply aspect_ratio here.

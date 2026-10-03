@@ -1,0 +1,19 @@
+<test name="aspect_ratio_flex_container_ratio_height_row_stretch_taller_content__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="flex" direction="rtl" position="absolute" width="200px" aspect-ratio="2">
+      <div display="block" direction="rtl" position="relative" width="50px">
+        <div display="block" direction="rtl" position="relative" height="150px"/>
+      </div>
+      <div display="block" direction="rtl" position="relative" width="50px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="200" height="100">
+      <node x="150" y="0" width="50" height="100">
+        <node x="0" y="0" width="50" height="150"/>
+      </node>
+      <node x="100" y="0" width="50" height="100"/>
+    </node>
+  </expectations>
+</test>
