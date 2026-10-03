@@ -65,6 +65,41 @@ mod caching {
         assert_eq!(taffy.get_node_context_mut(leaf).unwrap().count, 6);
     }
 
+    /// A flex container that is only asked for its main size (e.g. because it is an item of a grid
+    /// whose tracks are being sized) must not measure the cross size of its items.
+    /// (Without that short-circuit the leaf is measured 13 times in the row case and 12 times in the column case)
+    #[test]
+    #[cfg(all(feature = "grid", feature = "flexbox"))]
+    fn measure_count_flex_in_grid() {
+        for (flex_direction, expected_count) in [(FlexDirection::Row, 10), (FlexDirection::Column, 11)] {
+            let mut taffy = new_test_tree();
+
+            let text = TestNodeContext::ahem_text(
+                "HH\u{200B}HH\u{200B}HH\u{200B}HH".to_string(),
+                taffy_test_helpers::WritingMode::Horizontal,
+            );
+            let leaf = taffy.new_leaf_with_context(Style::default(), text).unwrap();
+            let flex = taffy
+                .new_with_children(Style { display: Display::Flex, flex_direction, ..Default::default() }, &[leaf])
+                .unwrap();
+            let grid = taffy
+                .new_with_children(
+                    Style {
+                        display: Display::Grid,
+                        size: Size { width: length(50.0), height: auto() },
+                        ..Default::default()
+                    },
+                    &[flex],
+                )
+                .unwrap();
+
+            taffy.compute_layout_with_measure(grid, Size::MAX_CONTENT, test_measure_function).unwrap();
+            let count = taffy.get_node_context_mut(leaf).unwrap().count;
+            assert_eq!(taffy.layout(leaf).unwrap().size, Size { width: 50.0, height: 20.0 });
+            assert_eq!(count, expected_count);
+        }
+    }
+
     /// A node's size measured for one axis must not be returned from the cache when the other
     /// axis is queried, as the size in the non-requested axis is not guaranteed to be valid.
     #[test]

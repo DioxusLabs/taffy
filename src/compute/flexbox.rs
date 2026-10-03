@@ -411,6 +411,20 @@ fn compute_preliminary(tree: &mut impl LayoutFlexboxContainer, node: NodeId, inp
         constants.gap.set_main(constants.dir, new_gap);
     }
 
+    // If only the container's main size has been requested then we are done, as nothing below changes it. This
+    // avoids measuring the cross size of every item.
+    if run_mode == RunMode::ComputeSize {
+        let main_axis_is_requested = match inputs.axis {
+            RequestedAxis::Horizontal => constants.dir.is_row(),
+            RequestedAxis::Vertical => constants.dir.is_column(),
+            RequestedAxis::Both => false,
+        };
+        if main_axis_is_requested {
+            let size = Size::ZERO.with_main(constants.dir, constants.container_size.main(constants.dir));
+            return LayoutOutput::from_outer_size(size);
+        }
+    }
+
     // 6. Resolve the flexible lengths of all the flex items to find their used main size.
     debug_log!("resolve_flexible_lengths");
     for line in &mut flex_lines {
