@@ -656,42 +656,51 @@ fn resolve_intrinsic_track_sizes<Tree: LayoutPartialTree>(
                     }
                     _ => unreachable!(),
                 };
-                let growth_limit_min_content_contribution = if !item.overflow.get(axis).is_scroll_container() {
+                axis_tracks[track_index as usize].base_size = new_base_size;
+
+                // Handle growth limits
+                //
+                // Computing an item's contributions calls into the child, so they are only computed if they are used.
+                // The min-content contribution is computed for every item in an intrinsic track (even where only the
+                // max-content contribution determines the growth limit), as the check for whether track sizing needs
+                // to be re-run compares each such item's min-content contribution against the one cached here.
+                let track = &axis_tracks[track_index as usize];
+                let max_track_sizing_function = track.max_track_sizing_function;
+                let fit_content_limit = track.fit_content_limit(axis_inner_node_size);
+                let min_content_contribution = if track.has_intrinsic_sizing_function() {
                     Some(item_sizer.min_content_contribution(item, axis_tracks))
                 } else {
                     None
                 };
-                let growth_limit_max_content_contribution = item_sizer.max_content_contribution(item, axis_tracks);
-                let growth_limit_intrinsic_min_content_contribution =
-                    item_sizer.min_content_contribution(item, axis_tracks);
-                let track = &mut axis_tracks[track_index as usize];
-                track.base_size = new_base_size;
-
-                // Handle growth limits
-                if track.max_track_sizing_function.is_fit_content() {
-                    // If item is not a scroll container, then increase the growth limit to at least the
-                    // size of the min-content contribution
-                    if let Some(min_content_contribution) = growth_limit_min_content_contribution {
-                        track.growth_limit_planned_increase =
-                            f32_max(track.growth_limit_planned_increase, min_content_contribution);
-                    }
-
+                let planned_increase = if max_track_sizing_function.is_fit_content() {
                     // Always increase the growth limit to at least the size of the *fit-content limited*
                     // max-content contribution
-                    let fit_content_limit = track.fit_content_limit(axis_inner_node_size);
-                    let max_content_contribution = f32_min(growth_limit_max_content_contribution, fit_content_limit);
-                    track.growth_limit_planned_increase =
-                        f32_max(track.growth_limit_planned_increase, max_content_contribution);
-                } else if track.max_track_sizing_function.is_max_content_alike()
-                    || track.max_track_sizing_function.uses_percentage() && axis_inner_node_size.is_none()
+                    let max_content_contribution =
+                        f32_min(item_sizer.max_content_contribution(item, axis_tracks), fit_content_limit);
+
+                    // If item is not a scroll container, then increase the growth limit to at least the
+                    // size of the min-content contribution
+                    match min_content_contribution {
+                        Some(min_content_contribution) if !item.overflow.get(axis).is_scroll_container() => {
+                            Some(f32_max(min_content_contribution, max_content_contribution))
+                        }
+                        _ => Some(max_content_contribution),
+                    }
+                } else if max_track_sizing_function.is_max_content_alike()
+                    || max_track_sizing_function.uses_percentage() && axis_inner_node_size.is_none()
                 {
                     // If the container size is indefinite and has not yet been resolved then percentage sized
                     // tracks should be treated as auto (this matches Chrome's behaviour and seems sensible)
+                    Some(item_sizer.max_content_contribution(item, axis_tracks))
+                } else if max_track_sizing_function.is_intrinsic() {
+                    min_content_contribution
+                } else {
+                    None
+                };
+                if let Some(planned_increase) = planned_increase {
+                    let track = &mut axis_tracks[track_index as usize];
                     track.growth_limit_planned_increase =
-                        f32_max(track.growth_limit_planned_increase, growth_limit_max_content_contribution);
-                } else if track.max_track_sizing_function.is_intrinsic() {
-                    track.growth_limit_planned_increase =
-                        f32_max(track.growth_limit_planned_increase, growth_limit_intrinsic_min_content_contribution);
+                        f32_max(track.growth_limit_planned_increase, planned_increase);
                 }
             }
 
