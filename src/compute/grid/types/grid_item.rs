@@ -48,9 +48,9 @@ pub(in super::super) struct GridItem {
     /// The item's size style
     pub size: Size<Dimension>,
     /// The item's min_size style
-    pub min_size: Size<LengthPercentageAuto>,
+    pub min_size: Size<Dimension>,
     /// The item's max_size style
-    pub max_size: Size<LengthPercentageAuto>,
+    pub max_size: Size<Dimension>,
     /// The item's aspect_ratio style
     pub aspect_ratio: Option<f32>,
     /// The item's padding style

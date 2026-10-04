@@ -156,12 +156,12 @@ pub trait CoreStyle {
     }
     /// Controls the minimum size of the item
     #[inline(always)]
-    fn min_size(&self) -> Size<LengthPercentageAuto> {
+    fn min_size(&self) -> Size<Dimension> {
         Style::<Self::CustomIdent>::DEFAULT.min_size
     }
     /// Controls the maximum size of the item
     #[inline(always)]
-    fn max_size(&self) -> Size<LengthPercentageAuto> {
+    fn max_size(&self) -> Size<Dimension> {
         Style::<Self::CustomIdent>::DEFAULT.max_size
     }
     /// Sets the preferred aspect ratio for the item
@@ -722,10 +722,10 @@ pub struct Style<S: CheapCloneStr = DefaultCheapStr> {
     pub size: Size<Dimension>,
     /// Controls the minimum size of the item
     #[cfg_attr(feature = "serde", serde(default = "style_helpers::auto"))]
-    pub min_size: Size<LengthPercentageAuto>,
+    pub min_size: Size<Dimension>,
     /// Controls the maximum size of the item
     #[cfg_attr(feature = "serde", serde(default = "style_helpers::auto"))]
-    pub max_size: Size<LengthPercentageAuto>,
+    pub max_size: Size<Dimension>,
     /// Sets the preferred aspect ratio for the item
     ///
     /// The ratio is calculated as width divided by height.
@@ -975,11 +975,11 @@ impl<S: CheapCloneStr> CoreStyle for Style<S> {
         self.size
     }
     #[inline(always)]
-    fn min_size(&self) -> Size<LengthPercentageAuto> {
+    fn min_size(&self) -> Size<Dimension> {
         self.min_size
     }
     #[inline(always)]
-    fn max_size(&self) -> Size<LengthPercentageAuto> {
+    fn max_size(&self) -> Size<Dimension> {
         self.max_size
     }
     #[inline(always)]
@@ -1067,11 +1067,11 @@ impl<T: CoreStyle> CoreStyle for &'_ T {
         (*self).size()
     }
     #[inline(always)]
-    fn min_size(&self) -> Size<LengthPercentageAuto> {
+    fn min_size(&self) -> Size<Dimension> {
         (*self).min_size()
     }
     #[inline(always)]
-    fn max_size(&self) -> Size<LengthPercentageAuto> {
+    fn max_size(&self) -> Size<Dimension> {
         (*self).max_size()
     }
     #[inline(always)]
