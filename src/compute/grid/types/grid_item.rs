@@ -304,7 +304,7 @@ impl GridItem {
                 return (entry.known_dimensions, entry.constraints);
             }
         }
-        let (known_dimensions, constraints) = self.known_dimensions(tree, grid_area_size);
+        let (known_dimensions, constraints) = self.known_dimensions(tree, grid_area_size, AvailableSpace::MaxContent);
         self.known_dimensions_cache = Some(KnownDimensionsCacheEntry { grid_area_size, known_dimensions, constraints });
         (known_dimensions, constraints)
     }
@@ -315,10 +315,14 @@ impl GridItem {
     ///
     /// Also returns the constraints that the item's own sizing styles place on the size that the item reports
     /// (if any of the item's dimensions are not known)
+    ///
+    /// `fit_content_max_fallback` is the constraint that a `fit-content` max width is measured under if the
+    /// width of the grid area is indefinite
     fn known_dimensions(
         &self,
         tree: &mut impl LayoutPartialTree,
         grid_area_size: Size<Option<f32>>,
+        fit_content_max_fallback: AvailableSpace,
     ) -> (Size<Option<f32>>, Option<ChildStyleConstraints>) {
         let margins = self.margins_axis_sums_with_baseline_shims(grid_area_size.width, tree);
 
@@ -438,6 +442,7 @@ impl GridItem {
                     min_size.width,
                     padding_border_size.width,
                     grid_area_minus_item_margins_size.width,
+                    fit_content_max_fallback,
                     height,
                     grid_area_size,
                     AvailableSpace::MaxContent,
@@ -576,7 +581,17 @@ impl GridItem {
         grid_area_size: Size<Option<f32>>,
         available_space: Size<Option<f32>>,
     ) -> f32 {
-        let (known_dimensions, constraints) = self.known_dimensions_cached(tree, grid_area_size);
+        // A `fit-content` max width that cannot be resolved against the grid area is the min-content width
+        // when computing the item's min-content contribution (and the max-content width otherwise).
+        let (known_dimensions, constraints) = if grid_area_size.width.is_none()
+            && self.max_size.width.is_sizing_keyword()
+            && !self.max_size.width.is_stretch()
+            && !self.size.width.is_auto()
+        {
+            self.known_dimensions(tree, grid_area_size, AvailableSpace::MinContent)
+        } else {
+            self.known_dimensions_cached(tree, grid_area_size)
+        };
         // If the item's size in the axis being measured is already known then that size is its contribution,
         // and we can avoid calling into the child entirely.
         if let Some(size) = known_dimensions.get(axis) {
@@ -738,11 +753,50 @@ impl GridItem {
         let padding_border_size = (padding + border).sum_axes();
         let box_sizing_adjustment =
             if self.box_sizing == BoxSizing::ContentBox { padding_border_size } else { Size::ZERO };
-        self.size
+        let preferred_size = self
+            .size
             .maybe_resolve(grid_area_size, |val, basis| tree.calc(val, basis))
             .maybe_apply_aspect_ratio(self.aspect_ratio)
             .maybe_add(box_sizing_adjustment)
-            .get(axis)
+            .get(axis);
+        // A definite preferred size is the item's min-content contribution, which is subject to the item's
+        // min and max sizes. A `stretch` min or max size is cyclic here, and behaves as the initial value.
+        if let Some(size) = preferred_size {
+            let resolve = |style: Size<Dimension>| {
+                style
+                    .maybe_resolve(grid_area_size, |val, basis| tree.calc(val, basis))
+                    .maybe_apply_aspect_ratio(self.aspect_ratio)
+                    .maybe_add(box_sizing_adjustment)
+                    .get(axis)
+            };
+            let min_size = resolve(self.min_size);
+            let max_size = resolve(self.max_size);
+            let size = size.maybe_min(max_size);
+            let min_style = self.min_size.get(axis);
+            let max_style = self.max_size.get(axis);
+            if axis == AbstractAxis::Inline
+                && ((min_style.is_sizing_keyword() && !min_style.is_stretch())
+                    || (max_style.is_sizing_keyword() && !max_style.is_stretch()))
+            {
+                let keyword = |style: Dimension| if style.is_stretch() { Dimension::auto() } else { style };
+                return tree.clamp_width_by_min_max_sizing_keywords(
+                    self.node,
+                    size,
+                    keyword(min_style),
+                    keyword(max_style),
+                    min_size,
+                    padding_border_size.width,
+                    None,
+                    AvailableSpace::MinContent,
+                    None,
+                    grid_area_size.with(axis, None),
+                    AvailableSpace::MaxContent,
+                    Line::FALSE,
+                );
+            }
+            return size.maybe_max(min_size).max(padding_border_size.get(axis));
+        }
+        None::<f32>
             .or_else(|| {
                 self.min_size
                     .maybe_resolve(grid_area_size, |val, basis| tree.calc(val, basis))

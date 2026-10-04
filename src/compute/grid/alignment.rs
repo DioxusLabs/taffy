@@ -355,6 +355,7 @@ pub(super) fn align_and_position_item(
                 min_size.width,
                 padding_border_size.width,
                 Some(grid_area_minus_item_margins_size.width),
+                AvailableSpace::MaxContent,
                 height,
                 grid_area_size.map(Option::Some),
                 AvailableSpace::Definite(grid_area_minus_item_margins_size.height),

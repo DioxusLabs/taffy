@@ -904,6 +904,10 @@ pub(crate) trait LayoutPartialTreeExt: LayoutPartialTree {
                     constraints.min_size.width,
                     constraints.padding_border_size.width,
                     min_max_stretch_size(inputs.parent_size, inputs.available_space).width,
+                    match inputs.available_space.width {
+                        AvailableSpace::MinContent => AvailableSpace::MinContent,
+                        _ => AvailableSpace::MaxContent,
+                    },
                     inputs.known_dimensions.height,
                     inputs.parent_size,
                     inputs.available_space.height,
@@ -925,6 +929,9 @@ pub(crate) trait LayoutPartialTreeExt: LayoutPartialTree {
     /// - `min_width` is the child's resolved minimum width, which takes precedence over a keyword maximum
     /// - `stretch_width` is the width that the child would have if it were stretched to fill the space
     ///   available to it. `fit-content` is resolved against it.
+    /// - `fit_content_max_fallback` is the constraint that a `fit-content` maximum is measured under if
+    ///   `stretch_width` is indefinite: `MinContent` if the child's min-content contribution is being computed,
+    ///   else `MaxContent`
     /// - `known_height`, `parent_size`, `available_height` and `vertical_margins_are_collapsible` are the inputs
     ///   that the child is otherwise being laid out with
     #[cold]
@@ -938,6 +945,7 @@ pub(crate) trait LayoutPartialTreeExt: LayoutPartialTree {
         min_width: Option<f32>,
         padding_border_width: f32,
         stretch_width: Option<f32>,
+        fit_content_max_fallback: AvailableSpace,
         known_height: Option<f32>,
         parent_size: Size<Option<f32>>,
         available_height: AvailableSpace,
@@ -957,9 +965,9 @@ pub(crate) trait LayoutPartialTreeExt: LayoutPartialTree {
                 vertical_margins_are_collapsible,
             )
         };
-        // With an indefinite available width a `fit-content` maximum is the max-content size
-        // and a `fit-content` minimum is the min-content size
-        let max = resolve(max_width_style, AvailableSpace::MaxContent);
+        // With an indefinite available width a `fit-content` maximum is the intrinsic size that is being
+        // computed (else the max-content size) and a `fit-content` minimum is the min-content size
+        let max = resolve(max_width_style, fit_content_max_fallback);
         let min = resolve(min_width_style, AvailableSpace::MinContent);
         width.maybe_min(max).maybe_max(min).maybe_max(min_width).max(padding_border_width)
     }

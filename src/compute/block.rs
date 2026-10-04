@@ -982,6 +982,10 @@ fn determine_content_based_container_width(
                 item.min_size.width,
                 item.padding_border_sum.width,
                 None,
+                match available_width {
+                    AvailableSpace::MinContent => AvailableSpace::MinContent,
+                    _ => AvailableSpace::MaxContent,
+                },
                 known_dimensions.height,
                 Size::NONE,
                 available_space.height,
@@ -1366,6 +1370,7 @@ fn perform_final_layout_on_in_flow_children(
                                 min_size.width,
                                 item.padding_border_sum.width,
                                 stretch_size.width,
+                                AvailableSpace::MaxContent,
                                 known_dimensions.height,
                                 parent_size,
                                 available_space.height,
