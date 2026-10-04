@@ -51,6 +51,9 @@ pub(in super::super) struct GridItem {
     pub max_size: Size<LengthPercentageAuto>,
     /// The item's aspect_ratio style
     pub aspect_ratio: Option<f32>,
+    /// Whether the item's inline size may depend on its block-axis constraints (and thus on the sizes of the rows).
+    /// Initially only accounts for the item's own `aspect_ratio`. Updated each time the item is measured.
+    pub depends_on_block_constraints: bool,
     /// The item's padding style
     pub padding: Rect<LengthPercentage>,
     /// The item's border style
@@ -128,6 +131,7 @@ impl GridItem {
             min_size: style.min_size(),
             max_size: style.max_size(),
             aspect_ratio: style.aspect_ratio(),
+            depends_on_block_constraints: style.aspect_ratio().is_some(),
             padding: style.padding(),
             border: style.border(),
             margin: style.margin(),
@@ -537,7 +541,7 @@ impl GridItem {
         // Spec:
         // https://www.w3.org/TR/css-grid-1/#grid-item-sizing
         // https://www.w3.org/TR/css-grid-1/#algo-overview
-        tree.measure_child_size(
+        let (size, depends_on_block_constraints) = tree.measure_child_size_with_block_dependency(
             self.node,
             known_dimensions,
             grid_area_size,
@@ -552,7 +556,9 @@ impl GridItem {
             SizingMode::InherentSize,
             axis.as_abs_naive(),
             Line::FALSE,
-        )
+        );
+        self.depends_on_block_constraints |= depends_on_block_constraints;
+        size
     }
 
     /// Retrieve the item's min content contribution from the cache or compute it using the provided parameters
@@ -588,7 +594,7 @@ impl GridItem {
         // See the min-content path above. Max-content measurement uses the same containing-block
         // basis so percentage-dependent item geometry is measured from the grid area rather than
         // from the container.
-        tree.measure_child_size(
+        let (size, depends_on_block_constraints) = tree.measure_child_size_with_block_dependency(
             self.node,
             known_dimensions,
             grid_area_size,
@@ -603,7 +609,9 @@ impl GridItem {
             SizingMode::InherentSize,
             axis.as_abs_naive(),
             Line::FALSE,
-        )
+        );
+        self.depends_on_block_constraints |= depends_on_block_constraints;
+        size
     }
 
     /// Subtract the item's margins (and baseline shim) from the definite axes of the space available

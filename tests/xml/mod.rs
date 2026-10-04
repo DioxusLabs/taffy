@@ -23663,6 +23663,174 @@ mod grid {
 
     #[cfg(feature = "grid")]
     #[test]
+    fn grid_auto_width_column_rerun_block_descendant__border_box_ltr() {
+        crate::run_xml_test("grid", "grid_auto_width_column_rerun_block_descendant__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_auto_width_column_rerun_block_descendant__content_box_ltr() {
+        crate::run_xml_test("grid", "grid_auto_width_column_rerun_block_descendant__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_auto_width_column_rerun_block_descendant__border_box_rtl() {
+        crate::run_xml_test("grid", "grid_auto_width_column_rerun_block_descendant__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_auto_width_column_rerun_block_descendant__content_box_rtl() {
+        crate::run_xml_test("grid", "grid_auto_width_column_rerun_block_descendant__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_auto_width_column_rerun_block_descendant_in_grid__border_box_ltr() {
+        crate::run_xml_test("grid", "grid_auto_width_column_rerun_block_descendant_in_grid__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_auto_width_column_rerun_block_descendant_in_grid__content_box_ltr() {
+        crate::run_xml_test("grid", "grid_auto_width_column_rerun_block_descendant_in_grid__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_auto_width_column_rerun_block_descendant_in_grid__border_box_rtl() {
+        crate::run_xml_test("grid", "grid_auto_width_column_rerun_block_descendant_in_grid__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_auto_width_column_rerun_block_descendant_in_grid__content_box_rtl() {
+        crate::run_xml_test("grid", "grid_auto_width_column_rerun_block_descendant_in_grid__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_auto_width_column_rerun_flex_descendant__border_box_ltr() {
+        crate::run_xml_test("grid", "grid_auto_width_column_rerun_flex_descendant__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_auto_width_column_rerun_flex_descendant__content_box_ltr() {
+        crate::run_xml_test("grid", "grid_auto_width_column_rerun_flex_descendant__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_auto_width_column_rerun_flex_descendant__border_box_rtl() {
+        crate::run_xml_test("grid", "grid_auto_width_column_rerun_flex_descendant__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_auto_width_column_rerun_flex_descendant__content_box_rtl() {
+        crate::run_xml_test("grid", "grid_auto_width_column_rerun_flex_descendant__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_auto_width_column_rerun_flex_descendant_in_grid__border_box_ltr() {
+        crate::run_xml_test("grid", "grid_auto_width_column_rerun_flex_descendant_in_grid__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_auto_width_column_rerun_flex_descendant_in_grid__content_box_ltr() {
+        crate::run_xml_test("grid", "grid_auto_width_column_rerun_flex_descendant_in_grid__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_auto_width_column_rerun_flex_descendant_in_grid__border_box_rtl() {
+        crate::run_xml_test("grid", "grid_auto_width_column_rerun_flex_descendant_in_grid__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_auto_width_column_rerun_flex_descendant_in_grid__content_box_rtl() {
+        crate::run_xml_test("grid", "grid_auto_width_column_rerun_flex_descendant_in_grid__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_auto_width_column_rerun_in_flex_column__border_box_ltr() {
+        crate::run_xml_test("grid", "grid_auto_width_column_rerun_in_flex_column__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_auto_width_column_rerun_in_flex_column__content_box_ltr() {
+        crate::run_xml_test("grid", "grid_auto_width_column_rerun_in_flex_column__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_auto_width_column_rerun_in_flex_column__border_box_rtl() {
+        crate::run_xml_test("grid", "grid_auto_width_column_rerun_in_flex_column__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_auto_width_column_rerun_in_flex_column__content_box_rtl() {
+        crate::run_xml_test("grid", "grid_auto_width_column_rerun_in_flex_column__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_auto_width_column_rerun_in_flex_row__border_box_ltr() {
+        crate::run_xml_test("grid", "grid_auto_width_column_rerun_in_flex_row__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_auto_width_column_rerun_in_flex_row__content_box_ltr() {
+        crate::run_xml_test("grid", "grid_auto_width_column_rerun_in_flex_row__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_auto_width_column_rerun_in_flex_row__border_box_rtl() {
+        crate::run_xml_test("grid", "grid_auto_width_column_rerun_in_flex_row__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_auto_width_column_rerun_in_flex_row__content_box_rtl() {
+        crate::run_xml_test("grid", "grid_auto_width_column_rerun_in_flex_row__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_auto_width_column_rerun_in_grid__border_box_ltr() {
+        crate::run_xml_test("grid", "grid_auto_width_column_rerun_in_grid__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_auto_width_column_rerun_in_grid__content_box_ltr() {
+        crate::run_xml_test("grid", "grid_auto_width_column_rerun_in_grid__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_auto_width_column_rerun_in_grid__border_box_rtl() {
+        crate::run_xml_test("grid", "grid_auto_width_column_rerun_in_grid__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_auto_width_column_rerun_in_grid__content_box_rtl() {
+        crate::run_xml_test("grid", "grid_auto_width_column_rerun_in_grid__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
     fn grid_available_space_greater_than_max_content__border_box_ltr() {
         crate::run_xml_test("grid", "grid_available_space_greater_than_max_content__border_box_ltr");
     }

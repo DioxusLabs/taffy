@@ -157,13 +157,15 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     // is ComputeSize (and thus the container's size is all that we're interested in)
     if run_mode == RunMode::ComputeSize {
         if let Size { width: Some(width), height: Some(height) } = outer_node_size {
-            return LayoutOutput::from_outer_size(Size { width, height });
+            return LayoutOutput::from_outer_size(Size { width, height })
+                .with_block_constraint_dependency(aspect_ratio.is_some());
         }
 
         // We can also short-circuit if the width is known and only the width has been requested.
         if inputs.axis == RequestedAxis::Horizontal {
             if let Some(width) = outer_node_size.width {
-                return LayoutOutput::from_outer_size(Size { width, height: 0.0 });
+                return LayoutOutput::from_outer_size(Size { width, height: 0.0 })
+                    .with_block_constraint_dependency(aspect_ratio.is_some());
             }
         }
     }
@@ -326,14 +328,28 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     let initial_column_sum = columns.iter().map(|track| track.base_size).sum::<f32>();
     inner_node_size.width = inner_node_size.width.or_else(|| initial_column_sum.into());
 
+    // Whether the width of any item that contributes to the size of an intrinsically sized column may depend on
+    // the item's block-axis constraints (and thus on the sizes of the rows). If so, then the sizes of the columns
+    // (and thus the container's content-based width) are only final once column sizing has been re-run.
+    let columns_depend_on_rows =
+        items.iter().any(|item| item.crosses_intrinsic_column && item.depends_on_block_constraints);
+    let depends_on_block_constraints =
+        aspect_ratio.is_some() || (outer_node_size.width.is_none() && columns_depend_on_rows);
+    let compute_size_needs_column_rerun = run_mode == RunMode::ComputeSize
+        && inputs.axis != RequestedAxis::Vertical
+        && outer_node_size.width.is_none()
+        && columns_depend_on_rows;
+
     // If only the container's width has been requested then we can skip sizing the rows entirely (which avoids
-    // measuring the height of every item), as column sizing is not re-run when only computing the container's size.
+    // measuring the height of every item), unless the sizes of the columns depend on the sizes of the rows.
     // Note: the short-circuit above has already handled the case where the container's width is known.
-    if run_mode == RunMode::ComputeSize && inputs.axis == RequestedAxis::Horizontal {
+    if run_mode == RunMode::ComputeSize && inputs.axis == RequestedAxis::Horizontal && !compute_size_needs_column_rerun
+    {
         let width = (initial_column_sum + content_box_inset.horizontal_axis_sum())
             .maybe_clamp(min_size.width, max_size.width)
             .max(padding_border_size.width);
-        return LayoutOutput::from_outer_size(Size { width, height: 0.0 });
+        return LayoutOutput::from_outer_size(Size { width, height: 0.0 })
+            .with_block_constraint_dependency(depends_on_block_constraints);
     }
 
     items.iter_mut().for_each(|item| item.grid_area_size_cache = None);
@@ -381,8 +397,9 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     };
 
     // If only the container's size has been requested
-    if run_mode == RunMode::ComputeSize {
-        return LayoutOutput::from_outer_size(container_border_box);
+    if run_mode == RunMode::ComputeSize && !compute_size_needs_column_rerun {
+        return LayoutOutput::from_outer_size(container_border_box)
+            .with_block_constraint_dependency(depends_on_block_constraints);
     }
 
     // The container's size is now determined, so percentages resolve against its content box when re-running track sizing.
@@ -438,6 +455,12 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
         });
     }
 
+    // If only the container's size has been requested and column sizing does not need to be re-run then we are done
+    if run_mode == RunMode::ComputeSize && !rerun_column_sizing {
+        return LayoutOutput::from_outer_size(container_border_box)
+            .with_block_constraint_dependency(depends_on_block_constraints);
+    }
+
     // Row sizing must be re-run (once) if:
     //   - The grid container's height was initially indefinite and there are any rows with percentage track sizing functions
     //   - Column sizing was re-run and any grid item crossing an intrinsically sized track's min content contribution height has changed
@@ -473,6 +496,19 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
             |track: &GridTrack, _, _| Some(track.base_size),
             has_baseline_aligned_item,
         );
+
+        // If only the container's size has been requested then we are done: the container's height is determined
+        // by the first row sizing pass, so there is no need to re-run row sizing.
+        if run_mode == RunMode::ComputeSize {
+            if intrinsic_column_contribution_changed && !has_percentage_column {
+                let final_column_sum = columns.iter().map(|track| track.base_size).sum::<f32>();
+                container_border_box.width = (final_column_sum + content_box_inset.horizontal_axis_sum())
+                    .maybe_clamp(min_size.width, max_size.width)
+                    .max(padding_border_size.width);
+            }
+            return LayoutOutput::from_outer_size(container_border_box)
+                .with_block_constraint_dependency(depends_on_block_constraints);
+        }
 
         // The column widths may have changed, so the items' intrinsic height contributions need to be recomputed
         // (unless row sizing is being re-run anyway, in which case the caches have already been cleared).
@@ -553,11 +589,6 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
             .max(padding_border_size.height);
         container_content_box.height =
             f32_max(0.0, container_border_box.height - content_box_inset.vertical_axis_sum());
-    }
-
-    // If only the container's size has been requested
-    if run_mode == RunMode::ComputeSize {
-        return LayoutOutput::from_outer_size(container_border_box);
     }
 
     // 8. Track Alignment
@@ -832,6 +863,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     );
     output.oof_candidates = oof_candidates;
     output.oof_positioning_area = oof_positioning_area;
+    output.depends_on_block_constraints = depends_on_block_constraints;
     output
 }
 

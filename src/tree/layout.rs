@@ -473,9 +473,25 @@ pub struct LayoutOutput {
     /// algorithms for `RunMode::PerformLayout` runs; `None` for leaves and size-only runs
     /// (in which case the out-of-flow positioning pass is a no-op).
     pub oof_positioning_area: Option<OofPositioningArea>,
+    /// Whether the node's inline size (width) can depend on its block-axis constraints: the `height` of the
+    /// `known_dimensions`, `parent_size` or `available_space` inputs. For example because the node (or one of its
+    /// descendants) has an `aspect-ratio` that transfers a block size into the inline axis.
+    ///
+    /// This is a conservative flag: `false` guarantees that the width does not depend on those inputs, `true`
+    /// means that it may do. It allows containers to skip re-measuring the node's width when only block-axis
+    /// constraints have changed.
+    pub depends_on_block_constraints: bool,
 }
 
 impl LayoutOutput {
+    /// Returns the output with [`depends_on_block_constraints`](Self::depends_on_block_constraints) set to the
+    /// specified value
+    #[inline(always)]
+    pub fn with_block_constraint_dependency(mut self, depends_on_block_constraints: bool) -> Self {
+        self.depends_on_block_constraints = depends_on_block_constraints;
+        self
+    }
+
     /// An all-zero `LayoutOutput` for hidden nodes
     pub const HIDDEN: Self = Self {
         size: Size::ZERO,
@@ -487,6 +503,7 @@ impl LayoutOutput {
         margins_can_collapse_through: false,
         oof_candidates: OofCandidates::NONE,
         oof_positioning_area: None,
+        depends_on_block_constraints: false,
     };
 
     /// A blank layout output
@@ -508,6 +525,7 @@ impl LayoutOutput {
             margins_can_collapse_through: false,
             oof_candidates: OofCandidates::NONE,
             oof_positioning_area: None,
+            depends_on_block_constraints: false,
         }
     }
 
