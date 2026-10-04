@@ -1,0 +1,19 @@
+<test name="grid_span_2_auto_auto_non_spanned_fr_rows__content_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" box-sizing="content-box" direction="rtl" position="absolute" height="100px" grid-template-rows="auto auto 1fr" grid-template-columns="50px">
+      <div box-sizing="content-box" direction="rtl" position="relative" grid-row-start="1" grid-row-end="span 2" grid-column-start="1">
+        <div box-sizing="content-box" direction="rtl" position="relative" flex-shrink="0" width="20px" height="80px"/>
+      </div>
+      <div box-sizing="content-box" direction="rtl" position="relative" width="10px" height="60px" grid-row-start="3" grid-column-start="1"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="50" height="100" resolved-rows="40px 40px 60px" resolved-columns="50px">
+      <node x="0" y="0" width="50" height="80">
+        <node x="30" y="0" width="20" height="80"/>
+      </node>
+      <node x="40" y="80" width="10" height="60"/>
+    </node>
+  </expectations>
+</test>

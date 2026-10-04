@@ -33623,6 +33623,78 @@ mod grid {
 
     #[cfg(feature = "grid")]
     #[test]
+    fn grid_span_2_auto_auto_non_spanned_fr__border_box_ltr() {
+        crate::run_xml_test("grid", "grid_span_2_auto_auto_non_spanned_fr__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_span_2_auto_auto_non_spanned_fr__content_box_ltr() {
+        crate::run_xml_test("grid", "grid_span_2_auto_auto_non_spanned_fr__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_span_2_auto_auto_non_spanned_fr__border_box_rtl() {
+        crate::run_xml_test("grid", "grid_span_2_auto_auto_non_spanned_fr__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_span_2_auto_auto_non_spanned_fr__content_box_rtl() {
+        crate::run_xml_test("grid", "grid_span_2_auto_auto_non_spanned_fr__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_span_2_auto_auto_non_spanned_fr_empty__border_box_ltr() {
+        crate::run_xml_test("grid", "grid_span_2_auto_auto_non_spanned_fr_empty__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_span_2_auto_auto_non_spanned_fr_empty__content_box_ltr() {
+        crate::run_xml_test("grid", "grid_span_2_auto_auto_non_spanned_fr_empty__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_span_2_auto_auto_non_spanned_fr_empty__border_box_rtl() {
+        crate::run_xml_test("grid", "grid_span_2_auto_auto_non_spanned_fr_empty__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_span_2_auto_auto_non_spanned_fr_empty__content_box_rtl() {
+        crate::run_xml_test("grid", "grid_span_2_auto_auto_non_spanned_fr_empty__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_span_2_auto_auto_non_spanned_fr_rows__border_box_ltr() {
+        crate::run_xml_test("grid", "grid_span_2_auto_auto_non_spanned_fr_rows__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_span_2_auto_auto_non_spanned_fr_rows__content_box_ltr() {
+        crate::run_xml_test("grid", "grid_span_2_auto_auto_non_spanned_fr_rows__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_span_2_auto_auto_non_spanned_fr_rows__border_box_rtl() {
+        crate::run_xml_test("grid", "grid_span_2_auto_auto_non_spanned_fr_rows__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_span_2_auto_auto_non_spanned_fr_rows__content_box_rtl() {
+        crate::run_xml_test("grid", "grid_span_2_auto_auto_non_spanned_fr_rows__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
     fn grid_span_2_max_content_auto_indefinite__border_box_ltr() {
         crate::run_xml_test("grid", "grid_span_2_max_content_auto_indefinite__border_box_ltr");
     }
@@ -34027,6 +34099,30 @@ mod grid {
     #[test]
     fn grid_span_2_min_content_min_content_indefinite__content_box_rtl() {
         crate::run_xml_test("grid", "grid_span_2_min_content_min_content_indefinite__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_span_2_min_content_min_content_non_spanned_auto__border_box_ltr() {
+        crate::run_xml_test("grid", "grid_span_2_min_content_min_content_non_spanned_auto__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_span_2_min_content_min_content_non_spanned_auto__content_box_ltr() {
+        crate::run_xml_test("grid", "grid_span_2_min_content_min_content_non_spanned_auto__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_span_2_min_content_min_content_non_spanned_auto__border_box_rtl() {
+        crate::run_xml_test("grid", "grid_span_2_min_content_min_content_non_spanned_auto__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_span_2_min_content_min_content_non_spanned_auto__content_box_rtl() {
+        crate::run_xml_test("grid", "grid_span_2_min_content_min_content_non_spanned_auto__content_box_rtl");
     }
 
     #[cfg(feature = "grid")]
