@@ -42,6 +42,7 @@ mod std {
     /// Rounds to the nearest whole number
     #[must_use]
     #[inline(always)]
+    #[cfg_attr(all(feature = "simd_rounding", not(test)), allow(dead_code))]
     pub(crate) fn round(value: f32) -> f32 {
         (value + 0.5).floor()
     }
