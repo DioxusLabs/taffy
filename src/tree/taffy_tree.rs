@@ -34,6 +34,10 @@ use crate::{compute::compute_grid_layout, LayoutGridContainer};
 use crate::compute::grid::DetailedGridInfo;
 use crate::tree::layout::DetailedLayoutInfo;
 
+#[cfg(feature = "parallel")]
+#[path = "taffy_tree_parallel.rs"]
+mod parallel;
+
 /// The error Taffy generates on invalid operations
 pub type TaffyResult<T> = Result<T, TaffyError>;
 
@@ -80,11 +84,19 @@ impl std::error::Error for TaffyError {}
 pub(crate) struct TaffyConfig {
     /// Whether to round layout values
     pub(crate) use_rounding: bool,
+    /// The minimum total number of nodes in the subtrees that a batch of child layouts
+    /// would lay out for the batch to be computed in parallel
+    #[cfg(feature = "parallel")]
+    pub(crate) parallel_min_batch_weight: u32,
 }
 
 impl Default for TaffyConfig {
     fn default() -> Self {
-        Self { use_rounding: true }
+        Self {
+            use_rounding: true,
+            #[cfg(feature = "parallel")]
+            parallel_min_batch_weight: parallel::DEFAULT_MIN_BATCH_WEIGHT,
+        }
     }
 }
 
