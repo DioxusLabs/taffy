@@ -399,6 +399,77 @@ pub(crate) struct ChildStyleConstraints {
     pub(crate) margin_size: Size<f32>,
 }
 
+/// A node's `min_size` and `max_size` styles, resolved into border-box sizes in the form in which they
+/// are passed down to the node in [`LayoutInput::min_size`] and [`LayoutInput::max_size`].
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub(crate) struct MinMaxSize {
+    /// The resolved `min_size` style
+    pub(crate) min: Size<Option<f32>>,
+    /// The resolved `max_size` style
+    pub(crate) max: Size<Option<f32>>,
+}
+
+impl MinMaxSize {
+    /// No minimum or maximum size in either axis
+    pub(crate) const NONE: Self = Self { min: Size::NONE, max: Size::NONE };
+
+    /// Whether a node has a `min_size` or `max_size` style that is not `auto` in either axis
+    #[inline(always)]
+    pub(crate) fn is_set(style: &impl crate::style::CoreStyle) -> bool {
+        let min_size = style.min_size();
+        let max_size = style.max_size();
+        !(min_size.width.is_auto()
+            && min_size.height.is_auto()
+            && max_size.width.is_auto()
+            && max_size.height.is_auto())
+    }
+
+    /// Resolve the `min_size` and `max_size` styles of a node whose percentages resolve against `parent_size`.
+    /// Each size is transferred through the node's aspect ratio into an axis in which it is not set.
+    #[inline]
+    pub(crate) fn resolve(
+        style: &impl crate::style::CoreStyle,
+        parent_size: Size<Option<f32>>,
+        calc: impl Fn(*const (), f32) -> f32,
+    ) -> Self {
+        use crate::style::BoxSizing;
+        use crate::util::{MaybeMath, MaybeResolve, ResolveOrZero};
+
+        // The overwhelmingly common case: the node has neither a minimum nor a maximum size
+        if !Self::is_set(style) {
+            return Self::NONE;
+        }
+        let min_size = style.min_size();
+        let max_size = style.max_size();
+
+        let aspect_ratio = style.aspect_ratio();
+        let box_sizing_adjustment = if style.box_sizing() == BoxSizing::ContentBox {
+            let padding = style.padding().resolve_or_zero(parent_size.width, &calc);
+            let border = style.border().resolve_or_zero(parent_size.width, &calc);
+            (padding + border).sum_axes()
+        } else {
+            Size::ZERO
+        };
+        Self {
+            min: min_size
+                .maybe_resolve(parent_size, &calc)
+                .maybe_apply_aspect_ratio(aspect_ratio)
+                .maybe_add(box_sizing_adjustment),
+            max: max_size
+                .maybe_resolve(parent_size, &calc)
+                .maybe_apply_aspect_ratio(aspect_ratio)
+                .maybe_add(box_sizing_adjustment),
+        }
+    }
+
+    /// Set the `min_size` and `max_size` of `inputs`
+    #[inline(always)]
+    pub(crate) fn apply_to_inputs(self, inputs: &mut LayoutInput) {
+        inputs.min_size = self.min;
+        inputs.max_size = self.max;
+    }
+}
+
 /// Resolve the sizing styles of a node from its core style. For use when the node is not being laid out
 /// as an item of a specific kind of container (which have their own item style accessors).
 pub(crate) fn resolve_core_style_constraints<Tree: LayoutPartialTree>(
@@ -409,14 +480,42 @@ pub(crate) fn resolve_core_style_constraints<Tree: LayoutPartialTree>(
     ChildStyleConstraints::resolve(&tree.get_core_container_style(node_id), inputs, |val, basis| tree.calc(val, basis))
 }
 
+/// As [`resolve_core_style_constraints`], but only resolves the constraints that are needed
+/// (see [`ChildStyleConstraints::resolve_unknown_axes`]).
+pub(crate) fn resolve_core_style_constraints_for_unknown_axes<Tree: LayoutPartialTree>(
+    tree: &Tree,
+    node_id: NodeId,
+    inputs: &mut LayoutInput,
+) -> Option<(ChildStyleConstraints, AutoAxes)> {
+    ChildStyleConstraints::resolve_unknown_axes(&tree.get_core_container_style(node_id), inputs, |val, basis| {
+        tree.calc(val, basis)
+    })
+}
+
 /// The axes in which a child's size is determined by its content rather than by a known dimension
 #[derive(Debug, Clone, Copy)]
 pub(crate) struct AutoAxes(Size<bool>);
 
 impl ChildStyleConstraints {
+    /// As [`Self::resolve`], except that if both of the child's dimensions are already known then only
+    /// the `min_size` and `max_size` of `inputs` are resolved and `None` is returned: the child's other
+    /// sizing styles only affect axes in which its size is not known.
+    #[inline(always)]
+    pub(crate) fn resolve_unknown_axes(
+        style: &impl crate::style::CoreStyle,
+        inputs: &mut LayoutInput,
+        calc: impl Fn(*const (), f32) -> f32,
+    ) -> Option<(Self, AutoAxes)> {
+        if inputs.known_dimensions.both_axis_defined() {
+            MinMaxSize::resolve(style, inputs.parent_size, calc).apply_to_inputs(inputs);
+            return None;
+        }
+        Some(Self::resolve(style, inputs, calc))
+    }
+
     /// Resolve a child's own `size`, `min_size`, `max_size` and `aspect_ratio` styles into the
-    /// `known_dimensions` and `available_space` of `inputs`, and return the constraints that must be
-    /// applied to the size that the child reports.
+    /// `known_dimensions`, `min_size`, `max_size` and `available_space` of `inputs`, and return the
+    /// constraints that must be applied to the size that the child reports.
     ///
     /// `style` must be the style of the child *as seen by its parent* (for example the style returned
     /// by `get_block_child_style` if the parent is a block container).
@@ -438,6 +537,14 @@ impl ChildStyleConstraints {
             if style.box_sizing() == BoxSizing::ContentBox { padding_border_size } else { Size::ZERO };
         let untransferred_min_size = style.min_size().maybe_resolve(parent_size, &calc);
         let untransferred_max_size = style.max_size().maybe_resolve(parent_size, &calc);
+
+        // The min and max sizes that are passed down to the child for use by its own layout algorithm.
+        // These are equal to `MinMaxSize::resolve`.
+        inputs.min_size =
+            untransferred_min_size.maybe_apply_aspect_ratio(aspect_ratio).maybe_add(box_sizing_adjustment);
+        inputs.max_size =
+            untransferred_max_size.maybe_apply_aspect_ratio(aspect_ratio).maybe_add(box_sizing_adjustment);
+
         // A minimum size that is transferred from the other axis through the aspect ratio does not
         // take precedence over a maximum size that is set in the axis that it is transferred to
         // <https://drafts.csswg.org/css-sizing-4/#aspect-ratio-size-transfers>
@@ -548,10 +655,12 @@ pub(crate) trait LayoutPartialTreeExt: LayoutPartialTree {
     /// Compute the size of the node in a single axis given the specified constraints.
     /// The child's own sizing styles are not applied: the caller is responsible for applying them.
     #[inline(always)]
+    #[allow(clippy::too_many_arguments)]
     fn measure_child_size(
         &mut self,
         node_id: NodeId,
         known_dimensions: Size<Option<f32>>,
+        min_max_size: MinMaxSize,
         parent_size: Size<Option<f32>>,
         available_space: Size<AvailableSpace>,
         axis: AbsoluteAxis,
@@ -562,6 +671,8 @@ pub(crate) trait LayoutPartialTreeExt: LayoutPartialTree {
             LayoutInput {
                 known_dimensions,
                 known_dimensions_are_definite: Size { width: true, height: true },
+                min_size: min_max_size.min,
+                max_size: min_max_size.max,
                 parent_size,
                 available_space,
                 axis: axis.into(),
@@ -580,6 +691,7 @@ pub(crate) trait LayoutPartialTreeExt: LayoutPartialTree {
         &mut self,
         node_id: NodeId,
         known_dimensions: Size<Option<f32>>,
+        min_max_size: MinMaxSize,
         parent_size: Size<Option<f32>>,
         available_space: Size<AvailableSpace>,
         vertical_margins_are_collapsible: Line<bool>,
@@ -589,6 +701,8 @@ pub(crate) trait LayoutPartialTreeExt: LayoutPartialTree {
             LayoutInput {
                 known_dimensions,
                 known_dimensions_are_definite: Size { width: true, height: true },
+                min_size: min_max_size.min,
+                max_size: min_max_size.max,
                 parent_size,
                 available_space,
                 axis: RequestedAxis::Both,
@@ -606,6 +720,7 @@ pub(crate) trait LayoutPartialTreeExt: LayoutPartialTree {
         &mut self,
         node_id: NodeId,
         known_dimensions: Size<Option<f32>>,
+        min_max_size: MinMaxSize,
         parent_size: Size<Option<f32>>,
         available_space: Size<AvailableSpace>,
         vertical_margins_are_collapsible: Line<bool>,
@@ -615,6 +730,8 @@ pub(crate) trait LayoutPartialTreeExt: LayoutPartialTree {
             LayoutInput {
                 known_dimensions,
                 known_dimensions_are_definite: Size { width: true, height: true },
+                min_size: min_max_size.min,
+                max_size: min_max_size.max,
                 parent_size,
                 available_space,
                 axis: RequestedAxis::Both,
@@ -636,13 +753,16 @@ pub(crate) trait LayoutPartialTreeExt: LayoutPartialTree {
         available_space: Size<AvailableSpace>,
         axis: AbsoluteAxis,
         vertical_margins_are_collapsible: Line<bool>,
-        resolve_styles: impl FnOnce(&Self, NodeId, &mut LayoutInput) -> (ChildStyleConstraints, AutoAxes),
+        resolve_styles: impl FnOnce(&Self, NodeId, &mut LayoutInput) -> Option<(ChildStyleConstraints, AutoAxes)>,
     ) -> f32 {
         self.compute_child_layout_with_styles(
             node_id,
             LayoutInput {
                 known_dimensions,
                 known_dimensions_are_definite: Size { width: true, height: true },
+                // Filled in by `resolve_styles`
+                min_size: Size::NONE,
+                max_size: Size::NONE,
                 parent_size,
                 available_space,
                 axis: axis.into(),
@@ -666,13 +786,16 @@ pub(crate) trait LayoutPartialTreeExt: LayoutPartialTree {
         parent_size: Size<Option<f32>>,
         available_space: Size<AvailableSpace>,
         vertical_margins_are_collapsible: Line<bool>,
-        resolve_styles: impl FnOnce(&Self, NodeId, &mut LayoutInput) -> (ChildStyleConstraints, AutoAxes),
+        resolve_styles: impl FnOnce(&Self, NodeId, &mut LayoutInput) -> Option<(ChildStyleConstraints, AutoAxes)>,
     ) -> Size<f32> {
         self.compute_child_layout_with_styles(
             node_id,
             LayoutInput {
                 known_dimensions,
                 known_dimensions_are_definite: Size { width: true, height: true },
+                // Filled in by `resolve_styles`
+                min_size: Size::NONE,
+                max_size: Size::NONE,
                 parent_size,
                 available_space,
                 axis: RequestedAxis::Both,
@@ -695,13 +818,16 @@ pub(crate) trait LayoutPartialTreeExt: LayoutPartialTree {
         parent_size: Size<Option<f32>>,
         available_space: Size<AvailableSpace>,
         vertical_margins_are_collapsible: Line<bool>,
-        resolve_styles: impl FnOnce(&Self, NodeId, &mut LayoutInput) -> (ChildStyleConstraints, AutoAxes),
+        resolve_styles: impl FnOnce(&Self, NodeId, &mut LayoutInput) -> Option<(ChildStyleConstraints, AutoAxes)>,
     ) -> LayoutOutput {
         self.compute_child_layout_with_styles(
             node_id,
             LayoutInput {
                 known_dimensions,
                 known_dimensions_are_definite: Size { width: true, height: true },
+                // Filled in by `resolve_styles`
+                min_size: Size::NONE,
+                max_size: Size::NONE,
                 parent_size,
                 available_space,
                 axis: RequestedAxis::Both,
@@ -713,19 +839,21 @@ pub(crate) trait LayoutPartialTreeExt: LayoutPartialTree {
     }
 
     /// Compute the layout of a child, resolving and applying the child's own sizing styles on its behalf.
-    /// `resolve_styles` resolves those styles from the style of the child as seen by its parent.
+    /// `resolve_styles` resolves those styles from the style of the child as seen by its parent. It always
+    /// resolves the `min_size` and `max_size` of the inputs, and returns `None` if both of the child's
+    /// dimensions are already known (in which case there is nothing to apply to the child's output).
     #[inline(always)]
     fn compute_child_layout_with_styles(
         &mut self,
         node_id: NodeId,
         mut inputs: LayoutInput,
-        resolve_styles: impl FnOnce(&Self, NodeId, &mut LayoutInput) -> (ChildStyleConstraints, AutoAxes),
+        resolve_styles: impl FnOnce(&Self, NodeId, &mut LayoutInput) -> Option<(ChildStyleConstraints, AutoAxes)>,
     ) -> LayoutOutput {
-        // The child's own sizing styles only affect axes in which its size is not already known
-        if inputs.known_dimensions.both_axis_defined() {
+        // The child's own sizing styles (other than the min and max sizes that are passed down to the
+        // child) only affect axes in which its size is not already known
+        let Some((constraints, auto_axes)) = resolve_styles(self, node_id, &mut inputs) else {
             return self.compute_child_layout(node_id, inputs);
-        }
-        let (constraints, auto_axes) = resolve_styles(self, node_id, &mut inputs);
+        };
         let mut output = self.compute_child_layout(node_id, inputs);
         constraints.apply_to_output(auto_axes, &mut output);
         output

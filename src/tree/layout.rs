@@ -127,6 +127,18 @@ pub struct LayoutInput {
     ///
     /// This flag is ignored (treated as `true`) for axes where the corresponding known dimension is `None`.
     pub known_dimensions_are_definite: Size<bool>,
+    /// The node's own `min_size` style, resolved by the node's parent into a border-box size.
+    ///
+    /// Taffy's container algorithms do not read a node's own `min_size`/`max_size` styles: whoever lays a node
+    /// out resolves them and passes the result down here (which
+    /// [`compute_child_layout_with_styles`](crate::compute_child_layout_with_styles) does on behalf of its caller).
+    /// The node's parent remains responsible for clamping the size that the node reports. These inputs exist
+    /// because container algorithms need the bounds *during* layout (for example to break flex lines or
+    /// to count auto-repeated grid tracks). `None` means that there is no minimum in that axis.
+    pub min_size: Size<Option<f32>>,
+    /// The node's own `max_size` style, resolved by the node's parent into a border-box size.
+    /// See [`min_size`](Self::min_size). `None` means that there is no maximum in that axis.
+    pub max_size: Size<Option<f32>>,
     /// Parent size dimensions are intended to be used for percentage resolution.
     pub parent_size: Size<Option<f32>>,
     /// Available space represents an amount of space to layout into, and is used as a soft constraint
@@ -144,6 +156,8 @@ impl LayoutInput {
         // The rest will be ignored
         known_dimensions: Size::NONE,
         known_dimensions_are_definite: Size { width: true, height: true },
+        min_size: Size::NONE,
+        max_size: Size::NONE,
         parent_size: Size::NONE,
         available_space: Size::MAX_CONTENT,
         axis: RequestedAxis::Both,

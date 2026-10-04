@@ -50,6 +50,20 @@ fn size_option_cache_key(input: Size<Option<f32>>) -> u64 {
     (option_cache_key(input.width) as u64) << 32 | option_cache_key(input.height) as u64
 }
 
+/// The bits of a quiet NaN, used to encode the absence of a min or max size. Unlike infinity (which is
+/// a meaningful value for a min or max size) no resolved style value has this bit pattern.
+const NO_BOUND_BITS: u32 = u32::MAX;
+
+/// Pack a `Size<Option<f32>>` that holds a min or max size into `u64`
+#[inline(always)]
+fn size_bound_cache_key(input: Size<Option<f32>>) -> u64 {
+    let bits = |bound: Option<f32>| match bound {
+        Some(value) => value.to_bits(),
+        None => NO_BOUND_BITS,
+    };
+    (bits(input.width) as u64) << 32 | bits(input.height) as u64
+}
+
 /// Pack `AvailableSpace` into `u32`
 #[inline(always)]
 fn available_space_cache_key(input: AvailableSpace) -> u32 {
@@ -89,6 +103,10 @@ struct CacheKey {
     kd_available_space: u64,
     /// The initial cached size of the parent's node
     parent_size: u64,
+    /// The min size that was passed to the node
+    min_size: u64,
+    /// The max size that was passed to the node
+    max_size: u64,
     /// Whether each known dimension is definite. Normalized such that an axis
     /// without a known dimension is always `true`.
     known_dimensions_are_definite: Size<bool>,
@@ -134,6 +152,8 @@ impl From<&LayoutInput> for CacheKey {
         Self {
             kd_available_space: size_mixed_cache_key(input.known_dimensions, input.available_space),
             parent_size: (size_option_cache_key(input.parent_size) & NON_SIGN_BITS_MASK) | extra_bits,
+            min_size: size_bound_cache_key(input.min_size),
+            max_size: size_bound_cache_key(input.max_size),
             known_dimensions_are_definite: input
                 .known_dimensions_are_definite
                 .zip_map(input.known_dimensions, |is_definite, kd| is_definite || kd.is_none()),
@@ -260,6 +280,8 @@ impl Cache {
                 for (index, entry) in self.measure_entries.iter().enumerate() {
                     let Some(entry) = entry else { continue };
                     if entry.key.kd_available_space == key.kd_available_space
+                        && entry.key.min_size == key.min_size
+                        && entry.key.max_size == key.max_size
                         && entry.key.known_dimensions_are_definite == key.known_dimensions_are_definite
                         && (entry.key.x_axis_parent_size() == key.x_axis_parent_size())
                         && entry.key.size_is_valid_for(&key)
@@ -373,6 +395,8 @@ mod tests {
             axis: RequestedAxis::Both,
             known_dimensions: Size { width: Some(width), height: None },
             known_dimensions_are_definite: Size { width: true, height: true },
+            min_size: Size::NONE,
+            max_size: Size::NONE,
             parent_size: Size::NONE,
             available_space: Size { width: AvailableSpace::MaxContent, height: AvailableSpace::MaxContent },
             vertical_margins_are_collapsible: Line::FALSE,
@@ -381,6 +405,51 @@ mod tests {
 
     fn output(width: f32) -> LayoutOutput {
         LayoutOutput::from_outer_size(Size { width, height: width })
+    }
+
+    #[test]
+    fn results_are_not_shared_between_inputs_that_differ_in_min_or_max_size() {
+        let unbounded = input(1.0);
+        let variants = [
+            LayoutInput { min_size: Size { width: None, height: Some(10.0) }, ..unbounded },
+            LayoutInput { min_size: Size { width: Some(10.0), height: None }, ..unbounded },
+            LayoutInput { max_size: Size { width: None, height: Some(10.0) }, ..unbounded },
+            LayoutInput { max_size: Size { width: Some(10.0), height: None }, ..unbounded },
+            LayoutInput { max_size: Size { width: None, height: Some(20.0) }, ..unbounded },
+            // An infinite bound is not the same input as an absent one
+            LayoutInput { min_size: Size { width: None, height: Some(f32::INFINITY) }, ..unbounded },
+            LayoutInput { max_size: Size { width: None, height: Some(f32::INFINITY) }, ..unbounded },
+        ];
+
+        for run_mode in [RunMode::ComputeSize, RunMode::PerformLayout] {
+            let with_run_mode = |input: &LayoutInput| LayoutInput { run_mode, ..*input };
+            for (index, variant) in variants.iter().enumerate() {
+                let mut cache = Cache::new();
+                cache.store(&with_run_mode(&unbounded), output(1.0));
+                assert_eq!(cache.get(&with_run_mode(variant)), None);
+
+                let mut cache = Cache::new();
+                cache.store(&with_run_mode(variant), output(2.0));
+                assert_eq!(cache.get(&with_run_mode(&unbounded)), None);
+                assert_eq!(cache.get(&with_run_mode(variant)), Some(output(2.0)));
+                for (other_index, other) in variants.iter().enumerate() {
+                    if other_index != index {
+                        assert_eq!(cache.get(&with_run_mode(other)), None);
+                    }
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn measurements_with_different_min_or_max_sizes_are_cached_side_by_side() {
+        let bounded = LayoutInput { max_size: Size { width: None, height: Some(10.0) }, ..input(1.0) };
+        let mut cache = Cache::new();
+        cache.store(&input(1.0), output(1.0));
+        cache.store(&bounded, output(2.0));
+
+        assert_eq!(cache.get(&input(1.0)), Some(output(1.0)));
+        assert_eq!(cache.get(&bounded), Some(output(2.0)));
     }
 
     #[test]

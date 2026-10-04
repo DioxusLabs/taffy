@@ -105,6 +105,8 @@ fn measure_input(width: f32) -> LayoutInput {
         axis: RequestedAxis::Both,
         known_dimensions: Size { width: Some(width), height: None },
         known_dimensions_are_definite: Size { width: true, height: true },
+        min_size: Size::NONE,
+        max_size: Size::NONE,
         parent_size: Size { width: Some(1000.0), height: None },
         available_space: Size { width: AvailableSpace::MaxContent, height: AvailableSpace::MaxContent },
         vertical_margins_are_collapsible: Line::FALSE,

@@ -2,6 +2,7 @@
 //! `fit-content(...)`, and `stretch`) on the `width`/`height` style properties
 use crate::geometry::{AbsoluteAxis, Line, Rect, Size};
 use crate::style::AvailableSpace;
+use crate::tree::traits::MinMaxSize;
 use crate::tree::{LayoutPartialTree, LayoutPartialTreeExt, NodeId};
 use crate::util::sys::f32_max;
 use crate::{CompactLength, Dimension};
@@ -60,6 +61,7 @@ pub(crate) fn resolve_absolute_sizing_keywords(
     node: NodeId,
     known_dimensions: &mut Size<Option<f32>>,
     size_style: Size<Dimension>,
+    min_max_size: MinMaxSize,
     area_size: Size<f32>,
     inset: Rect<Option<f32>>,
     margin: Rect<Option<f32>>,
@@ -103,6 +105,7 @@ pub(crate) fn resolve_absolute_sizing_keywords(
             let measured_size = tree.measure_child_size_both(
                 node,
                 Size::NONE,
+                min_max_size,
                 area_size.map(Some),
                 Size { width: available_width, height: available_height },
                 Line::FALSE,
@@ -116,6 +119,7 @@ pub(crate) fn resolve_absolute_sizing_keywords(
                     SizingKeywordResolution::Measure(available_width) => tree.measure_child_size(
                         node,
                         *known_dimensions,
+                        min_max_size,
                         area_size.map(Some),
                         Size { width: available_width, height: AvailableSpace::Definite(stretch_size.height) },
                         AbsoluteAxis::Horizontal,
@@ -129,6 +133,7 @@ pub(crate) fn resolve_absolute_sizing_keywords(
                     SizingKeywordResolution::Measure(available_height) => tree.measure_child_size(
                         node,
                         *known_dimensions,
+                        min_max_size,
                         area_size.map(Some),
                         Size {
                             width: known_dimensions

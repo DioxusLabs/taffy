@@ -54,7 +54,7 @@ pub use self::float::{BfcSlot, ContentSlot, FloatContext, FloatIntrinsicWidthCal
 
 use crate::geometry::{Line, Point, Size};
 use crate::style::{AvailableSpace, ContainingBlockClaims, CoreStyle, Overflow, Position};
-use crate::tree::traits::resolve_core_style_constraints;
+use crate::tree::traits::{resolve_core_style_constraints, resolve_core_style_constraints_for_unknown_axes};
 use crate::tree::{
     AxisStaticAlign, AxisStaticEdge, AxisStaticPosition, Layout, LayoutInput, LayoutOutput, LayoutPartialTree,
     LayoutPartialTreeExt, NodeId, OofCandidate, OofCandidates, RequestedAxis, RoundTree, RunMode,
@@ -256,6 +256,9 @@ fn compute_in_flow_root_layout(
     let mut inputs = LayoutInput {
         known_dimensions,
         known_dimensions_are_definite: Size { width: true, height: true },
+        // Filled in by `resolve_core_style_constraints`
+        min_size: Size::NONE,
+        max_size: Size::NONE,
         parent_size: available_space.into_options(),
         available_space,
         axis: RequestedAxis::Both,
@@ -330,6 +333,8 @@ fn compute_in_flow_root_layout(
 /// or `aspect_ratio` styles either): the node's parent is responsible for applying them. This function
 /// is for parents that do not have their own rules for resolving those styles. It:
 ///
+///   - Resolves the child's `min_size` and `max_size` styles into [`LayoutInput::min_size`] and
+///     [`LayoutInput::max_size`] (any values that `inputs` already contains for those are overwritten)
 ///   - Resolves the child's `size` style (clamped by its `min_size` and `max_size` styles) into the known
 ///     dimensions of `inputs`, in any axis for which `inputs` does not already contain a known dimension
 ///   - Calls [`LayoutPartialTree::compute_child_layout`] with the resulting inputs
@@ -343,7 +348,12 @@ pub fn compute_child_layout_with_styles(
     node_id: NodeId,
     inputs: LayoutInput,
 ) -> LayoutOutput {
-    LayoutPartialTreeExt::compute_child_layout_with_styles(tree, node_id, inputs, resolve_core_style_constraints)
+    LayoutPartialTreeExt::compute_child_layout_with_styles(
+        tree,
+        node_id,
+        inputs,
+        resolve_core_style_constraints_for_unknown_axes,
+    )
 }
 
 /// Attempts to find a cached layout for the specified node and layout inputs.
