@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    Test description
+  </title>
+</head>
+<body>
+
+<!-- A negative inset (like a negative margin) adds to the space available to a shrink-to-fit absolutely positioned box:
+     each wrapping flex box has 150px available in a 100px wide containing block and so fits three of its five 40px items on a line -->
+<div id="test-root" style="display: block;">
+  <div style="display: block; width: 100px; height: 100px;">
+    <div style="position: absolute; display: flex; flex-wrap: wrap; left: -50px;">
+      <div style="width: 40px; height: 10px; flex-shrink: 0;"></div>
+      <div style="width: 40px; height: 10px; flex-shrink: 0;"></div>
+      <div style="width: 40px; height: 10px; flex-shrink: 0;"></div>
+      <div style="width: 40px; height: 10px; flex-shrink: 0;"></div>
+      <div style="width: 40px; height: 10px; flex-shrink: 0;"></div>
+    </div>
+  </div>
+  <div style="display: block; width: 100px; height: 100px;">
+    <div style="position: absolute; display: flex; flex-wrap: wrap; right: -50px;">
+      <div style="width: 40px; height: 10px; flex-shrink: 0;"></div>
+      <div style="width: 40px; height: 10px; flex-shrink: 0;"></div>
+      <div style="width: 40px; height: 10px; flex-shrink: 0;"></div>
+      <div style="width: 40px; height: 10px; flex-shrink: 0;"></div>
+      <div style="width: 40px; height: 10px; flex-shrink: 0;"></div>
+    </div>
+  </div>
+  <div style="display: block; width: 100px; height: 100px;">
+    <div style="position: absolute; display: flex; flex-wrap: wrap; margin-left: -50px;">
+      <div style="width: 40px; height: 10px; flex-shrink: 0;"></div>
+      <div style="width: 40px; height: 10px; flex-shrink: 0;"></div>
+      <div style="width: 40px; height: 10px; flex-shrink: 0;"></div>
+      <div style="width: 40px; height: 10px; flex-shrink: 0;"></div>
+      <div style="width: 40px; height: 10px; flex-shrink: 0;"></div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

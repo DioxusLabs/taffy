@@ -290,6 +290,29 @@ pub(crate) fn layout_oof_box<Tree: LayoutContainingBlock>(
         known_dimensions = known_dimensions.maybe_apply_aspect_ratio(aspect_ratio).maybe_clamp(min_size, max_size);
     }
 
+    // The space available to the box's border box: the containing block minus the box's insets
+    // and margins (`auto` insets and margins are treated as zero), clamped by its min/max sizes
+    let available_space = Size {
+        width: f32_max(
+            area_width
+                - left.unwrap_or(0.0)
+                - right.unwrap_or(0.0)
+                - margin.left.unwrap_or(0.0)
+                - margin.right.unwrap_or(0.0),
+            0.0,
+        ),
+        height: f32_max(
+            area_height
+                - top.unwrap_or(0.0)
+                - bottom.unwrap_or(0.0)
+                - margin.top.unwrap_or(0.0)
+                - margin.bottom.unwrap_or(0.0),
+            0.0,
+        ),
+    }
+    .maybe_clamp(min_size, max_size)
+    .map(AvailableSpace::Definite);
+
     let final_size = match (known_dimensions.width, known_dimensions.height) {
         (Some(width), Some(height)) => Size { width, height },
         _ => {
@@ -297,10 +320,7 @@ pub(crate) fn layout_oof_box<Tree: LayoutContainingBlock>(
                 candidate.node,
                 known_dimensions,
                 area_size.map(Some),
-                Size {
-                    width: AvailableSpace::Definite(area_width.maybe_clamp(min_size.width, max_size.width)),
-                    height: AvailableSpace::Definite(area_height.maybe_clamp(min_size.height, max_size.height)),
-                },
+                available_space,
                 Line::FALSE,
             );
             known_dimensions.unwrap_or(measured_size)
@@ -312,10 +332,7 @@ pub(crate) fn layout_oof_box<Tree: LayoutContainingBlock>(
         known_dimensions: final_size.map(Some),
         known_dimensions_are_definite: Size { width: true, height: true },
         parent_size: area_size.map(Some),
-        available_space: Size {
-            width: AvailableSpace::Definite(area_width.maybe_clamp(min_size.width, max_size.width)),
-            height: AvailableSpace::Definite(area_height.maybe_clamp(min_size.height, max_size.height)),
-        },
+        available_space,
         axis: RequestedAxis::Both,
         run_mode: RunMode::PerformLayout,
         vertical_margins_are_collapsible: Line::FALSE,

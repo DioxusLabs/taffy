@@ -395,8 +395,6 @@ pub(crate) struct ChildStyleConstraints {
     pub(crate) aspect_ratio: Option<f32>,
     /// The sum of the child's padding and border in each axis
     pub(crate) padding_border_size: Size<f32>,
-    /// The sum of the child's margins in each axis
-    pub(crate) margin_size: Size<f32>,
     /// The child's `min_size.width` style if it is an intrinsic sizing keyword
     /// (`min-content`, `max-content`, `fit-content` or `fit-content(...)`), else `auto`
     pub(crate) keyword_min_width: Dimension,
@@ -622,7 +620,6 @@ impl ChildStyleConstraints {
         let min_size_style = style.min_size();
         let max_size_style = style.max_size();
         let parent_size = inputs.parent_size;
-        let margin = style.margin().resolve_or_zero(parent_size.width, &calc);
         let padding = style.padding().resolve_or_zero(parent_size.width, &calc);
         let border = style.border().resolve_or_zero(parent_size.width, &calc);
         let padding_border_size = (padding + border).sum_axes();
@@ -673,7 +670,6 @@ impl ChildStyleConstraints {
             untransferred_max_size,
             aspect_ratio,
             padding_border_size,
-            margin_size: margin.sum_axes(),
             keyword_min_width,
             min_size_is_stretch: min_size_style.map(|style| style.is_stretch()),
             keyword_max_width,
@@ -695,20 +691,18 @@ impl ChildStyleConstraints {
         });
         inputs.known_dimensions = inputs.known_dimensions.or(min_max_definite_size.maybe_max(self.padding_border_size));
 
-        // The space available to the child's content is limited by the child's own min and max sizes
+        // The space available to the child's border box is limited by the child's own min and max sizes
         if self.min_size.width.is_some() || self.max_size.width.is_some() {
             inputs.available_space.width = inputs.available_space.width.map_definite_value(|space| {
-                (space - self.margin_size.width)
-                    .maybe_clamp(self.min_size.width.filter(|_| !self.min_size_is_stretch.width), self.max_size.width)
-                    + self.margin_size.width
+                space.maybe_clamp(self.min_size.width.filter(|_| !self.min_size_is_stretch.width), self.max_size.width)
             });
         }
         if self.min_size.height.is_some() || self.max_size.height.is_some() {
             inputs.available_space.height = inputs.available_space.height.map_definite_value(|space| {
-                (space - self.margin_size.height).maybe_clamp(
+                space.maybe_clamp(
                     self.min_size.height.filter(|_| !self.min_size_is_stretch.height),
                     self.max_size.height,
-                ) + self.margin_size.height
+                )
             });
         }
 

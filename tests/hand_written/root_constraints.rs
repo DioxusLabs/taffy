@@ -107,4 +107,52 @@ mod root_constraints {
         assert_eq!(layout.size.width, 40.0);
         assert_eq!(layout.size.height, 40.0);
     }
+
+    /// The available space passed to a node is the space available to its border box, so the node's
+    /// `min_size` and `max_size` limit the space that its content is measured under directly
+    /// (without its margins being taken into account again).
+    #[test]
+    fn min_max_size_limits_border_box_available_space() {
+        use taffy::style::{Display, LengthPercentageAuto};
+        for (min_width, max_width, expected) in [(None, Some(50.0), 50.0), (Some(80.0), None, 80.0)] {
+            let mut taffy: TaffyTree<()> = TaffyTree::new();
+            let node = taffy
+                .new_leaf_with_context(
+                    Style {
+                        display: Display::Flex,
+                        margin: Rect::length(20.0).map(|m: taffy::LengthPercentage| LengthPercentageAuto::from(m)),
+                        min_size: Size {
+                            width: min_width.map_or(taffy::Dimension::auto(), taffy::Dimension::from_length),
+                            height: taffy::Dimension::auto(),
+                        },
+                        max_size: Size {
+                            width: max_width.map_or(taffy::Dimension::auto(), taffy::Dimension::from_length),
+                            height: taffy::Dimension::auto(),
+                        },
+                        ..Default::default()
+                    },
+                    (),
+                )
+                .unwrap();
+            let mut seen = None;
+            taffy
+                .compute_layout_with_measure(
+                    node,
+                    Size { width: AvailableSpace::Definite(100.0), height: AvailableSpace::MaxContent },
+                    |inputs, _node, _ctx, style| {
+                        taffy::compute_leaf_layout(
+                            inputs,
+                            style,
+                            |_, _| 0.0,
+                            |_known_dimensions, available_space| {
+                                seen = Some(available_space.width);
+                                Size { width: 200.0, height: 10.0 }
+                            },
+                        )
+                    },
+                )
+                .unwrap();
+            assert_eq!(seen, Some(AvailableSpace::Definite(expected)));
+        }
+    }
 }

@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    Test description
+  </title>
+</head>
+<body>
+
+<!-- In-flow children (leaf, flex, block, grid) with a 20px margin and 200px of wrappable content inside an auto-width float
+     in a 100px wide block container. The float is 100px wide (and each child 80px) -->
+<div id="test-root" style="display: block;">
+  <div style="display: block; width: 100px; overflow: hidden;">
+    <div style="display: block; float: left;">
+      <div style="margin-left: 20px;">HH&ZeroWidthSpace;HH&ZeroWidthSpace;HH&ZeroWidthSpace;HH&ZeroWidthSpace;HH&ZeroWidthSpace;HH&ZeroWidthSpace;HH&ZeroWidthSpace;HH&ZeroWidthSpace;HH&ZeroWidthSpace;HH</div>
+    </div>
+  </div>
+  <div style="display: block; width: 100px; overflow: hidden;">
+    <div style="display: block; float: left;">
+      <div style="display: flex; flex-wrap: wrap; margin-left: 20px;">
+        <div style="width: 20px; height: 10px; flex-shrink: 0;"></div>
+        <div style="width: 20px; height: 10px; flex-shrink: 0;"></div>
+        <div style="width: 20px; height: 10px; flex-shrink: 0;"></div>
+        <div style="width: 20px; height: 10px; flex-shrink: 0;"></div>
+        <div style="width: 20px; height: 10px; flex-shrink: 0;"></div>
+        <div style="width: 20px; height: 10px; flex-shrink: 0;"></div>
+        <div style="width: 20px; height: 10px; flex-shrink: 0;"></div>
+        <div style="width: 20px; height: 10px; flex-shrink: 0;"></div>
+        <div style="width: 20px; height: 10px; flex-shrink: 0;"></div>
+        <div style="width: 20px; height: 10px; flex-shrink: 0;"></div>
+      </div>
+    </div>
+  </div>
+  <div style="display: block; width: 100px; overflow: hidden;">
+    <div style="display: block; float: left;">
+      <div style="display: block; margin-left: 20px;">
+        <div>HH&ZeroWidthSpace;HH&ZeroWidthSpace;HH&ZeroWidthSpace;HH&ZeroWidthSpace;HH&ZeroWidthSpace;HH&ZeroWidthSpace;HH&ZeroWidthSpace;HH&ZeroWidthSpace;HH&ZeroWidthSpace;HH</div>
+      </div>
+    </div>
+  </div>
+  <div style="display: block; width: 100px; overflow: hidden;">
+    <div style="display: block; float: left;">
+      <div style="display: grid; margin-left: 20px;">
+        <div>HH&ZeroWidthSpace;HH&ZeroWidthSpace;HH&ZeroWidthSpace;HH&ZeroWidthSpace;HH&ZeroWidthSpace;HH&ZeroWidthSpace;HH&ZeroWidthSpace;HH&ZeroWidthSpace;HH&ZeroWidthSpace;HH</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
