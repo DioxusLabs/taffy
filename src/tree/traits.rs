@@ -126,7 +126,9 @@
 //! }
 //! ```
 //!
-use super::{DetailedLayoutInfo, Layout, LayoutInput, LayoutOutput, NodeId, RequestedAxis, RunMode, SizingMode};
+use super::{
+    ChildLayoutJob, DetailedLayoutInfo, Layout, LayoutInput, LayoutOutput, NodeId, RequestedAxis, RunMode, SizingMode,
+};
 use crate::debug::debug_log;
 use crate::geometry::{AbsoluteAxis, Line, Size};
 use crate::style::{AvailableSpace, CoreStyle, OofItemStyle};
@@ -201,6 +203,20 @@ pub trait LayoutPartialTree: TraversePartialTree {
 
     /// Compute the specified node's size or full layout given the specified constraints
     fn compute_child_layout(&mut self, node_id: NodeId, inputs: LayoutInput) -> LayoutOutput;
+
+    /// Compute a batch of child layouts, writing the result of each job to its `output` field.
+    ///
+    /// The jobs are for distinct children of `parent_node_id`, and no job's input depends on another job's
+    /// output. Implementations may therefore compute them in any order, or concurrently. The result must be
+    /// the same as calling [`compute_child_layout`](Self::compute_child_layout) for each job in order,
+    /// which is what the default implementation does.
+    #[inline(always)]
+    fn compute_child_layouts(&mut self, parent_node_id: NodeId, jobs: &mut [ChildLayoutJob]) {
+        let _ = parent_node_id;
+        for job in jobs {
+            job.output = self.compute_child_layout(job.node, job.input);
+        }
+    }
 }
 
 /// Extends [`LayoutPartialTree`] with the operations needed by the out-of-flow positioning pass
