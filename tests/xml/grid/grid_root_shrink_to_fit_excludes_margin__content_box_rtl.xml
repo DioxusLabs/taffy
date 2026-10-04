@@ -1,0 +1,15 @@
+<test name="grid_root_shrink_to_fit_excludes_margin__content_box_rtl" use-rounding="true">
+  <viewport width="100px" height="max-content"/>
+  <input>
+    <div display="grid" box-sizing="content-box" direction="rtl" position="relative" margin-left="20px">
+      <text box-sizing="content-box" direction="rtl" position="relative">
+        HH​HH​HH​HH​HH​HH​HH​HH​HH​HH
+      </text>
+    </div>
+  </input>
+  <expectations>
+    <node x="20" y="0" width="80" height="30" resolved-rows="30px" resolved-columns="80px">
+      <node x="0" y="0" width="80" height="30"/>
+    </node>
+  </expectations>
+</test>

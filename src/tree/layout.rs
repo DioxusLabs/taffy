@@ -143,6 +143,9 @@ pub struct LayoutInput {
     pub parent_size: Size<Option<f32>>,
     /// Available space represents an amount of space to layout into, and is used as a soft constraint
     /// for the purpose of wrapping.
+    ///
+    /// A definite available space is the space available to the node's border box: the parent
+    /// subtracts the node's margins before passing it, and the node must not subtract them again.
     pub available_space: Size<AvailableSpace>,
     /// Specific to CSS Block layout. Used for correctly computing margin collapsing. You probably want to set this to `Line::FALSE`.
     pub vertical_margins_are_collapsible: Line<bool>,

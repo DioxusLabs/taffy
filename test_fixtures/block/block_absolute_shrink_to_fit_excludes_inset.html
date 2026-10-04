@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    Test description
+  </title>
+</head>
+<body>
+
+<!-- The space available to a shrink-to-fit absolutely positioned box excludes its insets as well as its margins:
+     each wrapping flex box has 40px available and so wraps its three 30px items onto three lines -->
+<div id="test-root" style="display: block;">
+  <div style="display: block; width: 100px; height: 100px;">
+    <div style="position: absolute; display: flex; flex-wrap: wrap; left: 60px;">
+      <div style="width: 30px; height: 10px; flex-shrink: 0;"></div>
+      <div style="width: 30px; height: 10px; flex-shrink: 0;"></div>
+      <div style="width: 30px; height: 10px; flex-shrink: 0;"></div>
+    </div>
+  </div>
+  <div style="display: block; width: 100px; height: 100px;">
+    <div style="position: absolute; display: flex; flex-wrap: wrap; right: 60px;">
+      <div style="width: 30px; height: 10px; flex-shrink: 0;"></div>
+      <div style="width: 30px; height: 10px; flex-shrink: 0;"></div>
+      <div style="width: 30px; height: 10px; flex-shrink: 0;"></div>
+    </div>
+  </div>
+  <div style="display: block; width: 100px; height: 100px;">
+    <div style="position: absolute; display: flex; flex-wrap: wrap; left: 40px; margin-left: 20px;">
+      <div style="width: 30px; height: 10px; flex-shrink: 0;"></div>
+      <div style="width: 30px; height: 10px; flex-shrink: 0;"></div>
+      <div style="width: 30px; height: 10px; flex-shrink: 0;"></div>
+    </div>
+  </div>
+  <div style="display: block; width: 100px; height: 100px;">
+    <div style="position: absolute; display: flex; flex-wrap: wrap; margin-left: 60px;">
+      <div style="width: 30px; height: 10px; flex-shrink: 0;"></div>
+      <div style="width: 30px; height: 10px; flex-shrink: 0;"></div>
+      <div style="width: 30px; height: 10px; flex-shrink: 0;"></div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

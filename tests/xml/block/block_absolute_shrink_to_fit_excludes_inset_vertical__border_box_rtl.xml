@@ -1,0 +1,53 @@
+<test name="block_absolute_shrink_to_fit_excludes_inset_vertical__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="block" direction="rtl" position="absolute">
+      <div display="block" direction="rtl" position="relative" width="100px" height="100px">
+        <div display="flex" direction="rtl" position="absolute" flex-direction="column" flex-wrap="wrap" top="60px">
+          <div direction="rtl" position="relative" flex-shrink="0" width="10px" height="30px"/>
+          <div direction="rtl" position="relative" flex-shrink="0" width="10px" height="30px"/>
+          <div direction="rtl" position="relative" flex-shrink="0" width="10px" height="30px"/>
+        </div>
+      </div>
+      <div display="block" direction="rtl" position="relative" width="100px" height="100px">
+        <div display="flex" direction="rtl" position="absolute" flex-direction="column" flex-wrap="wrap" bottom="60px">
+          <div direction="rtl" position="relative" flex-shrink="0" width="10px" height="30px"/>
+          <div direction="rtl" position="relative" flex-shrink="0" width="10px" height="30px"/>
+          <div direction="rtl" position="relative" flex-shrink="0" width="10px" height="30px"/>
+        </div>
+      </div>
+      <div display="block" direction="rtl" position="relative" width="100px" height="100px">
+        <div display="flex" direction="rtl" position="absolute" flex-direction="column" flex-wrap="wrap" margin-top="20px" top="40px">
+          <div direction="rtl" position="relative" flex-shrink="0" width="10px" height="30px"/>
+          <div direction="rtl" position="relative" flex-shrink="0" width="10px" height="30px"/>
+          <div direction="rtl" position="relative" flex-shrink="0" width="10px" height="30px"/>
+        </div>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="100" height="300">
+      <node x="0" y="0" width="100" height="100">
+        <node x="90" y="60" width="10" height="90">
+          <node x="0" y="0" width="10" height="30"/>
+          <node x="0" y="30" width="10" height="30"/>
+          <node x="0" y="60" width="10" height="30"/>
+        </node>
+      </node>
+      <node x="0" y="100" width="100" height="100">
+        <node x="90" y="-50" width="10" height="90">
+          <node x="0" y="0" width="10" height="30"/>
+          <node x="0" y="30" width="10" height="30"/>
+          <node x="0" y="60" width="10" height="30"/>
+        </node>
+      </node>
+      <node x="0" y="200" width="100" height="100">
+        <node x="90" y="60" width="10" height="90">
+          <node x="0" y="0" width="10" height="30"/>
+          <node x="0" y="30" width="10" height="30"/>
+          <node x="0" y="60" width="10" height="30"/>
+        </node>
+      </node>
+    </node>
+  </expectations>
+</test>

@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    Test description
+  </title>
+</head>
+<body>
+
+<!-- Block-axis insets and margins on a shrink-to-fit absolutely positioned box reduce the space available to it, but
+     this does not cause a column flex box to wrap, it overflows the space instead (height 90px) -->
+<div id="test-root" style="display: block;">
+  <div style="display: block; width: 100px; height: 100px;">
+    <div style="position: absolute; display: flex; flex-direction: column; flex-wrap: wrap; top: 60px;">
+      <div style="width: 10px; height: 30px; flex-shrink: 0;"></div>
+      <div style="width: 10px; height: 30px; flex-shrink: 0;"></div>
+      <div style="width: 10px; height: 30px; flex-shrink: 0;"></div>
+    </div>
+  </div>
+  <div style="display: block; width: 100px; height: 100px;">
+    <div style="position: absolute; display: flex; flex-direction: column; flex-wrap: wrap; bottom: 60px;">
+      <div style="width: 10px; height: 30px; flex-shrink: 0;"></div>
+      <div style="width: 10px; height: 30px; flex-shrink: 0;"></div>
+      <div style="width: 10px; height: 30px; flex-shrink: 0;"></div>
+    </div>
+  </div>
+  <div style="display: block; width: 100px; height: 100px;">
+    <div style="position: absolute; display: flex; flex-direction: column; flex-wrap: wrap; top: 40px; margin-top: 20px;">
+      <div style="width: 10px; height: 30px; flex-shrink: 0;"></div>
+      <div style="width: 10px; height: 30px; flex-shrink: 0;"></div>
+      <div style="width: 10px; height: 30px; flex-shrink: 0;"></div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
