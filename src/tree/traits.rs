@@ -1205,26 +1205,6 @@ pub(crate) trait LayoutPartialTreeExt: LayoutPartialTree {
         ))
     }
 
-    /// Compute the layout of a child whose own sizing styles have already been resolved by the caller:
-    /// the child's preferred size must already be included in the known dimensions of `inputs`.
-    /// `constraints` may be `None` if both of the child's dimensions are known, or if the child's sizing styles
-    /// do not constrain the size that it reports.
-    #[inline(always)]
-    fn compute_child_layout_with_constraints(
-        &mut self,
-        node_id: NodeId,
-        mut inputs: LayoutInput,
-        constraints: Option<&ChildStyleConstraints>,
-    ) -> LayoutOutput {
-        let Some(constraints) = constraints else {
-            return self.compute_child_layout(node_id, inputs);
-        };
-        let auto_axes = constraints.apply_to_inputs(&mut inputs);
-        let mut output = self.compute_child_layout(node_id, inputs);
-        constraints.apply_to_output(auto_axes, &mut output);
-        output
-    }
-
     /// Alias to `resolve_calc_value` with a shorter function name
     #[inline(always)]
     #[cfg(feature = "calc")]

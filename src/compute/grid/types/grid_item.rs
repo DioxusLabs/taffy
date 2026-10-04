@@ -2,7 +2,7 @@
 use super::GridTrack;
 use crate::compute::common::sizing_keyword::{resolve_sizing_keyword, SizingKeywordResolution};
 use crate::compute::grid::OriginZeroLine;
-use crate::geometry::AbstractAxis;
+use crate::geometry::{AbsoluteAxis, AbstractAxis};
 use crate::geometry::{Line, Point, Rect, Size};
 use crate::style::{AlignItems, AlignSelf, AvailableSpace, Dimension, LengthPercentageAuto, Overflow};
 use crate::tree::traits::{has_min_max_sizing_keyword, resolve_extrinsic_min_max_keywords, ChildStyleConstraints};
@@ -308,70 +308,28 @@ impl GridItem {
         known_dimensions
     }
 
-    /// The constraints that the item's own sizing styles place on the size that it reports when it is measured
-    /// with the known_dimensions for the given grid area size.
-    ///
-    /// These are not cached (most items have none, and caching them would make every `GridItem` larger). Items
-    /// which cannot have any are detected from their styles alone, without resolving anything.
+    /// Whether the item has any of the styles (a min size, max size or aspect ratio) that can constrain the size
+    /// that it reports when it is measured. Most items have none, which is detected here from the item's styles
+    /// alone (without resolving anything).
     #[inline(always)]
-    fn style_constraints(
-        &self,
-        tree: &mut impl LayoutPartialTree,
-        grid_area_size: Size<Option<f32>>,
-        fit_content_max_fallback: AvailableSpace,
-    ) -> Option<ChildStyleConstraints> {
-        if self.aspect_ratio.is_none()
+    fn has_constraining_styles(&self) -> bool {
+        !(self.aspect_ratio.is_none()
             && self.min_size.width.is_auto()
             && self.min_size.height.is_auto()
             && self.max_size.width.is_auto()
-            && self.max_size.height.is_auto()
-        {
-            return None;
-        }
-        self.resolve_style_constraints(tree, grid_area_size, fit_content_max_fallback)
+            && self.max_size.height.is_auto())
     }
 
-    /// The slow path of [`Self::style_constraints`], for items that have sizing styles that may constrain them
-    #[inline(never)]
-    fn resolve_style_constraints(
-        &self,
-        tree: &mut impl LayoutPartialTree,
-        grid_area_size: Size<Option<f32>>,
-        fit_content_max_fallback: AvailableSpace,
-    ) -> Option<ChildStyleConstraints> {
-        self.resolve_sizing_styles::<true>(tree, grid_area_size, fit_content_max_fallback).1
-    }
-
-    /// Compute the known_dimensions to be passed to the child sizing functions
-    /// The key thing that is being done here is applying stretch alignment, which is necessary to
-    /// allow percentage sizes further down the tree to resolve properly in some cases
+    /// Resolve the constraints that the item's own sizing styles place on its size, for the given grid area size.
     ///
-    /// `fit_content_max_fallback` is the constraint that a `fit-content` max width is measured under if the
-    /// width of the grid area is indefinite
-    fn known_dimensions(
-        &self,
-        tree: &mut impl LayoutPartialTree,
-        grid_area_size: Size<Option<f32>>,
-        fit_content_max_fallback: AvailableSpace,
-    ) -> Size<Option<f32>> {
-        self.resolve_sizing_styles::<false>(tree, grid_area_size, fit_content_max_fallback).0
-    }
-
-    /// Computes the known_dimensions to be passed to the child sizing functions (see [`Self::known_dimensions`])
-    /// and, if `WITH_CONSTRAINTS` is set, the constraints that the item's own sizing styles place on the size
-    /// that the item reports (if any of the item's dimensions are not known).
-    ///
-    /// The two are computed from the same resolved styles. `WITH_CONSTRAINTS` is a const parameter so that
-    /// callers that only want the known_dimensions do not pay for building and returning the constraints.
+    /// These are not cached (caching them would make every `GridItem` larger, and most items have none: see
+    /// [`Self::has_constraining_styles`]), so this only does the work that is needed to resolve them.
     #[inline(always)]
-    fn resolve_sizing_styles<const WITH_CONSTRAINTS: bool>(
+    fn style_constraints(
         &self,
-        tree: &mut impl LayoutPartialTree,
+        tree: &impl LayoutPartialTree,
         grid_area_size: Size<Option<f32>>,
-        fit_content_max_fallback: AvailableSpace,
-    ) -> (Size<Option<f32>>, Option<ChildStyleConstraints>) {
-        let margins = self.margins_axis_sums_with_baseline_shims(grid_area_size.width, tree);
-
+    ) -> ChildStyleConstraints {
         let aspect_ratio = self.aspect_ratio;
         // CSS resolves percentage padding and border against the inline size of the containing
         // block. For a grid item under intrinsic measurement, that inline-size basis is the grid
@@ -382,22 +340,16 @@ impl GridItem {
         let padding = self.padding.resolve_or_zero(grid_area_size.width, |val, basis| tree.calc(val, basis));
         let border = self.border.resolve_or_zero(grid_area_size.width, |val, basis| tree.calc(val, basis));
         let padding_border_size = (padding + border).sum_axes();
-        let box_sizing_adjustment =
-            if self.box_sizing == BoxSizing::ContentBox { padding_border_size } else { Size::ZERO };
-        let inherent_size = self
-            .size
-            .maybe_resolve(grid_area_size, |val, basis| tree.calc(val, basis))
-            .maybe_apply_aspect_ratio(aspect_ratio)
-            .maybe_add(box_sizing_adjustment);
-        let grid_area_minus_item_margins_size = grid_area_size.maybe_sub(margins).maybe_max(Size::ZERO);
-
+        let box_sizing_adjustment = self.box_sizing_adjustment(padding_border_size);
         let mut resolved_min_size = self.min_size.maybe_resolve(grid_area_size, |val, basis| tree.calc(val, basis));
         let mut resolved_max_size = self.max_size.maybe_resolve(grid_area_size, |val, basis| tree.calc(val, basis));
         // `stretch` min and max sizes resolve against the grid area (and are cyclic while the size of
-        // the grid area is being determined). Content-based min and max widths are applied below.
+        // the grid area is being determined). Content-based min and max widths are applied by the caller.
         let mut keyword_min_width = Dimension::auto();
         let mut keyword_max_width = Dimension::auto();
         if has_min_max_sizing_keyword(self.min_size, self.max_size) {
+            let margins = self.margins_axis_sums_with_baseline_shims(grid_area_size.width, tree);
+            let grid_area_minus_item_margins_size = grid_area_size.maybe_sub(margins).maybe_max(Size::ZERO);
             (resolved_min_size, keyword_min_width) = resolve_extrinsic_min_max_keywords(
                 self.min_size,
                 resolved_min_size,
@@ -414,6 +366,82 @@ impl GridItem {
         let min_size = resolved_min_size.maybe_apply_aspect_ratio(aspect_ratio).maybe_add(box_sizing_adjustment);
         let untransferred_max_size = resolved_max_size.maybe_add(box_sizing_adjustment);
         let max_size = resolved_max_size.maybe_apply_aspect_ratio(aspect_ratio).maybe_add(box_sizing_adjustment);
+        ChildStyleConstraints {
+            min_size,
+            max_size,
+            untransferred_max_size,
+            aspect_ratio,
+            padding_border_size,
+            keyword_min_width,
+            min_size_is_stretch: self.min_size.map(|style| style.is_stretch()),
+            keyword_max_width,
+        }
+    }
+
+    /// The amount that must be added to a size that is specified by the item's styles to convert it to a border-box size
+    #[inline(always)]
+    fn box_sizing_adjustment(&self, padding_border_size: Size<f32>) -> Size<f32> {
+        if self.box_sizing == BoxSizing::ContentBox {
+            padding_border_size
+        } else {
+            Size::ZERO
+        }
+    }
+
+    /// Measure the item's size in one axis (for one of its intrinsic size contributions), applying the
+    /// constraints that the item's own sizing styles place on the size that it reports.
+    #[inline(always)]
+    fn measure_contribution(&self, tree: &mut impl LayoutPartialTree, inputs: LayoutInput, axis: AbsoluteAxis) -> f32 {
+        if !self.has_constraining_styles() {
+            return tree.compute_child_layout(self.node, inputs).size.get_abs(axis);
+        }
+        self.measure_constrained_contribution(tree, inputs, axis)
+    }
+
+    /// The slow path of [`Self::measure_contribution`], for items that have styles that may constrain their size
+    #[inline(never)]
+    fn measure_constrained_contribution(
+        &self,
+        tree: &mut impl LayoutPartialTree,
+        mut inputs: LayoutInput,
+        axis: AbsoluteAxis,
+    ) -> f32 {
+        let constraints = self.style_constraints(tree, inputs.parent_size);
+        let auto_axes = constraints.apply_to_inputs(&mut inputs);
+        let mut output = tree.compute_child_layout(self.node, inputs);
+        constraints.apply_to_output(auto_axes, &mut output);
+        output.size.get_abs(axis)
+    }
+
+    /// Compute the known_dimensions to be passed to the child sizing functions
+    /// The key thing that is being done here is applying stretch alignment, which is necessary to
+    /// allow percentage sizes further down the tree to resolve properly in some cases
+    ///
+    /// `fit_content_max_fallback` is the constraint that a `fit-content` max width is measured under if the
+    /// width of the grid area is indefinite
+    fn known_dimensions(
+        &self,
+        tree: &mut impl LayoutPartialTree,
+        grid_area_size: Size<Option<f32>>,
+        fit_content_max_fallback: AvailableSpace,
+    ) -> Size<Option<f32>> {
+        let margins = self.margins_axis_sums_with_baseline_shims(grid_area_size.width, tree);
+
+        let ChildStyleConstraints {
+            min_size,
+            max_size,
+            aspect_ratio,
+            padding_border_size,
+            keyword_min_width,
+            keyword_max_width,
+            ..
+        } = self.style_constraints(tree, grid_area_size);
+        let inherent_size = self
+            .size
+            .maybe_resolve(grid_area_size, |val, basis| tree.calc(val, basis))
+            .maybe_apply_aspect_ratio(aspect_ratio)
+            .maybe_add(self.box_sizing_adjustment(padding_border_size));
+        let grid_area_minus_item_margins_size = grid_area_size.maybe_sub(margins).maybe_max(Size::ZERO);
 
         // If node is absolutely positioned and width is not set explicitly, then deduce it
         // from left, right and container_content_box if both are set.
@@ -498,30 +526,7 @@ impl GridItem {
             width => width,
         };
 
-        // The item's own sizing styles only constrain the size that it reports in axes in which
-        // its size is not already known (and only if it has a min size, max size or aspect ratio)
-        let known_dimensions = Size { width, height };
-        let is_constrained = WITH_CONSTRAINTS
-            && !known_dimensions.both_axis_defined()
-            && (aspect_ratio.is_some()
-                || min_size.width.is_some()
-                || min_size.height.is_some()
-                || max_size.width.is_some()
-                || max_size.height.is_some()
-                || !keyword_min_width.is_auto()
-                || !keyword_max_width.is_auto());
-        let constraints = is_constrained.then_some(ChildStyleConstraints {
-            min_size,
-            max_size,
-            untransferred_max_size,
-            aspect_ratio,
-            padding_border_size,
-            keyword_min_width,
-            min_size_is_stretch: self.min_size.map(|style| style.is_stretch()),
-            keyword_max_width,
-        });
-
-        (known_dimensions, constraints)
+        Size { width, height }
     }
 
     /// Returns the grid area's size in the specified axis when every spanned track has a definite fixed size.
@@ -667,9 +672,8 @@ impl GridItem {
             tree,
         );
         let axis = axis.as_abs_naive();
-        let constraints = self.style_constraints(tree, grid_area_size, fit_content_max_fallback);
-        tree.compute_child_layout_with_constraints(
-            self.node,
+        self.measure_contribution(
+            tree,
             LayoutInput {
                 known_dimensions,
                 known_dimensions_are_definite: Size { width: true, height: true },
@@ -679,10 +683,8 @@ impl GridItem {
                 run_mode: RunMode::ComputeSize,
                 vertical_margins_are_collapsible: Line::FALSE,
             },
-            constraints.as_ref(),
+            axis,
         )
-        .size
-        .get_abs(axis)
     }
 
     /// Retrieve the item's min content contribution from the cache or compute it using the provided parameters
@@ -727,9 +729,8 @@ impl GridItem {
             tree,
         );
         let axis = axis.as_abs_naive();
-        let constraints = self.style_constraints(tree, grid_area_size, AvailableSpace::MaxContent);
-        tree.compute_child_layout_with_constraints(
-            self.node,
+        self.measure_contribution(
+            tree,
             LayoutInput {
                 known_dimensions,
                 known_dimensions_are_definite: Size { width: true, height: true },
@@ -739,10 +740,8 @@ impl GridItem {
                 run_mode: RunMode::ComputeSize,
                 vertical_margins_are_collapsible: Line::FALSE,
             },
-            constraints.as_ref(),
+            axis,
         )
-        .size
-        .get_abs(axis)
     }
 
     /// Subtract the item's margins (and baseline shim) from the definite axes of the space available
