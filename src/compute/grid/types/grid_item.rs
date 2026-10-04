@@ -823,6 +823,14 @@ impl GridItem {
         // A definite preferred size is the item's min-content contribution, which is subject to the item's
         // min and max sizes. A `stretch` min or max size is cyclic here, and behaves as the initial value.
         if let Some(size) = preferred_size {
+            // Fast path for the common case of an item with no min or max size
+            if self.min_size.width.is_auto()
+                && self.min_size.height.is_auto()
+                && self.max_size.width.is_auto()
+                && self.max_size.height.is_auto()
+            {
+                return size.max(padding_border_size.get(axis));
+            }
             let resolve = |style: Size<Dimension>| {
                 style
                     .maybe_resolve(grid_area_size, |val, basis| tree.calc(val, basis))
