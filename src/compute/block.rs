@@ -9,7 +9,9 @@ use crate::tree::{
     AxisStaticPosition, LayoutPartialTree, LayoutPartialTreeExt, NodeId, OofCandidate, OofCandidates,
     OofPositioningArea,
 };
-use crate::tree::{Baselines, CollapsibleMarginSet, Layout, LayoutInput, LayoutOutput, RunMode, SizingMode};
+use crate::tree::{
+    Baselines, ChildLayoutJob, CollapsibleMarginSet, Layout, LayoutInput, LayoutOutput, RunMode, SizingMode,
+};
 use crate::util::debug::debug_log;
 use crate::util::sys::f32_max;
 use crate::util::sys::Vec;
@@ -42,6 +44,9 @@ pub struct BlockFormattingContext {
     /// The float positioning context that handles positioning floats within this Block Formatting Context
     #[cfg(feature = "float_layout")]
     float_context: FloatContext,
+    /// Whether any box in this Block Formatting Context may be floated
+    #[cfg(feature = "float_layout")]
+    may_contain_floats: bool,
 }
 
 impl Default for BlockFormattingContext {
@@ -49,6 +54,8 @@ impl Default for BlockFormattingContext {
         Self {
             #[cfg(feature = "float_layout")]
             float_context: FloatContext::new(),
+            #[cfg(feature = "float_layout")]
+            may_contain_floats: true,
         }
     }
 }
@@ -57,6 +64,37 @@ impl BlockFormattingContext {
     /// Create a new `BlockFormattingContext` with the specified width constraint
     pub fn new() -> Self {
         Default::default()
+    }
+
+    /// Create a new `BlockFormattingContext`, specifying whether any box in it may be floated.
+    ///
+    /// Passing `false` is a promise that no floats will be placed in the context. Blocks in such a
+    /// context compute the layouts of their in-flow children as a batch.
+    pub fn with_may_contain_floats(may_contain_floats: bool) -> Self {
+        #[cfg(not(feature = "float_layout"))]
+        let _ = may_contain_floats;
+        Self {
+            #[cfg(feature = "float_layout")]
+            float_context: FloatContext::new(),
+            #[cfg(feature = "float_layout")]
+            may_contain_floats,
+        }
+    }
+
+    /// Create a new `BlockFormattingContext` that will not contain any floats
+    pub fn float_free() -> Self {
+        Self::with_may_contain_floats(false)
+    }
+
+    /// Create a `BlockContext` for a block that is not the root of its Block Formatting Context,
+    /// without access to the rest of that context.
+    ///
+    /// This is only equivalent to a context created by [`BlockContext::sub_context`] if the Block
+    /// Formatting Context does not contain floats, so `self` should have been created by [`Self::float_free`].
+    pub fn detached_block_context(&mut self) -> BlockContext<'_> {
+        let mut block_ctx = self.root_block_context();
+        block_ctx.is_root = false;
+        block_ctx
     }
 
     /// Create an initial `BlockContext` for this `BlockFormattingContext`
@@ -130,6 +168,15 @@ impl BlockContext<'_> {
     /// Returns whether this block is the root block of it's Block Formatting Context
     pub fn is_bfc_root(&self) -> bool {
         self.is_root
+    }
+
+    /// Returns whether any box in the Block Formatting Context may be floated
+    #[inline(always)]
+    pub fn may_contain_floats(&self) -> bool {
+        #[cfg(feature = "float_layout")]
+        return self.bfc.may_contain_floats;
+        #[cfg(not(feature = "float_layout"))]
+        return false;
     }
 }
 
@@ -455,7 +502,7 @@ pub fn compute_block_layout(
             inherited_bfc,
         ),
         _ => {
-            let mut root_bfc = BlockFormattingContext::new();
+            let mut root_bfc = BlockFormattingContext::with_may_contain_floats(tree.bfc_may_contain_floats(node_id));
             let mut root_ctx = root_bfc.root_block_context();
             compute_inner(
                 tree,
@@ -596,7 +643,7 @@ fn compute_inner(
     // 2. Compute container width
     let container_outer_width = known_dimensions.width.unwrap_or_else(|| {
         let available_width = available_space.width.maybe_sub(content_box_inset.horizontal_axis_sum());
-        let intrinsic_width = determine_content_based_container_width(tree, &items, available_width)
+        let intrinsic_width = determine_content_based_container_width(tree, node_id, &items, available_width)
             + content_box_inset.horizontal_axis_sum();
         intrinsic_width.maybe_clamp(min_size.width, max_size.width).maybe_max(Some(padding_border_size.width))
     });
@@ -640,6 +687,7 @@ fn compute_inner(
         mut first_baseline,
     ) = perform_final_layout_on_in_flow_children(
         tree,
+        node_id,
         run_mode,
         &mut items,
         container_outer_width,
@@ -1002,10 +1050,50 @@ fn resolve_stretch_height(
 #[inline]
 fn determine_content_based_container_width(
     tree: &mut impl LayoutPartialTree,
+    node_id: NodeId,
     items: &[BlockItem],
     available_width: AvailableSpace,
 ) -> f32 {
     let available_space = Size { width: available_width, height: AvailableSpace::MinContent };
+
+    // Measure all of the items that don't have a definite width as a batch
+    let mut jobs: Vec<ChildLayoutJob> = Vec::new();
+    for item in items.iter().filter(|item| !item.position.is_out_of_flow()) {
+        let known_dimensions = item.size.maybe_clamp(item.min_size, item.max_size);
+        if known_dimensions.width.is_some() {
+            continue;
+        }
+        let item_available_width =
+            match resolve_sizing_keyword(item.size_style.width, None, None, |val, basis| tree.calc(val, basis)) {
+                Some(SizingKeywordResolution::Measure(available_width)) => available_width,
+                Some(SizingKeywordResolution::Exact(width)) => AvailableSpace::Definite(width),
+                None => {
+                    let item_x_margin_sum = item
+                        .margin
+                        .resolve_or_zero(available_space.width.into_option(), |val, basis| tree.calc(val, basis))
+                        .horizontal_axis_sum();
+                    available_space.width.maybe_sub(item_x_margin_sum)
+                }
+            };
+        jobs.push(ChildLayoutJob::new(
+            item.node_id,
+            LayoutInput {
+                known_dimensions,
+                known_dimensions_are_definite: Size { width: true, height: true },
+                parent_size: Size::NONE,
+                available_space: Size { width: item_available_width, height: available_space.height },
+                sizing_mode: SizingMode::InherentSize,
+                axis: RequestedAxis::Horizontal,
+                run_mode: RunMode::ComputeSize,
+                // Must match the value passed when laying the item out (see `Cache`)
+                vertical_margins_are_collapsible: if item.is_in_same_bfc { Line::TRUE } else { Line::FALSE },
+            },
+        ));
+    }
+    if !jobs.is_empty() {
+        tree.compute_child_layouts(node_id, &mut jobs);
+    }
+    let mut measured_widths = jobs.iter().map(|job| job.output.size.width);
 
     let mut max_child_width = 0.0;
     #[cfg(feature = "float_layout")]
@@ -1017,24 +1105,7 @@ fn determine_content_based_container_width(
             .margin
             .resolve_or_zero(available_space.width.into_option(), |val, basis| tree.calc(val, basis))
             .horizontal_axis_sum();
-        let width = known_dimensions.width.unwrap_or_else(|| {
-            let item_available_width =
-                match resolve_sizing_keyword(item.size_style.width, None, None, |val, basis| tree.calc(val, basis)) {
-                    Some(SizingKeywordResolution::Measure(available_width)) => available_width,
-                    Some(SizingKeywordResolution::Exact(width)) => AvailableSpace::Definite(width),
-                    None => available_space.width.maybe_sub(item_x_margin_sum),
-                };
-            tree.measure_child_size(
-                item.node_id,
-                known_dimensions,
-                Size::NONE,
-                Size { width: item_available_width, height: available_space.height },
-                SizingMode::InherentSize,
-                crate::AbsoluteAxis::Horizontal,
-                // Must match the value passed when laying the item out (see `Cache`)
-                if item.is_in_same_bfc { Line::TRUE } else { Line::FALSE },
-            )
-        });
+        let width = known_dimensions.width.unwrap_or_else(|| measured_widths.next().unwrap());
 
         let width = f32_max(width, item.padding_border_sum.width) + item_x_margin_sum;
 
@@ -1055,11 +1126,97 @@ fn determine_content_based_container_width(
     max_child_width
 }
 
+/// Compute the `LayoutInput` used to lay out an in-flow, non-floated item
+#[inline]
+#[allow(clippy::too_many_arguments)]
+fn in_flow_item_layout_input(
+    tree: &mut impl LayoutPartialTree,
+    item: &BlockItem,
+    run_mode: RunMode,
+    justify_self: AlignSelf,
+    stretch_width: f32,
+    item_non_auto_margin: Rect<f32>,
+    children_margins_adjoin_own_edges: Line<bool>,
+    container_inner_width: f32,
+    container_percentage_resolution_height: Option<f32>,
+    parent_size: Size<Option<f32>>,
+    available_space: Size<AvailableSpace>,
+) -> LayoutInput {
+    let is_stretch = justify_self.keyword == AlignItemsKeyword::Stretch;
+    let is_normal_or_stretch = is_stretch || justify_self.keyword == AlignItemsKeyword::Normal;
+
+    // Unless stretched, tables and compressible replaced elements resolve their own width
+    // <https://www.w3.org/TR/CSS22/visudet.html#block-replaced-width>
+    let known_dimensions = if (item.is_table || item.is_compressible_replaced) && !is_stretch {
+        Size::NONE
+    } else {
+        // The automatic width of a block-level box whose `justify-self` is neither `normal` nor `stretch`
+        // is equivalent to `fit-content` rather than `stretch`
+        let width_style = if !is_normal_or_stretch && item.size_style.width.is_auto() {
+            Dimension::fit_content()
+        } else {
+            item.size_style.width
+        };
+
+        // Items with a sizing keyword width (min-content, max-content, fit-content,
+        // fit-content(...), stretch) resolve their width either directly or by measuring
+        // the item under the corresponding available space constraint
+        let keyword_width =
+            resolve_sizing_keyword(width_style, Some(stretch_width), Some(container_inner_width), |val, basis| {
+                tree.calc(val, basis)
+            })
+            .map(|resolution| match resolution {
+                SizingKeywordResolution::Exact(width) => width,
+                SizingKeywordResolution::Measure(item_available_width) => tree.measure_child_size(
+                    item.node_id,
+                    Size::NONE,
+                    parent_size,
+                    Size { width: item_available_width, height: AvailableSpace::MaxContent },
+                    SizingMode::InherentSize,
+                    crate::AbsoluteAxis::Horizontal,
+                    // Must match the value passed when laying the item out (see `Cache`)
+                    if item.is_in_same_bfc { Line::TRUE } else { Line::FALSE },
+                ),
+            });
+
+        let keyword_height = resolve_stretch_height(
+            item.size_style.height,
+            container_percentage_resolution_height,
+            item_non_auto_margin,
+            children_margins_adjoin_own_edges,
+        );
+
+        item.size
+            .map_width(|width| {
+                Some(
+                    width
+                        .or(keyword_width)
+                        .unwrap_or(stretch_width)
+                        .maybe_clamp(item.min_size.width, item.max_size.width),
+                )
+            })
+            .map_height(|height| height.or(keyword_height))
+            .maybe_clamp(item.min_size, item.max_size)
+    };
+
+    LayoutInput {
+        run_mode,
+        sizing_mode: SizingMode::InherentSize,
+        axis: RequestedAxis::Both,
+        known_dimensions,
+        known_dimensions_are_definite: Size { width: true, height: true },
+        parent_size,
+        available_space: available_space.map_width(|_| AvailableSpace::Definite(stretch_width)),
+        vertical_margins_are_collapsible: if item.is_in_same_bfc { Line::TRUE } else { Line::FALSE },
+    }
+}
+
 /// Compute each child's final size and position
 #[inline]
 #[allow(clippy::too_many_arguments)]
 fn perform_final_layout_on_in_flow_children(
     tree: &mut impl LayoutBlockContainer,
+    node_id: NodeId,
     run_mode: RunMode,
     items: &mut [BlockItem],
     container_outer_width: f32,
@@ -1122,6 +1279,47 @@ fn perform_final_layout_on_in_flow_children(
     let mut has_active_floats = block_ctx.has_active_floats(committed_y_offset);
     #[cfg(not(feature = "float_layout"))]
     let has_active_floats = false;
+
+    // If the Block Formatting Context does not contain floats then neither the input nor the output of a
+    // child's layout depends on its preceding siblings, so the layouts of all in-flow children are computed
+    // as a batch here. The loop below then positions each child using its output.
+    let batch_children = !block_ctx.may_contain_floats();
+    let mut jobs: Vec<ChildLayoutJob> = Vec::new();
+    let mut next_job = 0;
+    if batch_children {
+        for item in items.iter().filter(|item| !item.position.is_out_of_flow()) {
+            #[cfg(feature = "float_layout")]
+            debug_assert!(
+                item.float.float_direction().is_none(),
+                "Floated box in a float-free Block Formatting Context"
+            );
+            let item_non_auto_margin =
+                item.margin.resolve_or_zero(Some(container_inner_width), |val, basis| tree.calc(val, basis));
+            let stretch_width = (container_inner_width - item_non_auto_margin.horizontal_axis_sum()).max(0.0);
+            let justify_self =
+                item.justify_self.unwrap_or(justify_items).resolve_self_relative(item.direction, direction, true);
+            let input = in_flow_item_layout_input(
+                tree,
+                item,
+                run_mode,
+                justify_self,
+                stretch_width,
+                item_non_auto_margin,
+                children_margins_adjoin_own_edges,
+                container_inner_width,
+                container_percentage_resolution_height,
+                parent_size,
+                available_space,
+            );
+            jobs.push(ChildLayoutJob {
+                is_in_parent_bfc: item.is_in_same_bfc,
+                ..ChildLayoutJob::new(item.node_id, input)
+            });
+        }
+        if !jobs.is_empty() {
+            tree.compute_block_child_layouts(node_id, &mut jobs);
+        }
+    }
 
     for item in items.iter_mut() {
         if item.position.is_out_of_flow() {
@@ -1341,81 +1539,35 @@ fn perform_final_layout_on_in_flow_children(
             // would otherwise resolve their own width.
             let justify_self =
                 item.justify_self.unwrap_or(justify_items).resolve_self_relative(item.direction, direction, true);
-            let is_stretch = justify_self.keyword == AlignItemsKeyword::Stretch;
             // The (resolved) `justify-self` if it is neither `normal` nor `stretch`
             let non_stretch_justify_self = match justify_self.keyword {
                 AlignItemsKeyword::Normal | AlignItemsKeyword::Stretch => None,
                 _ => Some(justify_self),
             };
 
-            // Unless stretched, tables and compressible replaced elements resolve their own width
-            // <https://www.w3.org/TR/CSS22/visudet.html#block-replaced-width>
-            let known_dimensions = if (item.is_table || item.is_compressible_replaced) && !is_stretch {
-                Size::NONE
+            // If the children were computed as a batch then take this item's input and output from its job
+            let (inputs, batched_output) = if batch_children {
+                let job = &mut jobs[next_job];
+                next_job += 1;
+                debug_assert_eq!(job.node, item.node_id);
+                (job.input, Some(core::mem::replace(&mut job.output, LayoutOutput::HIDDEN)))
             } else {
-                // The automatic width of a block-level box whose `justify-self` is neither `normal` nor `stretch`
-                // is equivalent to `fit-content` rather than `stretch`
-                let width_style = if non_stretch_justify_self.is_some() && item.size_style.width.is_auto() {
-                    Dimension::fit_content()
-                } else {
-                    item.size_style.width
-                };
-
-                // Items with a sizing keyword width (min-content, max-content, fit-content,
-                // fit-content(...), stretch) resolve their width either directly or by measuring
-                // the item under the corresponding available space constraint
-                let keyword_width = resolve_sizing_keyword(
-                    width_style,
-                    Some(stretch_width),
-                    Some(container_inner_width),
-                    |val, basis| tree.calc(val, basis),
-                )
-                .map(|resolution| match resolution {
-                    SizingKeywordResolution::Exact(width) => width,
-                    SizingKeywordResolution::Measure(item_available_width) => tree.measure_child_size(
-                        item.node_id,
-                        Size::NONE,
-                        parent_size,
-                        Size { width: item_available_width, height: AvailableSpace::MaxContent },
-                        SizingMode::InherentSize,
-                        crate::AbsoluteAxis::Horizontal,
-                        // Must match the value passed when laying the item out (see `Cache`)
-                        if item.is_in_same_bfc { Line::TRUE } else { Line::FALSE },
-                    ),
-                });
-
-                let keyword_height = resolve_stretch_height(
-                    item.size_style.height,
-                    container_percentage_resolution_height,
+                let inputs = in_flow_item_layout_input(
+                    tree,
+                    item,
+                    run_mode,
+                    justify_self,
+                    stretch_width,
                     item_non_auto_margin,
                     children_margins_adjoin_own_edges,
+                    container_inner_width,
+                    container_percentage_resolution_height,
+                    parent_size,
+                    available_space,
                 );
-
-                item.size
-                    .map_width(|width| {
-                        Some(
-                            width
-                                .or(keyword_width)
-                                .unwrap_or(stretch_width)
-                                .maybe_clamp(item.min_size.width, item.max_size.width),
-                        )
-                    })
-                    .map_height(|height| height.or(keyword_height))
-                    .maybe_clamp(item.min_size, item.max_size)
+                (inputs, None)
             };
-
-            //
-
-            let inputs = LayoutInput {
-                run_mode,
-                sizing_mode: SizingMode::InherentSize,
-                axis: RequestedAxis::Both,
-                known_dimensions,
-                known_dimensions_are_definite: Size { width: true, height: true },
-                parent_size,
-                available_space: available_space.map_width(|_| AvailableSpace::Definite(stretch_width)),
-                vertical_margins_are_collapsible: if item.is_in_same_bfc { Line::TRUE } else { Line::FALSE },
-            };
+            let known_dimensions = inputs.known_dimensions;
 
             #[cfg(feature = "float_layout")]
             let clear_threshold = block_ctx.cleared_threshold(item.clear);
@@ -1429,7 +1581,9 @@ fn perform_final_layout_on_in_flow_children(
             #[cfg(feature = "float_layout")]
             let mut child_float_contribution = f32::NEG_INFINITY;
 
-            let mut item_layout = if item.is_in_same_bfc {
+            let mut item_layout = if let Some(output) = batched_output {
+                output
+            } else if item.is_in_same_bfc {
                 // Replaced elements may not have a known width (they are sized by their
                 // measure function rather than stretch-sized)
                 let width = known_dimensions.width.unwrap_or(stretch_width).max(item.padding_border_sum.width);
