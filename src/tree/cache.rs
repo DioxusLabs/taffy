@@ -64,14 +64,18 @@ fn size_bound_cache_key(input: Size<Option<f32>>) -> u64 {
     (bits(input.width) as u64) << 32 | bits(input.height) as u64
 }
 
+/// The number of distinct sets of min and max sizes that a [`Cache`] can hold entries for at once.
+/// At most 3, as the slot is stored in 2 bits (see [`CacheKey::BOUNDS_SHIFT`]).
+const BOUND_SETS: usize = 3;
+
 /// The min and max sizes that were passed to a node ([`LayoutInput::min_size`] and [`LayoutInput::max_size`]),
 /// packed into two `u64`s.
 ///
-/// Most nodes have neither a min nor a max size, and the ones that do are nearly always passed the same
-/// sizes every time that they are laid out (the sizes only vary if they are percentages and the size that
-/// they resolve against varies). So rather than storing the sizes in every [`CacheKey`], each key only
-/// records *whether* it was computed with any min or max size ([`CacheKey::BOUNDED_BIT`]) and the [`Cache`]
-/// records the single set of sizes that all of its bounded entries were computed with.
+/// Most nodes have neither a min nor a max size, and the ones that do are passed very few distinct sets of
+/// sizes (the sizes only vary if they are percentages and the size that they resolve against varies, which
+/// typically means one set for when that size is indefinite and one for when it is definite). So rather than
+/// storing the sizes in every [`CacheKey`], the [`Cache`] stores up to [`BOUND_SETS`] distinct sets of sizes
+/// and each key only records which of those sets it was computed with (or that it was computed with none).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(Serialize))]
 struct CacheBounds {
@@ -152,19 +156,22 @@ impl CacheKey {
     const DEFINITE_WIDTH_BIT: u8 = 0b001;
     /// Set if the known height is definite. Normalized such that it is always set if the height is not known.
     const DEFINITE_HEIGHT_BIT: u8 = 0b010;
-    /// Set if the node was passed a min or max size in either axis. If it was, then the sizes that it
-    /// was passed are the [`Cache::bounds`] of the cache that the entry is stored in.
-    const BOUNDED_BIT: u8 = 0b100;
+    /// The bits that hold which min and max sizes the node was passed: zero if it was passed neither in
+    /// either axis, else one more than the index into the [`Cache::bounds`] of the cache that the entry is
+    /// stored in.
+    const BOUNDS_SHIFT: u8 = 2;
+    /// Mask for the bits described by [`CacheKey::BOUNDS_SHIFT`]
+    const BOUNDS_MASK: u8 = 0b1100;
     /// Always set (see [`CacheKey::flags`])
-    const ALWAYS_SET_BIT: core::num::NonZeroU8 = match core::num::NonZeroU8::new(0b1000) {
+    const ALWAYS_SET_BIT: core::num::NonZeroU8 = match core::num::NonZeroU8::new(0b10000) {
         Some(bit) => bit,
         None => unreachable!(),
     };
 
-    /// Whether the node was passed a min or max size in either axis
+    /// See [`CacheKey::BOUNDS_SHIFT`]
     #[inline(always)]
-    fn is_bounded(&self) -> bool {
-        self.flags.get() & Self::BOUNDED_BIT != 0
+    fn bounds_slot(&self) -> u8 {
+        (self.flags.get() & Self::BOUNDS_MASK) >> Self::BOUNDS_SHIFT
     }
 
     #[inline(always)]
@@ -195,9 +202,9 @@ impl CacheKey {
 }
 
 impl CacheKey {
-    /// Create the key for `input`
+    /// Create the key for `input`. See [`CacheKey::BOUNDS_SHIFT`] for `bounds_slot`.
     #[inline(always)]
-    fn new(input: &LayoutInput) -> Self {
+    fn new(input: &LayoutInput, bounds_slot: u8) -> Self {
         // Pack axis enum into spare bits in the known_dimensions and available_space values
         let extra_bits = match input.axis {
             RequestedAxis::Horizontal => SIGN_BIT_1,
@@ -215,7 +222,7 @@ impl CacheKey {
             flags: Self::ALWAYS_SET_BIT
                 | (is_definite.width as u8 * Self::DEFINITE_WIDTH_BIT)
                 | (is_definite.height as u8 * Self::DEFINITE_HEIGHT_BIT)
-                | (CacheBounds::is_bounded(input) as u8 * Self::BOUNDED_BIT),
+                | (bounds_slot << Self::BOUNDS_SHIFT),
         }
     }
 }
@@ -279,8 +286,8 @@ std::thread_local! {
     static BOUNDS_CHANGE_EVICTIONS: core::cell::Cell<usize> = const { core::cell::Cell::new(0) };
 }
 
-/// The number of times that the current thread has stored a result into a [`Cache`] which held
-/// entries that were computed with a different (non-empty) set of min and max sizes, dropping those entries.
+/// The number of times that the current thread has stored a result into a [`Cache`] that had no room for
+/// another set of min and max sizes, dropping the entries that were computed with one of the sets that it held.
 ///
 /// Unlike [`cache_mode_change_evictions`] this can legitimately happen within a single layout pass:
 /// a node whose min or max size is a percentage is passed a different size whenever the size that
@@ -320,11 +327,13 @@ pub struct Cache {
     /// entries were computed with. Results are only retrieved for inputs that have the same mode,
     /// and storing a result that was computed with a different mode drops the existing entries.
     mode: CacheMode,
-    /// The min and max sizes that all of the cache's bounded entries (see [`CacheKey::BOUNDED_BIT`])
-    /// were computed with. Results for bounded inputs are only retrieved if the input has the same
-    /// min and max sizes, and storing a result that was computed with different ones drops the
-    /// existing bounded entries (but not the unbounded ones).
-    bounds: CacheBounds,
+    /// The distinct sets of min and max sizes that the cache's entries were computed with (see
+    /// [`CacheKey::BOUNDS_SHIFT`]). Unused slots are [`CacheBounds::NONE`]. Results for inputs that have a
+    /// min or max size are only retrieved if those sizes are in here, and storing a result that was
+    /// computed with sizes that are not replaces a slot, dropping the entries that were computed with it.
+    bounds: [CacheBounds; BOUND_SETS],
+    /// The next slot of `bounds` to replace
+    next_bounds_slot: u8,
 }
 
 impl Default for Cache {
@@ -345,7 +354,8 @@ impl Cache {
             next_measure_entry: 0,
             is_empty: true,
             mode: CacheMode::INITIAL,
-            bounds: CacheBounds::NONE,
+            bounds: [CacheBounds::NONE; BOUND_SETS],
+            next_bounds_slot: 0,
         }
     }
 
@@ -355,10 +365,11 @@ impl Cache {
         if self.mode != CacheMode::from(input) {
             return None;
         }
-        let key = CacheKey::new(input);
-        if key.is_bounded() && CacheBounds::from(input) != self.bounds {
-            return None;
-        }
+        let bounds_slot = match CacheBounds::is_bounded(input) {
+            false => 0,
+            true => self.bounds_slot(CacheBounds::from(input))?,
+        };
+        let key = CacheKey::new(input, bounds_slot);
         match input.run_mode {
             RunMode::PerformLayout => {
                 self.final_layout_entry.as_ref().filter(|entry| entry.key == key).map(|e| e.content.clone())
@@ -396,14 +407,14 @@ impl Cache {
             self.clear();
             self.mode = mode;
         }
-        let key = CacheKey::new(input);
-        if key.is_bounded() {
-            let bounds = CacheBounds::from(input);
-            if bounds != self.bounds {
-                self.clear_bounded_entries();
-                self.bounds = bounds;
+        let bounds_slot = match CacheBounds::is_bounded(input) {
+            false => 0,
+            true => {
+                let bounds = CacheBounds::from(input);
+                self.bounds_slot(bounds).unwrap_or_else(|| self.replace_bounds_slot(bounds))
             }
-        }
+        };
+        let key = CacheKey::new(input, bounds_slot);
         match input.run_mode {
             RunMode::PerformLayout => {
                 self.is_empty = false;
@@ -447,18 +458,35 @@ impl Cache {
         }
     }
 
-    /// Drop the entries that were computed with a min or max size
+    /// The slot (see [`CacheKey::BOUNDS_SHIFT`]) that holds `bounds`, which must not be [`CacheBounds::NONE`]
+    #[inline]
+    fn bounds_slot(&self, bounds: CacheBounds) -> Option<u8> {
+        self.bounds.iter().position(|slot_bounds| *slot_bounds == bounds).map(|index| index as u8 + 1)
+    }
+
+    /// Put `bounds` into a slot, dropping the entries that were computed with the slot's previous bounds.
+    /// Returns the slot.
     #[cold]
-    fn clear_bounded_entries(&mut self) {
+    fn replace_bounds_slot(&mut self, bounds: CacheBounds) -> u8 {
+        let index = match self.bounds.iter().position(|slot_bounds| *slot_bounds == CacheBounds::NONE) {
+            Some(unused_index) => unused_index,
+            None => {
+                let index = self.next_bounds_slot as usize;
+                self.next_bounds_slot = (self.next_bounds_slot + 1) % BOUND_SETS as u8;
+                index
+            }
+        };
+        let slot = index as u8 + 1;
+
         let mut evicted = false;
-        if self.final_layout_entry.as_ref().is_some_and(|entry| entry.key.is_bounded()) {
+        if self.final_layout_entry.as_ref().is_some_and(|entry| entry.key.bounds_slot() == slot) {
             self.final_layout_entry = None;
             evicted = true;
         }
-        for (index, entry) in self.measure_entries.iter_mut().enumerate() {
-            if entry.as_ref().is_some_and(|entry| entry.key.is_bounded()) {
+        for (entry_index, entry) in self.measure_entries.iter_mut().enumerate() {
+            if entry.as_ref().is_some_and(|entry| entry.key.bounds_slot() == slot) {
                 *entry = None;
-                self.recently_used_entries &= !(1 << index);
+                self.recently_used_entries &= !(1 << entry_index);
                 evicted = true;
             }
         }
@@ -468,6 +496,9 @@ impl Cache {
         }
         #[cfg(not(all(debug_assertions, feature = "std")))]
         let _ = evicted;
+
+        self.bounds[index] = bounds;
+        slot
     }
 
     /// Clear all cache entries and reports clear operation outcome ([`ClearState`])
@@ -482,6 +513,8 @@ impl Cache {
         self.measure_entries = [NONE_MEASURE_ENTRY; CACHE_SIZE];
         self.recently_used_entries = 0;
         self.next_measure_entry = 0;
+        self.bounds = [CacheBounds::NONE; BOUND_SETS];
+        self.next_bounds_slot = 0;
         ClearState::Cleared
     }
 
@@ -568,28 +601,78 @@ mod tests {
     }
 
     #[test]
-    fn storing_a_result_with_different_min_or_max_sizes_only_drops_the_bounded_entries() {
+    fn results_for_several_sets_of_min_and_max_sizes_are_cached_side_by_side() {
         let bounded = |max_height: f32, width: f32| LayoutInput {
             max_size: Size { width: None, height: Some(max_height) },
             ..input(width)
         };
+        let perform_layout = |input: LayoutInput| LayoutInput { run_mode: RunMode::PerformLayout, ..input };
+        let mut cache = Cache::new();
+        for set in 0..BOUND_SETS {
+            cache.store(&bounded(set as f32, 1.0), output(set as f32));
+        }
+        cache.store(&perform_layout(bounded(0.0, 1.0)), output(100.0));
+        for set in 0..BOUND_SETS {
+            assert_eq!(cache.get(&bounded(set as f32, 1.0)), Some(output(set as f32)));
+            assert_eq!(cache.get(&bounded(set as f32, 2.0)), None);
+        }
+        assert_eq!(cache.get(&perform_layout(bounded(0.0, 1.0))), Some(output(100.0)));
+        assert_eq!(cache.get(&perform_layout(bounded(1.0, 1.0))), None);
+    }
+
+    #[test]
+    fn storing_a_result_with_one_set_of_min_and_max_sizes_too_many_only_drops_the_entries_of_one_set() {
+        let bounded = |max_height: f32, width: f32| LayoutInput {
+            max_size: Size { width: None, height: Some(max_height) },
+            ..input(width)
+        };
+        let perform_layout = |input: LayoutInput| LayoutInput { run_mode: RunMode::PerformLayout, ..input };
         let mut cache = Cache::new();
         cache.store(&input(1.0), output(1.0));
-        cache.store(&bounded(10.0, 1.0), output(2.0));
-        cache.store(&bounded(10.0, 2.0), output(3.0));
-        cache.store(&LayoutInput { run_mode: RunMode::PerformLayout, ..bounded(10.0, 1.0) }, output(4.0));
+        cache.store(&bounded(0.0, 1.0), output(2.0));
+        cache.store(&bounded(0.0, 2.0), output(3.0));
+        cache.store(&perform_layout(bounded(0.0, 1.0)), output(4.0));
+        for set in 1..BOUND_SETS {
+            cache.store(&bounded(set as f32, 1.0), output(10.0 + set as f32));
+        }
 
         // Nothing is dropped by a lookup
-        assert_eq!(cache.get(&bounded(20.0, 1.0)), None);
-        assert_eq!(cache.get(&bounded(10.0, 1.0)), Some(output(2.0)));
+        let one_too_many = bounded(BOUND_SETS as f32, 1.0);
+        assert_eq!(cache.get(&one_too_many), None);
+        assert_eq!(cache.get(&bounded(0.0, 1.0)), Some(output(2.0)));
 
-        cache.store(&bounded(20.0, 1.0), output(5.0));
-        assert_eq!(cache.get(&bounded(20.0, 1.0)), Some(output(5.0)));
-        assert_eq!(cache.get(&bounded(10.0, 1.0)), None);
-        assert_eq!(cache.get(&bounded(10.0, 2.0)), None);
-        assert_eq!(cache.get(&LayoutInput { run_mode: RunMode::PerformLayout, ..bounded(10.0, 1.0) }), None);
+        // The entries of the oldest set are dropped, and are not confused with those of the set that replaces it
+        cache.store(&one_too_many, output(5.0));
+        assert_eq!(cache.get(&one_too_many), Some(output(5.0)));
+        assert_eq!(cache.get(&bounded(0.0, 1.0)), None);
+        assert_eq!(cache.get(&bounded(0.0, 2.0)), None);
+        assert_eq!(cache.get(&perform_layout(bounded(0.0, 1.0))), None);
+        assert_eq!(cache.get(&perform_layout(one_too_many)), None);
+        assert_eq!(cache.get(&bounded(BOUND_SETS as f32, 2.0)), None);
+
+        // Everything else is kept
         assert_eq!(cache.get(&input(1.0)), Some(output(1.0)));
-        assert!(!cache.is_empty());
+        for set in 1..BOUND_SETS {
+            assert_eq!(cache.get(&bounded(set as f32, 1.0)), Some(output(10.0 + set as f32)));
+        }
+
+        // The next set replaces the next oldest one
+        cache.store(&bounded(100.0, 1.0), output(6.0));
+        assert_eq!(cache.get(&bounded(100.0, 1.0)), Some(output(6.0)));
+        assert_eq!(cache.get(&bounded(1.0, 1.0)), None);
+        if BOUND_SETS > 2 {
+            assert_eq!(cache.get(&one_too_many), Some(output(5.0)));
+        }
+    }
+
+    #[test]
+    fn clearing_the_cache_forgets_its_sets_of_min_and_max_sizes() {
+        let bounded = LayoutInput { max_size: Size { width: None, height: Some(10.0) }, ..input(1.0) };
+        let mut cache = Cache::new();
+        cache.store(&bounded, output(1.0));
+        cache.clear();
+        assert_eq!(cache.get(&bounded), None);
+        assert_eq!(cache, Cache::new());
     }
 
     #[test]
