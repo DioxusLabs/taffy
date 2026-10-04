@@ -155,6 +155,7 @@ impl OriginZeroLine {
 
 impl Line<OriginZeroLine> {
     /// The number of tracks between the start and end lines
+    #[inline(always)]
     pub(crate) fn span(self) -> u16 {
         max(self.end.0 - self.start.0, 0) as u16
     }

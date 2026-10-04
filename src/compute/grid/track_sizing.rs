@@ -6,7 +6,7 @@ use crate::style::{AlignContent, AlignContentKeyword, AvailableSpace};
 use crate::style_helpers::TaffyMinContent;
 use crate::tree::{LayoutPartialTree, LayoutPartialTreeExt, SizingMode};
 use crate::util::sys::{f32_max, f32_min, Vec};
-use crate::util::{MaybeMath, ResolveOrZero};
+use crate::util::{FrontBackVecBuilder, MaybeMath, ResolveOrZero};
 use crate::CompactLength;
 
 /// Takes an axis, and a list of grid items sorted firstly by whether they cross a flex track
@@ -157,16 +157,6 @@ where
             item.minimum_contribution_cached(self.tree, self.axis, axis_tracks, grid_area_size, self.inner_node_size);
         contribution + margin_axis_sums.get(self.axis)
     }
-}
-
-/// The order in which the track sizing algorithm visits items in the given axis, packed into a
-/// single integer so that sorting compares keys rather than items: items that don't cross a
-/// flexible track first, then by the number of tracks spanned, then by start line.
-#[inline(always)]
-fn track_sizing_sort_key(item: &GridItem, axis: AbstractAxis) -> u64 {
-    let placement = item.placement(axis);
-    let start = (placement.start.0 as i32 - i16::MIN as i32) as u64;
-    ((item.crosses_flexible_track(axis) as u64) << 32) | ((placement.span() as u64) << 16) | start
 }
 
 /// When applying the track sizing algorithm and estimating the size in the other axis for content sizing items
@@ -538,6 +528,7 @@ fn resolve_item_baselines(
         for item in row_items.iter_mut() {
             if item.participates_in_baseline_alignment() {
                 item.baseline_shim = row_max_baseline - item.baseline.unwrap_or(0.0);
+                item.known_dimensions_cache = None;
             }
         }
     }
@@ -564,8 +555,24 @@ fn resolve_intrinsic_track_sizes<Tree: LayoutPartialTree>(
     // The track sizing algorithm requires us to iterate through the items in ascending order of the number of
     // tracks they span (first items that span 1 track, then items that span 2 tracks, etc).
     // To avoid having to do multiple iterations of the items, we pre-sort them into this order.
-    let mut items: Vec<&mut GridItem> = items.iter_mut().collect();
-    items.sort_by_key(|item| track_sizing_sort_key(item, axis));
+    //
+    // Items that cross a flexible track are all processed together in a single batch (regardless of their span), so
+    // they only need to be moved to the end of the list. And the order in which items within a batch are processed
+    // does not affect the result, so the remaining items only need to be sorted if any of them span more than one track.
+    let mut partitioned_items: FrontBackVecBuilder<&mut GridItem> = FrontBackVecBuilder::with_capacity(items.len());
+    let mut needs_sort = false;
+    for item in items.iter_mut() {
+        if item.crosses_flexible_track(axis) {
+            partitioned_items.push_back(item);
+        } else {
+            needs_sort |= item.span(axis) > 1;
+            partitioned_items.push_front(item);
+        }
+    }
+    let (mut items, non_flex_item_count) = partitioned_items.into_vec();
+    if needs_sort {
+        items[..non_flex_item_count].sort_by_key(|item| item.span(axis));
+    }
     let items = items.as_mut_slice();
 
     // Step 2, Step 3 and Step 4
