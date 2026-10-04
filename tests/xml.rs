@@ -201,6 +201,18 @@ fn run_xml_test(group: &str, name: &str) {
     );
     let root_node_id = expected_output.node_id;
 
+    // Lay out a copy of the tree in parallel (running every batch of child layouts in parallel,
+    // however small). Its results are compared to those of the sequential layout below.
+    #[cfg(feature = "parallel")]
+    let parallel_tree = {
+        let mut parallel_tree = tree.clone();
+        parallel_tree.set_parallel_layout_threshold(0);
+        parallel_tree
+            .compute_layout_with_measure_parallel(root_node_id, available_space, test_measure_function)
+            .unwrap();
+        parallel_tree
+    };
+
     // Compute layout
     #[cfg(all(debug_assertions, feature = "std"))]
     let cache_mode_change_evictions = taffy::tree::cache_mode_change_evictions();
@@ -229,6 +241,38 @@ fn run_xml_test(group: &str, name: &str) {
     actual_output.print_tree();
 
     assert_eq!(expected_output, actual_output);
+
+    #[cfg(feature = "parallel")]
+    assert_parallel_layout_matches(&tree, &parallel_tree, root_node_id);
+}
+
+/// Assert that laying out a tree in parallel gave exactly the same result as laying it out sequentially,
+/// and called the measure function of each node the same number of times
+#[cfg(feature = "parallel")]
+fn assert_parallel_layout_matches(
+    tree: &TaffyTree<TestNodeContext>,
+    parallel_tree: &TaffyTree<TestNodeContext>,
+    node_id: NodeId,
+) {
+    assert_eq!(tree.layout(node_id).unwrap(), parallel_tree.layout(node_id).unwrap(), "layout of {node_id:?}");
+    assert_eq!(
+        tree.unrounded_layout(node_id),
+        parallel_tree.unrounded_layout(node_id),
+        "unrounded layout of {node_id:?}"
+    );
+    assert_eq!(
+        get_resolved_track_lists(tree, node_id),
+        get_resolved_track_lists(parallel_tree, node_id),
+        "resolved track lists of {node_id:?}"
+    );
+    assert_eq!(
+        tree.get_node_context(node_id).map(|context| context.count),
+        parallel_tree.get_node_context(node_id).map(|context| context.count),
+        "measure count of {node_id:?}"
+    );
+    for child_id in tree.children(node_id).unwrap() {
+        assert_parallel_layout_matches(tree, parallel_tree, child_id);
+    }
 }
 
 fn construct_tree(
