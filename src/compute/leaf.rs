@@ -17,6 +17,10 @@ use core::unreachable;
 ///
 /// A definite `inputs.available_space` is treated as the space available to the node's border box:
 /// the caller is expected to have already subtracted the node's margins from it.
+///
+/// Note: [`LayoutOutput::depends_on_block_constraints`] is only set based on the node's `aspect_ratio` style. If the
+/// width returned by the measure function can depend on the height it is passed (for example a replaced element with
+/// an intrinsic aspect ratio) then the caller should set that field to `true` on the returned output.
 pub fn compute_leaf_layout<MeasureFunction>(
     inputs: LayoutInput,
     style: &impl CoreStyle,
@@ -110,6 +114,7 @@ where
                 margins_can_collapse_through: false,
                 oof_candidates: crate::tree::OofCandidates::NONE,
                 oof_positioning_area: None,
+                depends_on_block_constraints: aspect_ratio.is_some(),
             };
         };
     }
@@ -184,5 +189,6 @@ where
             && measured_size.height == 0.0,
         oof_candidates: crate::tree::OofCandidates::NONE,
         oof_positioning_area: None,
+        depends_on_block_constraints: aspect_ratio.is_some(),
     }
 }

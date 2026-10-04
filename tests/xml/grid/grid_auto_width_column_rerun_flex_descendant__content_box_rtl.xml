@@ -1,0 +1,19 @@
+<test name="grid_auto_width_column_rerun_flex_descendant__content_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" box-sizing="content-box" direction="rtl" position="absolute" justify-content="start" grid-template-rows="auto" grid-template-columns="auto auto">
+      <div box-sizing="content-box" direction="rtl" position="relative" width="10px" height="100px" grid-row-start="1" grid-column-start="1"/>
+      <div display="flex" box-sizing="content-box" direction="rtl" position="relative" justify-self="start" height="100%" grid-row-start="1" grid-column-start="2">
+        <div box-sizing="content-box" direction="rtl" position="relative" aspect-ratio="2"/>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="210" height="100" resolved-rows="100px" resolved-columns="10px 200px">
+      <node x="200" y="0" width="10" height="100"/>
+      <node x="0" y="0" width="200" height="100">
+        <node x="0" y="0" width="200" height="100"/>
+      </node>
+    </node>
+  </expectations>
+</test>
