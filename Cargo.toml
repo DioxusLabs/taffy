@@ -19,6 +19,7 @@ license = "MIT"
 document-features = { version = "0.2.7", optional = true }
 serde = { version = "1.0", default-features = false, optional = true, features = ["serde_derive"] }
 slotmap = { version = "1.0.6", default-features = false, optional = true }
+fearless_simd = { version = "1.0", optional = true }
 smallvec = { version = "1.13", default-features = false, optional = true }
 cssparser = { version = "0.37.0", default-features = false, optional = true }
 rayon = { version = "1.10", optional = true }
@@ -72,6 +73,10 @@ strict_provenance = []
 
 ## Enable the built-in Taffy node tree. See [`TaffyTree`](crate::TaffyTree).
 taffy_tree = ["dep:slotmap"]
+
+## PROTOTYPE: Round layouts using the best instructions that the CPU is detected to support at runtime
+## (using [`fearless_simd`]). Using this feature requires Rust 1.89 or higher.
+simd_rounding = ["std", "dep:fearless_simd"]
 
 ## PROTOTYPE: Enables laying out a [`TaffyTree`](crate::TaffyTree) in parallel using [`rayon`]
 parallel = ["std", "taffy_tree", "dep:rayon"]
