@@ -369,14 +369,15 @@ pub(super) fn track_sizing_algorithm<Tree: LayoutPartialTree>(
         }
     };
 
-    // Measure the contributions of the items that the steps below will use as batches.
+    // If the tree computes batches of child layouts in parallel then measure the contributions of the items that the
+    // steps below will use as batches. Otherwise each contribution is measured when a step first uses it.
     //
     // Which contributions of an item are used depends only on styles, track sizing functions and the available space, and
     // the inputs they are measured with depend only on the sizes of fixed-size tracks and on the other axis. Neither depends
     // on the contributions of other items. So the contributions that will be used are found by running the steps on a scratch
     // copy of the tracks with the measurer set to collect a job for each contribution that would be measured instead of
     // measuring it. The results of the jobs are then written to the items' caches, where the steps below find them.
-    if items.len() > 1 {
+    if Tree::COMPUTES_CHILD_LAYOUTS_IN_PARALLEL && items.len() > 1 {
         let mut jobs = ContributionJobs::default();
         let mut scratch_axis_tracks: Vec<GridTrack> = axis_tracks.to_vec();
         resolve_intrinsic_track_sizes(
@@ -551,8 +552,8 @@ fn initialize_track_sizes(
 }
 
 /// 11.5.1 Shim baseline-aligned items so their intrinsic size contributions reflect their baseline alignment.
-fn resolve_item_baselines(
-    tree: &mut impl LayoutPartialTree,
+fn resolve_item_baselines<Tree: LayoutPartialTree>(
+    tree: &mut Tree,
     node: NodeId,
     axis: AbstractAxis,
     items: &mut [GridItem],
@@ -564,40 +565,42 @@ fn resolve_item_baselines(
     let mut items: Vec<&mut GridItem> = items.iter_mut().collect();
     items.sort_by_key(|item| item.placement(other_axis).start);
 
-    // Find the items in each grid row that participate in baseline alignment. If a row has one or zero items participating
-    // in baseline alignment then baseline alignment is a no-op for those items and we skip further computations for that row.
-    // Else the baseline of each of the items needs to be computed, and we compute the layouts of all such items as a batch.
-    let mut jobs: Vec<ChildLayoutJob> = Vec::new();
-    let mut remaining_items = &items[0..];
-    while !remaining_items.is_empty() {
-        let (row_items, tail) = split_first_row(remaining_items, other_axis);
-        remaining_items = tail;
+    // The input with which the baseline of an item is computed
+    let baseline_layout_input = LayoutInput {
+        known_dimensions: Size::NONE,
+        known_dimensions_are_definite: Size { width: true, height: true },
+        parent_size: inner_node_size,
+        available_space: Size::MIN_CONTENT,
+        sizing_mode: SizingMode::InherentSize,
+        axis: RequestedAxis::Both,
+        run_mode: RunMode::PerformLayout,
+        vertical_margins_are_collapsible: Line::FALSE,
+    };
 
-        let row_baseline_item_count = row_items.iter().filter(|item| item.participates_in_baseline_alignment()).count();
-        if row_baseline_item_count <= 1 {
-            continue;
+    // If the tree computes batches of child layouts in parallel then find the items in each grid row whose baselines
+    // need to be computed (see below), and compute the layouts of all such items as a batch.
+    let mut jobs: Vec<ChildLayoutJob> = Vec::new();
+    if Tree::COMPUTES_CHILD_LAYOUTS_IN_PARALLEL {
+        let mut remaining_items = &items[0..];
+        while !remaining_items.is_empty() {
+            let (row_items, tail) = split_first_row(remaining_items, other_axis);
+            remaining_items = tail;
+
+            let row_baseline_item_count =
+                row_items.iter().filter(|item| item.participates_in_baseline_alignment()).count();
+            if row_baseline_item_count <= 1 {
+                continue;
+            }
+            for item in row_items.iter().filter(|item| item.participates_in_baseline_alignment()) {
+                jobs.push(ChildLayoutJob::new(item.node, baseline_layout_input));
+            }
         }
-        for item in row_items.iter().filter(|item| item.participates_in_baseline_alignment()) {
-            jobs.push(ChildLayoutJob::new(
-                item.node,
-                LayoutInput {
-                    known_dimensions: Size::NONE,
-                    known_dimensions_are_definite: Size { width: true, height: true },
-                    parent_size: inner_node_size,
-                    available_space: Size::MIN_CONTENT,
-                    sizing_mode: SizingMode::InherentSize,
-                    axis: RequestedAxis::Both,
-                    run_mode: RunMode::PerformLayout,
-                    vertical_margins_are_collapsible: Line::FALSE,
-                },
-            ));
+        if jobs.is_empty() {
+            return;
         }
+        tree.compute_child_layouts(node, &mut jobs);
     }
-    if jobs.is_empty() {
-        return;
-    }
-    tree.compute_child_layouts(node, &mut jobs);
-    let mut jobs = jobs.iter();
+    let mut jobs = jobs.into_iter();
 
     // Iterate over grid rows
     let mut remaining_items = &mut items[0..];
@@ -605,7 +608,9 @@ fn resolve_item_baselines(
         let (row_items, tail) = split_first_row_mut(remaining_items, other_axis);
         remaining_items = tail;
 
-        // Skip rows in which baseline alignment is a no-op (see above)
+        // Count how many items in *this row* are baseline aligned
+        // If a row has one or zero items participating in baseline alignment then baseline alignment is a no-op
+        // for those items and we skip further computations for that row
         let row_baseline_item_count = row_items.iter().filter(|item| item.participates_in_baseline_alignment()).count();
         if row_baseline_item_count <= 1 {
             continue;
@@ -617,7 +622,10 @@ fn resolve_item_baselines(
                 continue;
             }
 
-            let measured_size_and_baselines = &jobs.next().unwrap().output;
+            let measured_size_and_baselines = match jobs.next() {
+                Some(job) => job.output,
+                None => tree.compute_child_layout(item.node, baseline_layout_input),
+            };
 
             let baseline = measured_size_and_baselines.baselines.first;
             let height = measured_size_and_baselines.size.height;

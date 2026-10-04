@@ -97,8 +97,8 @@ struct GridContainerConstants {
 ///
 /// Note: every item must be visited (rather than stopping at the first item whose contribution changed) as each
 /// item's caches are updated.
-fn refresh_min_content_contributions(
-    tree: &mut impl LayoutPartialTree,
+fn refresh_min_content_contributions<Tree: LayoutPartialTree>(
+    tree: &mut Tree,
     node: NodeId,
     axis: AbstractAxis,
     items: &mut [GridItem],
@@ -106,8 +106,24 @@ fn refresh_min_content_contributions(
     other_axis_tracks: &[GridTrack],
     inner_node_size: Size<Option<f32>>,
 ) -> bool {
-    // Compute the inputs with which to measure the items, and measure them as a batch. Items whose size in the
-    // axis is already known do not need to be measured.
+    /// Replace the item's cached contributions by its new min-content contribution. Returns whether it changed.
+    #[inline(always)]
+    fn set_min_content_contribution(
+        item: &mut GridItem,
+        axis: AbstractAxis,
+        new_min_content_contribution: f32,
+    ) -> bool {
+        let has_changed = Some(new_min_content_contribution) != item.min_content_contribution_cache.get(axis);
+        item.min_content_contribution_cache.set(axis, Some(new_min_content_contribution));
+        item.max_content_contribution_cache.set(axis, None);
+        item.minimum_contribution_cache.set(axis, None);
+        has_changed
+    }
+
+    // Compute the inputs with which to measure the items. Items whose size in the axis is already known do not need to
+    // be measured. If the tree computes batches of child layouts in parallel then the other items are measured as a batch.
+    // Otherwise each is measured immediately.
+    let mut any_changed = false;
     let mut jobs: Vec<ChildLayoutJob> = Vec::new();
     let mut known_contributions: Vec<Option<f32>> = Vec::new();
     for item in items.iter_mut().filter(|item| item.crosses_intrinsic_track(axis)) {
@@ -121,30 +137,38 @@ fn refresh_min_content_contributions(
         );
         item.grid_area_size_cache = Some(grid_area_size);
         let available_space = grid_area_size.with(axis, None);
-        match item.min_content_contribution_input(axis, tree, grid_area_size, available_space) {
-            Ok(input) => {
-                jobs.push(ChildLayoutJob::new(item.node, input));
-                known_contributions.push(None);
+        let input = item.min_content_contribution_input(axis, tree, grid_area_size, available_space);
+        if Tree::COMPUTES_CHILD_LAYOUTS_IN_PARALLEL {
+            match input {
+                Ok(input) => {
+                    jobs.push(ChildLayoutJob::new(item.node, input));
+                    known_contributions.push(None);
+                }
+                Err(known_contribution) => known_contributions.push(Some(known_contribution)),
             }
-            Err(known_contribution) => known_contributions.push(Some(known_contribution)),
+        } else {
+            let new_min_content_contribution = match input {
+                Ok(input) => tree.compute_child_layout(item.node, input).size.get(axis),
+                Err(known_contribution) => known_contribution,
+            };
+            any_changed |= set_min_content_contribution(item, axis, new_min_content_contribution);
         }
     }
-    if !jobs.is_empty() {
-        tree.compute_child_layouts(node, &mut jobs);
+
+    if Tree::COMPUTES_CHILD_LAYOUTS_IN_PARALLEL {
+        if !jobs.is_empty() {
+            tree.compute_child_layouts(node, &mut jobs);
+        }
+        let mut measured_contributions = jobs.iter().map(|job| job.output.size.get(axis));
+        for (item, known_contribution) in
+            items.iter_mut().filter(|item| item.crosses_intrinsic_track(axis)).zip(known_contributions)
+        {
+            let new_min_content_contribution =
+                known_contribution.unwrap_or_else(|| measured_contributions.next().unwrap());
+            any_changed |= set_min_content_contribution(item, axis, new_min_content_contribution);
+        }
     }
 
-    let mut measured_contributions = jobs.iter().map(|job| job.output.size.get(axis));
-    let mut any_changed = false;
-    for (item, known_contribution) in
-        items.iter_mut().filter(|item| item.crosses_intrinsic_track(axis)).zip(known_contributions)
-    {
-        let new_min_content_contribution = known_contribution.unwrap_or_else(|| measured_contributions.next().unwrap());
-        any_changed |= Some(new_min_content_contribution) != item.min_content_contribution_cache.get(axis);
-
-        item.min_content_contribution_cache.set(axis, Some(new_min_content_contribution));
-        item.max_content_contribution_cache.set(axis, None);
-        item.minimum_contribution_cache.set(axis, None);
-    }
     any_changed
 }
 
@@ -754,28 +778,50 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
         },
     };
 
-    // Resolve the size of each in-flow child (stored in items vector), then compute their layouts as a batch
-    let mut prepared_items: Vec<PreparedItemLayout> = Vec::with_capacity(items.len());
-    let mut jobs: Vec<ChildLayoutJob> = Vec::with_capacity(items.len());
-    for item in items.iter() {
-        let grid_area = item_grid_area(item);
-        let prepared = prepare_item_layout(
-            tree,
-            item.node,
-            grid_area,
-            Size { width: grid_area.right - grid_area.left, height: grid_area.bottom - grid_area.top },
-            container_alignment_styles,
-            item.baseline_shim,
-            direction,
-        );
-        jobs.push(ChildLayoutJob::new(item.node, prepared.input));
-        prepared_items.push(prepared);
+    // Resolve the size of each in-flow child (stored in items vector). If the tree computes batches of child
+    // layouts in parallel then also compute their layouts as a batch.
+    let mut prepared_items: Vec<PreparedItemLayout> = Vec::new();
+    let mut jobs: Vec<ChildLayoutJob> = Vec::new();
+    if Tree::COMPUTES_CHILD_LAYOUTS_IN_PARALLEL {
+        prepared_items.reserve(items.len());
+        jobs.reserve(items.len());
+        for item in items.iter() {
+            let grid_area = item_grid_area(item);
+            let prepared = prepare_item_layout(
+                tree,
+                item.node,
+                grid_area,
+                Size { width: grid_area.right - grid_area.left, height: grid_area.bottom - grid_area.top },
+                container_alignment_styles,
+                item.baseline_shim,
+                direction,
+            );
+            jobs.push(ChildLayoutJob::new(item.node, prepared.input));
+            prepared_items.push(prepared);
+        }
+        tree.compute_child_layouts(node, &mut jobs);
     }
-    tree.compute_child_layouts(node, &mut jobs);
+    let mut batched_layouts = prepared_items.into_iter().zip(jobs);
 
     // Position in-flow children
-    for ((index, item), (prepared, job)) in items.iter_mut().enumerate().zip(prepared_items.into_iter().zip(jobs)) {
+    for (index, item) in items.iter_mut().enumerate() {
         let grid_area = item_grid_area(item);
+        let (prepared, layout_output) = match batched_layouts.next() {
+            Some((prepared, job)) => (prepared, job.output),
+            None => {
+                let prepared = prepare_item_layout(
+                    tree,
+                    item.node,
+                    grid_area,
+                    Size { width: grid_area.right - grid_area.left, height: grid_area.bottom - grid_area.top },
+                    container_alignment_styles,
+                    item.baseline_shim,
+                    direction,
+                );
+                let layout_output = tree.compute_child_layout(item.node, prepared.input);
+                (prepared, layout_output)
+            }
+        };
         #[cfg_attr(not(feature = "content_size"), allow(unused_variables))]
         let (overflow_contribution, y_position, height) = position_item(
             tree,
@@ -783,7 +829,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
             index as u32,
             grid_area,
             prepared,
-            job.output,
+            layout_output,
             item.baseline_shim,
             direction,
             container_border_box.width,

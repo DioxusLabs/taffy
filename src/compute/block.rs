@@ -1048,21 +1048,16 @@ fn resolve_stretch_height(
 
 /// Compute the content-based width in the case that the width of the container is not known
 #[inline]
-fn determine_content_based_container_width(
-    tree: &mut impl LayoutPartialTree,
+fn determine_content_based_container_width<Tree: LayoutPartialTree>(
+    tree: &mut Tree,
     node_id: NodeId,
     items: &[BlockItem],
     available_width: AvailableSpace,
 ) -> f32 {
     let available_space = Size { width: available_width, height: AvailableSpace::MinContent };
 
-    // Measure all of the items that don't have a definite width as a batch
-    let mut jobs: Vec<ChildLayoutJob> = Vec::new();
-    for item in items.iter().filter(|item| !item.position.is_out_of_flow()) {
-        let known_dimensions = item.size.maybe_clamp(item.min_size, item.max_size);
-        if known_dimensions.width.is_some() {
-            continue;
-        }
+    // The input with which to measure an item that doesn't have a definite width
+    let measure_input = |tree: &Tree, item: &BlockItem| {
         let item_available_width =
             match resolve_sizing_keyword(item.size_style.width, None, None, |val, basis| tree.calc(val, basis)) {
                 Some(SizingKeywordResolution::Measure(available_width)) => available_width,
@@ -1075,23 +1070,31 @@ fn determine_content_based_container_width(
                     available_space.width.maybe_sub(item_x_margin_sum)
                 }
             };
-        jobs.push(ChildLayoutJob::new(
-            item.node_id,
-            LayoutInput {
-                known_dimensions,
-                known_dimensions_are_definite: Size { width: true, height: true },
-                parent_size: Size::NONE,
-                available_space: Size { width: item_available_width, height: available_space.height },
-                sizing_mode: SizingMode::InherentSize,
-                axis: RequestedAxis::Horizontal,
-                run_mode: RunMode::ComputeSize,
-                // Must match the value passed when laying the item out (see `Cache`)
-                vertical_margins_are_collapsible: if item.is_in_same_bfc { Line::TRUE } else { Line::FALSE },
-            },
-        ));
-    }
-    if !jobs.is_empty() {
-        tree.compute_child_layouts(node_id, &mut jobs);
+        LayoutInput {
+            known_dimensions: item.size.maybe_clamp(item.min_size, item.max_size),
+            known_dimensions_are_definite: Size { width: true, height: true },
+            parent_size: Size::NONE,
+            available_space: Size { width: item_available_width, height: available_space.height },
+            sizing_mode: SizingMode::InherentSize,
+            axis: RequestedAxis::Horizontal,
+            run_mode: RunMode::ComputeSize,
+            // Must match the value passed when laying the item out (see `Cache`)
+            vertical_margins_are_collapsible: if item.is_in_same_bfc { Line::TRUE } else { Line::FALSE },
+        }
+    };
+
+    // If the tree computes batches of child layouts in parallel then measure all
+    // of the items that don't have a definite width as a batch
+    let mut jobs: Vec<ChildLayoutJob> = Vec::new();
+    if Tree::COMPUTES_CHILD_LAYOUTS_IN_PARALLEL {
+        for item in items.iter().filter(|item| !item.position.is_out_of_flow()) {
+            if item.size.maybe_clamp(item.min_size, item.max_size).width.is_none() {
+                jobs.push(ChildLayoutJob::new(item.node_id, measure_input(tree, item)));
+            }
+        }
+        if !jobs.is_empty() {
+            tree.compute_child_layouts(node_id, &mut jobs);
+        }
     }
     let mut measured_widths = jobs.iter().map(|job| job.output.size.width);
 
@@ -1105,7 +1108,13 @@ fn determine_content_based_container_width(
             .margin
             .resolve_or_zero(available_space.width.into_option(), |val, basis| tree.calc(val, basis))
             .horizontal_axis_sum();
-        let width = known_dimensions.width.unwrap_or_else(|| measured_widths.next().unwrap());
+        let width = known_dimensions.width.unwrap_or_else(|| {
+            if Tree::COMPUTES_CHILD_LAYOUTS_IN_PARALLEL {
+                measured_widths.next().unwrap()
+            } else {
+                tree.compute_child_layout(item.node_id, measure_input(tree, item)).size.width
+            }
+        });
 
         let width = f32_max(width, item.padding_border_sum.width) + item_x_margin_sum;
 
@@ -1214,8 +1223,8 @@ fn in_flow_item_layout_input(
 /// Compute each child's final size and position
 #[inline]
 #[allow(clippy::too_many_arguments)]
-fn perform_final_layout_on_in_flow_children(
-    tree: &mut impl LayoutBlockContainer,
+fn perform_final_layout_on_in_flow_children<Tree: LayoutBlockContainer>(
+    tree: &mut Tree,
     node_id: NodeId,
     run_mode: RunMode,
     items: &mut [BlockItem],
@@ -1281,9 +1290,10 @@ fn perform_final_layout_on_in_flow_children(
     let has_active_floats = false;
 
     // If the Block Formatting Context does not contain floats then neither the input nor the output of a
-    // child's layout depends on its preceding siblings, so the layouts of all in-flow children are computed
-    // as a batch here. The loop below then positions each child using its output.
-    let batch_children = !block_ctx.may_contain_floats();
+    // child's layout depends on its preceding siblings. So if the tree computes batches of child layouts in
+    // parallel then the layouts of all in-flow children are computed as a batch here, and the loop below
+    // positions each child using its output.
+    let batch_children = Tree::COMPUTES_CHILD_LAYOUTS_IN_PARALLEL && !block_ctx.may_contain_floats();
     let mut jobs: Vec<ChildLayoutJob> = Vec::new();
     let mut next_job = 0;
     if batch_children {
