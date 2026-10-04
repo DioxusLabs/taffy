@@ -6,9 +6,10 @@ use crate::compute::common::alignment::{
 };
 use crate::geometry::{InBothAbsAxis, Line, Point, Rect, Size};
 use crate::style::{
-    AlignContent, AlignItems, AlignItemsKeyword, AlignSelf, AvailableSpace, CoreStyle, GridItemStyle, Overflow,
-    Position,
+    AlignContent, AlignItems, AlignItemsKeyword, AlignSelf, AvailableSpace, CoreStyle, Dimension, GridItemStyle,
+    Overflow, Position,
 };
+use crate::tree::traits::{has_min_max_sizing_keyword, resolve_extrinsic_min_max_keywords};
 use crate::tree::{Layout, LayoutPartialTreeExt, NodeId, OofCandidates};
 use crate::util::sys::f32_max;
 use crate::util::{MaybeMath, MaybeResolve, ResolveOrZero};
@@ -145,18 +146,33 @@ pub(super) fn align_and_position_item(
         .maybe_resolve(grid_area_size, |val, basis| tree.calc(val, basis))
         .maybe_apply_aspect_ratio(aspect_ratio)
         .maybe_add(box_sizing_adjustment);
-    let min_size = style
-        .min_size()
-        .maybe_resolve(grid_area_size, |val, basis| tree.calc(val, basis))
+    let min_size_style = style.min_size();
+    let max_size_style = style.max_size();
+    let mut resolved_min_size = min_size_style.maybe_resolve(grid_area_size, |val, basis| tree.calc(val, basis));
+    let mut resolved_max_size = max_size_style.maybe_resolve(grid_area_size, |val, basis| tree.calc(val, basis));
+    // `stretch` min and max sizes resolve against the grid area less the item's margins.
+    // Content-based min and max widths are applied below.
+    let mut keyword_min_width = Dimension::auto();
+    let mut keyword_max_width = Dimension::auto();
+    if has_min_max_sizing_keyword(min_size_style, max_size_style) {
+        let margin = style
+            .margin()
+            .map(|margin| margin.resolve_to_option(grid_area_size.width, |val, basis| tree.calc(val, basis)));
+        let stretch_size = Size {
+            width: Some((grid_area_size.width - margin.left.unwrap_or(0.0) - margin.right.unwrap_or(0.0)).max(0.0)),
+            height: Some((grid_area_size.height - margin.top.unwrap_or(0.0) - margin.bottom.unwrap_or(0.0)).max(0.0)),
+        };
+        (resolved_min_size, keyword_min_width) =
+            resolve_extrinsic_min_max_keywords(min_size_style, resolved_min_size, stretch_size, box_sizing_adjustment);
+        (resolved_max_size, keyword_max_width) =
+            resolve_extrinsic_min_max_keywords(max_size_style, resolved_max_size, stretch_size, box_sizing_adjustment);
+    }
+    let min_size = resolved_min_size
         .maybe_add(box_sizing_adjustment)
         .or(padding_border_size.map(Some))
         .maybe_max(padding_border_size)
         .maybe_apply_aspect_ratio(aspect_ratio);
-    let max_size = style
-        .max_size()
-        .maybe_resolve(grid_area_size, |val, basis| tree.calc(val, basis))
-        .maybe_apply_aspect_ratio(aspect_ratio)
-        .maybe_add(box_sizing_adjustment);
+    let max_size = resolved_max_size.maybe_apply_aspect_ratio(aspect_ratio).maybe_add(box_sizing_adjustment);
 
     // Resolve default alignment styles if they are set on neither the parent or the node itself
     // Note: if the child has a preferred aspect ratio but neither width or height are set, then the width is stretched
@@ -326,6 +342,27 @@ pub(super) fn align_and_position_item(
 
     // Clamp size by min and max width/height
     let Size { width, height } = Size { width, height }.maybe_clamp(min_size, max_size);
+
+    // A width which is not determined by the item's content can only be clamped by a content-based
+    // min or max width by measuring the item
+    let width = match width {
+        Some(width) if !position.is_out_of_flow() && !(keyword_min_width.is_auto() && keyword_max_width.is_auto()) => {
+            Some(tree.clamp_width_by_min_max_sizing_keywords(
+                node,
+                width,
+                keyword_min_width,
+                keyword_max_width,
+                min_size.width,
+                padding_border_size.width,
+                Some(grid_area_minus_item_margins_size.width),
+                height,
+                grid_area_size.map(Option::Some),
+                AvailableSpace::Definite(grid_area_minus_item_margins_size.height),
+                Line::FALSE,
+            ))
+        }
+        width => width,
+    };
 
     // Layout node
     let size = if position.is_out_of_flow() && (width.is_none() || height.is_none()) {
