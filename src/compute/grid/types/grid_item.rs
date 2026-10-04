@@ -466,6 +466,7 @@ impl GridItem {
                 .resolve_or_zero(grid_area_size.width, |val, basis| tree.calc(val, basis))
                 .sum_axes(),
             keyword_min_width,
+            min_size_is_stretch: self.min_size.map(|style| style.is_stretch()),
             keyword_max_width,
         });
 

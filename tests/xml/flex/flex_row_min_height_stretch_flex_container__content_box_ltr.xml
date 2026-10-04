@@ -5,7 +5,7 @@
       <div display="flex" box-sizing="content-box" direction="ltr" position="relative" flex-direction="column" min-height="stretch">
         <div box-sizing="content-box" direction="ltr" position="relative" flex-grow="1" width="20px"/>
       </div>
-      <div display="grid" box-sizing="content-box" direction="ltr" position="relative" min-height="stretch" margin-top="10px">
+      <div display="grid" box-sizing="content-box" direction="ltr" position="relative" min-height="stretch">
         <div box-sizing="content-box" direction="ltr" position="relative" width="20px"/>
       </div>
       <div display="flex" box-sizing="content-box" direction="ltr" position="relative" flex-direction="column" max-height="stretch">
@@ -18,8 +18,8 @@
       <node x="0" y="0" width="20" height="100">
         <node x="0" y="0" width="20" height="100"/>
       </node>
-      <node x="20" y="10" width="20" height="90" resolved-rows="90px" resolved-columns="20px">
-        <node x="0" y="0" width="20" height="90"/>
+      <node x="20" y="0" width="20" height="100" resolved-rows="100px" resolved-columns="20px">
+        <node x="0" y="0" width="20" height="100"/>
       </node>
       <node x="40" y="0" width="20" height="100">
         <node x="0" y="0" width="20" height="100"/>

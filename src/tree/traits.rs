@@ -400,6 +400,9 @@ pub(crate) struct ChildStyleConstraints {
     /// The child's `min_size.width` style if it is an intrinsic sizing keyword
     /// (`min-content`, `max-content`, `fit-content` or `fit-content(...)`), else `auto`
     pub(crate) keyword_min_width: Dimension,
+    /// The axes in which `min_size` was resolved from a `stretch` keyword. Such a minimum is equal to the space
+    /// that is available to the child, so it is not used to adjust that space.
+    pub(crate) min_size_is_stretch: Size<bool>,
     /// The child's `max_size.width` style if it is an intrinsic sizing keyword
     /// (`min-content`, `max-content`, `fit-content` or `fit-content(...)`), else `auto`
     pub(crate) keyword_max_width: Dimension,
@@ -614,6 +617,7 @@ impl ChildStyleConstraints {
             padding_border_size,
             margin_size: margin.sum_axes(),
             keyword_min_width,
+            min_size_is_stretch: min_size_style.map(|style| style.is_stretch()),
             keyword_max_width,
         };
         let auto_axes = constraints.apply_to_inputs(inputs);
@@ -636,12 +640,15 @@ impl ChildStyleConstraints {
         // The space available to the child's content is limited by the child's own min and max sizes
         inputs.available_space = Size {
             width: inputs.available_space.width.map_definite_value(|space| {
-                (space - self.margin_size.width).maybe_clamp(self.min_size.width, self.max_size.width)
+                (space - self.margin_size.width)
+                    .maybe_clamp(self.min_size.width.filter(|_| !self.min_size_is_stretch.width), self.max_size.width)
                     + self.margin_size.width
             }),
             height: inputs.available_space.height.map_definite_value(|space| {
-                (space - self.margin_size.height).maybe_clamp(self.min_size.height, self.max_size.height)
-                    + self.margin_size.height
+                (space - self.margin_size.height).maybe_clamp(
+                    self.min_size.height.filter(|_| !self.min_size_is_stretch.height),
+                    self.max_size.height,
+                ) + self.margin_size.height
             }),
         };
 

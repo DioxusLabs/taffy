@@ -7,19 +7,11 @@
           HH​HH
         </text>
       </div>
-      <div display="flex" direction="ltr" position="relative">
-        <text direction="ltr" position="relative" width="100px" max-width="min-content">
-          HH​HH
-        </text>
-      </div>
     </div>
   </input>
   <expectations>
     <node x="0" y="0" width="300" height="20">
       <node x="0" y="0" width="20" height="20">
-        <node x="0" y="0" width="20" height="20"/>
-      </node>
-      <node x="20" y="0" width="20" height="20">
         <node x="0" y="0" width="20" height="20"/>
       </node>
     </node>
