@@ -430,6 +430,105 @@ pub(crate) fn has_min_max_sizing_keyword(min_size: Size<Dimension>, max_size: Si
             || max_size.height.is_sizing_keyword())
 }
 
+/// Which of a child's `min_size` and `max_size` styles are sizing keywords.
+///
+/// Stored by layout algorithms on their items in place of the styles themselves. A `stretch` bound
+/// resolves to a size that the child's parent already knows, so it is recorded per property and can be
+/// resolved without looking at the child's style again. The content-based keywords require the child to
+/// be measured, so only the presence of any one of them is recorded.
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+pub(crate) struct MinMaxKeywords(u8);
+
+impl MinMaxKeywords {
+    /// `min_size.width` is `stretch`
+    const MIN_WIDTH_STRETCH: u8 = 1 << 0;
+    /// `min_size.height` is `stretch`
+    const MIN_HEIGHT_STRETCH: u8 = 1 << 1;
+    /// `max_size.width` is `stretch`
+    const MAX_WIDTH_STRETCH: u8 = 1 << 2;
+    /// `max_size.height` is `stretch`
+    const MAX_HEIGHT_STRETCH: u8 = 1 << 3;
+    /// Any of the four styles is `min-content`, `max-content`, `fit-content` or `fit-content(...)`
+    const CONTENT: u8 = 1 << 4;
+
+    /// Classify a `min_size` and a `max_size` style
+    #[inline(always)]
+    pub(crate) fn new(min_size: Size<Dimension>, max_size: Size<Dimension>) -> Self {
+        match has_min_max_sizing_keyword(min_size, max_size) {
+            true => Self::classify(min_size, max_size),
+            false => Self(0),
+        }
+    }
+
+    /// Classify a `min_size` and a `max_size` style, at least one of which is a sizing keyword.
+    /// Kept out of line so that items which have no sizing keywords only pay for a single check.
+    #[cold]
+    fn classify(min_size: Size<Dimension>, max_size: Size<Dimension>) -> Self {
+        let classify = |style: Dimension, stretch_flag: u8| match style {
+            _ if style.is_stretch() => stretch_flag,
+            _ if style.is_sizing_keyword() => Self::CONTENT,
+            _ => 0,
+        };
+        Self(
+            classify(min_size.width, Self::MIN_WIDTH_STRETCH)
+                | classify(min_size.height, Self::MIN_HEIGHT_STRETCH)
+                | classify(max_size.width, Self::MAX_WIDTH_STRETCH)
+                | classify(max_size.height, Self::MAX_HEIGHT_STRETCH),
+        )
+    }
+
+    /// Whether none of the styles are sizing keywords
+    #[inline(always)]
+    pub(crate) fn is_empty(self) -> bool {
+        self.0 == 0
+    }
+
+    /// Whether any of the styles is a keyword that depends on the size of the child's content
+    #[inline(always)]
+    pub(crate) fn has_content_keyword(self) -> bool {
+        self.0 & Self::CONTENT != 0
+    }
+
+    /// The axes in which the `min_size` style is `stretch`
+    #[inline(always)]
+    pub(crate) fn min_size_is_stretch(self) -> Size<bool> {
+        Size { width: self.0 & Self::MIN_WIDTH_STRETCH != 0, height: self.0 & Self::MIN_HEIGHT_STRETCH != 0 }
+    }
+
+    /// The axes in which the `max_size` style is `stretch`
+    #[inline(always)]
+    pub(crate) fn max_size_is_stretch(self) -> Size<bool> {
+        Size { width: self.0 & Self::MAX_WIDTH_STRETCH != 0, height: self.0 & Self::MAX_HEIGHT_STRETCH != 0 }
+    }
+
+    /// Replace the bounds whose style is `stretch` in the resolved `min_size` and `max_size` of a child
+    /// with `stretch_size`: the size that the child would have if it filled the space available to it
+    #[inline(never)]
+    pub(crate) fn resolve_stretch(
+        self,
+        min_size: Size<Option<f32>>,
+        max_size: Size<Option<f32>>,
+        stretch_size: Size<Option<f32>>,
+    ) -> (Size<Option<f32>>, Size<Option<f32>>) {
+        let pick = |is_stretch: bool, stretch: Option<f32>, resolved: Option<f32>| match is_stretch {
+            true => stretch,
+            false => resolved,
+        };
+        let min_is_stretch = self.min_size_is_stretch();
+        let max_is_stretch = self.max_size_is_stretch();
+        (
+            Size {
+                width: pick(min_is_stretch.width, stretch_size.width, min_size.width),
+                height: pick(min_is_stretch.height, stretch_size.height, min_size.height),
+            },
+            Size {
+                width: pick(max_is_stretch.width, stretch_size.width, max_size.width),
+                height: pick(max_is_stretch.height, stretch_size.height, max_size.height),
+            },
+        )
+    }
+}
+
 /// The size that a `stretch` min or max size of a child resolves to: the space that the child's parent
 /// makes available to the child.
 ///
@@ -629,20 +728,22 @@ impl ChildStyleConstraints {
         let mut untransferred_max_size = max_size_style.maybe_resolve(parent_size, &calc);
         let mut keyword_min_width = Dimension::auto();
         let mut keyword_max_width = Dimension::auto();
-        if has_min_max_sizing_keyword(min_size_style, max_size_style) {
-            let stretch_size = min_max_stretch_size(parent_size, inputs.available_space);
-            (untransferred_min_size, keyword_min_width) = resolve_extrinsic_min_max_keywords(
-                min_size_style,
-                untransferred_min_size,
-                stretch_size,
-                box_sizing_adjustment,
-            );
-            (untransferred_max_size, keyword_max_width) = resolve_extrinsic_min_max_keywords(
-                max_size_style,
-                untransferred_max_size,
-                stretch_size,
-                box_sizing_adjustment,
-            );
+        let min_max_keywords = MinMaxKeywords::new(min_size_style, max_size_style);
+        if !min_max_keywords.is_empty() {
+            // `box_sizing_adjustment` is added to the resolved sizes below
+            let stretch_size = min_max_stretch_size(parent_size, inputs.available_space)
+                .maybe_sub(box_sizing_adjustment)
+                .maybe_max(Size::ZERO);
+            (untransferred_min_size, untransferred_max_size) =
+                min_max_keywords.resolve_stretch(untransferred_min_size, untransferred_max_size, stretch_size);
+            if min_max_keywords.has_content_keyword() {
+                let content_keyword = |style: Dimension| match style.is_sizing_keyword() && !style.is_stretch() {
+                    true => style,
+                    false => Dimension::auto(),
+                };
+                keyword_min_width = content_keyword(min_size_style.width);
+                keyword_max_width = content_keyword(max_size_style.width);
+            }
         }
         // A minimum size that is transferred from the other axis through the aspect ratio does not
         // take precedence over a maximum size that is set in the axis that it is transferred to
@@ -671,7 +772,7 @@ impl ChildStyleConstraints {
             aspect_ratio,
             padding_border_size,
             keyword_min_width,
-            min_size_is_stretch: min_size_style.map(|style| style.is_stretch()),
+            min_size_is_stretch: min_max_keywords.min_size_is_stretch(),
             keyword_max_width,
         };
         let auto_axes = constraints.apply_to_inputs(inputs);

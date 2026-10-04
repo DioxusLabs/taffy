@@ -23,7 +23,7 @@ use super::common::alignment::apply_alignment_fallback;
 #[cfg(feature = "content_size")]
 use super::common::scrollable_overflow::compute_scrollable_overflow_contribution;
 use super::common::sizing_keyword::{resolve_sizing_keyword, SizingKeywordResolution};
-use crate::tree::traits::has_min_max_sizing_keyword;
+use crate::tree::traits::MinMaxKeywords;
 
 /// The intermediate results of a flexbox calculation for a single item
 struct FlexItem {
@@ -42,10 +42,10 @@ struct FlexItem {
     min_size: Size<Option<f32>>,
     /// The maximum allowable size of this item
     max_size: Size<Option<f32>>,
-    /// The `min_size` and `max_size` styles of the item, if either contains a sizing keyword
-    /// (`min-content`, `max-content`, `fit-content`, `fit-content(...)`, or `stretch`). Those are
-    /// resolved into `min_size` and `max_size` when the flex base size of the item is determined.
-    has_min_max_keywords: bool,
+    /// Which of the `min_size` and `max_size` styles of the item are sizing keywords (`min-content`,
+    /// `max-content`, `fit-content`, `fit-content(...)`, or `stretch`). Those are resolved into
+    /// `min_size` and `max_size` when the flex base size of the item is determined.
+    min_max_keywords: MinMaxKeywords,
     /// The aspect ratio of this item
     aspect_ratio: Option<f32>,
     /// The cross-alignment of this item
@@ -761,6 +761,24 @@ fn generate_anonymous_flex_items(
             let pb_sum = (padding + border).sum_axes();
             let box_sizing_adjustment =
                 if child_style.box_sizing() == BoxSizing::ContentBox { pb_sum } else { Size::ZERO };
+            let margin = child_style
+                .margin()
+                .resolve_or_zero(constants.node_inner_size.width, |val, basis| tree.calc(val, basis));
+            let min_max_keywords = MinMaxKeywords::new(child_style.min_size(), child_style.max_size());
+            let mut min_size = child_style
+                .min_size()
+                .maybe_resolve(percent_resolution_size, |val, basis| tree.calc(val, basis))
+                .maybe_add(box_sizing_adjustment);
+            let mut max_size = child_style
+                .max_size()
+                .maybe_resolve(percent_resolution_size, |val, basis| tree.calc(val, basis))
+                .maybe_add(box_sizing_adjustment);
+            if !min_max_keywords.is_empty() {
+                // A `stretch` bound resolves against the inner size of the container, which is the same
+                // size that percentages resolve against. So like a percentage it is resolved here, once.
+                let stretch_size = percent_resolution_size.maybe_sub(margin.sum_axes()).maybe_max(Size::ZERO);
+                (min_size, max_size) = min_max_keywords.resolve_stretch(min_size, max_size, stretch_size);
+            }
             FlexItem {
                 node: child,
                 order: index as u32,
@@ -770,15 +788,9 @@ fn generate_anonymous_flex_items(
                     .maybe_apply_aspect_ratio(aspect_ratio)
                     .maybe_add(box_sizing_adjustment),
                 size_style: child_style.size(),
-                has_min_max_keywords: has_min_max_sizing_keyword(child_style.min_size(), child_style.max_size()),
-                min_size: child_style
-                    .min_size()
-                    .maybe_resolve(percent_resolution_size, |val, basis| tree.calc(val, basis))
-                    .maybe_add(box_sizing_adjustment),
-                max_size: child_style
-                    .max_size()
-                    .maybe_resolve(percent_resolution_size, |val, basis| tree.calc(val, basis))
-                    .maybe_add(box_sizing_adjustment),
+                min_max_keywords,
+                min_size,
+                max_size,
                 aspect_ratio,
 
                 relative_inset: if child_style.position() == Position::Relative {
@@ -789,9 +801,7 @@ fn generate_anonymous_flex_items(
                 } else {
                     Size::ZERO
                 },
-                margin: child_style
-                    .margin()
-                    .resolve_or_zero(constants.node_inner_size.width, |val, basis| tree.calc(val, basis)),
+                margin,
                 margin_is_auto: child_style.margin().map(LengthPercentageAuto::is_auto),
                 padding: child_style
                     .padding()
@@ -907,7 +917,7 @@ fn determine_flex_base_size(
     let dir = constants.dir;
 
     for child in flex_items.iter_mut() {
-        if child.has_min_max_keywords {
+        if child.min_max_keywords.has_content_keyword() {
             resolve_cross_axis_min_max_keywords(tree, constants, child, constants.node_inner_size.cross(dir));
         }
         let child_style = tree.get_flexbox_child_style(child.node);
@@ -990,7 +1000,7 @@ fn determine_flex_base_size(
 
         drop(child_style);
 
-        if child.has_min_max_keywords {
+        if child.min_max_keywords.has_content_keyword() {
             resolve_main_axis_min_max_keywords(
                 tree,
                 constants,
@@ -2326,13 +2336,13 @@ fn determine_used_cross_size(
             // A `stretch` min or max cross size resolves against the size of the item's flex line
             let child_style = tree.get_flexbox_child_style(child.node);
             let mut has_stretch_bound = false;
-            if child.has_min_max_keywords {
+            if !child.min_max_keywords.is_empty() {
                 let stretch_size = Some((line_cross_size - child.margin.cross_axis_sum(constants.dir)).max(0.0));
-                if child_style.max_size().cross(constants.dir).is_stretch() {
+                if child.min_max_keywords.max_size_is_stretch().cross(constants.dir) {
                     child.max_size.set_cross(constants.dir, stretch_size);
                     has_stretch_bound = true;
                 }
-                if child_style.min_size().cross(constants.dir).is_stretch() {
+                if child.min_max_keywords.min_size_is_stretch().cross(constants.dir) {
                     child.min_size.set_cross(constants.dir, stretch_size);
                     has_stretch_bound = true;
                 }
