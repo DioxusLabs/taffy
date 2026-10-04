@@ -1,0 +1,61 @@
+<test name="block_min_max_width_keywords_nested_container__border_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="block" direction="ltr" position="absolute" width="120px">
+      <div direction="ltr" position="relative" width="10px" min-width="min-content">
+        <text direction="ltr" position="relative">
+          HH​HH
+        </text>
+        <div direction="ltr" position="relative" width="30px" height="10px"/>
+      </div>
+      <div direction="ltr" position="relative" width="10px" min-width="max-content">
+        <text direction="ltr" position="relative">
+          HH​HH
+        </text>
+      </div>
+      <div direction="ltr" position="relative" max-width="fit-content" margin-top="0px" margin-left="auto" margin-bottom="0px" margin-right="auto">
+        <text direction="ltr" position="relative">
+          HH​HH
+        </text>
+      </div>
+      <div display="flex" direction="ltr" position="relative" width="10px" min-width="max-content">
+        <text direction="ltr" position="relative">
+          HH​HH
+        </text>
+        <text direction="ltr" position="relative">
+          HH​HH
+        </text>
+      </div>
+      <div display="grid" direction="ltr" position="relative" width="200px" max-width="min-content">
+        <text direction="ltr" position="relative">
+          HH​HH
+        </text>
+        <text direction="ltr" position="relative">
+          HH​HH
+        </text>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="120" height="90">
+      <node x="0" y="0" width="50" height="20">
+        <node x="0" y="0" width="29" height="20"/>
+        <node x="29" y="0" width="21" height="10"/>
+      </node>
+      <node x="0" y="20" width="40" height="10">
+        <node x="0" y="0" width="40" height="10"/>
+      </node>
+      <node x="40" y="30" width="40" height="10">
+        <node x="0" y="0" width="40" height="10"/>
+      </node>
+      <node x="0" y="40" width="80" height="10">
+        <node x="0" y="0" width="40" height="10"/>
+        <node x="40" y="0" width="40" height="10"/>
+      </node>
+      <node x="0" y="50" width="20" height="40" resolved-rows="20px 20px" resolved-columns="20px">
+        <node x="0" y="0" width="20" height="20"/>
+        <node x="0" y="20" width="20" height="20"/>
+      </node>
+    </node>
+  </expectations>
+</test>

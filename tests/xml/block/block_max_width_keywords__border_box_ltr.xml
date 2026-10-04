@@ -1,0 +1,43 @@
+<test name="block_max_width_keywords__border_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="block" direction="ltr" position="absolute" width="50px">
+      <text direction="ltr" position="relative" max-width="min-content">
+        HH​HH​HH​HH
+      </text>
+      <text direction="ltr" position="relative" max-width="max-content">
+        HH​HH​HH​HH
+      </text>
+      <text direction="ltr" position="relative" max-width="fit-content">
+        HH​HH​HH​HH
+      </text>
+      <text direction="ltr" position="relative" max-width="stretch">
+        HH​HH​HH​HH
+      </text>
+      <text direction="ltr" position="relative" width="200px" max-width="min-content">
+        HH​HH​HH​HH
+      </text>
+      <text direction="ltr" position="relative" width="200px" max-width="max-content">
+        HH​HH​HH​HH
+      </text>
+      <text direction="ltr" position="relative" width="200px" max-width="fit-content">
+        HH​HH​HH​HH
+      </text>
+      <text direction="ltr" position="relative" width="200px" max-width="stretch">
+        HH​HH​HH​HH
+      </text>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="50" height="190">
+      <node x="0" y="0" width="20" height="40"/>
+      <node x="0" y="40" width="50" height="20"/>
+      <node x="0" y="60" width="50" height="20"/>
+      <node x="0" y="80" width="50" height="20"/>
+      <node x="0" y="100" width="20" height="40"/>
+      <node x="0" y="140" width="80" height="10"/>
+      <node x="0" y="150" width="50" height="20"/>
+      <node x="0" y="170" width="50" height="20"/>
+    </node>
+  </expectations>
+</test>

@@ -424,6 +424,8 @@ impl GridItem {
                 .margin
                 .resolve_or_zero(grid_area_size.width, |val, basis| tree.calc(val, basis))
                 .sum_axes(),
+            keyword_min_width: Dimension::auto(),
+            keyword_max_width: Dimension::auto(),
         });
 
         (known_dimensions, constraints)

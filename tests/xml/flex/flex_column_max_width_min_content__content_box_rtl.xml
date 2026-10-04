@@ -1,0 +1,23 @@
+<test name="flex_column_max_width_min_content__content_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="flex" box-sizing="content-box" direction="rtl" position="absolute" flex-direction="column" width="50px">
+      <text box-sizing="content-box" direction="rtl" position="relative" width="200px" max-width="min-content">
+        HH​HH​HH​HH
+      </text>
+      <text box-sizing="content-box" direction="rtl" position="relative" max-width="min-content">
+        HH​HH​HH​HH
+      </text>
+      <text box-sizing="content-box" direction="rtl" position="relative" align-self="flex-start" max-width="min-content">
+        HH​HH​HH​HH
+      </text>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="50" height="120">
+      <node x="30" y="0" width="20" height="40"/>
+      <node x="30" y="40" width="20" height="40"/>
+      <node x="30" y="80" width="20" height="40"/>
+    </node>
+  </expectations>
+</test>

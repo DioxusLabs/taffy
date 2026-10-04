@@ -1,0 +1,21 @@
+<test name="flex_column_min_height_stretch__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="flex" box-sizing="content-box" direction="ltr" position="absolute" flex-direction="column" width="30px" height="100px">
+      <text box-sizing="content-box" direction="ltr" position="relative" flex-shrink="0" height="5px" min-height="stretch">
+        HH​HH
+      </text>
+      <text box-sizing="content-box" direction="ltr" position="relative" flex-basis="0px" min-height="stretch">
+        HH​HH
+      </text>
+      <div box-sizing="content-box" direction="ltr" position="relative" flex-grow="1"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="30" height="100">
+      <node x="0" y="0" width="30" height="100"/>
+      <node x="0" y="100" width="30" height="100"/>
+      <node x="0" y="200" width="30" height="0"/>
+    </node>
+  </expectations>
+</test>

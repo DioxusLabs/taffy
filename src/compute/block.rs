@@ -2,7 +2,9 @@
 use crate::geometry::{Line, Point, Rect, Size};
 use crate::style::{AvailableSpace, CoreStyle, LengthPercentageAuto, Overflow, Position};
 use crate::style_helpers::TaffyMaxContent;
-use crate::tree::traits::{AutoAxes, ChildStyleConstraints};
+use crate::tree::traits::{
+    has_min_max_sizing_keyword, resolve_extrinsic_min_max_keywords, AutoAxes, ChildStyleConstraints,
+};
 use crate::tree::{
     AxisStaticEdge, AxisStaticPosition, LayoutPartialTreeExt, NodeId, OofCandidate, OofCandidates, OofPositioningArea,
 };
@@ -311,6 +313,10 @@ struct BlockItem {
     min_size: Size<Option<f32>>,
     /// The maximum allowable size of this item
     max_size: Size<Option<f32>>,
+    /// The `min_size` and `max_size` styles of this item, if either contains a sizing keyword
+    /// (`min-content`, `max-content`, `fit-content`, `fit-content(...)`, or `stretch`).
+    /// Those are not included in `min_size` and `max_size`.
+    min_max_keywords: Option<(Size<Dimension>, Size<Dimension>)>,
 
     /// The overflow style of the item
     overflow: Point<Overflow>,
@@ -855,6 +861,10 @@ fn generate_item_list(
 
             let position = child_style.position();
             let overflow = child_style.overflow();
+            let min_size_style = child_style.min_size();
+            let max_size_style = child_style.max_size();
+            let min_max_keywords =
+                has_min_max_sizing_keyword(min_size_style, max_size_style).then_some((min_size_style, max_size_style));
 
             #[cfg(feature = "float_layout")]
             let float = child_style.float();
@@ -893,13 +903,12 @@ fn generate_item_list(
                     .maybe_resolve(node_inner_size, |val, basis| tree.calc(val, basis))
                     .maybe_apply_aspect_ratio(aspect_ratio)
                     .maybe_add(box_sizing_adjustment),
-                min_size: child_style
-                    .min_size()
+                min_max_keywords,
+                min_size: min_size_style
                     .maybe_resolve(node_inner_size, |val, basis| tree.calc(val, basis))
                     .maybe_apply_aspect_ratio(aspect_ratio)
                     .maybe_add(box_sizing_adjustment),
-                max_size: child_style
-                    .max_size()
+                max_size: max_size_style
                     .maybe_resolve(node_inner_size, |val, basis| tree.calc(val, basis))
                     .maybe_apply_aspect_ratio(aspect_ratio)
                     .maybe_add(box_sizing_adjustment),
@@ -957,12 +966,28 @@ fn determine_content_based_container_width(
     #[cfg(feature = "float_layout")]
     let mut float_contribution = FloatIntrinsicWidthCalculator::new(available_width);
     for item in items.iter().filter(|item| !item.position.is_out_of_flow()) {
-        let known_dimensions = item.size.maybe_clamp(item.min_size, item.max_size);
+        let mut known_dimensions = item.size.maybe_clamp(item.min_size, item.max_size);
 
         let item_x_margin_sum = item
             .margin
             .resolve_or_zero(available_space.width.into_option(), |val, basis| tree.calc(val, basis))
             .horizontal_axis_sum();
+        if let (Some((min_size_style, max_size_style)), Some(width)) = (item.min_max_keywords, known_dimensions.width) {
+            // A `stretch` bound is cyclic while the width of the container is being determined, so it is ignored
+            known_dimensions.width = Some(tree.clamp_width_by_min_max_sizing_keywords(
+                item.node_id,
+                width,
+                min_size_style.width,
+                max_size_style.width,
+                item.min_size.width,
+                item.padding_border_sum.width,
+                None,
+                known_dimensions.height,
+                Size::NONE,
+                available_space.height,
+                if item.is_in_same_bfc { Line::TRUE } else { Line::FALSE },
+            ));
+        }
         let width = known_dimensions.width.unwrap_or_else(|| {
             let item_available_width = match resolve_sizing_keyword(item.size_style.width, None, None) {
                 Some(SizingKeywordResolution::Measure(available_width)) => available_width,
@@ -1306,7 +1331,8 @@ fn perform_final_layout_on_in_flow_children(
                     item_non_auto_margin.vertical_axis_sum(),
                 );
 
-                item.size
+                let known_dimensions = item
+                    .size
                     .map_width(|width| {
                         Some(
                             width
@@ -1316,10 +1342,59 @@ fn perform_final_layout_on_in_flow_children(
                         )
                     })
                     .map_height(|height| height.or(keyword_height))
-                    .maybe_clamp(item.min_size, item.max_size)
+                    .maybe_clamp(item.min_size, item.max_size);
+                match item.min_max_keywords {
+                    Some((min_size_style, max_size_style)) => {
+                        let stretch_size = Size {
+                            width: Some(stretch_width),
+                            height: container_percentage_resolution_height
+                                .map(|height| (height - item_non_auto_margin.vertical_axis_sum()).max(0.0)),
+                        };
+                        // `stretch` bounds are resolved against the space available to the item
+                        let (min_size, _) =
+                            resolve_extrinsic_min_max_keywords(min_size_style, item.min_size, stretch_size, Size::ZERO);
+                        let (max_size, _) =
+                            resolve_extrinsic_min_max_keywords(max_size_style, item.max_size, stretch_size, Size::ZERO);
+                        let known_dimensions = known_dimensions.maybe_clamp(min_size, max_size);
+                        // Content-based bounds are resolved by measuring the item
+                        let width = match known_dimensions.width {
+                            Some(width) => Some(tree.clamp_width_by_min_max_sizing_keywords(
+                                item.node_id,
+                                width,
+                                min_size_style.width,
+                                max_size_style.width,
+                                min_size.width,
+                                item.padding_border_sum.width,
+                                stretch_size.width,
+                                known_dimensions.height,
+                                parent_size,
+                                available_space.height,
+                                if item.is_in_same_bfc { Line::TRUE } else { Line::FALSE },
+                            )),
+                            None => None,
+                        };
+                        Size { width, height: known_dimensions.height }
+                    }
+                    None => known_dimensions,
+                }
             };
 
             //
+
+            // The height available to a block-level box is not otherwise passed down to it, as it does not
+            // affect the box's size. But a `stretch` min or max height of the item resolves against it.
+            let available_height = match item.min_max_keywords {
+                Some((min_size_style, max_size_style))
+                    if known_dimensions.height.is_none()
+                        && (min_size_style.height.is_stretch() || max_size_style.height.is_stretch()) =>
+                {
+                    container_percentage_resolution_height
+                        .map(|height| (height - item_non_auto_margin.vertical_axis_sum()).max(0.0))
+                        .map(AvailableSpace::Definite)
+                        .unwrap_or(available_space.height)
+                }
+                _ => available_space.height,
+            };
 
             let mut inputs = LayoutInput {
                 run_mode,
@@ -1327,7 +1402,7 @@ fn perform_final_layout_on_in_flow_children(
                 known_dimensions,
                 known_dimensions_are_definite: Size { width: true, height: true },
                 parent_size,
-                available_space: available_space.map_width(|_| AvailableSpace::Definite(stretch_width)),
+                available_space: Size { width: AvailableSpace::Definite(stretch_width), height: available_height },
                 vertical_margins_are_collapsible: if item.is_in_same_bfc { Line::TRUE } else { Line::FALSE },
             };
 

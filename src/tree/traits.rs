@@ -129,7 +129,7 @@
 use super::{DetailedLayoutInfo, Layout, LayoutInput, LayoutOutput, NodeId, RequestedAxis, RunMode};
 use crate::debug::debug_log;
 use crate::geometry::{AbsoluteAxis, Line, Size};
-use crate::style::{AvailableSpace, CoreStyle, OofItemStyle};
+use crate::style::{AvailableSpace, CoreStyle, Dimension, OofItemStyle};
 #[cfg(feature = "flexbox")]
 use crate::style::{FlexboxContainerStyle, FlexboxItemStyle};
 #[cfg(feature = "grid")]
@@ -397,6 +397,12 @@ pub(crate) struct ChildStyleConstraints {
     pub(crate) padding_border_size: Size<f32>,
     /// The sum of the child's margins in each axis
     pub(crate) margin_size: Size<f32>,
+    /// The child's `min_size.width` style if it is an intrinsic sizing keyword
+    /// (`min-content`, `max-content`, `fit-content` or `fit-content(...)`), else `auto`
+    pub(crate) keyword_min_width: Dimension,
+    /// The child's `max_size.width` style if it is an intrinsic sizing keyword
+    /// (`min-content`, `max-content`, `fit-content` or `fit-content(...)`), else `auto`
+    pub(crate) keyword_max_width: Dimension,
 }
 
 /// Resolve the sizing styles of a node from its core style. For use when the node is not being laid out
@@ -407,6 +413,103 @@ pub(crate) fn resolve_core_style_constraints<Tree: LayoutPartialTree>(
     inputs: &mut LayoutInput,
 ) -> (ChildStyleConstraints, AutoAxes) {
     ChildStyleConstraints::resolve(&tree.get_core_container_style(node_id), inputs, |val, basis| tree.calc(val, basis))
+}
+
+/// Whether either of a `min_size` and a `max_size` style contain a sizing keyword in either axis
+#[inline(always)]
+pub(crate) fn has_min_max_sizing_keyword(min_size: Size<Dimension>, max_size: Size<Dimension>) -> bool {
+    min_size.width.is_sizing_keyword()
+        || min_size.height.is_sizing_keyword()
+        || max_size.width.is_sizing_keyword()
+        || max_size.height.is_sizing_keyword()
+}
+
+/// The size that a `stretch` min or max size of a child resolves to: the space that the child's parent
+/// makes available to the child.
+///
+/// The available space is only used in an axis in which the parent's size is definite. Otherwise it may be
+/// an available space that was passed down from a more distant ancestor, and `stretch` is treated as cyclic.
+#[inline]
+pub(crate) fn min_max_stretch_size(
+    parent_size: Size<Option<f32>>,
+    available_space: Size<AvailableSpace>,
+) -> Size<Option<f32>> {
+    use crate::util::sys::f32_max;
+    Size {
+        width: parent_size.width.and(available_space.width.into_option()).map(|space| f32_max(space, 0.0)),
+        height: parent_size.height.and(available_space.height.into_option()).map(|space| f32_max(space, 0.0)),
+    }
+}
+
+/// Resolve the sizing keywords in a `min_size` or `max_size` style that do not depend on the size of the
+/// box's content, given the result of resolving the style's lengths and percentages:
+///
+/// - `stretch` resolves to `stretch_size`, or behaves as the property's initial value if that is indefinite
+/// - The content-based keywords behave as the property's initial value in the block axis
+///   <https://drafts.csswg.org/css-sizing-3/#sizing-values>
+///
+/// Returns the resolved border-box size, and the width style if it is a content-based keyword (else `auto`).
+/// `box_sizing_adjustment` is the adjustment that the caller will add to the returned size.
+#[cold]
+pub(crate) fn resolve_extrinsic_min_max_keywords(
+    style: Size<Dimension>,
+    mut resolved: Size<Option<f32>>,
+    stretch_size: Size<Option<f32>>,
+    box_sizing_adjustment: Size<f32>,
+) -> (Size<Option<f32>>, Dimension) {
+    use crate::util::sys::f32_max;
+    let mut keyword_width = Dimension::auto();
+    if style.width.is_stretch() {
+        resolved.width = stretch_size.width.map(|size| f32_max(size - box_sizing_adjustment.width, 0.0));
+    } else if style.width.is_sizing_keyword() {
+        keyword_width = style.width;
+    }
+    if style.height.is_stretch() {
+        resolved.height = stretch_size.height.map(|size| f32_max(size - box_sizing_adjustment.height, 0.0));
+    }
+    (resolved, keyword_width)
+}
+
+/// The available space that measuring a box under yields the size that an intrinsic keyword min or
+/// max width resolves to.
+///
+/// Returns `None` if the keyword does not constrain the box: a `fit-content` bound is the box's
+/// fit-content size under the space that is available to it, which is never exceeded in either direction
+/// by the width of a box whose width is determined by its content.
+#[inline]
+fn intrinsic_keyword_available_space(style: Dimension, basis: Option<f32>) -> Option<AvailableSpace> {
+    use crate::CompactLength;
+    match style.tag() {
+        CompactLength::MIN_CONTENT_TAG => Some(AvailableSpace::MinContent),
+        CompactLength::MAX_CONTENT_TAG => Some(AvailableSpace::MaxContent),
+        CompactLength::FIT_CONTENT_PX_TAG => Some(AvailableSpace::Definite(style.value())),
+        CompactLength::FIT_CONTENT_PERCENT_TAG => basis.map(|basis| AvailableSpace::Definite(basis * style.value())),
+        _ => None,
+    }
+}
+
+/// The smaller of two available spaces, where `MinContent` < `Definite(_)` < `MaxContent`
+#[inline]
+fn min_available_space(a: AvailableSpace, b: AvailableSpace) -> AvailableSpace {
+    match (a, b) {
+        (AvailableSpace::MinContent, _) | (_, AvailableSpace::MinContent) => AvailableSpace::MinContent,
+        (AvailableSpace::MaxContent, other) | (other, AvailableSpace::MaxContent) => other,
+        (AvailableSpace::Definite(a), AvailableSpace::Definite(b)) => {
+            AvailableSpace::Definite(crate::util::sys::f32_min(a, b))
+        }
+    }
+}
+
+/// The larger of two available spaces, where `MinContent` < `Definite(_)` < `MaxContent`
+#[inline]
+fn max_available_space(a: AvailableSpace, b: AvailableSpace) -> AvailableSpace {
+    match (a, b) {
+        (AvailableSpace::MaxContent, _) | (_, AvailableSpace::MaxContent) => AvailableSpace::MaxContent,
+        (AvailableSpace::MinContent, other) | (other, AvailableSpace::MinContent) => other,
+        (AvailableSpace::Definite(a), AvailableSpace::Definite(b)) => {
+            AvailableSpace::Definite(crate::util::sys::f32_max(a, b))
+        }
+    }
 }
 
 /// The axes in which a child's size is determined by its content rather than by a known dimension
@@ -436,8 +539,27 @@ impl ChildStyleConstraints {
         let padding_border_size = (padding + border).sum_axes();
         let box_sizing_adjustment =
             if style.box_sizing() == BoxSizing::ContentBox { padding_border_size } else { Size::ZERO };
-        let untransferred_min_size = style.min_size().maybe_resolve(parent_size, &calc);
-        let untransferred_max_size = style.max_size().maybe_resolve(parent_size, &calc);
+        let min_size_style = style.min_size();
+        let max_size_style = style.max_size();
+        let mut untransferred_min_size = min_size_style.maybe_resolve(parent_size, &calc);
+        let mut untransferred_max_size = max_size_style.maybe_resolve(parent_size, &calc);
+        let mut keyword_min_width = Dimension::auto();
+        let mut keyword_max_width = Dimension::auto();
+        if has_min_max_sizing_keyword(min_size_style, max_size_style) {
+            let stretch_size = min_max_stretch_size(parent_size, inputs.available_space);
+            (untransferred_min_size, keyword_min_width) = resolve_extrinsic_min_max_keywords(
+                min_size_style,
+                untransferred_min_size,
+                stretch_size,
+                box_sizing_adjustment,
+            );
+            (untransferred_max_size, keyword_max_width) = resolve_extrinsic_min_max_keywords(
+                max_size_style,
+                untransferred_max_size,
+                stretch_size,
+                box_sizing_adjustment,
+            );
+        }
         // A minimum size that is transferred from the other axis through the aspect ratio does not
         // take precedence over a maximum size that is set in the axis that it is transferred to
         // <https://drafts.csswg.org/css-sizing-4/#aspect-ratio-size-transfers>
@@ -466,6 +588,8 @@ impl ChildStyleConstraints {
             aspect_ratio,
             padding_border_size,
             margin_size: margin.sum_axes(),
+            keyword_min_width,
+            keyword_max_width,
         };
         let auto_axes = constraints.apply_to_inputs(inputs);
         (constraints, auto_axes)
@@ -496,7 +620,50 @@ impl ChildStyleConstraints {
             }),
         };
 
+        if self.has_keywords() {
+            self.apply_keywords_to_inputs(inputs);
+        }
+
         AutoAxes(inputs.known_dimensions.map(|dim| dim.is_none()))
+    }
+
+    /// Whether the child has a min or max width which depends on the size of its content
+    #[inline(always)]
+    pub(crate) fn has_keywords(&self) -> bool {
+        !(self.keyword_min_width.is_auto() && self.keyword_max_width.is_auto())
+    }
+
+    /// Apply the child's intrinsic keyword min and max widths to the space that is made available to
+    /// the child, for use when the child's width is determined by its content.
+    ///
+    /// The width of a box whose width is determined by its content is its fit-content size under
+    /// the available space, and a fit-content size is monotonic in the available space. So clamping
+    /// that width by a keyword bound (which is itself a fit-content size under some other
+    /// available space) is the same as measuring the child once under the clamped available space.
+    /// This means that no additional measurement of the child is required.
+    #[cold]
+    fn apply_keywords_to_inputs(&self, inputs: &mut LayoutInput) {
+        if inputs.known_dimensions.width.is_some() {
+            return;
+        }
+        let basis = inputs.parent_size.width;
+        let mut available_width = inputs.available_space.width;
+        // The child's other min and max widths are applied to the size that the child reports, which
+        // gives them precedence over the bounds that are applied here. So that they have the precedence
+        // that CSS gives them (the minimum is applied after the maximum) they are also applied here.
+        if let Some(max) = self.max_size.width {
+            available_width = min_available_space(available_width, AvailableSpace::Definite(max));
+        }
+        if let Some(max) = intrinsic_keyword_available_space(self.keyword_max_width, basis) {
+            available_width = min_available_space(available_width, max);
+        }
+        if let Some(min) = self.min_size.width {
+            available_width = max_available_space(available_width, AvailableSpace::Definite(min));
+        }
+        if let Some(min) = intrinsic_keyword_available_space(self.keyword_min_width, basis) {
+            available_width = max_available_space(available_width, min);
+        }
+        inputs.available_space.width = available_width;
     }
 
     /// Apply the child's `min_size`, `max_size` and `aspect_ratio` styles to the size reported by the child
@@ -516,12 +683,10 @@ impl ChildStyleConstraints {
         };
         let mut size = output.size;
         if axis_is_auto.width {
-            size.width = clamp(
-                size.width,
-                self.min_size.width,
-                self.untransferred_max_size.width,
-                self.padding_border_size.width,
-            );
+            // A maximum width is applied to the child's available space if it has a keyword minimum width
+            // (see `apply_keywords_to_inputs`)
+            let max_width = if self.keyword_min_width.is_auto() { self.untransferred_max_size.width } else { None };
+            size.width = clamp(size.width, self.min_size.width, max_width, self.padding_border_size.width);
         }
         if axis_is_auto.height {
             size.height = clamp(
@@ -725,10 +890,122 @@ pub(crate) trait LayoutPartialTreeExt: LayoutPartialTree {
         if inputs.known_dimensions.both_axis_defined() {
             return self.compute_child_layout(node_id, inputs);
         }
-        let (constraints, auto_axes) = resolve_styles(self, node_id, &mut inputs);
+        let caller_known_dimensions = inputs.known_dimensions;
+        let (constraints, mut auto_axes) = resolve_styles(self, node_id, &mut inputs);
+        if constraints.has_keywords() {
+            // The caller is responsible for applying the child's min and max sizes to the dimensions that it
+            // determined. The ones that were resolved from the child's preferred size style are clamped here.
+            if let (None, Some(width)) = (caller_known_dimensions.width, inputs.known_dimensions.width) {
+                inputs.known_dimensions.width = Some(self.clamp_width_by_min_max_sizing_keywords(
+                    node_id,
+                    width,
+                    constraints.keyword_min_width,
+                    constraints.keyword_max_width,
+                    constraints.min_size.width,
+                    constraints.padding_border_size.width,
+                    min_max_stretch_size(inputs.parent_size, inputs.available_space).width,
+                    inputs.known_dimensions.height,
+                    inputs.parent_size,
+                    inputs.available_space.height,
+                    inputs.vertical_margins_are_collapsible,
+                ));
+            }
+            auto_axes = AutoAxes(inputs.known_dimensions.map(|dim| dim.is_none()));
+        }
         let mut output = self.compute_child_layout(node_id, inputs);
         constraints.apply_to_output(auto_axes, &mut output);
         output
+    }
+
+    /// Clamp a width of a child, which is not determined by the size of the child's content, by its
+    /// `min_size.width` and `max_size.width` styles if those are content-based sizing keywords (`min-content`,
+    /// `max-content`, `fit-content`, or `fit-content(...)`). This measures the child's content.
+    ///
+    /// - `width` must already be clamped by the child's other min and max widths
+    /// - `min_width` is the child's resolved minimum width, which takes precedence over a keyword maximum
+    /// - `stretch_width` is the width that the child would have if it were stretched to fill the space
+    ///   available to it. `fit-content` is resolved against it.
+    /// - `known_height`, `parent_size`, `available_height` and `vertical_margins_are_collapsible` are the inputs
+    ///   that the child is otherwise being laid out with
+    #[cold]
+    #[allow(clippy::too_many_arguments)]
+    fn clamp_width_by_min_max_sizing_keywords(
+        &mut self,
+        node_id: NodeId,
+        width: f32,
+        min_width_style: Dimension,
+        max_width_style: Dimension,
+        min_width: Option<f32>,
+        padding_border_width: f32,
+        stretch_width: Option<f32>,
+        known_height: Option<f32>,
+        parent_size: Size<Option<f32>>,
+        available_height: AvailableSpace,
+        vertical_margins_are_collapsible: Line<bool>,
+    ) -> f32 {
+        use crate::util::MaybeMath;
+
+        let mut resolve = |style: Dimension, fallback: AvailableSpace| {
+            self.resolve_min_max_width_keyword(
+                node_id,
+                style,
+                fallback,
+                stretch_width,
+                known_height,
+                parent_size,
+                available_height,
+                vertical_margins_are_collapsible,
+            )
+        };
+        // With an indefinite available width a `fit-content` maximum is the max-content size
+        // and a `fit-content` minimum is the min-content size
+        let max = resolve(max_width_style, AvailableSpace::MaxContent);
+        let min = resolve(min_width_style, AvailableSpace::MinContent);
+        width.maybe_min(max).maybe_max(min).maybe_max(min_width).max(padding_border_width)
+    }
+
+    /// Resolve a child's `min_size.width` or `max_size.width` style if it is a sizing keyword (`min-content`,
+    /// `max-content`, `fit-content`, `fit-content(...)`, or `stretch`), measuring the child's content
+    /// if required. Returns `None` if the style is not a sizing keyword, or if it cannot be resolved.
+    ///
+    /// - `fallback` is the constraint that a `fit-content` keyword is measured under if the size
+    ///   that it depends on is indefinite
+    /// - `stretch_width` is the width that the child would have if it were stretched to fill the space
+    ///   available to it
+    /// - `known_height`, `parent_size`, `available_height` and `vertical_margins_are_collapsible` are the inputs
+    ///   that the child is otherwise being laid out with
+    #[cold]
+    #[allow(clippy::too_many_arguments)]
+    fn resolve_min_max_width_keyword(
+        &mut self,
+        node_id: NodeId,
+        style: Dimension,
+        fallback: AvailableSpace,
+        stretch_width: Option<f32>,
+        known_height: Option<f32>,
+        parent_size: Size<Option<f32>>,
+        available_height: AvailableSpace,
+        vertical_margins_are_collapsible: Line<bool>,
+    ) -> Option<f32> {
+        use crate::compute::common::sizing_keyword::{resolve_sizing_keyword, SizingKeywordResolution};
+
+        if !style.is_sizing_keyword() {
+            return None;
+        }
+        let available_width = match resolve_sizing_keyword(style, stretch_width, parent_size.width) {
+            Some(SizingKeywordResolution::Exact(size)) => return Some(size),
+            Some(SizingKeywordResolution::Measure(space)) => space,
+            None if style.is_stretch() => return None,
+            None => fallback,
+        };
+        Some(self.measure_child_size(
+            node_id,
+            Size { width: None, height: known_height },
+            parent_size,
+            Size { width: available_width, height: available_height },
+            AbsoluteAxis::Horizontal,
+            vertical_margins_are_collapsible,
+        ))
     }
 
     /// Compute the layout of a child whose own sizing styles have already been resolved by the caller:

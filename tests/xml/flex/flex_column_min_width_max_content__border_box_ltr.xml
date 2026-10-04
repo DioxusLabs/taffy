@@ -1,0 +1,19 @@
+<test name="flex_column_min_width_max_content__border_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="flex" direction="ltr" position="absolute" flex-direction="column" align-items="flex-start" width="100px">
+      <text direction="ltr" position="relative" width="10px" min-width="max-content">
+        HH​HH
+      </text>
+      <text direction="ltr" position="relative" min-width="max-content">
+        HH​HH
+      </text>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="100" height="20">
+      <node x="0" y="0" width="40" height="10"/>
+      <node x="0" y="10" width="40" height="10"/>
+    </node>
+  </expectations>
+</test>
