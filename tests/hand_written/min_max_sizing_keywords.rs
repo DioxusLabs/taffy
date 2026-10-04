@@ -119,6 +119,32 @@ mod min_max_sizing_keywords {
         }
     }
 
+    /// The root node's `stretch` min and max sizes resolve against the available space (the viewport)
+    #[test]
+    fn root_stretch() {
+        for display in [Display::Block, Display::Flex, Display::Grid] {
+            let mut taffy = new_test_tree();
+            let child = taffy
+                .new_leaf(Style { size: Size { width: length(500.0), height: length(50.0) }, ..Default::default() })
+                .unwrap();
+            let style = Style {
+                display,
+                min_size: Size { width: auto(), height: Dimension::stretch() },
+                max_size: Size { width: Dimension::stretch(), height: auto() },
+                ..Default::default()
+            };
+            let root = taffy.new_with_children(style.clone(), &[child]).unwrap();
+
+            let viewport = Size { width: AvailableSpace::Definite(300.0), height: AvailableSpace::Definite(200.0) };
+            taffy.compute_layout_with_measure(root, viewport, test_measure_function).unwrap();
+            assert_eq!(taffy.layout(root).unwrap().size, Size { width: 300.0, height: 200.0 }, "{display:?}");
+
+            // The keywords behave as the initial value if the available space is indefinite
+            taffy.compute_layout_with_measure(root, Size::MAX_CONTENT, test_measure_function).unwrap();
+            assert_eq!(taffy.layout(root).unwrap().size, Size { width: 500.0, height: 50.0 }, "{display:?}");
+        }
+    }
+
     /// A `stretch` min or max size is resolved without measuring the child, so the child is measured
     /// exactly as many times as it is with the equivalent length
     #[test]
