@@ -11,7 +11,7 @@ pub mod traits;
 
 #[doc(hidden)]
 #[cfg(all(debug_assertions, feature = "std"))]
-pub use cache::cache_mode_change_evictions;
+pub use cache::{cache_bounds_change_evictions, cache_mode_change_evictions};
 pub use cache::{Cache, ClearState};
 pub use layout::{
     AxisStaticAlign, AxisStaticEdge, AxisStaticPosition, Baselines, CollapsibleMarginSet, Layout, LayoutInput,
