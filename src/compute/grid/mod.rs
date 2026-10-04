@@ -18,7 +18,7 @@ use crate::{
 use alignment::{align_and_position_item, align_tracks};
 use explicit_grid::{compute_explicit_grid_size_in_axis, initialize_grid_tracks, AutoRepeatStrategy};
 use implicit_grid::compute_grid_size_estimate;
-use placement::place_grid_items;
+use placement::{place_grid_items, place_grid_items_from_cache, tracks_with_items};
 use track_sizing::{
     determine_if_item_crosses_flexible_or_intrinsic_tracks, resolve_item_track_indexes, track_sizing_algorithm,
 };
@@ -30,6 +30,7 @@ use types::{GridItem, GridTrackKind, TrackCounts};
 
 pub(crate) use types::{GridCoordinate, GridLine, OriginZeroLine, MAX_GRID_TRACKS, MAX_OZ_LINE, MIN_OZ_LINE};
 
+pub use placement::GridPlacementCache;
 pub use types::{GridLineNames, GridLineNamesIter};
 
 mod alignment;
@@ -39,6 +40,21 @@ mod placement;
 mod track_sizing;
 mod types;
 mod util;
+
+#[cfg(all(debug_assertions, feature = "std"))]
+std::thread_local! {
+    /// See [`grid_placement_runs`]
+    static PLACEMENT_RUNS: core::cell::Cell<usize> = const { core::cell::Cell::new(0) };
+}
+
+/// The number of times that the current thread has run the grid item placement algorithm (as opposed to reusing
+/// a [`GridPlacementCache`]). Taffy's test suite uses this function to check that placement is cached.
+/// Only available in debug builds.
+#[doc(hidden)]
+#[cfg(all(debug_assertions, feature = "std"))]
+pub fn grid_placement_runs() -> usize {
+    PLACEMENT_RUNS.with(|count| count.get())
+}
 
 /// Grid layout algorithm
 /// This consists of a few phases:
@@ -174,7 +190,6 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
             style.box_generation_mode() != BoxGenerationMode::None && !style.position().is_out_of_flow()
         })
     };
-    let child_styles_iter = get_child_styles_iter(node);
 
     // 2. Resolve the explicit grid
 
@@ -215,55 +230,151 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
         AbsoluteAxis::Vertical,
     );
 
-    // type CustomIdent<'a> = <<Tree as LayoutPartialTree>::CoreContainerStyle<'_> as CoreStyle>::CustomIdent;
-    let mut name_resolver = NamedLineResolver::new(&style, col_auto_repetition_count, row_auto_repetition_count);
+    // Builds the `NamedLineResolver` for this grid, along with the number of columns and rows in the explicit grid
+    // (which depend on the template computed above and on `grid-template-areas`)
+    let build_name_resolver = || {
+        let mut name_resolver = NamedLineResolver::new(&style, col_auto_repetition_count, row_auto_repetition_count);
 
-    // Clamp the explicit grid to MAX_GRID_TRACKS tracks in each axis
-    // https://www.w3.org/TR/css-grid-1/#overlarge-grids
-    let explicit_col_count = grid_template_col_count.max(name_resolver.area_column_count()).min(MAX_GRID_TRACKS);
-    let explicit_row_count = grid_template_row_count.max(name_resolver.area_row_count()).min(MAX_GRID_TRACKS);
+        // Clamp the explicit grid to MAX_GRID_TRACKS tracks in each axis
+        // https://www.w3.org/TR/css-grid-1/#overlarge-grids
+        let explicit_col_count = grid_template_col_count.max(name_resolver.area_column_count()).min(MAX_GRID_TRACKS);
+        let explicit_row_count = grid_template_row_count.max(name_resolver.area_row_count()).min(MAX_GRID_TRACKS);
 
-    name_resolver.set_explicit_column_count(explicit_col_count);
-    name_resolver.set_explicit_row_count(explicit_row_count);
+        name_resolver.set_explicit_column_count(explicit_col_count);
+        name_resolver.set_explicit_row_count(explicit_row_count);
 
-    // Build the per-line names of the explicit grid from the name resolver's collected pairs
-    let mut detailed_column_line_names = name_resolver.detailed_line_names(AbsoluteAxis::Horizontal);
-    let mut detailed_row_line_names = name_resolver.detailed_line_names(AbsoluteAxis::Vertical);
+        (name_resolver, explicit_col_count, explicit_row_count)
+    };
 
-    // 3. Implicit Grid: Estimate Track Counts
-    // Estimate the number of rows and columns in the implicit grid (= the entire grid)
-    // This is necessary as part of placement. Doing it early here is a perf optimisation to reduce allocations.
-    let (est_col_counts, est_row_counts) =
-        compute_grid_size_estimate(explicit_col_count, explicit_row_count, child_styles_iter);
+    let in_flow_children_iter = || {
+        tree.child_ids(node)
+            .enumerate()
+            .map(|(index, child_node)| (index, child_node, tree.get_grid_child_style(child_node)))
+            .filter(|(_, _, style)| {
+                style.box_generation_mode() != BoxGenerationMode::None && !style.position().is_out_of_flow()
+            })
+    };
+    let align_items_or_stretch = align_items.unwrap_or(AlignItems::STRETCH);
+    let justify_items_or_stretch = justify_items.unwrap_or(AlignItems::STRETCH);
 
-    // 4. Grid Item Placement
+    // 3. Grid Item Placement
     // Match items (children) to a definite grid position (row start/end and column start/end position)
-    let mut items = Vec::with_capacity(tree.child_count(node));
-    let mut cell_occupancy_matrix = CellOccupancyMatrix::with_track_counts(est_col_counts, est_row_counts);
-    let in_flow_children_iter = tree
-        .child_ids(node)
-        .enumerate()
-        .map(|(index, child_node)| (index, child_node, tree.get_grid_child_style(child_node)))
-        .filter(|(_, _, style)| {
-            style.box_generation_mode() != BoxGenerationMode::None && !style.position().is_out_of_flow()
-        });
     // `items` is in document order from here on (placement only fills in each item's grid area). The track
     // sizing and baseline passes sort references to the items rather than the items themselves.
-    place_grid_items(
-        &mut cell_occupancy_matrix,
-        &mut items,
-        in_flow_children_iter,
-        style.grid_auto_flow(),
-        align_items.unwrap_or(AlignItems::STRETCH),
-        justify_items.unwrap_or(AlignItems::STRETCH),
-        &name_resolver,
+    let mut items = Vec::with_capacity(tree.child_count(node));
+
+    // 3a. Reuse the result of a previous run of the placement algorithm if the tree has one stored.
+    // Placement only depends on the size of the container via the number of auto-repetitions.
+    let cached_placement = tree
+        .get_grid_placement_cache(node)
+        .filter(|cache| cache.is_for_auto_repetition_counts(col_auto_repetition_count, row_auto_repetition_count));
+    let placement_is_from_cache = cached_placement.is_some_and(|cache| {
+        place_grid_items_from_cache(
+            cache,
+            &mut items,
+            in_flow_children_iter(),
+            align_items_or_stretch,
+            justify_items_or_stretch,
+        )
+    });
+    debug_assert!(
+        placement_is_from_cache || cached_placement.is_none(),
+        "The grid placement cache of node {node:?} is stale: its number of in-flow children has changed. \
+         See `LayoutGridContainer::get_grid_placement_cache` for when the cache must be discarded."
     );
 
-    // Extract track counts from previous step (auto-placement can expand the number of tracks)
-    let final_col_counts = *cell_occupancy_matrix.track_counts(AbsoluteAxis::Horizontal);
-    let final_row_counts = *cell_occupancy_matrix.track_counts(AbsoluteAxis::Vertical);
+    // The name resolver is built by placement. It is also required by the final layout pass, which builds it
+    // if placement did not run.
+    let mut name_resolver = None;
+    // The occupancy matrix is built by placement
+    let mut cell_occupancy_matrix = None;
 
-    // 5. Initialize Tracks
+    let (final_col_counts, final_row_counts) = match cached_placement {
+        Some(cache) if placement_is_from_cache => {
+            // Check that the cache is not stale by running placement anyway and comparing the results
+            #[cfg(debug_assertions)]
+            {
+                let (name_resolver, explicit_col_count, explicit_row_count) = build_name_resolver();
+                let (est_col_counts, est_row_counts) =
+                    compute_grid_size_estimate(explicit_col_count, explicit_row_count, get_child_styles_iter(node));
+                let mut cell_occupancy_matrix = CellOccupancyMatrix::with_track_counts(est_col_counts, est_row_counts);
+                let mut expected_items = Vec::with_capacity(items.len());
+                place_grid_items(
+                    &mut cell_occupancy_matrix,
+                    &mut expected_items,
+                    in_flow_children_iter(),
+                    style.grid_auto_flow(),
+                    align_items_or_stretch,
+                    justify_items_or_stretch,
+                    &name_resolver,
+                );
+                let cache_is_fresh = cache.track_counts(AbsoluteAxis::Horizontal)
+                    == *cell_occupancy_matrix.track_counts(AbsoluteAxis::Horizontal)
+                    && cache.track_counts(AbsoluteAxis::Vertical)
+                        == *cell_occupancy_matrix.track_counts(AbsoluteAxis::Vertical)
+                    && items.len() == expected_items.len()
+                    && items
+                        .iter()
+                        .zip(expected_items.iter())
+                        .all(|(item, expected)| item.row == expected.row && item.column == expected.column);
+                assert!(
+                    cache_is_fresh,
+                    "The grid placement cache of node {node:?} is stale: it does not match the result of running \
+                     the placement algorithm. See `LayoutGridContainer::get_grid_placement_cache` for when the \
+                     cache must be discarded."
+                );
+            }
+
+            (cache.track_counts(AbsoluteAxis::Horizontal), cache.track_counts(AbsoluteAxis::Vertical))
+        }
+        _ => {
+            #[cfg(all(debug_assertions, feature = "std"))]
+            PLACEMENT_RUNS.with(|count| count.set(count.get() + 1));
+
+            // 3b. Implicit Grid: Estimate Track Counts
+            // Estimate the number of rows and columns in the implicit grid (= the entire grid)
+            // This is necessary as part of placement. Doing it early here is a perf optimisation to reduce allocations.
+            let (resolver, explicit_col_count, explicit_row_count) = build_name_resolver();
+            let (est_col_counts, est_row_counts) =
+                compute_grid_size_estimate(explicit_col_count, explicit_row_count, get_child_styles_iter(node));
+
+            // 3c. Run the placement algorithm
+            let mut matrix = CellOccupancyMatrix::with_track_counts(est_col_counts, est_row_counts);
+            place_grid_items(
+                &mut matrix,
+                &mut items,
+                in_flow_children_iter(),
+                style.grid_auto_flow(),
+                align_items_or_stretch,
+                justify_items_or_stretch,
+                &resolver,
+            );
+
+            // Extract track counts from previous step (auto-placement can expand the number of tracks)
+            let final_counts =
+                (*matrix.track_counts(AbsoluteAxis::Horizontal), *matrix.track_counts(AbsoluteAxis::Vertical));
+            name_resolver = Some(resolver);
+            cell_occupancy_matrix = Some(matrix);
+            final_counts
+        }
+    };
+
+    // Whether each track contains any items is only needed to collapse empty `auto-fit` tracks. If placement was
+    // run then the occupancy matrix has that information. Otherwise it is recomputed from the items.
+    let (columns_with_items, rows_with_items) = if placement_is_from_cache {
+        let tracks_with_items = |axis, track_counts, auto_repetition_count| match auto_repetition_count {
+            0 => Vec::new(),
+            _ => tracks_with_items(&items, axis, track_counts),
+        };
+        (
+            tracks_with_items(AbsoluteAxis::Horizontal, final_col_counts, col_auto_repetition_count),
+            tracks_with_items(AbsoluteAxis::Vertical, final_row_counts, row_auto_repetition_count),
+        )
+    } else {
+        (Vec::new(), Vec::new())
+    };
+
+    // 4. Initialize Tracks
     // Initialize (explicit and implicit) grid tracks (and gutters)
     // This resolves the min and max track sizing functions for all tracks and gutters
     let mut columns = GridTrackVec::new();
@@ -274,7 +385,10 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
         &style,
         AbsoluteAxis::Horizontal,
         col_auto_repetition_count,
-        |column_index| cell_occupancy_matrix.column_is_occupied(column_index),
+        |column_index| match &cell_occupancy_matrix {
+            Some(matrix) => matrix.column_is_occupied(column_index),
+            None => columns_with_items.get(column_index).copied().unwrap_or(false),
+        },
     );
     initialize_grid_tracks(
         &mut rows,
@@ -282,7 +396,10 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
         &style,
         AbsoluteAxis::Vertical,
         row_auto_repetition_count,
-        |row_index| cell_occupancy_matrix.row_is_occupied(row_index),
+        |row_index| match &cell_occupancy_matrix {
+            Some(matrix) => matrix.row_is_occupied(row_index),
+            None => rows_with_items.get(row_index).copied().unwrap_or(false),
+        },
     );
 
     drop(grid_template_rows);
@@ -291,7 +408,21 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     drop(grid_auto_columns);
     drop(style);
 
-    // 6. Track Sizing
+    // Store the result of placement so that it does not need to be run the next time this node is sized or laid out
+    if !placement_is_from_cache {
+        tree.set_grid_placement_cache(
+            node,
+            GridPlacementCache::new(
+                col_auto_repetition_count,
+                row_auto_repetition_count,
+                final_col_counts,
+                final_row_counts,
+                &items,
+            ),
+        );
+    }
+
+    // 5. Track Sizing
 
     // Convert grid placements in origin-zero coordinates to indexes into the GridTrack (rows and columns) vectors
     // This computation is relatively trivial, but it requires the final number of negative (implicit) tracks in
@@ -576,6 +707,20 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
         return LayoutOutput::from_outer_size(container_border_box);
     }
 
+    // The name resolver is also required in order to resolve the grid areas of out-of-flow children and to
+    // generate the detailed grid info. If placement was cached then it has not been built yet.
+    let name_resolver = match name_resolver {
+        Some(name_resolver) => name_resolver,
+        None => {
+            let style = tree.get_grid_container_style(node);
+            let mut name_resolver =
+                NamedLineResolver::new(&style, col_auto_repetition_count, row_auto_repetition_count);
+            name_resolver.set_explicit_column_count(final_col_counts.explicit);
+            name_resolver.set_explicit_row_count(final_row_counts.explicit);
+            name_resolver
+        }
+    };
+
     // 8. Track Alignment
 
     // Align columns
@@ -793,6 +938,9 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
         };
     let absolute_position_area = container_border_box - absolute_position_inset.sum_axes();
     let absolute_position_offset = Point { x: absolute_position_inset.left, y: absolute_position_inset.top };
+    // Build the per-line names of the explicit grid from the name resolver's collected pairs
+    let mut detailed_column_line_names = name_resolver.detailed_line_names(AbsoluteAxis::Horizontal);
+    let mut detailed_row_line_names = name_resolver.detailed_line_names(AbsoluteAxis::Vertical);
     // Store the detailed grid info before the out-of-flow positioning pass so that the pass can
     // resolve the grid areas of out-of-flow boxes whose containing block is this grid
     name_resolver.populate_detailed_line_resolvers(&mut detailed_row_line_names, &mut detailed_column_line_names);

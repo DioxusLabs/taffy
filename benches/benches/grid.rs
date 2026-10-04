@@ -141,6 +141,47 @@ fn taffy_benchmarks(c: &mut Criterion) {
     }
     group.finish();
 
+    // The same trees as above, but laid out again with the grid item placement of the previous layout still cached
+    // (the benchmarks above discard it, so they include the cost of running the placement algorithm)
+    let mut group = benchmark_group(c, "grid/wide-cached-placement");
+    for track_count in [31usize, 100, 316].iter() {
+        let mut tree = None;
+        group.bench_with_input(
+            BenchmarkId::new(format!("{c}x{c}", c = track_count), track_count.pow(2)),
+            track_count,
+            |b, &track_count| {
+                bench_layout(
+                    b,
+                    &mut tree,
+                    || TaffyLayoutTree::new(build_grid_flat_hierarchy(track_count, track_count)),
+                    |tree| tree.mark_all_layouts_dirty(),
+                    |tree| tree.tree.compute_layout(tree.root, length(12000.0)).unwrap(),
+                )
+            },
+        );
+    }
+    group.finish();
+
+    let mut group = benchmark_group(c, "grid/deep-cached-placement");
+    for (tracks, levels) in [(2, 5), (3, 4), (2, 7)].iter() {
+        let children_per_level: usize = tracks * tracks;
+        let mut tree = None;
+        group.bench_with_input(
+            BenchmarkId::new(format!("{c}x{c}", c = tracks), children_per_level.pow(*levels as u32)),
+            &(*levels, *tracks),
+            |b, &(levels, tracks)| {
+                bench_layout(
+                    b,
+                    &mut tree,
+                    || TaffyLayoutTree::new(build_taffy_deep_grid_hierarchy(levels, tracks)),
+                    |tree| tree.mark_all_layouts_dirty(),
+                    |tree| tree.tree.compute_layout(tree.root, length(12000.0)).unwrap(),
+                )
+            },
+        );
+    }
+    group.finish();
+
     let mut group = benchmark_group(c, "grid/superdeep");
     for levels in [100, 1000].iter() {
         let mut tree = None;

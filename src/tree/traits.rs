@@ -139,7 +139,7 @@ use crate::CheapCloneStr;
 use crate::{BlockContainerStyle, BlockContext, BlockItemStyle};
 
 #[cfg(feature = "grid")]
-use crate::compute::grid::DetailedGridInfo;
+use crate::compute::grid::{DetailedGridInfo, GridPlacementCache};
 
 /// Taffy's abstraction for downward tree traversal.
 ///
@@ -340,6 +340,42 @@ pub trait LayoutGridContainer: LayoutPartialTree {
     /// the computed size of each grid track and the computed placement of each grid item.
     fn set_detailed_grid_info(&mut self, _node_id: NodeId, _detailed_grid_info: DetailedGridInfo<Self::CustomIdent>) {
         debug_log!("LayoutGridContainer::set_detailed_grid_info called");
+    }
+
+    /// Get the result of the grid item placement algorithm that was previously stored for the node by
+    /// [`set_grid_placement_cache`](Self::set_grid_placement_cache) (if any).
+    ///
+    /// Implementing this method (and `set_grid_placement_cache`) is optional. Doing so allows Taffy to skip
+    /// running the grid item placement algorithm when the node is sized or laid out again, which typically
+    /// happens several times in a single layout pass. The default implementation returns `None`, in which case
+    /// placement is run every time.
+    ///
+    /// The stored value must be discarded (so that this method returns `None`) whenever an input to the
+    /// node's grid item placement changes. That is, whenever:
+    ///
+    ///   - Any of the node's own styles change
+    ///   - A child of the node is added, removed, replaced or reordered
+    ///   - The `grid_row`, `grid_column`, `position` or `box_generation_mode` styles of a child of the node change
+    ///
+    /// Note that this is not the same condition as the one for clearing the node's layout cache
+    /// (see [`CacheTree`]): the stored value remains valid when the size or content of the node or of its
+    /// descendants changes. It is always correct (but less efficient) to also discard it when the node's layout
+    /// cache is cleared.
+    ///
+    /// In debug builds, Taffy checks that a value returned by this method matches the result of running the
+    /// placement algorithm and panics if it does not.
+    #[inline(always)]
+    fn get_grid_placement_cache(&self, node_id: NodeId) -> Option<&GridPlacementCache> {
+        let _ = node_id;
+        None
+    }
+
+    /// Store the result of the grid item placement algorithm for the node, replacing any previously stored value.
+    ///
+    /// See [`get_grid_placement_cache`](Self::get_grid_placement_cache).
+    #[inline(always)]
+    fn set_grid_placement_cache(&mut self, node_id: NodeId, grid_placement_cache: GridPlacementCache) {
+        let _ = (node_id, grid_placement_cache);
     }
 }
 

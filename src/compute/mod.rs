@@ -48,6 +48,11 @@ pub use self::flexbox::compute_flexbox_layout;
 
 #[cfg(feature = "grid")]
 pub use self::grid::compute_grid_layout;
+#[doc(hidden)]
+#[cfg(all(feature = "grid", debug_assertions, feature = "std"))]
+pub use self::grid::grid_placement_runs;
+#[cfg(feature = "grid")]
+pub use self::grid::GridPlacementCache;
 
 #[cfg(feature = "float_layout")]
 pub use self::float::{BfcSlot, ContentSlot, FloatContext, FloatIntrinsicWidthCalculator};
