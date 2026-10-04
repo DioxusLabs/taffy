@@ -7,6 +7,12 @@ use taffy::prelude::*;
 use taffy::{LayoutInput, LayoutOutput};
 use taffy_benchmarks::{bench_layout, benchmark_group, TaffyLayoutTree};
 
+// Grid layout allocates a lot, and with glibc's allocator that limits how well laying out a tree for a second time
+// scales with the number of threads. So the benchmarks can also be run with mimalloc for comparison.
+#[cfg(feature = "mimalloc")]
+#[global_allocator]
+static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
+
 const LOREM_IPSUM : &str = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.";
 
 const THREAD_COUNTS: [usize; 4] = [1, 2, 4, 8];

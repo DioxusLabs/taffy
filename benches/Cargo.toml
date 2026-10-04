@@ -23,6 +23,7 @@ ordered-float = { version = "4", optional = true }
 slotmap = { version = "1.0.6", optional = true }
 parley = "0.11.1"
 rayon = { version = "1.10", optional = true }
+mimalloc = { version = "0.1", optional = true }
 
 [features]
 yoga = ["dep:yoga", "dep:slotmap", "dep:ordered-float"]
@@ -31,6 +32,8 @@ taffy03 = ["dep:taffy_03"]
 content_size = ["taffy/content_size"]
 strict_provenance = ["taffy/strict_provenance"]
 parallel = ["taffy/parallel", "dep:rayon"]
+# Use mimalloc as the global allocator in the `parallel` benchmark
+mimalloc = ["dep:mimalloc"]
 small = []
 large = []
 grid-alternating-spans = []
