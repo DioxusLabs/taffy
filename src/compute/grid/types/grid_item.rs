@@ -302,7 +302,7 @@ impl GridItem {
                 return entry.known_dimensions;
             }
         }
-        let (known_dimensions, _) = self.known_dimensions(tree, grid_area_size);
+        let known_dimensions = self.known_dimensions(tree, grid_area_size);
         self.known_dimensions_cache = Some(KnownDimensionsCacheEntry { grid_area_size, known_dimensions });
         known_dimensions
     }
@@ -326,16 +326,38 @@ impl GridItem {
         {
             return None;
         }
-        self.known_dimensions(tree, grid_area_size).1
+        self.resolve_style_constraints(tree, grid_area_size)
+    }
+
+    /// The slow path of [`Self::style_constraints`], for items that have sizing styles that may constrain them
+    #[inline(never)]
+    fn resolve_style_constraints(
+        &self,
+        tree: &mut impl LayoutPartialTree,
+        grid_area_size: Size<Option<f32>>,
+    ) -> Option<ChildStyleConstraints> {
+        self.resolve_sizing_styles::<true>(tree, grid_area_size).1
     }
 
     /// Compute the known_dimensions to be passed to the child sizing functions
     /// The key thing that is being done here is applying stretch alignment, which is necessary to
     /// allow percentage sizes further down the tree to resolve properly in some cases
-    ///
-    /// Also returns the constraints that the item's own sizing styles place on the size that the item reports
-    /// (if any of the item's dimensions are not known)
     fn known_dimensions(
+        &self,
+        tree: &mut impl LayoutPartialTree,
+        grid_area_size: Size<Option<f32>>,
+    ) -> Size<Option<f32>> {
+        self.resolve_sizing_styles::<false>(tree, grid_area_size).0
+    }
+
+    /// Computes the known_dimensions to be passed to the child sizing functions (see [`Self::known_dimensions`])
+    /// and, if `WITH_CONSTRAINTS` is set, the constraints that the item's own sizing styles place on the size
+    /// that the item reports (if any of the item's dimensions are not known).
+    ///
+    /// The two are computed from the same resolved styles. `WITH_CONSTRAINTS` is a const parameter so that
+    /// callers that only want the known_dimensions do not pay for building and returning the constraints.
+    #[inline(always)]
+    fn resolve_sizing_styles<const WITH_CONSTRAINTS: bool>(
         &self,
         tree: &mut impl LayoutPartialTree,
         grid_area_size: Size<Option<f32>>,
@@ -434,7 +456,8 @@ impl GridItem {
         // The item's own sizing styles only constrain the size that it reports in axes in which
         // its size is not already known (and only if it has a min size, max size or aspect ratio)
         let known_dimensions = Size { width, height };
-        let is_constrained = !known_dimensions.both_axis_defined()
+        let is_constrained = WITH_CONSTRAINTS
+            && !known_dimensions.both_axis_defined()
             && (aspect_ratio.is_some()
                 || min_size.width.is_some()
                 || min_size.height.is_some()
