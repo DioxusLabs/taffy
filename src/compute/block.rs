@@ -2,6 +2,7 @@
 use crate::geometry::{Line, Point, Rect, Size};
 use crate::style::{AvailableSpace, CoreStyle, LengthPercentageAuto, Overflow, Position};
 use crate::style_helpers::TaffyMaxContent;
+use crate::tree::traits::resolve_container_min_max_size;
 use crate::tree::traits::{
     has_min_max_sizing_keyword, resolve_extrinsic_min_max_keywords, AutoAxes, ChildStyleConstraints,
 };
@@ -382,16 +383,24 @@ pub fn compute_block_layout(
     let box_sizing_adjustment =
         if style.box_sizing() == BoxSizing::ContentBox { padding_border_size } else { Size::ZERO };
 
-    let min_size = style
-        .min_size()
-        .maybe_resolve(parent_size, |val, basis| tree.calc(val, basis))
-        .maybe_apply_aspect_ratio(aspect_ratio)
-        .maybe_add(box_sizing_adjustment);
-    let max_size = style
-        .max_size()
-        .maybe_resolve(parent_size, |val, basis| tree.calc(val, basis))
-        .maybe_apply_aspect_ratio(aspect_ratio)
-        .maybe_add(box_sizing_adjustment);
+    let min_size = resolve_container_min_max_size(
+        style.min_size(),
+        parent_size,
+        inputs.available_space,
+        box_sizing_adjustment,
+        |val, basis| tree.calc(val, basis),
+    )
+    .maybe_apply_aspect_ratio(aspect_ratio)
+    .maybe_add(box_sizing_adjustment);
+    let max_size = resolve_container_min_max_size(
+        style.max_size(),
+        parent_size,
+        inputs.available_space,
+        box_sizing_adjustment,
+        |val, basis| tree.calc(val, basis),
+    )
+    .maybe_apply_aspect_ratio(aspect_ratio)
+    .maybe_add(box_sizing_adjustment);
 
     drop(style);
 
@@ -504,16 +513,24 @@ fn compute_inner(
         .maybe_resolve(parent_size, |val, basis| tree.calc(val, basis))
         .maybe_apply_aspect_ratio(aspect_ratio)
         .maybe_add(box_sizing_adjustment);
-    let min_size = style
-        .min_size()
-        .maybe_resolve(parent_size, |val, basis| tree.calc(val, basis))
-        .maybe_apply_aspect_ratio(aspect_ratio)
-        .maybe_add(box_sizing_adjustment);
-    let max_size = style
-        .max_size()
-        .maybe_resolve(parent_size, |val, basis| tree.calc(val, basis))
-        .maybe_apply_aspect_ratio(aspect_ratio)
-        .maybe_add(box_sizing_adjustment);
+    let min_size = resolve_container_min_max_size(
+        style.min_size(),
+        parent_size,
+        inputs.available_space,
+        box_sizing_adjustment,
+        |val, basis| tree.calc(val, basis),
+    )
+    .maybe_apply_aspect_ratio(aspect_ratio)
+    .maybe_add(box_sizing_adjustment);
+    let max_size = resolve_container_min_max_size(
+        style.max_size(),
+        parent_size,
+        inputs.available_space,
+        box_sizing_adjustment,
+        |val, basis| tree.calc(val, basis),
+    )
+    .maybe_apply_aspect_ratio(aspect_ratio)
+    .maybe_add(box_sizing_adjustment);
 
     // css-sizing-4: a definite size in one axis transfers through `aspect-ratio`
     // to make the other definite. Deriving it from `known_dimensions` self-gates

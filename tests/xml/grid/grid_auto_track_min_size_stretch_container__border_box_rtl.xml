@@ -1,0 +1,19 @@
+<test name="grid_auto_track_min_size_stretch_container__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" direction="rtl" position="absolute" align-items="start" justify-items="start" width="200px" grid-template-columns="auto auto">
+      <div display="flex" direction="rtl" position="relative" flex-direction="column" min-width="stretch" min-height="stretch">
+        <div direction="rtl" position="relative" flex-grow="1" width="20px" height="20px"/>
+      </div>
+      <div direction="rtl" position="relative" width="50px" height="60px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="200" height="60" resolved-rows="60px" resolved-columns="85px 115px">
+      <node x="115" y="0" width="85" height="60">
+        <node x="65" y="0" width="20" height="60"/>
+      </node>
+      <node x="65" y="0" width="50" height="60"/>
+    </node>
+  </expectations>
+</test>

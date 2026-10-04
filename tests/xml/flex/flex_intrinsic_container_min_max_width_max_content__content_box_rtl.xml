@@ -8,7 +8,7 @@
         </text>
       </div>
       <div display="flex" box-sizing="content-box" direction="rtl" position="relative">
-        <text box-sizing="content-box" direction="rtl" position="relative" flex-shrink="0" width="100px" max-width="max-content">
+        <text box-sizing="content-box" direction="rtl" position="relative" width="100px" max-width="max-content">
           HH​HH
         </text>
       </div>

@@ -1,0 +1,27 @@
+<test name="block_max_height_stretch_grid_container__content_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="block" box-sizing="content-box" direction="rtl" position="absolute" width="200px" height="100px">
+      <div display="grid" box-sizing="content-box" direction="rtl" position="relative" max-height="stretch" grid-template-rows="1fr 1fr">
+        <div box-sizing="content-box" direction="rtl" position="relative">
+          <div box-sizing="content-box" direction="rtl" position="relative" height="80px"/>
+        </div>
+        <div box-sizing="content-box" direction="rtl" position="relative">
+          <div box-sizing="content-box" direction="rtl" position="relative" height="120px"/>
+        </div>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="200" height="100">
+      <node x="0" y="0" width="200" height="100" resolved-rows="80px 120px" resolved-columns="200px">
+        <node x="0" y="0" width="200" height="80">
+          <node x="200" y="0" width="0" height="80"/>
+        </node>
+        <node x="0" y="80" width="200" height="120">
+          <node x="200" y="0" width="0" height="120"/>
+        </node>
+      </node>
+    </node>
+  </expectations>
+</test>

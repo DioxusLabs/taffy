@@ -7,6 +7,7 @@ use crate::style::{
 };
 use crate::style::{CoreStyle, FlexDirection, FlexboxContainerStyle, FlexboxItemStyle};
 use crate::style_helpers::{TaffyMaxContent, TaffyMinContent};
+use crate::tree::traits::resolve_container_min_max_size;
 use crate::tree::{
     AxisStaticAlign, AxisStaticEdge, AxisStaticPosition, LayoutFlexboxContainer, LayoutPartialTreeExt, NodeId,
     OofPositioningArea,
@@ -258,16 +259,24 @@ pub fn compute_flexbox_layout(
     let box_sizing_adjustment =
         if style.box_sizing() == BoxSizing::ContentBox { padding_border_sum } else { Size::ZERO };
 
-    let min_size = style
-        .min_size()
-        .maybe_resolve(parent_size, |val, basis| tree.calc(val, basis))
-        .maybe_apply_aspect_ratio(aspect_ratio)
-        .maybe_add(box_sizing_adjustment);
-    let max_size = style
-        .max_size()
-        .maybe_resolve(parent_size, |val, basis| tree.calc(val, basis))
-        .maybe_apply_aspect_ratio(aspect_ratio)
-        .maybe_add(box_sizing_adjustment);
+    let min_size = resolve_container_min_max_size(
+        style.min_size(),
+        parent_size,
+        inputs.available_space,
+        box_sizing_adjustment,
+        |val, basis| tree.calc(val, basis),
+    )
+    .maybe_apply_aspect_ratio(aspect_ratio)
+    .maybe_add(box_sizing_adjustment);
+    let max_size = resolve_container_min_max_size(
+        style.max_size(),
+        parent_size,
+        inputs.available_space,
+        box_sizing_adjustment,
+        |val, basis| tree.calc(val, basis),
+    )
+    .maybe_apply_aspect_ratio(aspect_ratio)
+    .maybe_add(box_sizing_adjustment);
 
     // If both min and max in a given axis are set and max <= min then this determines the size in that axis
     let min_max_definite_size = min_size.zip_map(max_size, |min, max| match (min, max) {
@@ -658,16 +667,24 @@ fn compute_constants(
         is_balance,
         #[cfg(feature = "flexbox_balance")]
         line_count,
-        min_size: style
-            .min_size()
-            .maybe_resolve(parent_size, |val, basis| tree.calc(val, basis))
-            .maybe_apply_aspect_ratio(aspect_ratio)
-            .maybe_add(box_sizing_adjustment),
-        max_size: style
-            .max_size()
-            .maybe_resolve(parent_size, |val, basis| tree.calc(val, basis))
-            .maybe_apply_aspect_ratio(aspect_ratio)
-            .maybe_add(box_sizing_adjustment),
+        min_size: resolve_container_min_max_size(
+            style.min_size(),
+            parent_size,
+            available_space,
+            box_sizing_adjustment,
+            |val, basis| tree.calc(val, basis),
+        )
+        .maybe_apply_aspect_ratio(aspect_ratio)
+        .maybe_add(box_sizing_adjustment),
+        max_size: resolve_container_min_max_size(
+            style.max_size(),
+            parent_size,
+            available_space,
+            box_sizing_adjustment,
+            |val, basis| tree.calc(val, basis),
+        )
+        .maybe_apply_aspect_ratio(aspect_ratio)
+        .maybe_add(box_sizing_adjustment),
         margin,
         border,
         gap,

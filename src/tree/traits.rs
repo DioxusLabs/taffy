@@ -470,6 +470,31 @@ pub(crate) fn resolve_extrinsic_min_max_keywords(
     (resolved, keyword_width)
 }
 
+/// Resolve a container's own `min_size` or `max_size` style for use by the container's layout algorithm.
+///
+/// In addition to lengths and percentages (which resolve against `parent_size`) this resolves `stretch` against the
+/// space that the container's parent made available to the container. The content-based keywords are cyclic while
+/// a container is sizing itself, so they behave as the property's initial value. The container's parent is
+/// responsible for applying them to the size that the container reports.
+///
+/// `box_sizing_adjustment` is the adjustment that the caller will add to the returned size.
+#[inline(always)]
+pub(crate) fn resolve_container_min_max_size(
+    style: Size<Dimension>,
+    parent_size: Size<Option<f32>>,
+    available_space: Size<AvailableSpace>,
+    box_sizing_adjustment: Size<f32>,
+    calc: impl Fn(*const (), f32) -> f32,
+) -> Size<Option<f32>> {
+    use crate::util::MaybeResolve;
+    let resolved = style.maybe_resolve(parent_size, calc);
+    if style.width.is_stretch() || style.height.is_stretch() {
+        let stretch_size = min_max_stretch_size(parent_size, available_space);
+        return resolve_extrinsic_min_max_keywords(style, resolved, stretch_size, box_sizing_adjustment).0;
+    }
+    resolved
+}
+
 /// The available space that measuring a box under yields the size that an intrinsic keyword min or
 /// max width resolves to.
 ///

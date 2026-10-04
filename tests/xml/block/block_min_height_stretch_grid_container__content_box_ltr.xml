@@ -1,0 +1,19 @@
+<test name="block_min_height_stretch_grid_container__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="block" box-sizing="content-box" direction="ltr" position="absolute" width="200px" height="200px">
+      <div display="grid" box-sizing="content-box" direction="ltr" position="relative" min-height="stretch">
+        <div box-sizing="content-box" direction="ltr" position="relative" height="20px"/>
+        <div box-sizing="content-box" direction="ltr" position="relative"/>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="200" height="200">
+      <node x="0" y="0" width="200" height="200" resolved-rows="110px 90px" resolved-columns="200px">
+        <node x="0" y="0" width="200" height="20"/>
+        <node x="0" y="110" width="200" height="90"/>
+      </node>
+    </node>
+  </expectations>
+</test>

@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    Test description
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="display: flex; width: 200px; height: 100px; align-items: flex-start;">
+  <div style="display: flex; flex-direction: column; min-height: stretch;">
+    <div style="flex-grow: 1; width: 20px;"></div>
+  </div>
+  <div style="display: grid; min-height: stretch; margin-top: 10px;">
+    <div style="width: 20px;"></div>
+  </div>
+  <div style="display: flex; flex-direction: column; max-height: stretch;">
+    <div style="height: 150px; width: 20px;"></div>
+  </div>
+</div>
+
+</body>
+</html>

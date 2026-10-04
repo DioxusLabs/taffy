@@ -1,0 +1,21 @@
+<test name="flex_wrap_min_height_stretch_flex_container__border_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="flex" direction="ltr" position="absolute" flex-wrap="wrap" align-items="flex-start" align-content="flex-start" width="100px" height="200px">
+      <div direction="ltr" position="relative" width="60px" height="30px"/>
+      <div display="flex" direction="ltr" position="relative" flex-direction="column" width="60px" min-height="stretch">
+        <div direction="ltr" position="relative" flex-grow="1" height="10px"/>
+      </div>
+      <div direction="ltr" position="relative" width="30px" height="50px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="100" height="200">
+      <node x="0" y="0" width="60" height="30"/>
+      <node x="0" y="30" width="60" height="200">
+        <node x="0" y="0" width="60" height="200"/>
+      </node>
+      <node x="60" y="30" width="30" height="50"/>
+    </node>
+  </expectations>
+</test>
