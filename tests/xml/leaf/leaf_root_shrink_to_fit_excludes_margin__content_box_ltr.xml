@@ -1,0 +1,11 @@
+<test name="leaf_root_shrink_to_fit_excludes_margin__content_box_ltr" use-rounding="true">
+  <viewport width="100px" height="max-content"/>
+  <input>
+    <text box-sizing="content-box" direction="ltr" position="relative" margin-left="20px">
+      HH​HH​HH​HH​HH​HH​HH​HH​HH​HH
+    </text>
+  </input>
+  <expectations>
+    <node x="20" y="0" width="80" height="30"/>
+  </expectations>
+</test>

@@ -6,6 +6,7 @@ use crate::geometry::AbstractAxis;
 use crate::geometry::{Line, Point, Rect, Size};
 use crate::style::{AlignItems, AlignSelf, AvailableSpace, Dimension, LengthPercentageAuto, Overflow};
 use crate::tree::{LayoutPartialTree, LayoutPartialTreeExt, NodeId, OofCandidates, SizingMode};
+use crate::util::sys::f32_max;
 use crate::util::{MaybeMath, MaybeResolve, ResolveOrZero};
 use crate::{AlignItemsKeyword, BoxSizing, GridItemStyle, LengthPercentage};
 use core::ops::Range;
@@ -538,7 +539,7 @@ impl GridItem {
             grid_area_size,
             self.keyword_adjusted_available_space(
                 grid_area_size,
-                available_space.map(|opt| match opt {
+                self.available_space_minus_margins(grid_area_size, available_space, tree).map(|opt| match opt {
                     Some(size) => AvailableSpace::Definite(size),
                     None => AvailableSpace::MinContent,
                 }),
@@ -589,7 +590,7 @@ impl GridItem {
             grid_area_size,
             self.keyword_adjusted_available_space(
                 grid_area_size,
-                available_space.map(|opt| match opt {
+                self.available_space_minus_margins(grid_area_size, available_space, tree).map(|opt| match opt {
                     Some(size) => AvailableSpace::Definite(size),
                     None => AvailableSpace::MaxContent,
                 }),
@@ -599,6 +600,29 @@ impl GridItem {
             axis.as_abs_naive(),
             Line::FALSE,
         )
+    }
+
+    /// Subtract the item's margins (and baseline shim) from the definite axes of the space available
+    /// to the item's margin box, giving the available space that is passed to the item.
+    /// As when the item is laid out into its final position, margins resolve against the width
+    /// of the grid area and `auto` margins are treated as zero.
+    #[inline(always)]
+    fn available_space_minus_margins(
+        &self,
+        grid_area_size: Size<Option<f32>>,
+        available_space: Size<Option<f32>>,
+        tree: &impl LayoutPartialTree,
+    ) -> Size<Option<f32>> {
+        if available_space.width.is_none() && available_space.height.is_none() {
+            return available_space;
+        }
+        let margin = self.margin.resolve_or_zero(grid_area_size.width, |val, basis| tree.calc(val, basis));
+        Size {
+            width: available_space.width.map(|width| f32_max(width - margin.horizontal_axis_sum(), 0.0)),
+            height: available_space
+                .height
+                .map(|height| f32_max(height - margin.vertical_axis_sum() - self.baseline_shim, 0.0)),
+        }
     }
 
     /// Override the available space in each axis whose size style is a sizing keyword that

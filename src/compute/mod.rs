@@ -201,6 +201,14 @@ fn compute_in_flow_root_layout(
 ) -> (Layout, OofCandidates) {
     let mut known_dimensions = Size::NONE;
 
+    // The available space passed to the root excludes the root's margins
+    let root_available_space = {
+        let style = tree.get_core_container_style(root);
+        let margin =
+            style.margin().resolve_or_zero(available_space.width.into_option(), |val, basis| tree.calc(val, basis));
+        available_space.maybe_sub(margin.sum_axes()).maybe_max(Size::ZERO)
+    };
+
     #[cfg(feature = "block_layout")]
     {
         use crate::BoxSizing;
@@ -211,7 +219,6 @@ fn compute_in_flow_root_layout(
         if style.is_block() {
             // Pull these out earlier to avoid borrowing issues
             let aspect_ratio = style.aspect_ratio();
-            let margin = style.margin().resolve_or_zero(parent_size.width, |val, basis| tree.calc(val, basis));
             let padding = style.padding().resolve_or_zero(parent_size.width, |val, basis| tree.calc(val, basis));
             let border = style.border().resolve_or_zero(parent_size.width, |val, basis| tree.calc(val, basis));
             let padding_border_size = (padding + border).sum_axes();
@@ -242,10 +249,7 @@ fn compute_in_flow_root_layout(
             });
 
             // Block nodes automatically stretch fit their width to fit available space if available space is definite
-            let available_space_based_size = Size {
-                width: available_space.width.into_option().maybe_sub(margin.horizontal_axis_sum()),
-                height: None,
-            };
+            let available_space_based_size = Size { width: root_available_space.width.into_option(), height: None };
 
             let styled_based_known_dimensions = known_dimensions
                 .or(min_max_definite_size)
@@ -261,7 +265,7 @@ fn compute_in_flow_root_layout(
         known_dimensions,
         known_dimensions_are_definite: Size { width: true, height: true },
         parent_size: available_space.into_options(),
-        available_space,
+        available_space: root_available_space,
         sizing_mode: SizingMode::InherentSize,
         axis: RequestedAxis::Both,
         run_mode: RunMode::PerformLayout,

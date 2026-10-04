@@ -88,6 +88,7 @@ impl<T: MaybeResolve<Option<f32>, Option<f32>>> MaybeResolve<f32, Option<f32>> f
 // Generic MaybeResolve for Size
 impl<In, Out, T: MaybeResolve<In, Out>> MaybeResolve<Size<In>, Size<Out>> for Size<T> {
     /// Converts any `parent`-relative values for size into an absolute size
+    #[inline(always)]
     fn maybe_resolve(self, context: Size<In>, calc: impl Fn(*const (), f32) -> f32) -> Size<Out> {
         Size {
             width: self.width.maybe_resolve(context.width, &calc),
@@ -144,6 +145,7 @@ impl<In: Copy, Out: TaffyZero, T: ResolveOrZero<In, Out>> ResolveOrZero<Size<In>
 // Generic ResolveOrZero for resolving Rect against Option
 impl<Out: TaffyZero, T: ResolveOrZero<Option<f32>, Out>> ResolveOrZero<Option<f32>, Rect<Out>> for Rect<T> {
     /// Converts any `parent`-relative values for Rect into an absolute Rect
+    #[inline(always)]
     fn resolve_or_zero(self, context: Option<f32>, calc: impl Fn(*const (), f32) -> f32) -> Rect<Out> {
         Rect {
             left: self.left.resolve_or_zero(context, &calc),

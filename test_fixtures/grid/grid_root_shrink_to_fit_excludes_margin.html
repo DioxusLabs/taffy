@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    Test description
+  </title>
+</head>
+<body>
+
+<!-- A grid root with a 20px margin and 200px of wrappable content, laid out into 100px of available space:
+     the space available to the root excludes its margin, so it is 80px wide -->
+<div class="viewport" style="width: 100px;">
+  <div id="test-root" style="display: grid; margin-left: 20px;">
+    <div>HH&ZeroWidthSpace;HH&ZeroWidthSpace;HH&ZeroWidthSpace;HH&ZeroWidthSpace;HH&ZeroWidthSpace;HH&ZeroWidthSpace;HH&ZeroWidthSpace;HH&ZeroWidthSpace;HH&ZeroWidthSpace;HH</div>
+  </div>
+</div>
+
+</body>
+</html>
