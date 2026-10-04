@@ -146,6 +146,7 @@ impl<T> Rect<T> {
     /// as the second parameter of `f`.
     /// When applied to the top or bottom sides, the height is used instead.
     #[cfg(any(feature = "flexbox", feature = "block_layout"))]
+    #[inline(always)]
     pub(crate) fn zip_size<R, F, U>(self, size: Size<U>, f: F) -> Rect<R>
     where
         F: Fn(T, U) -> R,
@@ -162,6 +163,7 @@ impl<T> Rect<T> {
     /// Applies the function `f` to the left, right, top, and bottom properties
     ///
     /// This is used to transform a `Rect<T>` into a `Rect<R>`.
+    #[inline(always)]
     pub fn map<R, F>(self, f: F) -> Rect<R>
     where
         F: Fn(T) -> R,
