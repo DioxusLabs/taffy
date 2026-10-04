@@ -4,6 +4,8 @@
 
 ### Breaking
 
+- `Style::min_size` and `Style::max_size` (and the `CoreStyle::min_size`/`CoreStyle::max_size` style trait methods) are now `Size<Dimension>` rather than `Size<LengthPercentageAuto>`, so that they accept the sizing keywords `min-content`, `max-content`, `fit-content`, `fit-content(<length-percentage>)` and `stretch` (see "Added" below). Code that sets them with the generic style helpers (`length(..)`, `percent(..)`, `auto()`) is unaffected; code that names the type must switch to `Dimension` (`LengthPercentageAuto` converts with `.into()`). `Dimension::content()` is treated as `auto` in these properties
+
 - Removed `SizingMode` and the `LayoutInput::sizing_mode` field. A node's own `size`, `min_size`, `max_size` and `aspect_ratio` styles are now always resolved by the node's *parent* rather than (depending on the sizing mode) by the node itself, so the result of laying out a node no longer depends on which kind of container asked for it. This fixes stale cached measurements being reused when a node's parent switches between layout modes (for example between Flexbox, which sized its children with `SizingMode::ContentSize`, and CSS Grid, which used `SizingMode::InherentSize`). Consequences for code using the low-level API:
   - Code constructing a `LayoutInput` must drop the `sizing_mode` field
   - `compute_leaf_layout` no longer applies the leaf's own `size`, `min_size`, `max_size` or `aspect_ratio` styles: the caller passes the resolved size as `known_dimensions` and clamps the size that is returned. `compute_root_layout`, `compute_block_layout`, `compute_flexbox_layout` and `compute_grid_layout` do this for the nodes that they lay out, so trees which delegate to Taffy's algorithms are unaffected
@@ -37,6 +39,11 @@
   - The container layout algorithms no longer require the `LayoutContainingBlock` bound (only `compute_oof_layout` and `compute_root_layout` do)
 
 ### Added
+
+- Sizing keywords in `min_size` and `max_size` (`min-width`, `max-width`, `min-height` and `max-height`), for children of block, flexbox and grid containers and for those containers themselves:
+  - `stretch` resolves to the size that would make the box fill the space available to it (the containing block for block children, the grid area for grid items, the flex container or flex line for flex items) minus its margins. It behaves as the initial value if that space is indefinite. It is resolved without measuring the box
+  - `min-content`, `max-content`, `fit-content` and `fit-content(<length-percentage>)` resolve to the corresponding intrinsic size of the box in the inline axis (and in the main axis of a column flex container). As in browsers, they behave as the initial value in the block axis otherwise. A box whose width is determined by its content is not measured any more times than it is without the keyword; a box whose width is otherwise definite (a `width` style, stretched or flexed) has its content measured once per keyword bound
+  - Not yet supported for absolutely positioned boxes, where the keywords behave as the initial value
 
 - `compute_oof_layout_for_area` and `OofLayoutResult` allow integrations to lay out out-of-flow candidates against an explicit positioning area without immediately mutating a layout node's hoisted-child list. This supports containing blocks represented outside Taffy's layout tree.
 

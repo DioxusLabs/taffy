@@ -721,9 +721,15 @@ pub struct Style<S: CheapCloneStr = DefaultCheapStr> {
     #[cfg_attr(feature = "serde", serde(default = "style_helpers::auto"))]
     pub size: Size<Dimension>,
     /// Controls the minimum size of the item
+    ///
+    /// Accepts the sizing keywords (`min-content`, `max-content`, `fit-content` and `stretch`) in addition
+    /// to lengths and percentages. `auto` and `content` are the initial value (the automatic minimum size).
     #[cfg_attr(feature = "serde", serde(default = "style_helpers::auto"))]
     pub min_size: Size<Dimension>,
     /// Controls the maximum size of the item
+    ///
+    /// Accepts the sizing keywords (`min-content`, `max-content`, `fit-content` and `stretch`) in addition
+    /// to lengths and percentages. `auto` and `content` are the initial value (no maximum size).
     #[cfg_attr(feature = "serde", serde(default = "style_helpers::auto"))]
     pub max_size: Size<Dimension>,
     /// Sets the preferred aspect ratio for the item
