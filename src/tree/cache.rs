@@ -141,8 +141,10 @@ struct CacheKey {
     kd_available_space: u64,
     /// The initial cached size of the parent's node
     parent_size: u64,
-    /// The remaining inputs, packed into the `CacheKey::*_BIT` bits
-    flags: u8,
+    /// The remaining inputs, packed into the `CacheKey::*_BIT` bits. [`CacheKey::ALWAYS_SET_BIT`] is always
+    /// set, which makes the value non-zero. That leaves a niche for the `Option`s that the cache's
+    /// entries are stored in, which would otherwise each be 8 bytes larger.
+    flags: core::num::NonZeroU8,
 }
 
 impl CacheKey {
@@ -153,11 +155,16 @@ impl CacheKey {
     /// Set if the node was passed a min or max size in either axis. If it was, then the sizes that it
     /// was passed are the [`Cache::bounds`] of the cache that the entry is stored in.
     const BOUNDED_BIT: u8 = 0b100;
+    /// Always set (see [`CacheKey::flags`])
+    const ALWAYS_SET_BIT: core::num::NonZeroU8 = match core::num::NonZeroU8::new(0b1000) {
+        Some(bit) => bit,
+        None => unreachable!(),
+    };
 
     /// Whether the node was passed a min or max size in either axis
     #[inline(always)]
     fn is_bounded(&self) -> bool {
-        self.flags & Self::BOUNDED_BIT != 0
+        self.flags.get() & Self::BOUNDED_BIT != 0
     }
 
     #[inline(always)]
@@ -205,7 +212,8 @@ impl CacheKey {
         Self {
             kd_available_space: size_mixed_cache_key(input.known_dimensions, input.available_space),
             parent_size: (size_option_cache_key(input.parent_size) & NON_SIGN_BITS_MASK) | extra_bits,
-            flags: (is_definite.width as u8 * Self::DEFINITE_WIDTH_BIT)
+            flags: Self::ALWAYS_SET_BIT
+                | (is_definite.width as u8 * Self::DEFINITE_WIDTH_BIT)
                 | (is_definite.height as u8 * Self::DEFINITE_HEIGHT_BIT)
                 | (CacheBounds::is_bounded(input) as u8 * Self::BOUNDED_BIT),
         }
