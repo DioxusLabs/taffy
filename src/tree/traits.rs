@@ -204,6 +204,12 @@ pub trait LayoutPartialTree: TraversePartialTree {
     /// Compute the specified node's size or full layout given the specified constraints
     fn compute_child_layout(&mut self, node_id: NodeId, inputs: LayoutInput) -> LayoutOutput;
 
+    /// Whether [`compute_child_layouts`](Self::compute_child_layouts) computes the jobs of a batch concurrently.
+    ///
+    /// Collecting child layouts into batches has a cost, so where an algorithm can only build a batch by doing
+    /// extra work it only does so if this is `true`.
+    const COMPUTES_CHILD_LAYOUTS_IN_PARALLEL: bool = false;
+
     /// Compute a batch of child layouts, writing the result of each job to its `output` field.
     ///
     /// The jobs are for distinct children of `parent_node_id`, and no job's input depends on another job's
