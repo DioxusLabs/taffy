@@ -54,9 +54,10 @@ pub use self::float::{BfcSlot, ContentSlot, FloatContext, FloatIntrinsicWidthCal
 
 use crate::geometry::{Line, Point, Size};
 use crate::style::{AvailableSpace, ContainingBlockClaims, CoreStyle, Overflow, Position};
+use crate::tree::traits::resolve_core_style_constraints;
 use crate::tree::{
     AxisStaticAlign, AxisStaticEdge, AxisStaticPosition, Layout, LayoutInput, LayoutOutput, LayoutPartialTree,
-    LayoutPartialTreeExt, NodeId, OofCandidate, OofCandidates, RequestedAxis, RoundTree, RunMode, SizingMode,
+    LayoutPartialTreeExt, NodeId, OofCandidate, OofCandidates, RequestedAxis, RoundTree, RunMode,
 };
 use crate::util::debug::{debug_log, debug_log_node, debug_pop_node, debug_push_node};
 use crate::util::sys::{round, Vec};
@@ -256,20 +257,21 @@ fn compute_in_flow_root_layout(
         }
     }
 
-    let inputs = LayoutInput {
+    let mut inputs = LayoutInput {
         known_dimensions,
         known_dimensions_are_definite: Size { width: true, height: true },
         parent_size: available_space.into_options(),
         available_space: root_available_space,
-        sizing_mode: SizingMode::InherentSize,
         axis: RequestedAxis::Both,
         run_mode: RunMode::PerformLayout,
         vertical_margins_are_collapsible: Line::FALSE,
     };
+    let root_styles = resolve_core_style_constraints(tree, root, &mut inputs);
     *root_is_cached = tree.cache_get(root, &inputs).is_some();
 
     // Recursively compute node layout
     let mut output = tree.compute_child_layout(root, inputs);
+    root_styles.apply_to_output(&mut output);
     let style = tree.get_core_container_style(root);
     let padding =
         style.padding().resolve_or_zero(available_space.width.into_option(), |val, basis| tree.calc(val, basis));
@@ -324,6 +326,28 @@ fn compute_in_flow_root_layout(
     tree.set_unrounded_layout(root, &layout);
 
     (layout, output.oof_candidates.take())
+}
+
+/// Compute the layout of a child node, resolving and applying the child's own sizing styles on its behalf.
+///
+/// A node never applies its own `size` style (and leaf nodes do not apply their own `min_size`, `max_size`
+/// or `aspect_ratio` styles either): the node's parent is responsible for applying them. This function
+/// is for parents that do not have their own rules for resolving those styles. It:
+///
+///   - Resolves the child's `size` style (clamped by its `min_size` and `max_size` styles) into the known
+///     dimensions of `inputs`, in any axis for which `inputs` does not already contain a known dimension
+///   - Calls [`LayoutPartialTree::compute_child_layout`] with the resulting inputs
+///   - Applies the child's `min_size`, `max_size` and `aspect_ratio` styles to the size that the child
+///     reports, in any axis in which the child's size was not known
+///
+/// This is how Taffy's block and grid algorithms and [`compute_root_layout`] lay out the nodes that they
+/// are responsible for. Custom layout algorithms which lay out children can use it to do the same.
+pub fn compute_child_layout_with_styles(
+    tree: &mut impl LayoutPartialTree,
+    node_id: NodeId,
+    inputs: LayoutInput,
+) -> LayoutOutput {
+    LayoutPartialTreeExt::compute_child_layout_with_styles(tree, node_id, inputs, resolve_core_style_constraints)
 }
 
 /// Attempts to find a cached layout for the specified node and layout inputs.
