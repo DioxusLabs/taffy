@@ -477,9 +477,12 @@ pub struct LayoutOutput {
     /// `known_dimensions`, `parent_size` or `available_space` inputs. For example because the node (or one of its
     /// descendants) has an `aspect-ratio` that transfers a block size into the inline axis.
     ///
-    /// This is a conservative flag: `false` guarantees that the width does not depend on those inputs, `true`
-    /// means that it may do. It allows containers to skip re-measuring the node's width when only block-axis
-    /// constraints have changed.
+    /// This is a conservative flag: `true` means that the width may depend on those inputs, not that it does.
+    /// It allows containers to skip re-measuring the node's width when only block-axis constraints have changed.
+    ///
+    /// Taffy's algorithms currently only track dependencies that are caused by an `aspect-ratio`. In particular a
+    /// wrapping column flex container (whose number of lines, and thus width, depends on its height) does not
+    /// set this flag.
     pub depends_on_block_constraints: bool,
 }
 

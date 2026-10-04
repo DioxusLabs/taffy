@@ -427,7 +427,7 @@ fn compute_preliminary(tree: &mut impl LayoutFlexboxContainer, node: NodeId, inp
         if main_axis_is_requested_axis {
             let size = Size::ZERO.with_main(constants.dir, constants.container_size.main(constants.dir));
             return LayoutOutput::from_outer_size(size).with_block_constraint_dependency(
-                has_aspect_ratio || content_depends_on_block_constraints(&constants, known_dimensions, &flex_lines),
+                has_aspect_ratio || content_depends_on_block_constraints(known_dimensions, &flex_lines),
             );
         }
     }
@@ -498,7 +498,7 @@ fn compute_preliminary(tree: &mut impl LayoutFlexboxContainer, node: NodeId, inp
     // If our caller does not care about performing layout we are done now.
     if run_mode == RunMode::ComputeSize {
         return LayoutOutput::from_outer_size(constants.container_size).with_block_constraint_dependency(
-            has_aspect_ratio || content_depends_on_block_constraints(&constants, known_dimensions, &flex_lines),
+            has_aspect_ratio || content_depends_on_block_constraints(known_dimensions, &flex_lines),
         );
     }
 
@@ -573,7 +573,7 @@ fn compute_preliminary(tree: &mut impl LayoutFlexboxContainer, node: NodeId, inp
     output.oof_positioning_area =
         Some(OofPositioningArea { size: absolute_position_area, offset: absolute_position_offset });
     output.depends_on_block_constraints =
-        has_aspect_ratio || content_depends_on_block_constraints(&constants, known_dimensions, &flex_lines);
+        has_aspect_ratio || content_depends_on_block_constraints(known_dimensions, &flex_lines);
     output
 }
 
@@ -589,17 +589,14 @@ fn resolve_normal_alignment(alignment: AlignItems) -> AlignItems {
 
 /// Whether the container's content-based width may depend on block-axis constraints
 /// (see [`LayoutOutput::depends_on_block_constraints`])
-fn content_depends_on_block_constraints(
-    constants: &AlgoConstants,
-    known_dimensions: Size<Option<f32>>,
-    flex_lines: &[FlexLine],
-) -> bool {
+fn content_depends_on_block_constraints(known_dimensions: Size<Option<f32>>, flex_lines: &[FlexLine]) -> bool {
     if known_dimensions.width.is_some() {
         return false;
     }
-    // The number of flex lines (and thus the width) of a wrapping column container depends on its height
-    let is_wrapping_column = constants.is_column && constants.is_wrap;
-    is_wrapping_column || flex_lines.iter().any(|line| line.items.iter().any(|item| item.depends_on_block_constraints))
+    // Note: the number of flex lines (and thus the width) of a wrapping column container also depends on its height.
+    // This is deliberately not reported: it would cause grids to run an extra row sizing pass whenever they are
+    // measured with such a container in an intrinsically sized column, which is expensive and rarely changes the result.
+    flex_lines.iter().any(|line| line.items.iter().any(|item| item.depends_on_block_constraints))
 }
 
 /// Compute constants that can be reused during the flexbox algorithm.
