@@ -138,7 +138,7 @@ use crate::style::{FlexboxContainerStyle, FlexboxItemStyle};
 use crate::style::{GridContainerStyle, GridItemStyle};
 use crate::CheapCloneStr;
 #[cfg(feature = "block_layout")]
-use crate::{BlockContainerStyle, BlockContext, BlockItemStyle};
+use crate::{BlockContainerStyle, BlockContext, BlockFormattingContext, BlockItemStyle};
 
 #[cfg(feature = "grid")]
 use crate::compute::grid::DetailedGridInfo;
@@ -399,6 +399,42 @@ pub trait LayoutBlockContainer: LayoutPartialTree {
     ) -> LayoutOutput {
         let _ = block_ctx;
         self.compute_child_layout(node_id, inputs)
+    }
+
+    /// Whether the Block Formatting Context rooted at `bfc_root_node_id` may contain floats.
+    ///
+    /// Returning `false` is a promise that no box in that Block Formatting Context is floated. The
+    /// layouts of the in-flow children of a block in such a context do not depend on each other, so
+    /// block layout computes them as a batch using [`compute_block_child_layouts`](Self::compute_block_child_layouts).
+    ///
+    /// The default implementation returns `true`, which is always correct.
+    #[cfg(feature = "block_layout")]
+    #[inline(always)]
+    fn bfc_may_contain_floats(&self, bfc_root_node_id: NodeId) -> bool {
+        let _ = bfc_root_node_id;
+        true
+    }
+
+    /// Compute a batch of layouts of in-flow children of a block in a Block Formatting Context that
+    /// does not contain floats, writing the result of each job to its `output` field.
+    ///
+    /// This is the block layout version of [`compute_child_layouts`](LayoutPartialTree::compute_child_layouts),
+    /// and the same rules apply. A job whose `is_in_parent_bfc` flag is set must be computed using
+    /// [`compute_block_child_layout`](Self::compute_block_child_layout) with a `BlockContext` created by
+    /// [`BlockFormattingContext::detached_block_context`]. Other jobs are computed with `compute_child_layout`.
+    #[cfg(feature = "block_layout")]
+    #[inline(always)]
+    fn compute_block_child_layouts(&mut self, parent_node_id: NodeId, jobs: &mut [ChildLayoutJob]) {
+        let _ = parent_node_id;
+        for job in jobs {
+            job.output = if job.is_in_parent_bfc {
+                let mut bfc = BlockFormattingContext::float_free();
+                let mut block_ctx = bfc.detached_block_context();
+                self.compute_block_child_layout(job.node, job.input, Some(&mut block_ctx))
+            } else {
+                self.compute_child_layout(job.node, job.input)
+            };
+        }
     }
 }
 

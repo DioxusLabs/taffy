@@ -516,13 +516,18 @@ pub struct ChildLayoutJob {
     pub input: LayoutInput,
     /// The result of the computation. This is written by `compute_child_layouts`. Until then it is `LayoutOutput::HIDDEN`.
     pub output: LayoutOutput,
+    /// Whether the child is a block that belongs to the same Block Formatting Context as its parent.
+    ///
+    /// This is only ever `true` for jobs passed to
+    /// [`LayoutBlockContainer::compute_block_child_layouts`](crate::LayoutBlockContainer::compute_block_child_layouts).
+    pub is_in_parent_bfc: bool,
 }
 
 impl ChildLayoutJob {
     /// Create a job whose output has not yet been computed
     #[inline(always)]
     pub fn new(node: NodeId, input: LayoutInput) -> Self {
-        Self { node, input, output: LayoutOutput::HIDDEN }
+        Self { node, input, output: LayoutOutput::HIDDEN, is_in_parent_bfc: false }
     }
 }
 
