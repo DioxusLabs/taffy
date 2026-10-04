@@ -383,6 +383,8 @@ where
 
     type CustomIdent = DefaultCheapStr;
 
+    const COMPUTES_CHILD_LAYOUTS_IN_PARALLEL: bool = true;
+
     #[inline(always)]
     fn get_core_container_style(&self, node_id: NodeId) -> Self::CoreContainerStyle<'_> {
         self.style(node_id)
