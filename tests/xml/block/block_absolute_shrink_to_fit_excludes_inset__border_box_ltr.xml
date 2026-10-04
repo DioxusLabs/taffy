@@ -1,0 +1,67 @@
+<test name="block_absolute_shrink_to_fit_excludes_inset__border_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="block" direction="ltr" position="absolute">
+      <div display="block" direction="ltr" position="relative" width="100px" height="100px">
+        <div display="flex" direction="ltr" position="absolute" flex-wrap="wrap" left="60px">
+          <div direction="ltr" position="relative" flex-shrink="0" width="30px" height="10px"/>
+          <div direction="ltr" position="relative" flex-shrink="0" width="30px" height="10px"/>
+          <div direction="ltr" position="relative" flex-shrink="0" width="30px" height="10px"/>
+        </div>
+      </div>
+      <div display="block" direction="ltr" position="relative" width="100px" height="100px">
+        <div display="flex" direction="ltr" position="absolute" flex-wrap="wrap" right="60px">
+          <div direction="ltr" position="relative" flex-shrink="0" width="30px" height="10px"/>
+          <div direction="ltr" position="relative" flex-shrink="0" width="30px" height="10px"/>
+          <div direction="ltr" position="relative" flex-shrink="0" width="30px" height="10px"/>
+        </div>
+      </div>
+      <div display="block" direction="ltr" position="relative" width="100px" height="100px">
+        <div display="flex" direction="ltr" position="absolute" flex-wrap="wrap" margin-left="20px" left="40px">
+          <div direction="ltr" position="relative" flex-shrink="0" width="30px" height="10px"/>
+          <div direction="ltr" position="relative" flex-shrink="0" width="30px" height="10px"/>
+          <div direction="ltr" position="relative" flex-shrink="0" width="30px" height="10px"/>
+        </div>
+      </div>
+      <div display="block" direction="ltr" position="relative" width="100px" height="100px">
+        <div display="flex" direction="ltr" position="absolute" flex-wrap="wrap" margin-left="60px">
+          <div direction="ltr" position="relative" flex-shrink="0" width="30px" height="10px"/>
+          <div direction="ltr" position="relative" flex-shrink="0" width="30px" height="10px"/>
+          <div direction="ltr" position="relative" flex-shrink="0" width="30px" height="10px"/>
+        </div>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="100" height="400">
+      <node x="0" y="0" width="100" height="100">
+        <node x="60" y="0" width="40" height="30">
+          <node x="0" y="0" width="30" height="10"/>
+          <node x="0" y="10" width="30" height="10"/>
+          <node x="0" y="20" width="30" height="10"/>
+        </node>
+      </node>
+      <node x="0" y="100" width="100" height="100">
+        <node x="0" y="0" width="40" height="30">
+          <node x="0" y="0" width="30" height="10"/>
+          <node x="0" y="10" width="30" height="10"/>
+          <node x="0" y="20" width="30" height="10"/>
+        </node>
+      </node>
+      <node x="0" y="200" width="100" height="100">
+        <node x="60" y="0" width="40" height="30">
+          <node x="0" y="0" width="30" height="10"/>
+          <node x="0" y="10" width="30" height="10"/>
+          <node x="0" y="20" width="30" height="10"/>
+        </node>
+      </node>
+      <node x="0" y="300" width="100" height="100">
+        <node x="60" y="0" width="40" height="30">
+          <node x="0" y="0" width="30" height="10"/>
+          <node x="0" y="10" width="30" height="10"/>
+          <node x="0" y="20" width="30" height="10"/>
+        </node>
+      </node>
+    </node>
+  </expectations>
+</test>

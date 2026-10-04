@@ -29,6 +29,11 @@
   - Which candidates a node claims is decided by `CoreStyle::is_containing_block()` — the same policy the grid algorithm uses to decide whether an out-of-flow child's static position is derived from its grid area — so the two can never disagree
   - The container layout algorithms no longer require the `LayoutContainingBlock` bound (only `compute_oof_layout` and `compute_root_layout` do)
 
+- **The margin convention for `LayoutInput::available_space` is now uniform**: a definite `available_space` is the space available to the node's *border box*. The parent subtracts the child's margins (`auto` margins counting as zero) before passing it, and no layout algorithm subtracts the node's own margins from it. Previously Block and Grid containers subtracted the child's margins while Flexbox containers, absolutely positioned boxes and the root did not, and `compute_leaf_layout` and `compute_flexbox_layout` subtracted the node's own margins while `compute_block_layout` and `compute_grid_layout` did not, so shrink-to-fit boxes with margins were sized as if their margins were counted twice or not at all depending on the pairing of parent and child. `MinContent` and `MaxContent` constraints are unaffected. Consequences for custom trees:
+  - `compute_leaf_layout` and `compute_flexbox_layout` no longer subtract the node's margins from `inputs.available_space`. A custom parent that calls them (or a measure function via them) must subtract the child's margins from any definite available space it passes
+  - A custom leaf or container that is laid out by Taffy's Flexbox algorithm, as an absolutely positioned box, or as the root now receives a definite `available_space` that already excludes its margins, and must not subtract them again
+  - `compute_root_layout` subtracts the root's margins from the available space for all root nodes (previously only for `Display::Block` roots)
+
 ### Added
 
 - `compute_oof_layout_for_area` and `OofLayoutResult` allow integrations to lay out out-of-flow candidates against an explicit positioning area without immediately mutating a layout node's hoisted-child list. This supports containing blocks represented outside Taffy's layout tree.
@@ -42,6 +47,8 @@
 
 ### Fixed
 
+- The space available to a shrink-to-fit absolutely positioned box now excludes its (non-`auto`) insets as well as its margins. Previously a box with e.g. `left: 60px` in a 100px wide containing block was sized as if it had 100px available and overflowed its containing block rather than wrapping its content.
+- Grid: an item's margins are now subtracted from the space available to it in the opposite axis when computing its intrinsic contribution to a track's size (previously a row could be sized for an item wrapped at the full column width while the item was then laid out at the column width minus its margins).
 - The `serde` feature now compiles without the `std` feature
 
 - `TaffyTree::remove` and `TaffyTree::clear` now drop the removed nodes' contexts. Both are documented as dropping nodes, but neither touched `node_context_data`, so a node's context outlived the node — for a `TaffyTree` whose context is a measure function, that kept a boxed closure and everything it captured alive indefinitely. It is worst for callers that rebuild their tree every frame.

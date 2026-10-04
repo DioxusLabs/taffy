@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    Test description
+  </title>
+</head>
+<body>
+
+<!-- Shrink-to-fit children (leaf, flex, block, grid) with a 20px margin and 200px of wrappable content in a 100px wide flex column.
+     The space available to each child excludes its margin, so each child is 80px wide. -->
+<div id="test-root" style="display: block;">
+  <div style="display: flex; flex-direction: column; width: 100px;">
+    <div style="align-self: flex-start; margin-left: 20px;">HH&ZeroWidthSpace;HH&ZeroWidthSpace;HH&ZeroWidthSpace;HH&ZeroWidthSpace;HH&ZeroWidthSpace;HH&ZeroWidthSpace;HH&ZeroWidthSpace;HH&ZeroWidthSpace;HH&ZeroWidthSpace;HH</div>
+  </div>
+  <div style="display: flex; flex-direction: column; width: 100px;">
+    <div style="display: flex; flex-wrap: wrap; align-self: flex-start; margin-left: 20px;">
+      <div style="width: 20px; height: 10px; flex-shrink: 0;"></div>
+      <div style="width: 20px; height: 10px; flex-shrink: 0;"></div>
+      <div style="width: 20px; height: 10px; flex-shrink: 0;"></div>
+      <div style="width: 20px; height: 10px; flex-shrink: 0;"></div>
+      <div style="width: 20px; height: 10px; flex-shrink: 0;"></div>
+      <div style="width: 20px; height: 10px; flex-shrink: 0;"></div>
+      <div style="width: 20px; height: 10px; flex-shrink: 0;"></div>
+      <div style="width: 20px; height: 10px; flex-shrink: 0;"></div>
+      <div style="width: 20px; height: 10px; flex-shrink: 0;"></div>
+      <div style="width: 20px; height: 10px; flex-shrink: 0;"></div>
+    </div>
+  </div>
+  <div style="display: flex; flex-direction: column; width: 100px;">
+    <div style="display: block; align-self: flex-start; margin-left: 20px;">
+      <div>HH&ZeroWidthSpace;HH&ZeroWidthSpace;HH&ZeroWidthSpace;HH&ZeroWidthSpace;HH&ZeroWidthSpace;HH&ZeroWidthSpace;HH&ZeroWidthSpace;HH&ZeroWidthSpace;HH&ZeroWidthSpace;HH</div>
+    </div>
+  </div>
+  <div style="display: flex; flex-direction: column; width: 100px;">
+    <div style="display: grid; align-self: flex-start; margin-left: 20px;">
+      <div>HH&ZeroWidthSpace;HH&ZeroWidthSpace;HH&ZeroWidthSpace;HH&ZeroWidthSpace;HH&ZeroWidthSpace;HH&ZeroWidthSpace;HH&ZeroWidthSpace;HH&ZeroWidthSpace;HH&ZeroWidthSpace;HH</div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
