@@ -510,7 +510,7 @@ impl GridItem {
                 || max_size.height.is_some()
                 || !keyword_min_width.is_auto()
                 || !keyword_max_width.is_auto());
-        let constraints = is_constrained.then(|| ChildStyleConstraints {
+        let constraints = is_constrained.then_some(ChildStyleConstraints {
             min_size,
             max_size,
             untransferred_max_size,
