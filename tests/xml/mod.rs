@@ -1406,6 +1406,26 @@ mod block {
     }
 
     #[test]
+    fn block_absolute_shrink_to_fit_negative_inset__border_box_ltr() {
+        crate::run_xml_test("block", "block_absolute_shrink_to_fit_negative_inset__border_box_ltr");
+    }
+
+    #[test]
+    fn block_absolute_shrink_to_fit_negative_inset__content_box_ltr() {
+        crate::run_xml_test("block", "block_absolute_shrink_to_fit_negative_inset__content_box_ltr");
+    }
+
+    #[test]
+    fn block_absolute_shrink_to_fit_negative_inset__border_box_rtl() {
+        crate::run_xml_test("block", "block_absolute_shrink_to_fit_negative_inset__border_box_rtl");
+    }
+
+    #[test]
+    fn block_absolute_shrink_to_fit_negative_inset__content_box_rtl() {
+        crate::run_xml_test("block", "block_absolute_shrink_to_fit_negative_inset__content_box_rtl");
+    }
+
+    #[test]
     fn block_absolute_width_keywords__border_box_ltr() {
         crate::run_xml_test("block", "block_absolute_width_keywords__border_box_ltr");
     }
