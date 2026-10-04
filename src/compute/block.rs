@@ -2,7 +2,7 @@
 use crate::geometry::{Line, Point, Rect, Size};
 use crate::style::{AvailableSpace, CoreStyle, LengthPercentageAuto, Overflow, Position};
 use crate::style_helpers::TaffyMaxContent;
-use crate::tree::traits::{AutoAxes, ChildStyleConstraints};
+use crate::tree::traits::{ChildStyleConstraints, ResolvedChildStyles};
 use crate::tree::{
     AxisStaticEdge, AxisStaticPosition, LayoutPartialTreeExt, NodeId, OofCandidate, OofCandidates, OofPositioningArea,
 };
@@ -446,7 +446,7 @@ fn resolve_block_child_style_constraints<Tree: LayoutBlockContainer>(
     tree: &Tree,
     node_id: NodeId,
     inputs: &mut LayoutInput,
-) -> (ChildStyleConstraints, AutoAxes) {
+) -> ResolvedChildStyles {
     ChildStyleConstraints::resolve(&tree.get_block_child_style(node_id), inputs, |val, basis| tree.calc(val, basis))
 }
 
@@ -1338,8 +1338,12 @@ fn perform_final_layout_on_in_flow_children(
             #[cfg(not(feature = "float_layout"))]
             let clear_pos = f32::NEG_INFINITY;
 
-            let (item_style_constraints, item_auto_axes) =
-                resolve_block_child_style_constraints(tree, item.node_id, &mut inputs);
+            // The item's own sizing styles only affect axes in which its size is not already known
+            let item_styles = if known_dimensions.both_axis_defined() {
+                ResolvedChildStyles::UNCONSTRAINED
+            } else {
+                resolve_block_child_style_constraints(tree, item.node_id, &mut inputs)
+            };
             let mut item_layout = if item.is_in_same_bfc {
                 // Replaced elements may not have a known width (they are sized by their
                 // measure function rather than stretch-sized)
@@ -1370,7 +1374,7 @@ fn perform_final_layout_on_in_flow_children(
             } else {
                 tree.compute_child_layout(item.node_id, inputs)
             };
-            item_style_constraints.apply_to_output(item_auto_axes, &mut item_layout);
+            item_styles.apply_to_output(&mut item_layout);
             item.oof_candidates = item_layout.oof_candidates.take();
             let final_size = item_layout.size;
 

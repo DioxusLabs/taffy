@@ -294,20 +294,29 @@ impl GridItem {
 
     /// Retrieve the known_dimensions for the given grid area size from the cache or compute them.
     /// The min-content and max-content contributions of an item are both computed from the same known_dimensions.
+    ///
+    /// The style constraints that go with the returned known_dimensions are left in the cache, where they can
+    /// be accessed using [`Self::cached_style_constraints`].
     #[inline(always)]
     fn known_dimensions_cached(
         &mut self,
         tree: &mut impl LayoutPartialTree,
         grid_area_size: Size<Option<f32>>,
-    ) -> (Size<Option<f32>>, Option<ChildStyleConstraints>) {
-        if let Some(entry) = self.known_dimensions_cache {
+    ) -> Size<Option<f32>> {
+        if let Some(entry) = &self.known_dimensions_cache {
             if entry.grid_area_size == grid_area_size {
-                return (entry.known_dimensions, entry.constraints);
+                return entry.known_dimensions;
             }
         }
         let (known_dimensions, constraints) = self.known_dimensions(tree, grid_area_size);
         self.known_dimensions_cache = Some(KnownDimensionsCacheEntry { grid_area_size, known_dimensions, constraints });
-        (known_dimensions, constraints)
+        known_dimensions
+    }
+
+    /// The style constraints that go with the known_dimensions last returned by [`Self::known_dimensions_cached`]
+    #[inline(always)]
+    fn cached_style_constraints(&self) -> Option<&ChildStyleConstraints> {
+        self.known_dimensions_cache.as_ref().and_then(|entry| entry.constraints.as_ref())
     }
 
     /// Compute the known_dimensions to be passed to the child sizing functions
@@ -413,9 +422,15 @@ impl GridItem {
             Size { width, height }.maybe_clamp(min_size, max_size).maybe_max(padding_border_size);
 
         // The item's own sizing styles only constrain the size that it reports in axes in which
-        // its size is not already known
+        // its size is not already known (and only if it has a min size, max size or aspect ratio)
         let known_dimensions = Size { width, height };
-        let constraints = (!known_dimensions.both_axis_defined()).then(|| ChildStyleConstraints {
+        let is_constrained = !known_dimensions.both_axis_defined()
+            && (aspect_ratio.is_some()
+                || min_size.width.is_some()
+                || min_size.height.is_some()
+                || max_size.width.is_some()
+                || max_size.height.is_some());
+        let constraints = is_constrained.then(|| ChildStyleConstraints {
             min_size,
             max_size,
             untransferred_max_size,
@@ -535,7 +550,7 @@ impl GridItem {
         grid_area_size: Size<Option<f32>>,
         available_space: Size<Option<f32>>,
     ) -> f32 {
-        let (known_dimensions, constraints) = self.known_dimensions_cached(tree, grid_area_size);
+        let known_dimensions = self.known_dimensions_cached(tree, grid_area_size);
         // If the item's size in the axis being measured is already known then that size is its contribution,
         // and we can avoid calling into the child entirely.
         if let Some(size) = known_dimensions.get(axis) {
@@ -566,7 +581,7 @@ impl GridItem {
                 run_mode: RunMode::ComputeSize,
                 vertical_margins_are_collapsible: Line::FALSE,
             },
-            constraints.as_ref(),
+            self.cached_style_constraints(),
         )
         .size
         .get_abs(axis)
@@ -596,7 +611,7 @@ impl GridItem {
         grid_area_size: Size<Option<f32>>,
         available_space: Size<Option<f32>>,
     ) -> f32 {
-        let (known_dimensions, constraints) = self.known_dimensions_cached(tree, grid_area_size);
+        let known_dimensions = self.known_dimensions_cached(tree, grid_area_size);
         // If the item's size in the axis being measured is already known then that size is its contribution,
         // and we can avoid calling into the child entirely.
         if let Some(size) = known_dimensions.get(axis) {
@@ -625,7 +640,7 @@ impl GridItem {
                 run_mode: RunMode::ComputeSize,
                 vertical_margins_are_collapsible: Line::FALSE,
             },
-            constraints.as_ref(),
+            self.cached_style_constraints(),
         )
         .size
         .get_abs(axis)
