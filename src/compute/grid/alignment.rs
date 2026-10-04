@@ -358,7 +358,9 @@ pub(super) fn align_and_position_item(
                 AvailableSpace::MaxContent,
                 height,
                 grid_area_size.map(Option::Some),
-                AvailableSpace::Definite(grid_area_minus_item_margins_size.height),
+                // The same constraint that the width is measured under when sizing the grid's rows,
+                // so that the measurement is shared with that pass
+                AvailableSpace::MaxContent,
                 Line::FALSE,
             ))
         }
