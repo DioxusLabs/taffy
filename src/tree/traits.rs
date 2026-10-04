@@ -421,10 +421,15 @@ pub(crate) fn resolve_core_style_constraints<Tree: LayoutPartialTree>(
 /// Whether either of a `min_size` and a `max_size` style contain a sizing keyword in either axis
 #[inline(always)]
 pub(crate) fn has_min_max_sizing_keyword(min_size: Size<Dimension>, max_size: Size<Dimension>) -> bool {
-    min_size.width.is_sizing_keyword()
-        || min_size.height.is_sizing_keyword()
-        || max_size.width.is_sizing_keyword()
-        || max_size.height.is_sizing_keyword()
+    // All keyword tags have the third-lowest bit set, and no length, percentage, calc or auto tag does.
+    // So the common case of there being no keywords at all is a single branch.
+    const KEYWORD_BIT: usize = 0b100;
+    let tags = min_size.width.tag() | min_size.height.tag() | max_size.width.tag() | max_size.height.tag();
+    tags & KEYWORD_BIT != 0
+        && (min_size.width.is_sizing_keyword()
+            || min_size.height.is_sizing_keyword()
+            || max_size.width.is_sizing_keyword()
+            || max_size.height.is_sizing_keyword())
 }
 
 /// The size that a `stretch` min or max size of a child resolves to: the space that the child's parent

@@ -317,7 +317,7 @@ struct BlockItem {
     /// The `min_size` and `max_size` styles of this item, if either contains a sizing keyword
     /// (`min-content`, `max-content`, `fit-content`, `fit-content(...)`, or `stretch`).
     /// Those are not included in `min_size` and `max_size`.
-    min_max_keywords: Option<(Size<Dimension>, Size<Dimension>)>,
+    has_min_max_keywords: bool,
 
     /// The overflow style of the item
     overflow: Point<Overflow>,
@@ -880,8 +880,7 @@ fn generate_item_list(
             let overflow = child_style.overflow();
             let min_size_style = child_style.min_size();
             let max_size_style = child_style.max_size();
-            let min_max_keywords =
-                has_min_max_sizing_keyword(min_size_style, max_size_style).then_some((min_size_style, max_size_style));
+            let has_min_max_keywords = has_min_max_sizing_keyword(min_size_style, max_size_style);
 
             #[cfg(feature = "float_layout")]
             let float = child_style.float();
@@ -920,7 +919,7 @@ fn generate_item_list(
                     .maybe_resolve(node_inner_size, |val, basis| tree.calc(val, basis))
                     .maybe_apply_aspect_ratio(aspect_ratio)
                     .maybe_add(box_sizing_adjustment),
-                min_max_keywords,
+                has_min_max_keywords,
                 min_size: min_size_style
                     .maybe_resolve(node_inner_size, |val, basis| tree.calc(val, basis))
                     .maybe_apply_aspect_ratio(aspect_ratio)
@@ -989,7 +988,8 @@ fn determine_content_based_container_width(
             .margin
             .resolve_or_zero(available_space.width.into_option(), |val, basis| tree.calc(val, basis))
             .horizontal_axis_sum();
-        if let (Some((min_size_style, max_size_style)), Some(width)) = (item.min_max_keywords, known_dimensions.width) {
+        if let (true, Some(width)) = (item.has_min_max_keywords, known_dimensions.width) {
+            let (min_size_style, max_size_style) = min_max_size_styles(tree, item.node_id);
             // A `stretch` bound is cyclic while the width of the container is being determined, so it is ignored
             known_dimensions.width = Some(tree.clamp_width_by_min_max_sizing_keywords(
                 item.node_id,
@@ -1364,8 +1364,9 @@ fn perform_final_layout_on_in_flow_children(
                     })
                     .map_height(|height| height.or(keyword_height))
                     .maybe_clamp(item.min_size, item.max_size);
-                match item.min_max_keywords {
-                    Some((min_size_style, max_size_style)) => {
+                match item.has_min_max_keywords {
+                    true => {
+                        let (min_size_style, max_size_style) = min_max_size_styles(tree, item.node_id);
                         let stretch_size = Size {
                             width: Some(stretch_width),
                             height: container_percentage_resolution_height
@@ -1397,7 +1398,7 @@ fn perform_final_layout_on_in_flow_children(
                         };
                         Size { width, height: known_dimensions.height }
                     }
-                    None => known_dimensions,
+                    false => known_dimensions,
                 }
             };
 
@@ -1405,10 +1406,11 @@ fn perform_final_layout_on_in_flow_children(
 
             // The height available to a block-level box is not otherwise passed down to it, as it does not
             // affect the box's size. But a `stretch` min or max height of the item resolves against it.
-            let available_height = match item.min_max_keywords {
-                Some((min_size_style, max_size_style))
-                    if known_dimensions.height.is_none()
-                        && (min_size_style.height.is_stretch() || max_size_style.height.is_stretch()) =>
+            let available_height = match item.has_min_max_keywords {
+                true if known_dimensions.height.is_none() && {
+                    let (min_size_style, max_size_style) = min_max_size_styles(tree, item.node_id);
+                    min_size_style.height.is_stretch() || max_size_style.height.is_stretch()
+                } =>
                 {
                     container_percentage_resolution_height
                         .map(|height| (height - item_non_auto_margin.vertical_axis_sum()).max(0.0))
@@ -1769,4 +1771,11 @@ fn perform_final_layout_on_in_flow_children(
     committed_y_offset += resolved_content_box_inset.bottom + bottom_y_margin_offset;
     let content_height = f32_max(0.0, committed_y_offset);
     (inflow_overflow_rect, content_height, first_child_top_margin_set, last_child_bottom_margin_set, first_baseline)
+}
+
+/// The `min_size` and `max_size` styles of a child. Only used for children which have sizing keywords in those styles
+#[cold]
+fn min_max_size_styles(tree: &impl LayoutBlockContainer, node_id: NodeId) -> (Size<Dimension>, Size<Dimension>) {
+    let style = tree.get_block_child_style(node_id);
+    (style.min_size(), style.max_size())
 }

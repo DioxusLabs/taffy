@@ -45,7 +45,7 @@ struct FlexItem {
     /// The `min_size` and `max_size` styles of the item, if either contains a sizing keyword
     /// (`min-content`, `max-content`, `fit-content`, `fit-content(...)`, or `stretch`). Those are
     /// resolved into `min_size` and `max_size` when the flex base size of the item is determined.
-    min_max_keywords: Option<(Size<Dimension>, Size<Dimension>)>,
+    has_min_max_keywords: bool,
     /// The aspect ratio of this item
     aspect_ratio: Option<f32>,
     /// The cross-alignment of this item
@@ -774,10 +774,7 @@ fn generate_anonymous_flex_items(
                     .maybe_apply_aspect_ratio(aspect_ratio)
                     .maybe_add(box_sizing_adjustment),
                 size_style: child_style.size(),
-                min_max_keywords: {
-                    let (min_size, max_size) = (child_style.min_size(), child_style.max_size());
-                    has_min_max_sizing_keyword(min_size, max_size).then_some((min_size, max_size))
-                },
+                has_min_max_keywords: has_min_max_sizing_keyword(child_style.min_size(), child_style.max_size()),
                 min_size: child_style
                     .min_size()
                     .maybe_resolve(percent_resolution_size, |val, basis| tree.calc(val, basis))
@@ -920,7 +917,7 @@ fn determine_flex_base_size(
     let dir = constants.dir;
 
     for child in flex_items.iter_mut() {
-        if child.min_max_keywords.is_some() {
+        if child.has_min_max_keywords {
             resolve_cross_axis_min_max_keywords(tree, constants, child, constants.node_inner_size.cross(dir));
         }
         let child_style = tree.get_flexbox_child_style(child.node);
@@ -1006,7 +1003,7 @@ fn determine_flex_base_size(
 
         drop(child_style);
 
-        if child.min_max_keywords.is_some() {
+        if child.has_min_max_keywords {
             resolve_main_axis_min_max_keywords(
                 tree,
                 constants,
@@ -1213,7 +1210,10 @@ fn resolve_cross_axis_min_max_keywords(
     child: &mut FlexItem,
     cross_stretch_basis: Option<f32>,
 ) {
-    let Some((min_size_style, max_size_style)) = child.min_max_keywords else { return };
+    let (min_size_style, max_size_style) = {
+        let child_style = tree.get_flexbox_child_style(child.node);
+        (child_style.min_size(), child_style.max_size())
+    };
     let dir = constants.dir;
     let stretch_size = cross_stretch_basis.maybe_sub(child.margin.cross_axis_sum(dir)).maybe_max(0.0);
     let parent_size = Size::from_cross(dir, constants.node_inner_size.cross(dir));
@@ -1264,7 +1264,10 @@ fn resolve_main_axis_min_max_keywords(
     cross_axis_available_space: AvailableSpace,
     main_axis_available_space: AvailableSpace,
 ) {
-    let Some((min_size_style, max_size_style)) = child.min_max_keywords else { return };
+    let (min_size_style, max_size_style) = {
+        let child_style = tree.get_flexbox_child_style(child.node);
+        (child_style.min_size(), child_style.max_size())
+    };
     let dir = constants.dir;
     let percent_resolution_main_size =
         if constants.known_main_size_is_definite { constants.node_inner_size.main(dir) } else { None };
@@ -2332,22 +2335,20 @@ fn determine_used_cross_size(
 
         for child in line.items.iter_mut() {
             // A `stretch` min or max cross size resolves against the size of the item's flex line
-            let has_stretch_bound = child.min_max_keywords.is_some_and(|(min_size, max_size)| {
-                min_size.cross(constants.dir).is_stretch() || max_size.cross(constants.dir).is_stretch()
-            });
-            if has_stretch_bound {
+            let child_style = tree.get_flexbox_child_style(child.node);
+            let mut has_stretch_bound = false;
+            if child.has_min_max_keywords {
                 let stretch_size = Some((line_cross_size - child.margin.cross_axis_sum(constants.dir)).max(0.0));
-                if let Some((min_size, max_size)) = child.min_max_keywords {
-                    if max_size.cross(constants.dir).is_stretch() {
-                        child.max_size.set_cross(constants.dir, stretch_size);
-                    }
-                    if min_size.cross(constants.dir).is_stretch() {
-                        child.min_size.set_cross(constants.dir, stretch_size);
-                    }
+                if child_style.max_size().cross(constants.dir).is_stretch() {
+                    child.max_size.set_cross(constants.dir, stretch_size);
+                    has_stretch_bound = true;
+                }
+                if child_style.min_size().cross(constants.dir).is_stretch() {
+                    child.min_size.set_cross(constants.dir, stretch_size);
+                    has_stretch_bound = true;
                 }
             }
 
-            let child_style = tree.get_flexbox_child_style(child.node);
             // A cross size of `stretch` stretches to the flex line like align-self: stretch
             // (but regardless of the alignment style)
             let cross_is_stretch = child.size_style.cross(constants.dir).is_stretch();

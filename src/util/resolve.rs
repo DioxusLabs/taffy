@@ -58,19 +58,18 @@ impl MaybeResolve<Option<f32>, Option<f32>> for Dimension {
     /// Converts the given [`Dimension`] into an absolute length
     ///
     /// Can return `None`
+    #[inline(always)]
     fn maybe_resolve(self, context: Option<f32>, calc: impl Fn(*const (), f32) -> f32) -> Option<f32> {
         match self.0.tag() {
-            CompactLength::AUTO_TAG => None,
-            // The content keyword is only valid for flex-basis. In any other context it behaves as auto.
-            CompactLength::CONTENT_TAG => None,
             CompactLength::LENGTH_TAG => Some(self.0.value()),
             CompactLength::PERCENT_TAG => context.map(|dim| dim * self.0.value()),
             #[cfg(feature = "calc")]
             _ if self.0.is_calc() => context.map(|dim| calc(self.0.calc_value(), dim)),
-            // Intrinsic sizing keywords cannot be resolved to a definite size out of context.
-            // Layout algorithms that support them must handle them explicitly.
-            _ if self.0.is_sizing_keyword() => None,
-            _ => unreachable!(),
+            // - `auto` has no definite size.
+            // - The `content` keyword is only valid for flex-basis. In any other context it behaves as auto.
+            // - Intrinsic sizing keywords cannot be resolved to a definite size out of context.
+            //   Layout algorithms that support them must handle them explicitly.
+            _ => None,
         }
     }
 }
