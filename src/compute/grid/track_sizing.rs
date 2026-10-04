@@ -6,7 +6,7 @@ use crate::style::{AlignContent, AlignContentKeyword, AvailableSpace};
 use crate::style_helpers::TaffyMinContent;
 use crate::tree::{LayoutPartialTree, LayoutPartialTreeExt, SizingMode};
 use crate::util::sys::{f32_max, f32_min, Vec};
-use crate::util::{FrontBackVec, MaybeMath, ResolveOrZero};
+use crate::util::{FrontBackVecBuilder, MaybeMath, ResolveOrZero};
 use crate::CompactLength;
 
 /// Takes an axis, and a list of grid items sorted firstly by whether they cross a flex track
@@ -559,7 +559,7 @@ fn resolve_intrinsic_track_sizes<Tree: LayoutPartialTree>(
     // Items that cross a flexible track are all processed together in a single batch (regardless of their span), so
     // they only need to be moved to the end of the list. And the order in which items within a batch are processed
     // does not affect the result, so the remaining items only need to be sorted if any of them span more than one track.
-    let mut partitioned_items: FrontBackVec<&mut GridItem> = FrontBackVec::with_capacity(items.len());
+    let mut partitioned_items: FrontBackVecBuilder<&mut GridItem> = FrontBackVecBuilder::with_capacity(items.len());
     let mut needs_sort = false;
     for item in items.iter_mut() {
         if item.crosses_flexible_track(axis) {

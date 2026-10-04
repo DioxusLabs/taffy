@@ -7,9 +7,9 @@ pub use math::MaybeMath;
 pub use resolve::{MaybeResolve, ResolveOrZero};
 
 #[cfg(feature = "grid")]
-mod front_back_vec;
+mod front_back_vec_builder;
 #[cfg(feature = "grid")]
-pub(crate) use front_back_vec::FrontBackVec;
+pub(crate) use front_back_vec_builder::FrontBackVecBuilder;
 
 #[doc(hidden)]
 #[macro_use]
