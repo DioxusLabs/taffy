@@ -21,6 +21,7 @@ serde = { version = "1.0", default-features = false, optional = true, features =
 slotmap = { version = "1.0.6", default-features = false, optional = true }
 smallvec = { version = "1.13", default-features = false, optional = true }
 cssparser = { version = "0.37.0", default-features = false, optional = true }
+rayon = { version = "1.10", optional = true }
 
 [package.metadata.docs.rs]
 # To test all the documentation related features, run:
@@ -71,6 +72,9 @@ strict_provenance = []
 
 ## Enable the built-in Taffy node tree. See [`TaffyTree`](crate::TaffyTree).
 taffy_tree = ["dep:slotmap"]
+
+## PROTOTYPE: Enables laying out a [`TaffyTree`](crate::TaffyTree) in parallel using [`rayon`]
+parallel = ["std", "taffy_tree", "dep:rayon"]
 
 #! ### Other
 
