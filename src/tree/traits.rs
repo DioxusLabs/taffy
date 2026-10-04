@@ -312,6 +312,44 @@ pub trait RoundTree: TraverseTree {
     /// Get the nth out-of-flow box whose containing block is `node_id`
     /// (as recorded by [`LayoutContainingBlock::add_hoisted_children`])
     fn get_hoisted_child_id(&self, node_id: NodeId, index: usize) -> NodeId;
+
+    /// Round the layouts of the subtrees below a node, by calling `round_subtree` once for each of
+    /// the node's in-flow children and once for each out-of-flow box whose containing block is the
+    /// node, passing on `cumulative_x` and `cumulative_y` (the unrounded position of the node
+    /// relative to the root).
+    ///
+    /// The calls are independent of each other: each one only reads and writes the layouts of the
+    /// nodes in its subtree. The default implementation makes them in order. A tree can override
+    /// this method to make them in parallel.
+    #[inline(always)]
+    fn round_child_subtrees(
+        &mut self,
+        node_id: NodeId,
+        cumulative_x: f32,
+        cumulative_y: f32,
+        round_subtree: impl Fn(&mut Self, NodeId, f32, f32) + Copy + Send + Sync,
+    ) where
+        Self: Sized,
+    {
+        // Recurse into in-flow children. Out-of-flow (absolute/fixed) children are skipped here:
+        // they are instead visited via their containing block's hoisted child list below, which
+        // ensures each node is visited exactly once and that its cumulative offset is accumulated
+        // relative to its containing block (which its `location` is relative to).
+        let child_count = self.child_count(node_id);
+        for index in 0..child_count {
+            let child = self.get_child_id(node_id, index);
+            if !self.is_out_of_flow(child) {
+                round_subtree(self, child, cumulative_x, cumulative_y);
+            }
+        }
+
+        // Recurse into out-of-flow boxes for which this node is the containing block
+        let hoisted_count = self.hoisted_child_count(node_id);
+        for index in 0..hoisted_count {
+            let child = self.get_hoisted_child_id(node_id, index);
+            round_subtree(self, child, cumulative_x, cumulative_y);
+        }
+    }
 }
 
 /// Trait used by the `print_tree` method which prints a debug representation

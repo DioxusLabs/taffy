@@ -414,24 +414,9 @@ pub fn round_layout(tree: &mut impl RoundTree, node_id: NodeId) {
 
         tree.set_final_layout(node_id, &layout);
 
-        // Recurse into in-flow children. Out-of-flow (absolute/fixed) children are skipped here:
-        // they are instead visited via their containing block's hoisted child list below, which
-        // ensures each node is visited exactly once and that its cumulative offset is accumulated
-        // relative to its containing block (which its `location` is relative to).
-        let child_count = tree.child_count(node_id);
-        for index in 0..child_count {
-            let child = tree.get_child_id(node_id, index);
-            if !tree.is_out_of_flow(child) {
-                round_layout_inner(tree, child, cumulative_x, cumulative_y);
-            }
-        }
-
-        // Recurse into out-of-flow boxes for which this node is the containing block
-        let hoisted_count = tree.hoisted_child_count(node_id);
-        for index in 0..hoisted_count {
-            let child = tree.get_hoisted_child_id(node_id, index);
-            round_layout_inner(tree, child, cumulative_x, cumulative_y);
-        }
+        // Recurse into the node's in-flow children and into the out-of-flow boxes
+        // for which this node is the containing block
+        tree.round_child_subtrees(node_id, cumulative_x, cumulative_y, round_layout_inner);
     }
 
     #[cfg(feature = "content_size")]
