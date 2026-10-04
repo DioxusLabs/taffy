@@ -26,7 +26,7 @@ use track_sizing::{
 use types::{CellOccupancyMatrix, GridTrack, NamedLineResolver};
 
 use crate::sys::{DefaultCheapStr, String};
-use crate::tree::traits::{AutoAxes, ChildStyleConstraints};
+use crate::tree::traits::{ChildStyleConstraints, ResolvedChildStyles};
 use crate::{CheapCloneStr, GridPlacement};
 use types::{GridItem, GridTrackKind, TrackCounts};
 
@@ -47,7 +47,7 @@ pub(super) fn resolve_grid_child_style_constraints<Tree: LayoutGridContainer>(
     tree: &Tree,
     node_id: NodeId,
     inputs: &mut LayoutInput,
-) -> (ChildStyleConstraints, AutoAxes) {
+) -> ResolvedChildStyles {
     ChildStyleConstraints::resolve(&tree.get_grid_child_style(node_id), inputs, |val, basis| tree.calc(val, basis))
 }
 

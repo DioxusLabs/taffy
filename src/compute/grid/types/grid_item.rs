@@ -11,15 +11,13 @@ use crate::util::{MaybeMath, MaybeResolve, ResolveOrZero};
 use crate::{AlignItemsKeyword, BoxSizing, GridItemStyle, LengthPercentage};
 use core::ops::Range;
 
-/// The known_dimensions (and style constraints) computed for a grid item for a given grid area size
+/// The known_dimensions computed for a grid item for a given grid area size
 #[derive(Debug, Clone, Copy)]
 pub(in super::super) struct KnownDimensionsCacheEntry {
     /// The grid area size that `known_dimensions` was computed for
     grid_area_size: Size<Option<f32>>,
     /// The cached known_dimensions
     known_dimensions: Size<Option<f32>>,
-    /// The cached constraints that the item's own sizing styles place on the size that the item reports
-    constraints: Option<ChildStyleConstraints>,
 }
 
 /// Represents a single grid item
@@ -298,27 +296,74 @@ impl GridItem {
         &mut self,
         tree: &mut impl LayoutPartialTree,
         grid_area_size: Size<Option<f32>>,
-    ) -> (Size<Option<f32>>, Option<ChildStyleConstraints>) {
+    ) -> Size<Option<f32>> {
         if let Some(entry) = self.known_dimensions_cache {
             if entry.grid_area_size == grid_area_size {
-                return (entry.known_dimensions, entry.constraints);
+                return entry.known_dimensions;
             }
         }
-        let (known_dimensions, constraints) = self.known_dimensions(tree, grid_area_size, AvailableSpace::MaxContent);
-        self.known_dimensions_cache = Some(KnownDimensionsCacheEntry { grid_area_size, known_dimensions, constraints });
-        (known_dimensions, constraints)
+        let known_dimensions = self.known_dimensions(tree, grid_area_size, AvailableSpace::MaxContent);
+        self.known_dimensions_cache = Some(KnownDimensionsCacheEntry { grid_area_size, known_dimensions });
+        known_dimensions
+    }
+
+    /// The constraints that the item's own sizing styles place on the size that it reports when it is measured
+    /// with the known_dimensions for the given grid area size.
+    ///
+    /// These are not cached (most items have none, and caching them would make every `GridItem` larger). Items
+    /// which cannot have any are detected from their styles alone, without resolving anything.
+    #[inline(always)]
+    fn style_constraints(
+        &self,
+        tree: &mut impl LayoutPartialTree,
+        grid_area_size: Size<Option<f32>>,
+        fit_content_max_fallback: AvailableSpace,
+    ) -> Option<ChildStyleConstraints> {
+        if self.aspect_ratio.is_none()
+            && self.min_size.width.is_auto()
+            && self.min_size.height.is_auto()
+            && self.max_size.width.is_auto()
+            && self.max_size.height.is_auto()
+        {
+            return None;
+        }
+        self.resolve_style_constraints(tree, grid_area_size, fit_content_max_fallback)
+    }
+
+    /// The slow path of [`Self::style_constraints`], for items that have sizing styles that may constrain them
+    #[inline(never)]
+    fn resolve_style_constraints(
+        &self,
+        tree: &mut impl LayoutPartialTree,
+        grid_area_size: Size<Option<f32>>,
+        fit_content_max_fallback: AvailableSpace,
+    ) -> Option<ChildStyleConstraints> {
+        self.resolve_sizing_styles::<true>(tree, grid_area_size, fit_content_max_fallback).1
     }
 
     /// Compute the known_dimensions to be passed to the child sizing functions
     /// The key thing that is being done here is applying stretch alignment, which is necessary to
     /// allow percentage sizes further down the tree to resolve properly in some cases
     ///
-    /// Also returns the constraints that the item's own sizing styles place on the size that the item reports
-    /// (if any of the item's dimensions are not known)
-    ///
     /// `fit_content_max_fallback` is the constraint that a `fit-content` max width is measured under if the
     /// width of the grid area is indefinite
     fn known_dimensions(
+        &self,
+        tree: &mut impl LayoutPartialTree,
+        grid_area_size: Size<Option<f32>>,
+        fit_content_max_fallback: AvailableSpace,
+    ) -> Size<Option<f32>> {
+        self.resolve_sizing_styles::<false>(tree, grid_area_size, fit_content_max_fallback).0
+    }
+
+    /// Computes the known_dimensions to be passed to the child sizing functions (see [`Self::known_dimensions`])
+    /// and, if `WITH_CONSTRAINTS` is set, the constraints that the item's own sizing styles place on the size
+    /// that the item reports (if any of the item's dimensions are not known).
+    ///
+    /// The two are computed from the same resolved styles. `WITH_CONSTRAINTS` is a const parameter so that
+    /// callers that only want the known_dimensions do not pay for building and returning the constraints.
+    #[inline(always)]
+    fn resolve_sizing_styles<const WITH_CONSTRAINTS: bool>(
         &self,
         tree: &mut impl LayoutPartialTree,
         grid_area_size: Size<Option<f32>>,
@@ -453,9 +498,18 @@ impl GridItem {
         };
 
         // The item's own sizing styles only constrain the size that it reports in axes in which
-        // its size is not already known
+        // its size is not already known (and only if it has a min size, max size or aspect ratio)
         let known_dimensions = Size { width, height };
-        let constraints = (!known_dimensions.both_axis_defined()).then(|| ChildStyleConstraints {
+        let is_constrained = WITH_CONSTRAINTS
+            && !known_dimensions.both_axis_defined()
+            && (aspect_ratio.is_some()
+                || min_size.width.is_some()
+                || min_size.height.is_some()
+                || max_size.width.is_some()
+                || max_size.height.is_some()
+                || !keyword_min_width.is_auto()
+                || !keyword_max_width.is_auto());
+        let constraints = is_constrained.then(|| ChildStyleConstraints {
             min_size,
             max_size,
             untransferred_max_size,
@@ -584,14 +638,18 @@ impl GridItem {
     ) -> f32 {
         // A `fit-content` max width that cannot be resolved against the grid area is the min-content width
         // when computing the item's min-content contribution (and the max-content width otherwise).
-        let (known_dimensions, constraints) = if grid_area_size.width.is_none()
+        let fit_content_max_fallback = if grid_area_size.width.is_none()
             && self.max_size.width.is_sizing_keyword()
             && !self.max_size.width.is_stretch()
             && !self.size.width.is_auto()
         {
-            self.known_dimensions(tree, grid_area_size, AvailableSpace::MinContent)
+            AvailableSpace::MinContent
         } else {
-            self.known_dimensions_cached(tree, grid_area_size)
+            AvailableSpace::MaxContent
+        };
+        let known_dimensions = match fit_content_max_fallback {
+            AvailableSpace::MinContent => self.known_dimensions(tree, grid_area_size, fit_content_max_fallback),
+            _ => self.known_dimensions_cached(tree, grid_area_size),
         };
         // If the item's size in the axis being measured is already known then that size is its contribution,
         // and we can avoid calling into the child entirely.
@@ -612,6 +670,7 @@ impl GridItem {
             tree,
         );
         let axis = axis.as_abs_naive();
+        let constraints = self.style_constraints(tree, grid_area_size, fit_content_max_fallback);
         tree.compute_child_layout_with_constraints(
             self.node,
             LayoutInput {
@@ -653,7 +712,7 @@ impl GridItem {
         grid_area_size: Size<Option<f32>>,
         available_space: Size<Option<f32>>,
     ) -> f32 {
-        let (known_dimensions, constraints) = self.known_dimensions_cached(tree, grid_area_size);
+        let known_dimensions = self.known_dimensions_cached(tree, grid_area_size);
         // If the item's size in the axis being measured is already known then that size is its contribution,
         // and we can avoid calling into the child entirely.
         if let Some(size) = known_dimensions.get(axis) {
@@ -671,6 +730,7 @@ impl GridItem {
             tree,
         );
         let axis = axis.as_abs_naive();
+        let constraints = self.style_constraints(tree, grid_area_size, AvailableSpace::MaxContent);
         tree.compute_child_layout_with_constraints(
             self.node,
             LayoutInput {
