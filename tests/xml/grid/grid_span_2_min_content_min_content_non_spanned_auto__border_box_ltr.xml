@@ -1,0 +1,17 @@
+<test name="grid_span_2_min_content_min_content_non_spanned_auto__border_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" direction="ltr" position="absolute" width="100px" grid-template-columns="min-content min-content auto">
+      <text direction="ltr" position="relative" grid-row-start="1" grid-column-start="1" grid-column-end="span 2">
+        XXXXXXXX​XXXXXXXX
+      </text>
+      <div direction="ltr" position="relative" width="60px" height="10px" grid-row-start="1" grid-column-start="3"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="100" height="20" resolved-rows="20px" resolved-columns="40px 40px 60px">
+      <node x="0" y="0" width="80" height="20"/>
+      <node x="80" y="0" width="60" height="10"/>
+    </node>
+  </expectations>
+</test>
