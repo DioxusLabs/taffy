@@ -563,6 +563,10 @@ impl GridItem {
             LayoutInput {
                 known_dimensions,
                 known_dimensions_are_definite: Size { width: true, height: true },
+                // The constraints computed by `known_dimensions` hold the item's min and max sizes in
+                // the form in which they are passed down to the item
+                min_size: constraints.map_or(Size::NONE, |constraints| constraints.min_size),
+                max_size: constraints.map_or(Size::NONE, |constraints| constraints.max_size),
                 parent_size: grid_area_size,
                 available_space,
                 axis: axis.into(),
@@ -622,6 +626,10 @@ impl GridItem {
             LayoutInput {
                 known_dimensions,
                 known_dimensions_are_definite: Size { width: true, height: true },
+                // The constraints computed by `known_dimensions` hold the item's min and max sizes in
+                // the form in which they are passed down to the item
+                min_size: constraints.map_or(Size::NONE, |constraints| constraints.min_size),
+                max_size: constraints.map_or(Size::NONE, |constraints| constraints.max_size),
                 parent_size: grid_area_size,
                 available_space,
                 axis: axis.into(),

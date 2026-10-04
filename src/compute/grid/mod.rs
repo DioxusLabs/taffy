@@ -10,9 +10,9 @@ use crate::tree::{
 use crate::util::debug::debug_log;
 use crate::util::sys::{f32_max, f32_min, GridTrackVec, Vec};
 use crate::util::MaybeMath;
-use crate::util::{MaybeResolve, ResolveOrZero};
+use crate::util::ResolveOrZero;
 use crate::{
-    style_helpers::*, AlignContent, AlignItemsKeyword, AlignSelf, BoxGenerationMode, BoxSizing, CoreStyle, Direction,
+    style_helpers::*, AlignContent, AlignItemsKeyword, AlignSelf, BoxGenerationMode, CoreStyle, Direction,
     GridContainerStyle, GridItemStyle, JustifyContent, LayoutGridContainer, RequestedAxis,
 };
 use alignment::{align_and_position_item, align_tracks};
@@ -25,7 +25,7 @@ use track_sizing::{
 use types::{CellOccupancyMatrix, GridTrack, NamedLineResolver};
 
 use crate::sys::{DefaultCheapStr, String};
-use crate::tree::traits::{AutoAxes, ChildStyleConstraints};
+use crate::tree::traits::{AutoAxes, ChildStyleConstraints, MinMaxSize};
 use crate::{CheapCloneStr, GridPlacement};
 use types::{GridItem, GridTrackKind, TrackCounts};
 
@@ -42,12 +42,17 @@ mod types;
 mod util;
 
 /// Resolve the sizing styles of a grid container's child from the child's grid item style
+///
+/// If both of the child's dimensions are already known then only the min and max sizes that are passed down
+/// to the child are resolved (see [`ChildStyleConstraints::resolve_unknown_axes`]).
 pub(super) fn resolve_grid_child_style_constraints<Tree: LayoutGridContainer>(
     tree: &Tree,
     node_id: NodeId,
     inputs: &mut LayoutInput,
-) -> (ChildStyleConstraints, AutoAxes) {
-    ChildStyleConstraints::resolve(&tree.get_grid_child_style(node_id), inputs, |val, basis| tree.calc(val, basis))
+) -> Option<(ChildStyleConstraints, AutoAxes)> {
+    ChildStyleConstraints::resolve_unknown_axes(&tree.get_grid_child_style(node_id), inputs, |val, basis| {
+        tree.calc(val, basis)
+    })
 }
 
 /// Grid layout algorithm
@@ -70,24 +75,13 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
 
     // 1. Compute "available grid space"
     // https://www.w3.org/TR/css-grid-1/#available-grid-space
-    let aspect_ratio = style.aspect_ratio();
     let padding = style.padding().resolve_or_zero(parent_size.width, |val, basis| tree.calc(val, basis));
     let border = style.border().resolve_or_zero(parent_size.width, |val, basis| tree.calc(val, basis));
     let padding_border = padding + border;
     let padding_border_size = padding_border.sum_axes();
-    let box_sizing_adjustment =
-        if style.box_sizing() == BoxSizing::ContentBox { padding_border_size } else { Size::ZERO };
 
-    let min_size = style
-        .min_size()
-        .maybe_resolve(parent_size, |val, basis| tree.calc(val, basis))
-        .maybe_apply_aspect_ratio(aspect_ratio)
-        .maybe_add(box_sizing_adjustment);
-    let max_size = style
-        .max_size()
-        .maybe_resolve(parent_size, |val, basis| tree.calc(val, basis))
-        .maybe_apply_aspect_ratio(aspect_ratio)
-        .maybe_add(box_sizing_adjustment);
+    // The container's own min and max sizes are resolved by its parent
+    let LayoutInput { min_size, max_size, .. } = inputs;
 
     // Scrollbar gutters are reserved when the `overflow` property is set to `Overflow::Scroll`.
     // However, the axis are switched (transposed) because a node that scrolls vertically needs
@@ -673,7 +667,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
         if child_style.box_generation_mode() == BoxGenerationMode::None {
             drop(child_style);
             tree.set_unrounded_layout(child, &Layout::with_order(order));
-            tree.perform_child_layout(child, Size::NONE, Size::NONE, Size::MAX_CONTENT, Line::FALSE);
+            tree.perform_child_layout(child, Size::NONE, MinMaxSize::NONE, Size::NONE, Size::MAX_CONTENT, Line::FALSE);
             order += 1;
             return;
         }

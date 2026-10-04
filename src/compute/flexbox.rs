@@ -7,6 +7,7 @@ use crate::style::{
 };
 use crate::style::{CoreStyle, FlexDirection, FlexboxContainerStyle, FlexboxItemStyle};
 use crate::style_helpers::{TaffyMaxContent, TaffyMinContent};
+use crate::tree::traits::MinMaxSize;
 use crate::tree::{
     AxisStaticAlign, AxisStaticEdge, AxisStaticPosition, LayoutFlexboxContainer, LayoutPartialTreeExt, NodeId,
     OofPositioningArea,
@@ -33,6 +34,9 @@ struct FlexItem {
 
     /// The base size of this item
     size: Size<Option<f32>>,
+    /// Whether the item has a `min_size` or `max_size` style that is not `auto` in either axis.
+    /// If it does not, then there are no min or max sizes to resolve and pass down to the item.
+    has_min_max_size: bool,
     /// The raw size style of this item. Used to detect and resolve sizing
     /// keywords (`min-content`, `max-content`, `fit-content`, `fit-content(...)`, and `stretch`)
     size_style: Size<Dimension>,
@@ -246,23 +250,12 @@ pub fn compute_flexbox_layout(
 
     // Pull these out earlier to avoid borrowing issues
     let contain = style.contain();
-    let aspect_ratio = style.aspect_ratio();
     let padding = style.padding().resolve_or_zero(parent_size.width, |val, basis| tree.calc(val, basis));
     let border = style.border().resolve_or_zero(parent_size.width, |val, basis| tree.calc(val, basis));
     let padding_border_sum = padding.sum_axes() + border.sum_axes();
-    let box_sizing_adjustment =
-        if style.box_sizing() == BoxSizing::ContentBox { padding_border_sum } else { Size::ZERO };
 
-    let min_size = style
-        .min_size()
-        .maybe_resolve(parent_size, |val, basis| tree.calc(val, basis))
-        .maybe_apply_aspect_ratio(aspect_ratio)
-        .maybe_add(box_sizing_adjustment);
-    let max_size = style
-        .max_size()
-        .maybe_resolve(parent_size, |val, basis| tree.calc(val, basis))
-        .maybe_apply_aspect_ratio(aspect_ratio)
-        .maybe_add(box_sizing_adjustment);
+    // The container's own min and max sizes are resolved by its parent
+    let LayoutInput { min_size, max_size, .. } = inputs;
 
     // If both min and max in a given axis are set and max <= min then this determines the size in that axis
     let min_max_definite_size = min_size.zip_map(max_size, |min, max| match (min, max) {
@@ -329,6 +322,7 @@ fn compute_preliminary(tree: &mut impl LayoutFlexboxContainer, node: NodeId, inp
         tree.get_flexbox_container_style(node),
         known_dimensions,
         inputs.known_dimensions_are_definite,
+        MinMaxSize { min: inputs.min_size, max: inputs.max_size },
         parent_size,
         available_space,
     );
@@ -540,7 +534,7 @@ fn compute_preliminary(tree: &mut impl LayoutFlexboxContainer, node: NodeId, inp
         let child = tree.get_child_id(node, order);
         if tree.get_flexbox_child_style(child).box_generation_mode() == BoxGenerationMode::None {
             tree.set_unrounded_layout(child, &Layout::with_order(order as u32));
-            tree.perform_child_layout(child, Size::NONE, Size::NONE, Size::MAX_CONTENT, Line::FALSE);
+            tree.perform_child_layout(child, Size::NONE, MinMaxSize::NONE, Size::NONE, Size::MAX_CONTENT, Line::FALSE);
         }
     }
 
@@ -576,6 +570,19 @@ fn compute_preliminary(tree: &mut impl LayoutFlexboxContainer, node: NodeId, inp
     output
 }
 
+/// Resolve the min and max sizes that are passed down to a flex item when it is laid out with the given `parent_size`
+#[inline(always)]
+fn item_min_max_size(
+    tree: &impl LayoutFlexboxContainer,
+    item: &FlexItem,
+    parent_size: Size<Option<f32>>,
+) -> MinMaxSize {
+    if !item.has_min_max_size {
+        return MinMaxSize::NONE;
+    }
+    MinMaxSize::resolve(&tree.get_flexbox_child_style(item.node), parent_size, |val, basis| tree.calc(val, basis))
+}
+
 /// Compute constants that can be reused during the flexbox algorithm.
 #[inline]
 fn compute_constants(
@@ -583,6 +590,7 @@ fn compute_constants(
     style: impl FlexboxContainerStyle,
     known_dimensions: Size<Option<f32>>,
     known_dimensions_are_definite: Size<bool>,
+    min_max_size: MinMaxSize,
     parent_size: Size<Option<f32>>,
     available_space: Size<AvailableSpace>,
 ) -> AlgoConstants {
@@ -597,13 +605,9 @@ fn compute_constants(
     #[cfg(feature = "flexbox_balance")]
     let line_count = if is_wrap { Some(style.flex_line_count().max(1)) } else { None };
 
-    let aspect_ratio = style.aspect_ratio();
     let margin = style.margin().resolve_or_zero(parent_size.width, |val, basis| tree.calc(val, basis));
     let padding = style.padding().resolve_or_zero(parent_size.width, |val, basis| tree.calc(val, basis));
     let border = style.border().resolve_or_zero(parent_size.width, |val, basis| tree.calc(val, basis));
-    let padding_border_sum = padding.sum_axes() + border.sum_axes();
-    let box_sizing_adjustment =
-        if style.box_sizing() == BoxSizing::ContentBox { padding_border_sum } else { Size::ZERO };
 
     let align_items = style.align_items().unwrap_or(AlignItems::STRETCH);
     let align_content = style.align_content().unwrap_or(AlignContent::STRETCH);
@@ -653,16 +657,8 @@ fn compute_constants(
         is_balance,
         #[cfg(feature = "flexbox_balance")]
         line_count,
-        min_size: style
-            .min_size()
-            .maybe_resolve(parent_size, |val, basis| tree.calc(val, basis))
-            .maybe_apply_aspect_ratio(aspect_ratio)
-            .maybe_add(box_sizing_adjustment),
-        max_size: style
-            .max_size()
-            .maybe_resolve(parent_size, |val, basis| tree.calc(val, basis))
-            .maybe_apply_aspect_ratio(aspect_ratio)
-            .maybe_add(box_sizing_adjustment),
+        min_size: min_max_size.min,
+        max_size: min_max_size.max,
         margin,
         border,
         gap,
@@ -752,6 +748,7 @@ fn generate_anonymous_flex_items(
                     .maybe_apply_aspect_ratio(aspect_ratio)
                     .maybe_add(box_sizing_adjustment),
                 size_style: child_style.size(),
+                has_min_max_size: MinMaxSize::is_set(&child_style),
                 min_size: child_style
                     .min_size()
                     .maybe_resolve(percent_resolution_size, |val, basis| tree.calc(val, basis))
@@ -1084,6 +1081,7 @@ fn determine_flex_base_size(
             break 'flex_basis tree.measure_child_size(
                 child.node,
                 child_known_dimensions,
+                item_min_max_size(tree, child, child_parent_size),
                 child_parent_size,
                 child_available_space,
                 dir.main_axis(),
@@ -1126,6 +1124,7 @@ fn determine_flex_base_size(
                 tree.measure_child_size(
                     child.node,
                     child_known_dimensions,
+                    item_min_max_size(tree, child, child_parent_size),
                     child_parent_size,
                     child_available_space,
                     dir.main_axis(),
@@ -1579,6 +1578,7 @@ fn determine_container_main_size(
                                 let measured_main_size = tree.measure_child_size(
                                     item.node,
                                     child_known_dimensions,
+                                    item_min_max_size(tree, item, constants.node_inner_size),
                                     constants.node_inner_size,
                                     child_available_space,
                                     dir.main_axis(),
@@ -1942,6 +1942,7 @@ fn determine_hypothetical_cross_size(
         };
 
         let child_inner_cross = child_cross.unwrap_or_else(|| {
+            let min_max_size = item_min_max_size(tree, child, constants.node_inner_size);
             tree.compute_child_layout(
                 child.node,
                 LayoutInput {
@@ -1952,6 +1953,8 @@ fn determine_hypothetical_cross_size(
                         height: if constants.is_row { child_cross } else { child.target_size.height.into() },
                     },
                     known_dimensions_are_definite: item_known_dimension_definiteness(constants, child),
+                    min_size: min_max_size.min,
+                    max_size: min_max_size.max,
                     parent_size: constants.node_inner_size,
                     available_space: Size {
                         width: if constants.is_row { child_known_main } else { child_available_cross },
@@ -2002,6 +2005,7 @@ fn calculate_children_base_lines(
                 continue;
             }
 
+            let min_max_size = item_min_max_size(tree, child, constants.node_inner_size);
             let measured_size_and_baselines = tree.compute_child_layout(
                 child.node,
                 LayoutInput {
@@ -2020,6 +2024,8 @@ fn calculate_children_base_lines(
                         },
                     },
                     known_dimensions_are_definite: item_known_dimension_definiteness(constants, child),
+                    min_size: min_max_size.min,
+                    max_size: min_max_size.max,
                     parent_size: constants.node_inner_size,
                     available_space: Size {
                         width: if constants.is_row {
@@ -2529,6 +2535,7 @@ fn calculate_flex_item(
     let direction = constants.dir;
     let layout_direction = constants.layout_direction;
     let item_known_dimension_definiteness = item_known_dimension_definiteness(constants, item);
+    let min_max_size = item_min_max_size(tree, item, node_inner_size);
     let mut layout_output = tree.compute_child_layout(
         item.node,
         LayoutInput {
@@ -2536,6 +2543,8 @@ fn calculate_flex_item(
             axis: RequestedAxis::Both,
             known_dimensions: item.target_size.map(|s| s.into()),
             known_dimensions_are_definite: item_known_dimension_definiteness,
+            min_size: min_max_size.min,
+            max_size: min_max_size.max,
             parent_size: node_inner_size,
             available_space: container_size.map(|s| s.into()),
             vertical_margins_are_collapsible: Line::FALSE,

@@ -14,6 +14,7 @@ mod hand_written {
     mod min_max_overrides;
     mod negative_available_space;
     mod oof_hoisting;
+    mod passed_min_max_size;
     mod position;
     mod relayout;
     mod root_constraints;

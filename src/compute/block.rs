@@ -2,7 +2,7 @@
 use crate::geometry::{Line, Point, Rect, Size};
 use crate::style::{AvailableSpace, CoreStyle, LengthPercentageAuto, Overflow, Position};
 use crate::style_helpers::TaffyMaxContent;
-use crate::tree::traits::{AutoAxes, ChildStyleConstraints};
+use crate::tree::traits::{AutoAxes, ChildStyleConstraints, MinMaxSize};
 use crate::tree::{
     AxisStaticEdge, AxisStaticPosition, LayoutPartialTreeExt, NodeId, OofCandidate, OofCandidates, OofPositioningArea,
 };
@@ -369,23 +369,11 @@ pub fn compute_block_layout(
     // <https://drafts.csswg.org/css-contain-2/#containment-layout>
     let establishes_new_bfc =
         is_scroll_container || style.align_content().is_some() || contain.establishes_independent_formatting_context();
-    let aspect_ratio = style.aspect_ratio();
     let padding = style.padding().resolve_or_zero(parent_size.width, |val, basis| tree.calc(val, basis));
     let border = style.border().resolve_or_zero(parent_size.width, |val, basis| tree.calc(val, basis));
     let padding_border_size = (padding + border).sum_axes();
-    let box_sizing_adjustment =
-        if style.box_sizing() == BoxSizing::ContentBox { padding_border_size } else { Size::ZERO };
 
-    let min_size = style
-        .min_size()
-        .maybe_resolve(parent_size, |val, basis| tree.calc(val, basis))
-        .maybe_apply_aspect_ratio(aspect_ratio)
-        .maybe_add(box_sizing_adjustment);
-    let max_size = style
-        .max_size()
-        .maybe_resolve(parent_size, |val, basis| tree.calc(val, basis))
-        .maybe_apply_aspect_ratio(aspect_ratio)
-        .maybe_add(box_sizing_adjustment);
+    let LayoutInput { min_size, max_size, .. } = inputs;
 
     drop(style);
 
@@ -450,6 +438,18 @@ fn resolve_block_child_style_constraints<Tree: LayoutBlockContainer>(
     ChildStyleConstraints::resolve(&tree.get_block_child_style(node_id), inputs, |val, basis| tree.calc(val, basis))
 }
 
+/// As [`resolve_block_child_style_constraints`], but only resolves the constraints that are needed
+/// (see [`ChildStyleConstraints::resolve_unknown_axes`]).
+fn resolve_block_child_style_constraints_for_unknown_axes<Tree: LayoutBlockContainer>(
+    tree: &Tree,
+    node_id: NodeId,
+    inputs: &mut LayoutInput,
+) -> Option<(ChildStyleConstraints, AutoAxes)> {
+    ChildStyleConstraints::resolve_unknown_axes(&tree.get_block_child_style(node_id), inputs, |val, basis| {
+        tree.calc(val, basis)
+    })
+}
+
 /// Computes the layout of [`LayoutBlockContainer`] according to the block layout algorithm
 fn compute_inner(
     tree: &mut impl LayoutBlockContainer,
@@ -498,16 +498,8 @@ fn compute_inner(
         .maybe_resolve(parent_size, |val, basis| tree.calc(val, basis))
         .maybe_apply_aspect_ratio(aspect_ratio)
         .maybe_add(box_sizing_adjustment);
-    let min_size = style
-        .min_size()
-        .maybe_resolve(parent_size, |val, basis| tree.calc(val, basis))
-        .maybe_apply_aspect_ratio(aspect_ratio)
-        .maybe_add(box_sizing_adjustment);
-    let max_size = style
-        .max_size()
-        .maybe_resolve(parent_size, |val, basis| tree.calc(val, basis))
-        .maybe_apply_aspect_ratio(aspect_ratio)
-        .maybe_add(box_sizing_adjustment);
+    // The container's own min and max sizes are resolved by its parent
+    let LayoutInput { min_size, max_size, .. } = inputs;
 
     // css-sizing-4: a definite size in one axis transfers through `aspect-ratio`
     // to make the other definite. Deriving it from `known_dimensions` self-gates
@@ -825,7 +817,7 @@ fn compute_inner(
         if child_style.box_generation_mode() == BoxGenerationMode::None {
             drop(child_style);
             tree.set_unrounded_layout(child, &Layout::with_order(order as u32));
-            tree.perform_child_layout(child, Size::NONE, Size::NONE, Size::MAX_CONTENT, Line::FALSE);
+            tree.perform_child_layout(child, Size::NONE, MinMaxSize::NONE, Size::NONE, Size::MAX_CONTENT, Line::FALSE);
         }
     }
 
@@ -977,7 +969,7 @@ fn determine_content_based_container_width(
                 crate::AbsoluteAxis::Horizontal,
                 // Must match the value passed when laying the item out (see `Cache`)
                 if item.is_in_same_bfc { Line::TRUE } else { Line::FALSE },
-                resolve_block_child_style_constraints,
+                resolve_block_child_style_constraints_for_unknown_axes,
             )
         });
 
@@ -1115,7 +1107,7 @@ fn perform_final_layout_on_in_flow_children(
                     // A float establishes a new block formatting context: its margins do not
                     // collapse with the margins of its children
                     Line::FALSE,
-                    resolve_block_child_style_constraints,
+                    resolve_block_child_style_constraints_for_unknown_axes,
                 );
                 item.oof_candidates = item_layout.oof_candidates.take();
                 let margin_box = item_layout.size + item_non_auto_margin.sum_axes();
@@ -1296,7 +1288,7 @@ fn perform_final_layout_on_in_flow_children(
                                     crate::AbsoluteAxis::Horizontal,
                                     // Must match the value passed when laying the item out (see `Cache`)
                                     if item.is_in_same_bfc { Line::TRUE } else { Line::FALSE },
-                                    resolve_block_child_style_constraints,
+                                    resolve_block_child_style_constraints_for_unknown_axes,
                                 ),
                         });
 
@@ -1326,6 +1318,9 @@ fn perform_final_layout_on_in_flow_children(
                 axis: RequestedAxis::Both,
                 known_dimensions,
                 known_dimensions_are_definite: Size { width: true, height: true },
+                // Filled in by `resolve_block_child_style_constraints`
+                min_size: Size::NONE,
+                max_size: Size::NONE,
                 parent_size,
                 available_space: available_space.map_width(|_| AvailableSpace::Definite(stretch_width)),
                 vertical_margins_are_collapsible: if item.is_in_same_bfc { Line::TRUE } else { Line::FALSE },

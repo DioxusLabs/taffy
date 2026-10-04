@@ -9,6 +9,7 @@ use crate::style::{
     AlignContent, AlignItems, AlignItemsKeyword, AlignSelf, AvailableSpace, CoreStyle, GridItemStyle, Overflow,
     Position,
 };
+use crate::tree::traits::MinMaxSize;
 use crate::tree::{Layout, LayoutPartialTreeExt, NodeId, OofCandidates};
 use crate::util::sys::f32_max;
 use crate::util::{MaybeMath, MaybeResolve, ResolveOrZero};
@@ -184,6 +185,9 @@ pub(super) fn align_and_position_item(
     let margin =
         style.margin().map(|margin| margin.resolve_to_option(grid_area_size.width, |val, basis| tree.calc(val, basis)));
 
+    // Whether the item has min or max sizes that need to be resolved and passed down to it
+    let has_min_max_size = MinMaxSize::is_set(&style);
+
     drop(style);
 
     let grid_area_minus_item_margins_size = Size {
@@ -348,7 +352,14 @@ pub(super) fn align_and_position_item(
         grid_area_size.map(Option::Some),
         grid_area_minus_item_margins_size.map(AvailableSpace::Definite),
         Line::FALSE,
-        resolve_grid_child_style_constraints,
+        |tree, node, inputs| {
+            // The common case: the item's size is fully determined and it has no min or max sizes
+            // to be passed down to it, so there is nothing to resolve from its style.
+            if !has_min_max_size && inputs.known_dimensions.both_axis_defined() {
+                return None;
+            }
+            resolve_grid_child_style_constraints(tree, node, inputs)
+        },
     );
 
     // Resolve final size

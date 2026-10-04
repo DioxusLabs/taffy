@@ -8,6 +8,7 @@ use crate::geometry::{Line, Point, Rect, Size};
 #[cfg(feature = "grid")]
 use crate::style::OofItemStyle;
 use crate::style::{AvailableSpace, ContainingBlockClaims, CoreStyle};
+use crate::tree::traits::MinMaxSize;
 #[cfg(feature = "grid")]
 use crate::tree::DetailedLayoutInfo;
 use crate::tree::{
@@ -230,18 +231,19 @@ pub(crate) fn layout_oof_box<Tree: LayoutContainingBlock>(
         .maybe_resolve(area_size, |val, basis| tree.calc(val, basis))
         .maybe_apply_aspect_ratio(aspect_ratio)
         .maybe_add(box_sizing_adjustment);
-    let min_size = child_style
+    let style_min_size = child_style
         .min_size()
         .maybe_resolve(area_size, |val, basis| tree.calc(val, basis))
         .maybe_apply_aspect_ratio(aspect_ratio)
-        .maybe_add(box_sizing_adjustment)
-        .or(padding_border_sum.map(Some))
-        .maybe_max(padding_border_sum);
+        .maybe_add(box_sizing_adjustment);
+    let min_size = style_min_size.or(padding_border_sum.map(Some)).maybe_max(padding_border_sum);
     let max_size = child_style
         .max_size()
         .maybe_resolve(area_size, |val, basis| tree.calc(val, basis))
         .maybe_apply_aspect_ratio(aspect_ratio)
         .maybe_add(box_sizing_adjustment);
+    // The min and max sizes that are passed down to the item for use by its own layout algorithm
+    let passed_min_max_size = MinMaxSize { min: style_min_size, max: max_size };
     let mut known_dimensions = style_size.maybe_clamp(min_size, max_size);
 
     let is_replaced = child_style.is_compressible_replaced();
@@ -261,6 +263,7 @@ pub(crate) fn layout_oof_box<Tree: LayoutContainingBlock>(
             candidate.node,
             &mut known_dimensions,
             size_style,
+            passed_min_max_size,
             area_size,
             Rect { left, right, top, bottom },
             margin,
@@ -296,6 +299,7 @@ pub(crate) fn layout_oof_box<Tree: LayoutContainingBlock>(
             let measured_size = tree.measure_child_size_both(
                 candidate.node,
                 known_dimensions,
+                passed_min_max_size,
                 area_size.map(Some),
                 Size {
                     width: AvailableSpace::Definite(area_width.maybe_clamp(min_size.width, max_size.width)),
@@ -311,6 +315,8 @@ pub(crate) fn layout_oof_box<Tree: LayoutContainingBlock>(
     let layout_input = LayoutInput {
         known_dimensions: final_size.map(Some),
         known_dimensions_are_definite: Size { width: true, height: true },
+        min_size: passed_min_max_size.min,
+        max_size: passed_min_max_size.max,
         parent_size: area_size.map(Some),
         available_space: Size {
             width: AvailableSpace::Definite(area_width.maybe_clamp(min_size.width, max_size.width)),
