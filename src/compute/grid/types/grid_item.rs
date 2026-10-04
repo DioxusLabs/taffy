@@ -11,15 +11,13 @@ use crate::util::{MaybeMath, MaybeResolve, ResolveOrZero};
 use crate::{AlignItemsKeyword, BoxSizing, GridItemStyle, LengthPercentage};
 use core::ops::Range;
 
-/// The known_dimensions (and style constraints) computed for a grid item for a given grid area size
+/// The known_dimensions computed for a grid item for a given grid area size
 #[derive(Debug, Clone, Copy)]
 pub(in super::super) struct KnownDimensionsCacheEntry {
     /// The grid area size that `known_dimensions` was computed for
     grid_area_size: Size<Option<f32>>,
     /// The cached known_dimensions
     known_dimensions: Size<Option<f32>>,
-    /// The cached constraints that the item's own sizing styles place on the size that the item reports
-    constraints: Option<ChildStyleConstraints>,
 }
 
 /// Represents a single grid item
@@ -293,29 +291,42 @@ impl GridItem {
 
     /// Retrieve the known_dimensions for the given grid area size from the cache or compute them.
     /// The min-content and max-content contributions of an item are both computed from the same known_dimensions.
-    ///
-    /// The style constraints that go with the returned known_dimensions are left in the cache, where they can
-    /// be accessed using [`Self::cached_style_constraints`].
     #[inline(always)]
     fn known_dimensions_cached(
         &mut self,
         tree: &mut impl LayoutPartialTree,
         grid_area_size: Size<Option<f32>>,
     ) -> Size<Option<f32>> {
-        if let Some(entry) = &self.known_dimensions_cache {
+        if let Some(entry) = self.known_dimensions_cache {
             if entry.grid_area_size == grid_area_size {
                 return entry.known_dimensions;
             }
         }
-        let (known_dimensions, constraints) = self.known_dimensions(tree, grid_area_size);
-        self.known_dimensions_cache = Some(KnownDimensionsCacheEntry { grid_area_size, known_dimensions, constraints });
+        let (known_dimensions, _) = self.known_dimensions(tree, grid_area_size);
+        self.known_dimensions_cache = Some(KnownDimensionsCacheEntry { grid_area_size, known_dimensions });
         known_dimensions
     }
 
-    /// The style constraints that go with the known_dimensions last returned by [`Self::known_dimensions_cached`]
+    /// The constraints that the item's own sizing styles place on the size that it reports when it is measured
+    /// with the known_dimensions for the given grid area size.
+    ///
+    /// These are not cached (most items have none, and caching them would make every `GridItem` larger). Items
+    /// which cannot have any are detected from their styles alone, without resolving anything.
     #[inline(always)]
-    fn cached_style_constraints(&self) -> Option<&ChildStyleConstraints> {
-        self.known_dimensions_cache.as_ref().and_then(|entry| entry.constraints.as_ref())
+    fn style_constraints(
+        &self,
+        tree: &mut impl LayoutPartialTree,
+        grid_area_size: Size<Option<f32>>,
+    ) -> Option<ChildStyleConstraints> {
+        if self.aspect_ratio.is_none()
+            && self.min_size.width.is_auto()
+            && self.min_size.height.is_auto()
+            && self.max_size.width.is_auto()
+            && self.max_size.height.is_auto()
+        {
+            return None;
+        }
+        self.known_dimensions(tree, grid_area_size).1
     }
 
     /// Compute the known_dimensions to be passed to the child sizing functions
@@ -573,6 +584,7 @@ impl GridItem {
             tree,
         );
         let axis = axis.as_abs_naive();
+        let constraints = self.style_constraints(tree, grid_area_size);
         tree.compute_child_layout_with_constraints(
             self.node,
             LayoutInput {
@@ -584,7 +596,7 @@ impl GridItem {
                 run_mode: RunMode::ComputeSize,
                 vertical_margins_are_collapsible: Line::FALSE,
             },
-            self.cached_style_constraints(),
+            constraints.as_ref(),
         )
         .size
         .get_abs(axis)
@@ -632,6 +644,7 @@ impl GridItem {
             tree,
         );
         let axis = axis.as_abs_naive();
+        let constraints = self.style_constraints(tree, grid_area_size);
         tree.compute_child_layout_with_constraints(
             self.node,
             LayoutInput {
@@ -643,7 +656,7 @@ impl GridItem {
                 run_mode: RunMode::ComputeSize,
                 vertical_margins_are_collapsible: Line::FALSE,
             },
-            self.cached_style_constraints(),
+            constraints.as_ref(),
         )
         .size
         .get_abs(axis)
