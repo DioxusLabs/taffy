@@ -424,8 +424,9 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     rerun_column_sizing = parent_width_indefinite && has_percentage_column;
 
     if !rerun_column_sizing {
+        // Note: every item must be visited (no short-circuiting) as the closure updates each item's caches
         intrinsic_column_contribution_changed =
-            items.iter_mut().filter(|item| item.crosses_intrinsic_column).any(|item| {
+            items.iter_mut().filter(|item| item.crosses_intrinsic_column).fold(false, |any_changed, item| {
                 let grid_area_size = item.grid_area_size(
                     AbstractAxis::Inline,
                     &columns,
@@ -445,7 +446,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
                 item.max_content_contribution_cache.width = None;
                 item.minimum_contribution_cache.width = None;
 
-                has_changed
+                any_changed | has_changed
             });
         rerun_column_sizing = intrinsic_column_contribution_changed;
     } else {
@@ -488,8 +489,9 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
         rerun_row_sizing = parent_height_indefinite && has_percentage_row;
 
         if !rerun_row_sizing {
+            // Note: every item must be visited (no short-circuiting) as the closure updates each item's caches
             intrinsic_row_contribution_changed =
-                items.iter_mut().filter(|item| item.crosses_intrinsic_column).any(|item| {
+                items.iter_mut().filter(|item| item.crosses_intrinsic_row).fold(false, |any_changed, item| {
                     let grid_area_size = item.grid_area_size(
                         AbstractAxis::Block,
                         &rows,
@@ -509,7 +511,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
                     item.max_content_contribution_cache.height = None;
                     item.minimum_contribution_cache.height = None;
 
-                    has_changed
+                    any_changed | has_changed
                 });
             rerun_row_sizing = intrinsic_row_contribution_changed;
         } else {
