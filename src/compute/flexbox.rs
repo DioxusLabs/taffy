@@ -11,7 +11,9 @@ use crate::tree::{
     AxisStaticAlign, AxisStaticEdge, AxisStaticPosition, LayoutFlexboxContainer, LayoutPartialTreeExt, NodeId,
     OofPositioningArea,
 };
-use crate::tree::{Baselines, Layout, LayoutInput, LayoutOutput, OofCandidate, OofCandidates, RunMode, SizingMode};
+use crate::tree::{
+    Baselines, ChildLayoutJob, Layout, LayoutInput, LayoutOutput, OofCandidate, OofCandidates, RunMode, SizingMode,
+};
 use crate::util::debug::debug_log;
 use crate::util::sys::{f32_max, f32_min, new_vec_with_capacity, Vec};
 use crate::util::MaybeMath;
@@ -113,6 +115,12 @@ struct FlexItem {
     /// Out-of-flow candidates bubbled out of this item's subtree. Anchors are relative to the
     /// container's border box (translated when the item's final layout is computed).
     oof_candidates: OofCandidates,
+
+    /// Scratch: the input of the child measurement most recently requested for this item. Steps that measure
+    /// children in a batch use this to carry values from the pass that builds the batch to the pass that consumes it.
+    measure_input: LayoutInput,
+    /// Scratch: whether this item has a job in the batch of child layouts that is currently being computed
+    has_job: bool,
 }
 
 impl FlexItem {
@@ -355,7 +363,8 @@ fn compute_preliminary(tree: &mut impl LayoutFlexboxContainer, node: NodeId, inp
 
     // 3. Determine the flex base size and hypothetical main size of each item.
     debug_log!("determine_flex_base_size");
-    determine_flex_base_size(tree, &constants, available_space, &mut flex_items);
+    let mut jobs: Vec<ChildLayoutJob> = Vec::new();
+    determine_flex_base_size(tree, node, &constants, available_space, &mut flex_items, &mut jobs);
 
     #[cfg(feature = "debug")]
     for item in flex_items.iter() {
@@ -391,7 +400,7 @@ fn compute_preliminary(tree: &mut impl LayoutFlexboxContainer, node: NodeId, inp
         constants.container_size.set_main(constants.dir, outer_main_size);
     } else {
         // Sets constants.container_size and constants.outer_container_size
-        determine_container_main_size(tree, available_space, &mut flex_lines, &mut constants);
+        determine_container_main_size(tree, node, available_space, &mut flex_lines, &mut constants, &mut jobs);
         constants.node_inner_size.set_main(constants.dir, Some(constants.inner_container_size.main(constants.dir)));
         constants.node_outer_size.set_main(constants.dir, Some(constants.container_size.main(constants.dir)));
 
@@ -433,14 +442,20 @@ fn compute_preliminary(tree: &mut impl LayoutFlexboxContainer, node: NodeId, inp
 
     // 7. Determine the hypothetical cross size of each item.
     debug_log!("determine_hypothetical_cross_size");
-    for line in &mut flex_lines {
-        determine_hypothetical_cross_size(tree, line, &constants, available_space);
-    }
+    determine_hypothetical_cross_size(tree, node, &mut flex_lines, &constants, available_space, &mut jobs);
 
     // Calculate child baselines. This function is internally smart and only computes child baselines
     // if they are necessary.
     debug_log!("calculate_children_base_lines");
-    calculate_children_base_lines(tree, known_dimensions, available_space, &mut flex_lines, &constants);
+    calculate_children_base_lines(
+        tree,
+        node,
+        known_dimensions,
+        available_space,
+        &mut flex_lines,
+        &constants,
+        &mut jobs,
+    );
 
     // 8. Calculate the cross size of each flex line.
     debug_log!("calculate_cross_size");
@@ -497,7 +512,7 @@ fn compute_preliminary(tree: &mut impl LayoutFlexboxContainer, node: NodeId, inp
 
     // Do a final layout pass and gather the resulting layouts
     debug_log!("final_layout_pass");
-    let inflow_overflow_rect = final_layout_pass(tree, &mut flex_lines, &constants);
+    let inflow_overflow_rect = final_layout_pass(tree, node, &mut flex_lines, &constants, &mut jobs);
 
     // Collect out-of-flow candidates in document order (direct out-of-flow children interleaved
     // with candidates bubbled from in-flow children's subtrees). These are laid out by the
@@ -812,6 +827,9 @@ fn generate_anonymous_flex_items(
                 offset_cross: 0.0,
 
                 oof_candidates: OofCandidates::NONE,
+
+                measure_input: LayoutInput::HIDDEN,
+                has_job: false,
             }
         })
         .collect()
@@ -884,12 +902,17 @@ fn determine_available_space(
 #[inline]
 fn determine_flex_base_size(
     tree: &mut impl LayoutFlexboxContainer,
+    node: NodeId,
     constants: &AlgoConstants,
     available_space: Size<AvailableSpace>,
     flex_items: &mut [FlexItem],
+    jobs: &mut Vec<ChildLayoutJob>,
 ) {
     let dir = constants.dir;
 
+    // Determine the flex base size of each item whose flex base size does not depend on its content,
+    // and collect a measurement job for each item whose flex base size does.
+    jobs.clear();
     for child in flex_items.iter_mut() {
         let child_style = tree.get_flexbox_child_style(child.node);
 
@@ -971,7 +994,19 @@ fn determine_flex_base_size(
 
         drop(child_style);
 
-        child.flex_basis = 'flex_basis: {
+        // The input for measuring this item. The main axis available space is set separately for each measurement.
+        child.measure_input = LayoutInput {
+            run_mode: RunMode::ComputeSize,
+            sizing_mode: SizingMode::ContentSize,
+            axis: dir.main_axis().into(),
+            known_dimensions: child_known_dimensions,
+            known_dimensions_are_definite: Size { width: true, height: true },
+            parent_size: child_parent_size,
+            available_space: Size::MAX_CONTENT.with_cross(dir, cross_axis_available_space),
+            vertical_margins_are_collapsible: Line::FALSE,
+        };
+
+        let flex_basis: Option<f32> = 'flex_basis: {
             // A. If the item has a definite used flex basis, that’s the flex base size.
 
             // B. If the flex item has an intrinsic aspect ratio,
@@ -1002,7 +1037,7 @@ fn determine_flex_base_size(
                 ) {
                     Some(SizingKeywordResolution::Exact(size)) => {
                         child.flex_basis_is_definite = true;
-                        break 'flex_basis size;
+                        break 'flex_basis Some(size);
                     }
                     Some(SizingKeywordResolution::Measure(available)) => Some(available),
                     None => None,
@@ -1010,7 +1045,7 @@ fn determine_flex_base_size(
             } else {
                 if let Some(flex_basis) = flex_basis.or(main_size.filter(|_| flex_basis_style.is_auto())) {
                     child.flex_basis_is_definite = true;
-                    break 'flex_basis flex_basis;
+                    break 'flex_basis Some(flex_basis);
                 };
 
                 // A main size that is a sizing keyword either resolves to an exact size or
@@ -1024,7 +1059,7 @@ fn determine_flex_base_size(
                     ) {
                         Some(SizingKeywordResolution::Exact(size)) => {
                             child.flex_basis_is_definite = true;
-                            break 'flex_basis size;
+                            break 'flex_basis Some(size);
                         }
                         Some(SizingKeywordResolution::Measure(available)) => Some(available),
                         None => None,
@@ -1057,7 +1092,7 @@ fn determine_flex_base_size(
             if child_cross_size_is_definite {
                 if let (Some(ratio), Some(cross)) = (child.aspect_ratio, child_known_dimensions.cross(dir)) {
                     child.flex_basis_is_definite = true;
-                    break 'flex_basis if dir.is_row() { cross * ratio } else { cross / ratio };
+                    break 'flex_basis Some(if dir.is_row() { cross * ratio } else { cross / ratio });
                 }
             }
 
@@ -1082,18 +1117,29 @@ fn determine_flex_base_size(
                 )
                 .with_cross(dir, cross_axis_available_space);
 
-            debug_log!("COMPUTE CHILD BASE SIZE:");
-            break 'flex_basis tree.measure_child_size(
+            jobs.push(ChildLayoutJob::new(
                 child.node,
-                child_known_dimensions,
-                child_parent_size,
-                child_available_space,
-                SizingMode::ContentSize,
-                dir.main_axis(),
-                Line::FALSE,
-            );
+                LayoutInput { available_space: child_available_space, ..child.measure_input },
+            ));
+            None
         };
+        child.has_job = flex_basis.is_none();
+        child.flex_basis = flex_basis.unwrap_or(0.0);
+    }
 
+    // Measure the items whose flex base size depends on their content
+    if !jobs.is_empty() {
+        debug_log!("COMPUTE CHILD BASE SIZES:");
+        tree.compute_child_layouts(node, jobs);
+        let mut measured = jobs.iter();
+        for child in flex_items.iter_mut().filter(|child| child.has_job) {
+            child.flex_basis = measured.next().unwrap().output.size.main(dir);
+        }
+    }
+
+    // Collect a measurement job for each item whose minimum main size depends on its content
+    jobs.clear();
+    for child in flex_items.iter_mut() {
         // Floor flex-basis by the padding_border_sum (floors inner_flex_basis at zero)
         // This seems to be in violation of the spec which explicitly states that the content box should not be floored at zero
         // (like it usually is) when calculating the flex-basis. But including this matches both Chrome and Firefox's behaviour.
@@ -1110,8 +1156,6 @@ fn determine_flex_base_size(
         child.inner_flex_basis =
             child.flex_basis - child.padding.main_axis_sum(constants.dir) - child.border.main_axis_sum(constants.dir);
 
-        let padding_border_axes_sums = (child.padding + child.border).sum_axes().map(Some);
-
         // Note that it is important that the `parent_size` parameter in the main axis is not set for this
         // function call as it used for resolving percentages, and percentage size in an axis should not contribute
         // to a min-content contribution in that same axis. However the `parent_size` and `available_space` *should*
@@ -1121,28 +1165,39 @@ fn determine_flex_base_size(
         let style_min_main_size =
             child.min_size.or(child.overflow.map(Overflow::maybe_into_automatic_min_size).into()).main(dir);
 
-        child.resolved_minimum_main_size = style_min_main_size.unwrap_or_else(|| {
-            let min_content_main_size = {
-                let child_available_space = Size::MIN_CONTENT.with_cross(dir, cross_axis_available_space);
+        child.has_job = style_min_main_size.is_none();
+        child.resolved_minimum_main_size = style_min_main_size.unwrap_or(0.0);
+        if child.has_job {
+            let cross_axis_available_space = child.measure_input.available_space.cross(dir);
+            let child_available_space = Size::MIN_CONTENT.with_cross(dir, cross_axis_available_space);
+            jobs.push(ChildLayoutJob::new(
+                child.node,
+                LayoutInput { available_space: child_available_space, ..child.measure_input },
+            ));
+        }
+    }
 
-                debug_log!("COMPUTE CHILD MIN SIZE:");
-                tree.measure_child_size(
-                    child.node,
-                    child_known_dimensions,
-                    child_parent_size,
-                    child_available_space,
-                    SizingMode::ContentSize,
-                    dir.main_axis(),
-                    Line::FALSE,
-                )
-            };
+    // Measure the items whose minimum main size depends on their content
+    if !jobs.is_empty() {
+        debug_log!("COMPUTE CHILD MIN SIZES:");
+        tree.compute_child_layouts(node, jobs);
+    }
+
+    let mut measured = jobs.iter();
+    for child in flex_items.iter_mut() {
+        let transferred_min_size = child.min_size.maybe_apply_aspect_ratio(child.aspect_ratio);
+        let transferred_max_size = child.max_size.maybe_apply_aspect_ratio(child.aspect_ratio);
+        let padding_border_axes_sums = (child.padding + child.border).sum_axes().map(Some);
+
+        if child.has_job {
+            let min_content_main_size = measured.next().unwrap().output.size.main(dir);
 
             // 4.5. Automatic Minimum Size of Flex Items
             // https://www.w3.org/TR/css-flexbox-1/#min-size-auto
             let clamped_min_content_size =
                 min_content_main_size.maybe_min(child.size.main(dir)).maybe_min(transferred_max_size.main(dir));
-            clamped_min_content_size.maybe_max(padding_border_axes_sums.main(dir))
-        });
+            child.resolved_minimum_main_size = clamped_min_content_size.maybe_max(padding_border_axes_sums.main(dir));
+        }
 
         // Sizes transferred through the aspect ratio clamp the hypothetical main size,
         // but do not participate in resolving flexible lengths or clamping the final size.
@@ -1368,9 +1423,11 @@ fn item_known_dimension_definiteness(constants: &AlgoConstants, item: &FlexItem)
 /// Determine the container's main size (if not already known)
 fn determine_container_main_size(
     tree: &mut impl LayoutFlexboxContainer,
+    node: NodeId,
     available_space: Size<AvailableSpace>,
     lines: &mut [FlexLine<'_>],
     constants: &mut AlgoConstants,
+    jobs: &mut Vec<ChildLayoutJob>,
 ) {
     let dir = constants.dir;
     let main_content_box_inset = constants.content_box_inset.main_axis_sum(constants.dir);
@@ -1464,6 +1521,10 @@ fn determine_container_main_size(
                 //   "The flex container’s max-content size is the largest sum of the afore-calculated sizes of all items within a single line."
                 let mut main_size = 0.0;
 
+                // Compute the content contribution of each item whose contribution does not depend on its
+                // content, and collect a measurement job for each item whose contribution does.
+                // An item's contribution is stored in `content_flex_fraction` until that is computed below.
+                jobs.clear();
                 for line in lines.iter_mut() {
                     for item in line.items.iter_mut() {
                         let style_min = item.min_size.main(constants.dir);
@@ -1496,18 +1557,18 @@ fn determine_container_main_size(
                         let max_main_size =
                             style_max.maybe_min(flex_basis_max).or(flex_basis_max).unwrap_or(f32::INFINITY);
 
-                        let content_contribution = match (min_main_size, style_preferred, max_main_size) {
+                        let content_contribution: Option<f32> = match (min_main_size, style_preferred, max_main_size) {
                             // If the clamping values are such that max <= min, then we can avoid the expensive step of computing the content size
                             // as we know that the clamping values will override it anyway
                             (min, Some(pref), max) if max <= min || max <= pref => {
-                                pref.min(max).max(min) + item.margin.main_axis_sum(constants.dir)
+                                Some(pref.min(max).max(min) + item.margin.main_axis_sum(constants.dir))
                             }
-                            (min, _, max) if max <= min => min + item.margin.main_axis_sum(constants.dir),
+                            (min, _, max) if max <= min => Some(min + item.margin.main_axis_sum(constants.dir)),
 
                             // Else compute the min- or -max content size and apply the full formula for computing the
                             // min- or max- content contribution
                             _ if item.is_scroll_container() => {
-                                item.flex_basis + item.margin.main_axis_sum(constants.dir)
+                                Some(item.flex_basis + item.margin.main_axis_sum(constants.dir))
                             }
 
                             // If the item has a definite preferred main size then that is its content
@@ -1518,13 +1579,13 @@ fn determine_container_main_size(
                                 let item_pb_main = item.padding.main_axis_sum(constants.dir)
                                     + item.border.main_axis_sum(constants.dir);
                                 let inner_main_size = pref.max(item_pb_main);
-                                if constants.is_row {
+                                Some(if constants.is_row {
                                     (inner_main_size + item.margin.main_axis_sum(constants.dir))
                                         .maybe_clamp(style_min, style_max)
                                 } else {
                                     (inner_main_size.max(item.flex_basis) + item.margin.main_axis_sum(constants.dir))
                                         .maybe_clamp(style_min, style_max)
-                                }
+                                })
                             }
 
                             _ => {
@@ -1570,46 +1631,70 @@ fn determine_container_main_size(
 
                                 // Either the min- or max- content size depending on which constraint we are sizing under.
                                 // TODO: Optimise by using already computed values where available
-                                debug_log!("COMPUTE CHILD BASE SIZE (for intrinsic main size):");
-                                let measured_main_size = tree.measure_child_size(
-                                    item.node,
-                                    child_known_dimensions,
-                                    constants.node_inner_size,
-                                    child_available_space,
-                                    SizingMode::ContentSize,
-                                    dir.main_axis(),
-                                    Line::FALSE,
-                                );
-
-                                // A known cross size is transferred through the item's aspect-ratio
-                                // and floors the measured content size
-                                let transferred_main_size = item
-                                    .aspect_ratio
-                                    .zip(child_known_dimensions.cross(dir))
-                                    .map(|(ratio, cross)| if constants.is_row { cross * ratio } else { cross / ratio });
-
-                                let inner_main_size = measured_main_size.maybe_max(transferred_main_size);
-
-                                // This is somewhat bizarre in that it's asymmetrical depending whether the flex container is a column or a row.
-                                //
-                                // I *think* this might relate to https://drafts.csswg.org/css-flexbox-1/#algo-main-container:
-                                //
-                                //    "The automatic block size of a block-level flex container is its max-content size."
-                                //
-                                // Which could suggest that flex-basis defining a vertical size does not shrink because it is in the block axis, and the automatic size
-                                // in the block axis is a MAX content size. Whereas a flex-basis defining a horizontal size does shrink because the automatic size in
-                                // inline axis is MIN content size (although I don't have a reference for that).
-                                //
-                                // Ultimately, this was not found by reading the spec, but by trial and error fixing tests to align with Webkit/Firefox output.
-                                // (see the `flex_basis_unconstraint_row` and `flex_basis_uncontraint_column` generated tests which demonstrate this)
-                                if constants.is_row {
-                                    (inner_main_size + item.margin.main_axis_sum(constants.dir))
-                                        .maybe_clamp(style_min, style_max)
-                                } else {
-                                    (inner_main_size.max(item.flex_basis) + item.margin.main_axis_sum(constants.dir))
-                                        .maybe_clamp(style_min, style_max)
-                                }
+                                item.measure_input = LayoutInput {
+                                    run_mode: RunMode::ComputeSize,
+                                    sizing_mode: SizingMode::ContentSize,
+                                    axis: dir.main_axis().into(),
+                                    known_dimensions: child_known_dimensions,
+                                    known_dimensions_are_definite: Size { width: true, height: true },
+                                    parent_size: constants.node_inner_size,
+                                    available_space: child_available_space,
+                                    vertical_margins_are_collapsible: Line::FALSE,
+                                };
+                                jobs.push(ChildLayoutJob::new(item.node, item.measure_input));
+                                None
                             }
+                        };
+                        item.has_job = content_contribution.is_none();
+                        item.content_flex_fraction = content_contribution.unwrap_or(0.0);
+                    }
+                }
+
+                // Measure the items whose content contribution depends on their content
+                if !jobs.is_empty() {
+                    debug_log!("COMPUTE CHILD BASE SIZES (for intrinsic main size):");
+                    tree.compute_child_layouts(node, jobs);
+                }
+
+                let mut measured = jobs.iter();
+                for line in lines.iter_mut() {
+                    for item in line.items.iter_mut() {
+                        let content_contribution = if item.has_job {
+                            let style_min = item.min_size.main(constants.dir);
+                            let style_max = item.max_size.main(constants.dir);
+                            let child_known_dimensions = item.measure_input.known_dimensions;
+                            let measured_main_size = measured.next().unwrap().output.size.main(dir);
+
+                            // A known cross size is transferred through the item's aspect-ratio
+                            // and floors the measured content size
+                            let transferred_main_size = item
+                                .aspect_ratio
+                                .zip(child_known_dimensions.cross(dir))
+                                .map(|(ratio, cross)| if constants.is_row { cross * ratio } else { cross / ratio });
+
+                            let inner_main_size = measured_main_size.maybe_max(transferred_main_size);
+
+                            // This is somewhat bizarre in that it's asymmetrical depending whether the flex container is a column or a row.
+                            //
+                            // I *think* this might relate to https://drafts.csswg.org/css-flexbox-1/#algo-main-container:
+                            //
+                            //    "The automatic block size of a block-level flex container is its max-content size."
+                            //
+                            // Which could suggest that flex-basis defining a vertical size does not shrink because it is in the block axis, and the automatic size
+                            // in the block axis is a MAX content size. Whereas a flex-basis defining a horizontal size does shrink because the automatic size in
+                            // inline axis is MIN content size (although I don't have a reference for that).
+                            //
+                            // Ultimately, this was not found by reading the spec, but by trial and error fixing tests to align with Webkit/Firefox output.
+                            // (see the `flex_basis_unconstraint_row` and `flex_basis_uncontraint_column` generated tests which demonstrate this)
+                            if constants.is_row {
+                                (inner_main_size + item.margin.main_axis_sum(constants.dir))
+                                    .maybe_clamp(style_min, style_max)
+                            } else {
+                                (inner_main_size.max(item.flex_basis) + item.margin.main_axis_sum(constants.dir))
+                                    .maybe_clamp(style_min, style_max)
+                            }
+                        } else {
+                            item.content_flex_fraction
                         };
                         item.content_flex_fraction = {
                             let diff = content_contribution - item.flex_basis;
@@ -1891,11 +1976,16 @@ fn resolve_flexible_lengths(line: &mut FlexLine, constants: &AlgoConstants) {
 #[inline]
 fn determine_hypothetical_cross_size(
     tree: &mut impl LayoutFlexboxContainer,
-    line: &mut FlexLine,
+    node: NodeId,
+    flex_lines: &mut [FlexLine],
     constants: &AlgoConstants,
     available_space: Size<AvailableSpace>,
+    jobs: &mut Vec<ChildLayoutJob>,
 ) {
-    for child in line.items.iter_mut() {
+    // Determine the hypothetical cross size of each item with a definite cross size,
+    // and collect a measurement job for each item whose cross size depends on its content.
+    jobs.clear();
+    for child in flex_lines.iter_mut().flat_map(|line| line.items.iter_mut()) {
         let padding_border_sum = (child.padding + child.border).cross_axis_sum(constants.dir);
 
         // The available space passed to the child excludes the child's margins
@@ -1941,8 +2031,11 @@ fn determine_hypothetical_cross_size(
             _ => child_available_cross,
         };
 
-        let child_inner_cross = child_cross.unwrap_or_else(|| {
-            tree.compute_child_layout(
+        child.has_job = child_cross.is_none();
+        if let Some(child_inner_cross) = child_cross {
+            child.hypothetical_inner_size.set_cross(constants.dir, child_inner_cross);
+        } else {
+            jobs.push(ChildLayoutJob::new(
                 child.node,
                 LayoutInput {
                     run_mode: RunMode::ComputeSize,
@@ -1960,12 +2053,34 @@ fn determine_hypothetical_cross_size(
                     },
                     vertical_margins_are_collapsible: Line::FALSE,
                 },
-            )
-            .size
-            .get_abs(constants.dir.cross_axis())
-            .maybe_clamp(transferred_min_cross, transferred_max_cross)
-            .max(padding_border_sum)
-        });
+            ));
+        }
+    }
+
+    // Measure the items whose cross size depends on their content
+    if !jobs.is_empty() {
+        tree.compute_child_layouts(node, jobs);
+    }
+
+    let mut measured = jobs.iter();
+    for child in flex_lines.iter_mut().flat_map(|line| line.items.iter_mut()) {
+        let child_inner_cross = if child.has_job {
+            let padding_border_sum = (child.padding + child.border).cross_axis_sum(constants.dir);
+            let transferred_min_cross =
+                child.min_size.maybe_apply_aspect_ratio(child.aspect_ratio).cross(constants.dir);
+            let transferred_max_cross =
+                child.max_size.maybe_apply_aspect_ratio(child.aspect_ratio).cross(constants.dir);
+            measured
+                .next()
+                .unwrap()
+                .output
+                .size
+                .get_abs(constants.dir.cross_axis())
+                .maybe_clamp(transferred_min_cross, transferred_max_cross)
+                .max(padding_border_sum)
+        } else {
+            child.hypothetical_inner_size.cross(constants.dir)
+        };
         let child_outer_cross = child_inner_cross + child.margin.cross_axis_sum(constants.dir);
 
         child.hypothetical_inner_size.set_cross(constants.dir, child_inner_cross);
@@ -1977,10 +2092,12 @@ fn determine_hypothetical_cross_size(
 #[inline]
 fn calculate_children_base_lines(
     tree: &mut impl LayoutFlexboxContainer,
+    node: NodeId,
     node_size: Size<Option<f32>>,
     available_space: Size<AvailableSpace>,
     flex_lines: &mut [FlexLine],
     constants: &AlgoConstants,
+    jobs: &mut Vec<ChildLayoutJob>,
 ) {
     // Only compute baselines for flex rows because we only support baseline alignment in the cross axis
     // where that axis is also the inline axis
@@ -1989,21 +2106,22 @@ fn calculate_children_base_lines(
         return;
     }
 
-    for line in flex_lines {
+    // Collect a layout job for each item that participates in baseline alignment
+    jobs.clear();
+    for line in flex_lines.iter_mut() {
         // If a flex line has one or zero items participating in baseline alignment then baseline alignment is a no-op so we skip
         let line_baseline_child_count =
             line.items.iter().filter(|child| child.participates_in_baseline_alignment(constants.dir)).count();
-        if line_baseline_child_count <= 1 {
-            continue;
-        }
+        let line_is_baseline_aligned = line_baseline_child_count > 1;
 
         for child in line.items.iter_mut() {
             // Only calculate baselines for children participating in baseline alignment
-            if !child.participates_in_baseline_alignment(constants.dir) {
+            child.has_job = line_is_baseline_aligned && child.participates_in_baseline_alignment(constants.dir);
+            if !child.has_job {
                 continue;
             }
 
-            let measured_size_and_baselines = tree.compute_child_layout(
+            jobs.push(ChildLayoutJob::new(
                 child.node,
                 LayoutInput {
                     run_mode: RunMode::PerformLayout,
@@ -2040,8 +2158,19 @@ fn calculate_children_base_lines(
                     .maybe_max(Size::ZERO),
                     vertical_margins_are_collapsible: Line::FALSE,
                 },
-            );
+            ));
+        }
+    }
 
+    if jobs.is_empty() {
+        return;
+    }
+    tree.compute_child_layouts(node, jobs);
+
+    let mut measured = jobs.iter();
+    for line in flex_lines.iter_mut() {
+        for child in line.items.iter_mut().filter(|child| child.has_job) {
+            let measured_size_and_baselines = &measured.next().unwrap().output;
             let baseline = measured_size_and_baselines.baselines.first;
             let height = measured_size_and_baselines.size.height;
 
@@ -2511,6 +2640,7 @@ fn align_flex_lines_per_align_content(flex_lines: &mut [FlexLine], constants: &A
 fn calculate_flex_item(
     tree: &mut impl LayoutFlexboxContainer,
     item: &mut FlexItem,
+    mut layout_output: LayoutOutput,
     total_offset_main: &mut f32,
     total_offset_cross: f32,
     line_offset_cross: f32,
@@ -2519,24 +2649,8 @@ fn calculate_flex_item(
     constants: &AlgoConstants,
 ) {
     let container_size = constants.container_size;
-    let node_inner_size = constants.node_inner_size;
     let direction = constants.dir;
     let layout_direction = constants.layout_direction;
-    let item_known_dimension_definiteness = item_known_dimension_definiteness(constants, item);
-    let mut layout_output = tree.compute_child_layout(
-        item.node,
-        LayoutInput {
-            run_mode: RunMode::PerformLayout,
-            sizing_mode: SizingMode::ContentSize,
-            axis: RequestedAxis::Both,
-            known_dimensions: item.target_size.map(|s| s.into()),
-            known_dimensions_are_definite: item_known_dimension_definiteness,
-            parent_size: node_inner_size,
-            // The available space passed to the child excludes the child's margins
-            available_space: (container_size - item.margin.sum_axes()).map(|s| s.max(0.0).into()),
-            vertical_margins_are_collapsible: Line::FALSE,
-        },
-    );
     let LayoutOutput {
         size,
         #[cfg(feature = "content_size")]
@@ -2644,6 +2758,7 @@ fn calculate_flex_item(
 fn calculate_layout_line(
     tree: &mut impl LayoutFlexboxContainer,
     line: &mut FlexLine,
+    line_jobs: &mut [ChildLayoutJob],
     total_offset_cross: &mut f32,
     #[cfg(feature = "content_size")] overflow_rect: &mut Rect<f32>,
     #[cfg(feature = "content_size")] border: Rect<f32>,
@@ -2666,10 +2781,11 @@ fn calculate_layout_line(
     }
 
     if direction.is_reverse() {
-        for item in line.items.iter_mut().rev() {
+        for (item, job) in line.items.iter_mut().zip(line_jobs.iter_mut()).rev() {
             calculate_flex_item(
                 tree,
                 item,
+                core::mem::replace(&mut job.output, LayoutOutput::HIDDEN),
                 &mut total_offset_main,
                 *total_offset_cross,
                 line_offset_cross,
@@ -2681,10 +2797,11 @@ fn calculate_layout_line(
             );
         }
     } else {
-        for item in line.items.iter_mut() {
+        for (item, job) in line.items.iter_mut().zip(line_jobs.iter_mut()) {
             calculate_flex_item(
                 tree,
                 item,
+                core::mem::replace(&mut job.output, LayoutOutput::HIDDEN),
                 &mut total_offset_main,
                 *total_offset_cross,
                 line_offset_cross,
@@ -2706,9 +2823,34 @@ fn calculate_layout_line(
 #[inline]
 fn final_layout_pass(
     tree: &mut impl LayoutFlexboxContainer,
+    node: NodeId,
     flex_lines: &mut [FlexLine],
     constants: &AlgoConstants,
+    jobs: &mut Vec<ChildLayoutJob>,
 ) -> Rect<f32> {
+    // Lay out every item. An item's final size does not depend on the position of any other item,
+    // so the items are laid out as a batch and then positioned from the results.
+    jobs.clear();
+    for item in flex_lines.iter().flat_map(|line| line.items.iter()) {
+        jobs.push(ChildLayoutJob::new(
+            item.node,
+            LayoutInput {
+                run_mode: RunMode::PerformLayout,
+                sizing_mode: SizingMode::ContentSize,
+                axis: RequestedAxis::Both,
+                known_dimensions: item.target_size.map(|s| s.into()),
+                known_dimensions_are_definite: item_known_dimension_definiteness(constants, item),
+                parent_size: constants.node_inner_size,
+                // The available space passed to the child excludes the child's margins
+                available_space: (constants.container_size - item.margin.sum_axes()).map(|s| s.max(0.0).into()),
+                vertical_margins_are_collapsible: Line::FALSE,
+            },
+        ));
+    }
+    tree.compute_child_layouts(node, jobs);
+
+    // The jobs are in flex line order, so each line's jobs are a contiguous range of `jobs`
+
     let mut total_offset_cross = if constants.is_column && constants.layout_direction.is_rtl() {
         constants.container_size.width - constants.content_box_inset.cross_end(constants.dir)
     } else {
@@ -2719,10 +2861,15 @@ fn final_layout_pass(
     let mut overflow_rect = Rect::ZERO;
 
     if constants.is_wrap_reverse {
+        let mut job_end = jobs.len();
         for line in flex_lines.iter_mut().rev() {
+            let job_start = job_end - line.items.len();
+            let line_jobs = &mut jobs[job_start..job_end];
+            job_end = job_start;
             calculate_layout_line(
                 tree,
                 line,
+                line_jobs,
                 &mut total_offset_cross,
                 #[cfg(feature = "content_size")]
                 &mut overflow_rect,
@@ -2732,10 +2879,15 @@ fn final_layout_pass(
             );
         }
     } else {
+        let mut job_start = 0;
         for line in flex_lines.iter_mut() {
+            let job_end = job_start + line.items.len();
+            let line_jobs = &mut jobs[job_start..job_end];
+            job_start = job_end;
             calculate_layout_line(
                 tree,
                 line,
+                line_jobs,
                 &mut total_offset_cross,
                 #[cfg(feature = "content_size")]
                 &mut overflow_rect,
