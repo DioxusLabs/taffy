@@ -2,7 +2,7 @@
 //! <https://www.w3.org/TR/css-grid-1>
 use crate::geometry::{AbsoluteAxis, AbstractAxis, InBothAbsAxis};
 use crate::geometry::{Line, Point, Rect, Size};
-use crate::style::{AlignItems, AvailableSpace, Overflow};
+use crate::style::{AvailableSpace, Overflow};
 use crate::tree::{
     AxisStaticPosition, Baselines, Layout, LayoutInput, LayoutOutput, LayoutPartialTreeExt, NodeId, OofCandidate,
     OofCandidates, OofPositioningArea, RunMode, SizingMode,
@@ -254,8 +254,8 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
         &mut items,
         in_flow_children_iter,
         style.grid_auto_flow(),
-        align_items.unwrap_or(AlignItems::STRETCH),
-        justify_items.unwrap_or(AlignItems::STRETCH),
+        align_items,
+        justify_items,
         &name_resolver,
     );
 
@@ -671,14 +671,13 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
         if child_style.position().is_out_of_flow() {
             let position = child_style.position();
             let item_direction = child_style.direction();
-            let justify_self = child_style
-                .justify_self()
-                .or(justify_items)
-                .map(|align| align.resolve_self_relative(item_direction, direction, true));
-            let align_self = child_style
-                .align_self()
-                .or(align_items)
-                .map(|align| align.resolve_self_relative(item_direction, direction, false));
+            let justify_self = child_style.justify_self().unwrap_or(justify_items).resolve_self_relative(
+                item_direction,
+                direction,
+                true,
+            );
+            let align_self =
+                child_style.align_self().unwrap_or(align_items).resolve_self_relative(item_direction, direction, false);
 
             // The static-position rectangle: the grid area determined by the grid-placement
             // properties when this grid is the child's containing block, and otherwise the

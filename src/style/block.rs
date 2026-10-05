@@ -20,7 +20,7 @@ pub trait BlockContainerStyle: CoreStyle {
     /// Out-of-flow children with `justify-self: auto` are aligned within their static-position
     /// rectangle according to this value.
     #[inline(always)]
-    fn justify_items(&self) -> Option<AlignItems> {
+    fn justify_items(&self) -> AlignItems {
         Style::<Self::CustomIdent>::DEFAULT.justify_items
     }
 }

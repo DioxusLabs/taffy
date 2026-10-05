@@ -16,6 +16,7 @@ mod hand_written {
     mod measure;
     mod min_max_overrides;
     mod negative_available_space;
+    #[cfg(all(feature = "flexbox", feature = "grid", feature = "block_layout"))]
     mod oof_hoisting;
     mod position;
     mod relayout;

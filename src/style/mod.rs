@@ -777,13 +777,13 @@ pub struct Style<S: CheapCloneStr = DefaultCheapStr> {
     // Alignment properties
     /// How this node's children aligned in the cross/block axis?
     #[cfg(any(feature = "flexbox", feature = "grid"))]
-    pub align_items: Option<AlignItems>,
+    pub align_items: AlignItems,
     /// How this node should be aligned in the cross/block axis
     /// Falls back to the parents [`AlignItems`] if not set
     pub align_self: Option<AlignSelf>,
     /// How this node's children should be aligned in the inline axis
     #[cfg(any(feature = "grid", feature = "block_layout"))]
-    pub justify_items: Option<AlignItems>,
+    pub justify_items: AlignItems,
     /// How this node should be aligned in the inline axis
     /// Falls back to the parents [`JustifyItems`] if not set
     pub justify_self: Option<AlignSelf>,
@@ -901,10 +901,10 @@ impl<S: CheapCloneStr> Style<S> {
         gap: Size::zero(),
         // Alignment
         #[cfg(any(feature = "flexbox", feature = "grid"))]
-        align_items: None,
+        align_items: AlignItems::NORMAL,
         align_self: None,
         #[cfg(any(feature = "grid", feature = "block_layout"))]
-        justify_items: None,
+        justify_items: AlignItems::NORMAL,
         justify_self: None,
         #[cfg(any(feature = "flexbox", feature = "grid", feature = "block_layout"))]
         align_content: None,
@@ -1183,7 +1183,7 @@ impl<S: CheapCloneStr> BlockContainerStyle for Style<S> {
     }
 
     #[inline(always)]
-    fn justify_items(&self) -> Option<AlignItems> {
+    fn justify_items(&self) -> AlignItems {
         self.justify_items
     }
 }
@@ -1201,7 +1201,7 @@ impl<T: BlockContainerStyle> BlockContainerStyle for &'_ T {
     }
 
     #[inline(always)]
-    fn justify_items(&self) -> Option<AlignItems> {
+    fn justify_items(&self) -> AlignItems {
         (*self).justify_items()
     }
 }
@@ -1290,7 +1290,7 @@ impl<S: CheapCloneStr> FlexboxContainerStyle for Style<S> {
         self.align_content
     }
     #[inline(always)]
-    fn align_items(&self) -> Option<AlignItems> {
+    fn align_items(&self) -> AlignItems {
         self.align_items
     }
     #[inline(always)]
@@ -1323,7 +1323,7 @@ impl<T: FlexboxContainerStyle> FlexboxContainerStyle for &'_ T {
         (*self).align_content()
     }
     #[inline(always)]
-    fn align_items(&self) -> Option<AlignItems> {
+    fn align_items(&self) -> AlignItems {
         (*self).align_items()
     }
     #[inline(always)]
@@ -1436,11 +1436,11 @@ impl<S: CheapCloneStr> GridContainerStyle for Style<S> {
         self.justify_content
     }
     #[inline(always)]
-    fn align_items(&self) -> Option<AlignItems> {
+    fn align_items(&self) -> AlignItems {
         self.align_items
     }
     #[inline(always)]
-    fn justify_items(&self) -> Option<AlignItems> {
+    fn justify_items(&self) -> AlignItems {
         self.justify_items
     }
 
@@ -1558,11 +1558,11 @@ impl<T: GridContainerStyle> GridContainerStyle for &'_ T {
         (*self).justify_content()
     }
     #[inline(always)]
-    fn align_items(&self) -> Option<AlignItems> {
+    fn align_items(&self) -> AlignItems {
         (*self).align_items()
     }
     #[inline(always)]
-    fn justify_items(&self) -> Option<AlignItems> {
+    fn justify_items(&self) -> AlignItems {
         (*self).justify_items()
     }
 }

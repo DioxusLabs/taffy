@@ -18,10 +18,13 @@ use crate::style::Direction;
 ///
 /// Compute paths match on this enum directly so every match is exhaustive and
 /// requires no `Safe*` siblings.
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[repr(u8)]
 pub enum AlignItemsKeyword {
+    /// The layout mode's default alignment: usually `Stretch`, but `Start` in some cases.
+    #[default]
+    Normal,
     /// Items are packed toward the start of the axis.
     Start,
     /// Items are packed toward the end of the axis.
@@ -122,13 +125,14 @@ impl AlignContentKeyword {
 ///
 /// [css-align-overflow]: https://www.w3.org/TR/css-align-3/#overflow-values
 /// [css-align-abspos]: https://www.w3.org/TR/css-align-3/#auto-safety-position
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[repr(u8)]
 pub enum AlignmentSafety {
     /// No overflow-position keyword specified. Behaves as `Unsafe`, except for absolutely
     /// positioned boxes, whose alignment is adjusted to minimize overflow of their
     /// containing block.
+    #[default]
     Default,
     /// Keeps the requested alignment even when the subject overflows the alignment
     /// container at the start edge.
@@ -143,7 +147,7 @@ pub enum AlignmentSafety {
 /// For Grid it controls alignment in the block axis.
 ///
 /// [MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/align-items)
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 pub struct AlignItems {
     /// Position keyword.
     pub keyword: AlignItemsKeyword,
@@ -152,6 +156,8 @@ pub struct AlignItems {
 }
 
 impl AlignItems {
+    /// The layout mode's default alignment. See [`AlignItemsKeyword::Normal`].
+    pub const NORMAL: Self = Self { keyword: AlignItemsKeyword::Normal, safety: AlignmentSafety::Default };
     /// Items are packed toward the start of the axis.
     pub const START: Self = Self { keyword: AlignItemsKeyword::Start, safety: AlignmentSafety::Default };
     /// Items are packed toward the end of the axis.
@@ -208,6 +214,13 @@ impl AlignItems {
     #[inline]
     pub const fn keyword(self) -> AlignItemsKeyword {
         self.keyword
+    }
+
+    /// Returns true if the keyword is `Stretch` or `Normal` (ignoring any overflow-position
+    /// modifier).
+    #[inline(always)]
+    pub const fn is_stretch_or_normal(self) -> bool {
+        matches!(self.keyword, AlignItemsKeyword::Stretch | AlignItemsKeyword::Normal)
     }
 
     /// Resolve the writing-mode-relative `SelfStart`/`SelfEnd` keywords to `Start`/`End`
@@ -281,6 +294,7 @@ impl FromCss for AlignItems {
                 };
                 Ok(Self { keyword, safety: AlignmentSafety::Unsafe })
             },
+            "normal" => Ok(Self::NORMAL),
             "start" => Ok(Self::START),
             "end" => Ok(Self::END),
             "flex-start" => Ok(Self::FLEX_START),
@@ -451,6 +465,7 @@ pub type JustifyContent = AlignContent;
 /// `unknown_variant` errors. Mirrors the spellings produced by `Serialize`.
 #[cfg(feature = "serde")]
 const ALIGN_ITEMS_NAMES: &[&str] = &[
+    "Normal",
     "Start",
     "End",
     "FlexStart",
@@ -494,6 +509,7 @@ impl serde::Serialize for AlignItems {
             (AlignItemsKeyword::SelfStart, AlignmentSafety::Unsafe) => "UnsafeSelfStart",
             (AlignItemsKeyword::SelfEnd, AlignmentSafety::Unsafe) => "UnsafeSelfEnd",
             (AlignItemsKeyword::Center, AlignmentSafety::Unsafe) => "UnsafeCenter",
+            (AlignItemsKeyword::Normal, _) => "Normal",
             (AlignItemsKeyword::Baseline, _) => "Baseline",
             (AlignItemsKeyword::Stretch, _) => "Stretch",
             (AlignItemsKeyword::Start, AlignmentSafety::Safe) => "SafeStart",
@@ -519,6 +535,7 @@ impl<'de> serde::Deserialize<'de> for AlignItems {
             }
             fn visit_str<E: serde::de::Error>(self, v: &str) -> Result<Self::Value, E> {
                 Ok(match v {
+                    "Normal" => AlignItems::NORMAL,
                     "Start" => AlignItems::START,
                     "End" => AlignItems::END,
                     "FlexStart" => AlignItems::FLEX_START,
@@ -674,6 +691,7 @@ mod tests {
         assert!(AlignItems::SAFE_SELF_END.is_safe());
         assert!(!AlignItems::SELF_START.is_safe());
         assert!(!AlignItems::SELF_END.is_safe());
+        assert!(!AlignItems::NORMAL.is_safe());
     }
 
     #[test]
@@ -693,6 +711,14 @@ mod tests {
         assert_eq!(AlignItems::STRETCH.keyword(), AlignItemsKeyword::Stretch);
         assert_eq!(AlignItems::BASELINE.keyword(), AlignItemsKeyword::Baseline);
         assert_eq!(AlignItems::FLEX_START.keyword(), AlignItemsKeyword::FlexStart);
+        assert_eq!(AlignItems::NORMAL.keyword(), AlignItemsKeyword::Normal);
+    }
+
+    #[test]
+    fn align_items_default_is_normal() {
+        assert_eq!(AlignItems::default(), AlignItems::NORMAL);
+        assert_eq!(AlignItemsKeyword::default(), AlignItemsKeyword::Normal);
+        assert_eq!(AlignmentSafety::default(), AlignmentSafety::Default);
     }
 
     #[test]
@@ -713,6 +739,7 @@ mod tests {
         // Other keywords are unchanged
         assert_eq!(AlignItems::START.resolve_self_relative(Ltr, Rtl, true), AlignItems::START);
         assert_eq!(AlignItems::FLEX_END.resolve_self_relative(Ltr, Rtl, true), AlignItems::FLEX_END);
+        assert_eq!(AlignItems::NORMAL.resolve_self_relative(Ltr, Rtl, true), AlignItems::NORMAL);
     }
 
     #[test]
@@ -769,6 +796,16 @@ mod tests {
 
     #[cfg(feature = "parse")]
     #[test]
+    fn parse_align_items_normal() {
+        assert_eq!("normal".parse::<AlignItems>().unwrap(), AlignItems::NORMAL);
+        assert_eq!("NORMAL".parse::<AlignItems>().unwrap(), AlignItems::NORMAL);
+        assert_eq!(AlignItems::NORMAL.safety, AlignmentSafety::Default);
+        // `auto` is not an `AlignItems` keyword: it is represented by `None` on the `*-self` styles
+        assert!("auto".parse::<AlignSelf>().is_err());
+    }
+
+    #[cfg(feature = "parse")]
+    #[test]
     fn parse_align_items_safe() {
         assert_eq!("safe start".parse::<AlignItems>().unwrap(), AlignItems::SAFE_START);
         assert_eq!("safe end".parse::<AlignItems>().unwrap(), AlignItems::SAFE_END);
@@ -809,6 +846,10 @@ mod tests {
         assert!("safe garbage".parse::<AlignItems>().is_err());
         assert!("unsafe stretch".parse::<AlignItems>().is_err());
         assert!("unsafe baseline".parse::<AlignItems>().is_err());
+        assert!("safe normal".parse::<AlignItems>().is_err());
+        assert!("safe auto".parse::<AlignItems>().is_err());
+        assert!("unsafe normal".parse::<AlignItems>().is_err());
+        assert!("unsafe auto".parse::<AlignItems>().is_err());
     }
 
     #[cfg(feature = "parse")]
@@ -855,6 +896,7 @@ mod tests {
     #[test]
     fn serde_align_items_round_trip() {
         let cases = [
+            (AlignItems::NORMAL, "\"Normal\""),
             (AlignItems::START, "\"Start\""),
             (AlignItems::END, "\"End\""),
             (AlignItems::FLEX_START, "\"FlexStart\""),

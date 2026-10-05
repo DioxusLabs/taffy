@@ -260,25 +260,22 @@ impl AxisStaticPosition {
 
     /// Create a `AxisStaticPosition` which aligns the box within `area` according to its
     /// self-alignment property in this axis (`justify-self` in the inline axis, `align-self` in
-    /// the block axis). `None` corresponds to `normal`, which behaves as `start`. This is the
-    /// static position used by block and inline layout.
+    /// the block axis). `normal` and `stretch` behave as `start`. This is the static position
+    /// used by block and inline layout.
     ///
-    /// `alignment` must already be resolved: `auto` replaced by the container's `justify-items`/
-    /// `align-items`, and `self-start`/`self-end` resolved against the container's direction
-    /// (see [`AlignItems::resolve_self_relative`]). `axis_is_rtl` is whether this axis is the
-    /// inline axis of a right-to-left static-position containing block, in which case `start`
-    /// and `end` are flipped.
-    pub fn from_alignment(alignment: Option<AlignSelf>, area: Line<f32>, axis_is_rtl: bool) -> Self {
+    /// `alignment` must already be resolved: `auto` (`None`) replaced by the container's
+    /// `justify-items`/`align-items`, and `self-start`/`self-end` resolved against the
+    /// container's direction (see [`AlignSelf::resolve_self_relative`]).
+    /// `axis_is_rtl` is whether this axis is the inline axis of a right-to-left static-position
+    /// containing block, in which case `start` and `end` are flipped.
+    pub fn from_alignment(alignment: AlignSelf, area: Line<f32>, axis_is_rtl: bool) -> Self {
         debug_assert!(
-            !matches!(
-                alignment.map(|align| align.keyword),
-                Some(AlignItemsKeyword::SelfStart | AlignItemsKeyword::SelfEnd)
-            ),
+            !matches!(alignment.keyword, AlignItemsKeyword::SelfStart | AlignItemsKeyword::SelfEnd),
             "self-start/self-end must be resolved before computing the static position"
         );
         /// The edge of the static-position rectangle that a (resolved) alignment keyword
-        /// aligns the box to. Stretch does not apply to absolutely positioned items and falls
-        /// back to start-alignment for static-position purposes.
+        /// aligns the box to. Normal and Stretch (and anything else that is not an end or
+        /// center alignment) fall back to start-alignment for static-position purposes.
         fn edge_for(keyword: AlignItemsKeyword, axis_is_rtl: bool) -> AxisStaticEdge {
             let start_position = !matches!(keyword, AlignItemsKeyword::End | AlignItemsKeyword::FlexEnd) ^ axis_is_rtl;
             match keyword {
@@ -287,7 +284,6 @@ impl AxisStaticPosition {
                 _ => AxisStaticEdge::End,
             }
         }
-        let alignment = alignment.unwrap_or(AlignSelf::START);
         let fallback = if matches!(alignment.safety, AlignmentSafety::Safe) {
             AlignItemsKeyword::Start
         } else {
