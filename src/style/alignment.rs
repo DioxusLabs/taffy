@@ -67,14 +67,8 @@ pub enum AlignItemsKeyword {
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[repr(u8)]
 pub enum AlignContentKeyword {
-    /// The default alignment of the layout mode (the initial value of `align-content` and
-    /// `justify-content`).
-    ///
-    /// How `Normal` behaves depends on the layout mode: for flex containers it behaves as
-    /// `Stretch` (which in the main axis is equivalent to `FlexStart`); for grid containers
-    /// it behaves as `Stretch`; and for block containers it behaves as `Start` (and, unlike
-    /// every other value, does not make the block container establish an independent
-    /// formatting context).
+    /// The layout mode's default alignment: `Stretch` for flex and grid containers, `Start`
+    /// for block containers.
     #[default]
     Normal,
     /// Items are packed toward the start of the axis.
