@@ -1,6 +1,6 @@
 //! Computes the CSS block layout algorithm in the case that the block container being laid out contains only block-level boxes
 use crate::geometry::{Line, Point, Rect, Size};
-use crate::style::{AlignSelf, AvailableSpace, CoreStyle, LengthPercentageAuto, Overflow, Position};
+use crate::style::{AlignContent, AlignSelf, AvailableSpace, CoreStyle, LengthPercentageAuto, Overflow, Position};
 use crate::style_helpers::TaffyMaxContent;
 use crate::tree::{
     AxisStaticPosition, LayoutPartialTree, LayoutPartialTreeExt, NodeId, OofCandidate, OofCandidates,
@@ -21,6 +21,18 @@ use crate::{
 use super::float::{BfcSlot, ContentSlot, FloatContext, FloatIntrinsicWidthCalculator, FIT_TOLERANCE};
 #[cfg(feature = "float_layout")]
 use crate::{Clear, Float, FloatDirection};
+
+/// Compute the block-axis offset that `align-content` applies to the in-flow content of a block
+/// container, given the free space between the container's content box and its content.
+///
+/// The entire stack of in-flow content is treated as a single alignment subject, so the
+/// distribution keywords (`space-*`, `stretch`) invoke their single-subject fallbacks. This is
+/// used both by block layout and by inline formatting contexts (line boxes) which are laid out
+/// externally to Taffy.
+pub fn compute_block_align_content_offset(align_content: AlignContent, free_space: f32) -> f32 {
+    let keyword = apply_alignment_fallback(free_space, 1, align_content);
+    compute_alignment_offset(free_space, 1, 0.0, keyword, false, true)
+}
 
 /// Context for positioning Block and Float boxes within a Block Formatting Context
 pub struct BlockFormattingContext {
@@ -245,9 +257,9 @@ impl BlockContext<'_> {
         self.top_adjoining_floats.unwrap_or(self.adjoining_floats)
     }
 
-    /// Update the height that descendent floats with the height that floats consume
-    /// within a particular child
-    fn add_child_floated_content_height_contribution(&mut self, child_contribution: f32) {
+    /// Update the height that descendent floats consume with the height that floats consume
+    /// within a particular child (`child_contribution` is relative to this block's border-top)
+    pub fn add_child_floated_content_height_contribution(&mut self, child_contribution: f32) {
         self.float_content_contribution = self.float_content_contribution.max(child_contribution);
     }
 
@@ -666,8 +678,7 @@ fn compute_inner(
         let container_inner_height = container_outer_height - resolved_content_box_inset.vertical_axis_sum();
         let inflow_content_height = intrinsic_outer_height - resolved_content_box_inset.vertical_axis_sum();
         let free_space = container_inner_height - inflow_content_height;
-        let keyword = apply_alignment_fallback(free_space, 1, align_content);
-        let group_offset = compute_alignment_offset(free_space, 1, 0.0, keyword, false, true);
+        let group_offset = compute_block_align_content_offset(align_content, free_space);
         first_baseline = first_baseline.map(|baseline| baseline + group_offset);
         for item in items.iter_mut() {
             if let Some(layout) = item.final_layout.as_mut() {
@@ -891,7 +902,8 @@ fn generate_item_list(
                 && !position.is_out_of_flow()
                 && is_not_floated
                 && !is_scroll_container
-                && !contain.establishes_independent_formatting_context();
+                && !contain.establishes_independent_formatting_context()
+                && child_style.align_content().is_none();
 
             BlockItem {
                 node_id: child_node_id,
@@ -1367,6 +1379,11 @@ fn perform_final_layout_on_in_flow_children(
             #[cfg(not(feature = "float_layout"))]
             let clear_pos = f32::NEG_INFINITY;
 
+            // The height consumed by floats within a same-BFC child, relative to the child's
+            // border-top. Added to the parent's contribution once the child's position is known.
+            #[cfg(feature = "float_layout")]
+            let mut child_float_contribution = f32::NEG_INFINITY;
+
             let mut item_layout = if item.is_in_same_bfc {
                 // Replaced elements may not have a known width (they are sized by their
                 // measure function rather than stretch-sized)
@@ -1377,17 +1394,18 @@ fn perform_final_layout_on_in_flow_children(
                 let inset_right = container_outer_width - width - inset_left;
                 let insets = [inset_left, inset_right];
 
-                // Compute child layout
-                let mut child_block_ctx =
-                    block_ctx.sub_context((y_offset_for_absolute + item_non_auto_margin.top).max(clear_pos), insets);
+                // Compute child layout. The child's position is estimated from its top margin collapsed with
+                // the preceding margins (the child's own collapsed-through margins are not yet known).
+                let estimated_y = committed_y_offset
+                    + active_collapsible_margin_set.collapse_with_margin(item_non_auto_margin.top).resolve();
+                let mut child_block_ctx = block_ctx.sub_context(estimated_y.max(clear_pos), insets);
                 let output = tree.compute_block_child_layout(item.node_id, inputs, Some(&mut child_block_ctx));
 
                 // Extract float contribution from child block context
                 #[cfg(feature = "float_layout")]
                 {
-                    let child_contribution = child_block_ctx.floated_content_height_contribution();
+                    child_float_contribution = child_block_ctx.floated_content_height_contribution();
                     let child_top_adjoining_floats = child_block_ctx.top_adjoining_floats();
-                    block_ctx.add_child_floated_content_height_contribution(y_offset_for_absolute + child_contribution);
                     // Floats placed while the position of the child's top margin strut was unresolved
                     // also adjoin this block's current strut
                     block_ctx.merge_adjoining_floats(child_top_adjoining_floats);
@@ -1550,6 +1568,15 @@ fn perform_final_layout_on_in_flow_children(
                     y: float_avoiding_position.y + inset_offset.y,
                 }
             };
+
+            // Floats within the child are positioned relative to the child's border-top, so the
+            // child's (margin-collapsed) position, rather than its relative offset, is added.
+            #[cfg(feature = "float_layout")]
+            if item.is_in_same_bfc {
+                block_ctx.add_child_floated_content_height_contribution(
+                    location.y - inset_offset.y + child_float_contribution,
+                );
+            }
 
             // Apply alignment
             let item_outer_width = item_layout.size.width + resolved_margin.horizontal_axis_sum();

@@ -1,0 +1,19 @@
+<test name="float_align_content_end_nested_float_in_child__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="block" box-sizing="content-box" direction="ltr" position="absolute" align-content="end" width="200px" height="200px">
+      <div display="block" box-sizing="content-box" direction="ltr" position="relative" width="200px" height="20px">
+        <div box-sizing="content-box" direction="ltr" position="relative" float="right" width="50px" height="60px"/>
+      </div>
+      <div display="block" box-sizing="content-box" direction="ltr" position="relative" overflow-x="hidden" overflow-y="hidden" scrollbar-width="15" width="100px" height="20px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="200" height="200">
+      <node x="0" y="140" width="200" height="20">
+        <node x="150" y="0" width="50" height="60"/>
+      </node>
+      <node x="0" y="160" width="100" height="20" scroll_width="0" scroll_height="0"/>
+    </node>
+  </expectations>
+</test>
