@@ -1085,8 +1085,9 @@ fn determine_content_based_container_width<Tree: LayoutPartialTree>(
 
     // If the tree computes batches of child layouts in parallel then measure all
     // of the items that don't have a definite width as a batch
+    let batch_child_layouts = Tree::COMPUTES_CHILD_LAYOUTS_IN_PARALLEL && tree.batches_child_layouts(node_id);
     let mut jobs: Vec<ChildLayoutJob> = Vec::new();
-    if Tree::COMPUTES_CHILD_LAYOUTS_IN_PARALLEL {
+    if batch_child_layouts {
         for item in items.iter().filter(|item| !item.position.is_out_of_flow()) {
             if item.size.maybe_clamp(item.min_size, item.max_size).width.is_none() {
                 jobs.push(ChildLayoutJob::new(item.node_id, measure_input(tree, item)));
@@ -1109,7 +1110,7 @@ fn determine_content_based_container_width<Tree: LayoutPartialTree>(
             .resolve_or_zero(available_space.width.into_option(), |val, basis| tree.calc(val, basis))
             .horizontal_axis_sum();
         let width = known_dimensions.width.unwrap_or_else(|| {
-            if Tree::COMPUTES_CHILD_LAYOUTS_IN_PARALLEL {
+            if batch_child_layouts {
                 measured_widths.next().unwrap()
             } else {
                 tree.compute_child_layout(item.node_id, measure_input(tree, item)).size.width
@@ -1293,7 +1294,9 @@ fn perform_final_layout_on_in_flow_children<Tree: LayoutBlockContainer>(
     // child's layout depends on its preceding siblings. So if the tree computes batches of child layouts in
     // parallel then the layouts of all in-flow children are computed as a batch here, and the loop below
     // positions each child using its output.
-    let batch_children = Tree::COMPUTES_CHILD_LAYOUTS_IN_PARALLEL && !block_ctx.may_contain_floats();
+    let batch_children = Tree::COMPUTES_CHILD_LAYOUTS_IN_PARALLEL
+        && !block_ctx.may_contain_floats()
+        && tree.batches_child_layouts(node_id);
     let mut jobs: Vec<ChildLayoutJob> = Vec::new();
     let mut next_job = 0;
     if batch_children {

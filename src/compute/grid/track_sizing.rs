@@ -377,7 +377,7 @@ pub(super) fn track_sizing_algorithm<Tree: LayoutPartialTree>(
     // on the contributions of other items. So the contributions that will be used are found by running the steps on a scratch
     // copy of the tracks with the measurer set to collect a job for each contribution that would be measured instead of
     // measuring it. The results of the jobs are then written to the items' caches, where the steps below find them.
-    if Tree::COMPUTES_CHILD_LAYOUTS_IN_PARALLEL && items.len() > 1 {
+    if Tree::COMPUTES_CHILD_LAYOUTS_IN_PARALLEL && items.len() > 1 && tree.batches_child_layouts(node) {
         let mut jobs = ContributionJobs::default();
         let mut scratch_axis_tracks: Vec<GridTrack> = axis_tracks.to_vec();
         resolve_intrinsic_track_sizes(
@@ -580,7 +580,7 @@ fn resolve_item_baselines<Tree: LayoutPartialTree>(
     // If the tree computes batches of child layouts in parallel then find the items in each grid row whose baselines
     // need to be computed (see below), and compute the layouts of all such items as a batch.
     let mut jobs: Vec<ChildLayoutJob> = Vec::new();
-    if Tree::COMPUTES_CHILD_LAYOUTS_IN_PARALLEL {
+    if Tree::COMPUTES_CHILD_LAYOUTS_IN_PARALLEL && tree.batches_child_layouts(node) {
         let mut remaining_items = &items[0..];
         while !remaining_items.is_empty() {
             let (row_items, tail) = split_first_row(remaining_items, other_axis);

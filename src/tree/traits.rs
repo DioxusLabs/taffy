@@ -210,6 +210,19 @@ pub trait LayoutPartialTree: TraversePartialTree {
     /// extra work it only does so if this is `true`.
     const COMPUTES_CHILD_LAYOUTS_IN_PARALLEL: bool = false;
 
+    /// Whether the child layouts of `parent_node_id` should be collected into batches and computed using
+    /// [`compute_child_layouts`](Self::compute_child_layouts).
+    ///
+    /// This is only consulted if [`COMPUTES_CHILD_LAYOUTS_IN_PARALLEL`](Self::COMPUTES_CHILD_LAYOUTS_IN_PARALLEL)
+    /// is `true`. A tree that computes batches in parallel can return `false` for a node whose batches would
+    /// be too small to be worth computing in parallel, so that the node is laid out without the cost of
+    /// collecting batches. The value returned for a node must not change while the node is being laid out.
+    #[inline(always)]
+    fn batches_child_layouts(&self, parent_node_id: NodeId) -> bool {
+        let _ = parent_node_id;
+        true
+    }
+
     /// Compute a batch of child layouts, writing the result of each job to its `output` field.
     ///
     /// The jobs are for distinct children of `parent_node_id`, and no job's input depends on another job's
