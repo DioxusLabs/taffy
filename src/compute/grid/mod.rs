@@ -354,7 +354,6 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
         false, // TODO: Support baseline alignment in the vertical axis
     );
     let initial_row_sum = rows.iter().map(|track| track.base_size).sum::<f32>();
-    inner_node_size.height = inner_node_size.height.or_else(|| initial_row_sum.into());
 
     debug_log!("initial_column_sum", dbg:initial_column_sum);
     debug_log!(dbg: columns.iter().map(|track| track.base_size).collect::<Vec<_>>());
@@ -384,6 +383,10 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     if run_mode == RunMode::ComputeSize {
         return LayoutOutput::from_outer_size(container_border_box);
     }
+
+    // The container's size is now determined, so percentages resolve against its content box when re-running track sizing.
+    // This may be a no-op if the container's size was known upfront (in which case it already equals `inner_node_size`).
+    inner_node_size = container_content_box.map(Some);
 
     // 7. Resolve percentage track base sizes
     // In the case of an indefinitely sized container these resolve to zero during the "Initialise Tracks" step
@@ -420,7 +423,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
 
     let has_percentage_column = columns.iter().any(|track| track.uses_percentage());
     let has_percentage_row = rows.iter().any(|track| track.uses_percentage());
-    let parent_width_indefinite = !available_space.width.is_definite();
+    let parent_width_indefinite = outer_node_size.width.is_none();
     rerun_column_sizing = parent_width_indefinite && has_percentage_column;
 
     if !rerun_column_sizing {
@@ -485,7 +488,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
         // TODO: Only rerun sizing for tracks that actually require it rather than for all tracks if any need it.
         let mut rerun_row_sizing;
 
-        let parent_height_indefinite = !available_space.height.is_definite();
+        let parent_height_indefinite = outer_node_size.height.is_none();
         rerun_row_sizing = parent_height_indefinite && has_percentage_row;
 
         if !rerun_row_sizing {
