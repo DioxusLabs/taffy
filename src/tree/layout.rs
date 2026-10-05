@@ -276,18 +276,22 @@ impl AxisStaticPosition {
             ),
             "self-start/self-end must be resolved before computing the static position"
         );
-        let edge_for = |keyword: AlignItemsKeyword| {
-            // Stretch does not apply to absolutely positioned items and falls back to
-            // start-alignment for static-position purposes
+        /// The edge of the static-position rectangle that a (resolved) alignment keyword
+        /// aligns the box to. Stretch does not apply to absolutely positioned items and falls
+        /// back to start-alignment for static-position purposes.
+        fn edge_for(keyword: AlignItemsKeyword, axis_is_rtl: bool) -> AxisStaticEdge {
             let start_position = !matches!(keyword, AlignItemsKeyword::End | AlignItemsKeyword::FlexEnd) ^ axis_is_rtl;
             match keyword {
                 AlignItemsKeyword::Center => AxisStaticEdge::Center,
                 _ if start_position => AxisStaticEdge::Start,
                 _ => AxisStaticEdge::End,
             }
-        };
+        }
         let Some(alignment) = alignment else {
-            return Self { area, align: AxisStaticAlign::from_keyword(edge_for(AlignItemsKeyword::Start)) };
+            return Self {
+                area,
+                align: AxisStaticAlign::from_keyword(edge_for(AlignItemsKeyword::Start, axis_is_rtl)),
+            };
         };
         let fallback = if matches!(alignment.safety, AlignmentSafety::Safe) {
             AlignItemsKeyword::Start
@@ -297,9 +301,9 @@ impl AxisStaticPosition {
         Self {
             area,
             align: AxisStaticAlign {
-                keyword: edge_for(alignment.keyword),
+                keyword: edge_for(alignment.keyword, axis_is_rtl),
                 safety: alignment.safety,
-                fallback: edge_for(fallback),
+                fallback: edge_for(fallback, axis_is_rtl),
             },
         }
     }
