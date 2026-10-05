@@ -38,7 +38,6 @@ pub trait FlexboxContainerStyle: CoreStyle {
         Style::<Self::CustomIdent>::DEFAULT.align_content
     }
     /// How this node's children aligned in the cross/block axis?
-    /// Defaults to [`AlignItems::NORMAL`]
     #[inline(always)]
     fn align_items(&self) -> AlignItems {
         Style::<Self::CustomIdent>::DEFAULT.align_items
@@ -69,7 +68,7 @@ pub trait FlexboxItemStyle: CoreStyle {
     }
 
     /// How this node should be aligned in the cross/block axis
-    /// Defaults to `None` (the CSS `auto` keyword), which falls back to the parents [`AlignItems`]
+    /// Falls back to the parents [`AlignItems`] if not set
     #[inline(always)]
     fn align_self(&self) -> Option<AlignSelf> {
         Style::<Self::CustomIdent>::DEFAULT.align_self

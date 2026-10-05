@@ -34,14 +34,14 @@ pub trait BlockItemStyle: CoreStyle {
     }
 
     /// How an out-of-flow (absolutely positioned) child is aligned in the block axis of its
-    /// static-position rectangle (`align-self`). Defaults to `auto`, which behaves as `normal`.
+    /// static-position rectangle (`align-self`). `None` corresponds to `normal`/`auto`.
     #[inline(always)]
     fn align_self(&self) -> Option<AlignSelf> {
         None
     }
 
     /// How an out-of-flow (absolutely positioned) child is aligned in the inline axis of its
-    /// static-position rectangle (`justify-self`). Defaults to `auto`, which defers to the container's `justify-items`.
+    /// static-position rectangle (`justify-self`). `None` corresponds to `normal`/`auto`.
     #[inline(always)]
     fn justify_self(&self) -> Option<AlignSelf> {
         None

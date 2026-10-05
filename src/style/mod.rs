@@ -210,13 +210,13 @@ pub trait CoreStyle {
 /// its containing block's out-of-flow positioning pass
 pub trait OofItemStyle: CoreStyle {
     /// How the box is aligned in the block axis of its inset-modified containing block
-    /// (`align-self`). Defaults to `auto`, which behaves as `normal`.
+    /// (`align-self`). `None` corresponds to `normal`/`auto`.
     #[inline(always)]
     fn align_self(&self) -> Option<AlignSelf> {
         None
     }
     /// How the box is aligned in the inline axis of its inset-modified containing block
-    /// (`justify-self`). Defaults to `auto`, which behaves as `normal`.
+    /// (`justify-self`). `None` corresponds to `normal`/`auto`.
     #[inline(always)]
     fn justify_self(&self) -> Option<AlignSelf> {
         None
@@ -776,18 +776,16 @@ pub struct Style<S: CheapCloneStr = DefaultCheapStr> {
 
     // Alignment properties
     /// How this node's children aligned in the cross/block axis?
-    /// Defaults to [`AlignItems::NORMAL`]
     #[cfg(any(feature = "flexbox", feature = "grid"))]
     pub align_items: AlignItems,
     /// How this node should be aligned in the cross/block axis
-    /// Defaults to `None` (the CSS `auto` keyword), which falls back to the parents [`AlignItems`]
+    /// Falls back to the parents [`AlignItems`] if not set
     pub align_self: Option<AlignSelf>,
     /// How this node's children should be aligned in the inline axis
-    /// Defaults to [`AlignItems::NORMAL`]
     #[cfg(any(feature = "grid", feature = "block_layout"))]
     pub justify_items: AlignItems,
     /// How this node should be aligned in the inline axis
-    /// Defaults to `None` (the CSS `auto` keyword), which falls back to the parents [`JustifyItems`]
+    /// Falls back to the parents [`JustifyItems`] if not set
     pub justify_self: Option<AlignSelf>,
     /// How should content contained within this item be aligned in the cross/block axis
     #[cfg(any(feature = "flexbox", feature = "grid", feature = "block_layout"))]
@@ -1647,11 +1645,11 @@ mod tests {
             #[cfg(feature = "flexbox_balance")]
             flex_line_count: 1,
             #[cfg(any(feature = "flexbox", feature = "grid"))]
-            align_items: super::AlignItems::NORMAL,
-            align_self: None,
+            align_items: Default::default(),
+            align_self: Default::default(),
             #[cfg(any(feature = "grid", feature = "block_layout"))]
-            justify_items: super::AlignItems::NORMAL,
-            justify_self: None,
+            justify_items: Default::default(),
+            justify_self: Default::default(),
             #[cfg(any(feature = "flexbox", feature = "grid", feature = "block_layout"))]
             align_content: Default::default(),
             #[cfg(any(feature = "flexbox", feature = "grid"))]
@@ -1779,6 +1777,7 @@ mod tests {
         assert_type_size::<AlignmentSafety>(1);
         assert_type_size::<AlignContent>(2);
         assert_type_size::<AlignItems>(2);
+        assert_type_size::<Option<AlignItems>>(2);
         assert_type_size::<Option<AlignContent>>(2);
 
         // Flexbox Container

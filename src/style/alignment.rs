@@ -146,10 +146,6 @@ pub enum AlignmentSafety {
 /// For Flexbox it controls alignment in the cross axis.
 /// For Grid it controls alignment in the block axis.
 ///
-/// The default value is [`AlignItems::NORMAL`]. This type is also used for the `*-self`
-/// properties (see [`AlignSelf`]), which are an `Option<AlignSelf>` where `None` represents
-/// the CSS `auto` keyword (defer to the parent's `align-items` / `justify-items`).
-///
 /// [MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/align-items)
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 pub struct AlignItems {
@@ -160,8 +156,7 @@ pub struct AlignItems {
 }
 
 impl AlignItems {
-    /// The default alignment of the layout mode. This is the default value of `align-items`
-    /// and `justify-items`. See [`AlignItemsKeyword::Normal`].
+    /// The layout mode's default alignment. See [`AlignItemsKeyword::Normal`].
     pub const NORMAL: Self = Self { keyword: AlignItemsKeyword::Normal, safety: AlignmentSafety::Default };
     /// Items are packed toward the start of the axis.
     pub const START: Self = Self { keyword: AlignItemsKeyword::Start, safety: AlignmentSafety::Default };
@@ -230,8 +225,8 @@ impl AlignItems {
 
     /// Resolve the writing-mode-relative `SelfStart`/`SelfEnd` keywords to `Start`/`End`
     /// based on the item's own `direction` per CSS Box Alignment §5.2
-    /// <https://www.w3.org/TR/css-align-3/#self-alignment>. All other keywords
-    /// (including `Normal`) are returned unchanged.
+    /// <https://www.w3.org/TR/css-align-3/#self-alignment>. All other keywords are
+    /// returned unchanged.
     ///
     /// The `Start`/`End` keywords used by the compute paths are relative to the
     /// *container's* writing mode/direction, so in the inline axis `SelfStart` resolves
@@ -321,8 +316,6 @@ crate::util::parse::from_str_from_css!(AlignItems);
 /// Does not apply to Flexbox, and will be ignored if specified on a flex container.
 /// For Grid it controls alignment in the inline axis.
 ///
-/// The default value is [`AlignItems::NORMAL`].
-///
 /// [MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/justify-items)
 pub type JustifyItems = AlignItems;
 /// Controls alignment of an individual node.
@@ -331,9 +324,6 @@ pub type JustifyItems = AlignItems;
 /// For Flexbox it controls alignment in the cross axis.
 /// For Grid it controls alignment in the block axis.
 ///
-/// The `align-self` style is an `Option<AlignSelf>`. The default value is `None`, which
-/// represents the CSS `auto` keyword and defers to the parent Node's `AlignItems` property.
-///
 /// [MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/align-self)
 pub type AlignSelf = AlignItems;
 /// Controls alignment of an individual node.
@@ -341,9 +331,6 @@ pub type AlignSelf = AlignItems;
 /// Overrides the parent Node's `JustifyItems` property.
 /// Does not apply to Flexbox, and will be ignored if specified on a flex child.
 /// For Grid it controls alignment in the inline axis.
-///
-/// The `justify-self` style is an `Option<JustifySelf>`. The default value is `None`, which
-/// represents the CSS `auto` keyword and defers to the parent Node's `JustifyItems` property.
 ///
 /// [MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/justify-self)
 pub type JustifySelf = AlignItems;
@@ -682,6 +669,7 @@ mod tests {
     fn align_types_within_size_budget() {
         assert!(size_of::<AlignItems>() <= 2, "AlignItems grew to {}", size_of::<AlignItems>());
         assert!(size_of::<AlignContent>() <= 2, "AlignContent grew to {}", size_of::<AlignContent>());
+        assert!(size_of::<Option<AlignItems>>() <= 3);
         assert!(size_of::<Option<AlignContent>>() <= 3);
     }
 

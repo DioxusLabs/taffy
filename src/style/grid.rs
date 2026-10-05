@@ -240,13 +240,11 @@ pub trait GridContainerStyle: CoreStyle {
         Style::<Self::CustomIdent>::DEFAULT.justify_content
     }
     /// How this node's children aligned in the cross/block axis?
-    /// Defaults to [`AlignItems::NORMAL`]
     #[inline(always)]
     fn align_items(&self) -> AlignItems {
         Style::<Self::CustomIdent>::DEFAULT.align_items
     }
     /// How this node's children should be aligned in the inline axis
-    /// Defaults to [`AlignItems::NORMAL`]
     #[inline(always)]
     fn justify_items(&self) -> AlignItems {
         Style::<Self::CustomIdent>::DEFAULT.justify_items
@@ -285,13 +283,13 @@ pub trait GridItemStyle: CoreStyle {
     }
 
     /// How this node should be aligned in the cross/block axis
-    /// Defaults to `None` (the CSS `auto` keyword), which falls back to the parents [`AlignItems`]
+    /// Falls back to the parents [`AlignItems`] if not set
     #[inline(always)]
     fn align_self(&self) -> Option<AlignSelf> {
         Style::<Self::CustomIdent>::DEFAULT.align_self
     }
     /// How this node should be aligned in the inline axis
-    /// Defaults to `None` (the CSS `auto` keyword), which falls back to the parents [`super::JustifyItems`]
+    /// Falls back to the parents [`super::JustifyItems`] if not set
     #[inline(always)]
     fn justify_self(&self) -> Option<AlignSelf> {
         Style::<Self::CustomIdent>::DEFAULT.justify_self
