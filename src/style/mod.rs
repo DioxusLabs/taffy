@@ -92,14 +92,11 @@ pub trait CoreStyle {
     fn is_block(&self) -> bool {
         false
     }
-    /// Whether the box is a *compressible replaced element*: a replaced element (image, video,
-    /// canvas, iframe, ...) or a form control that is laid out as a leaf box with an intrinsic size
-    /// (`input`, `select`, `textarea`, `progress`, `meter`)
-    /// <https://drafts.csswg.org/css-sizing-3/#compressible>.
-    ///
-    /// Such boxes resolve an `auto` width from their intrinsic size rather than being stretched by
-    /// block layout, and their min-content contribution is compressible to zero in grid layout
-    /// <https://drafts.csswg.org/css-sizing-3/#min-content-zero>.
+    /// Is it a compressible replaced element: a replaced element (image, video, canvas, ...) or a
+    /// form control with an intrinsic size (`input`, `select`, `textarea`, `meter`, ...)?
+    /// Such boxes resolve an `auto` width to their intrinsic size rather than being stretched by
+    /// block layout, and have a zero min-content contribution in grid layout.
+    /// <https://drafts.csswg.org/css-sizing-3/#compressible>
     #[inline(always)]
     fn is_compressible_replaced(&self) -> bool {
         false
@@ -222,14 +219,10 @@ pub trait OofItemStyle: CoreStyle {
     fn is_table(&self) -> bool {
         false
     }
-    /// Whether the box is a *replaced element* (image, video, canvas, iframe, ...)
-    /// <https://html.spec.whatwg.org/multipage/rendering.html#replaced-elements>. A `normal`
-    /// self-alignment does not stretch replaced elements to fill their inset-modified containing
-    /// block: an `auto` size resolves to the intrinsic size instead
-    /// <https://www.w3.org/TR/CSS22/visudet.html#abs-replaced-width>.
-    ///
-    /// Note that this is narrower than [`CoreStyle::is_compressible_replaced`]: form controls are
-    /// compressible replaced elements, but they *are* stretched when absolutely positioned.
+    /// Is it a replaced element (image, video, canvas, ...)? Unlike other compressible replaced
+    /// elements (form controls), an `auto`-sized replaced element is not stretched between its
+    /// insets under `normal` alignment.
+    /// <https://html.spec.whatwg.org/multipage/rendering.html#replaced-elements>
     #[inline(always)]
     fn is_replaced(&self) -> bool {
         false
@@ -722,13 +715,11 @@ pub struct Style<S: CheapCloneStr = DefaultCheapStr> {
     /// Whether a child is display:table or not. This affects children of block layouts.
     /// This should really be part of `Display`, but it is currently seperate because table layout isn't implemented
     pub item_is_table: bool,
-    /// Whether the node is a replaced element like an image, video, canvas or iframe
-    /// <https://html.spec.whatwg.org/multipage/rendering.html#replaced-elements>.
-    /// Replaced elements are also compressible replaced elements.
+    /// Is it a replaced element like an image or video? Implies `is_compressible_replaced`.
+    /// <https://html.spec.whatwg.org/multipage/rendering.html#replaced-elements>
     pub item_is_replaced: bool,
-    /// Whether the node is a compressible replaced element that is not a replaced element: a form
-    /// control laid out as a leaf box with an intrinsic size (`input`, `select`, `textarea`,
-    /// `progress`, `meter`) <https://drafts.csswg.org/css-sizing-3/#compressible>.
+    /// Is it a compressible replaced element that is not a replaced element (a form control with
+    /// an intrinsic size)? <https://drafts.csswg.org/css-sizing-3/#compressible>
     pub item_is_compressible_replaced: bool,
     /// Should size styles apply to the content box or the border box of the node
     pub box_sizing: BoxSizing,

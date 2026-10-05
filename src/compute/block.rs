@@ -286,9 +286,8 @@ struct BlockItem {
     /// Items that are tables don't have stretch sizing applied to them
     is_table: bool,
 
-    /// Items that are compressible replaced elements (replaced elements and form controls)
-    /// resolve an auto width to their intrinsic size rather than being stretch-sized
-    /// <https://www.w3.org/TR/CSS22/visudet.html#block-replaced-width>
+    /// Compressible replaced items resolve an auto width to their intrinsic size rather than
+    /// being stretch-sized <https://www.w3.org/TR/CSS22/visudet.html#block-replaced-width>
     is_compressible_replaced: bool,
 
     /// Whether the child is a non-independent block or inline node
@@ -1315,10 +1314,8 @@ fn perform_final_layout_on_in_flow_children(
             let is_stretch = justify_self.is_some_and(|align| align.keyword == AlignItemsKeyword::Stretch);
             let non_stretch_justify_self = justify_self.filter(|align| align.keyword != AlignItemsKeyword::Stretch);
 
-            // Unless stretched, tables and compressible replaced elements (replaced elements and
-            // form controls) are not stretch-sized: they resolve their own size (for replaced
-            // elements an auto width resolves to the intrinsic size
-            // <https://www.w3.org/TR/CSS22/visudet.html#block-replaced-width>)
+            // Unless stretched, tables and compressible replaced elements resolve their own width
+            // <https://www.w3.org/TR/CSS22/visudet.html#block-replaced-width>
             let known_dimensions = if (item.is_table || item.is_compressible_replaced) && !is_stretch {
                 Size::NONE
             } else {
