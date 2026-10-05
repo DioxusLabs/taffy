@@ -1313,7 +1313,7 @@ fn perform_final_layout_on_in_flow_children(
                 .or(justify_items)
                 .map(|align| align.resolve_self_relative(item.direction, direction, true));
             let is_stretch = justify_self.is_some_and(|align| align.keyword == AlignItemsKeyword::Stretch);
-            let justify_self = justify_self.filter(|align| align.keyword != AlignItemsKeyword::Stretch);
+            let non_stretch_justify_self = justify_self.filter(|align| align.keyword != AlignItemsKeyword::Stretch);
 
             // Unless stretched, tables and replaced elements are not stretch-sized: they resolve
             // their own size (for replaced elements an auto width resolves to the intrinsic size
@@ -1323,7 +1323,7 @@ fn perform_final_layout_on_in_flow_children(
             } else {
                 // The automatic width of a block-level box whose `justify-self` is neither `normal` nor `stretch`
                 // is equivalent to `fit-content` rather than `stretch`
-                let width_style = if justify_self.is_some() && item.size_style.width.is_auto() {
+                let width_style = if non_stretch_justify_self.is_some() && item.size_style.width.is_auto() {
                     Dimension::fit_content()
                 } else {
                     item.size_style.width
@@ -1581,7 +1581,7 @@ fn perform_final_layout_on_in_flow_children(
             // already absorbed the free space) take precedence over `justify-self`.
             let has_auto_x_margin = item_margin.left.is_none() || item_margin.right.is_none();
             let item_outer_width = item_layout.size.width + resolved_margin.horizontal_axis_sum();
-            if let (Some(justify_self), false) = (justify_self, has_auto_x_margin) {
+            if let (Some(justify_self), false) = (non_stretch_justify_self, has_auto_x_margin) {
                 // The alignment container is the containing block, except that a BFC-establishing
                 // box placed next to a float aligns within the space left over by the float (in
                 // which case the slot is already inset by the item's margins).
@@ -1611,7 +1611,7 @@ fn perform_final_layout_on_in_flow_children(
                     Some(_) => 0.0,
                 };
                 location.x = container_start + resolved_margin.left + inset_offset.x + offset;
-            } else if justify_self.is_none() && item_outer_width < container_inner_width {
+            } else if non_stretch_justify_self.is_none() && item_outer_width < container_inner_width {
                 let free_x_space = container_inner_width - item_outer_width;
                 match (text_align, direction) {
                     (TextAlign::Auto, _) => {
