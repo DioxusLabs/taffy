@@ -1,6 +1,6 @@
 //! Final data structures that represent the high-level UI layout
 use crate::geometry::{AbsoluteAxis, Line, Point, Rect, Size};
-use crate::style::{AlignmentSafety, AvailableSpace, CheapCloneStr, Position};
+use crate::style::{AlignItemsKeyword, AlignSelf, AlignmentSafety, AvailableSpace, CheapCloneStr, Position};
 use crate::style_helpers::TaffyMaxContent;
 use crate::sys::DefaultCheapStr;
 use crate::tree::NodeId;
@@ -230,7 +230,7 @@ pub struct AxisStaticAlign {
 impl AxisStaticAlign {
     /// Create a `AxisStaticAlign` from a keyword with no safe fallback
     pub const fn from_keyword(keyword: AxisStaticEdge) -> Self {
-        Self { keyword, safety: AlignmentSafety::Unsafe, fallback: keyword }
+        Self { keyword, safety: AlignmentSafety::Default, fallback: keyword }
     }
 }
 
@@ -256,6 +256,51 @@ impl AxisStaticPosition {
     /// safe fallback
     pub const fn from_edge(anchor: f32, edge: AxisStaticEdge) -> Self {
         Self { area: Line { start: anchor, end: anchor }, align: AxisStaticAlign::from_keyword(edge) }
+    }
+
+    /// Create a `AxisStaticPosition` which aligns the box within `area` according to its
+    /// self-alignment property in this axis (`justify-self` in the inline axis, `align-self` in
+    /// the block axis). `None` corresponds to `normal`, which behaves as `start`. This is the
+    /// static position used by block and inline layout.
+    ///
+    /// `alignment` must already be resolved: `auto` replaced by the container's `justify-items`/
+    /// `align-items`, and `self-start`/`self-end` resolved against the container's direction
+    /// (see [`AlignItems::resolve_self_relative`]). `axis_is_rtl` is whether this axis is the
+    /// inline axis of a right-to-left static-position containing block, in which case `start`
+    /// and `end` are flipped.
+    pub fn from_alignment(alignment: Option<AlignSelf>, area: Line<f32>, axis_is_rtl: bool) -> Self {
+        debug_assert!(
+            !matches!(
+                alignment.map(|align| align.keyword),
+                Some(AlignItemsKeyword::SelfStart | AlignItemsKeyword::SelfEnd)
+            ),
+            "self-start/self-end must be resolved before computing the static position"
+        );
+        /// The edge of the static-position rectangle that a (resolved) alignment keyword
+        /// aligns the box to. Stretch does not apply to absolutely positioned items and falls
+        /// back to start-alignment for static-position purposes.
+        fn edge_for(keyword: AlignItemsKeyword, axis_is_rtl: bool) -> AxisStaticEdge {
+            let start_position = !matches!(keyword, AlignItemsKeyword::End | AlignItemsKeyword::FlexEnd) ^ axis_is_rtl;
+            match keyword {
+                AlignItemsKeyword::Center => AxisStaticEdge::Center,
+                _ if start_position => AxisStaticEdge::Start,
+                _ => AxisStaticEdge::End,
+            }
+        }
+        let alignment = alignment.unwrap_or(AlignSelf::START);
+        let fallback = if matches!(alignment.safety, AlignmentSafety::Safe) {
+            AlignItemsKeyword::Start
+        } else {
+            alignment.keyword
+        };
+        Self {
+            area,
+            align: AxisStaticAlign {
+                keyword: edge_for(alignment.keyword, axis_is_rtl),
+                safety: alignment.safety,
+                fallback: edge_for(fallback, axis_is_rtl),
+            },
+        }
     }
 }
 
