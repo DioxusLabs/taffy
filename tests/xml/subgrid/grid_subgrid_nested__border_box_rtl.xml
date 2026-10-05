@@ -1,19 +1,19 @@
 <test name="grid_subgrid_nested__border_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="grid" direction="rtl" grid-template-rows="50px" grid-template-columns="auto auto">
-      <div display="grid" direction="rtl" grid-template-rows="50px" grid-template-columns="subgrid" grid-column-start="1" grid-column-end="3">
-        <div display="grid" direction="rtl" grid-template-rows="50px" grid-template-columns="subgrid" grid-column-start="1" grid-column-end="3">
-          <div direction="rtl" width="40px"/>
-          <div direction="rtl" width="60px"/>
+    <div display="grid" direction="rtl" position="absolute" grid-template-rows="50px" grid-template-columns="auto auto">
+      <div display="grid" direction="rtl" position="relative" grid-template-rows="50px" grid-template-columns="subgrid" grid-column-start="1" grid-column-end="3">
+        <div display="grid" direction="rtl" position="relative" grid-template-rows="50px" grid-template-columns="subgrid" grid-column-start="1" grid-column-end="3">
+          <div direction="rtl" position="relative" width="40px"/>
+          <div direction="rtl" position="relative" width="60px"/>
         </div>
       </div>
     </div>
   </input>
   <expectations>
-    <node x="0" y="0" width="100" height="50">
-      <node x="0" y="0" width="100" height="50">
-        <node x="0" y="0" width="100" height="50">
+    <node x="0" y="0" width="100" height="50" resolved-rows="50px" resolved-columns="40px 60px">
+      <node x="0" y="0" width="100" height="50" resolved-rows="50px" resolved-columns="subgrid [] [] []">
+        <node x="0" y="0" width="100" height="50" resolved-rows="50px" resolved-columns="subgrid [] [] []">
           <node x="60" y="0" width="40" height="50"/>
           <node x="0" y="0" width="60" height="50"/>
         </node>

@@ -58,6 +58,7 @@ Grid containers which are themselves grid items can now set `grid_template_rows`
 - Subgrids adopt the parent's track sizes and gutters in subgridded axes, are always stretched to their grid area (size styles do not apply), clamp item placements to the explicit grid (no implicit tracks), and their margin/border/padding reduce the size of the first/last adopted track. A subgrid specifying its own non-zero `gap` overrides the inherited gutters.
 - Items of subgrids (including nested subgrids) participate in the track sizing of the parent grid, so intrinsically-sized (`auto`, `*-content`, `fr`) parent tracks account for subgrid content.
 - The `subgrid` keyword is supported when parsing grid templates from CSS strings (with the `parse` feature).
+- `DetailedGridTracksInfo` gains an `is_subgrid` field, and the resolved track list of a subgridded axis is serialized as `subgrid` followed by its line names (matching `getComputedStyle`).
 
 Not yet supported: `repeat()` within a subgrid line-name list, inheritance of parent line names into the subgrid, baseline alignment of subgrid items with the parent grid, and absolutely-positioned subgrids.
 

@@ -29,6 +29,8 @@ enum TrackListToken {
     Names(Vec<String>),
     /// A used track size in pixels, e.g. `10.5px`
     Size(f32),
+    /// The `subgrid` keyword (which starts the resolved value of a subgridded axis)
+    Subgrid,
 }
 
 /// Parse a resolved track list string (e.g. `[foo] 10px 20.5px [bar baz]` or `none`) into tokens
@@ -39,6 +41,10 @@ fn parse_track_list(input: &str) -> Vec<TrackListToken> {
     }
     let mut tokens = Vec::new();
     let mut rest = input;
+    if let Some(after_keyword) = input.strip_prefix("subgrid") {
+        tokens.push(TrackListToken::Subgrid);
+        rest = after_keyword;
+    }
     while !rest.is_empty() {
         rest = rest.trim_start();
         if rest.is_empty() {

@@ -960,11 +960,13 @@ pub fn compute_grid_layout_with_subgrid_context<Tree: LayoutGridContainer>(
                 final_row_counts,
                 rows,
                 detailed_row_line_names,
+                adopted_rows.is_some(),
             ),
             columns: DetailedGridTracksInfo::from_grid_tracks_and_track_count(
                 final_col_counts,
                 columns,
                 detailed_column_line_names,
+                adopted_columns.is_some(),
             ),
             items: items.iter().map(DetailedGridItemsInfo::from_grid_item).collect(),
         },
@@ -1306,6 +1308,10 @@ pub struct DetailedGridTracksInfo<S: CheapCloneStr = DefaultCheapStr> {
     /// [`DetailedGridTracksInfo::iter_line_names`] for indices relative to the full grid
     /// (including implicit tracks). Empty if the grid has no named lines.
     pub line_names: GridLineNames<S>,
+
+    /// Whether this axis is subgridded (its tracks are adopted from the parent grid).
+    /// See <https://www.w3.org/TR/css-grid-2/#subgrids>
+    pub is_subgrid: bool,
 }
 
 impl<S: CheapCloneStr> DetailedGridTracksInfo<S> {
@@ -1323,6 +1329,7 @@ impl<S: CheapCloneStr> DetailedGridTracksInfo<S> {
         track_count: TrackCounts,
         grid_tracks: Vec<GridTrack>,
         line_names: GridLineNames<S>,
+        is_subgrid: bool,
     ) -> Self {
         let positions = DetailedGridTracksInfo::<S>::positions_from_grid_track_layout(&grid_tracks);
         // An axis with no tracks consists of a single gutter whose offset is where the axis'
@@ -1335,6 +1342,7 @@ impl<S: CheapCloneStr> DetailedGridTracksInfo<S> {
             positions,
             empty_axis_line,
             line_names,
+            is_subgrid,
         }
     }
 
@@ -1375,6 +1383,17 @@ impl<S: CheapCloneStr> DetailedGridTracksInfo<S> {
                 out.write_str(name.as_ref())?;
             }
             out.write_char(']')
+        }
+
+        // The resolved value of a subgridded axis is the `subgrid` keyword followed by the
+        // names of each of its lines (see <https://www.w3.org/TR/css-grid-2/#resolved-track-list-subgrid>)
+        if self.is_subgrid {
+            out.write_str("subgrid")?;
+            for line_index in 0..=self.positions.len() {
+                out.write_char(' ')?;
+                write_line_names(out, self.names_for_line(line_index))?;
+            }
+            return Ok(());
         }
 
         if self.positions.is_empty() {
