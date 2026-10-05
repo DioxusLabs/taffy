@@ -37,6 +37,20 @@ mod compat {
     pub fn tag_ptr(ptr: *const (), tag: usize) -> *const () {
         (ptr as usize | tag) as *const ()
     }
+
+    /// Clear the tag bits of a pointer preserving provenance (requires Rust 1.84)
+    #[inline(always)]
+    #[cfg(all(target_pointer_width = "64", feature = "strict_provenance"))]
+    pub fn untag_ptr(ptr: *const (), mask: usize) -> *const () {
+        ptr.map_addr(|a| a & !mask)
+    }
+
+    /// Clear the tag bits of a pointer exposing provenance (works back to Rust 1.0)
+    #[inline(always)]
+    #[cfg(all(target_pointer_width = "64", not(feature = "strict_provenance")))]
+    pub fn untag_ptr(ptr: *const (), mask: usize) -> *const () {
+        (ptr as usize & !mask) as *const ()
+    }
 }
 
 #[cfg(not(any(target_pointer_width = "32", target_pointer_width = "64")))]
@@ -45,14 +59,12 @@ std::compile_error!("Taffy only supports targets with a pointer width of 32 or 6
 /// CompactLengthInner implementation for 64 bit platforms
 #[cfg(target_pointer_width = "64")]
 mod inner {
-    use super::compat::{f32_from_bits, f32_to_bits, tag_ptr};
+    use super::compat::{f32_from_bits, f32_to_bits, tag_ptr, untag_ptr};
 
     /// The low byte (8 bits)
     const TAG_MASK: usize = 0b11111111;
     /// The low 3 bits
     const CALC_TAG_MASK: usize = 0b111;
-    // The high 63 bits
-    // const CALC_PTR_MASK: usize = usize::MAX ^ 0b111;
 
     /// On 64 bit platforms the tag, value and pointer are packed into a single 64 bit pointer
     ///
@@ -98,10 +110,10 @@ mod inner {
             (self.tagged_ptr as usize) & TAG_MASK
         }
 
-        /// Get the pointer value
+        /// Get the pointer value (with the tag bits cleared)
         #[inline(always)]
         pub(super) fn ptr(self) -> *const () {
-            self.tagged_ptr
+            untag_ptr(self.tagged_ptr, CALC_TAG_MASK)
         }
 
         /// Get the numeric value
@@ -209,32 +221,63 @@ use inner::CompactLengthInner;
 #[repr(transparent)]
 pub struct CompactLength(CompactLengthInner);
 
+/// Tag layout
+///
+/// Tags are 8 bits. The low 3 bits are shared with pointer variants (such as `calc()`), which require
+/// an 8-byte aligned pointer and so always have those bits clear. They are assigned as follows:
+///
+///   - Bit 0 (`NON_POINTER_BIT`): set for every variant that is *not* a pointer. Pointer variants
+///     (`calc()`) have this bit clear, so `is_plain_calc()` is a single bit test.
+///   - Bit 1 (`KEYWORD_BIT`): set for every variant that is *not* a plain length, percentage or calc()
+///     value (i.e. everything that cannot be resolved to a length given only a percentage basis).
+///   - Bit 2 (`PERCENTAGE_BIT`): set for every variant whose resolved value depends on a percentage basis,
+///     including all `calc()` variants. `uses_percentage()` is a single bit test.
+///
+/// Pointer variants are distinguished by bit 1: `calc()` is `0b100` and `fit-content(calc())` is `0b110`.
+/// Any pointer variant's `tag()` includes address bits 3..7, so pointer variants must be tested with low-bit
+/// masks (`is_plain_calc()`, `is_fit_content_calc()`, `has_calc()`) rather than as `match` arms.
+///
+/// Within the keyword class, bit 3 (`SIZING_KEYWORD_BIT`) is set for the CSS sizing keywords
+/// (`min-content`, `max-content`, `fit-content`, `fit-content()`, `stretch`) and clear for `auto`,
+/// `fr` and `content`. The remaining high bits distinguish variants within a class.
 impl CompactLength {
+    /// Bit set for all non-pointer (i.e. not `calc()`) tags
+    pub const NON_POINTER_BIT: usize = 0b0001;
+    /// Bit set for all tags that are not a plain length, percentage or calc() value
+    pub const KEYWORD_BIT: usize = 0b0010;
+    /// Bit set for all tags whose value depends on a percentage basis (including `calc()`)
+    pub const PERCENTAGE_BIT: usize = 0b0100;
+    /// Bit set (in addition to `KEYWORD_BIT`) for all CSS sizing keyword tags
+    pub const SIZING_KEYWORD_BIT: usize = 0b1000;
+
     /// The tag indicating a calc() value
     #[cfg(feature = "calc")]
-    pub const CALC_TAG: usize = 0b000;
+    pub const CALC_TAG: usize = 0b0000_0100;
+    /// The tag indicating a fit-content() value with a calc() limit
+    #[cfg(feature = "calc")]
+    pub const FIT_CONTENT_CALC_TAG: usize = 0b0000_0110;
     /// The tag indicating a length value
     pub const LENGTH_TAG: usize = 0b0000_0001;
     /// The tag indicating a percentage value
-    pub const PERCENT_TAG: usize = 0b0000_0010;
+    pub const PERCENT_TAG: usize = 0b0000_0101;
     /// The tag indicating an auto value
     pub const AUTO_TAG: usize = 0b0000_0011;
     /// The tag indicating an fr value
-    pub const FR_TAG: usize = 0b0000_0100;
-    /// The tag indicating a min-content value
-    pub const MIN_CONTENT_TAG: usize = 0b00000111;
-    /// The tag indicating a max-content value
-    pub const MAX_CONTENT_TAG: usize = 0b00001111;
-    /// The tag indicating a fit-content value with px limit
-    pub const FIT_CONTENT_PX_TAG: usize = 0b00010111;
-    /// The tag indicating a fit-content value with percent limit
-    pub const FIT_CONTENT_PERCENT_TAG: usize = 0b00011111;
-    /// The tag indicating a plain fit-content keyword value (no limit)
-    pub const FIT_CONTENT_KEYWORD_TAG: usize = 0b00100111;
-    /// The tag indicating a stretch keyword value
-    pub const STRETCH_TAG: usize = 0b00101111;
+    pub const FR_TAG: usize = 0b0001_0011;
     /// The tag indicating a content keyword value
-    pub const CONTENT_TAG: usize = 0b00110111;
+    pub const CONTENT_TAG: usize = 0b0010_0011;
+    /// The tag indicating a min-content value
+    pub const MIN_CONTENT_TAG: usize = 0b0000_1011;
+    /// The tag indicating a max-content value
+    pub const MAX_CONTENT_TAG: usize = 0b0001_1011;
+    /// The tag indicating a fit-content value with px limit
+    pub const FIT_CONTENT_PX_TAG: usize = 0b0010_1011;
+    /// The tag indicating a plain fit-content keyword value (no limit)
+    pub const FIT_CONTENT_KEYWORD_TAG: usize = 0b0011_1011;
+    /// The tag indicating a stretch keyword value
+    pub const STRETCH_TAG: usize = 0b0100_1011;
+    /// The tag indicating a fit-content value with percent limit
+    pub const FIT_CONTENT_PERCENT_TAG: usize = 0b0000_1111;
 }
 
 impl CompactLength {
@@ -263,6 +306,18 @@ impl CompactLength {
         assert_ne!(ptr as u64, 0);
         assert_eq!(ptr as u64 & 0b111, 0);
         Self(CompactLengthInner::from_ptr(ptr, Self::CALC_TAG))
+    }
+
+    /// A `fit-content(calc())` value. The value passed here is treated as an opaque handle to
+    /// the actual calc representation of the limit and may be a pointer, index, etc.
+    ///
+    /// The low 3 bits are used as a tag value and will be returned as 0.
+    #[inline]
+    #[cfg(feature = "calc")]
+    pub fn fit_content_calc(ptr: *const ()) -> Self {
+        assert_ne!(ptr as u64, 0);
+        assert_eq!(ptr as u64 & 0b111, 0);
+        Self(CompactLengthInner::from_ptr(ptr, Self::FIT_CONTENT_CALC_TAG))
     }
 
     /// The dimension should be automatically computed according to algorithm-specific rules
@@ -370,11 +425,24 @@ impl CompactLength {
         self.0.ptr()
     }
 
-    /// Returns true if the value is 0 px
+    /// Returns true if the value is a plain calc() value (not a fit-content(calc()) value)
     #[inline(always)]
     #[cfg(feature = "calc")]
-    pub fn is_calc(self) -> bool {
-        self.0.calc_tag() == 0
+    pub fn is_plain_calc(self) -> bool {
+        self.0.calc_tag() & (Self::NON_POINTER_BIT | Self::KEYWORD_BIT) == 0
+    }
+
+    /// Returns true if the value is a fit-content() value with a calc() limit
+    #[inline(always)]
+    pub fn is_fit_content_calc(self) -> bool {
+        self.tag() & (Self::NON_POINTER_BIT | Self::KEYWORD_BIT) == Self::KEYWORD_BIT
+    }
+
+    /// Returns true if the value holds a calc() pointer: either a plain calc() value or a
+    /// fit-content() value with a calc() limit. `calc_value()` is valid for exactly these values.
+    #[inline(always)]
+    pub fn has_calc(self) -> bool {
+        self.tag() & Self::NON_POINTER_BIT == 0
     }
 
     /// Returns true if the value is 0 px
@@ -386,7 +454,7 @@ impl CompactLength {
     /// Returns true if the value is a length or percentage value
     #[inline(always)]
     pub fn is_length_or_percentage(self) -> bool {
-        matches!(self.tag(), Self::LENGTH_TAG | Self::PERCENT_TAG)
+        self.tag() & (Self::NON_POINTER_BIT | Self::KEYWORD_BIT) == Self::NON_POINTER_BIT
     }
 
     /// Returns true if the value is auto
@@ -416,27 +484,22 @@ impl CompactLength {
     /// Returns true if the value is a fit-content(...) value
     #[inline(always)]
     pub fn is_fit_content(self) -> bool {
-        matches!(self.tag(), Self::FIT_CONTENT_PX_TAG | Self::FIT_CONTENT_PERCENT_TAG)
+        matches!(self.tag(), Self::FIT_CONTENT_PX_TAG | Self::FIT_CONTENT_PERCENT_TAG) || self.is_fit_content_calc()
     }
 
     /// Returns true if the value is min-content, max-content, fit-content, fit-content(...), or stretch
     #[inline(always)]
     pub fn is_sizing_keyword(self) -> bool {
-        matches!(
-            self.tag(),
-            Self::MIN_CONTENT_TAG
-                | Self::MAX_CONTENT_TAG
-                | Self::FIT_CONTENT_KEYWORD_TAG
-                | Self::FIT_CONTENT_PX_TAG
-                | Self::FIT_CONTENT_PERCENT_TAG
-                | Self::STRETCH_TAG
-        )
+        const MASK: usize =
+            CompactLength::NON_POINTER_BIT | CompactLength::KEYWORD_BIT | CompactLength::SIZING_KEYWORD_BIT;
+        self.tag() & MASK == MASK || self.is_fit_content_calc()
     }
 
     /// Returns true if the value is max-content or a fit-content(...) value
     #[inline(always)]
     pub fn is_max_or_fit_content(self) -> bool {
         matches!(self.tag(), Self::MAX_CONTENT_TAG | Self::FIT_CONTENT_PX_TAG | Self::FIT_CONTENT_PERCENT_TAG)
+            || self.is_fit_content_calc()
     }
 
     /// Returns true if the max track sizing function is `MaxContent`, `FitContent` or `Auto` else false.
@@ -450,7 +513,7 @@ impl CompactLength {
                 | CompactLength::MAX_CONTENT_TAG
                 | CompactLength::FIT_CONTENT_PX_TAG
                 | CompactLength::FIT_CONTENT_PERCENT_TAG
-        )
+        ) || self.is_fit_content_calc()
     }
 
     /// Returns true if the min track sizing function is `MinContent` or `MaxContent`, else false.
@@ -469,7 +532,7 @@ impl CompactLength {
                 | Self::MAX_CONTENT_TAG
                 | Self::FIT_CONTENT_PX_TAG
                 | Self::FIT_CONTENT_PERCENT_TAG
-        )
+        ) || self.is_fit_content_calc()
     }
 
     /// Returns true if the value is and fr value
@@ -481,14 +544,7 @@ impl CompactLength {
     /// Whether the track sizing functions depends on the size of the parent node
     #[inline(always)]
     pub fn uses_percentage(self) -> bool {
-        #[cfg(feature = "calc")]
-        {
-            matches!(self.tag(), CompactLength::PERCENT_TAG | CompactLength::FIT_CONTENT_PERCENT_TAG) || self.is_calc()
-        }
-        #[cfg(not(feature = "calc"))]
-        {
-            matches!(self.tag(), CompactLength::PERCENT_TAG | CompactLength::FIT_CONTENT_PERCENT_TAG)
-        }
+        self.tag() & Self::PERCENTAGE_BIT != 0
     }
 
     /// Resolve percentage values against the passed parent_size, returning Some(value)
@@ -502,7 +558,7 @@ impl CompactLength {
         match self.tag() {
             CompactLength::PERCENT_TAG => Some(self.value() * parent_size),
             #[cfg(feature = "calc")]
-            _ if self.is_calc() => Some(calc_resolver(self.0.ptr(), parent_size)),
+            _ if self.is_plain_calc() => Some(calc_resolver(self.0.ptr(), parent_size)),
             _ => None,
         }
     }
@@ -541,6 +597,8 @@ impl TaffyFitContent for CompactLength {
         match lp.0.tag() {
             Self::LENGTH_TAG => Self::fit_content_px(value),
             Self::PERCENT_TAG => Self::fit_content_percent(value),
+            #[cfg(feature = "calc")]
+            _ if lp.0.is_plain_calc() => Self::fit_content_calc(lp.0.calc_value()),
             _ => unreachable!(),
         }
     }
@@ -554,7 +612,7 @@ impl serde::Serialize for CompactLength {
     {
         #[cfg(feature = "calc")]
         {
-            if self.tag() == Self::CALC_TAG {
+            if self.has_calc() {
                 Err(serde::ser::Error::custom("Cannot serialize Calc value"))
             } else {
                 serializer.serialize_u64(self.0.serialized())
@@ -574,7 +632,8 @@ impl<'de> serde::Deserialize<'de> for CompactLength {
     {
         let bits: u64 = u64::deserialize(deserializer)?;
         let value = Self(CompactLengthInner::from_serialized(bits));
-        // Note: validation intentionally excludes the CALC_TAG as deserializing calc() values is not supported
+        // Note: validation intentionally excludes the CALC_TAG as deserializing calc() values is not supported.
+        // All of the accepted tags have `NON_POINTER_BIT` set, so a calc() tag can never pass validation.
         if matches!(
             value.tag(),
             CompactLength::LENGTH_TAG
@@ -593,5 +652,142 @@ impl<'de> serde::Deserialize<'de> for CompactLength {
         } else {
             Err(serde::de::Error::custom("Cannot deserialize Calc value"))
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{CompactLength, CompactLengthInner};
+
+    impl CompactLength {
+        fn from_raw_tag(tag: usize) -> Self {
+            Self(CompactLengthInner::from_tag(tag))
+        }
+    }
+
+    const NON_PERCENTAGE_TAGS: &[usize] = &[
+        CompactLength::LENGTH_TAG,
+        CompactLength::AUTO_TAG,
+        CompactLength::FR_TAG,
+        CompactLength::MIN_CONTENT_TAG,
+        CompactLength::MAX_CONTENT_TAG,
+        CompactLength::FIT_CONTENT_PX_TAG,
+        CompactLength::FIT_CONTENT_KEYWORD_TAG,
+        CompactLength::STRETCH_TAG,
+        CompactLength::CONTENT_TAG,
+    ];
+    const PERCENTAGE_TAGS: &[usize] = &[CompactLength::PERCENT_TAG, CompactLength::FIT_CONTENT_PERCENT_TAG];
+
+    #[test]
+    fn tags_are_unique_and_fit_in_a_byte() {
+        let mut all: Vec<usize> = NON_PERCENTAGE_TAGS.iter().chain(PERCENTAGE_TAGS).copied().collect();
+        #[cfg(feature = "calc")]
+        all.push(CompactLength::CALC_TAG);
+        #[cfg(feature = "calc")]
+        all.push(CompactLength::FIT_CONTENT_CALC_TAG);
+        assert!(all.iter().all(|tag| *tag <= 0xFF));
+        all.sort_unstable();
+        all.dedup();
+        assert_eq!(all.len(), NON_PERCENTAGE_TAGS.len() + PERCENTAGE_TAGS.len() + 2 * cfg!(feature = "calc") as usize);
+    }
+
+    #[test]
+    fn non_pointer_tags_have_non_pointer_bit_set() {
+        for tag in NON_PERCENTAGE_TAGS.iter().chain(PERCENTAGE_TAGS) {
+            assert_ne!(tag & CompactLength::NON_POINTER_BIT, 0, "tag {tag:#010b}");
+        }
+        #[cfg(feature = "calc")]
+        assert_eq!(CompactLength::CALC_TAG & CompactLength::NON_POINTER_BIT, 0);
+    }
+
+    #[test]
+    fn keyword_bits_match_predicates() {
+        let all = NON_PERCENTAGE_TAGS.iter().chain(PERCENTAGE_TAGS).map(|tag| CompactLength::from_raw_tag(*tag));
+        for value in all {
+            let tag = value.tag();
+            let is_plain = matches!(tag, CompactLength::LENGTH_TAG | CompactLength::PERCENT_TAG);
+            assert_eq!(tag & CompactLength::KEYWORD_BIT == 0, is_plain, "tag {tag:#010b}");
+            assert_eq!(value.is_length_or_percentage(), is_plain, "tag {tag:#010b}");
+            let is_sizing_keyword = matches!(
+                tag,
+                CompactLength::MIN_CONTENT_TAG
+                    | CompactLength::MAX_CONTENT_TAG
+                    | CompactLength::FIT_CONTENT_KEYWORD_TAG
+                    | CompactLength::FIT_CONTENT_PX_TAG
+                    | CompactLength::FIT_CONTENT_PERCENT_TAG
+                    | CompactLength::STRETCH_TAG
+            );
+            assert_eq!(value.is_sizing_keyword(), is_sizing_keyword, "tag {tag:#010b}");
+        }
+        #[cfg(feature = "calc")]
+        {
+            assert_eq!(CompactLength::CALC_TAG & CompactLength::KEYWORD_BIT, 0);
+            assert_ne!(CompactLength::FIT_CONTENT_CALC_TAG & CompactLength::KEYWORD_BIT, 0);
+            assert_eq!(CompactLength::FIT_CONTENT_CALC_TAG & CompactLength::NON_POINTER_BIT, 0);
+            assert_ne!(CompactLength::FIT_CONTENT_CALC_TAG & CompactLength::PERCENTAGE_BIT, 0);
+        }
+    }
+
+    #[test]
+    fn percentage_bit_matches_uses_percentage() {
+        for tag in NON_PERCENTAGE_TAGS {
+            assert_eq!(tag & CompactLength::PERCENTAGE_BIT, 0, "tag {tag:#010b}");
+        }
+        for tag in PERCENTAGE_TAGS {
+            assert_ne!(tag & CompactLength::PERCENTAGE_BIT, 0, "tag {tag:#010b}");
+        }
+        #[cfg(feature = "calc")]
+        assert_ne!(CompactLength::CALC_TAG & CompactLength::PERCENTAGE_BIT, 0);
+
+        assert!(!CompactLength::length(10.0).uses_percentage());
+        assert!(!CompactLength::auto().uses_percentage());
+        assert!(!CompactLength::fr(1.0).uses_percentage());
+        assert!(!CompactLength::min_content().uses_percentage());
+        assert!(!CompactLength::max_content().uses_percentage());
+        assert!(!CompactLength::fit_content_px(10.0).uses_percentage());
+        assert!(!CompactLength::fit_content_keyword().uses_percentage());
+        assert!(!CompactLength::stretch().uses_percentage());
+        assert!(!CompactLength::content().uses_percentage());
+        assert!(CompactLength::percent(0.5).uses_percentage());
+        assert!(CompactLength::fit_content_percent(0.5).uses_percentage());
+    }
+
+    #[test]
+    #[cfg(feature = "calc")]
+    fn fit_content_calc_round_trips_pointer() {
+        let boxed = Box::new(0u64);
+        let ptr = &*boxed as *const u64 as *const ();
+        let value = CompactLength::fit_content_calc(ptr);
+        assert!(value.is_fit_content_calc());
+        assert!(value.has_calc());
+        assert!(!value.is_plain_calc());
+        assert!(value.is_fit_content());
+        assert!(value.is_sizing_keyword());
+        assert!(value.is_intrinsic());
+        assert!(value.is_max_or_fit_content());
+        assert!(value.is_max_content_alike());
+        assert!(value.uses_percentage());
+        assert!(!value.is_length_or_percentage());
+        assert_eq!(value.calc_value(), ptr);
+
+        let calc = CompactLength::calc(ptr);
+        assert!(calc.is_plain_calc());
+        assert!(calc.has_calc());
+        assert!(!calc.is_fit_content_calc());
+        assert!(!calc.is_fit_content());
+        assert!(!calc.is_sizing_keyword());
+    }
+
+    #[test]
+    fn calc_round_trips_pointer() {
+        let boxed = Box::new(42u64);
+        let ptr = &*boxed as *const u64 as *const ();
+        let value = CompactLength::calc(ptr);
+        assert!(value.is_plain_calc());
+        assert!(value.uses_percentage());
+        assert!(!value.is_length_or_percentage());
+        assert!(!value.is_auto());
+        assert!(!value.is_intrinsic());
+        assert_eq!(value.calc_value(), ptr);
     }
 }

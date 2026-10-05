@@ -23913,6 +23913,60 @@ mod grid {
 
     #[cfg(feature = "grid")]
     #[test]
+    fn grid_fit_content_span_2_capped_by_non_growable_fit_content_track__border_box_ltr() {
+        crate::run_xml_test("grid", "grid_fit_content_span_2_capped_by_non_growable_fit_content_track__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_fit_content_span_2_capped_by_non_growable_fit_content_track__content_box_ltr() {
+        crate::run_xml_test(
+            "grid",
+            "grid_fit_content_span_2_capped_by_non_growable_fit_content_track__content_box_ltr",
+        );
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_fit_content_span_2_capped_by_non_growable_fit_content_track__border_box_rtl() {
+        crate::run_xml_test("grid", "grid_fit_content_span_2_capped_by_non_growable_fit_content_track__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_fit_content_span_2_capped_by_non_growable_fit_content_track__content_box_rtl() {
+        crate::run_xml_test(
+            "grid",
+            "grid_fit_content_span_2_capped_by_non_growable_fit_content_track__content_box_rtl",
+        );
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_fit_content_span_3_between_auto_tracks__border_box_ltr() {
+        crate::run_xml_test("grid", "grid_fit_content_span_3_between_auto_tracks__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_fit_content_span_3_between_auto_tracks__content_box_ltr() {
+        crate::run_xml_test("grid", "grid_fit_content_span_3_between_auto_tracks__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_fit_content_span_3_between_auto_tracks__border_box_rtl() {
+        crate::run_xml_test("grid", "grid_fit_content_span_3_between_auto_tracks__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_fit_content_span_3_between_auto_tracks__content_box_rtl() {
+        crate::run_xml_test("grid", "grid_fit_content_span_3_between_auto_tracks__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
     fn grid_flex_track_intrinsic_sizes_001_span1_0fr__border_box_ltr() {
         crate::run_xml_test("grid", "grid_flex_track_intrinsic_sizes_001_span1_0fr__border_box_ltr");
     }

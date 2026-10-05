@@ -87,7 +87,7 @@ impl LengthPercentage {
             CompactLength::LENGTH_TAG => ExpandedLengthPercentage::Length(self.0.value()),
             CompactLength::PERCENT_TAG => ExpandedLengthPercentage::Percent(self.0.value()),
             #[cfg(feature = "calc")]
-            _ if self.0.is_calc() => ExpandedLengthPercentage::Calc(self.0.calc_value()),
+            _ if self.0.is_plain_calc() => ExpandedLengthPercentage::Calc(self.0.calc_value()),
             _ => unreachable!("LengthPercentage contains a value with an invalid tag"),
         }
     }
@@ -241,7 +241,7 @@ impl LengthPercentageAuto {
             CompactLength::PERCENT_TAG => Some(context * self.0.value()),
             CompactLength::AUTO_TAG => None,
             #[cfg(feature = "calc")]
-            _ if self.0.is_calc() => Some(calc_resolver(self.0.calc_value(), context)),
+            _ if self.0.is_plain_calc() => Some(calc_resolver(self.0.calc_value(), context)),
             _ => unreachable!("LengthPercentageAuto values cannot be constructed with other tags"),
         }
     }
@@ -263,7 +263,7 @@ impl LengthPercentageAuto {
             CompactLength::PERCENT_TAG => ExpandedLengthPercentageAuto::Percent(self.0.value()),
             CompactLength::AUTO_TAG => ExpandedLengthPercentageAuto::Auto,
             #[cfg(feature = "calc")]
-            _ if self.0.is_calc() => ExpandedLengthPercentageAuto::Calc(self.0.calc_value()),
+            _ if self.0.is_plain_calc() => ExpandedLengthPercentageAuto::Calc(self.0.calc_value()),
             _ => unreachable!("LengthPercentageAuto contains a value with an invalid tag"),
         }
     }
@@ -473,6 +473,29 @@ impl Dimension {
         Self(CompactLength::calc(ptr))
     }
 
+    /// A `fit-content()` value whose limit is a `calc()` value. The value passed here is treated as an opaque
+    /// handle to the actual calc representation and may be a pointer, index, etc.
+    ///
+    /// The low 3 bits are used as a tag value and will be returned as 0.
+    #[inline]
+    #[cfg(feature = "calc")]
+    pub fn fit_content_calc(ptr: *const ()) -> Self {
+        Self(CompactLength::fit_content_calc(ptr))
+    }
+
+    /// Returns true if the value is a `fit-content()` value with a `calc()` limit
+    #[inline(always)]
+    pub fn is_fit_content_calc(self) -> bool {
+        self.0.is_fit_content_calc()
+    }
+
+    /// Get the calc() pointer (valid for `calc()` and `fit-content(calc())` values)
+    #[inline(always)]
+    #[cfg(feature = "calc")]
+    pub fn calc_value(self) -> *const () {
+        self.0.calc_value()
+    }
+
     /// Create a LengthPercentageAuto from a raw `CompactLength`.
     /// # Safety
     /// CompactLength must represent a valid variant for LengthPercentageAuto
@@ -543,10 +566,12 @@ impl Dimension {
             CompactLength::FIT_CONTENT_PX_TAG => ExpandedDimension::FitContentPx(self.0.value()),
             CompactLength::FIT_CONTENT_PERCENT_TAG => ExpandedDimension::FitContentPercent(self.0.value()),
             CompactLength::FIT_CONTENT_KEYWORD_TAG => ExpandedDimension::FitContent,
+            #[cfg(feature = "calc")]
+            _ if self.0.is_fit_content_calc() => ExpandedDimension::FitContentCalc(self.0.calc_value()),
             CompactLength::STRETCH_TAG => ExpandedDimension::Stretch,
             CompactLength::CONTENT_TAG => ExpandedDimension::Content,
             #[cfg(feature = "calc")]
-            _ if self.0.is_calc() => ExpandedDimension::Calc(self.0.calc_value()),
+            _ if self.0.is_plain_calc() => ExpandedDimension::Calc(self.0.calc_value()),
             _ => unreachable!("Dimension contains a value with an invalid tag"),
         }
     }
@@ -572,6 +597,9 @@ pub enum ExpandedDimension {
     FitContentPx(f32),
     /// A `fit-content(...)` value with a percentage limit (see [`Dimension::fit_content_percent`])
     FitContentPercent(f32),
+    /// The size is the fit-content size with a `calc()` limit (an opaque handle to the calc representation)
+    #[cfg(feature = "calc")]
+    FitContentCalc(*const ()),
     /// The `fit-content` keyword with no limit (see [`Dimension::fit_content`])
     FitContent,
     /// The `stretch` keyword (see [`Dimension::stretch`])
@@ -601,6 +629,8 @@ impl From<ExpandedDimension> for Dimension {
             ExpandedDimension::FitContentPx(val) => Self::fit_content_px(val),
             ExpandedDimension::FitContentPercent(val) => Self::fit_content_percent(val),
             ExpandedDimension::FitContent => Self::fit_content(),
+            #[cfg(feature = "calc")]
+            ExpandedDimension::FitContentCalc(ptr) => Self::fit_content_calc(ptr),
             ExpandedDimension::Stretch => Self::stretch(),
             ExpandedDimension::Content => Self::content(),
             #[cfg(feature = "calc")]
@@ -725,6 +755,8 @@ mod expand_tests {
         assert_eq!(LengthPercentage::calc(handle).expand(), ExpandedLengthPercentage::Calc(handle));
         assert_eq!(LengthPercentage::from(ExpandedLengthPercentage::Calc(handle)), LengthPercentage::calc(handle));
         assert_eq!(Dimension::calc(handle).expand(), ExpandedDimension::Calc(handle));
+        assert_eq!(Dimension::fit_content_calc(handle).expand(), ExpandedDimension::FitContentCalc(handle));
+        assert_eq!(Dimension::from(ExpandedDimension::FitContentCalc(handle)), Dimension::fit_content_calc(handle));
         assert_eq!(LengthPercentageAuto::calc(handle).expand(), ExpandedLengthPercentageAuto::Calc(handle));
     }
 }

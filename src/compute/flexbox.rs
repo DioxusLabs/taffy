@@ -978,7 +978,12 @@ fn determine_flex_base_size(
                 // default constraint below
                 None
             } else if flex_basis_style.is_sizing_keyword() {
-                match resolve_sizing_keyword(flex_basis_style, main_stretch_size, percent_resolution_main_size) {
+                match resolve_sizing_keyword(
+                    flex_basis_style,
+                    main_stretch_size,
+                    percent_resolution_main_size,
+                    |val, basis| tree.calc(val, basis),
+                ) {
                     Some(SizingKeywordResolution::Exact(size)) => {
                         child.flex_basis_is_definite = true;
                         break 'flex_basis size;
@@ -998,6 +1003,7 @@ fn determine_flex_base_size(
                     child.size_style.main(dir),
                     main_stretch_size,
                     percent_resolution_main_size,
+                    |val, basis| tree.calc(val, basis),
                 ) {
                     Some(SizingKeywordResolution::Exact(size)) => {
                         child.flex_basis_is_definite = true;
@@ -1909,6 +1915,7 @@ fn determine_hypothetical_cross_size(
             child.size_style.cross(constants.dir),
             cross_stretch_size,
             constants.node_inner_size.cross(constants.dir),
+            |val, basis| tree.calc(val, basis),
         ) {
             Some(SizingKeywordResolution::Measure(available)) => available,
             _ => child_available_cross,

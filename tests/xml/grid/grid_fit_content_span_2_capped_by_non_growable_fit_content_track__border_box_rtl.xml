@@ -1,0 +1,19 @@
+<test name="grid_fit_content_span_2_capped_by_non_growable_fit_content_track__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" direction="rtl" position="absolute" justify-content="start" width="100px" column-gap="5px" grid-template-columns="fit-content(110px) fit-content(40px)">
+      <text direction="rtl" position="relative" grid-row-start="1" grid-column-start="2">
+        XX
+      </text>
+      <text direction="rtl" position="relative" grid-row-start="2" grid-column-start="1" grid-column-end="-1">
+        XXX​XXX​X
+      </text>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="100" height="20" resolved-rows="10px 10px" resolved-columns="45px 20px">
+      <node x="30" y="0" width="20" height="10"/>
+      <node x="30" y="10" width="70" height="10"/>
+    </node>
+  </expectations>
+</test>

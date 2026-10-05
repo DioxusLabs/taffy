@@ -360,6 +360,7 @@ impl GridItem {
                     self.size.width,
                     grid_area_minus_item_margins_size.width,
                     grid_area_size.width,
+                    |val, basis| tree.calc(val, basis),
                 ) {
                     Some(SizingKeywordResolution::Exact(width)) => Some(width),
                     _ => None,
@@ -388,6 +389,7 @@ impl GridItem {
                     self.size.height,
                     grid_area_minus_item_margins_size.height,
                     grid_area_size.height,
+                    |val, basis| tree.calc(val, basis),
                 ) {
                     Some(SizingKeywordResolution::Exact(height)) => Some(height),
                     _ => None,
@@ -646,7 +648,9 @@ impl GridItem {
             }
             let stretch_size = grid_area_size.get(axis).maybe_sub(margins.get(axis)).maybe_max(0.0);
             if let Some(SizingKeywordResolution::Measure(available)) =
-                resolve_sizing_keyword(size_style, stretch_size, grid_area_size.get(axis))
+                resolve_sizing_keyword(size_style, stretch_size, grid_area_size.get(axis), |val, basis| {
+                    tree.calc(val, basis)
+                })
             {
                 adjusted.set(axis, available);
             }

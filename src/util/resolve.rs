@@ -33,7 +33,7 @@ impl MaybeResolve<Option<f32>, Option<f32>> for LengthPercentage {
             CompactLength::LENGTH_TAG => Some(self.0.value()),
             CompactLength::PERCENT_TAG => context.map(|dim| dim * self.0.value()),
             #[cfg(feature = "calc")]
-            _ if self.0.is_calc() => context.map(|dim| calc(self.0.calc_value(), dim)),
+            _ if self.0.is_plain_calc() => context.map(|dim| calc(self.0.calc_value(), dim)),
             _ => unreachable!(),
         }
     }
@@ -48,7 +48,7 @@ impl MaybeResolve<Option<f32>, Option<f32>> for LengthPercentageAuto {
             CompactLength::LENGTH_TAG => Some(self.0.value()),
             CompactLength::PERCENT_TAG => context.map(|dim| dim * self.0.value()),
             #[cfg(feature = "calc")]
-            _ if self.0.is_calc() => context.map(|dim| calc(self.0.calc_value(), dim)),
+            _ if self.0.is_plain_calc() => context.map(|dim| calc(self.0.calc_value(), dim)),
             _ => unreachable!(),
         }
     }
@@ -66,7 +66,7 @@ impl MaybeResolve<Option<f32>, Option<f32>> for Dimension {
             CompactLength::LENGTH_TAG => Some(self.0.value()),
             CompactLength::PERCENT_TAG => context.map(|dim| dim * self.0.value()),
             #[cfg(feature = "calc")]
-            _ if self.0.is_calc() => context.map(|dim| calc(self.0.calc_value(), dim)),
+            _ if self.0.is_plain_calc() => context.map(|dim| calc(self.0.calc_value(), dim)),
             // Intrinsic sizing keywords cannot be resolved to a definite size out of context.
             // Layout algorithms that support them must handle them explicitly.
             _ if self.0.is_sizing_keyword() => None,

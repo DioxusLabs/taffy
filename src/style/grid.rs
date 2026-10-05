@@ -924,6 +924,16 @@ impl MaxTrackSizingFunction {
         Self(CompactLength::calc(ptr))
     }
 
+    /// A `fit-content()` track sizing function whose limit is a `calc()` value. The value passed here is treated
+    /// as an opaque handle to the actual calc representation and may be a pointer, index, etc.
+    ///
+    /// The low 3 bits are used as a tag value and will be returned as 0.
+    #[inline]
+    #[cfg(feature = "calc")]
+    pub fn fit_content_calc(ptr: *const ()) -> Self {
+        Self(CompactLength::fit_content_calc(ptr))
+    }
+
     /// Create a LengthPercentageAuto from a raw `CompactLength`.
     /// # Safety
     /// CompactLength must represent a valid variant for LengthPercentageAuto
@@ -994,7 +1004,7 @@ impl MaxTrackSizingFunction {
             CompactLength::LENGTH_TAG => true,
             CompactLength::PERCENT_TAG => parent_size.is_some(),
             #[cfg(feature = "calc")]
-            _ if self.0.is_calc() => parent_size.is_some(),
+            _ if self.0.is_plain_calc() => parent_size.is_some(),
             _ => false,
         }
     }
@@ -1012,7 +1022,27 @@ impl MaxTrackSizingFunction {
             CompactLength::LENGTH_TAG => Some(self.0.value()),
             CompactLength::PERCENT_TAG => parent_size.map(|size| self.0.value() * size),
             #[cfg(feature = "calc")]
-            _ if self.0.is_calc() => parent_size.map(|size| calc_resolver(self.0.calc_value(), size)),
+            _ if self.0.is_plain_calc() => parent_size.map(|size| calc_resolver(self.0.calc_value(), size)),
+            _ => None,
+        }
+    }
+
+    /// Resolve the `fit-content()` limit of this track sizing function against the passed `parent_size`.
+    /// Returns `None` if this is not a `fit-content()` function, or if it has a percentage or `calc()`
+    /// argument and `parent_size` is indefinite.
+    #[inline(always)]
+    pub fn fit_content_limit(
+        self,
+        parent_size: Option<f32>,
+        calc_resolver: impl Fn(*const (), f32) -> f32,
+    ) -> Option<f32> {
+        #[cfg(not(feature = "calc"))]
+        let _ = &calc_resolver;
+        match self.0.tag() {
+            CompactLength::FIT_CONTENT_PX_TAG => Some(self.0.value()),
+            CompactLength::FIT_CONTENT_PERCENT_TAG => parent_size.map(|size| self.0.value() * size),
+            #[cfg(feature = "calc")]
+            _ if self.0.is_fit_content_calc() => parent_size.map(|size| calc_resolver(self.0.calc_value(), size)),
             _ => None,
         }
     }
@@ -1032,6 +1062,8 @@ impl MaxTrackSizingFunction {
         match self.0.tag() {
             CompactLength::FIT_CONTENT_PX_TAG => Some(self.0.value()),
             CompactLength::FIT_CONTENT_PERCENT_TAG => parent_size.map(|size| self.0.value() * size),
+            #[cfg(feature = "calc")]
+            _ if self.0.is_fit_content_calc() => parent_size.map(|size| calc_resolver(self.0.calc_value(), size)),
             _ => self.definite_value(parent_size, calc_resolver),
         }
     }
@@ -1067,9 +1099,11 @@ impl MaxTrackSizingFunction {
             CompactLength::MAX_CONTENT_TAG => ExpandedMaxTrackSizingFunction::MaxContent,
             CompactLength::FIT_CONTENT_PX_TAG => ExpandedMaxTrackSizingFunction::FitContentPx(self.0.value()),
             CompactLength::FIT_CONTENT_PERCENT_TAG => ExpandedMaxTrackSizingFunction::FitContentPercent(self.0.value()),
+            #[cfg(feature = "calc")]
+            _ if self.0.is_fit_content_calc() => ExpandedMaxTrackSizingFunction::FitContentCalc(self.0.calc_value()),
             CompactLength::FR_TAG => ExpandedMaxTrackSizingFunction::Fr(self.0.value()),
             #[cfg(feature = "calc")]
-            _ if self.0.is_calc() => ExpandedMaxTrackSizingFunction::Calc(self.0.calc_value()),
+            _ if self.0.is_plain_calc() => ExpandedMaxTrackSizingFunction::Calc(self.0.calc_value()),
             _ => unreachable!("MaxTrackSizingFunction contains a value with an invalid tag"),
         }
     }
@@ -1095,6 +1129,10 @@ pub enum ExpandedMaxTrackSizingFunction {
     FitContentPx(f32),
     /// A `fit-content(...)` value with a percentage limit (see [`MaxTrackSizingFunction::fit_content_percent`])
     FitContentPercent(f32),
+    /// Track maximum size should be content sized under a max-content constraint, but not larger than
+    /// the `calc()` limit (an opaque handle to the calc representation)
+    #[cfg(feature = "calc")]
+    FitContentCalc(*const ()),
     /// A fraction of the leftover space (see [`MaxTrackSizingFunction::fr`])
     Fr(f32),
     /// A `calc()` value (see [`MaxTrackSizingFunction::calc`]). The pointer is an opaque handle to
@@ -1119,6 +1157,8 @@ impl From<ExpandedMaxTrackSizingFunction> for MaxTrackSizingFunction {
             ExpandedMaxTrackSizingFunction::MaxContent => Self::max_content(),
             ExpandedMaxTrackSizingFunction::FitContentPx(val) => Self::fit_content_px(val),
             ExpandedMaxTrackSizingFunction::FitContentPercent(val) => Self::fit_content_percent(val),
+            #[cfg(feature = "calc")]
+            ExpandedMaxTrackSizingFunction::FitContentCalc(ptr) => Self::fit_content_calc(ptr),
             ExpandedMaxTrackSizingFunction::Fr(val) => Self::fr(val),
             #[cfg(feature = "calc")]
             ExpandedMaxTrackSizingFunction::Calc(ptr) => Self::calc(ptr),
@@ -1176,6 +1216,7 @@ impl From<Dimension> for MinTrackSizingFunction {
             | CompactLength::FIT_CONTENT_KEYWORD_TAG
             | CompactLength::STRETCH_TAG
             | CompactLength::CONTENT_TAG => Self::auto(),
+            _ if input.0.is_fit_content_calc() => Self::auto(),
             _ => Self(input.0),
         }
     }
@@ -1345,7 +1386,7 @@ impl MinTrackSizingFunction {
             CompactLength::LENGTH_TAG => Some(self.0.value()),
             CompactLength::PERCENT_TAG => parent_size.map(|size| self.0.value() * size),
             #[cfg(feature = "calc")]
-            _ if self.0.is_calc() => parent_size.map(|size| calc_resolver(self.0.calc_value(), size)),
+            _ if self.0.is_plain_calc() => parent_size.map(|size| calc_resolver(self.0.calc_value(), size)),
             _ => None,
         }
     }
@@ -1364,14 +1405,7 @@ impl MinTrackSizingFunction {
     /// Whether the track sizing functions depends on the size of the parent node
     #[inline(always)]
     pub fn uses_percentage(self) -> bool {
-        #[cfg(feature = "calc")]
-        {
-            matches!(self.0.tag(), CompactLength::PERCENT_TAG) || self.0.is_calc()
-        }
-        #[cfg(not(feature = "calc"))]
-        {
-            matches!(self.0.tag(), CompactLength::PERCENT_TAG)
-        }
+        self.0.uses_percentage()
     }
 
     /// Expand the compact representation into an [`ExpandedMinTrackSizingFunction`] enum.
@@ -1387,7 +1421,7 @@ impl MinTrackSizingFunction {
             CompactLength::MIN_CONTENT_TAG => ExpandedMinTrackSizingFunction::MinContent,
             CompactLength::MAX_CONTENT_TAG => ExpandedMinTrackSizingFunction::MaxContent,
             #[cfg(feature = "calc")]
-            _ if self.0.is_calc() => ExpandedMinTrackSizingFunction::Calc(self.0.calc_value()),
+            _ if self.0.is_plain_calc() => ExpandedMinTrackSizingFunction::Calc(self.0.calc_value()),
             _ => unreachable!("MinTrackSizingFunction contains a value with an invalid tag"),
         }
     }
@@ -1907,6 +1941,23 @@ mod expand_tests {
         let handle = &HANDLE as *const Aligned as *const ();
 
         assert_eq!(MaxTrackSizingFunction::calc(handle).expand(), ExpandedMaxTrackSizingFunction::Calc(handle));
+        assert_eq!(
+            MaxTrackSizingFunction::fit_content_calc(handle).expand(),
+            ExpandedMaxTrackSizingFunction::FitContentCalc(handle)
+        );
+        assert_eq!(
+            MaxTrackSizingFunction::from(ExpandedMaxTrackSizingFunction::FitContentCalc(handle)),
+            MaxTrackSizingFunction::fit_content_calc(handle)
+        );
+        assert_eq!(
+            MaxTrackSizingFunction::fit_content(LengthPercentage::calc(handle)),
+            MaxTrackSizingFunction::fit_content_calc(handle)
+        );
+        assert_eq!(
+            MinTrackSizingFunction::from(MaxTrackSizingFunction::fit_content_calc(handle)),
+            MinTrackSizingFunction::AUTO
+        );
+        assert_eq!(MinTrackSizingFunction::from(Dimension::fit_content_calc(handle)), MinTrackSizingFunction::AUTO);
         assert_eq!(
             MaxTrackSizingFunction::from(ExpandedMaxTrackSizingFunction::Calc(handle)),
             MaxTrackSizingFunction::calc(handle)
