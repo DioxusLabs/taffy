@@ -354,7 +354,6 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
         false, // TODO: Support baseline alignment in the vertical axis
     );
     let initial_row_sum = rows.iter().map(|track| track.base_size).sum::<f32>();
-    inner_node_size.height = inner_node_size.height.or_else(|| initial_row_sum.into());
 
     debug_log!("initial_column_sum", dbg:initial_column_sum);
     debug_log!(dbg: columns.iter().map(|track| track.base_size).collect::<Vec<_>>());
@@ -385,6 +384,9 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
         return LayoutOutput::from_outer_size(container_border_box);
     }
 
+    // The container's size is now determined, so percentages resolve against its content box when re-running track sizing
+    inner_node_size = container_content_box.map(Some);
+
     // 7. Resolve percentage track base sizes
     // In the case of an indefinitely sized container these resolve to zero during the "Initialise Tracks" step
     // and therefore need to be re-resolved here based on the content-sized content box of the container
@@ -409,14 +411,6 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
                 .resolved_percentage_size(container_content_box.height, |val, basis| tree.calc(val, basis));
             row.base_size = row.base_size.maybe_clamp(min, max);
         }
-    }
-
-    // When re-running track sizing, percentages resolve against the (min/max clamped) size of the container
-    if outer_node_size.width.is_none() {
-        inner_node_size.width = Some(container_content_box.width);
-    }
-    if outer_node_size.height.is_none() {
-        inner_node_size.height = Some(container_content_box.height);
     }
 
     // Column sizing must be re-run (once) if:
