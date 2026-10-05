@@ -287,12 +287,7 @@ impl AxisStaticPosition {
                 _ => AxisStaticEdge::End,
             }
         }
-        let Some(alignment) = alignment else {
-            return Self {
-                area,
-                align: AxisStaticAlign::from_keyword(edge_for(AlignItemsKeyword::Start, axis_is_rtl)),
-            };
-        };
+        let alignment = alignment.unwrap_or(AlignSelf::START);
         let fallback = if matches!(alignment.safety, AlignmentSafety::Safe) {
             AlignItemsKeyword::Start
         } else {
