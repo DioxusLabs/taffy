@@ -1364,14 +1364,7 @@ impl MinTrackSizingFunction {
     /// Whether the track sizing functions depends on the size of the parent node
     #[inline(always)]
     pub fn uses_percentage(self) -> bool {
-        #[cfg(feature = "calc")]
-        {
-            matches!(self.0.tag(), CompactLength::PERCENT_TAG) || self.0.is_calc()
-        }
-        #[cfg(not(feature = "calc"))]
-        {
-            matches!(self.0.tag(), CompactLength::PERCENT_TAG)
-        }
+        self.0.uses_percentage()
     }
 
     /// Expand the compact representation into an [`ExpandedMinTrackSizingFunction`] enum.
