@@ -230,13 +230,11 @@ pub trait GridContainerStyle: CoreStyle {
     // Alignment properties
 
     /// How should content contained within this item be aligned in the cross/block axis
-    /// Defaults to [`AlignContent::NORMAL`]
     #[inline(always)]
     fn align_content(&self) -> AlignContent {
         Style::<Self::CustomIdent>::DEFAULT.align_content
     }
     /// How should contained within this item be aligned in the main/inline axis
-    /// Defaults to [`JustifyContent::NORMAL`]
     #[inline(always)]
     fn justify_content(&self) -> JustifyContent {
         Style::<Self::CustomIdent>::DEFAULT.justify_content
@@ -261,9 +259,8 @@ pub trait GridContainerStyle: CoreStyle {
         }
     }
 
-    /// Get a grid container's align-content or justify-content alignment depending on the axis passed.
-    /// `normal` behaves as `stretch` for grid containers, so [`AlignContent::NORMAL`] is returned as
-    /// [`AlignContent::STRETCH`].
+    /// Get a grid container's align-content or justify-content alignment depending on the axis passed
+    /// (with `normal` resolved to `stretch`)
     #[inline(always)]
     fn grid_align_content(&self, axis: AbstractAxis) -> AlignContent {
         let alignment = match axis {

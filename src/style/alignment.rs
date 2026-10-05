@@ -343,8 +343,6 @@ pub type JustifySelf = AlignItems;
 /// For Flexbox it controls alignment in the cross axis.
 /// For Grid it controls alignment in the block axis.
 ///
-/// The default value is [`AlignContent::NORMAL`].
-///
 /// [MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/align-content)
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 pub struct AlignContent {
@@ -355,8 +353,7 @@ pub struct AlignContent {
 }
 
 impl AlignContent {
-    /// The default alignment of the layout mode. This is the default value of `align-content`
-    /// and `justify-content`. See [`AlignContentKeyword::Normal`].
+    /// The layout mode's default alignment. See [`AlignContentKeyword::Normal`].
     pub const NORMAL: Self = Self { keyword: AlignContentKeyword::Normal, safety: AlignmentSafety::Default };
     /// Items are packed toward the start of the axis.
     pub const START: Self = Self { keyword: AlignContentKeyword::Start, safety: AlignmentSafety::Default };
@@ -461,8 +458,6 @@ crate::util::parse::from_str_from_css!(AlignContent);
 /// Sets the distribution of space between and around content items.
 /// For Flexbox it controls alignment in the main axis.
 /// For Grid it controls alignment in the inline axis.
-///
-/// The default value is [`JustifyContent::NORMAL`].
 ///
 /// [MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/justify-content)
 pub type JustifyContent = AlignContent;

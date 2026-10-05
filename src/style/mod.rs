@@ -788,11 +788,9 @@ pub struct Style<S: CheapCloneStr = DefaultCheapStr> {
     /// Falls back to the parents [`JustifyItems`] if not set
     pub justify_self: Option<AlignSelf>,
     /// How should content contained within this item be aligned in the cross/block axis
-    /// Defaults to [`AlignContent::NORMAL`]
     #[cfg(any(feature = "flexbox", feature = "grid", feature = "block_layout"))]
     pub align_content: AlignContent,
     /// How should content contained within this item be aligned in the main/inline axis
-    /// Defaults to [`JustifyContent::NORMAL`]
     #[cfg(any(feature = "flexbox", feature = "grid"))]
     pub justify_content: JustifyContent,
     /// How large should the gaps between items in a grid or flex container be?
@@ -1653,9 +1651,9 @@ mod tests {
             justify_items: Default::default(),
             justify_self: Default::default(),
             #[cfg(any(feature = "flexbox", feature = "grid", feature = "block_layout"))]
-            align_content: super::AlignContent::NORMAL,
+            align_content: Default::default(),
             #[cfg(any(feature = "flexbox", feature = "grid"))]
-            justify_content: super::JustifyContent::NORMAL,
+            justify_content: Default::default(),
             inset: Rect::auto(),
             margin: Rect::zero(),
             padding: Rect::zero(),

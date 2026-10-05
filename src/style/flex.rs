@@ -33,7 +33,6 @@ pub trait FlexboxContainerStyle: CoreStyle {
     // Alignment properties
 
     /// How should content contained within this item be aligned in the cross/block axis
-    /// Defaults to [`AlignContent::NORMAL`]
     #[inline(always)]
     fn align_content(&self) -> AlignContent {
         Style::<Self::CustomIdent>::DEFAULT.align_content
@@ -43,8 +42,7 @@ pub trait FlexboxContainerStyle: CoreStyle {
     fn align_items(&self) -> AlignItems {
         Style::<Self::CustomIdent>::DEFAULT.align_items
     }
-    /// How should content contained within this item be aligned in the main/inline axis
-    /// Defaults to [`JustifyContent::NORMAL`]
+    /// How this node's children should be aligned in the inline axis
     #[inline(always)]
     fn justify_content(&self) -> JustifyContent {
         Style::<Self::CustomIdent>::DEFAULT.justify_content
