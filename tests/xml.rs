@@ -1,8 +1,9 @@
 use roxmltree::Document;
 use std::{fmt::Debug, io::Write, path::PathBuf, str::FromStr};
 use taffy::{
-    prelude::TaffyZero as _, AvailableSpace, CheapCloneStr, Dimension, GridAutoTracks, GridTemplateComponent,
-    GridTemplateTracks, LengthPercentage, LengthPercentageAuto, Line, NodeId, Point, PrintTree, Rect, Size, TaffyTree,
+    prelude::TaffyZero as _, AlignItems, AlignSelf, AvailableSpace, CheapCloneStr, Dimension, GridAutoTracks,
+    GridTemplateComponent, GridTemplateTracks, JustifyItems, JustifySelf, LengthPercentage, LengthPercentageAuto, Line,
+    NodeId, Point, PrintTree, Rect, Size, TaffyTree,
 };
 use taffy_test_helpers::{test_measure_function, TestNodeContext};
 
@@ -412,10 +413,10 @@ fn build_style<S: CheapCloneStr>(xnode: roxmltree::Node) -> taffy::Style<S> {
         },
 
         aspect_ratio: maybe_parse(xnode.attribute("aspect-ratio")),
-        align_items: maybe_parse(xnode.attribute("align-items")),
-        align_self: maybe_parse(xnode.attribute("align-self")),
-        justify_items: maybe_parse(xnode.attribute("justify-items")),
-        justify_self: maybe_parse(xnode.attribute("justify-self")),
+        align_items: parse_or(xnode.attribute("align-items"), AlignItems::NORMAL),
+        align_self: parse_or(xnode.attribute("align-self"), AlignSelf::AUTO),
+        justify_items: parse_or(xnode.attribute("justify-items"), JustifyItems::NORMAL),
+        justify_self: parse_or(xnode.attribute("justify-self"), JustifySelf::AUTO),
         align_content: maybe_parse(xnode.attribute("align-content")),
         justify_content: maybe_parse(xnode.attribute("justify-content")),
 

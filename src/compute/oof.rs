@@ -85,17 +85,20 @@ enum OofAlignment {
 }
 
 impl OofAlignment {
-    /// Resolve an `align-self`/`justify-self` value for an out-of-flow box into a logical
-    /// alignment relative to the containing block's writing mode. Taffy only supports the
-    /// `horizontal-tb` writing mode, so only the inline axis can be reversed.
-    fn from_style(
-        alignment: Option<AlignSelf>,
-        item_direction: Direction,
-        container_direction: Direction,
-        axis_is_inline: bool,
-    ) -> Self {
-        let Some(alignment) = alignment else { return Self::Normal };
-        match alignment.resolve_self_relative(item_direction, container_direction, axis_is_inline).keyword {
+    /// Convert an `align-self`/`justify-self` value for an out-of-flow box into a logical
+    /// alignment relative to the containing block's writing mode.
+    ///
+    /// `alignment` must already have had `self-start`/`self-end` resolved against the containing
+    /// block's direction (see [`AlignSelf::resolve_self_relative`]). `auto` behaves as `normal`
+    /// for absolutely positioned boxes (it does not defer to the `*-items` properties of the
+    /// containing block), so it does not need to be resolved.
+    fn from_resolved(alignment: AlignSelf) -> Self {
+        debug_assert!(
+            !matches!(alignment.keyword, AlignItemsKeyword::SelfStart | AlignItemsKeyword::SelfEnd),
+            "self-start/self-end must be resolved before computing out-of-flow alignment"
+        );
+        match alignment.keyword {
+            AlignItemsKeyword::Normal | AlignItemsKeyword::Auto => Self::Normal,
             AlignItemsKeyword::Stretch => Self::Stretch,
             AlignItemsKeyword::Center => Self::Center,
             AlignItemsKeyword::End | AlignItemsKeyword::FlexEnd | AlignItemsKeyword::SelfEnd => Self::End,
@@ -510,8 +513,9 @@ pub(crate) fn layout_oof_box<Tree: LayoutContainingBlock>(
     let is_replaced = child_style.is_replaced();
     let is_table = child_style.is_table();
     let item_direction = child_style.direction();
-    let justify_self = child_style.justify_self();
-    let align_self = child_style.align_self();
+    // Taffy only supports the `horizontal-tb` writing mode, so only the inline axis can be reversed.
+    let justify_self = child_style.justify_self().resolve_self_relative(item_direction, direction, true);
+    let align_self = child_style.align_self().resolve_self_relative(item_direction, direction, false);
     let overflow = child_style.overflow();
     let scrollbar_width = child_style.scrollbar_width();
     #[cfg(feature = "content_size")]
@@ -537,8 +541,8 @@ pub(crate) fn layout_oof_box<Tree: LayoutContainingBlock>(
         inset: Line { start: left, end: right },
         margin: Line { start: margin.left, end: margin.right },
         static_position: static_position.x,
-        alignment: OofAlignment::from_style(justify_self, item_direction, direction, true),
-        safety: justify_self.map(|a| a.safety).unwrap_or(AlignmentSafety::Default),
+        alignment: OofAlignment::from_resolved(justify_self),
+        safety: justify_self.safety,
         is_inline: true,
         reversed: direction.is_rtl(),
         is_scroll_axis: container_overflow.x.is_scroll_container(),
@@ -548,8 +552,8 @@ pub(crate) fn layout_oof_box<Tree: LayoutContainingBlock>(
         inset: Line { start: top, end: bottom },
         margin: Line { start: margin.top, end: margin.bottom },
         static_position: static_position.y,
-        alignment: OofAlignment::from_style(align_self, item_direction, direction, false),
-        safety: align_self.map(|a| a.safety).unwrap_or(AlignmentSafety::Default),
+        alignment: OofAlignment::from_resolved(align_self),
+        safety: align_self.safety,
         is_inline: false,
         reversed: false,
         is_scroll_axis: container_overflow.y.is_scroll_container(),

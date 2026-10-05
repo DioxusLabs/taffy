@@ -105,7 +105,7 @@ mod caching {
         );
         let leaf = taffy
             .new_leaf_with_context(
-                Style { justify_self: Some(JustifySelf::START), grid_column: line(1), ..Default::default() },
+                Style { justify_self: JustifySelf::START, grid_column: line(1), ..Default::default() },
                 text,
             )
             .unwrap();

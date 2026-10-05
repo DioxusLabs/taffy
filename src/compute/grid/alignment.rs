@@ -89,7 +89,7 @@ pub(super) fn align_and_position_item(
     node: NodeId,
     order: u32,
     grid_area: Rect<f32>,
-    container_alignment_styles: InBothAbsAxis<Option<AlignItems>>,
+    container_alignment_styles: InBothAbsAxis<AlignItems>,
     baseline_shim: f32,
     direction: Direction,
     container_border_box_width: f32,
@@ -106,20 +106,21 @@ pub(super) fn align_and_position_item(
     let contain = style.contain();
     let scrollbar_width = style.scrollbar_width();
     let aspect_ratio = style.aspect_ratio();
-    // Resolve writing-mode-relative self-start/self-end keywords against the item's own
-    // direction. The horizontal axis is the inline axis (Taffy only supports horizontal-tb);
-    // the vertical (block) axis resolves them to plain start/end.
+    // Resolve `auto` against the container's justify-items/align-items, and then resolve
+    // writing-mode-relative self-start/self-end keywords against the item's own direction.
+    // The horizontal axis is the inline axis (Taffy only supports horizontal-tb); the vertical
+    // (block) axis resolves them to plain start/end.
     let item_direction = style.direction();
-    let justify_self = style.justify_self().map(|align| align.resolve_self_relative(item_direction, direction, true));
-    let align_self = style.align_self().map(|align| align.resolve_self_relative(item_direction, direction, false));
-    let container_alignment_styles = InBothAbsAxis {
-        horizontal: container_alignment_styles
-            .horizontal
-            .map(|align| align.resolve_self_relative(item_direction, direction, true)),
-        vertical: container_alignment_styles
-            .vertical
-            .map(|align| align.resolve_self_relative(item_direction, direction, false)),
-    };
+    let justify_self = style.justify_self().resolve_auto(container_alignment_styles.horizontal).resolve_self_relative(
+        item_direction,
+        direction,
+        true,
+    );
+    let align_self = style.align_self().resolve_auto(container_alignment_styles.vertical).resolve_self_relative(
+        item_direction,
+        direction,
+        false,
+    );
 
     let position = style.position();
     let inset_horizontal = style
@@ -157,25 +158,31 @@ pub(super) fn align_and_position_item(
         .maybe_apply_aspect_ratio(aspect_ratio)
         .maybe_add(box_sizing_adjustment);
 
-    // Resolve default alignment styles if they are set on neither the parent or the node itself
+    // Resolve `normal` alignment (the default if alignment is set on neither the parent or the node itself)
     // Note: if the child has a preferred aspect ratio but neither width or height are set, then the width is stretched
     // and the then height is calculated from the width according the aspect ratio
     // See: https://www.w3.org/TR/css-grid-1/#grid-item-sizing
     let alignment_styles = InBothAbsAxis {
-        horizontal: justify_self.or(container_alignment_styles.horizontal).unwrap_or_else(|| {
-            if inherent_size.width.is_some() || size_style.width.is_sizing_keyword() {
-                AlignSelf::START
-            } else {
-                AlignSelf::STRETCH
+        horizontal: match justify_self.keyword {
+            AlignItemsKeyword::Normal | AlignItemsKeyword::Auto => {
+                if inherent_size.width.is_some() || size_style.width.is_sizing_keyword() {
+                    AlignSelf::START
+                } else {
+                    AlignSelf::STRETCH
+                }
             }
-        }),
-        vertical: align_self.or(container_alignment_styles.vertical).unwrap_or_else(|| {
-            if inherent_size.height.is_some() || size_style.height.is_sizing_keyword() || aspect_ratio.is_some() {
-                AlignSelf::START
-            } else {
-                AlignSelf::STRETCH
+            _ => justify_self,
+        },
+        vertical: match align_self.keyword {
+            AlignItemsKeyword::Normal | AlignItemsKeyword::Auto => {
+                if inherent_size.height.is_some() || size_style.height.is_sizing_keyword() || aspect_ratio.is_some() {
+                    AlignSelf::START
+                } else {
+                    AlignSelf::STRETCH
+                }
             }
-        }),
+            _ => align_self,
+        },
     };
 
     // Note: This is not a bug. It is part of the CSS spec that both horizontal and vertical margins
@@ -357,7 +364,7 @@ pub(super) fn align_and_position_item(
 
     let (x, x_margin) = align_item_within_area(
         Line { start: grid_area.left, end: grid_area.right },
-        justify_self.unwrap_or(alignment_styles.horizontal),
+        alignment_styles.horizontal,
         width,
         position,
         inset_horizontal,
@@ -367,7 +374,7 @@ pub(super) fn align_and_position_item(
     );
     let (y, y_margin) = align_item_within_area(
         Line { start: grid_area.top, end: grid_area.bottom },
-        align_self.unwrap_or(alignment_styles.vertical),
+        alignment_styles.vertical,
         height,
         position,
         inset_vertical,
@@ -481,9 +488,12 @@ pub(super) fn align_item_within_area(
         AlignItemsKeyword::Center => {
             (grid_area_size - resolved_size + resolved_margin.start - resolved_margin.end) / 2.0
         }
-        // SelfStart/SelfEnd are resolved to Start/End against the item's own direction in
-        // `align_and_position_item`.
-        AlignItemsKeyword::SelfStart | AlignItemsKeyword::SelfEnd => unreachable!(),
+        // Normal/Auto are resolved, and SelfStart/SelfEnd are resolved to Start/End against
+        // the item's own direction, in `align_and_position_item`.
+        AlignItemsKeyword::Normal
+        | AlignItemsKeyword::Auto
+        | AlignItemsKeyword::SelfStart
+        | AlignItemsKeyword::SelfEnd => unreachable!(),
     };
 
     let offset_within_area = if position.is_out_of_flow() {

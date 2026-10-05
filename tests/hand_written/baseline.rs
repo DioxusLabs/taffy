@@ -49,7 +49,7 @@ mod baseline {
                 Style {
                     display: Display::Flex,
                     flex_direction: FlexDirection::Row,
-                    align_items: Some(AlignItems::BASELINE),
+                    align_items: AlignItems::BASELINE,
                     size: Size { width: length(200.0), height: length(100.0) },
                     ..Default::default()
                 },
@@ -119,7 +119,7 @@ mod baseline {
                 Style {
                     display: Display::Flex,
                     flex_direction: FlexDirection::Row,
-                    align_items: Some(AlignItems::BASELINE),
+                    align_items: AlignItems::BASELINE,
                     size: Size { width: length(200.0), height: length(120.0) },
                     ..Default::default()
                 },
@@ -179,7 +179,7 @@ mod baseline {
                 Style {
                     display: Display::Flex,
                     flex_direction: FlexDirection::Row,
-                    align_items: Some(AlignItems::BASELINE),
+                    align_items: AlignItems::BASELINE,
                     size: Size { width: length(200.0), height: length(120.0) },
                     ..Default::default()
                 },
@@ -248,7 +248,7 @@ mod baseline {
                 Style {
                     display: Display::Flex,
                     flex_direction: FlexDirection::Row,
-                    align_items: Some(AlignItems::BASELINE),
+                    align_items: AlignItems::BASELINE,
                     size: Size { width: length(200.0), height: length(120.0) },
                     ..Default::default()
                 },
@@ -288,7 +288,7 @@ mod baseline {
                 Style {
                     display: Display::Flex,
                     flex_direction: FlexDirection::Row,
-                    align_items: Some(AlignItems::FLEX_START),
+                    align_items: AlignItems::FLEX_START,
                     size: Size { width: length(200.0), height: length(100.0) },
                     ..Default::default()
                 },

@@ -20,7 +20,7 @@ pub trait BlockContainerStyle: CoreStyle {
     /// Out-of-flow children with `justify-self: auto` are aligned within their static-position
     /// rectangle according to this value.
     #[inline(always)]
-    fn justify_items(&self) -> Option<AlignItems> {
+    fn justify_items(&self) -> AlignItems {
         Style::<Self::CustomIdent>::DEFAULT.justify_items
     }
 }
@@ -34,17 +34,17 @@ pub trait BlockItemStyle: CoreStyle {
     }
 
     /// How an out-of-flow (absolutely positioned) child is aligned in the block axis of its
-    /// static-position rectangle (`align-self`). `None` corresponds to `normal`/`auto`.
+    /// static-position rectangle (`align-self`). Defaults to `auto`, which behaves as `normal`.
     #[inline(always)]
-    fn align_self(&self) -> Option<AlignSelf> {
-        None
+    fn align_self(&self) -> AlignSelf {
+        AlignSelf::AUTO
     }
 
     /// How an out-of-flow (absolutely positioned) child is aligned in the inline axis of its
-    /// static-position rectangle (`justify-self`). `None` corresponds to `normal`/`auto`.
+    /// static-position rectangle (`justify-self`). Defaults to `auto`, which defers to the container's `justify-items`.
     #[inline(always)]
-    fn justify_self(&self) -> Option<AlignSelf> {
-        None
+    fn justify_self(&self) -> AlignSelf {
+        AlignSelf::AUTO
     }
 
     /// Whether the item is a floated

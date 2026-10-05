@@ -27,9 +27,9 @@ N = Supported in spec but not implemented in Taffy
 | `align_content`          | Y    | Y    | `AlignContent`                        | 2     | -      | How should content contained within this item be aligned relative to the cross axis?        |
 | `justify_content`        | Y    | Y    | `AlignContent`                        | 2     | -      | How should content contained within this item be aligned relative to the main axis?         |
 | `align_items`            | Y    | Y    | `AlignItems`                          | 2     | -      | How should items be aligned relative to the cross axis?                                     |
-| `align_self`             | Y    | Y    | `Option<AlignItems>`                  | 2     | -      | Should this item violate the cross axis alignment specified by its parent's [`AlignItems`]? |
+| `align_self`             | Y    | Y    | `AlignSelf`                           | 2     | -      | Should this item violate the cross axis alignment specified by its parent's [`AlignItems`]? |
 | `justify_items`          | -    | Y    | `AlignItems`                          | 2     | -      | How should items be aligned relative to the main axis?                                      |
-| `justify_self`           | -    | Y    | `Option<AlignItems>`                  | 2     | -      | Should this item violate the main axis alignment specified by its parent's [`AlignItems`]?  |
+| `justify_self`           | -    | Y    | `AlignSelf`                           | 2     | -      | Should this item violate the main axis alignment specified by its parent's [`AlignItems`]?  |
 | **Flexbox**              |      |      |                                       |       |        |                                                                                             |
 | `flex_direction`         | Y    | -    | `FlexDirection`                       | 1     | -      | Which direction does the main axis flow in?                                                 |
 | `flex_wrap`              | Y    | -    | `FlexWrap`                            | 1     | -      | Should elements wrap, or stay in a single line?                                             |

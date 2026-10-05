@@ -57,9 +57,11 @@ pub(in super::super) struct GridItem {
     pub border: Rect<LengthPercentage>,
     /// The item's margin style
     pub margin: Rect<LengthPercentageAuto>,
-    /// The item's align_self property, or the parent's align_items property is not set
+    /// The item's align_self property, or the parent's align_items property if it is `auto`.
+    /// May be `Normal` (but never `Auto`).
     pub align_self: AlignSelf,
-    /// The item's justify_self property, or the parent's justify_items property is not set
+    /// The item's justify_self property, or the parent's justify_items property if it is `auto`.
+    /// May be `Normal` (but never `Auto`).
     pub justify_self: AlignSelf,
     /// The items first baseline (horizontal)
     pub baseline: Option<f32>,
@@ -106,6 +108,17 @@ pub(in super::super) struct GridItem {
     pub oof_candidates: OofCandidates,
 }
 
+/// Whether a grid item's (auto-resolved) self-alignment is treated as `stretch` when resolving
+/// the item's known dimensions for track sizing.
+///
+/// Note: `normal` is treated as `stretch` here regardless of whether the item has a preferred
+/// size or aspect ratio in the relevant axis. This differs from the rule used when the item is
+/// finally aligned (see `align_and_position_item`).
+#[inline(always)]
+fn is_stretch_or_normal(alignment: AlignSelf) -> bool {
+    alignment == AlignSelf::STRETCH || alignment.keyword == AlignItemsKeyword::Normal
+}
+
 impl GridItem {
     /// Create a new item from its style. Its placement (`row`/`column`) is filled in by the placement algorithm.
     pub fn new_with_style_and_order<S: GridItemStyle>(
@@ -131,8 +144,8 @@ impl GridItem {
             padding: style.padding(),
             border: style.border(),
             margin: style.margin(),
-            align_self: style.align_self().unwrap_or(parent_align_items),
-            justify_self: style.justify_self().unwrap_or(parent_justify_items),
+            align_self: style.align_self().resolve_auto(parent_align_items),
+            justify_self: style.justify_self().resolve_auto(parent_justify_items),
             baseline: None,
             baseline_shim: 0.0,
             row_indexes: Line { start: 0, end: 0 }, // Properly initialised later
@@ -371,7 +384,7 @@ impl GridItem {
             //  - Alignment style is "stretch"
             //  - The node is not absolutely positioned
             //  - The node does not have auto margins in this axis.
-            if !self.margin.left.is_auto() && !self.margin.right.is_auto() && self.justify_self == AlignSelf::STRETCH {
+            if !self.margin.left.is_auto() && !self.margin.right.is_auto() && is_stretch_or_normal(self.justify_self) {
                 return grid_area_minus_item_margins_size.width;
             }
 
@@ -400,7 +413,7 @@ impl GridItem {
             //  - Alignment style is "stretch"
             //  - The node is not absolutely positioned
             //  - The node does not have auto margins in this axis.
-            if !self.margin.top.is_auto() && !self.margin.bottom.is_auto() && self.align_self == AlignSelf::STRETCH {
+            if !self.margin.top.is_auto() && !self.margin.bottom.is_auto() && is_stretch_or_normal(self.align_self) {
                 return grid_area_minus_item_margins_size.height;
             }
 

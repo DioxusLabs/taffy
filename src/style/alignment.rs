@@ -22,6 +22,21 @@ use crate::style::Direction;
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[repr(u8)]
 pub enum AlignItemsKeyword {
+    /// The default alignment of the layout mode (the initial value of `align-items` and
+    /// `justify-items`).
+    ///
+    /// How `Normal` behaves depends on the layout mode: for flex items it behaves as
+    /// `Stretch`; for grid items it behaves as `Stretch`, or as `Start` if the item has a
+    /// preferred size or aspect ratio in the relevant axis; for block-level boxes it behaves
+    /// as `Stretch` in the inline axis; and for absolutely positioned boxes it behaves either
+    /// as `Stretch` or as `Start` depending on the box's insets and whether it is replaced.
+    Normal,
+    /// Defer to the parent's `align-items` / `justify-items` value (the initial value of
+    /// `align-self` and `justify-self`).
+    ///
+    /// `Auto` is only meaningful for the `*-self` properties. If it is set on `align-items`
+    /// or `justify-items` then it behaves as `Normal`.
+    Auto,
     /// Items are packed toward the start of the axis.
     Start,
     /// Items are packed toward the end of the axis.
@@ -142,6 +157,11 @@ pub enum AlignmentSafety {
 /// For Flexbox it controls alignment in the cross axis.
 /// For Grid it controls alignment in the block axis.
 ///
+/// The default value is [`AlignItems::NORMAL`]. This type is also used for the `*-self`
+/// properties (see [`AlignSelf`]), whose default value is [`AlignSelf::AUTO`]. `AUTO` is
+/// only meaningful for the `*-self` properties: on `align-items` / `justify-items` it
+/// behaves as `NORMAL`.
+///
 /// [MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/align-items)
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 pub struct AlignItems {
@@ -152,6 +172,15 @@ pub struct AlignItems {
 }
 
 impl AlignItems {
+    /// The default alignment of the layout mode. This is the default value of `align-items`
+    /// and `justify-items`. See [`AlignItemsKeyword::Normal`].
+    pub const NORMAL: Self = Self { keyword: AlignItemsKeyword::Normal, safety: AlignmentSafety::Default };
+    /// Defer to the parent's `align-items` / `justify-items` value. This is the default
+    /// value of `align-self` and `justify-self`. See [`AlignItemsKeyword::Auto`].
+    ///
+    /// `Auto` is only meaningful for `align-self` and `justify-self`. If it is set on
+    /// `align-items` or `justify-items` then it behaves as [`AlignItems::NORMAL`].
+    pub const AUTO: Self = Self { keyword: AlignItemsKeyword::Auto, safety: AlignmentSafety::Default };
     /// Items are packed toward the start of the axis.
     pub const START: Self = Self { keyword: AlignItemsKeyword::Start, safety: AlignmentSafety::Default };
     /// Items are packed toward the end of the axis.
@@ -210,10 +239,28 @@ impl AlignItems {
         self.keyword
     }
 
+    /// Resolve `Auto` (on `align-self` / `justify-self`) against the parent's `align-items` /
+    /// `justify-items` value. All other keywords are returned unchanged.
+    ///
+    /// `Auto` is not a valid value of `align-items` / `justify-items`, so if `parent` is
+    /// itself `Auto` then it is treated as `Normal`. This means that the returned value is
+    /// never `Auto`.
+    ///
+    /// `Normal` is deliberately *not* resolved here, as it behaves differently in each
+    /// layout mode.
+    #[inline]
+    pub const fn resolve_auto(self, parent: AlignItems) -> AlignItems {
+        match (self.keyword, parent.keyword) {
+            (AlignItemsKeyword::Auto, AlignItemsKeyword::Auto) => AlignItems::NORMAL,
+            (AlignItemsKeyword::Auto, _) => parent,
+            _ => self,
+        }
+    }
+
     /// Resolve the writing-mode-relative `SelfStart`/`SelfEnd` keywords to `Start`/`End`
     /// based on the item's own `direction` per CSS Box Alignment §5.2
-    /// <https://www.w3.org/TR/css-align-3/#self-alignment>. All other keywords are
-    /// returned unchanged.
+    /// <https://www.w3.org/TR/css-align-3/#self-alignment>. All other keywords
+    /// (including `Normal` and `Auto`) are returned unchanged.
     ///
     /// The `Start`/`End` keywords used by the compute paths are relative to the
     /// *container's* writing mode/direction, so in the inline axis `SelfStart` resolves
@@ -281,6 +328,8 @@ impl FromCss for AlignItems {
                 };
                 Ok(Self { keyword, safety: AlignmentSafety::Unsafe })
             },
+            "normal" => Ok(Self::NORMAL),
+            "auto" => Ok(Self::AUTO),
             "start" => Ok(Self::START),
             "end" => Ok(Self::END),
             "flex-start" => Ok(Self::FLEX_START),
@@ -302,6 +351,8 @@ crate::util::parse::from_str_from_css!(AlignItems);
 /// Does not apply to Flexbox, and will be ignored if specified on a flex container.
 /// For Grid it controls alignment in the inline axis.
 ///
+/// The default value is [`AlignItems::NORMAL`].
+///
 /// [MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/justify-items)
 pub type JustifyItems = AlignItems;
 /// Controls alignment of an individual node.
@@ -310,6 +361,13 @@ pub type JustifyItems = AlignItems;
 /// For Flexbox it controls alignment in the cross axis.
 /// For Grid it controls alignment in the block axis.
 ///
+/// The default value is [`AlignSelf::AUTO`], which defers to the parent Node's `AlignItems`
+/// property.
+///
+/// `AlignSelf` is the same type as [`AlignItems`]. [`AlignSelf::AUTO`] is only meaningful
+/// for `align-self` / `justify-self`: if it is set on `align-items` / `justify-items` then it
+/// behaves as [`AlignItems::NORMAL`].
+///
 /// [MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/align-self)
 pub type AlignSelf = AlignItems;
 /// Controls alignment of an individual node.
@@ -317,6 +375,9 @@ pub type AlignSelf = AlignItems;
 /// Overrides the parent Node's `JustifyItems` property.
 /// Does not apply to Flexbox, and will be ignored if specified on a flex child.
 /// For Grid it controls alignment in the inline axis.
+///
+/// The default value is [`JustifySelf::AUTO`], which defers to the parent Node's
+/// `JustifyItems` property.
 ///
 /// [MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/justify-self)
 pub type JustifySelf = AlignItems;
@@ -451,6 +512,8 @@ pub type JustifyContent = AlignContent;
 /// `unknown_variant` errors. Mirrors the spellings produced by `Serialize`.
 #[cfg(feature = "serde")]
 const ALIGN_ITEMS_NAMES: &[&str] = &[
+    "Normal",
+    "Auto",
     "Start",
     "End",
     "FlexStart",
@@ -494,6 +557,8 @@ impl serde::Serialize for AlignItems {
             (AlignItemsKeyword::SelfStart, AlignmentSafety::Unsafe) => "UnsafeSelfStart",
             (AlignItemsKeyword::SelfEnd, AlignmentSafety::Unsafe) => "UnsafeSelfEnd",
             (AlignItemsKeyword::Center, AlignmentSafety::Unsafe) => "UnsafeCenter",
+            (AlignItemsKeyword::Normal, _) => "Normal",
+            (AlignItemsKeyword::Auto, _) => "Auto",
             (AlignItemsKeyword::Baseline, _) => "Baseline",
             (AlignItemsKeyword::Stretch, _) => "Stretch",
             (AlignItemsKeyword::Start, AlignmentSafety::Safe) => "SafeStart",
@@ -519,6 +584,8 @@ impl<'de> serde::Deserialize<'de> for AlignItems {
             }
             fn visit_str<E: serde::de::Error>(self, v: &str) -> Result<Self::Value, E> {
                 Ok(match v {
+                    "Normal" => AlignItems::NORMAL,
+                    "Auto" => AlignItems::AUTO,
                     "Start" => AlignItems::START,
                     "End" => AlignItems::END,
                     "FlexStart" => AlignItems::FLEX_START,
@@ -652,7 +719,6 @@ mod tests {
     fn align_types_within_size_budget() {
         assert!(size_of::<AlignItems>() <= 2, "AlignItems grew to {}", size_of::<AlignItems>());
         assert!(size_of::<AlignContent>() <= 2, "AlignContent grew to {}", size_of::<AlignContent>());
-        assert!(size_of::<Option<AlignItems>>() <= 3);
         assert!(size_of::<Option<AlignContent>>() <= 3);
     }
 
@@ -674,6 +740,8 @@ mod tests {
         assert!(AlignItems::SAFE_SELF_END.is_safe());
         assert!(!AlignItems::SELF_START.is_safe());
         assert!(!AlignItems::SELF_END.is_safe());
+        assert!(!AlignItems::NORMAL.is_safe());
+        assert!(!AlignItems::AUTO.is_safe());
     }
 
     #[test]
@@ -693,6 +761,24 @@ mod tests {
         assert_eq!(AlignItems::STRETCH.keyword(), AlignItemsKeyword::Stretch);
         assert_eq!(AlignItems::BASELINE.keyword(), AlignItemsKeyword::Baseline);
         assert_eq!(AlignItems::FLEX_START.keyword(), AlignItemsKeyword::FlexStart);
+        assert_eq!(AlignItems::NORMAL.keyword(), AlignItemsKeyword::Normal);
+        assert_eq!(AlignSelf::AUTO.keyword(), AlignItemsKeyword::Auto);
+    }
+
+    #[test]
+    fn resolve_auto() {
+        // `auto` defers to the parent's value
+        assert_eq!(AlignSelf::AUTO.resolve_auto(AlignItems::CENTER), AlignItems::CENTER);
+        assert_eq!(AlignSelf::AUTO.resolve_auto(AlignItems::SAFE_END), AlignItems::SAFE_END);
+        assert_eq!(AlignSelf::AUTO.resolve_auto(AlignItems::SELF_START), AlignItems::SELF_START);
+        assert_eq!(AlignSelf::AUTO.resolve_auto(AlignItems::NORMAL), AlignItems::NORMAL);
+        // `auto` is not a valid `*-items` value and is treated as `normal`
+        assert_eq!(AlignSelf::AUTO.resolve_auto(AlignItems::AUTO), AlignItems::NORMAL);
+        // Everything else (including `normal`) is unchanged
+        assert_eq!(AlignSelf::NORMAL.resolve_auto(AlignItems::CENTER), AlignItems::NORMAL);
+        assert_eq!(AlignSelf::START.resolve_auto(AlignItems::CENTER), AlignItems::START);
+        assert_eq!(AlignSelf::SAFE_CENTER.resolve_auto(AlignItems::END), AlignItems::SAFE_CENTER);
+        assert_eq!(AlignSelf::STRETCH.resolve_auto(AlignItems::AUTO), AlignItems::STRETCH);
     }
 
     #[test]
@@ -713,6 +799,8 @@ mod tests {
         // Other keywords are unchanged
         assert_eq!(AlignItems::START.resolve_self_relative(Ltr, Rtl, true), AlignItems::START);
         assert_eq!(AlignItems::FLEX_END.resolve_self_relative(Ltr, Rtl, true), AlignItems::FLEX_END);
+        assert_eq!(AlignItems::NORMAL.resolve_self_relative(Ltr, Rtl, true), AlignItems::NORMAL);
+        assert_eq!(AlignItems::AUTO.resolve_self_relative(Ltr, Rtl, true), AlignItems::AUTO);
     }
 
     #[test]
@@ -769,6 +857,17 @@ mod tests {
 
     #[cfg(feature = "parse")]
     #[test]
+    fn parse_align_items_normal_auto() {
+        assert_eq!("normal".parse::<AlignItems>().unwrap(), AlignItems::NORMAL);
+        assert_eq!("auto".parse::<AlignSelf>().unwrap(), AlignSelf::AUTO);
+        assert_eq!("NORMAL".parse::<AlignItems>().unwrap(), AlignItems::NORMAL);
+        assert_eq!("Auto".parse::<AlignSelf>().unwrap(), AlignSelf::AUTO);
+        assert_eq!(AlignItems::NORMAL.safety, AlignmentSafety::Default);
+        assert_eq!(AlignSelf::AUTO.safety, AlignmentSafety::Default);
+    }
+
+    #[cfg(feature = "parse")]
+    #[test]
     fn parse_align_items_safe() {
         assert_eq!("safe start".parse::<AlignItems>().unwrap(), AlignItems::SAFE_START);
         assert_eq!("safe end".parse::<AlignItems>().unwrap(), AlignItems::SAFE_END);
@@ -809,6 +908,10 @@ mod tests {
         assert!("safe garbage".parse::<AlignItems>().is_err());
         assert!("unsafe stretch".parse::<AlignItems>().is_err());
         assert!("unsafe baseline".parse::<AlignItems>().is_err());
+        assert!("safe normal".parse::<AlignItems>().is_err());
+        assert!("safe auto".parse::<AlignItems>().is_err());
+        assert!("unsafe normal".parse::<AlignItems>().is_err());
+        assert!("unsafe auto".parse::<AlignItems>().is_err());
     }
 
     #[cfg(feature = "parse")]
@@ -855,6 +958,8 @@ mod tests {
     #[test]
     fn serde_align_items_round_trip() {
         let cases = [
+            (AlignItems::NORMAL, "\"Normal\""),
+            (AlignItems::AUTO, "\"Auto\""),
             (AlignItems::START, "\"Start\""),
             (AlignItems::END, "\"End\""),
             (AlignItems::FLEX_START, "\"FlexStart\""),

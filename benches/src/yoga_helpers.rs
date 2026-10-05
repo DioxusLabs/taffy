@@ -152,11 +152,11 @@ fn into_pixels(dim: impl Into<tf::Dimension>) -> f32 {
     dim.into().into_option().unwrap_or(0.0)
 }
 
-fn items_into_align(align: Option<tf::AlignSelf>) -> yg::Align {
+fn items_into_align(align: tf::AlignSelf) -> yg::Align {
     // Yoga has no safe/unsafe overflow-position concept — drop the safety field and dispatch
     // on the bare keyword. Safe and unsafe alike fold to the same yoga keyword.
-    let Some(align) = align else { return yg::Align::Auto };
     match align.keyword {
+        tf::AlignItemsKeyword::Normal | tf::AlignItemsKeyword::Auto => yg::Align::Auto,
         tf::AlignItemsKeyword::FlexStart => yg::Align::FlexStart,
         tf::AlignItemsKeyword::FlexEnd => yg::Align::FlexEnd,
         tf::AlignItemsKeyword::Center => yg::Align::Center,
