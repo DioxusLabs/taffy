@@ -123,6 +123,7 @@ fn refresh_min_content_contributions<Tree: LayoutPartialTree>(
     // Compute the inputs with which to measure the items. Items whose size in the axis is already known do not need to
     // be measured. If the tree computes batches of child layouts in parallel then the other items are measured as a batch.
     // Otherwise each is measured immediately.
+    let batch_child_layouts = Tree::COMPUTES_CHILD_LAYOUTS_IN_PARALLEL && tree.batches_child_layouts(node);
     let mut any_changed = false;
     let mut jobs: Vec<ChildLayoutJob> = Vec::new();
     let mut known_contributions: Vec<Option<f32>> = Vec::new();
@@ -138,7 +139,7 @@ fn refresh_min_content_contributions<Tree: LayoutPartialTree>(
         item.grid_area_size_cache = Some(grid_area_size);
         let available_space = grid_area_size.with(axis, None);
         let input = item.min_content_contribution_input(axis, tree, grid_area_size, available_space);
-        if Tree::COMPUTES_CHILD_LAYOUTS_IN_PARALLEL {
+        if batch_child_layouts {
             match input {
                 Ok(input) => {
                     jobs.push(ChildLayoutJob::new(item.node, input));
@@ -155,7 +156,7 @@ fn refresh_min_content_contributions<Tree: LayoutPartialTree>(
         }
     }
 
-    if Tree::COMPUTES_CHILD_LAYOUTS_IN_PARALLEL {
+    if batch_child_layouts {
         if !jobs.is_empty() {
             tree.compute_child_layouts(node, &mut jobs);
         }
@@ -782,7 +783,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     // layouts in parallel then also compute their layouts as a batch.
     let mut prepared_items: Vec<PreparedItemLayout> = Vec::new();
     let mut jobs: Vec<ChildLayoutJob> = Vec::new();
-    if Tree::COMPUTES_CHILD_LAYOUTS_IN_PARALLEL {
+    if Tree::COMPUTES_CHILD_LAYOUTS_IN_PARALLEL && tree.batches_child_layouts(node) {
         prepared_items.reserve(items.len());
         jobs.reserve(items.len());
         for item in items.iter() {

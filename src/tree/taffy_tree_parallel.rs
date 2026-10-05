@@ -411,6 +411,13 @@ where
         )
     }
 
+    /// A batch of child layouts of a node whose subtree (not counting the node itself) is smaller than
+    /// the smallest batch that is computed in parallel would never be computed in parallel
+    #[inline(always)]
+    fn batches_child_layouts(&self, parent_node_id: NodeId) -> bool {
+        self.shared.subtree_sizes[slot(parent_node_id)] > self.shared.min_batch_weight
+    }
+
     #[inline(always)]
     fn compute_child_layouts(&mut self, parent_node_id: NodeId, jobs: &mut [ChildLayoutJob]) {
         self.compute_batch(parent_node_id, jobs)
