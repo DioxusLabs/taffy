@@ -1305,23 +1305,20 @@ fn perform_final_layout_on_in_flow_children(
 
             // `justify-self` on an in-flow block-level box (css-align-3 §6.1.1). `auto` (`None`)
             // takes the container's `justify-items`, and `normal` (`None` on both) lays the box
-            // out according to the default block layout rules. `stretch` also does for
-            // non-replaced boxes, whereas it fills the container for auto-width replaced boxes.
+            // out according to the default block layout rules. `stretch` does too: the default
+            // rules already stretch an auto-width box, so it only differs from `normal` for
+            // replaced boxes, which would otherwise resolve their own width.
             let justify_self = item
                 .justify_self
                 .or(justify_items)
                 .map(|align| align.resolve_self_relative(item.direction, direction, true));
-            let stretches_replaced = item.is_replaced
-                && item.size_style.width.is_auto()
-                && justify_self.is_some_and(|align| align.keyword == AlignItemsKeyword::Stretch);
+            let is_stretch = justify_self.is_some_and(|align| align.keyword == AlignItemsKeyword::Stretch);
             let justify_self = justify_self.filter(|align| align.keyword != AlignItemsKeyword::Stretch);
 
-            // Tables and replaced elements are not stretch-sized: they resolve their own
-            // size (for replaced elements an auto width resolves to the intrinsic size
+            // Tables and (non-stretched) replaced elements are not stretch-sized: they resolve
+            // their own size (for replaced elements an auto width resolves to the intrinsic size
             // <https://www.w3.org/TR/CSS22/visudet.html#block-replaced-width>)
-            let known_dimensions = if stretches_replaced {
-                Size { width: Some(stretch_width.maybe_clamp(item.min_size.width, item.max_size.width)), height: None }
-            } else if item.is_table || item.is_replaced {
+            let known_dimensions = if item.is_table || (item.is_replaced && !is_stretch) {
                 Size::NONE
             } else {
                 // The automatic width of a block-level box whose `justify-self` is not `normal`
