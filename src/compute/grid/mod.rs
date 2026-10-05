@@ -384,7 +384,8 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
         return LayoutOutput::from_outer_size(container_border_box);
     }
 
-    // The container's size is now determined, so percentages resolve against its content box when re-running track sizing
+    // The container's size is now determined, so percentages resolve against its content box when re-running track sizing.
+    // This may be a no-op if the container's size was known upfront (in which case it already equals `inner_node_size`).
     inner_node_size = container_content_box.map(Some);
 
     // 7. Resolve percentage track base sizes
