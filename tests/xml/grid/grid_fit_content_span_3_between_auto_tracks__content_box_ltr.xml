@@ -1,0 +1,19 @@
+<test name="grid_fit_content_span_3_between_auto_tracks__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" box-sizing="content-box" direction="ltr" position="absolute" justify-content="start" width="100px" column-gap="5px" grid-template-columns="auto fit-content(110px) auto">
+      <text box-sizing="content-box" direction="ltr" position="relative" grid-row-start="1" grid-column-start="1" grid-column-end="-1">
+        XX​XX​XX​XX​XX​X
+      </text>
+      <text box-sizing="content-box" direction="ltr" position="relative" grid-row-start="2" grid-column-start="1" grid-column-end="-1">
+        XXX​XXX​X
+      </text>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="100" height="30" resolved-rows="20px 10px" resolved-columns="29.9844px 30px 30.0156px">
+      <node x="0" y="0" width="100" height="20"/>
+      <node x="0" y="20" width="100" height="10"/>
+    </node>
+  </expectations>
+</test>

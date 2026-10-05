@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    A spanning item's max-content contribution should only grow tracks whose growth limit is still infinite (or which are marked infinitely growable), not a fit-content() track whose growth limit was already set by a non-spanning item
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="display: grid; width: 100px; column-gap: 5px; justify-content: start; grid-template-columns: fit-content(110px) fit-content(40px);">
+  <div style="grid-row: 1; grid-column: 2;">XX</div>
+  <div style="grid-row: 2; grid-column: 1 / -1;">XXX&ZeroWidthSpace;XXX&ZeroWidthSpace;X</div>
+</div>
+
+</body>
+</html>
