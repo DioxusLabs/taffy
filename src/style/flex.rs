@@ -44,7 +44,6 @@ pub trait FlexboxContainerStyle: CoreStyle {
         Style::<Self::CustomIdent>::DEFAULT.align_items
     }
     /// How this node's children should be aligned in the inline axis
-    /// Defaults to [`AlignItems::NORMAL`]
     #[inline(always)]
     fn justify_content(&self) -> Option<JustifyContent> {
         Style::<Self::CustomIdent>::DEFAULT.justify_content
