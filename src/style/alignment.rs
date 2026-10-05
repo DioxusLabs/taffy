@@ -22,14 +22,7 @@ use crate::style::Direction;
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[repr(u8)]
 pub enum AlignItemsKeyword {
-    /// The default alignment of the layout mode (the initial value of `align-items` and
-    /// `justify-items`).
-    ///
-    /// How `Normal` behaves depends on the layout mode: for flex items it behaves as
-    /// `Stretch`; for grid items it behaves as `Stretch`, or as `Start` if the item has a
-    /// preferred size or aspect ratio in the relevant axis; for block-level boxes it behaves
-    /// as `Stretch` in the inline axis; and for absolutely positioned boxes it behaves either
-    /// as `Stretch` or as `Start` depending on the box's insets and whether it is replaced.
+    /// The layout mode's default alignment: usually `Stretch`, but `Start` in some cases.
     #[default]
     Normal,
     /// Items are packed toward the start of the axis.
