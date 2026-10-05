@@ -11,8 +11,8 @@ impl CreateParentTestNode for (f32, f32, i32, i32) {
         Style {
             display: Display::Grid,
             size: Size { width: Dimension::from_length(self.0), height: Dimension::from_length(self.1) },
-            grid_template_columns: vec![fr(1f32); self.2 as usize],
-            grid_template_rows: vec![fr(1f32); self.3 as usize],
+            grid_template_columns: vec![fr(1f32); self.2 as usize].into(),
+            grid_template_rows: vec![fr(1f32); self.3 as usize].into(),
             ..Default::default()
         }
     }

@@ -4,7 +4,7 @@ use super::types::{GridItem, GridTrack, TrackCounts};
 use crate::geometry::{AbstractAxis, Line, Size};
 use crate::style::{AlignContent, AlignContentKeyword, AvailableSpace};
 use crate::style_helpers::TaffyMinContent;
-use crate::tree::{LayoutPartialTree, LayoutPartialTreeExt, SizingMode};
+use crate::tree::{LayoutGridContainer, LayoutPartialTreeExt, SizingMode};
 use crate::util::sys::{f32_max, f32_min, Vec};
 use crate::util::{FrontBackVecBuilder, MaybeMath, ResolveOrZero};
 use crate::CompactLength;
@@ -71,7 +71,7 @@ impl ItemBatcher {
 /// don't have to be passed around all over the place below. It then has methods that implement the intrinsic sizing computations
 struct IntrinsicSizeMeasurer<'tree, 'oat, Tree, EstimateFunction>
 where
-    Tree: LayoutPartialTree,
+    Tree: LayoutGridContainer,
     EstimateFunction: Fn(&GridTrack, Option<f32>, &Tree) -> Option<f32>,
 {
     /// The layout tree
@@ -89,7 +89,7 @@ where
 
 impl<Tree, EstimateFunction> IntrinsicSizeMeasurer<'_, '_, Tree, EstimateFunction>
 where
-    Tree: LayoutPartialTree,
+    Tree: LayoutGridContainer,
     EstimateFunction: Fn(&GridTrack, Option<f32>, &Tree) -> Option<f32>,
 {
     /// Compute the available_space to be passed to the child sizing functions
@@ -252,7 +252,7 @@ pub(super) fn determine_if_item_crosses_flexible_or_intrinsic_tracks(
 /// Track sizing algorithm
 /// Note: Gutters are treated as empty fixed-size tracks for the purpose of the track sizing algorithm.
 #[allow(clippy::too_many_arguments)]
-pub(super) fn track_sizing_algorithm<Tree: LayoutPartialTree>(
+pub(super) fn track_sizing_algorithm<Tree: LayoutGridContainer>(
     tree: &mut Tree,
     axis: AbstractAxis,
     axis_min_size: Option<f32>,
@@ -404,7 +404,7 @@ fn flush_planned_growth_limit_increases(tracks: &mut [GridTrack], set_infinitely
 /// Initialize each track’s base size and growth limit.
 #[inline(always)]
 fn initialize_track_sizes(
-    tree: &impl LayoutPartialTree,
+    tree: &impl LayoutGridContainer,
     axis_tracks: &mut [GridTrack],
     axis_inner_node_size: Option<f32>,
 ) {
@@ -441,7 +441,7 @@ fn initialize_track_sizes(
 
 /// 11.5.1 Shim baseline-aligned items so their intrinsic size contributions reflect their baseline alignment.
 fn resolve_item_baselines(
-    tree: &mut impl LayoutPartialTree,
+    tree: &mut impl LayoutGridContainer,
     axis: AbstractAxis,
     items: &mut [GridItem],
     inner_node_size: Size<Option<f32>>,
@@ -536,7 +536,7 @@ fn resolve_item_baselines(
 
 /// 11.5 Resolve Intrinsic Track Sizes
 #[allow(clippy::too_many_arguments)]
-fn resolve_intrinsic_track_sizes<Tree: LayoutPartialTree>(
+fn resolve_intrinsic_track_sizes<Tree: LayoutGridContainer>(
     tree: &mut Tree,
     axis: AbstractAxis,
     axis_tracks: &mut [GridTrack],
@@ -559,9 +559,14 @@ fn resolve_intrinsic_track_sizes<Tree: LayoutPartialTree>(
     // Items that cross a flexible track are all processed together in a single batch (regardless of their span), so
     // they only need to be moved to the end of the list. And the order in which items within a batch are processed
     // does not affect the result, so the remaining items only need to be sorted if any of them span more than one track.
-    let mut partitioned_items: FrontBackVecBuilder<&mut GridItem> = FrontBackVecBuilder::with_capacity(items.len());
+    //
+    // Items which do not participate in sizing in this axis (subgrids in their subgridded axes and
+    // hoisted subgrid items in axes which are not subgridded) are excluded.
+    let participating_item_count = items.iter().filter(|item| item.participates_in_sizing(axis)).count();
+    let mut partitioned_items: FrontBackVecBuilder<&mut GridItem> =
+        FrontBackVecBuilder::with_capacity(participating_item_count);
     let mut needs_sort = false;
-    for item in items.iter_mut() {
+    for item in items.iter_mut().filter(|item| item.participates_in_sizing(axis)) {
         if item.crosses_flexible_track(axis) {
             partitioned_items.push_back(item);
         } else {
@@ -1281,7 +1286,7 @@ fn maximise_tracks(
 /// This step sizes flexible tracks using the largest value it can assign to an fr without exceeding the available space.
 #[allow(clippy::too_many_arguments)]
 #[inline(always)]
-fn expand_flexible_tracks<Tree: LayoutPartialTree>(
+fn expand_flexible_tracks<Tree: LayoutGridContainer>(
     tree: &mut Tree,
     axis: AbstractAxis,
     axis_tracks: &mut [GridTrack],
@@ -1337,7 +1342,7 @@ fn expand_flexible_tracks<Tree: LayoutPartialTree>(
                 // that the item crosses and a space to fill of the item’s max-content contribution.
                 items
                     .iter_mut()
-                    .filter(|item| item.crosses_flexible_track(axis))
+                    .filter(|item| item.crosses_flexible_track(axis) && item.participates_in_sizing(axis))
                     .map(|item| {
                         let max_content_contribution = item_sizer.max_content_contribution(item, axis_tracks);
                         let tracks = &axis_tracks[item.track_range_excluding_lines(axis)];

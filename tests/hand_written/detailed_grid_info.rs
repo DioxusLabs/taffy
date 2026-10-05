@@ -31,8 +31,8 @@ mod detailed_grid_info {
                 Style {
                     display: Display::Grid,
                     size: Size { width: Dimension::from_length(100.0), height: Dimension::from_length(50.0) },
-                    grid_template_columns: vec![length(40.0), length(60.0)],
-                    grid_template_rows: vec![length(50.0)],
+                    grid_template_columns: vec![length(40.0), length(60.0)].into(),
+                    grid_template_rows: vec![length(50.0)].into(),
                     ..Default::default()
                 },
                 &[child],
@@ -57,13 +57,13 @@ mod detailed_grid_info {
                 Style {
                     display: Display::Grid,
                     size: Size { width: Dimension::from_length(100.0), height: Dimension::from_length(50.0) },
-                    grid_template_columns: vec![length(40.0), length(60.0)],
+                    grid_template_columns: vec![length(40.0), length(60.0)].into(),
                     grid_template_column_names: vec![
                         vec!["full-start".into()],
                         vec!["main-start".into()],
                         vec!["main-end".into(), "full-end".into()],
                     ],
-                    grid_template_rows: vec![length(50.0)],
+                    grid_template_rows: vec![length(50.0)].into(),
                     grid_template_areas: Some(GridTemplateAreas {
                         areas: vec![GridTemplateArea {
                             name: "hero".into(),
@@ -124,9 +124,10 @@ mod detailed_grid_info {
                         count: RepetitionCount::Count(2),
                         tracks: vec![length(50.0)],
                         line_names: vec![vec!["col-start".into()], vec!["col-end".into()]],
-                    })],
+                    })]
+                    .into(),
                     grid_template_column_names: vec![vec!["outer-start".into()], vec!["outer-end".into()]],
-                    grid_template_rows: vec![length(50.0)],
+                    grid_template_rows: vec![length(50.0)].into(),
                     ..Default::default()
                 },
                 &[child],
@@ -163,9 +164,9 @@ mod detailed_grid_info {
                 Style {
                     display: Display::Grid,
                     size: Size { width: Dimension::from_length(100.0), height: Dimension::from_length(50.0) },
-                    grid_template_columns: vec![length(50.0)],
+                    grid_template_columns: vec![length(50.0)].into(),
                     grid_template_column_names: vec![vec!["a".into()], vec!["b".into()]],
-                    grid_template_rows: vec![length(50.0)],
+                    grid_template_rows: vec![length(50.0)].into(),
                     ..Default::default()
                 },
                 &[child],
@@ -200,8 +201,8 @@ mod detailed_grid_info {
             .new_with_children(
                 Style {
                     display: Display::Grid,
-                    grid_template_columns: vec![length(40.0), length(60.0)],
-                    grid_template_rows: vec![length(50.0), length(30.0)],
+                    grid_template_columns: vec![length(40.0), length(60.0)].into(),
+                    grid_template_rows: vec![length(50.0), length(30.0)].into(),
                     gap: length(10.0),
                     padding: Rect { left: length(5.0), right: length(5.0), top: length(5.0), bottom: length(5.0) },
                     ..Default::default()
@@ -279,14 +280,14 @@ mod detailed_grid_info {
                 Style {
                     display: Display::Grid,
                     size: Size { width: Dimension::from_length(90.0), height: Dimension::from_length(50.0) },
-                    grid_template_columns: vec![length(30.0), length(30.0), length(30.0)],
+                    grid_template_columns: vec![length(30.0), length(30.0), length(30.0)].into(),
                     grid_template_column_names: vec![
                         vec!["a".into()],
                         vec!["b".into()],
                         vec!["b".into()],
                         vec!["c".into()],
                     ],
-                    grid_template_rows: vec![length(50.0)],
+                    grid_template_rows: vec![length(50.0)].into(),
                     ..Default::default()
                 },
                 &[child],
@@ -325,9 +326,9 @@ mod detailed_grid_info {
                     display: Display::Grid,
                     direction: taffy::style::Direction::Rtl,
                     size: Size { width: Dimension::from_length(100.0), height: Dimension::from_length(50.0) },
-                    grid_template_columns: vec![length(40.0), length(60.0)],
+                    grid_template_columns: vec![length(40.0), length(60.0)].into(),
                     grid_template_column_names: vec![vec!["a".into()], vec!["b".into()], vec!["c".into()]],
-                    grid_template_rows: vec![length(50.0)],
+                    grid_template_rows: vec![length(50.0)].into(),
                     ..Default::default()
                 },
                 &[child],

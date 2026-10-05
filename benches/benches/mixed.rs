@@ -84,8 +84,8 @@ fn random_grid_track<R: Rng>(rng: &mut R) -> GridTemplateComponent<String> {
 fn random_nxn_grid_style<R: Rng>(rng: &mut R, track_count: usize) -> Style {
     Style {
         display: Display::Grid,
-        grid_template_columns: iter::from_fn(|| Some(random_grid_track(rng))).take(track_count).collect(),
-        grid_template_rows: iter::from_fn(|| Some(random_grid_track(rng))).take(track_count).collect(),
+        grid_template_columns: taffy::GridTemplate::Tracks(iter::from_fn(|| Some(random_grid_track(rng))).take(track_count).collect()),
+        grid_template_rows: taffy::GridTemplate::Tracks(iter::from_fn(|| Some(random_grid_track(rng))).take(track_count).collect()),
         ..Default::default()
     }
 }

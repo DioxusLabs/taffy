@@ -24,7 +24,7 @@ fn container_style(display: Display, depth: usize) -> Style {
     Style {
         display,
         flex_direction: [FlexDirection::Column, FlexDirection::Row][depth % 2],
-        grid_template_columns: vec![auto(), auto()],
+        grid_template_columns: vec![auto(), auto()].into(),
         padding: Rect::length(1.0),
         ..Default::default()
     }

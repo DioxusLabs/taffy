@@ -47,6 +47,21 @@
 - Flexbox: a flex container that is only asked for its main size (`RunMode::ComputeSize` with a `RequestedAxis` matching its main axis) now returns as soon as its main size has been determined rather than going on to compute its cross size, which measured the cross size of each of its items for no benefit. This makes the layout of nested flex containers faster (15-18% in Taffy's deep flexbox benchmarks).
 - Grid: the min-/max-content contribution of a grid item whose size in the axis being measured is already known (from its `size` style or from stretch alignment in a definite grid area) is now taken directly from that known size rather than by calling into the item's layout. The known size computed for grid items during track sizing is also now floored by the item's padding and border, as it already was during final layout.
 
+### Added: CSS Grid Level 2 subgrid support
+
+Grid containers which are themselves grid items can now set `grid_template_rows` and/or `grid_template_columns` to `subgrid`, adopting the tracks of their parent grid in that axis as specified by [CSS Grid Level 2](https://www.w3.org/TR/css-grid-2/#subgrids):
+
+- The `Style.grid_template_rows`/`grid_template_columns` properties are now of type `GridTemplate<S>`, an enum with `Tracks` (a track listing, as before) and `Subgrid` (with an optional line-name list) variants. Existing `Vec<GridTemplateComponent<S>>` values can be converted with `.into()`. **This is a breaking change.**
+- The `GridContainerStyle::grid_template_rows`/`grid_template_columns` trait methods now return a `GenericGridTemplate` enum instead of an `Option`. **This is a breaking change** for custom style types.
+- A new `CoreStyle::is_grid_container` method (default `false`) is used to detect subgrid children. Custom style types should implement it for subgrid support.
+- A new `LayoutGridContainer::compute_grid_child_layout` trait method passes adopted track sizes (a `SubgridContext`) from parent grids to subgrids. The default implementation ignores the context (causing subgridded axes to behave as `none`); custom tree implementations should override it and dispatch to the new `compute_grid_layout_with_subgrid_context` function, bypassing any layout cache when a context is provided (while calling the new `Cache::mark_uncached_result` so that invalidating a subgrid's descendants still invalidates its ancestors). `SubgridContext` and `AdoptedTracks` are exported from the crate root.
+- Subgrids adopt the parent's track sizes and gutters in subgridded axes, are always stretched to their grid area (size styles do not apply), clamp item placements to the explicit grid (no implicit tracks), and their margin/border/padding reduce the size of the first/last adopted track. A subgrid specifying its own non-zero `gap` overrides the inherited gutters.
+- Items of subgrids (including nested subgrids) participate in the track sizing of the parent grid, so intrinsically-sized (`auto`, `*-content`, `fr`) parent tracks account for subgrid content.
+- The `subgrid` keyword is supported when parsing grid templates from CSS strings (with the `parse` feature).
+- `DetailedGridTracksInfo` gains an `is_subgrid` field, and the resolved track list of a subgridded axis is serialized as `subgrid` followed by its line names (matching `getComputedStyle`).
+
+Not yet supported: `repeat()` within a subgrid line-name list, inheritance of parent line names into the subgrid, baseline alignment of subgrid items with the parent grid, and absolutely-positioned subgrids.
+
 ### Fixed
 
 - The space available to a shrink-to-fit absolutely positioned box now excludes its (non-`auto`) insets as well as its margins. Previously a box with e.g. `left: 60px` in a 100px wide containing block was sized as if it had 100px available and overflowed its containing block rather than wrapping its content.
