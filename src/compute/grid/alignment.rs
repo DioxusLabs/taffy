@@ -106,7 +106,7 @@ pub(super) fn align_and_position_item(
     let contain = style.contain();
     let scrollbar_width = style.scrollbar_width();
     let aspect_ratio = style.aspect_ratio();
-    // Resolve `auto` against the container's justify-items/align-items, and then resolve
+    // Fall back to the container's justify-items/align-items if unset (`None`), and then resolve
     // writing-mode-relative self-start/self-end keywords against the item's own direction.
     // The horizontal axis is the inline axis (Taffy only supports horizontal-tb); the vertical
     // (block) axis resolves them to plain start/end.

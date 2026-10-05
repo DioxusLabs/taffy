@@ -786,8 +786,8 @@ fn compute_inner(
                 end: container_outer_width - resolved_content_box_inset.right,
             };
             let block_area = Line { start: item.static_position.y, end: item.static_position.y };
-            // `justify-self: auto` takes the container's `justify-items`. Block containers have no
-            // `align-items`, so `align-self: auto` behaves as `normal`.
+            // A `justify_self` of `None` takes the container's `justify-items`. Block containers have
+            // no `align-items`, so an `align_self` of `None` behaves as `normal`.
             let justify_self =
                 item.justify_self.unwrap_or(justify_items).resolve_self_relative(item.direction, direction, true);
             let align_self =
@@ -1303,7 +1303,7 @@ fn perform_final_layout_on_in_flow_children(
                 }
             };
 
-            // `justify-self` on an in-flow block-level box (css-align-3 §6.1.1). `auto` takes the
+            // `justify-self` on an in-flow block-level box (css-align-3 §6.1.1). `None` takes the
             // container's `justify-items`, and `normal` lays the box out according to the default
             // block layout rules. `stretch` does too: the default rules already stretch an
             // auto-width box, so it only differs from `normal` for tables and replaced boxes, which

@@ -603,7 +603,7 @@ fn compute_constants(
         if style.box_sizing() == BoxSizing::ContentBox { padding_border_sum } else { Size::ZERO };
 
     // `normal` behaves as `stretch` for flex items. This is resolved once here so that
-    // `auto` self-alignments which defer to this value are also resolved.
+    // items with an `align_self` of `None`, which defer to this value, are also resolved.
     let align_items = resolve_normal_alignment(style.align_items());
     let align_content = style.align_content().unwrap_or(AlignContent::STRETCH);
     let justify_content = style.justify_content();
