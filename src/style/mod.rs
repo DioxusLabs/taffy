@@ -92,10 +92,21 @@ pub trait CoreStyle {
     fn is_block(&self) -> bool {
         false
     }
-    /// Is it a compressible replaced element?
-    /// <https://drafts.csswg.org/css-sizing-3/#min-content-zero>
+    /// Is it a compressible replaced element: a replaced element (image, video, canvas, ...) or a
+    /// form control with an intrinsic size (`input`, `select`, `textarea`, `meter`, ...)?
+    /// Such boxes resolve an `auto` width to their intrinsic size rather than being stretched by
+    /// block layout, and have a zero min-content contribution in grid layout.
+    /// <https://drafts.csswg.org/css-sizing-3/#compressible>
     #[inline(always)]
     fn is_compressible_replaced(&self) -> bool {
+        false
+    }
+    /// Is it a replaced element (image, video, canvas, ...)? Unlike other compressible replaced
+    /// elements (form controls), an `auto`-sized replaced element is not stretched between its
+    /// insets under `normal` alignment.
+    /// <https://html.spec.whatwg.org/multipage/rendering.html#replaced-elements>
+    #[inline(always)]
+    fn is_replaced(&self) -> bool {
         false
     }
     /// Which box do size styles apply to
@@ -704,9 +715,12 @@ pub struct Style<S: CheapCloneStr = DefaultCheapStr> {
     /// Whether a child is display:table or not. This affects children of block layouts.
     /// This should really be part of `Display`, but it is currently seperate because table layout isn't implemented
     pub item_is_table: bool,
-    /// Is it a replaced element like an image or form field?
-    /// <https://drafts.csswg.org/css-sizing-3/#min-content-zero>
+    /// Is it a replaced element like an image or video? Implies `is_compressible_replaced`.
+    /// <https://html.spec.whatwg.org/multipage/rendering.html#replaced-elements>
     pub item_is_replaced: bool,
+    /// Is it a compressible replaced element that is not a replaced element (a form control with
+    /// an intrinsic size)? <https://drafts.csswg.org/css-sizing-3/#compressible>
+    pub item_is_compressible_replaced: bool,
     /// Should size styles apply to the content box or the border box of the node
     pub box_sizing: BoxSizing,
     /// Sets the direction of text, table and grid columns, and horizontal overflow.
@@ -864,6 +878,7 @@ impl<S: CheapCloneStr> Style<S> {
         display: Display::DEFAULT,
         item_is_table: false,
         item_is_replaced: false,
+        item_is_compressible_replaced: false,
         box_sizing: BoxSizing::BorderBox,
         direction: Direction::Ltr,
         overflow: Point { x: Overflow::Visible, y: Overflow::Visible },
@@ -958,6 +973,10 @@ impl<S: CheapCloneStr> CoreStyle for Style<S> {
     }
     #[inline(always)]
     fn is_compressible_replaced(&self) -> bool {
+        self.item_is_replaced || self.item_is_compressible_replaced
+    }
+    #[inline(always)]
+    fn is_replaced(&self) -> bool {
         self.item_is_replaced
     }
     #[inline(always)]
@@ -1059,6 +1078,10 @@ impl<T: CoreStyle> CoreStyle for &'_ T {
     #[inline(always)]
     fn is_compressible_replaced(&self) -> bool {
         (*self).is_compressible_replaced()
+    }
+    #[inline(always)]
+    fn is_replaced(&self) -> bool {
+        (*self).is_replaced()
     }
     #[inline(always)]
     fn box_sizing(&self) -> BoxSizing {
@@ -1604,6 +1627,7 @@ mod tests {
             display: Default::default(),
             item_is_table: false,
             item_is_replaced: false,
+            item_is_compressible_replaced: false,
             box_sizing: Default::default(),
             #[cfg(feature = "float_layout")]
             float: Default::default(),

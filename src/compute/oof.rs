@@ -507,7 +507,7 @@ pub(crate) fn layout_oof_box<Tree: LayoutContainingBlock>(
         .maybe_add(box_sizing_adjustment);
     let mut known_dimensions = style_size.maybe_clamp(min_size, max_size);
 
-    let is_replaced = child_style.is_compressible_replaced();
+    let is_replaced = child_style.is_replaced();
     let is_table = child_style.is_table();
     let item_direction = child_style.direction();
     let justify_self = child_style.justify_self();
