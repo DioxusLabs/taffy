@@ -1,0 +1,35 @@
+<test name="grid_min_size_stretch_flex_container__border_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" direction="ltr" position="absolute" align-items="start" justify-items="start" width="200px" height="200px" grid-template-rows="1fr 1fr" grid-template-columns="1fr 1fr">
+      <div display="flex" direction="ltr" position="relative" flex-direction="column" min-height="stretch">
+        <div direction="ltr" position="relative" flex-grow="1" width="20px"/>
+      </div>
+      <div display="flex" direction="ltr" position="relative" min-width="stretch">
+        <div direction="ltr" position="relative" flex-grow="1" height="20px"/>
+      </div>
+      <div display="grid" direction="ltr" position="relative" min-width="stretch" min-height="stretch" margin-top="10px" margin-left="10px" margin-bottom="10px" margin-right="10px">
+        <div direction="ltr" position="relative"/>
+      </div>
+      <div display="flex" direction="ltr" position="relative" max-width="stretch" margin-left="30px">
+        <div direction="ltr" position="relative" width="120px" height="20px"/>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="200" height="200" resolved-rows="100px 100px" resolved-columns="50px 150px">
+      <node x="0" y="0" width="20" height="100">
+        <node x="0" y="0" width="20" height="100"/>
+      </node>
+      <node x="50" y="0" width="150" height="20">
+        <node x="0" y="0" width="150" height="20"/>
+      </node>
+      <node x="10" y="110" width="30" height="80" resolved-rows="80px" resolved-columns="30px">
+        <node x="0" y="0" width="30" height="80"/>
+      </node>
+      <node x="80" y="100" width="120" height="20">
+        <node x="0" y="0" width="120" height="20"/>
+      </node>
+    </node>
+  </expectations>
+</test>

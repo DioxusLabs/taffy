@@ -61,3 +61,8 @@ harness = false
 name = "relayout"
 path = "benches/relayout.rs"
 harness = false
+
+[[bench]]
+name = "sizing_keywords"
+path = "benches/sizing_keywords.rs"
+harness = false

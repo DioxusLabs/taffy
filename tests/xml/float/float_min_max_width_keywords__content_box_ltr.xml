@@ -1,0 +1,51 @@
+<test name="float_min_max_width_keywords__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="block" box-sizing="content-box" direction="ltr" position="absolute" width="50px">
+      <text box-sizing="content-box" direction="ltr" position="relative" float="left" clear="left" max-width="min-content">
+        HH​HH​HH​HH
+      </text>
+      <text box-sizing="content-box" direction="ltr" position="relative" float="left" clear="left" max-width="max-content">
+        HH​HH​HH​HH
+      </text>
+      <text box-sizing="content-box" direction="ltr" position="relative" float="left" clear="left" max-width="fit-content">
+        HH​HH​HH​HH
+      </text>
+      <text box-sizing="content-box" direction="ltr" position="relative" float="left" clear="left" max-width="stretch">
+        HH​HH​HH​HH
+      </text>
+      <text box-sizing="content-box" direction="ltr" position="relative" float="left" clear="left" min-width="min-content">
+        HH​HH​HH​HH
+      </text>
+      <text box-sizing="content-box" direction="ltr" position="relative" float="left" clear="left" min-width="max-content">
+        HH​HH​HH​HH
+      </text>
+      <text box-sizing="content-box" direction="ltr" position="relative" float="left" clear="left" min-width="fit-content">
+        HH​HH​HH​HH
+      </text>
+      <text box-sizing="content-box" direction="ltr" position="relative" float="left" clear="left" min-width="stretch">
+        HH​HH​HH​HH
+      </text>
+      <text box-sizing="content-box" direction="ltr" position="relative" float="left" clear="left" min-width="max-content" max-width="30px">
+        HH​HH​HH​HH
+      </text>
+      <text box-sizing="content-box" direction="ltr" position="relative" float="left" clear="left" min-width="60px" max-width="min-content">
+        HH​HH​HH​HH
+      </text>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="50" height="200">
+      <node x="0" y="0" width="20" height="40"/>
+      <node x="0" y="40" width="50" height="20"/>
+      <node x="0" y="60" width="50" height="20"/>
+      <node x="0" y="80" width="50" height="20"/>
+      <node x="0" y="100" width="50" height="20"/>
+      <node x="0" y="120" width="80" height="10"/>
+      <node x="0" y="130" width="50" height="20"/>
+      <node x="0" y="150" width="50" height="20"/>
+      <node x="0" y="170" width="80" height="10"/>
+      <node x="0" y="180" width="60" height="20"/>
+    </node>
+  </expectations>
+</test>

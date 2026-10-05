@@ -3,6 +3,7 @@
 use crate::geometry::{AbsoluteAxis, AbstractAxis, InBothAbsAxis};
 use crate::geometry::{Line, Point, Rect, Size};
 use crate::style::{AlignItems, AvailableSpace, Overflow};
+use crate::tree::traits::resolve_container_min_max_size;
 use crate::tree::{
     AxisStaticAlign, AxisStaticEdge, AxisStaticPosition, Baselines, Layout, LayoutInput, LayoutOutput,
     LayoutPartialTreeExt, NodeId, OofCandidate, OofCandidates, OofPositioningArea, RunMode,
@@ -10,7 +11,7 @@ use crate::tree::{
 use crate::util::debug::debug_log;
 use crate::util::sys::{f32_max, f32_min, GridTrackVec, Vec};
 use crate::util::MaybeMath;
-use crate::util::{MaybeResolve, ResolveOrZero};
+use crate::util::ResolveOrZero;
 use crate::{
     style_helpers::*, AlignContent, AlignItemsKeyword, AlignSelf, BoxGenerationMode, BoxSizing, CoreStyle, Direction,
     GridContainerStyle, GridItemStyle, JustifyContent, LayoutGridContainer, RequestedAxis,
@@ -78,16 +79,24 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     let box_sizing_adjustment =
         if style.box_sizing() == BoxSizing::ContentBox { padding_border_size } else { Size::ZERO };
 
-    let min_size = style
-        .min_size()
-        .maybe_resolve(parent_size, |val, basis| tree.calc(val, basis))
-        .maybe_apply_aspect_ratio(aspect_ratio)
-        .maybe_add(box_sizing_adjustment);
-    let max_size = style
-        .max_size()
-        .maybe_resolve(parent_size, |val, basis| tree.calc(val, basis))
-        .maybe_apply_aspect_ratio(aspect_ratio)
-        .maybe_add(box_sizing_adjustment);
+    let min_size = resolve_container_min_max_size(
+        style.min_size(),
+        parent_size,
+        available_space,
+        box_sizing_adjustment,
+        |val, basis| tree.calc(val, basis),
+    )
+    .maybe_apply_aspect_ratio(aspect_ratio)
+    .maybe_add(box_sizing_adjustment);
+    let max_size = resolve_container_min_max_size(
+        style.max_size(),
+        parent_size,
+        available_space,
+        box_sizing_adjustment,
+        |val, basis| tree.calc(val, basis),
+    )
+    .maybe_apply_aspect_ratio(aspect_ratio)
+    .maybe_add(box_sizing_adjustment);
 
     // Scrollbar gutters are reserved when the `overflow` property is set to `Overflow::Scroll`.
     // However, the axis are switched (transposed) because a node that scrolls vertically needs

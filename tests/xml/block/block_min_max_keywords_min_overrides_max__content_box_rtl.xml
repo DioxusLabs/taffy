@@ -1,0 +1,35 @@
+<test name="block_min_max_keywords_min_overrides_max__content_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="block" box-sizing="content-box" direction="rtl" position="absolute" width="120px">
+      <text box-sizing="content-box" direction="rtl" position="relative" width="10px" min-width="max-content" max-width="15px">
+        HH​HH
+      </text>
+      <text box-sizing="content-box" direction="rtl" position="relative" width="10px" min-width="max-content" max-width="min-content">
+        HH​HH
+      </text>
+      <text box-sizing="content-box" direction="rtl" position="relative" width="100px" min-width="30px" max-width="min-content">
+        HH​HH
+      </text>
+      <text box-sizing="content-box" direction="rtl" position="relative" width="100px" min-width="15px" max-width="min-content">
+        HH​HH
+      </text>
+      <text box-sizing="content-box" direction="rtl" position="relative" height="5px" min-height="min-content" max-height="8px">
+        HH​HH
+      </text>
+      <text box-sizing="content-box" direction="rtl" position="relative" height="50px" min-height="30px" max-height="min-content">
+        HH​HH
+      </text>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="120" height="115">
+      <node x="80" y="0" width="40" height="10"/>
+      <node x="80" y="10" width="40" height="10"/>
+      <node x="90" y="20" width="30" height="20"/>
+      <node x="100" y="40" width="20" height="20"/>
+      <node x="0" y="60" width="120" height="5"/>
+      <node x="0" y="65" width="120" height="50"/>
+    </node>
+  </expectations>
+</test>

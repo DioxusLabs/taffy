@@ -12,6 +12,7 @@ mod hand_written {
     mod initial_containing_block;
     mod measure;
     mod min_max_overrides;
+    mod min_max_sizing_keywords;
     mod negative_available_space;
     mod oof_hoisting;
     mod position;

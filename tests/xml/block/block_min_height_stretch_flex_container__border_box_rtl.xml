@@ -1,0 +1,19 @@
+<test name="block_min_height_stretch_flex_container__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="block" direction="rtl" position="absolute" width="200px" height="200px">
+      <div display="flex" direction="rtl" position="relative" flex-direction="column" min-height="stretch">
+        <div direction="rtl" position="relative" flex-grow="1" height="20px"/>
+        <div direction="rtl" position="relative" height="20px"/>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="200" height="200">
+      <node x="0" y="0" width="200" height="200">
+        <node x="0" y="0" width="200" height="180"/>
+        <node x="0" y="180" width="200" height="20"/>
+      </node>
+    </node>
+  </expectations>
+</test>

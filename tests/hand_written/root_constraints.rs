@@ -122,12 +122,12 @@ mod root_constraints {
                         display: Display::Flex,
                         margin: Rect::length(20.0).map(|m: taffy::LengthPercentage| LengthPercentageAuto::from(m)),
                         min_size: Size {
-                            width: min_width.map_or(LengthPercentageAuto::auto(), LengthPercentageAuto::from_length),
-                            height: LengthPercentageAuto::auto(),
+                            width: min_width.map_or(taffy::Dimension::auto(), taffy::Dimension::from_length),
+                            height: taffy::Dimension::auto(),
                         },
                         max_size: Size {
-                            width: max_width.map_or(LengthPercentageAuto::auto(), LengthPercentageAuto::from_length),
-                            height: LengthPercentageAuto::auto(),
+                            width: max_width.map_or(taffy::Dimension::auto(), taffy::Dimension::from_length),
+                            height: taffy::Dimension::auto(),
                         },
                         ..Default::default()
                     },

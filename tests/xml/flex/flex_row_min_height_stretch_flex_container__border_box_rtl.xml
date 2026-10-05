@@ -1,0 +1,29 @@
+<test name="flex_row_min_height_stretch_flex_container__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="flex" direction="rtl" position="absolute" align-items="flex-start" width="200px" height="100px">
+      <div display="flex" direction="rtl" position="relative" flex-direction="column" min-height="stretch">
+        <div direction="rtl" position="relative" flex-grow="1" width="20px"/>
+      </div>
+      <div display="grid" direction="rtl" position="relative" min-height="stretch">
+        <div direction="rtl" position="relative" width="20px"/>
+      </div>
+      <div display="flex" direction="rtl" position="relative" flex-direction="column" max-height="stretch">
+        <div direction="rtl" position="relative" width="20px" height="150px"/>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="200" height="100">
+      <node x="180" y="0" width="20" height="100">
+        <node x="0" y="0" width="20" height="100"/>
+      </node>
+      <node x="160" y="0" width="20" height="100" resolved-rows="100px" resolved-columns="20px">
+        <node x="0" y="0" width="20" height="100"/>
+      </node>
+      <node x="140" y="0" width="20" height="100">
+        <node x="0" y="0" width="20" height="100"/>
+      </node>
+    </node>
+  </expectations>
+</test>

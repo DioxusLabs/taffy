@@ -54,6 +54,7 @@ pub use self::float::{BfcSlot, ContentSlot, FloatContext, FloatIntrinsicWidthCal
 
 use crate::geometry::{Line, Point, Size};
 use crate::style::{AvailableSpace, ContainingBlockClaims, CoreStyle, Overflow, Position};
+use crate::tree::traits::resolve_container_min_max_size;
 use crate::tree::traits::resolve_core_style_constraints;
 use crate::tree::{
     AxisStaticAlign, AxisStaticEdge, AxisStaticPosition, Layout, LayoutInput, LayoutOutput, LayoutPartialTree,
@@ -221,16 +222,24 @@ fn compute_in_flow_root_layout(
             let box_sizing_adjustment =
                 if style.box_sizing() == BoxSizing::ContentBox { padding_border_size } else { Size::ZERO };
 
-            let min_size = style
-                .min_size()
-                .maybe_resolve(parent_size, |val, basis| tree.calc(val, basis))
-                .maybe_apply_aspect_ratio(aspect_ratio)
-                .maybe_add(box_sizing_adjustment);
-            let max_size = style
-                .max_size()
-                .maybe_resolve(parent_size, |val, basis| tree.calc(val, basis))
-                .maybe_apply_aspect_ratio(aspect_ratio)
-                .maybe_add(box_sizing_adjustment);
+            let min_size = resolve_container_min_max_size(
+                style.min_size(),
+                parent_size,
+                available_space,
+                box_sizing_adjustment,
+                |val, basis| tree.calc(val, basis),
+            )
+            .maybe_apply_aspect_ratio(aspect_ratio)
+            .maybe_add(box_sizing_adjustment);
+            let max_size = resolve_container_min_max_size(
+                style.max_size(),
+                parent_size,
+                available_space,
+                box_sizing_adjustment,
+                |val, basis| tree.calc(val, basis),
+            )
+            .maybe_apply_aspect_ratio(aspect_ratio)
+            .maybe_add(box_sizing_adjustment);
             let clamped_style_size = style
                 .size()
                 .maybe_resolve(parent_size, |val, basis| tree.calc(val, basis))

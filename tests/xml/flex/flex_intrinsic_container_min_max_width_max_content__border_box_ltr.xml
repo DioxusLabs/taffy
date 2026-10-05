@@ -1,0 +1,19 @@
+<test name="flex_intrinsic_container_min_max_width_max_content__border_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="flex" direction="ltr" position="absolute" align-items="flex-start" width="300px">
+      <div display="flex" direction="ltr" position="relative">
+        <text direction="ltr" position="relative" flex-shrink="0" width="10px" min-width="max-content">
+          HH​HH
+        </text>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="300" height="10">
+      <node x="0" y="0" width="40" height="10">
+        <node x="0" y="0" width="40" height="10"/>
+      </node>
+    </node>
+  </expectations>
+</test>

@@ -1,0 +1,27 @@
+<test name="grid_max_width_min_content__border_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" direction="ltr" position="absolute" width="100px" grid-template-columns="50px auto">
+      <text direction="ltr" position="relative" width="200px" max-width="min-content">
+        HH​HH​HH​HH
+      </text>
+      <text direction="ltr" position="relative" width="200px" max-width="min-content">
+        HH​HH​HH​HH
+      </text>
+      <text direction="ltr" position="relative" max-width="min-content">
+        HH​HH​HH​HH
+      </text>
+      <text direction="ltr" position="relative" justify-self="start" max-width="min-content">
+        HH​HH​HH​HH
+      </text>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="100" height="80" resolved-rows="40px 40px" resolved-columns="50px 50px">
+      <node x="0" y="0" width="20" height="40"/>
+      <node x="50" y="0" width="20" height="40"/>
+      <node x="0" y="40" width="20" height="40"/>
+      <node x="50" y="40" width="20" height="40"/>
+    </node>
+  </expectations>
+</test>
