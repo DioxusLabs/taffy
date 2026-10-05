@@ -1321,7 +1321,7 @@ fn perform_final_layout_on_in_flow_children(
             let known_dimensions = if (item.is_table || item.is_replaced) && !is_stretch {
                 Size::NONE
             } else {
-                // The automatic width of a block-level box whose `justify-self` is not `normal`
+                // The automatic width of a block-level box whose `justify-self` is neither `normal` nor `stretch`
                 // is equivalent to `fit-content` rather than `stretch`
                 let width_style = if justify_self.is_some() && item.size_style.width.is_auto() {
                     Dimension::fit_content()
