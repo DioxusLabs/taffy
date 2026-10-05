@@ -1,0 +1,19 @@
+<test name="grid_auto_height_row_rerun_fr_column__content_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" box-sizing="content-box" direction="rtl" position="absolute" width="300px" grid-template-rows="auto auto" grid-template-columns="auto minmax(0px, 1fr)">
+      <div box-sizing="content-box" direction="rtl" position="relative" justify-self="start" height="100%" aspect-ratio="1" grid-row-start="1" grid-column-start="1"/>
+      <div box-sizing="content-box" direction="rtl" position="relative" width="10px" height="100px" grid-row-start="1" grid-column-start="2"/>
+      <text box-sizing="content-box" direction="rtl" position="relative" grid-row-start="2" grid-column-start="2">
+        XXXXXXXXXX​XXXXXXXXXX​XXXXX
+      </text>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="300" height="110" resolved-rows="100px 20px" resolved-columns="100px 200px">
+      <node x="200" y="0" width="100" height="100"/>
+      <node x="190" y="0" width="10" height="100"/>
+      <node x="0" y="100" width="200" height="20"/>
+    </node>
+  </expectations>
+</test>

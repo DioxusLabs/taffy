@@ -399,7 +399,8 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     let has_percentage_column = columns.iter().any(|track| track.uses_percentage());
     let has_percentage_row = rows.iter().any(|track| track.uses_percentage());
     let parent_width_indefinite = outer_node_size.width.is_none();
-    rerun_column_sizing = parent_width_indefinite && has_percentage_column;
+    let resolved_percentage_columns = parent_width_indefinite && has_percentage_column;
+    rerun_column_sizing = resolved_percentage_columns;
 
     if !rerun_column_sizing {
         // Note: every item must be visited (no short-circuiting) as the closure updates each item's caches
@@ -523,31 +524,35 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
         );
     }
 
-    if (intrinsic_column_contribution_changed && !has_percentage_column)
-        || (intrinsic_row_contribution_changed && !has_percentage_row)
-    {
+    // Update the container's width if column sizing was re-run with changed intrinsic contributions.
+    if intrinsic_column_contribution_changed && !has_percentage_column {
         let final_column_sum = columns.iter().map(|track| track.base_size).sum::<f32>();
+        container_border_box.width = resolved_style_size
+            .get(AbstractAxis::Inline)
+            .unwrap_or_else(|| final_column_sum + content_box_inset.horizontal_axis_sum())
+            .maybe_clamp(min_size.width, max_size.width)
+            .max(padding_border_size.width);
+        container_content_box.width =
+            f32_max(0.0, container_border_box.width - content_box_inset.horizontal_axis_sum());
+    }
+
+    // Update the container's height if row sizing was re-run because resolving percentage columns against the
+    // container's (now determined) width changed the height of an item.
+    //
+    // Note: the container's height is deliberately NOT updated if row sizing was re-run for any other reason (the
+    // contribution of an item changed because column sizing was re-run with the row sizes known). Browsers resolve
+    // percentage columns before their first row sizing pass, and then size an auto-height grid container using the row
+    // sizes from that pass (which is also what is returned above when run_mode is RunMode::ComputeSize and there are
+    // no percentage columns), even if re-running row sizing then causes the rows to overflow the container.
+    if resolved_percentage_columns && intrinsic_row_contribution_changed && !has_percentage_row {
         let final_row_sum = rows.iter().map(|track| track.base_size).sum::<f32>();
-
-        if intrinsic_column_contribution_changed && !has_percentage_column {
-            container_border_box.width = resolved_style_size
-                .get(AbstractAxis::Inline)
-                .unwrap_or_else(|| final_column_sum + content_box_inset.horizontal_axis_sum())
-                .maybe_clamp(min_size.width, max_size.width)
-                .max(padding_border_size.width);
-            container_content_box.width =
-                f32_max(0.0, container_border_box.width - content_box_inset.horizontal_axis_sum());
-        }
-
-        if intrinsic_row_contribution_changed && !has_percentage_row {
-            container_border_box.height = resolved_style_size
-                .get(AbstractAxis::Block)
-                .unwrap_or_else(|| final_row_sum + content_box_inset.vertical_axis_sum())
-                .maybe_clamp(min_size.height, max_size.height)
-                .max(padding_border_size.height);
-            container_content_box.height =
-                f32_max(0.0, container_border_box.height - content_box_inset.vertical_axis_sum());
-        }
+        container_border_box.height = resolved_style_size
+            .get(AbstractAxis::Block)
+            .unwrap_or_else(|| final_row_sum + content_box_inset.vertical_axis_sum())
+            .maybe_clamp(min_size.height, max_size.height)
+            .max(padding_border_size.height);
+        container_content_box.height =
+            f32_max(0.0, container_border_box.height - content_box_inset.vertical_axis_sum());
     }
 
     // If only the container's size has been requested
