@@ -286,10 +286,10 @@ struct BlockItem {
     /// Items that are tables don't have stretch sizing applied to them
     is_table: bool,
 
-    /// Items that are replaced elements resolve an auto width to their intrinsic size
-    /// rather than being stretch-sized
+    /// Items that are compressible replaced elements (replaced elements and form controls)
+    /// resolve an auto width to their intrinsic size rather than being stretch-sized
     /// <https://www.w3.org/TR/CSS22/visudet.html#block-replaced-width>
-    is_replaced: bool,
+    is_compressible_replaced: bool,
 
     /// Whether the child is a non-independent block or inline node
     is_in_same_bfc: bool,
@@ -886,7 +886,7 @@ fn generate_item_list(
 
             let is_block = child_style.is_block();
             let is_table = child_style.is_table();
-            let is_replaced = child_style.is_compressible_replaced();
+            let is_compressible_replaced = child_style.is_compressible_replaced();
             let is_scroll_container = overflow.x.is_scroll_container() || overflow.y.is_scroll_container();
             let contain = child_style.contain();
 
@@ -901,7 +901,7 @@ fn generate_item_list(
                 node_id: child_node_id,
                 order: order as u32,
                 is_table,
-                is_replaced,
+                is_compressible_replaced,
                 is_in_same_bfc,
                 #[cfg(feature = "float_layout")]
                 float,
@@ -1315,10 +1315,11 @@ fn perform_final_layout_on_in_flow_children(
             let is_stretch = justify_self.is_some_and(|align| align.keyword == AlignItemsKeyword::Stretch);
             let non_stretch_justify_self = justify_self.filter(|align| align.keyword != AlignItemsKeyword::Stretch);
 
-            // Unless stretched, tables and replaced elements are not stretch-sized: they resolve
-            // their own size (for replaced elements an auto width resolves to the intrinsic size
+            // Unless stretched, tables and compressible replaced elements (replaced elements and
+            // form controls) are not stretch-sized: they resolve their own size (for replaced
+            // elements an auto width resolves to the intrinsic size
             // <https://www.w3.org/TR/CSS22/visudet.html#block-replaced-width>)
-            let known_dimensions = if (item.is_table || item.is_replaced) && !is_stretch {
+            let known_dimensions = if (item.is_table || item.is_compressible_replaced) && !is_stretch {
                 Size::NONE
             } else {
                 // The automatic width of a block-level box whose `justify-self` is neither `normal` nor `stretch`

@@ -358,6 +358,7 @@ fn build_style<S: CheapCloneStr>(xnode: roxmltree::Node) -> taffy::Style<S> {
         direction: parse_or_default(xnode.attribute("direction")),
         item_is_table: false,
         item_is_replaced: false,
+        item_is_compressible_replaced: false,
         box_sizing: parse_or_default(xnode.attribute("box-sizing")),
         overflow: Point {
             x: parse_or_default(xnode.attribute("overflow-x")),

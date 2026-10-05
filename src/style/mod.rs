@@ -92,8 +92,14 @@ pub trait CoreStyle {
     fn is_block(&self) -> bool {
         false
     }
-    /// Is it a compressible replaced element?
-    /// <https://drafts.csswg.org/css-sizing-3/#min-content-zero>
+    /// Whether the box is a *compressible replaced element*: a replaced element (image, video,
+    /// canvas, iframe, ...) or a form control that is laid out as a leaf box with an intrinsic size
+    /// (`input`, `select`, `textarea`, `progress`, `meter`)
+    /// <https://drafts.csswg.org/css-sizing-3/#compressible>.
+    ///
+    /// Such boxes resolve an `auto` width from their intrinsic size rather than being stretched by
+    /// block layout, and their min-content contribution is compressible to zero in grid layout
+    /// <https://drafts.csswg.org/css-sizing-3/#min-content-zero>.
     #[inline(always)]
     fn is_compressible_replaced(&self) -> bool {
         false
@@ -214,6 +220,18 @@ pub trait OofItemStyle: CoreStyle {
     /// tables to fill their inset-modified containing block.
     #[inline(always)]
     fn is_table(&self) -> bool {
+        false
+    }
+    /// Whether the box is a *replaced element* (image, video, canvas, iframe, ...)
+    /// <https://html.spec.whatwg.org/multipage/rendering.html#replaced-elements>. A `normal`
+    /// self-alignment does not stretch replaced elements to fill their inset-modified containing
+    /// block: an `auto` size resolves to the intrinsic size instead
+    /// <https://www.w3.org/TR/CSS22/visudet.html#abs-replaced-width>.
+    ///
+    /// Note that this is narrower than [`CoreStyle::is_compressible_replaced`]: form controls are
+    /// compressible replaced elements, but they *are* stretched when absolutely positioned.
+    #[inline(always)]
+    fn is_replaced(&self) -> bool {
         false
     }
     /// Defines which row in the grid the box should start and end at, when the box's containing
@@ -704,9 +722,14 @@ pub struct Style<S: CheapCloneStr = DefaultCheapStr> {
     /// Whether a child is display:table or not. This affects children of block layouts.
     /// This should really be part of `Display`, but it is currently seperate because table layout isn't implemented
     pub item_is_table: bool,
-    /// Is it a replaced element like an image or form field?
-    /// <https://drafts.csswg.org/css-sizing-3/#min-content-zero>
+    /// Whether the node is a replaced element like an image, video, canvas or iframe
+    /// <https://html.spec.whatwg.org/multipage/rendering.html#replaced-elements>.
+    /// Replaced elements are also compressible replaced elements.
     pub item_is_replaced: bool,
+    /// Whether the node is a compressible replaced element that is not a replaced element: a form
+    /// control laid out as a leaf box with an intrinsic size (`input`, `select`, `textarea`,
+    /// `progress`, `meter`) <https://drafts.csswg.org/css-sizing-3/#compressible>.
+    pub item_is_compressible_replaced: bool,
     /// Should size styles apply to the content box or the border box of the node
     pub box_sizing: BoxSizing,
     /// Sets the direction of text, table and grid columns, and horizontal overflow.
@@ -864,6 +887,7 @@ impl<S: CheapCloneStr> Style<S> {
         display: Display::DEFAULT,
         item_is_table: false,
         item_is_replaced: false,
+        item_is_compressible_replaced: false,
         box_sizing: BoxSizing::BorderBox,
         direction: Direction::Ltr,
         overflow: Point { x: Overflow::Visible, y: Overflow::Visible },
@@ -958,7 +982,7 @@ impl<S: CheapCloneStr> CoreStyle for Style<S> {
     }
     #[inline(always)]
     fn is_compressible_replaced(&self) -> bool {
-        self.item_is_replaced
+        self.item_is_replaced || self.item_is_compressible_replaced
     }
     #[inline(always)]
     fn box_sizing(&self) -> BoxSizing {
@@ -1030,6 +1054,10 @@ impl<S: CheapCloneStr> OofItemStyle for Style<S> {
     #[inline(always)]
     fn is_table(&self) -> bool {
         self.item_is_table
+    }
+    #[inline(always)]
+    fn is_replaced(&self) -> bool {
+        self.item_is_replaced
     }
     #[cfg(feature = "grid")]
     #[inline(always)]
@@ -1134,6 +1162,10 @@ impl<T: OofItemStyle> OofItemStyle for &'_ T {
     #[inline(always)]
     fn is_table(&self) -> bool {
         (*self).is_table()
+    }
+    #[inline(always)]
+    fn is_replaced(&self) -> bool {
+        (*self).is_replaced()
     }
     #[cfg(feature = "grid")]
     #[inline(always)]
@@ -1604,6 +1636,7 @@ mod tests {
             display: Default::default(),
             item_is_table: false,
             item_is_replaced: false,
+            item_is_compressible_replaced: false,
             box_sizing: Default::default(),
             #[cfg(feature = "float_layout")]
             float: Default::default(),

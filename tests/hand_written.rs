@@ -5,6 +5,7 @@ mod hand_written {
     mod block_replaced;
     mod border_and_padding;
     mod caching;
+    mod compressible_replaced;
     mod detailed_grid_info;
     mod fit_content_calc;
     #[cfg(feature = "flexbox_balance")]
