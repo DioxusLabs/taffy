@@ -20,7 +20,13 @@ use rand::{Rng, SeedableRng};
 use rand_chacha::ChaCha8Rng;
 use std::time::{Duration, Instant};
 use taffy::style::Style as TaffyStyle;
-use taffy::{NodeId, TaffyTree};
+use taffy::{AvailableSpace, LayoutInput, LayoutOutput, NodeId, Size, TaffyTree};
+
+// Grid layout allocates a lot, and with glibc's allocator that limits how well laying out a tree
+// scales with the number of threads. So the benchmarks can also be run with mimalloc for comparison.
+#[cfg(feature = "mimalloc")]
+#[global_allocator]
+static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
 pub const STANDARD_RNG_SEED: u64 = 12345;
 
@@ -74,6 +80,37 @@ pub fn bench_layout<T>(
         layout(tree);
         start.elapsed()
     })
+}
+
+/// Lay out a [`TaffyTree`].
+///
+/// If the `parallel` feature is enabled then the tree is laid out in parallel on Rayon's global thread pool
+/// (whose size can be set using the `RAYON_NUM_THREADS` environment variable). The benchmarks have the same names
+/// either way, so Criterion baselines can be used to compare the two (e.g. `cargo bench -- --save-baseline sequential`
+/// and then `cargo bench --features parallel -- --baseline sequential`).
+pub fn compute_layout<NodeContext: Send>(
+    tree: &mut TaffyTree<NodeContext>,
+    root: NodeId,
+    available_space: Size<AvailableSpace>,
+) {
+    #[cfg(feature = "parallel")]
+    tree.compute_layout_parallel(root, available_space).unwrap();
+    #[cfg(not(feature = "parallel"))]
+    tree.compute_layout(root, available_space).unwrap();
+}
+
+/// Lay out a [`TaffyTree`] whose leaves are measured by `measure_function`.
+/// See [`compute_layout`] for the effect of the `parallel` feature.
+pub fn compute_layout_with_measure<NodeContext: Send>(
+    tree: &mut TaffyTree<NodeContext>,
+    root: NodeId,
+    available_space: Size<AvailableSpace>,
+    measure_function: impl Fn(LayoutInput, NodeId, Option<&mut NodeContext>, &TaffyStyle) -> LayoutOutput + Sync,
+) {
+    #[cfg(feature = "parallel")]
+    tree.compute_layout_with_measure_parallel(root, available_space, measure_function).unwrap();
+    #[cfg(not(feature = "parallel"))]
+    tree.compute_layout_with_measure(root, available_space, measure_function).unwrap();
 }
 
 /// A [`TaffyTree`] along with what is needed to lay it out from scratch repeatedly
