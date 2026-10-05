@@ -1142,13 +1142,10 @@ fn determine_flex_base_size(
             //
             // The specified size suggestion is the item's preferred main size if it is definite.
             // That includes a main size of `stretch` that resolves against a definite container size.
-            let specified_size_suggestion = child.size.main(dir).or_else(|| {
-                if child.size_style.main(dir).is_stretch() {
-                    main_stretch_size
-                } else {
-                    None
-                }
-            });
+            let specified_size_suggestion = match child.size.main(dir) {
+                None if child.size_style.main(dir).is_stretch() => main_stretch_size,
+                size => size,
+            };
             let clamped_min_content_size =
                 min_content_main_size.maybe_min(specified_size_suggestion).maybe_min(transferred_max_size.main(dir));
             clamped_min_content_size.maybe_max(padding_border_axes_sums.main(dir))
