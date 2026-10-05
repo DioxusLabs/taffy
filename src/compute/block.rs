@@ -1,6 +1,9 @@
 //! Computes the CSS block layout algorithm in the case that the block container being laid out contains only block-level boxes
 use crate::geometry::{Line, Point, Rect, Size};
-use crate::style::{AlignSelf, AvailableSpace, CoreStyle, LengthPercentageAuto, Overflow, Position};
+use crate::style::{
+    AlignItems, AlignItemsKeyword, AlignSelf, AlignmentSafety, AvailableSpace, CoreStyle, LengthPercentageAuto,
+    Overflow, Position,
+};
 use crate::style_helpers::TaffyMaxContent;
 use crate::tree::{
     AxisStaticPosition, LayoutPartialTree, LayoutPartialTreeExt, NodeId, OofCandidate, OofCandidates,
@@ -626,6 +629,7 @@ fn compute_inner(
         resolved_content_box_inset,
         resolved_border,
         text_align,
+        justify_items,
         direction,
         own_margins_collapse_with_children,
         #[cfg(feature = "content_size")]
@@ -1035,6 +1039,7 @@ fn perform_final_layout_on_in_flow_children(
     resolved_content_box_inset: Rect<f32>,
     resolved_border: Rect<f32>,
     text_align: TextAlign,
+    justify_items: Option<AlignItems>,
     direction: Direction,
     own_margins_collapse_with_children: Line<bool>,
     #[cfg(feature = "content_size")] is_scroll_container: bool,
@@ -1298,17 +1303,40 @@ fn perform_final_layout_on_in_flow_children(
                 }
             };
 
+            // `justify-self` on an in-flow block-level box (css-align-3 §6.1.1). `auto` (`None`)
+            // takes the container's `justify-items`, and `normal` (`None` on both) lays the box
+            // out according to the default block layout rules. `stretch` also does for
+            // non-replaced boxes, whereas it fills the container for auto-width replaced boxes.
+            let justify_self = item
+                .justify_self
+                .or(justify_items)
+                .map(|align| align.resolve_self_relative(item.direction, direction, true));
+            let stretches_replaced = item.is_replaced
+                && item.size_style.width.is_auto()
+                && justify_self.is_some_and(|align| align.keyword == AlignItemsKeyword::Stretch);
+            let justify_self = justify_self.filter(|align| align.keyword != AlignItemsKeyword::Stretch);
+
             // Tables and replaced elements are not stretch-sized: they resolve their own
             // size (for replaced elements an auto width resolves to the intrinsic size
             // <https://www.w3.org/TR/CSS22/visudet.html#block-replaced-width>)
-            let known_dimensions = if item.is_table || item.is_replaced {
+            let known_dimensions = if stretches_replaced {
+                Size { width: Some(stretch_width.maybe_clamp(item.min_size.width, item.max_size.width)), height: None }
+            } else if item.is_table || item.is_replaced {
                 Size::NONE
             } else {
+                // The automatic width of a block-level box whose `justify-self` is not `normal`
+                // is equivalent to `fit-content` rather than `stretch`
+                let width_style = if justify_self.is_some() && item.size_style.width.is_auto() {
+                    Dimension::fit_content()
+                } else {
+                    item.size_style.width
+                };
+
                 // Items with a sizing keyword width (min-content, max-content, fit-content,
                 // fit-content(...), stretch) resolve their width either directly or by measuring
                 // the item under the corresponding available space constraint
                 let keyword_width = resolve_sizing_keyword(
-                    item.size_style.width,
+                    width_style,
                     Some(stretch_width),
                     Some(container_inner_width),
                     |val, basis| tree.calc(val, basis),
@@ -1551,9 +1579,42 @@ fn perform_final_layout_on_in_flow_children(
                 }
             };
 
-            // Apply alignment
+            // Apply alignment. `justify-self` aligns the item's margin box within its alignment
+            // container and takes precedence over legacy `text-align`, but auto margins (which have
+            // already absorbed the free space) take precedence over `justify-self`.
+            let has_auto_x_margin = item_margin.left.is_none() || item_margin.right.is_none();
             let item_outer_width = item_layout.size.width + resolved_margin.horizontal_axis_sum();
-            if item_outer_width < container_inner_width {
+            if let (Some(justify_self), false) = (justify_self, has_auto_x_margin) {
+                // The alignment container is the containing block, except that a BFC-establishing
+                // box placed next to a float aligns within the space left over by the float (in
+                // which case the slot is already inset by the item's margins).
+                #[cfg(feature = "float_layout")]
+                let (container_start, free_x_space) = if item_avoids_floats {
+                    (float_avoiding_position.x - resolved_margin.left, float_avoiding_width - item_layout.size.width)
+                } else {
+                    (resolved_content_box_inset.left, container_inner_width - item_outer_width)
+                };
+                #[cfg(not(feature = "float_layout"))]
+                let (container_start, free_x_space) =
+                    (resolved_content_box_inset.left, container_inner_width - item_outer_width);
+
+                let keyword = if matches!(justify_self.safety, AlignmentSafety::Safe) && free_x_space < 0.0 {
+                    AlignItemsKeyword::Start
+                } else {
+                    justify_self.keyword
+                };
+                let align_to_end = match keyword {
+                    AlignItemsKeyword::Center => None,
+                    AlignItemsKeyword::End | AlignItemsKeyword::FlexEnd | AlignItemsKeyword::SelfEnd => Some(true),
+                    _ => Some(false),
+                };
+                let offset = match align_to_end {
+                    None => free_x_space / 2.0,
+                    Some(end) if end != direction.is_rtl() => free_x_space,
+                    Some(_) => 0.0,
+                };
+                location.x = container_start + resolved_margin.left + inset_offset.x + offset;
+            } else if justify_self.is_none() && item_outer_width < container_inner_width {
                 let free_x_space = container_inner_width - item_outer_width;
                 match (text_align, direction) {
                     (TextAlign::Auto, _) => {
