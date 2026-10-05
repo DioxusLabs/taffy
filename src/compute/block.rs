@@ -1,9 +1,9 @@
 //! Computes the CSS block layout algorithm in the case that the block container being laid out contains only block-level boxes
 use crate::geometry::{Line, Point, Rect, Size};
-use crate::style::{AvailableSpace, CoreStyle, LengthPercentageAuto, Overflow, Position};
+use crate::style::{AlignSelf, AvailableSpace, CoreStyle, LengthPercentageAuto, Overflow, Position};
 use crate::style_helpers::TaffyMaxContent;
 use crate::tree::{
-    AxisStaticEdge, AxisStaticPosition, LayoutPartialTree, LayoutPartialTreeExt, NodeId, OofCandidate, OofCandidates,
+    AxisStaticPosition, LayoutPartialTree, LayoutPartialTreeExt, NodeId, OofCandidate, OofCandidates,
     OofPositioningArea,
 };
 use crate::tree::{Baselines, CollapsibleMarginSet, Layout, LayoutInput, LayoutOutput, RunMode, SizingMode};
@@ -321,6 +321,12 @@ struct BlockItem {
 
     /// The position style of the item
     position: Position,
+    /// The `direction` style of the item (used to resolve `self-start`/`self-end`)
+    direction: Direction,
+    /// The `align-self` style of the item (used to derive the static position of out-of-flow items)
+    align_self: Option<AlignSelf>,
+    /// The `justify-self` style of the item (used to derive the static position of out-of-flow items)
+    justify_self: Option<AlignSelf>,
     /// The final offset of this item
     inset: Rect<LengthPercentageAuto>,
     /// The margin of this item
@@ -559,6 +565,7 @@ fn compute_inner(
 
     let text_align = style.text_align();
     let align_content = style.align_content();
+    let justify_items = style.justify_items();
     drop(style);
 
     // 1. Generate items
@@ -659,17 +666,20 @@ fn compute_inner(
         let container_inner_height = container_outer_height - resolved_content_box_inset.vertical_axis_sum();
         let inflow_content_height = intrinsic_outer_height - resolved_content_box_inset.vertical_axis_sum();
         let free_space = container_inner_height - inflow_content_height;
+        let keyword = apply_alignment_fallback(free_space, 1, align_content);
+        let group_offset = compute_alignment_offset(free_space, 1, 0.0, keyword, false, true);
+        first_baseline = first_baseline.map(|baseline| baseline + group_offset);
+        for item in items.iter_mut() {
+            if let Some(layout) = item.final_layout.as_mut() {
+                layout.location.y += group_offset;
+            }
+            // The static positions of out-of-flow children move with the in-flow content
+            if item.position.is_out_of_flow() {
+                item.static_position.y += group_offset;
+            }
+        }
         let any_in_flow = items.iter().any(|item| item.final_layout.is_some());
         if any_in_flow {
-            let keyword = apply_alignment_fallback(free_space, 1, align_content);
-            let group_offset = compute_alignment_offset(free_space, 1, 0.0, keyword, false, true);
-            first_baseline = first_baseline.map(|baseline| baseline + group_offset);
-            for item in items.iter_mut() {
-                if let Some(layout) = item.final_layout.as_mut() {
-                    layout.location.y += group_offset;
-                }
-            }
-
             #[cfg(feature = "content_size")]
             {
                 inflow_overflow_rect = Rect::ZERO;
@@ -762,16 +772,29 @@ fn compute_inner(
     let mut candidates = OofCandidates::new();
     for item in items.iter_mut() {
         if item.position.is_out_of_flow() {
+            // The static-position rectangle of an out-of-flow child of a block container spans
+            // the container's content box in the inline axis, and is a zero-height line at the
+            // child's hypothetical position in the block axis. The child's self-alignment
+            // properties determine how it is aligned within that rectangle.
+            // <https://www.w3.org/TR/css-position-3/#staticpos-rect>
+            let inline_area = Line {
+                start: resolved_content_box_inset.left,
+                end: container_outer_width - resolved_content_box_inset.right,
+            };
+            let block_area = Line { start: item.static_position.y, end: item.static_position.y };
+            // `justify-self: auto` (`None`) takes the container's `justify-items`
+            let justify_self = item
+                .justify_self
+                .or(justify_items)
+                .map(|align| align.resolve_self_relative(item.direction, direction, true));
+            let align_self = item.align_self.map(|align| align.resolve_self_relative(item.direction, direction, false));
             candidates.push(OofCandidate {
                 node: item.node_id,
                 order: item.order,
                 position: item.position,
                 static_position: Point {
-                    x: AxisStaticPosition::from_edge(
-                        item.static_position.x,
-                        if direction.is_rtl() { AxisStaticEdge::End } else { AxisStaticEdge::Start },
-                    ),
-                    y: AxisStaticPosition::from_edge(item.static_position.y, AxisStaticEdge::Start),
+                    x: AxisStaticPosition::from_alignment(justify_self, inline_area, direction.is_rtl()),
+                    y: AxisStaticPosition::from_alignment(align_self, block_area, false),
                 },
             });
         } else if !item.oof_candidates.is_empty() {
@@ -900,6 +923,9 @@ fn generate_item_list(
                 contain,
                 scrollbar_width: child_style.scrollbar_width(),
                 position,
+                direction: child_style.direction(),
+                align_self: child_style.align_self(),
+                justify_self: child_style.justify_self(),
                 inset: child_style.inset(),
                 margin: child_style.margin(),
                 padding,

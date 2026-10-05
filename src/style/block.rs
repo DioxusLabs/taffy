@@ -1,5 +1,5 @@
 //! Style types for Block layout
-use crate::style::AlignContent;
+use crate::style::{AlignContent, AlignItems, AlignSelf};
 use crate::{CoreStyle, Style};
 
 /// The set of styles required for a Block layout container
@@ -15,6 +15,14 @@ pub trait BlockContainerStyle: CoreStyle {
     fn align_content(&self) -> Option<AlignContent> {
         Style::<Self::CustomIdent>::DEFAULT.align_content
     }
+
+    /// The default inline-axis alignment of this block container's children (`justify-items`).
+    /// Out-of-flow children with `justify-self: auto` are aligned within their static-position
+    /// rectangle according to this value.
+    #[inline(always)]
+    fn justify_items(&self) -> Option<AlignItems> {
+        Style::<Self::CustomIdent>::DEFAULT.justify_items
+    }
 }
 
 /// The set of styles required for a Block layout item (child of a Block container)
@@ -23,6 +31,20 @@ pub trait BlockItemStyle: CoreStyle {
     #[inline(always)]
     fn is_table(&self) -> bool {
         false
+    }
+
+    /// How an out-of-flow (absolutely positioned) child is aligned in the block axis of its
+    /// static-position rectangle (`align-self`). `None` corresponds to `normal`/`auto`.
+    #[inline(always)]
+    fn align_self(&self) -> Option<AlignSelf> {
+        None
+    }
+
+    /// How an out-of-flow (absolutely positioned) child is aligned in the inline axis of its
+    /// static-position rectangle (`justify-self`). `None` corresponds to `normal`/`auto`.
+    #[inline(always)]
+    fn justify_self(&self) -> Option<AlignSelf> {
+        None
     }
 
     /// Whether the item is a floated

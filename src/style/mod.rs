@@ -198,6 +198,24 @@ pub trait CoreStyle {
 /// The styles of an out-of-flow (`position: absolute` / `position: fixed`) box that are read by
 /// its containing block's out-of-flow positioning pass
 pub trait OofItemStyle: CoreStyle {
+    /// How the box is aligned in the block axis of its inset-modified containing block
+    /// (`align-self`). `None` corresponds to `normal`/`auto`.
+    #[inline(always)]
+    fn align_self(&self) -> Option<AlignSelf> {
+        None
+    }
+    /// How the box is aligned in the inline axis of its inset-modified containing block
+    /// (`justify-self`). `None` corresponds to `normal`/`auto`.
+    #[inline(always)]
+    fn justify_self(&self) -> Option<AlignSelf> {
+        None
+    }
+    /// Whether the box is a table wrapper box. A `normal` self-alignment does not stretch
+    /// tables to fill their inset-modified containing block.
+    #[inline(always)]
+    fn is_table(&self) -> bool {
+        false
+    }
     /// Defines which row in the grid the box should start and end at, when the box's containing
     /// block is a grid container
     #[cfg(feature = "grid")]
@@ -649,7 +667,7 @@ pub enum Direction {
 impl Direction {
     /// Returns true if the direction is right-to-left
     #[inline]
-    pub(crate) fn is_rtl(&self) -> bool {
+    pub fn is_rtl(&self) -> bool {
         matches!(self, Direction::Rtl)
     }
 }
@@ -748,14 +766,12 @@ pub struct Style<S: CheapCloneStr = DefaultCheapStr> {
     pub align_items: Option<AlignItems>,
     /// How this node should be aligned in the cross/block axis
     /// Falls back to the parents [`AlignItems`] if not set
-    #[cfg(any(feature = "flexbox", feature = "grid"))]
     pub align_self: Option<AlignSelf>,
     /// How this node's children should be aligned in the inline axis
-    #[cfg(feature = "grid")]
+    #[cfg(any(feature = "grid", feature = "block_layout"))]
     pub justify_items: Option<AlignItems>,
     /// How this node should be aligned in the inline axis
     /// Falls back to the parents [`JustifyItems`] if not set
-    #[cfg(feature = "grid")]
     pub justify_self: Option<AlignSelf>,
     /// How should content contained within this item be aligned in the cross/block axis
     #[cfg(any(feature = "flexbox", feature = "grid", feature = "block_layout"))]
@@ -871,11 +887,9 @@ impl<S: CheapCloneStr> Style<S> {
         // Alignment
         #[cfg(any(feature = "flexbox", feature = "grid"))]
         align_items: None,
-        #[cfg(any(feature = "flexbox", feature = "grid"))]
         align_self: None,
-        #[cfg(feature = "grid")]
+        #[cfg(any(feature = "grid", feature = "block_layout"))]
         justify_items: None,
-        #[cfg(feature = "grid")]
         justify_self: None,
         #[cfg(any(feature = "flexbox", feature = "grid", feature = "block_layout"))]
         align_content: None,
@@ -1005,6 +1019,18 @@ impl<S: CheapCloneStr> CoreStyle for Style<S> {
 }
 
 impl<S: CheapCloneStr> OofItemStyle for Style<S> {
+    #[inline(always)]
+    fn align_self(&self) -> Option<AlignSelf> {
+        self.align_self
+    }
+    #[inline(always)]
+    fn justify_self(&self) -> Option<AlignSelf> {
+        self.justify_self
+    }
+    #[inline(always)]
+    fn is_table(&self) -> bool {
+        self.item_is_table
+    }
     #[cfg(feature = "grid")]
     #[inline(always)]
     fn grid_row(&self) -> Line<GridPlacement<S>> {
@@ -1097,6 +1123,18 @@ impl<T: CoreStyle> CoreStyle for &'_ T {
 }
 
 impl<T: OofItemStyle> OofItemStyle for &'_ T {
+    #[inline(always)]
+    fn align_self(&self) -> Option<AlignSelf> {
+        (*self).align_self()
+    }
+    #[inline(always)]
+    fn justify_self(&self) -> Option<AlignSelf> {
+        (*self).justify_self()
+    }
+    #[inline(always)]
+    fn is_table(&self) -> bool {
+        (*self).is_table()
+    }
     #[cfg(feature = "grid")]
     #[inline(always)]
     fn grid_row(&self) -> Line<GridPlacement<Self::CustomIdent>> {
@@ -1120,6 +1158,11 @@ impl<S: CheapCloneStr> BlockContainerStyle for Style<S> {
     fn align_content(&self) -> Option<AlignContent> {
         self.align_content
     }
+
+    #[inline(always)]
+    fn justify_items(&self) -> Option<AlignItems> {
+        self.justify_items
+    }
 }
 
 #[cfg(feature = "block_layout")]
@@ -1133,6 +1176,11 @@ impl<T: BlockContainerStyle> BlockContainerStyle for &'_ T {
     fn align_content(&self) -> Option<AlignContent> {
         (*self).align_content()
     }
+
+    #[inline(always)]
+    fn justify_items(&self) -> Option<AlignItems> {
+        (*self).justify_items()
+    }
 }
 
 #[cfg(feature = "block_layout")]
@@ -1140,6 +1188,16 @@ impl<S: CheapCloneStr> BlockItemStyle for Style<S> {
     #[inline(always)]
     fn is_table(&self) -> bool {
         self.item_is_table
+    }
+
+    #[inline(always)]
+    fn align_self(&self) -> Option<AlignSelf> {
+        self.align_self
+    }
+
+    #[inline(always)]
+    fn justify_self(&self) -> Option<AlignSelf> {
+        self.justify_self
     }
 
     #[cfg(feature = "float_layout")]
@@ -1160,6 +1218,16 @@ impl<T: BlockItemStyle> BlockItemStyle for &'_ T {
     #[inline(always)]
     fn is_table(&self) -> bool {
         (*self).is_table()
+    }
+
+    #[inline(always)]
+    fn align_self(&self) -> Option<AlignSelf> {
+        (*self).align_self()
+    }
+
+    #[inline(always)]
+    fn justify_self(&self) -> Option<AlignSelf> {
+        (*self).justify_self()
     }
 
     #[cfg(feature = "float_layout")]
@@ -1554,11 +1622,9 @@ mod tests {
             flex_line_count: 1,
             #[cfg(any(feature = "flexbox", feature = "grid"))]
             align_items: Default::default(),
-            #[cfg(any(feature = "flexbox", feature = "grid"))]
             align_self: Default::default(),
-            #[cfg(feature = "grid")]
+            #[cfg(any(feature = "grid", feature = "block_layout"))]
             justify_items: Default::default(),
-            #[cfg(feature = "grid")]
             justify_self: Default::default(),
             #[cfg(any(feature = "flexbox", feature = "grid", feature = "block_layout"))]
             align_content: Default::default(),
