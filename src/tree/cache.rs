@@ -337,6 +337,16 @@ impl Cache {
         }
     }
 
+    /// Record that a layout result was computed for this node without being stored in the cache
+    /// (because it depends on inputs which are not part of the cache key, such as the tracks
+    /// adopted by a subgrid).
+    ///
+    /// This ensures that the next [`Cache::clear`] reports [`ClearState::Cleared`] so that
+    /// invalidation propagates through this node to its ancestors.
+    pub fn mark_uncached_result(&mut self) {
+        self.is_empty = false;
+    }
+
     /// Clear all cache entries and reports clear operation outcome ([`ClearState`])
     pub fn clear(&mut self) -> ClearState {
         if self.is_empty {

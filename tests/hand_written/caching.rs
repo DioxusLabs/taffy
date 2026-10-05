@@ -251,4 +251,45 @@ mod caching {
         assert_eq!(taffy.layout(leaf).unwrap().size.width, 300.0);
         assert_eq!(taffy.get_node_context_mut(leaf).unwrap().count, 1);
     }
+
+    #[test]
+    #[cfg(feature = "grid")]
+    fn subgrid_descendant_change_invalidates_ancestors() {
+        use taffy::GridTemplate;
+
+        let mut taffy: TaffyTree<()> = TaffyTree::new();
+        let leaf_style =
+            |height: f32| Style { size: Size { width: length(10.0), height: length(height) }, ..Default::default() };
+        let leaf = taffy.new_leaf(leaf_style(20.0)).unwrap();
+        let subgrid = taffy
+            .new_with_children(
+                Style {
+                    display: Display::Grid,
+                    grid_template_rows: GridTemplate::Subgrid(Vec::new()),
+                    ..Default::default()
+                },
+                &[leaf],
+            )
+            .unwrap();
+        let root = taffy
+            .new_with_children(
+                Style {
+                    display: Display::Grid,
+                    grid_template_rows: GridTemplate::Tracks(vec![auto()]),
+                    ..Default::default()
+                },
+                &[subgrid],
+            )
+            .unwrap();
+
+        taffy.compute_layout(root, Size::MAX_CONTENT).unwrap();
+        assert_eq!(taffy.layout(root).unwrap().size.height, 20.0);
+        assert_eq!(taffy.layout(subgrid).unwrap().size.height, 20.0);
+
+        taffy.set_style(leaf, leaf_style(50.0)).unwrap();
+        taffy.compute_layout(root, Size::MAX_CONTENT).unwrap();
+        assert_eq!(taffy.layout(leaf).unwrap().size.height, 50.0);
+        assert_eq!(taffy.layout(subgrid).unwrap().size.height, 50.0);
+        assert_eq!(taffy.layout(root).unwrap().size.height, 50.0);
+    }
 }

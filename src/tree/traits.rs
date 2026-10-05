@@ -350,7 +350,9 @@ pub trait LayoutGridContainer: LayoutPartialTree {
     ///
     /// Note: layout results computed with a `SubgridContext` should NOT be stored in or retrieved
     /// from a layout cache keyed only on [`LayoutInput`], as the adopted track sizes (which affect
-    /// the layout result) are not part of the cache key.
+    /// the layout result) are not part of the cache key. Implementations which skip the cache for
+    /// such layouts must still ensure that invalidating a descendant of the subgrid invalidates the
+    /// subgrid's ancestors (see [`Cache::mark_uncached_result`](crate::Cache::mark_uncached_result)).
     fn compute_grid_child_layout(
         &mut self,
         node_id: NodeId,

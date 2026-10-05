@@ -343,6 +343,7 @@ where
         // write) to avoid returning stale or incorrect results.
         #[cfg(feature = "grid")]
         if subgrid_ctx.is_some() {
+            self.taffy.nodes[node_id.into()].cache.mark_uncached_result();
             return compute_uncached(self, node_id, inputs);
         }
 
