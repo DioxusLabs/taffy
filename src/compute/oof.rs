@@ -166,7 +166,7 @@ impl OofAxis {
 
     /// The inset-modified containing block (IMCB) in this axis
     /// <https://www.w3.org/TR/css-position-3/#resolving-insets>
-    fn imcb(&self) -> Line<f32> {
+    fn inset_modified_containing_block(&self) -> Line<f32> {
         let (mut imcb, weaker_edge) = match (self.inset.start, self.inset.end) {
             (Some(start), Some(end)) => (Line { start, end: self.cb_size - end }, self.end_edge()),
             // A lone auto inset resolves to zero, and is the weaker inset
@@ -208,8 +208,8 @@ impl OofAxis {
     }
 
     /// The size of the IMCB in this axis: the space available to the box's margin box
-    fn imcb_size(&self) -> f32 {
-        let imcb = self.imcb();
+    fn inset_modified_containing_block_size(&self) -> f32 {
+        let imcb = self.inset_modified_containing_block();
         imcb.end - imcb.start
     }
 
@@ -217,7 +217,7 @@ impl OofAxis {
     /// margins are treated as zero) <https://www.w3.org/TR/css-position-3/#abspos-auto-size>
     fn stretch_fit_size(&self) -> f32 {
         let non_auto_margin_sum = self.margin.start.unwrap_or(0.0) + self.margin.end.unwrap_or(0.0);
-        f32_max(self.imcb_size() - non_auto_margin_sum, 0.0)
+        f32_max(self.inset_modified_containing_block_size() - non_auto_margin_sum, 0.0)
     }
 
     /// Whether an `auto` size in this axis is the stretch-fit size (rather than fit-content)
@@ -236,7 +236,7 @@ impl OofAxis {
     /// <https://www.w3.org/TR/css-position-3/#abspos-margins>
     fn resolve_margins(&self, size: f32) -> Line<f32> {
         let both_insets = self.inset.start.is_some() && self.inset.end.is_some();
-        let imcb = self.imcb();
+        let imcb = self.inset_modified_containing_block();
         let free_space = imcb.end - imcb.start - size;
         match (self.margin.start, self.margin.end) {
             (Some(start), Some(end)) => Line { start, end },
@@ -262,7 +262,7 @@ impl OofAxis {
     /// Compute the physical start of the box's border box given its final size and margins
     /// <https://www.w3.org/TR/css-position-3/#abspos-alignment>
     fn position(&self, size: f32, margin: Line<f32>) -> f32 {
-        let imcb = self.imcb();
+        let imcb = self.inset_modified_containing_block();
         match (self.inset.start, self.inset.end) {
             // Both insets are auto: the box is aligned within its static-position rectangle
             (None, None) => resolve_static_offset_axis(self.static_position, size, margin),

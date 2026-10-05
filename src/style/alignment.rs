@@ -221,7 +221,7 @@ impl AlignItems {
     /// differs. Taffy only supports the `horizontal-tb` writing mode, so in the block
     /// axis `SelfStart`/`SelfEnd` always resolve to `Start`/`End` respectively.
     #[inline]
-    pub(crate) fn resolve_self_relative(
+    pub fn resolve_self_relative(
         self,
         item_direction: Direction,
         container_direction: Direction,

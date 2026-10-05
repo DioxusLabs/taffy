@@ -671,8 +671,14 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
         if child_style.position().is_out_of_flow() {
             let position = child_style.position();
             let item_direction = child_style.direction();
-            let justify_self = child_style.justify_self().or(justify_items);
-            let align_self = child_style.align_self().or(align_items);
+            let justify_self = child_style
+                .justify_self()
+                .or(justify_items)
+                .map(|align| align.resolve_self_relative(item_direction, direction, true));
+            let align_self = child_style
+                .align_self()
+                .or(align_items)
+                .map(|align| align.resolve_self_relative(item_direction, direction, false));
 
             // The static-position rectangle: the grid area determined by the grid-placement
             // properties when this grid is the child's containing block, and otherwise the
@@ -714,15 +720,11 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
                     x: AxisStaticPosition::from_alignment(
                         justify_self,
                         Line { start: area.left, end: area.right },
-                        item_direction,
-                        direction,
-                        true,
+                        direction.is_rtl(),
                     ),
                     y: AxisStaticPosition::from_alignment(
                         align_self,
                         Line { start: area.top, end: area.bottom },
-                        item_direction,
-                        direction,
                         false,
                     ),
                 },

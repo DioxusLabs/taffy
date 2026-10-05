@@ -783,20 +783,18 @@ fn compute_inner(
             };
             let block_area = Line { start: item.static_position.y, end: item.static_position.y };
             // `justify-self: auto` (`None`) takes the container's `justify-items`
-            let justify_self = item.justify_self.or(justify_items);
+            let justify_self = item
+                .justify_self
+                .or(justify_items)
+                .map(|align| align.resolve_self_relative(item.direction, direction, true));
+            let align_self = item.align_self.map(|align| align.resolve_self_relative(item.direction, direction, false));
             candidates.push(OofCandidate {
                 node: item.node_id,
                 order: item.order,
                 position: item.position,
                 static_position: Point {
-                    x: AxisStaticPosition::from_alignment(justify_self, inline_area, item.direction, direction, true),
-                    y: AxisStaticPosition::from_alignment(
-                        item.align_self,
-                        block_area,
-                        item.direction,
-                        direction,
-                        false,
-                    ),
+                    x: AxisStaticPosition::from_alignment(justify_self, inline_area, direction.is_rtl()),
+                    y: AxisStaticPosition::from_alignment(align_self, block_area, false),
                 },
             });
         } else if !item.oof_candidates.is_empty() {

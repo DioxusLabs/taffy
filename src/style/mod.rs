@@ -667,7 +667,7 @@ pub enum Direction {
 impl Direction {
     /// Returns true if the direction is right-to-left
     #[inline]
-    pub(crate) fn is_rtl(&self) -> bool {
+    pub fn is_rtl(&self) -> bool {
         matches!(self, Direction::Rtl)
     }
 }

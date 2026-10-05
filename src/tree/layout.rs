@@ -1,6 +1,6 @@
 //! Final data structures that represent the high-level UI layout
 use crate::geometry::{AbsoluteAxis, Line, Point, Rect, Size};
-use crate::style::{AlignItemsKeyword, AlignSelf, AlignmentSafety, AvailableSpace, CheapCloneStr, Direction, Position};
+use crate::style::{AlignItemsKeyword, AlignSelf, AlignmentSafety, AvailableSpace, CheapCloneStr, Position};
 use crate::style_helpers::TaffyMaxContent;
 use crate::sys::DefaultCheapStr;
 use crate::tree::NodeId;
@@ -260,25 +260,25 @@ impl AxisStaticPosition {
 
     /// Create a `AxisStaticPosition` which aligns the box within `area` according to its
     /// self-alignment property in this axis (`justify-self` in the inline axis, `align-self` in
-    /// the block axis), resolved relative to the writing mode of the static-position containing
-    /// block. `None` corresponds to `normal`, which behaves as `start`. This is the static
-    /// position used by block and inline layout.
+    /// the block axis). `None` corresponds to `normal`, which behaves as `start`. This is the
+    /// static position used by block and inline layout.
     ///
-    /// `item_direction` and `container_direction` are the `direction` of the box and of its
-    /// static-position containing block, which are used to resolve `self-start`/`self-end` and
-    /// to flip the inline axis of a right-to-left container.
-    pub fn from_alignment(
-        alignment: Option<AlignSelf>,
-        area: Line<f32>,
-        item_direction: Direction,
-        container_direction: Direction,
-        axis_is_inline: bool,
-    ) -> Self {
-        let axis_is_rtl = axis_is_inline && container_direction.is_rtl();
+    /// `alignment` must already be resolved: `auto` replaced by the container's `justify-items`/
+    /// `align-items`, and `self-start`/`self-end` resolved against the container's direction
+    /// (see [`AlignItems::resolve_self_relative`]). `axis_is_rtl` is whether this axis is the
+    /// inline axis of a right-to-left static-position containing block, in which case `start`
+    /// and `end` are flipped.
+    pub fn from_alignment(alignment: Option<AlignSelf>, area: Line<f32>, axis_is_rtl: bool) -> Self {
         let edge_for = |keyword: AlignItemsKeyword| {
+            debug_assert!(
+                !matches!(keyword, AlignItemsKeyword::SelfStart | AlignItemsKeyword::SelfEnd),
+                "self-start/self-end must be resolved before computing the static position"
+            );
             // Stretch does not apply to absolutely positioned items and falls back to
             // start-alignment for static-position purposes
-            let start_position = !matches!(keyword, AlignItemsKeyword::End | AlignItemsKeyword::FlexEnd) ^ axis_is_rtl;
+            let start_position =
+                !matches!(keyword, AlignItemsKeyword::End | AlignItemsKeyword::FlexEnd | AlignItemsKeyword::SelfEnd)
+                    ^ axis_is_rtl;
             match keyword {
                 AlignItemsKeyword::Center => AxisStaticEdge::Center,
                 _ if start_position => AxisStaticEdge::Start,
@@ -288,7 +288,6 @@ impl AxisStaticPosition {
         let Some(alignment) = alignment else {
             return Self { area, align: AxisStaticAlign::from_keyword(edge_for(AlignItemsKeyword::Start)) };
         };
-        let alignment = alignment.resolve_self_relative(item_direction, container_direction, axis_is_inline);
         let fallback = if matches!(alignment.safety, AlignmentSafety::Safe) {
             AlignItemsKeyword::Start
         } else {
