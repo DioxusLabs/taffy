@@ -926,11 +926,13 @@ fn resolve_stretch_height(
     height_style: Dimension,
     container_inner_height: Option<f32>,
     item_y_margin_sum: f32,
+    calc_resolver: impl Fn(*const (), f32) -> f32,
 ) -> Option<f32> {
     match resolve_sizing_keyword(
         height_style,
         container_inner_height.maybe_sub(item_y_margin_sum),
         container_inner_height,
+        calc_resolver,
     ) {
         Some(SizingKeywordResolution::Exact(height)) => Some(height),
         _ => None,
@@ -957,11 +959,12 @@ fn determine_content_based_container_width(
             .resolve_or_zero(available_space.width.into_option(), |val, basis| tree.calc(val, basis))
             .horizontal_axis_sum();
         let width = known_dimensions.width.unwrap_or_else(|| {
-            let item_available_width = match resolve_sizing_keyword(item.size_style.width, None, None) {
-                Some(SizingKeywordResolution::Measure(available_width)) => available_width,
-                Some(SizingKeywordResolution::Exact(width)) => AvailableSpace::Definite(width),
-                None => available_space.width.maybe_sub(item_x_margin_sum),
-            };
+            let item_available_width =
+                match resolve_sizing_keyword(item.size_style.width, None, None, |val, basis| tree.calc(val, basis)) {
+                    Some(SizingKeywordResolution::Measure(available_width)) => available_width,
+                    Some(SizingKeywordResolution::Exact(width)) => AvailableSpace::Definite(width),
+                    None => available_space.width.maybe_sub(item_x_margin_sum),
+                };
             tree.measure_child_size(
                 item.node_id,
                 known_dimensions,
@@ -1090,6 +1093,7 @@ fn perform_final_layout_on_in_flow_children(
                     item.size_style.width,
                     Some(available_width),
                     Some(container_inner_width),
+                    |val, basis| tree.calc(val, basis),
                 ) {
                     Some(SizingKeywordResolution::Measure(available)) => (None, available),
                     Some(SizingKeywordResolution::Exact(width)) => (Some(width), AvailableSpace::Definite(width)),
@@ -1099,6 +1103,7 @@ fn perform_final_layout_on_in_flow_children(
                     item.size_style.height,
                     container_percentage_resolution_height,
                     item_non_auto_margin.vertical_axis_sum(),
+                    |val, basis| tree.calc(val, basis),
                 );
                 let mut item_layout = tree.perform_child_layout(
                     item.node_id,
@@ -1276,26 +1281,31 @@ fn perform_final_layout_on_in_flow_children(
                 // Items with a sizing keyword width (min-content, max-content, fit-content,
                 // fit-content(...), stretch) resolve their width either directly or by measuring
                 // the item under the corresponding available space constraint
-                let keyword_width =
-                    resolve_sizing_keyword(item.size_style.width, Some(stretch_width), Some(container_inner_width))
-                        .map(|resolution| match resolution {
-                            SizingKeywordResolution::Exact(width) => width,
-                            SizingKeywordResolution::Measure(item_available_width) => tree.measure_child_size(
-                                item.node_id,
-                                Size::NONE,
-                                parent_size,
-                                Size { width: item_available_width, height: AvailableSpace::MaxContent },
-                                SizingMode::InherentSize,
-                                crate::AbsoluteAxis::Horizontal,
-                                // Must match the value passed when laying the item out (see `Cache`)
-                                if item.is_in_same_bfc { Line::TRUE } else { Line::FALSE },
-                            ),
-                        });
+                let keyword_width = resolve_sizing_keyword(
+                    item.size_style.width,
+                    Some(stretch_width),
+                    Some(container_inner_width),
+                    |val, basis| tree.calc(val, basis),
+                )
+                .map(|resolution| match resolution {
+                    SizingKeywordResolution::Exact(width) => width,
+                    SizingKeywordResolution::Measure(item_available_width) => tree.measure_child_size(
+                        item.node_id,
+                        Size::NONE,
+                        parent_size,
+                        Size { width: item_available_width, height: AvailableSpace::MaxContent },
+                        SizingMode::InherentSize,
+                        crate::AbsoluteAxis::Horizontal,
+                        // Must match the value passed when laying the item out (see `Cache`)
+                        if item.is_in_same_bfc { Line::TRUE } else { Line::FALSE },
+                    ),
+                });
 
                 let keyword_height = resolve_stretch_height(
                     item.size_style.height,
                     container_percentage_resolution_height,
                     item_non_auto_margin.vertical_axis_sum(),
+                    |val, basis| tree.calc(val, basis),
                 );
 
                 item.size

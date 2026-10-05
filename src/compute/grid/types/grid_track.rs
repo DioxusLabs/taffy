@@ -3,7 +3,6 @@ use crate::{
     prelude::TaffyZero,
     style::{LengthPercentage, MaxTrackSizingFunction, MinTrackSizingFunction},
     util::sys::f32_min,
-    CompactLength,
 };
 
 /// Whether a GridTrack represents an actual track or a gutter.
@@ -57,6 +56,10 @@ pub(in super::super) struct GridTrack {
     /// A temporary scratch value when "distributing space"
     /// See: https://www.w3.org/TR/css3-grid-layout/#infinitely-growable
     pub infinitely_growable: bool,
+
+    /// The resolved `fit-content()` limit of the max track sizing function (infinity if it is not `fit-content()`
+    /// or the limit cannot be resolved). Resolved once per track sizing pass by `resolve_fit_content_limit`.
+    pub fit_content_limit: f32,
 }
 
 impl GridTrack {
@@ -79,6 +82,7 @@ impl GridTrack {
             base_size_planned_increase: 0.0,
             growth_limit_planned_increase: 0.0,
             infinitely_growable: false,
+            fit_content_limit: f32::INFINITY,
         }
     }
 
@@ -105,6 +109,7 @@ impl GridTrack {
         self.is_collapsed = true;
         self.min_track_sizing_function = MinTrackSizingFunction::ZERO;
         self.max_track_sizing_function = MaxTrackSizingFunction::ZERO;
+        self.fit_content_limit = f32::INFINITY;
     }
 
     #[inline(always)]
@@ -125,23 +130,31 @@ impl GridTrack {
         self.min_track_sizing_function.is_intrinsic() || self.max_track_sizing_function.is_intrinsic()
     }
 
+    /// Cache the `fit-content()` limit of the max track sizing function (if any), resolved against the
+    /// container's inner size in this axis. Percentage and calc() limits resolve to infinity if that size is
+    /// indefinite, as do tracks which are not `fit-content()`.
     #[inline]
-    /// Returns true if the track is flexible (has a Flex MaxTrackSizingFunction), else false.
-    pub fn fit_content_limit(&self, axis_available_grid_space: Option<f32>) -> f32 {
-        match self.max_track_sizing_function.0.tag() {
-            CompactLength::FIT_CONTENT_PX_TAG => self.max_track_sizing_function.0.value(),
-            CompactLength::FIT_CONTENT_PERCENT_TAG => match axis_available_grid_space {
-                Some(space) => space * self.max_track_sizing_function.0.value(),
-                None => f32::INFINITY,
-            },
-            _ => f32::INFINITY,
-        }
+    pub fn resolve_fit_content_limit(
+        &mut self,
+        axis_inner_node_size: Option<f32>,
+        calc_resolver: impl Fn(*const (), f32) -> f32,
+    ) {
+        self.fit_content_limit = self
+            .max_track_sizing_function
+            .fit_content_limit(axis_inner_node_size, calc_resolver)
+            .unwrap_or(f32::INFINITY);
+    }
+
+    #[inline(always)]
+    /// Returns the resolved `fit-content()` limit of the track (infinity if the track is not `fit-content()`)
+    pub fn fit_content_limit(&self) -> f32 {
+        self.fit_content_limit
     }
 
     #[inline]
-    /// Returns true if the track is flexible (has a Flex MaxTrackSizingFunction), else false.
-    pub fn fit_content_limited_growth_limit(&self, axis_available_grid_space: Option<f32>) -> f32 {
-        f32_min(self.growth_limit, self.fit_content_limit(axis_available_grid_space))
+    /// Returns the track's growth limit, capped by its `fit-content()` limit (if any)
+    pub fn fit_content_limited_growth_limit(&self) -> f32 {
+        f32_min(self.growth_limit, self.fit_content_limit)
     }
 
     #[inline]
