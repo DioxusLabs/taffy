@@ -4,6 +4,13 @@
 
 ### Breaking
 
+- **`normal` is now a first-class keyword for `align-content` / `justify-content`, which are no longer wrapped in `Option`**. `AlignContentKeyword` gains a `Normal` variant, exposed as the constant `AlignContent::NORMAL` (= `JustifyContent::NORMAL`), which is the initial value of both properties. Layout is unchanged: `NORMAL` behaves exactly as `None` did (as `stretch` in Flexbox and CSS Grid containers, and as `start` in block containers, where it is also the only value that does not make the container establish an independent formatting context).
+  - `Style::align_content` and `Style::justify_content` are now `AlignContent` / `JustifyContent` (default `AlignContent::NORMAL`). Replace `Some(AlignContent::X)` with `AlignContent::X`, and `None` with `AlignContent::NORMAL`
+  - The style trait getters `FlexboxContainerStyle::{align_content, justify_content}`, `GridContainerStyle::{align_content, justify_content}` and `BlockContainerStyle::align_content` return `AlignContent` / `JustifyContent` rather than `Option<_>`
+  - Code that exhaustively matches on `AlignContentKeyword` must handle the new variant
+  - With the `parse` feature, `AlignContent` now parses the `normal` keyword
+  - With the `serde` feature, these two `Style` fields now serialize as `"Normal"` where they previously serialized as `null`, and no longer deserialize from `null` (a missing key still deserializes to the default)
+
 - **`normal` is now a first-class alignment keyword, and the `align-items` / `justify-items` styles are no longer wrapped in `Option`**. `AlignItemsKeyword` gains a `Normal` variant, exposed as the constant `AlignItems::NORMAL` (the initial value of `align-items`/`justify-items`). Previously `None` represented both `normal` (on `*-items`) and `auto` (on `*-self`); now `None` only ever means `auto`, so `align-self: normal` / `justify-self: normal` can be expressed (as `Some(AlignSelf::NORMAL)`) and override the parent's `*-items` value. Layout is otherwise unchanged: `AlignItems::NORMAL` behaves exactly as `None` did.
   - `Style::align_items` and `Style::justify_items` are now `AlignItems` (default `AlignItems::NORMAL`). Replace `Some(AlignItems::X)` with `AlignItems::X`, and `None` with `AlignItems::NORMAL`
   - `Style::align_self` and `Style::justify_self` remain `Option<AlignSelf>`, where `None` (the default) represents the CSS `auto` keyword and defers to the parent's `align-items` / `justify-items`

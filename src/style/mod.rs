@@ -788,11 +788,13 @@ pub struct Style<S: CheapCloneStr = DefaultCheapStr> {
     /// Falls back to the parents [`JustifyItems`] if not set
     pub justify_self: Option<AlignSelf>,
     /// How should content contained within this item be aligned in the cross/block axis
+    /// Defaults to [`AlignContent::NORMAL`]
     #[cfg(any(feature = "flexbox", feature = "grid", feature = "block_layout"))]
-    pub align_content: Option<AlignContent>,
+    pub align_content: AlignContent,
     /// How should content contained within this item be aligned in the main/inline axis
+    /// Defaults to [`JustifyContent::NORMAL`]
     #[cfg(any(feature = "flexbox", feature = "grid"))]
-    pub justify_content: Option<JustifyContent>,
+    pub justify_content: JustifyContent,
     /// How large should the gaps between items in a grid or flex container be?
     #[cfg(any(feature = "flexbox", feature = "grid"))]
     #[cfg_attr(feature = "serde", serde(default = "style_helpers::zero"))]
@@ -907,9 +909,9 @@ impl<S: CheapCloneStr> Style<S> {
         justify_items: AlignItems::NORMAL,
         justify_self: None,
         #[cfg(any(feature = "flexbox", feature = "grid", feature = "block_layout"))]
-        align_content: None,
+        align_content: AlignContent::NORMAL,
         #[cfg(any(feature = "flexbox", feature = "grid"))]
-        justify_content: None,
+        justify_content: JustifyContent::NORMAL,
         // Block
         #[cfg(feature = "block_layout")]
         text_align: TextAlign::Auto,
@@ -1178,7 +1180,7 @@ impl<S: CheapCloneStr> BlockContainerStyle for Style<S> {
     }
 
     #[inline(always)]
-    fn align_content(&self) -> Option<AlignContent> {
+    fn align_content(&self) -> AlignContent {
         self.align_content
     }
 
@@ -1196,7 +1198,7 @@ impl<T: BlockContainerStyle> BlockContainerStyle for &'_ T {
     }
 
     #[inline(always)]
-    fn align_content(&self) -> Option<AlignContent> {
+    fn align_content(&self) -> AlignContent {
         (*self).align_content()
     }
 
@@ -1286,7 +1288,7 @@ impl<S: CheapCloneStr> FlexboxContainerStyle for Style<S> {
         self.gap
     }
     #[inline(always)]
-    fn align_content(&self) -> Option<AlignContent> {
+    fn align_content(&self) -> AlignContent {
         self.align_content
     }
     #[inline(always)]
@@ -1294,7 +1296,7 @@ impl<S: CheapCloneStr> FlexboxContainerStyle for Style<S> {
         self.align_items
     }
     #[inline(always)]
-    fn justify_content(&self) -> Option<JustifyContent> {
+    fn justify_content(&self) -> JustifyContent {
         self.justify_content
     }
 }
@@ -1319,7 +1321,7 @@ impl<T: FlexboxContainerStyle> FlexboxContainerStyle for &'_ T {
         (*self).gap()
     }
     #[inline(always)]
-    fn align_content(&self) -> Option<AlignContent> {
+    fn align_content(&self) -> AlignContent {
         (*self).align_content()
     }
     #[inline(always)]
@@ -1327,7 +1329,7 @@ impl<T: FlexboxContainerStyle> FlexboxContainerStyle for &'_ T {
         (*self).align_items()
     }
     #[inline(always)]
-    fn justify_content(&self) -> Option<JustifyContent> {
+    fn justify_content(&self) -> JustifyContent {
         (*self).justify_content()
     }
 }
@@ -1428,11 +1430,11 @@ impl<S: CheapCloneStr> GridContainerStyle for Style<S> {
         self.gap
     }
     #[inline(always)]
-    fn align_content(&self) -> Option<AlignContent> {
+    fn align_content(&self) -> AlignContent {
         self.align_content
     }
     #[inline(always)]
-    fn justify_content(&self) -> Option<JustifyContent> {
+    fn justify_content(&self) -> JustifyContent {
         self.justify_content
     }
     #[inline(always)]
@@ -1550,11 +1552,11 @@ impl<T: GridContainerStyle> GridContainerStyle for &'_ T {
         (*self).gap()
     }
     #[inline(always)]
-    fn align_content(&self) -> Option<AlignContent> {
+    fn align_content(&self) -> AlignContent {
         (*self).align_content()
     }
     #[inline(always)]
-    fn justify_content(&self) -> Option<JustifyContent> {
+    fn justify_content(&self) -> JustifyContent {
         (*self).justify_content()
     }
     #[inline(always)]
@@ -1651,9 +1653,9 @@ mod tests {
             justify_items: Default::default(),
             justify_self: Default::default(),
             #[cfg(any(feature = "flexbox", feature = "grid", feature = "block_layout"))]
-            align_content: Default::default(),
+            align_content: super::AlignContent::NORMAL,
             #[cfg(any(feature = "flexbox", feature = "grid"))]
-            justify_content: Default::default(),
+            justify_content: super::JustifyContent::NORMAL,
             inset: Rect::auto(),
             margin: Rect::zero(),
             padding: Rect::zero(),
@@ -1778,7 +1780,6 @@ mod tests {
         assert_type_size::<AlignContent>(2);
         assert_type_size::<AlignItems>(2);
         assert_type_size::<Option<AlignItems>>(2);
-        assert_type_size::<Option<AlignContent>>(2);
 
         // Flexbox Container
         assert_type_size::<FlexDirection>(1);

@@ -178,7 +178,7 @@ fn grid_safe_align_content_overflow_falls_back_to_start() {
                 size: Size { width: length(100.0), height: length(100.0) },
                 grid_template_rows: vec![length(80.0), length(80.0)],
                 grid_template_columns: vec![length(40.0)],
-                align_content: Some(AlignContent::SAFE_END),
+                align_content: AlignContent::SAFE_END,
                 ..Default::default()
             },
             &[child_a, child_b],
@@ -263,7 +263,7 @@ fn flex_safe_justify_content_falls_back_to_start_on_overflow() {
             Style {
                 display: Display::Flex,
                 size: Size { width: length(100.0), height: length(100.0) },
-                justify_content: Some(JustifyContent::SAFE_END),
+                justify_content: JustifyContent::SAFE_END,
                 ..Default::default()
             },
             &[child_a, child_b],
@@ -293,7 +293,7 @@ fn flex_safe_align_content_falls_back_to_start_on_multiline_overflow() {
                 display: Display::Flex,
                 flex_wrap: FlexWrap::Wrap,
                 size: Size { width: length(100.0), height: length(100.0) },
-                align_content: Some(AlignContent::SAFE_END),
+                align_content: AlignContent::SAFE_END,
                 ..Default::default()
             },
             &[child_a, child_b],

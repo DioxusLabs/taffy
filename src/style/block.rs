@@ -10,9 +10,11 @@ pub trait BlockContainerStyle: CoreStyle {
         Style::<Self::CustomIdent>::DEFAULT.text_align
     }
 
-    /// How children of this block container are aligned in the block (cross) axis
+    /// How children of this block container are aligned in the block (cross) axis.
+    /// Defaults to [`AlignContent::NORMAL`]. Any other value makes the block container
+    /// establish an independent formatting context.
     #[inline(always)]
-    fn align_content(&self) -> Option<AlignContent> {
+    fn align_content(&self) -> AlignContent {
         Style::<Self::CustomIdent>::DEFAULT.align_content
     }
 

@@ -55,7 +55,7 @@ N = Supported in spec but not implemented in Taffy
 
 ```rust
 pub struct AlignContent {
-    pub keyword: AlignContentKeyword,   // Start, End, FlexStart, FlexEnd, Center,
+    pub keyword: AlignContentKeyword,   // Normal, Start, End, FlexStart, FlexEnd, Center,
                                         // Stretch, SpaceBetween, SpaceEvenly, SpaceAround
     pub safety: AlignmentSafety,        // Safe | Unsafe
 }

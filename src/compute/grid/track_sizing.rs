@@ -182,7 +182,8 @@ pub(super) fn compute_alignment_gutter_adjustment(
         | AlignContentKeyword::End
         | AlignContentKeyword::FlexEnd
         | AlignContentKeyword::Center => 1,
-        AlignContentKeyword::Stretch => 0,
+        // Normal is resolved to Stretch in `compute_grid_layout`
+        AlignContentKeyword::Normal | AlignContentKeyword::Stretch => 0,
         AlignContentKeyword::SpaceBetween => 0,
         AlignContentKeyword::SpaceAround => 1,
         AlignContentKeyword::SpaceEvenly => 1,
@@ -194,6 +195,7 @@ pub(super) fn compute_alignment_gutter_adjustment(
         | AlignContentKeyword::FlexEnd
         | AlignContentKeyword::End
         | AlignContentKeyword::Center
+        | AlignContentKeyword::Normal
         | AlignContentKeyword::Stretch => 0,
         AlignContentKeyword::SpaceBetween => 1,
         AlignContentKeyword::SpaceAround => 2,
