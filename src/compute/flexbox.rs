@@ -184,7 +184,7 @@ struct AlgoConstants {
     /// The align_content property of this node
     align_content: AlignContent,
     /// The justify_content property of this node
-    justify_content: Option<JustifyContent>,
+    justify_content: JustifyContent,
 
     /// The border-box size of the node being laid out (if known)
     node_outer_size: Size<Option<f32>>,
@@ -605,8 +605,17 @@ fn compute_constants(
     // `normal` behaves as `stretch` for flex items. This is resolved once here so that
     // items with an `align_self` of `None`, which defer to this value, are also resolved.
     let align_items = resolve_normal_alignment(style.align_items());
-    let align_content = style.align_content().unwrap_or(AlignContent::STRETCH);
-    let justify_content = style.justify_content();
+    // `normal` behaves as `stretch` for flex containers. In the main axis `stretch` behaves as
+    // `flex-start`, so a `normal` justify-content is resolved straight to `flex-start`.
+    // <https://www.w3.org/TR/css-align-3/#distribution-flex>
+    let align_content = match style.align_content() {
+        AlignContent { keyword: AlignContentKeyword::Normal, .. } => AlignContent::STRETCH,
+        align_content => align_content,
+    };
+    let justify_content = match style.justify_content() {
+        JustifyContent { keyword: AlignContentKeyword::Normal, .. } => JustifyContent::FLEX_START,
+        justify_content => justify_content,
+    };
     let layout_direction = style.direction();
 
     // Scrollbar gutters are reserved when the `overflow` property is set to `Overflow::Scroll`.
@@ -2267,8 +2276,7 @@ fn distribute_remaining_free_space(flex_lines: &mut [FlexLine], constants: &Algo
         let num_items = line.items.len();
         let layout_reverse = constants.dir.is_reverse();
         let gap = constants.gap.main(constants.dir);
-        let raw_justify_content_mode = constants.justify_content.unwrap_or(JustifyContent::FLEX_START);
-        let justify_content_mode = apply_alignment_fallback(free_space, num_items, raw_justify_content_mode);
+        let justify_content_mode = apply_alignment_fallback(free_space, num_items, constants.justify_content);
 
         let justify_item = |(i, child): (usize, &mut FlexItem)| {
             child.offset_main =
@@ -2819,6 +2827,7 @@ fn collect_oof_candidates(
         //
         // Stretch is an invalid value for justify_content in the flexbox algorithm, so we
         // treat it as if it wasn't set (and thus we default to FlexStart behaviour).
+        // Normal has already been resolved to FlexStart.
         //
         // The `safe` overflow-position keyword is intentionally NOT applied here, even when
         // the abs-positioned item would overflow the main axis: Chrome does not apply safe
@@ -2829,7 +2838,7 @@ fn collect_oof_candidates(
         // `start`/`end` are writing-mode relative (they flip for RTL but not for
         // reversed flex-directions), whereas `flex-start`/`flex-end` and the
         // distributed keywords' fallbacks are flex-relative.
-        let main_keyword = constants.justify_content.unwrap_or(JustifyContent::FLEX_START).keyword();
+        let main_keyword = constants.justify_content.keyword();
         let main_start_position = match main_keyword {
             AlignContentKeyword::Start => !main_is_rtl,
             AlignContentKeyword::End => main_is_rtl,
@@ -2837,7 +2846,7 @@ fn collect_oof_candidates(
         };
         let main_edge = match (main_keyword, main_axis_flex_start_reversed) {
             (AlignContentKeyword::SpaceBetween, false)
-            | (AlignContentKeyword::Stretch, false)
+            | (AlignContentKeyword::Normal | AlignContentKeyword::Stretch, false)
             | (AlignContentKeyword::FlexStart, false)
             | (AlignContentKeyword::FlexEnd, true) => AxisStaticEdge::Start,
             (AlignContentKeyword::Start | AlignContentKeyword::End, _) => {
@@ -2849,7 +2858,7 @@ fn collect_oof_candidates(
             }
             (AlignContentKeyword::FlexEnd, false)
             | (AlignContentKeyword::FlexStart, true)
-            | (AlignContentKeyword::Stretch, true)
+            | (AlignContentKeyword::Normal | AlignContentKeyword::Stretch, true)
             | (AlignContentKeyword::SpaceBetween, true) => AxisStaticEdge::End,
             (AlignContentKeyword::SpaceEvenly, _)
             | (AlignContentKeyword::SpaceAround, _)

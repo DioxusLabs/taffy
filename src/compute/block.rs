@@ -1,8 +1,8 @@
 //! Computes the CSS block layout algorithm in the case that the block container being laid out contains only block-level boxes
 use crate::geometry::{Line, Point, Rect, Size};
 use crate::style::{
-    AlignItems, AlignItemsKeyword, AlignSelf, AlignmentSafety, AvailableSpace, CoreStyle, LengthPercentageAuto,
-    Overflow, Position,
+    AlignContentKeyword, AlignItems, AlignItemsKeyword, AlignSelf, AlignmentSafety, AvailableSpace, CoreStyle,
+    LengthPercentageAuto, Overflow, Position,
 };
 use crate::style_helpers::TaffyMaxContent;
 use crate::tree::{
@@ -376,8 +376,9 @@ pub fn compute_block_layout(
     // independent formatting context. <https://drafts.csswg.org/css-align-3/#distribution-block>
     // Layout and paint containment also establish an independent formatting context.
     // <https://drafts.csswg.org/css-contain-2/#containment-layout>
-    let establishes_new_bfc =
-        is_scroll_container || style.align_content().is_some() || contain.establishes_independent_formatting_context();
+    let establishes_new_bfc = is_scroll_container
+        || style.align_content().keyword != AlignContentKeyword::Normal
+        || contain.establishes_independent_formatting_context();
     let aspect_ratio = style.aspect_ratio();
     let padding = style.padding().resolve_or_zero(parent_size.width, |val, basis| tree.calc(val, basis));
     let border = style.border().resolve_or_zero(parent_size.width, |val, basis| tree.calc(val, basis));
@@ -540,7 +541,7 @@ fn compute_inner(
     let overflow = style.overflow();
     let is_scroll_container = overflow.x.is_scroll_container() || overflow.y.is_scroll_container();
     let establishes_new_bfc = is_scroll_container
-        || style.align_content().is_some()
+        || style.align_content().keyword != AlignContentKeyword::Normal
         || style.contain().establishes_independent_formatting_context();
 
     // Determine margin collapsing behaviour
@@ -666,7 +667,7 @@ fn compute_inner(
     // `space-evenly`, `stretch`) must invoke the single-subject fallback unconditionally —
     // which is what passing `num_items = 1` to `apply_alignment_fallback` does. The whole
     // group then shifts by one offset, with zero inter-item gap.
-    if let Some(align_content) = align_content {
+    if align_content.keyword != AlignContentKeyword::Normal {
         let container_inner_height = container_outer_height - resolved_content_box_inset.vertical_axis_sum();
         let inflow_content_height = intrinsic_outer_height - resolved_content_box_inset.vertical_axis_sum();
         let free_space = container_inner_height - inflow_content_height;

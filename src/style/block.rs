@@ -12,7 +12,7 @@ pub trait BlockContainerStyle: CoreStyle {
 
     /// How children of this block container are aligned in the block (cross) axis
     #[inline(always)]
-    fn align_content(&self) -> Option<AlignContent> {
+    fn align_content(&self) -> AlignContent {
         Style::<Self::CustomIdent>::DEFAULT.align_content
     }
 

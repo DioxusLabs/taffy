@@ -21,12 +21,23 @@ pub(crate) fn resolve_self_alignment_safety(alignment: AlignItems, overflows: bo
 ///
 /// In addition to the spec at <https://www.w3.org/TR/css-align-3/> this implementation follows
 /// the resolution of <https://github.com/w3c/csswg-drafts/issues/10154>.
+///
+/// `normal` behaves differently in each layout mode, so callers must resolve
+/// [`AlignContentKeyword::Normal`] to the keyword it behaves as before calling this function
+/// (if it is not resolved then it is treated as `stretch`).
 pub(crate) fn apply_alignment_fallback(
     free_space: f32,
     num_items: usize,
     alignment_mode: AlignContent,
 ) -> AlignContentKeyword {
-    let mut keyword = alignment_mode.keyword;
+    debug_assert!(
+        alignment_mode.keyword != AlignContentKeyword::Normal,
+        "normal must be resolved before computing content alignment"
+    );
+    let mut keyword = match alignment_mode.keyword {
+        AlignContentKeyword::Normal => AlignContentKeyword::Stretch,
+        keyword => keyword,
+    };
     let mut is_safe = matches!(alignment_mode.safety, AlignmentSafety::Safe);
 
     // 1. If there is only a single item being aligned or the items overflow the container, the
@@ -83,7 +94,7 @@ pub(crate) fn compute_alignment_offset(
                 }
             }
             AlignContentKeyword::Center => free_space / 2.0,
-            AlignContentKeyword::Stretch => 0.0,
+            AlignContentKeyword::Normal | AlignContentKeyword::Stretch => 0.0,
             AlignContentKeyword::SpaceBetween => 0.0,
             AlignContentKeyword::SpaceAround => {
                 if free_space >= 0.0 {
@@ -108,6 +119,7 @@ pub(crate) fn compute_alignment_offset(
             | AlignContentKeyword::End
             | AlignContentKeyword::FlexEnd
             | AlignContentKeyword::Center
+            | AlignContentKeyword::Normal
             | AlignContentKeyword::Stretch => 0.0,
             AlignContentKeyword::SpaceBetween => free_space / (num_items - 1) as f32,
             AlignContentKeyword::SpaceAround => free_space / num_items as f32,

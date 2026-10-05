@@ -169,9 +169,9 @@ fn items_into_align(align: tf::AlignSelf) -> yg::Align {
     }
 }
 
-fn content_into_align(align: Option<tf::AlignContent>) -> yg::Align {
-    let Some(align) = align else { return yg::Align::Auto };
+fn content_into_align(align: tf::AlignContent) -> yg::Align {
     match align.keyword {
+        tf::AlignContentKeyword::Normal => yg::Align::Auto,
         tf::AlignContentKeyword::FlexStart | tf::AlignContentKeyword::Start => yg::Align::FlexStart,
         tf::AlignContentKeyword::FlexEnd | tf::AlignContentKeyword::End => yg::Align::FlexEnd,
         tf::AlignContentKeyword::Center => yg::Align::Center,
@@ -182,9 +182,9 @@ fn content_into_align(align: Option<tf::AlignContent>) -> yg::Align {
     }
 }
 
-fn content_into_justify(align: Option<tf::JustifyContent>) -> yg::Justify {
-    let Some(align) = align else { return yg::Justify::FlexStart };
+fn content_into_justify(align: tf::JustifyContent) -> yg::Justify {
     match align.keyword {
+        tf::AlignContentKeyword::Normal => yg::Justify::FlexStart,
         tf::AlignContentKeyword::FlexStart | tf::AlignContentKeyword::Start => yg::Justify::FlexStart,
         tf::AlignContentKeyword::FlexEnd | tf::AlignContentKeyword::End => yg::Justify::FlexEnd,
         tf::AlignContentKeyword::Center => yg::Justify::Center,

@@ -341,7 +341,7 @@ fn relayout_is_stable_with_rounding() {
         .new_with_children(
             Style {
                 size: Size { width: length(150.), height: auto() },
-                justify_content: Some(JustifyContent::END),
+                justify_content: JustifyContent::END,
                 ..Default::default()
             },
             &[inner],

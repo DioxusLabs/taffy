@@ -14,7 +14,7 @@ mod flex_line_count {
             size: Size { width: Dimension::from_length(210.0), height: Dimension::from_length(100.0) },
             gap: Size { width: LengthPercentage::from_length(10.0), height: LengthPercentage::ZERO },
             align_items: AlignItems::START,
-            align_content: Some(AlignContent::START),
+            align_content: AlignContent::START,
             ..Default::default()
         }
     }
