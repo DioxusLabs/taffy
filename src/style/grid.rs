@@ -1027,6 +1027,26 @@ impl MaxTrackSizingFunction {
         }
     }
 
+    /// Resolve the `fit-content()` limit of this track sizing function against the passed `parent_size`.
+    /// Returns `None` if this is not a `fit-content()` function, or if it has a percentage or `calc()`
+    /// argument and `parent_size` is indefinite.
+    #[inline(always)]
+    pub fn fit_content_limit(
+        self,
+        parent_size: Option<f32>,
+        calc_resolver: impl Fn(*const (), f32) -> f32,
+    ) -> Option<f32> {
+        #[cfg(not(feature = "calc"))]
+        let _ = &calc_resolver;
+        match self.0.tag() {
+            CompactLength::FIT_CONTENT_PX_TAG => Some(self.0.value()),
+            CompactLength::FIT_CONTENT_PERCENT_TAG => parent_size.map(|size| self.0.value() * size),
+            #[cfg(feature = "calc")]
+            _ if self.0.is_fit_content_calc() => parent_size.map(|size| calc_resolver(self.0.calc_value(), size)),
+            _ => None,
+        }
+    }
+
     /// Resolve the maximum size of the track as defined by either:
     ///     - A fixed track sizing function
     ///     - A percentage track sizing function (with definite available space)

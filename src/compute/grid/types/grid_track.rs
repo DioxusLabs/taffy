@@ -3,7 +3,6 @@ use crate::{
     prelude::TaffyZero,
     style::{LengthPercentage, MaxTrackSizingFunction, MinTrackSizingFunction},
     util::sys::f32_min,
-    CompactLength,
 };
 
 /// Whether a GridTrack represents an actual track or a gutter.
@@ -131,31 +130,19 @@ impl GridTrack {
         self.min_track_sizing_function.is_intrinsic() || self.max_track_sizing_function.is_intrinsic()
     }
 
-    /// Resolve the `fit-content()` limit of the max track sizing function (if any) against the container's
-    /// inner size in this axis, storing it in `fit_content_limit`. Percentage and calc() limits resolve to
-    /// infinity if the container size is indefinite.
+    /// Cache the `fit-content()` limit of the max track sizing function (if any), resolved against the
+    /// container's inner size in this axis. Percentage and calc() limits resolve to infinity if that size is
+    /// indefinite, as do tracks which are not `fit-content()`.
     #[inline]
     pub fn resolve_fit_content_limit(
         &mut self,
         axis_inner_node_size: Option<f32>,
         calc_resolver: impl Fn(*const (), f32) -> f32,
     ) {
-        #[cfg(not(feature = "calc"))]
-        let _ = &calc_resolver;
-        let max = self.max_track_sizing_function.0;
-        self.fit_content_limit = match max.tag() {
-            CompactLength::FIT_CONTENT_PX_TAG => max.value(),
-            CompactLength::FIT_CONTENT_PERCENT_TAG => match axis_inner_node_size {
-                Some(size) => size * max.value(),
-                None => f32::INFINITY,
-            },
-            #[cfg(feature = "calc")]
-            _ if max.is_fit_content_calc() => match axis_inner_node_size {
-                Some(size) => calc_resolver(max.calc_value(), size),
-                None => f32::INFINITY,
-            },
-            _ => f32::INFINITY,
-        };
+        self.fit_content_limit = self
+            .max_track_sizing_function
+            .fit_content_limit(axis_inner_node_size, calc_resolver)
+            .unwrap_or(f32::INFINITY);
     }
 
     #[inline(always)]
