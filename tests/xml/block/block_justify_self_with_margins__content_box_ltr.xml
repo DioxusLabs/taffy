@@ -1,0 +1,17 @@
+<test name="block_justify_self_with_margins__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="block" box-sizing="content-box" direction="ltr" position="absolute" width="200px" height="100px">
+      <div box-sizing="content-box" direction="ltr" position="relative" justify-self="center" width="50px" height="20px" margin-left="10px" margin-right="30px"/>
+      <div box-sizing="content-box" direction="ltr" position="relative" justify-self="end" width="50px" height="20px" margin-right="10px"/>
+      <div box-sizing="content-box" direction="ltr" position="relative" justify-self="start" width="50px" height="20px" margin-left="10px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="200" height="100">
+      <node x="65" y="0" width="50" height="20"/>
+      <node x="140" y="20" width="50" height="20"/>
+      <node x="10" y="40" width="50" height="20"/>
+    </node>
+  </expectations>
+</test>
