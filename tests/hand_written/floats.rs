@@ -1,7 +1,7 @@
 #![cfg(feature = "float_layout")]
 use taffy::geometry::Point;
 use taffy::prelude::*;
-use taffy::style::{Clear, Float};
+use taffy::style::{Clear, Direction, Float};
 use taffy_test_helpers::new_test_tree;
 
 /// Regression test for <https://wpt.live/css/CSS2/floats-clear/floats-146.xht>
@@ -148,4 +148,131 @@ fn float_beside_existing_float_moves_down_instead_of_overflowing() {
     assert_eq!(taffy.layout(left).unwrap().location, Point { x: 0.0, y: 0.0 });
     assert_eq!(taffy.layout(right).unwrap().location, Point { x: 40.0, y: 50.0 });
     assert_eq!(taffy.layout(left2).unwrap().location, Point { x: 0.0, y: 100.0 });
+}
+
+/// Regression test for auto-margins-used-values-with-floats.tentative.html.
+#[test]
+fn auto_margins_include_float_avoidance_offsets() {
+    for direction in [Direction::Ltr, Direction::Rtl] {
+        for (left_float_width, right_float_width) in [(0.0, 20.0), (20.0, 0.0), (20.0, 20.0), (0.0, 0.0)] {
+            let mut taffy = new_test_tree();
+            let left_float = taffy.new_leaf(float_block(left_float_width, 40.0, Float::Left)).unwrap();
+            let right_float = taffy.new_leaf(float_block(right_float_width, 40.0, Float::Right)).unwrap();
+            let auto_sides = [(true, true), (true, false), (false, true)];
+            let boxes: Vec<_> = auto_sides
+                .iter()
+                .map(|&(left_auto, right_auto)| {
+                    taffy
+                        .new_leaf(Style {
+                            display: Display::FlowRoot,
+                            direction,
+                            size: Size { width: length(40.0), height: length(10.0) },
+                            margin: Rect {
+                                left: if left_auto { auto() } else { zero() },
+                                right: if right_auto { auto() } else { zero() },
+                                top: auto(),
+                                bottom: auto(),
+                            },
+                            ..Default::default()
+                        })
+                        .unwrap()
+                })
+                .collect();
+            let children: Vec<_> = [left_float, right_float].into_iter().chain(boxes.iter().copied()).collect();
+            let root = taffy
+                .new_with_children(
+                    Style {
+                        display: Display::FlowRoot,
+                        direction,
+                        size: Size { width: length(100.0), height: auto() },
+                        padding: Rect { left: length(5.0), right: length(5.0), top: length(5.0), bottom: length(5.0) },
+                        ..Default::default()
+                    },
+                    &children,
+                )
+                .unwrap();
+
+            taffy.compute_layout(root, Size::MAX_CONTENT).unwrap();
+
+            for (index, (&node, &(left_auto, right_auto))) in boxes.iter().zip(&auto_sides).enumerate() {
+                let layout = taffy.layout(node).unwrap();
+                let free_space = 90.0 - left_float_width - right_float_width - 40.0;
+                let alignment_margin = free_space / (u8::from(left_auto) + u8::from(right_auto)) as f32;
+                let left_gap = if left_auto { alignment_margin } else { 0.0 };
+                assert_eq!(
+                    layout.location,
+                    Point { x: 5.0 + left_float_width + left_gap, y: 5.0 + index as f32 * 10.0 }
+                );
+                assert_eq!(layout.size, Size { width: 40.0, height: 10.0 });
+                assert_eq!(layout.margin.left, if left_auto { left_float_width + alignment_margin } else { 0.0 });
+                assert_eq!(layout.margin.right, if right_auto { right_float_width + alignment_margin } else { 0.0 });
+                assert_eq!(layout.margin.top, 0.0);
+                assert_eq!(layout.margin.bottom, 0.0);
+            }
+        }
+    }
+}
+
+#[test]
+fn float_avoiding_auto_margins_in_nested_block_ignore_relative_insets_and_clearance() {
+    for direction in [Direction::Ltr, Direction::Rtl] {
+        let mut taffy = new_test_tree();
+        let left_float = taffy.new_leaf(float_block(40.0, 40.0, Float::Left)).unwrap();
+        let right_float = taffy.new_leaf(float_block(60.0, 40.0, Float::Right)).unwrap();
+        let box_style = Style {
+            display: Display::FlowRoot,
+            direction,
+            size: Size { width: length(40.0), height: length(10.0) },
+            margin: Rect { left: auto(), right: auto(), top: zero(), bottom: zero() },
+            ..Default::default()
+        };
+        let relative_box = taffy
+            .new_leaf(Style {
+                position: Position::Relative,
+                inset: Rect { left: length(7.0), ..Rect::auto() },
+                ..box_style.clone()
+            })
+            .unwrap();
+        let cleared_box = taffy.new_leaf(Style { clear: Clear::Both, ..box_style }).unwrap();
+        let nested = taffy
+            .new_with_children(
+                Style {
+                    display: Display::Block,
+                    direction,
+                    margin: Rect { left: length(20.0), right: length(30.0), ..Rect::zero() },
+                    padding: Rect { left: length(5.0), right: length(7.0), ..Rect::zero() },
+                    border: Rect { left: length(3.0), right: length(5.0), ..Rect::zero() },
+                    ..Default::default()
+                },
+                &[relative_box, cleared_box],
+            )
+            .unwrap();
+        let root = taffy
+            .new_with_children(
+                Style {
+                    display: Display::FlowRoot,
+                    direction,
+                    size: Size { width: length(200.0), height: auto() },
+                    padding: Rect { left: length(10.0), right: length(10.0), top: length(10.0), bottom: length(10.0) },
+                    ..Default::default()
+                },
+                &[left_float, right_float, nested],
+            )
+            .unwrap();
+
+        taffy.compute_layout(root, Size::MAX_CONTENT).unwrap();
+
+        let relative_layout = taffy.layout(relative_box).unwrap();
+        assert_eq!(relative_layout.location, Point { x: 47.0, y: 0.0 });
+        assert_eq!(relative_layout.margin.left, 32.0);
+        assert_eq!(relative_layout.margin.right, 38.0);
+        let cleared_layout = taffy.layout(cleared_box).unwrap();
+        assert_eq!(cleared_layout.location, Point { x: 43.0, y: 40.0 });
+        assert_eq!(cleared_layout.margin.left, 35.0);
+        assert_eq!(cleared_layout.margin.right, 35.0);
+        let nested_layout = taffy.layout(nested).unwrap();
+        assert_eq!(nested_layout.location, Point { x: 30.0, y: 10.0 });
+        assert_eq!(nested_layout.margin.left, 20.0);
+        assert_eq!(nested_layout.margin.right, 30.0);
+    }
 }

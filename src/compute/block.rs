@@ -1595,6 +1595,24 @@ fn perform_final_layout_on_in_flow_children(
                 first_baseline = child_baseline.map(|baseline| location.y + baseline);
             }
 
+            // Used auto margins include float-avoidance offsets, unlike the alignment margins above.
+            #[cfg(feature = "float_layout")]
+            let resolved_margin = {
+                let mut margin = resolved_margin;
+                if item_avoids_floats {
+                    if item_margin.left.is_none() {
+                        margin.left += float_avoiding_position.x - resolved_content_box_inset.left;
+                    }
+                    if item_margin.right.is_none() {
+                        margin.right += container_outer_width
+                            - resolved_content_box_inset.right
+                            - float_avoiding_position.x
+                            - float_avoiding_width;
+                    }
+                }
+                margin
+            };
+
             // Defer `set_unrounded_layout` to the post-loop pass in `compute_inner` so that
             // `align-content` can shift `location.y` before the layout is committed to the tree.
             item.final_layout = Some(Layout {

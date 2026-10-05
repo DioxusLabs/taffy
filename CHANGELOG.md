@@ -56,6 +56,7 @@
 
 ### Fixed
 
+- Block: used horizontal `auto` margins of boxes that avoid floats now include the float-avoidance offsets from the containing block's content edges, without changing box placement.
 - The space available to a shrink-to-fit absolutely positioned box now excludes its (non-`auto`) insets as well as its margins. Previously a box with e.g. `left: 60px` in a 100px wide containing block was sized as if it had 100px available and overflowed its containing block rather than wrapping its content.
 - Grid: an item's margins are now subtracted from the space available to it in the opposite axis when computing its intrinsic contribution to a track's size (previously a row could be sized for an item wrapped at the full column width while the item was then laid out at the column width minus its margins).
 - The `serde` feature now compiles without the `std` feature
