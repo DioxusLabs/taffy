@@ -101,6 +101,14 @@ pub trait CoreStyle {
     fn is_compressible_replaced(&self) -> bool {
         false
     }
+    /// Is it a replaced element (image, video, canvas, ...)? Unlike other compressible replaced
+    /// elements (form controls), an `auto`-sized replaced element is not stretched between its
+    /// insets under `normal` alignment.
+    /// <https://html.spec.whatwg.org/multipage/rendering.html#replaced-elements>
+    #[inline(always)]
+    fn is_replaced(&self) -> bool {
+        false
+    }
     /// Which box do size styles apply to
     #[inline(always)]
     fn box_sizing(&self) -> BoxSizing {
@@ -217,14 +225,6 @@ pub trait OofItemStyle: CoreStyle {
     /// tables to fill their inset-modified containing block.
     #[inline(always)]
     fn is_table(&self) -> bool {
-        false
-    }
-    /// Is it a replaced element (image, video, canvas, ...)? Unlike other compressible replaced
-    /// elements (form controls), an `auto`-sized replaced element is not stretched between its
-    /// insets under `normal` alignment.
-    /// <https://html.spec.whatwg.org/multipage/rendering.html#replaced-elements>
-    #[inline(always)]
-    fn is_replaced(&self) -> bool {
         false
     }
     /// Defines which row in the grid the box should start and end at, when the box's containing
@@ -976,6 +976,10 @@ impl<S: CheapCloneStr> CoreStyle for Style<S> {
         self.item_is_replaced || self.item_is_compressible_replaced
     }
     #[inline(always)]
+    fn is_replaced(&self) -> bool {
+        self.item_is_replaced
+    }
+    #[inline(always)]
     fn box_sizing(&self) -> BoxSizing {
         self.box_sizing
     }
@@ -1046,10 +1050,6 @@ impl<S: CheapCloneStr> OofItemStyle for Style<S> {
     fn is_table(&self) -> bool {
         self.item_is_table
     }
-    #[inline(always)]
-    fn is_replaced(&self) -> bool {
-        self.item_is_replaced
-    }
     #[cfg(feature = "grid")]
     #[inline(always)]
     fn grid_row(&self) -> Line<GridPlacement<S>> {
@@ -1078,6 +1078,10 @@ impl<T: CoreStyle> CoreStyle for &'_ T {
     #[inline(always)]
     fn is_compressible_replaced(&self) -> bool {
         (*self).is_compressible_replaced()
+    }
+    #[inline(always)]
+    fn is_replaced(&self) -> bool {
+        (*self).is_replaced()
     }
     #[inline(always)]
     fn box_sizing(&self) -> BoxSizing {
@@ -1153,10 +1157,6 @@ impl<T: OofItemStyle> OofItemStyle for &'_ T {
     #[inline(always)]
     fn is_table(&self) -> bool {
         (*self).is_table()
-    }
-    #[inline(always)]
-    fn is_replaced(&self) -> bool {
-        (*self).is_replaced()
     }
     #[cfg(feature = "grid")]
     #[inline(always)]

@@ -8,7 +8,7 @@
 #[cfg(test)]
 mod compressible_replaced {
     use taffy::prelude::*;
-    use taffy::style::{CoreStyle, OofItemStyle};
+    use taffy::style::CoreStyle;
     use taffy::{Point, TaffyTree};
     use taffy_test_helpers::{new_test_tree, test_measure_function, TestNodeContext};
 
@@ -82,9 +82,9 @@ mod compressible_replaced {
     fn replaced_implies_compressible_replaced() {
         let style: Style = Style { item_is_replaced: true, ..Default::default() };
         assert!(CoreStyle::is_compressible_replaced(&style));
-        assert!(OofItemStyle::is_replaced(&style));
+        assert!(CoreStyle::is_replaced(&style));
         let style: Style = Style { item_is_compressible_replaced: true, ..Default::default() };
         assert!(CoreStyle::is_compressible_replaced(&style));
-        assert!(!OofItemStyle::is_replaced(&style));
+        assert!(!CoreStyle::is_replaced(&style));
     }
 }
