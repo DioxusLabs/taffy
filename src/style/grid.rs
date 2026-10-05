@@ -1004,7 +1004,7 @@ impl MaxTrackSizingFunction {
             CompactLength::LENGTH_TAG => true,
             CompactLength::PERCENT_TAG => parent_size.is_some(),
             #[cfg(feature = "calc")]
-            _ if self.0.is_calc() => parent_size.is_some(),
+            _ if self.0.is_plain_calc() => parent_size.is_some(),
             _ => false,
         }
     }
@@ -1022,7 +1022,7 @@ impl MaxTrackSizingFunction {
             CompactLength::LENGTH_TAG => Some(self.0.value()),
             CompactLength::PERCENT_TAG => parent_size.map(|size| self.0.value() * size),
             #[cfg(feature = "calc")]
-            _ if self.0.is_calc() => parent_size.map(|size| calc_resolver(self.0.calc_value(), size)),
+            _ if self.0.is_plain_calc() => parent_size.map(|size| calc_resolver(self.0.calc_value(), size)),
             _ => None,
         }
     }
@@ -1083,7 +1083,7 @@ impl MaxTrackSizingFunction {
             _ if self.0.is_fit_content_calc() => ExpandedMaxTrackSizingFunction::FitContentCalc(self.0.calc_value()),
             CompactLength::FR_TAG => ExpandedMaxTrackSizingFunction::Fr(self.0.value()),
             #[cfg(feature = "calc")]
-            _ if self.0.is_calc() => ExpandedMaxTrackSizingFunction::Calc(self.0.calc_value()),
+            _ if self.0.is_plain_calc() => ExpandedMaxTrackSizingFunction::Calc(self.0.calc_value()),
             _ => unreachable!("MaxTrackSizingFunction contains a value with an invalid tag"),
         }
     }
@@ -1366,7 +1366,7 @@ impl MinTrackSizingFunction {
             CompactLength::LENGTH_TAG => Some(self.0.value()),
             CompactLength::PERCENT_TAG => parent_size.map(|size| self.0.value() * size),
             #[cfg(feature = "calc")]
-            _ if self.0.is_calc() => parent_size.map(|size| calc_resolver(self.0.calc_value(), size)),
+            _ if self.0.is_plain_calc() => parent_size.map(|size| calc_resolver(self.0.calc_value(), size)),
             _ => None,
         }
     }
@@ -1401,7 +1401,7 @@ impl MinTrackSizingFunction {
             CompactLength::MIN_CONTENT_TAG => ExpandedMinTrackSizingFunction::MinContent,
             CompactLength::MAX_CONTENT_TAG => ExpandedMinTrackSizingFunction::MaxContent,
             #[cfg(feature = "calc")]
-            _ if self.0.is_calc() => ExpandedMinTrackSizingFunction::Calc(self.0.calc_value()),
+            _ if self.0.is_plain_calc() => ExpandedMinTrackSizingFunction::Calc(self.0.calc_value()),
             _ => unreachable!("MinTrackSizingFunction contains a value with an invalid tag"),
         }
     }

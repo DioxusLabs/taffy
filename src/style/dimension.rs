@@ -87,7 +87,7 @@ impl LengthPercentage {
             CompactLength::LENGTH_TAG => ExpandedLengthPercentage::Length(self.0.value()),
             CompactLength::PERCENT_TAG => ExpandedLengthPercentage::Percent(self.0.value()),
             #[cfg(feature = "calc")]
-            _ if self.0.is_calc() => ExpandedLengthPercentage::Calc(self.0.calc_value()),
+            _ if self.0.is_plain_calc() => ExpandedLengthPercentage::Calc(self.0.calc_value()),
             _ => unreachable!("LengthPercentage contains a value with an invalid tag"),
         }
     }
@@ -241,7 +241,7 @@ impl LengthPercentageAuto {
             CompactLength::PERCENT_TAG => Some(context * self.0.value()),
             CompactLength::AUTO_TAG => None,
             #[cfg(feature = "calc")]
-            _ if self.0.is_calc() => Some(calc_resolver(self.0.calc_value(), context)),
+            _ if self.0.is_plain_calc() => Some(calc_resolver(self.0.calc_value(), context)),
             _ => unreachable!("LengthPercentageAuto values cannot be constructed with other tags"),
         }
     }
@@ -263,7 +263,7 @@ impl LengthPercentageAuto {
             CompactLength::PERCENT_TAG => ExpandedLengthPercentageAuto::Percent(self.0.value()),
             CompactLength::AUTO_TAG => ExpandedLengthPercentageAuto::Auto,
             #[cfg(feature = "calc")]
-            _ if self.0.is_calc() => ExpandedLengthPercentageAuto::Calc(self.0.calc_value()),
+            _ if self.0.is_plain_calc() => ExpandedLengthPercentageAuto::Calc(self.0.calc_value()),
             _ => unreachable!("LengthPercentageAuto contains a value with an invalid tag"),
         }
     }
@@ -571,7 +571,7 @@ impl Dimension {
             CompactLength::STRETCH_TAG => ExpandedDimension::Stretch,
             CompactLength::CONTENT_TAG => ExpandedDimension::Content,
             #[cfg(feature = "calc")]
-            _ if self.0.is_calc() => ExpandedDimension::Calc(self.0.calc_value()),
+            _ if self.0.is_plain_calc() => ExpandedDimension::Calc(self.0.calc_value()),
             _ => unreachable!("Dimension contains a value with an invalid tag"),
         }
     }

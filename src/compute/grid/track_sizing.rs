@@ -653,7 +653,7 @@ fn resolve_intrinsic_track_sizes<Tree: LayoutPartialTree>(
                     }
                     // Handle calc() like percentage
                     #[cfg(feature = "calc")]
-                    _ if track.min_track_sizing_function.0.is_calc() => {
+                    _ if track.min_track_sizing_function.0.is_plain_calc() => {
                         if axis_inner_node_size.is_none() {
                             f32_max(track.base_size, item_sizer.min_content_contribution(item, axis_tracks))
                         } else {
