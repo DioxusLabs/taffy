@@ -63,7 +63,7 @@ pub enum AlignItemsKeyword {
 ///
 /// Compute paths match on this enum directly so every match is exhaustive and
 /// requires no `Safe*` siblings.
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[repr(u8)]
 pub enum AlignContentKeyword {
@@ -75,6 +75,7 @@ pub enum AlignContentKeyword {
     /// it behaves as `Stretch`; and for block containers it behaves as `Start` (and, unlike
     /// every other value, does not make the block container establish an independent
     /// formatting context).
+    #[default]
     Normal,
     /// Items are packed toward the start of the axis.
     Start,
@@ -351,7 +352,7 @@ pub type JustifySelf = AlignItems;
 /// The default value is [`AlignContent::NORMAL`].
 ///
 /// [MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/align-content)
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 pub struct AlignContent {
     /// Position keyword.
     pub keyword: AlignContentKeyword,
@@ -815,6 +816,12 @@ mod tests {
         assert_eq!("self-end".parse::<AlignItems>().unwrap(), AlignItems::SELF_END);
         assert_eq!("baseline".parse::<AlignItems>().unwrap(), AlignItems::BASELINE);
         assert_eq!("stretch".parse::<AlignItems>().unwrap(), AlignItems::STRETCH);
+    }
+
+    #[test]
+    fn align_content_default_is_normal() {
+        assert_eq!(AlignContent::default(), AlignContent::NORMAL);
+        assert_eq!(JustifyContent::default(), JustifyContent::NORMAL);
     }
 
     #[cfg(feature = "parse")]
