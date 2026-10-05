@@ -47,6 +47,8 @@
 - `AlignItems::with_safety` / `AlignContent::with_safety` return a copy of the alignment with a different overflow-position modifier
 - `compute_oof_layout_for_area` and `OofLayoutResult` allow integrations to lay out out-of-flow candidates against an explicit positioning area without immediately mutating a layout node's hoisted-child list. This supports containing blocks represented outside Taffy's layout tree.
 - Block: in-flow block-level children of a block container now support `justify-self` (falling back to the container's `justify-items`) per [css-align §6.1.1](https://www.w3.org/TR/css-align-3/#justify-block): a box with a non-`normal`/`stretch` value is sized as `fit-content` when its width is `auto` and its margin box is aligned within the containing block (or within the space next to any floats it avoids), taking precedence over `text-align` but not over `auto` margins; `safe` alignment falls back to `start` when the box overflows, and `justify-self: stretch` stretches auto-width replaced boxes
+- Block: `BlockItemStyle` gains a defaulted `align_content()` method: a child with a non-`normal` `align-content` establishes an independent formatting context (it is placed next to floats and does not collapse margins with its parent)
+- `compute_block_align_content_offset` computes the block-axis offset that `align-content` applies to a block container's in-flow content, for integrations that lay out inline formatting contexts outside Taffy
 
 ### Changed
 
@@ -66,6 +68,7 @@
 
 - `TaffyTree::remove` and `TaffyTree::clear` now drop the removed nodes' contexts. Both are documented as dropping nodes, but neither touched `node_context_data`, so a node's context outlived the node — for a `TaffyTree` whose context is a measure function, that kept a boxed closure and everything it captured alive indefinitely. It is worst for callers that rebuild their tree every frame.
 - Block: cached block child layouts are not reused when floats in the shared block formatting context could affect the result. Floats no longer end up misplaced when a block child is laid out again (e.g. when its parent is relaid out at a different size)
+- Block: the height consumed by floats inside a same-BFC block child is now propagated to the parent relative to the child's final (margin-collapsed) position. Floats no longer end up omitted from the parent's auto height when block `align-content` shifts the child
 - Block: a block container's content width and the stretch width / available width handed to its in-flow and floated children are floored at zero when padding/border or the child's margins exceed the container width. Children (and measure functions) could previously receive negative widths.
 - Flexbox/Grid: the stretch size and available space derived from the container/grid area minus an item's margins are likewise floored at zero. Stretched flex items whose cross-axis margins exceeded the line previously ended up with a negative used cross size (Chrome gives 0).
 - Grid: items with an `auto` start line and a definite end line (e.g. `grid-column: auto / 1`) no longer cause a phantom zero-sized positive implicit track to be created. This previously caused `grid_template_columns()`/`grid_template_rows()` to serialize an extra `0px` track (e.g. `10px 0px` instead of `10px`)
