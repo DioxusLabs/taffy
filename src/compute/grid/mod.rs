@@ -411,6 +411,14 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
         }
     }
 
+    // When re-running track sizing, percentages resolve against the (min/max clamped) size of the container
+    if outer_node_size.width.is_none() {
+        inner_node_size.width = Some(container_content_box.width);
+    }
+    if outer_node_size.height.is_none() {
+        inner_node_size.height = Some(container_content_box.height);
+    }
+
     // Column sizing must be re-run (once) if:
     //   - The grid container's width was initially indefinite and there are any columns with percentage track sizing functions
     //   - Any grid item crossing an intrinsically sized track's min content contribution width has changed
@@ -420,7 +428,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
 
     let has_percentage_column = columns.iter().any(|track| track.uses_percentage());
     let has_percentage_row = rows.iter().any(|track| track.uses_percentage());
-    let parent_width_indefinite = !available_space.width.is_definite();
+    let parent_width_indefinite = outer_node_size.width.is_none();
     rerun_column_sizing = parent_width_indefinite && has_percentage_column;
 
     if !rerun_column_sizing {
@@ -485,7 +493,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
         // TODO: Only rerun sizing for tracks that actually require it rather than for all tracks if any need it.
         let mut rerun_row_sizing;
 
-        let parent_height_indefinite = !available_space.height.is_definite();
+        let parent_height_indefinite = outer_node_size.height.is_none();
         rerun_row_sizing = parent_height_indefinite && has_percentage_row;
 
         if !rerun_row_sizing {
