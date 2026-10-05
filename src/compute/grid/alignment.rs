@@ -198,6 +198,7 @@ pub(super) fn align_and_position_item(
             size_style.width,
             Some(grid_area_minus_item_margins_size.width),
             Some(grid_area_size.width),
+            |val, basis| tree.calc(val, basis),
         )
     });
     let keyword_height = inherent_size.height.is_none().then(|| {
@@ -205,6 +206,7 @@ pub(super) fn align_and_position_item(
             size_style.height,
             Some(grid_area_minus_item_margins_size.height),
             Some(grid_area_size.height),
+            |val, basis| tree.calc(val, basis),
         )
     });
 

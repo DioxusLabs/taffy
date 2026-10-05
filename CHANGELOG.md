@@ -38,6 +38,7 @@
 
 ### Added
 
+- `fit-content()` with a `calc()` limit is now supported for `Dimension` (`Dimension::fit_content_calc`) and `MaxTrackSizingFunction` (`MaxTrackSizingFunction::fit_content_calc`). `CompactLength::fit_content(LengthPercentage)` now accepts a `calc()` argument (previously it panicked). The new `CompactLength::FIT_CONTENT_CALC_TAG` is a pointer variant (`0b110`) alongside `CALC_TAG` (`0b100`); `is_fit_content_calc()` and `has_calc()` (either calc pointer variant) have been added, and the calc pointer is resolved through `resolve_calc_value` like any other `calc()` value.
 - `compute_oof_layout_for_area` and `OofLayoutResult` allow integrations to lay out out-of-flow candidates against an explicit positioning area without immediately mutating a layout node's hoisted-child list. This supports containing blocks represented outside Taffy's layout tree.
 
 ### Changed
