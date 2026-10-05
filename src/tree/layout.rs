@@ -269,16 +269,17 @@ impl AxisStaticPosition {
     /// inline axis of a right-to-left static-position containing block, in which case `start`
     /// and `end` are flipped.
     pub fn from_alignment(alignment: Option<AlignSelf>, area: Line<f32>, axis_is_rtl: bool) -> Self {
+        debug_assert!(
+            !matches!(
+                alignment.map(|align| align.keyword),
+                Some(AlignItemsKeyword::SelfStart | AlignItemsKeyword::SelfEnd)
+            ),
+            "self-start/self-end must be resolved before computing the static position"
+        );
         let edge_for = |keyword: AlignItemsKeyword| {
-            debug_assert!(
-                !matches!(keyword, AlignItemsKeyword::SelfStart | AlignItemsKeyword::SelfEnd),
-                "self-start/self-end must be resolved before computing the static position"
-            );
             // Stretch does not apply to absolutely positioned items and falls back to
             // start-alignment for static-position purposes
-            let start_position =
-                !matches!(keyword, AlignItemsKeyword::End | AlignItemsKeyword::FlexEnd | AlignItemsKeyword::SelfEnd)
-                    ^ axis_is_rtl;
+            let start_position = !matches!(keyword, AlignItemsKeyword::End | AlignItemsKeyword::FlexEnd) ^ axis_is_rtl;
             match keyword {
                 AlignItemsKeyword::Center => AxisStaticEdge::Center,
                 _ if start_position => AxisStaticEdge::Start,
