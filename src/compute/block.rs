@@ -1307,7 +1307,7 @@ fn perform_final_layout_on_in_flow_children(
             // takes the container's `justify-items`, and `normal` (`None` on both) lays the box
             // out according to the default block layout rules. `stretch` does too: the default
             // rules already stretch an auto-width box, so it only differs from `normal` for
-            // replaced boxes, which would otherwise resolve their own width.
+            // tables and replaced boxes, which would otherwise resolve their own width.
             let justify_self = item
                 .justify_self
                 .or(justify_items)
@@ -1315,10 +1315,10 @@ fn perform_final_layout_on_in_flow_children(
             let is_stretch = justify_self.is_some_and(|align| align.keyword == AlignItemsKeyword::Stretch);
             let justify_self = justify_self.filter(|align| align.keyword != AlignItemsKeyword::Stretch);
 
-            // Tables and (non-stretched) replaced elements are not stretch-sized: they resolve
+            // Unless stretched, tables and replaced elements are not stretch-sized: they resolve
             // their own size (for replaced elements an auto width resolves to the intrinsic size
             // <https://www.w3.org/TR/CSS22/visudet.html#block-replaced-width>)
-            let known_dimensions = if item.is_table || (item.is_replaced && !is_stretch) {
+            let known_dimensions = if (item.is_table || item.is_replaced) && !is_stretch {
                 Size::NONE
             } else {
                 // The automatic width of a block-level box whose `justify-self` is not `normal`
