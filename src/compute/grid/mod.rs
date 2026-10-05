@@ -388,32 +388,6 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     // This may be a no-op if the container's size was known upfront (in which case it already equals `inner_node_size`).
     inner_node_size = container_content_box.map(Some);
 
-    // 7. Resolve percentage track base sizes
-    // In the case of an indefinitely sized container these resolve to zero during the "Initialise Tracks" step
-    // and therefore need to be re-resolved here based on the content-sized content box of the container
-    if !available_grid_space.width.is_definite() {
-        for column in &mut columns {
-            let min: Option<f32> = column
-                .min_track_sizing_function
-                .resolved_percentage_size(container_content_box.width, |val, basis| tree.calc(val, basis));
-            let max: Option<f32> = column
-                .max_track_sizing_function
-                .resolved_percentage_size(container_content_box.width, |val, basis| tree.calc(val, basis));
-            column.base_size = column.base_size.maybe_clamp(min, max);
-        }
-    }
-    if !available_grid_space.height.is_definite() {
-        for row in &mut rows {
-            let min: Option<f32> = row
-                .min_track_sizing_function
-                .resolved_percentage_size(container_content_box.height, |val, basis| tree.calc(val, basis));
-            let max: Option<f32> = row
-                .max_track_sizing_function
-                .resolved_percentage_size(container_content_box.height, |val, basis| tree.calc(val, basis));
-            row.base_size = row.base_size.maybe_clamp(min, max);
-        }
-    }
-
     // Column sizing must be re-run (once) if:
     //   - The grid container's width was initially indefinite and there are any columns with percentage track sizing functions
     //   - Any grid item crossing an intrinsically sized track's min content contribution width has changed
@@ -462,7 +436,23 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
         });
     }
 
+    // Row sizing must be re-run (once) if:
+    //   - The grid container's height was initially indefinite and there are any rows with percentage track sizing functions
+    //   - Column sizing was re-run and any grid item crossing an intrinsically sized track's min content contribution height has changed
+    // TODO: Only rerun sizing for tracks that actually require it rather than for all tracks if any need it.
+    let parent_height_indefinite = outer_node_size.height.is_none();
+    let mut rerun_row_sizing = parent_height_indefinite && has_percentage_row;
     let mut intrinsic_row_contribution_changed = false;
+
+    if rerun_row_sizing {
+        // Clear intrinsic height caches
+        items.iter_mut().for_each(|item| {
+            item.grid_area_size_cache = None;
+            item.min_content_contribution_cache.height = None;
+            item.max_content_contribution_cache.height = None;
+            item.minimum_contribution_cache.height = None;
+        });
+    }
 
     if rerun_column_sizing {
         // Re-run track sizing algorithm for Inline axis
@@ -482,15 +472,8 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
             has_baseline_aligned_item,
         );
 
-        // Row sizing must be re-run (once) if:
-        //   - The grid container's height was initially indefinite and there are any rows with percentage track sizing functions
-        //   - Any grid item crossing an intrinsically sized track's min content contribution height has changed
-        // TODO: Only rerun sizing for tracks that actually require it rather than for all tracks if any need it.
-        let mut rerun_row_sizing;
-
-        let parent_height_indefinite = outer_node_size.height.is_none();
-        rerun_row_sizing = parent_height_indefinite && has_percentage_row;
-
+        // The column widths may have changed, so the items' intrinsic height contributions need to be recomputed
+        // (unless row sizing is being re-run anyway, in which case the caches have already been cleared).
         if !rerun_row_sizing {
             // Note: every item must be visited (no short-circuiting) as the closure updates each item's caches
             intrinsic_row_contribution_changed =
@@ -517,34 +500,26 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
                     any_changed | has_changed
                 });
             rerun_row_sizing = intrinsic_row_contribution_changed;
-        } else {
-            items.iter_mut().for_each(|item| {
-                // Clear intrinsic height caches
-                item.grid_area_size_cache = None;
-                item.min_content_contribution_cache.height = None;
-                item.max_content_contribution_cache.height = None;
-                item.minimum_contribution_cache.height = None;
-            });
         }
+    }
 
-        if rerun_row_sizing {
-            // Re-run track sizing algorithm for Block axis
-            track_sizing_algorithm(
-                tree,
-                AbstractAxis::Block,
-                inner_min_size.get(AbstractAxis::Block),
-                inner_max_size.get(AbstractAxis::Block),
-                align_content,
-                justify_content,
-                available_grid_space,
-                inner_node_size,
-                &mut rows,
-                &mut columns,
-                &mut items,
-                |track: &GridTrack, _, _| Some(track.base_size),
-                false, // TODO: Support baseline alignment in the vertical axis
-            );
-        }
+    if rerun_row_sizing {
+        // Re-run track sizing algorithm for Block axis
+        track_sizing_algorithm(
+            tree,
+            AbstractAxis::Block,
+            inner_min_size.get(AbstractAxis::Block),
+            inner_max_size.get(AbstractAxis::Block),
+            align_content,
+            justify_content,
+            available_grid_space,
+            inner_node_size,
+            &mut rows,
+            &mut columns,
+            &mut items,
+            |track: &GridTrack, _, _| Some(track.base_size),
+            false, // TODO: Support baseline alignment in the vertical axis
+        );
     }
 
     if (intrinsic_column_contribution_changed && !has_percentage_column)
