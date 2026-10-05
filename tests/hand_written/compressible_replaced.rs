@@ -56,7 +56,7 @@ mod compressible_replaced {
             Style {
                 display: Display::Block,
                 item_is_compressible_replaced: true,
-                justify_self: AlignItems::STRETCH,
+                justify_self: Some(AlignItems::STRETCH),
                 ..Default::default()
             },
         );

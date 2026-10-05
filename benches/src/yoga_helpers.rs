@@ -156,7 +156,7 @@ fn items_into_align(align: tf::AlignSelf) -> yg::Align {
     // Yoga has no safe/unsafe overflow-position concept — drop the safety field and dispatch
     // on the bare keyword. Safe and unsafe alike fold to the same yoga keyword.
     match align.keyword {
-        tf::AlignItemsKeyword::Normal | tf::AlignItemsKeyword::Auto => yg::Align::Auto,
+        tf::AlignItemsKeyword::Normal => yg::Align::Auto,
         tf::AlignItemsKeyword::FlexStart => yg::Align::FlexStart,
         tf::AlignItemsKeyword::FlexEnd => yg::Align::FlexEnd,
         tf::AlignItemsKeyword::Center => yg::Align::Center,
@@ -253,7 +253,7 @@ fn apply_taffy_style(node: &mut yg::Node, style: &tf::Style) {
 
     // alignment
     node.set_align_items(items_into_align(style.align_items));
-    node.set_align_self(items_into_align(style.align_self));
+    node.set_align_self(style.align_self.map(items_into_align).unwrap_or(yg::Align::Auto));
     node.set_align_content(content_into_align(style.align_content));
     node.set_justify_content(content_into_justify(style.justify_content));
 

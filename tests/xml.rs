@@ -2,8 +2,8 @@ use roxmltree::Document;
 use std::{fmt::Debug, io::Write, path::PathBuf, str::FromStr};
 use taffy::{
     prelude::TaffyZero as _, AlignItems, AlignSelf, AvailableSpace, CheapCloneStr, Dimension, GridAutoTracks,
-    GridTemplateComponent, GridTemplateTracks, JustifyItems, JustifySelf, LengthPercentage, LengthPercentageAuto, Line,
-    NodeId, Point, PrintTree, Rect, Size, TaffyTree,
+    GridTemplateComponent, GridTemplateTracks, JustifyItems, LengthPercentage, LengthPercentageAuto, Line, NodeId,
+    Point, PrintTree, Rect, Size, TaffyTree,
 };
 use taffy_test_helpers::{test_measure_function, TestNodeContext};
 
@@ -281,6 +281,11 @@ fn parse_or<T: FromStr<Err: Debug>>(input: Option<&str>, fallback: T) -> T {
     input.map(|input| input.parse().unwrap()).unwrap_or(fallback)
 }
 
+/// Parse an `align-self` / `justify-self` value, where `auto` (the default) is represented by `None`
+fn parse_self_alignment(input: Option<&str>) -> Option<AlignSelf> {
+    input.filter(|input| !input.trim().eq_ignore_ascii_case("auto")).map(|input| input.parse().unwrap())
+}
+
 fn maybe_parse<T: FromStr>(input: Option<&str>) -> Option<T> {
     input.and_then(|input| input.parse().ok())
 }
@@ -414,9 +419,9 @@ fn build_style<S: CheapCloneStr>(xnode: roxmltree::Node) -> taffy::Style<S> {
 
         aspect_ratio: maybe_parse(xnode.attribute("aspect-ratio")),
         align_items: parse_or(xnode.attribute("align-items"), AlignItems::NORMAL),
-        align_self: parse_or(xnode.attribute("align-self"), AlignSelf::AUTO),
+        align_self: parse_self_alignment(xnode.attribute("align-self")),
         justify_items: parse_or(xnode.attribute("justify-items"), JustifyItems::NORMAL),
-        justify_self: parse_or(xnode.attribute("justify-self"), JustifySelf::AUTO),
+        justify_self: parse_self_alignment(xnode.attribute("justify-self")),
         align_content: maybe_parse(xnode.attribute("align-content")),
         justify_content: maybe_parse(xnode.attribute("justify-content")),
 

@@ -285,15 +285,15 @@ pub trait GridItemStyle: CoreStyle {
     }
 
     /// How this node should be aligned in the cross/block axis
-    /// Defaults to [`AlignSelf::AUTO`], which falls back to the parents [`AlignItems`]
+    /// Defaults to `None` (the CSS `auto` keyword), which falls back to the parents [`AlignItems`]
     #[inline(always)]
-    fn align_self(&self) -> AlignSelf {
+    fn align_self(&self) -> Option<AlignSelf> {
         Style::<Self::CustomIdent>::DEFAULT.align_self
     }
     /// How this node should be aligned in the inline axis
-    /// Defaults to [`AlignSelf::AUTO`], which falls back to the parents [`super::JustifyItems`]
+    /// Defaults to `None` (the CSS `auto` keyword), which falls back to the parents [`super::JustifyItems`]
     #[inline(always)]
-    fn justify_self(&self) -> AlignSelf {
+    fn justify_self(&self) -> Option<AlignSelf> {
         Style::<Self::CustomIdent>::DEFAULT.justify_self
     }
 

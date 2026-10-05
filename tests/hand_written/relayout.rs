@@ -13,7 +13,7 @@ fn relayout() {
     let node0 = taffy
         .new_with_children(
             taffy::style::Style {
-                align_self: taffy::prelude::AlignSelf::CENTER,
+                align_self: Some(taffy::prelude::AlignSelf::CENTER),
                 size: taffy::geometry::Size { width: Dimension::AUTO, height: Dimension::AUTO },
                 // size: taffy::geometry::Size { width: Dimension::Percent(1.0), height: Dimension::Percent(1.0) },
                 ..Default::default()

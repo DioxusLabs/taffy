@@ -89,16 +89,14 @@ impl OofAlignment {
     /// alignment relative to the containing block's writing mode.
     ///
     /// `alignment` must already have had `self-start`/`self-end` resolved against the containing
-    /// block's direction (see [`AlignSelf::resolve_self_relative`]). `auto` behaves as `normal`
-    /// for absolutely positioned boxes (it does not defer to the `*-items` properties of the
-    /// containing block), so it does not need to be resolved.
+    /// block's direction (see [`AlignSelf::resolve_self_relative`]).
     fn from_resolved(alignment: AlignSelf) -> Self {
         debug_assert!(
             !matches!(alignment.keyword, AlignItemsKeyword::SelfStart | AlignItemsKeyword::SelfEnd),
             "self-start/self-end must be resolved before computing out-of-flow alignment"
         );
         match alignment.keyword {
-            AlignItemsKeyword::Normal | AlignItemsKeyword::Auto => Self::Normal,
+            AlignItemsKeyword::Normal => Self::Normal,
             AlignItemsKeyword::Stretch => Self::Stretch,
             AlignItemsKeyword::Center => Self::Center,
             AlignItemsKeyword::End | AlignItemsKeyword::FlexEnd | AlignItemsKeyword::SelfEnd => Self::End,
@@ -514,8 +512,12 @@ pub(crate) fn layout_oof_box<Tree: LayoutContainingBlock>(
     let is_table = child_style.is_table();
     let item_direction = child_style.direction();
     // Taffy only supports the `horizontal-tb` writing mode, so only the inline axis can be reversed.
-    let justify_self = child_style.justify_self().resolve_self_relative(item_direction, direction, true);
-    let align_self = child_style.align_self().resolve_self_relative(item_direction, direction, false);
+    // `auto` (`None`) behaves as `normal` for absolutely positioned boxes: it does not defer to the
+    // `*-items` properties of the containing block.
+    let justify_self =
+        child_style.justify_self().unwrap_or(AlignSelf::NORMAL).resolve_self_relative(item_direction, direction, true);
+    let align_self =
+        child_style.align_self().unwrap_or(AlignSelf::NORMAL).resolve_self_relative(item_direction, direction, false);
     let overflow = child_style.overflow();
     let scrollbar_width = child_style.scrollbar_width();
     #[cfg(feature = "content_size")]

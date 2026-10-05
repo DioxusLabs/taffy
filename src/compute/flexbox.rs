@@ -566,13 +566,10 @@ fn compute_preliminary(tree: &mut impl LayoutFlexboxContainer, node: NodeId, inp
 
 /// Resolve the `normal` alignment keyword, which behaves as `stretch` for flex items.
 /// <https://www.w3.org/TR/css-align-3/#align-flex>
-///
-/// `auto` is also resolved to `stretch`: it only reaches here when set on `align-items`,
-/// where it behaves as `normal`.
 #[inline(always)]
 fn resolve_normal_alignment(alignment: AlignItems) -> AlignItems {
     match alignment.keyword {
-        AlignItemsKeyword::Normal | AlignItemsKeyword::Auto => AlignItems::STRETCH,
+        AlignItemsKeyword::Normal => AlignItems::STRETCH,
         _ => alignment,
     }
 }
@@ -780,7 +777,7 @@ fn generate_anonymous_flex_items(
                 border: child_style
                     .border()
                     .resolve_or_zero(constants.node_inner_size.width, |val, basis| tree.calc(val, basis)),
-                align_self: resolve_normal_alignment(child_style.align_self().resolve_auto(constants.align_items))
+                align_self: resolve_normal_alignment(child_style.align_self().unwrap_or(constants.align_items))
                     .resolve_self_relative(child_style.direction(), constants.layout_direction, constants.is_column),
                 overflow: child_style.overflow(),
                 contain: child_style.contain(),
@@ -2431,13 +2428,9 @@ fn align_flex_items_along_cross_axis(
                 0.0
             }
         }
-        // Normal/Auto are resolved to Stretch (or the container's align-items), and
-        // SelfStart/SelfEnd are resolved to Start/End against the item's own direction when
-        // flex items are generated.
-        AlignItemsKeyword::Normal
-        | AlignItemsKeyword::Auto
-        | AlignItemsKeyword::SelfStart
-        | AlignItemsKeyword::SelfEnd => unreachable!(),
+        // Normal is resolved to Stretch, and SelfStart/SelfEnd are resolved to Start/End
+        // against the item's own direction when flex items are generated.
+        AlignItemsKeyword::Normal | AlignItemsKeyword::SelfStart | AlignItemsKeyword::SelfEnd => unreachable!(),
     }
 }
 
@@ -2818,7 +2811,7 @@ fn collect_oof_candidates(
             continue;
         }
 
-        let align_self = resolve_normal_alignment(child_style.align_self().resolve_auto(constants.align_items))
+        let align_self = resolve_normal_alignment(child_style.align_self().unwrap_or(constants.align_items))
             .resolve_self_relative(child_style.direction(), constants.layout_direction, constants.is_column);
         drop(child_style);
 
@@ -2890,16 +2883,11 @@ fn collect_oof_candidates(
                 (AlignItemsKeyword::Stretch | AlignItemsKeyword::FlexStart, true)
                 | (AlignItemsKeyword::FlexEnd, false) => AxisStaticEdge::End,
                 (AlignItemsKeyword::Center, _) => AxisStaticEdge::Center,
-                // Normal/Auto are resolved to Stretch (or the container's align-items), and
-                // SelfStart/SelfEnd are resolved to Start/End against the item's own direction
-                // where `align_self` is read above.
-                (
-                    AlignItemsKeyword::Normal
-                    | AlignItemsKeyword::Auto
-                    | AlignItemsKeyword::SelfStart
-                    | AlignItemsKeyword::SelfEnd,
-                    _,
-                ) => unreachable!(),
+                // Normal is resolved to Stretch, and SelfStart/SelfEnd are resolved to Start/End
+                // against the item's own direction where `align_self` is read above.
+                (AlignItemsKeyword::Normal | AlignItemsKeyword::SelfStart | AlignItemsKeyword::SelfEnd, _) => {
+                    unreachable!()
+                }
             }
         };
 

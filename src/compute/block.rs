@@ -326,10 +326,10 @@ struct BlockItem {
     /// The `direction` style of the item (used to resolve `self-start`/`self-end`)
     direction: Direction,
     /// The `align-self` style of the item (used to derive the static position of out-of-flow items)
-    align_self: AlignSelf,
+    align_self: Option<AlignSelf>,
     /// The `justify-self` style of the item (used to align in-flow items and to derive the static position of
     /// out-of-flow items)
-    justify_self: AlignSelf,
+    justify_self: Option<AlignSelf>,
     /// The final offset of this item
     inset: Rect<LengthPercentageAuto>,
     /// The margin of this item
@@ -789,12 +789,9 @@ fn compute_inner(
             // `justify-self: auto` takes the container's `justify-items`. Block containers have no
             // `align-items`, so `align-self: auto` behaves as `normal`.
             let justify_self =
-                item.justify_self.resolve_auto(justify_items).resolve_self_relative(item.direction, direction, true);
-            let align_self = item.align_self.resolve_auto(AlignItems::NORMAL).resolve_self_relative(
-                item.direction,
-                direction,
-                false,
-            );
+                item.justify_self.unwrap_or(justify_items).resolve_self_relative(item.direction, direction, true);
+            let align_self =
+                item.align_self.unwrap_or(AlignItems::NORMAL).resolve_self_relative(item.direction, direction, false);
             candidates.push(OofCandidate {
                 node: item.node_id,
                 order: item.order,
@@ -1312,11 +1309,11 @@ fn perform_final_layout_on_in_flow_children(
             // auto-width box, so it only differs from `normal` for tables and replaced boxes, which
             // would otherwise resolve their own width.
             let justify_self =
-                item.justify_self.resolve_auto(justify_items).resolve_self_relative(item.direction, direction, true);
+                item.justify_self.unwrap_or(justify_items).resolve_self_relative(item.direction, direction, true);
             let is_stretch = justify_self.keyword == AlignItemsKeyword::Stretch;
             // The (resolved) `justify-self` if it is neither `normal` nor `stretch`
             let non_stretch_justify_self = match justify_self.keyword {
-                AlignItemsKeyword::Normal | AlignItemsKeyword::Auto | AlignItemsKeyword::Stretch => None,
+                AlignItemsKeyword::Normal | AlignItemsKeyword::Stretch => None,
                 _ => Some(justify_self),
             };
 

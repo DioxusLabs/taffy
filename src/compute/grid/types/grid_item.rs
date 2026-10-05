@@ -58,10 +58,10 @@ pub(in super::super) struct GridItem {
     /// The item's margin style
     pub margin: Rect<LengthPercentageAuto>,
     /// The item's align_self property, or the parent's align_items property if it is `auto`.
-    /// May be `Normal` (but never `Auto`).
+    /// May be `Normal`.
     pub align_self: AlignSelf,
     /// The item's justify_self property, or the parent's justify_items property if it is `auto`.
-    /// May be `Normal` (but never `Auto`).
+    /// May be `Normal`.
     pub justify_self: AlignSelf,
     /// The items first baseline (horizontal)
     pub baseline: Option<f32>,
@@ -133,8 +133,8 @@ impl GridItem {
             padding: style.padding(),
             border: style.border(),
             margin: style.margin(),
-            align_self: style.align_self().resolve_auto(parent_align_items),
-            justify_self: style.justify_self().resolve_auto(parent_justify_items),
+            align_self: style.align_self().unwrap_or(parent_align_items),
+            justify_self: style.justify_self().unwrap_or(parent_justify_items),
             baseline: None,
             baseline_shim: 0.0,
             row_indexes: Line { start: 0, end: 0 }, // Properly initialised later

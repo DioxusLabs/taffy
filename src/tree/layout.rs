@@ -263,18 +263,15 @@ impl AxisStaticPosition {
     /// the block axis). `normal` and `stretch` behave as `start`. This is the static position
     /// used by block and inline layout.
     ///
-    /// `alignment` must already be resolved: `auto` replaced by the container's `justify-items`/
-    /// `align-items` (see [`AlignSelf::resolve_auto`]), and `self-start`/`self-end` resolved
-    /// against the container's direction (see [`AlignSelf::resolve_self_relative`]).
+    /// `alignment` must already be resolved: `auto` (`None`) replaced by the container's
+    /// `justify-items`/`align-items`, and `self-start`/`self-end` resolved against the
+    /// container's direction (see [`AlignSelf::resolve_self_relative`]).
     /// `axis_is_rtl` is whether this axis is the inline axis of a right-to-left static-position
     /// containing block, in which case `start` and `end` are flipped.
     pub fn from_alignment(alignment: AlignSelf, area: Line<f32>, axis_is_rtl: bool) -> Self {
         debug_assert!(
-            !matches!(
-                alignment.keyword,
-                AlignItemsKeyword::Auto | AlignItemsKeyword::SelfStart | AlignItemsKeyword::SelfEnd
-            ),
-            "auto and self-start/self-end must be resolved before computing the static position"
+            !matches!(alignment.keyword, AlignItemsKeyword::SelfStart | AlignItemsKeyword::SelfEnd),
+            "self-start/self-end must be resolved before computing the static position"
         );
         /// The edge of the static-position rectangle that a (resolved) alignment keyword
         /// aligns the box to. Normal and Stretch (and anything else that is not an end or

@@ -111,12 +111,12 @@ pub(super) fn align_and_position_item(
     // The horizontal axis is the inline axis (Taffy only supports horizontal-tb); the vertical
     // (block) axis resolves them to plain start/end.
     let item_direction = style.direction();
-    let justify_self = style.justify_self().resolve_auto(container_alignment_styles.horizontal).resolve_self_relative(
+    let justify_self = style.justify_self().unwrap_or(container_alignment_styles.horizontal).resolve_self_relative(
         item_direction,
         direction,
         true,
     );
-    let align_self = style.align_self().resolve_auto(container_alignment_styles.vertical).resolve_self_relative(
+    let align_self = style.align_self().unwrap_or(container_alignment_styles.vertical).resolve_self_relative(
         item_direction,
         direction,
         false,
@@ -164,7 +164,7 @@ pub(super) fn align_and_position_item(
     // See: https://www.w3.org/TR/css-grid-1/#grid-item-sizing
     let alignment_styles = InBothAbsAxis {
         horizontal: match justify_self.keyword {
-            AlignItemsKeyword::Normal | AlignItemsKeyword::Auto => {
+            AlignItemsKeyword::Normal => {
                 if inherent_size.width.is_some() || size_style.width.is_sizing_keyword() {
                     AlignSelf::START
                 } else {
@@ -174,7 +174,7 @@ pub(super) fn align_and_position_item(
             _ => justify_self,
         },
         vertical: match align_self.keyword {
-            AlignItemsKeyword::Normal | AlignItemsKeyword::Auto => {
+            AlignItemsKeyword::Normal => {
                 if inherent_size.height.is_some() || size_style.height.is_sizing_keyword() || aspect_ratio.is_some() {
                     AlignSelf::START
                 } else {
@@ -488,12 +488,9 @@ pub(super) fn align_item_within_area(
         AlignItemsKeyword::Center => {
             (grid_area_size - resolved_size + resolved_margin.start - resolved_margin.end) / 2.0
         }
-        // Normal/Auto are resolved, and SelfStart/SelfEnd are resolved to Start/End against
+        // Normal is resolved, and SelfStart/SelfEnd are resolved to Start/End against
         // the item's own direction, in `align_and_position_item`.
-        AlignItemsKeyword::Normal
-        | AlignItemsKeyword::Auto
-        | AlignItemsKeyword::SelfStart
-        | AlignItemsKeyword::SelfEnd => unreachable!(),
+        AlignItemsKeyword::Normal | AlignItemsKeyword::SelfStart | AlignItemsKeyword::SelfEnd => unreachable!(),
     };
 
     let offset_within_area = if position.is_out_of_flow() {

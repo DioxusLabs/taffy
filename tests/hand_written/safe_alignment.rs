@@ -17,7 +17,7 @@ fn grid_safe_align_self_falls_back_to_start_on_overflow() {
     let child = taffy
         .new_leaf(Style {
             size: Size { width: length(50.0), height: length(150.0) },
-            align_self: AlignSelf::SAFE_END,
+            align_self: Some(AlignSelf::SAFE_END),
             ..Default::default()
         })
         .unwrap();
@@ -47,7 +47,7 @@ fn grid_safe_align_self_behaves_as_end_when_no_overflow() {
     let child = taffy
         .new_leaf(Style {
             size: Size { width: length(50.0), height: length(40.0) },
-            align_self: AlignSelf::SAFE_END,
+            align_self: Some(AlignSelf::SAFE_END),
             ..Default::default()
         })
         .unwrap();
@@ -77,7 +77,7 @@ fn grid_unsafe_align_self_keeps_overflowing_position() {
     let child = taffy
         .new_leaf(Style {
             size: Size { width: length(50.0), height: length(150.0) },
-            align_self: AlignSelf::END,
+            align_self: Some(AlignSelf::END),
             ..Default::default()
         })
         .unwrap();
@@ -107,7 +107,7 @@ fn grid_safe_justify_self_falls_back_to_start_on_overflow() {
     let child = taffy
         .new_leaf(Style {
             size: Size { width: length(150.0), height: length(50.0) },
-            justify_self: JustifySelf::SAFE_END,
+            justify_self: Some(JustifySelf::SAFE_END),
             ..Default::default()
         })
         .unwrap();
@@ -136,7 +136,7 @@ fn grid_safe_justify_self_rtl_falls_back_to_rtl_start_edge() {
     let child = taffy
         .new_leaf(Style {
             size: Size { width: length(150.0), height: length(50.0) },
-            justify_self: JustifySelf::SAFE_END,
+            justify_self: Some(JustifySelf::SAFE_END),
             ..Default::default()
         })
         .unwrap();
@@ -199,7 +199,7 @@ fn flex_safe_align_self_falls_back_to_start_on_overflow() {
     let child = taffy
         .new_leaf(Style {
             size: Size { width: length(50.0), height: length(150.0) },
-            align_self: AlignSelf::SAFE_END,
+            align_self: Some(AlignSelf::SAFE_END),
             ..Default::default()
         })
         .unwrap();
@@ -227,7 +227,7 @@ fn flex_unsafe_align_self_keeps_overflowing_position() {
     let child = taffy
         .new_leaf(Style {
             size: Size { width: length(50.0), height: length(150.0) },
-            align_self: AlignSelf::END,
+            align_self: Some(AlignSelf::END),
             ..Default::default()
         })
         .unwrap();

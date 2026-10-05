@@ -671,16 +671,13 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
         if child_style.position().is_out_of_flow() {
             let position = child_style.position();
             let item_direction = child_style.direction();
-            let justify_self = child_style.justify_self().resolve_auto(justify_items).resolve_self_relative(
+            let justify_self = child_style.justify_self().unwrap_or(justify_items).resolve_self_relative(
                 item_direction,
                 direction,
                 true,
             );
-            let align_self = child_style.align_self().resolve_auto(align_items).resolve_self_relative(
-                item_direction,
-                direction,
-                false,
-            );
+            let align_self =
+                child_style.align_self().unwrap_or(align_items).resolve_self_relative(item_direction, direction, false);
 
             // The static-position rectangle: the grid area determined by the grid-placement
             // properties when this grid is the child's containing block, and otherwise the
