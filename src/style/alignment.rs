@@ -223,7 +223,7 @@ impl AlignItems {
 
     /// Returns true if the keyword is `Stretch` or `Normal` (ignoring any overflow-position
     /// modifier).
-    #[inline]
+    #[inline(always)]
     pub const fn is_stretch_or_normal(self) -> bool {
         matches!(self.keyword, AlignItemsKeyword::Stretch | AlignItemsKeyword::Normal)
     }
