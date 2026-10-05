@@ -58,10 +58,8 @@ pub(in super::super) struct GridItem {
     /// The item's margin style
     pub margin: Rect<LengthPercentageAuto>,
     /// The item's align_self property, or the parent's align_items property if it is `auto`.
-    /// May be `Normal`.
     pub align_self: AlignSelf,
     /// The item's justify_self property, or the parent's justify_items property if it is `auto`.
-    /// May be `Normal`.
     pub justify_self: AlignSelf,
     /// The items first baseline (horizontal)
     pub baseline: Option<f32>,
