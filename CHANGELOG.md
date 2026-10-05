@@ -4,7 +4,7 @@
 
 ### Breaking
 
-- `CompactLength` tag values have been reassigned so that the low 3 bits encode variant classes: bit 0 (`NON_POINTER_BIT`) is set for every non-`calc()` tag and bit 2 (`PERCENTAGE_BIT`) is set for every tag that depends on a percentage basis (including `calc()`). `is_calc()` and `uses_percentage()` are now single bit tests. This changes the numeric values of the `*_TAG` constants and the `serde` representation of `percent`, `fr` and sizing keyword values.
+- `CompactLength` tag values have been reassigned so that the low bits encode variant classes: bit 0 (`NON_POINTER_BIT`) is set for every non-`calc()` tag, bit 1 (`KEYWORD_BIT`) for everything other than plain length/percentage/`calc()` values, bit 2 (`PERCENTAGE_BIT`) for every tag that depends on a percentage basis (including `calc()`), and bit 3 (`SIZING_KEYWORD_BIT`) for the CSS sizing keywords. `is_calc()`, `uses_percentage()`, `is_length_or_percentage()` and `is_sizing_keyword()` are now single mask tests. This changes the numeric values of the `*_TAG` constants and the `serde` representation of `percent`, `fr` and sizing keyword values.
 
 - Removed the heapless (neither `std` nor `alloc`) build mode. Taffy now always requires the `alloc` crate: the `arrayvec` dependency and the fixed `MAX_NODE_COUNT`/`MAX_CHILD_COUNT` limits are gone, and `no_std` builds without the `std` feature use `alloc`'s `Vec`/`String`/`BTreeMap` unconditionally. The `alloc` cargo feature is retained as a deprecated no-op so existing `features = ["alloc"]` configurations keep compiling
 
