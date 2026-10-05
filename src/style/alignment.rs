@@ -258,6 +258,15 @@ impl AlignItems {
         }
     }
 
+    /// Returns true if the keyword is `Stretch` or `Normal` (ignoring any overflow-position
+    /// modifier).
+    ///
+    /// `Auto` is not included: resolve it with [`resolve_auto`](Self::resolve_auto) first.
+    #[inline]
+    pub const fn is_stretch_or_normal(self) -> bool {
+        matches!(self.keyword, AlignItemsKeyword::Stretch | AlignItemsKeyword::Normal)
+    }
+
     /// Resolve the writing-mode-relative `SelfStart`/`SelfEnd` keywords to `Start`/`End`
     /// based on the item's own `direction` per CSS Box Alignment §5.2
     /// <https://www.w3.org/TR/css-align-3/#self-alignment>. All other keywords

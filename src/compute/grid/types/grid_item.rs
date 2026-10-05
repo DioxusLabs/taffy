@@ -108,17 +108,6 @@ pub(in super::super) struct GridItem {
     pub oof_candidates: OofCandidates,
 }
 
-/// Whether a grid item's (auto-resolved) self-alignment is treated as `stretch` when resolving
-/// the item's known dimensions for track sizing.
-///
-/// Note: `normal` is treated as `stretch` here regardless of whether the item has a preferred
-/// size or aspect ratio in the relevant axis. This differs from the rule used when the item is
-/// finally aligned (see `align_and_position_item`).
-#[inline(always)]
-fn is_stretch_or_normal(alignment: AlignSelf) -> bool {
-    alignment == AlignSelf::STRETCH || alignment.keyword == AlignItemsKeyword::Normal
-}
-
 impl GridItem {
     /// Create a new item from its style. Its placement (`row`/`column`) is filled in by the placement algorithm.
     pub fn new_with_style_and_order<S: GridItemStyle>(
@@ -381,10 +370,12 @@ impl GridItem {
             }
 
             // Apply width based on stretch alignment if:
-            //  - Alignment style is "stretch"
+            //  - Alignment style is "stretch" or "normal". Note that "normal" is treated as "stretch"
+            //    here regardless of whether the item has a preferred size or aspect ratio in this axis,
+            //    which differs from the rule used when the item is finally aligned (see `align_and_position_item`).
             //  - The node is not absolutely positioned
             //  - The node does not have auto margins in this axis.
-            if !self.margin.left.is_auto() && !self.margin.right.is_auto() && is_stretch_or_normal(self.justify_self) {
+            if !self.margin.left.is_auto() && !self.margin.right.is_auto() && self.justify_self.is_stretch_or_normal() {
                 return grid_area_minus_item_margins_size.width;
             }
 
@@ -410,10 +401,10 @@ impl GridItem {
             }
 
             // Apply height based on stretch alignment if:
-            //  - Alignment style is "stretch"
+            //  - Alignment style is "stretch" or "normal" (see the note on width above)
             //  - The node is not absolutely positioned
             //  - The node does not have auto margins in this axis.
-            if !self.margin.top.is_auto() && !self.margin.bottom.is_auto() && is_stretch_or_normal(self.align_self) {
+            if !self.margin.top.is_auto() && !self.margin.bottom.is_auto() && self.align_self.is_stretch_or_normal() {
                 return grid_area_minus_item_margins_size.height;
             }
 
