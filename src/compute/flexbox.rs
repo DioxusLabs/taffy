@@ -971,6 +971,8 @@ fn determine_flex_base_size(
 
         drop(child_style);
 
+        let main_stretch_size = percent_resolution_main_size.maybe_sub(child.margin.main_axis_sum(dir)).maybe_max(0.0);
+
         child.flex_basis = 'flex_basis: {
             // A. If the item has a definite used flex basis, that’s the flex base size.
 
@@ -980,8 +982,6 @@ fn determine_flex_base_size(
             //    cross size and the flex item’s intrinsic aspect ratio.
 
             let main_size = child.size.main(dir);
-            let main_stretch_size =
-                percent_resolution_main_size.maybe_sub(child.margin.main_axis_sum(dir)).maybe_max(0.0);
 
             // A flex basis that is a sizing keyword (min-content, max-content, fit-content,
             // fit-content(...), stretch) is used in place of the main size property: `stretch`
@@ -1139,8 +1139,18 @@ fn determine_flex_base_size(
 
             // 4.5. Automatic Minimum Size of Flex Items
             // https://www.w3.org/TR/css-flexbox-1/#min-size-auto
+            //
+            // The specified size suggestion is the item's preferred main size if it is definite.
+            // That includes a main size of `stretch` that resolves against a definite container size.
+            let specified_size_suggestion = child.size.main(dir).or_else(|| {
+                if child.size_style.main(dir).is_stretch() {
+                    main_stretch_size
+                } else {
+                    None
+                }
+            });
             let clamped_min_content_size =
-                min_content_main_size.maybe_min(child.size.main(dir)).maybe_min(transferred_max_size.main(dir));
+                min_content_main_size.maybe_min(specified_size_suggestion).maybe_min(transferred_max_size.main(dir));
             clamped_min_content_size.maybe_max(padding_border_axes_sums.main(dir))
         });
 
@@ -1923,22 +1933,28 @@ fn determine_hypothetical_cross_size(
 
         // A cross size that is a sizing keyword (min-content, max-content, fit-content,
         // fit-content(...)) determines the available space constraint the item is measured under.
-        // The `stretch` keyword is not resolved here: it stretches to the flex line, which is
-        // handled in `determine_used_cross_size`
+        // If the container has a definite cross size then the `stretch` keyword resolves against
+        // it for the purpose of sizing the flex lines (https://github.com/w3c/csswg-drafts/issues/11784).
+        // Otherwise it is not resolved here. In both cases the item is then stretched to its
+        // flex line in `determine_used_cross_size`.
         let cross_stretch_size = constants
             .node_inner_size
             .cross(constants.dir)
             .map(|val| constants.divided_cross_space(val))
             .maybe_sub(child.margin.cross_axis_sum(constants.dir))
             .maybe_max(0.0);
-        let child_available_cross = match resolve_sizing_keyword(
+        let (child_cross, child_available_cross) = match resolve_sizing_keyword(
             child.size_style.cross(constants.dir),
             cross_stretch_size,
             constants.node_inner_size.cross(constants.dir),
             |val, basis| tree.calc(val, basis),
         ) {
-            Some(SizingKeywordResolution::Measure(available)) => available,
-            _ => child_available_cross,
+            Some(SizingKeywordResolution::Measure(available)) => (child_cross, available),
+            Some(SizingKeywordResolution::Exact(size)) if constants.has_definite_cross_size => (
+                Some(size.maybe_clamp(transferred_min_cross, transferred_max_cross).max(padding_border_sum)),
+                child_available_cross,
+            ),
+            _ => (child_cross, child_available_cross),
         };
 
         let child_inner_cross = child_cross.unwrap_or_else(|| {
