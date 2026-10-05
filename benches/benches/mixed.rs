@@ -5,7 +5,7 @@ use rand_chacha::ChaCha8Rng;
 use std::iter;
 use taffy::prelude::*;
 use taffy::style::Style;
-use taffy_benchmarks::{bench_layout, benchmark_group, TaffyLayoutTree};
+use taffy_benchmarks::{bench_layout, benchmark_group, compute_layout_with_measure, TaffyLayoutTree};
 
 pub const LOREM_IPSUM : &str = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.";
 
@@ -158,22 +158,21 @@ fn mixed_benchmark(c: &mut Criterion) {
                     },
                     |tree| tree.mark_all_dirty(),
                     |tree| {
-                        tree.tree
-                            .compute_layout_with_measure(
-                                tree.root,
-                                Size::MAX_CONTENT,
-                                |inputs, _node_id, node_context, style| {
-                                    taffy::compute_leaf_layout(
-                                        inputs,
-                                        style,
-                                        |_, _| 0.0,
-                                        |known_dimensions, available_space| {
-                                            measure_function(known_dimensions, available_space, node_context)
-                                        },
-                                    )
-                                },
-                            )
-                            .unwrap();
+                        compute_layout_with_measure(
+                            &mut tree.tree,
+                            tree.root,
+                            Size::MAX_CONTENT,
+                            |inputs, _node_id, node_context, style| {
+                                taffy::compute_leaf_layout(
+                                    inputs,
+                                    style,
+                                    |_, _| 0.0,
+                                    |known_dimensions, available_space| {
+                                        measure_function(known_dimensions, available_space, node_context)
+                                    },
+                                )
+                            },
+                        );
                     },
                 )
             });
