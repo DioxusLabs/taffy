@@ -137,13 +137,14 @@ impl AlignContentKeyword {
 ///
 /// [css-align-overflow]: https://www.w3.org/TR/css-align-3/#overflow-values
 /// [css-align-abspos]: https://www.w3.org/TR/css-align-3/#auto-safety-position
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[repr(u8)]
 pub enum AlignmentSafety {
     /// No overflow-position keyword specified. Behaves as `Unsafe`, except for absolutely
     /// positioned boxes, whose alignment is adjusted to minimize overflow of their
     /// containing block.
+    #[default]
     Default,
     /// Keeps the requested alignment even when the subject overflows the alignment
     /// container at the start edge.
