@@ -1,0 +1,19 @@
+<test name="grid_min_width_max_content_span_flex_tracks__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" box-sizing="content-box" direction="ltr" position="absolute" width="10px" border-top="3px" border-left="3px" border-bottom="3px" border-right="3px" grid-template-columns="1fr 1fr">
+      <text box-sizing="content-box" direction="ltr" position="relative" min-width="max-content" grid-column-start="1" grid-column-end="span 2">
+        HH​HH
+      </text>
+      <div box-sizing="content-box" direction="ltr" position="relative" grid-column-start="1"/>
+      <div box-sizing="content-box" direction="ltr" position="relative" grid-column-start="2"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="16" height="16" resolved-rows="10px 0px" resolved-columns="20px 20px">
+      <node x="3" y="3" width="40" height="10"/>
+      <node x="3" y="13" width="20" height="0"/>
+      <node x="23" y="13" width="20" height="0"/>
+    </node>
+  </expectations>
+</test>

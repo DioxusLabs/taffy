@@ -892,6 +892,33 @@ impl GridItem {
                     .maybe_add(box_sizing_adjustment)
                     .get(axis)
             })
+            .or_else(|| {
+                // A content-based keyword minimum width is the item's used minimum size, so it is the item's
+                // minimum contribution (CSS gives the minimum precedence over the maximum, so the maximum width
+                // does not need to be resolved). `stretch` is cyclic here and behaves as `auto`, and the
+                // content-based keywords behave as `auto` in the block axis.
+                let min_style = self.min_size.get(axis);
+                if axis != AbstractAxis::Inline || !min_style.is_sizing_keyword() || min_style.is_stretch() {
+                    return None;
+                }
+                // The min-content and max-content contributions are shared with the automatic minimum size and
+                // the track sizing algorithm, so that the item is not measured any more than it is without the
+                // keyword. `fit-content` cannot resolve against the (indefinite) grid area here, so it is the
+                // min-content contribution, and `fit-content(limit)` is `max(min-content, min(max-content, limit))`.
+                match resolve_sizing_keyword(min_style, None, grid_area_size.width) {
+                    Some(SizingKeywordResolution::Measure(AvailableSpace::MaxContent)) => {
+                        Some(self.max_content_contribution_cached(axis, tree, grid_area_size, grid_area_size))
+                    }
+                    Some(SizingKeywordResolution::Measure(AvailableSpace::Definite(limit))) => {
+                        let max_content =
+                            self.max_content_contribution_cached(axis, tree, grid_area_size, grid_area_size);
+                        let min_content =
+                            self.min_content_contribution_cached(axis, tree, grid_area_size, grid_area_size);
+                        Some(max_content.min(limit).max(min_content))
+                    }
+                    _ => Some(self.min_content_contribution_cached(axis, tree, grid_area_size, grid_area_size)),
+                }
+            })
             .or_else(|| self.overflow.get(axis).maybe_into_automatic_min_size())
             .unwrap_or_else(|| {
                 // Automatic minimum size. See https://www.w3.org/TR/css-grid-1/#min-size-auto

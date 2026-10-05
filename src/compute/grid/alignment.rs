@@ -391,7 +391,10 @@ pub(super) fn align_and_position_item(
         resolve_grid_child_style_constraints,
     );
 
-    // Resolve final size
+    // Resolve final size. A keyword minimum width has already been applied to the width above (or by the
+    // item's own layout) and takes precedence over the maximum width, so the maximum width must not be
+    // reapplied here.
+    let max_size = Size { width: max_size.width.filter(|_| keyword_min_width.is_auto()), height: max_size.height };
     let Size { width, height } = size.unwrap_or(layout_output.size).maybe_clamp(min_size, max_size);
 
     let (x, x_margin) = align_item_within_area(
