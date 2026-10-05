@@ -48,6 +48,10 @@ struct SharedTree<'t, NodeContext, MeasureFunction> {
     contexts: Vec<*mut NodeContext>,
     /// The number of nodes in the subtree rooted at each node (indexed by slot)
     subtree_sizes: Vec<u32>,
+    /// The number of nodes in the subtrees of each node's children, not counting the largest of those subtrees
+    /// (indexed by slot). This is the most layout work of a batch of the node's children that could be
+    /// moved to other threads.
+    stealable_sizes: Vec<u32>,
     /// The children of each node
     children: &'t SlotMap<DefaultKey, ChildrenVec<NodeId>>,
     /// The parent of each node
@@ -96,6 +100,7 @@ impl<'t, NodeContext, MeasureFunction> SharedTree<'t, NodeContext, MeasureFuncti
         // Compute the size of each subtree: list the nodes so that each node comes after its parent,
         // then add the size of each node's subtree to its parent's in reverse order
         let mut subtree_sizes: Vec<u32> = vec![0; node_ptrs.len()];
+        let mut largest_child_sizes: Vec<u32> = vec![0; node_ptrs.len()];
         let mut order: Vec<(u32, u32)> = Vec::with_capacity(node_count);
         let mut stack: Vec<(NodeId, u32)> = Vec::new();
         stack.push((root, u32::MAX));
@@ -107,9 +112,18 @@ impl<'t, NodeContext, MeasureFunction> SharedTree<'t, NodeContext, MeasureFuncti
         for (node_slot, parent_slot) in order.into_iter().rev() {
             subtree_sizes[node_slot as usize] += 1;
             if parent_slot != u32::MAX {
-                subtree_sizes[parent_slot as usize] += subtree_sizes[node_slot as usize];
+                let size = subtree_sizes[node_slot as usize];
+                subtree_sizes[parent_slot as usize] += size;
+                let largest = &mut largest_child_sizes[parent_slot as usize];
+                *largest = (*largest).max(size);
             }
         }
+        // (the subtree size of a node that is not in the subtree being laid out is zero)
+        let stealable_sizes: Vec<u32> = subtree_sizes
+            .iter()
+            .zip(largest_child_sizes)
+            .map(|(size, largest)| size.saturating_sub(1).saturating_sub(largest))
+            .collect();
 
         #[cfg(not(debug_assertions))]
         let _ = parents;
@@ -120,6 +134,7 @@ impl<'t, NodeContext, MeasureFunction> SharedTree<'t, NodeContext, MeasureFuncti
             nodes: node_ptrs,
             contexts: context_ptrs,
             subtree_sizes,
+            stealable_sizes,
             children,
             #[cfg(debug_assertions)]
             parents,
@@ -313,18 +328,26 @@ where
         let shared = self.shared;
         let mut uncached_jobs: Vec<&mut ChildLayoutJob> = Vec::new();
         let mut weight: u32 = 0;
+        let mut largest_weight: u32 = 0;
         for job in jobs.iter_mut() {
             if job.input.run_mode == RunMode::PerformHiddenLayout {
                 job.output = self.compute_hidden_child_layout(job.node);
             } else if let Some(output) = self.cache_get(job.node, &job.input) {
                 job.output = output;
             } else {
-                weight = weight.saturating_add(shared.subtree_sizes[slot(job.node)]);
+                let job_weight = shared.subtree_sizes[slot(job.node)];
+                weight = weight.saturating_add(job_weight);
+                largest_weight = largest_weight.max(job_weight);
                 uncached_jobs.push(job);
             }
         }
 
-        if uncached_jobs.len() >= 2 && weight >= shared.min_batch_weight {
+        // A batch is only worth computing in parallel if enough of its work can run at the same time as its
+        // largest job. A balanced batch that reaches `min_batch_weight` always passes the second condition.
+        let is_parallel = uncached_jobs.len() >= 2
+            && weight >= shared.min_batch_weight
+            && weight - largest_weight >= shared.min_batch_weight / 2;
+        if is_parallel {
             // Group small jobs so that the subtrees laid out by each task are (on average)
             // at least a quarter of the size of the smallest batch that is run in parallel
             let min_task_weight = (shared.min_batch_weight / 4).max(1) as usize;
@@ -415,7 +438,9 @@ where
     /// the smallest batch that is computed in parallel would never be computed in parallel
     #[inline(always)]
     fn batches_child_layouts(&self, parent_node_id: NodeId) -> bool {
-        self.shared.subtree_sizes[slot(parent_node_id)] > self.shared.min_batch_weight
+        let slot = slot(parent_node_id);
+        self.shared.subtree_sizes[slot] > self.shared.min_batch_weight
+            && self.shared.stealable_sizes[slot] >= self.shared.min_batch_weight / 2
     }
 
     #[inline(always)]
