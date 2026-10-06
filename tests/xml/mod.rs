@@ -33557,6 +33557,54 @@ mod grid {
 
     #[cfg(feature = "grid")]
     #[test]
+    fn grid_percent_min_track_indefinite_fixed_max_column__border_box_ltr() {
+        crate::run_xml_test("grid", "grid_percent_min_track_indefinite_fixed_max_column__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_percent_min_track_indefinite_fixed_max_column__content_box_ltr() {
+        crate::run_xml_test("grid", "grid_percent_min_track_indefinite_fixed_max_column__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_percent_min_track_indefinite_fixed_max_column__border_box_rtl() {
+        crate::run_xml_test("grid", "grid_percent_min_track_indefinite_fixed_max_column__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_percent_min_track_indefinite_fixed_max_column__content_box_rtl() {
+        crate::run_xml_test("grid", "grid_percent_min_track_indefinite_fixed_max_column__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_percent_min_track_indefinite_fixed_max_row__border_box_ltr() {
+        crate::run_xml_test("grid", "grid_percent_min_track_indefinite_fixed_max_row__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_percent_min_track_indefinite_fixed_max_row__content_box_ltr() {
+        crate::run_xml_test("grid", "grid_percent_min_track_indefinite_fixed_max_row__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_percent_min_track_indefinite_fixed_max_row__border_box_rtl() {
+        crate::run_xml_test("grid", "grid_percent_min_track_indefinite_fixed_max_row__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_percent_min_track_indefinite_fixed_max_row__content_box_rtl() {
+        crate::run_xml_test("grid", "grid_percent_min_track_indefinite_fixed_max_row__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
     fn grid_percent_propagates_through_nested_grid_container__border_box_ltr() {
         crate::run_xml_test("grid", "grid_percent_propagates_through_nested_grid_container__border_box_ltr");
     }

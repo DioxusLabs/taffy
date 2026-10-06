@@ -613,19 +613,12 @@ fn resolve_intrinsic_track_sizes<Tree: LayoutPartialTree>(
                     CompactLength::MIN_CONTENT_TAG => {
                         f32_max(track.base_size, item_sizer.min_content_contribution(item, axis_tracks))
                     }
-                    // If the container size is indefinite and has not yet been resolved then percentage sized
-                    // tracks should be treated as min-content (this matches Chrome's behaviour and seems sensible)
-                    CompactLength::PERCENT_TAG => {
-                        if axis_inner_node_size.is_none() {
-                            f32_max(track.base_size, item_sizer.min_content_contribution(item, axis_tracks))
-                        } else {
-                            track.base_size
-                        }
-                    }
                     CompactLength::MAX_CONTENT_TAG => {
                         f32_max(track.base_size, item_sizer.max_content_contribution(item, axis_tracks))
                     }
-                    CompactLength::AUTO_TAG => {
+                    // If the container size is indefinite and has not yet been resolved then percentage sized
+                    // tracks are treated as auto
+                    _ if track.min_track_sizing_function.behaves_as_auto(axis_inner_node_size) => {
                         let space = match axis_available_grid_space {
                             // QUIRK: The spec says that:
                             //
@@ -649,20 +642,8 @@ fn resolve_intrinsic_track_sizes<Tree: LayoutPartialTree>(
                         };
                         f32_max(track.base_size, space)
                     }
-                    CompactLength::LENGTH_TAG => {
-                        // Do nothing as it's not an intrinsic track sizing function
-                        track.base_size
-                    }
-                    // Handle calc() like percentage
-                    #[cfg(feature = "calc")]
-                    _ if track.min_track_sizing_function.0.is_plain_calc() => {
-                        if axis_inner_node_size.is_none() {
-                            f32_max(track.base_size, item_sizer.min_content_contribution(item, axis_tracks))
-                        } else {
-                            track.base_size
-                        }
-                    }
-                    _ => unreachable!(),
+                    // Do nothing as it's not an intrinsic track sizing function
+                    _ => track.base_size,
                 };
                 axis_tracks[track_index as usize].base_size = new_base_size;
 
