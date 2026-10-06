@@ -132,7 +132,12 @@ impl TrackIntervals {
     /// before the returned extent also collides with the interval), or `None` if the range is
     /// entirely unoccupied.
     fn collision_extent(&self, range: &Range<i16>) -> Option<i16> {
-        let interval = self.intervals.iter().rev().find(|interval| interval.overlaps(range))?;
+        let interval = self
+            .intervals
+            .iter()
+            .rev()
+            .take_while(|interval| interval.range.end > range.start)
+            .find(|interval| interval.overlaps(range))?;
         Some(interval.range.end - 1)
     }
 }
