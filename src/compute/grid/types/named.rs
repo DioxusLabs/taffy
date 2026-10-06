@@ -9,7 +9,6 @@ use core::{borrow::Borrow, cmp::Ordering, fmt::Debug};
 use super::{GridLine, MAX_GRID_TRACKS};
 use crate::geometry::AbsoluteAxis;
 use crate::sys::DefaultCheapStr;
-// use alloc::fmt::format;
 use crate::sys::{Map, Vec};
 use smallvec::{smallvec, SmallVec};
 
