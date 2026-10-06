@@ -305,6 +305,9 @@ struct BlockItem {
     /// Whether the child is a non-independent block or inline node
     is_in_same_bfc: bool,
 
+    /// Whether the item has an `aspect-ratio` (which can transfer the item's block size into the inline axis)
+    has_aspect_ratio: bool,
+
     #[cfg(feature = "float_layout")]
     /// The `float` style of the node
     float: Float,
@@ -434,13 +437,15 @@ pub fn compute_block_layout(
     // is ComputeSize (and thus the container's size is all that we're interested in)
     if run_mode == RunMode::ComputeSize {
         if let Size { width: Some(width), height: Some(height) } = styled_based_known_dimensions {
-            return LayoutOutput::from_outer_size(Size { width, height });
+            return LayoutOutput::from_outer_size(Size { width, height })
+                .with_block_constraint_dependency(aspect_ratio.is_some());
         }
 
         // We can also short-circuit if the width is known and only the width has been requested.
         if inputs.axis == RequestedAxis::Horizontal {
             if let Some(width) = styled_based_known_dimensions.width {
-                return LayoutOutput::from_outer_size(Size { width, height: 0.0 });
+                return LayoutOutput::from_outer_size(Size { width, height: 0.0 })
+                    .with_block_constraint_dependency(aspect_ratio.is_some());
             }
         }
     }
@@ -588,21 +593,26 @@ fn compute_inner(
     let mut items = generate_item_list(tree, node_id, container_content_box_size);
 
     // 2. Compute container width
+    let mut depends_on_block_constraints = aspect_ratio.is_some();
     let container_outer_width = known_dimensions.width.unwrap_or_else(|| {
         let available_width = available_space.width.maybe_sub(content_box_inset.horizontal_axis_sum());
-        let intrinsic_width = determine_content_based_container_width(tree, &items, available_width)
-            + content_box_inset.horizontal_axis_sum();
+        let (content_width, content_depends_on_block_constraints) =
+            determine_content_based_container_width(tree, &items, available_width);
+        depends_on_block_constraints |= content_depends_on_block_constraints;
+        let intrinsic_width = content_width + content_box_inset.horizontal_axis_sum();
         intrinsic_width.maybe_clamp(min_size.width, max_size.width).maybe_max(Some(padding_border_size.width))
     });
 
     // Short-circuit if computing size and both dimensions known
     if let (RunMode::ComputeSize, Some(container_outer_height)) = (run_mode, known_dimensions.height) {
-        return LayoutOutput::from_outer_size(Size { width: container_outer_width, height: container_outer_height });
+        return LayoutOutput::from_outer_size(Size { width: container_outer_width, height: container_outer_height })
+            .with_block_constraint_dependency(depends_on_block_constraints);
     }
 
     // We can also short-circuit if the width is known and only the width has been requested.
     if run_mode == RunMode::ComputeSize && inputs.axis == RequestedAxis::Horizontal {
-        return LayoutOutput::from_outer_size(Size { width: container_outer_width, height: 0.0 });
+        return LayoutOutput::from_outer_size(Size { width: container_outer_width, height: 0.0 })
+            .with_block_constraint_dependency(depends_on_block_constraints);
     }
 
     // Under `SizingMode::ContentSize` the container's own `height`/`min-height` are ignored,
@@ -765,6 +775,7 @@ fn compute_inner(
         margins_can_collapse_through: can_be_collapsed_through,
         oof_candidates: OofCandidates::NONE,
         oof_positioning_area: None,
+        depends_on_block_constraints,
     };
 
     // Short-circuit if computing size.
@@ -916,6 +927,7 @@ fn generate_item_list(
                 is_table,
                 is_compressible_replaced,
                 is_in_same_bfc,
+                has_aspect_ratio: aspect_ratio.is_some(),
                 #[cfg(feature = "float_layout")]
                 float,
                 #[cfg(feature = "float_layout")]
@@ -983,19 +995,24 @@ fn resolve_stretch_height(
 }
 
 /// Compute the content-based width in the case that the width of the container is not known
+///
+/// Also returns whether that width may depend on the block-axis constraints of any of the items
+/// (see [`LayoutOutput::depends_on_block_constraints`])
 #[inline]
 fn determine_content_based_container_width(
     tree: &mut impl LayoutPartialTree,
     items: &[BlockItem],
     available_width: AvailableSpace,
-) -> f32 {
+) -> (f32, bool) {
     let available_space = Size { width: available_width, height: AvailableSpace::MinContent };
 
     let mut max_child_width = 0.0;
+    let mut depends_on_block_constraints = false;
     #[cfg(feature = "float_layout")]
     let mut float_contribution = FloatIntrinsicWidthCalculator::new(available_width);
     for item in items.iter().filter(|item| !item.position.is_out_of_flow()) {
         let known_dimensions = item.size.maybe_clamp(item.min_size, item.max_size);
+        depends_on_block_constraints |= item.has_aspect_ratio;
 
         let item_x_margin_sum = item
             .margin
@@ -1008,7 +1025,7 @@ fn determine_content_based_container_width(
                     Some(SizingKeywordResolution::Exact(width)) => AvailableSpace::Definite(width),
                     None => available_space.width.maybe_sub(item_x_margin_sum),
                 };
-            tree.measure_child_size(
+            let (width, item_depends_on_block_constraints) = tree.measure_child_size_with_block_dependency(
                 item.node_id,
                 known_dimensions,
                 Size::NONE,
@@ -1017,7 +1034,9 @@ fn determine_content_based_container_width(
                 crate::AbsoluteAxis::Horizontal,
                 // Must match the value passed when laying the item out (see `Cache`)
                 if item.is_in_same_bfc { Line::TRUE } else { Line::FALSE },
-            )
+            );
+            depends_on_block_constraints |= item_depends_on_block_constraints;
+            width
         });
 
         let width = f32_max(width, item.padding_border_sum.width) + item_x_margin_sum;
@@ -1036,7 +1055,7 @@ fn determine_content_based_container_width(
         max_child_width = max_child_width.max(float_contribution.result());
     }
 
-    max_child_width
+    (max_child_width, depends_on_block_constraints)
 }
 
 /// Compute each child's final size and position

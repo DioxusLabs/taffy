@@ -409,6 +409,37 @@ pub(crate) trait LayoutPartialTreeExt: LayoutPartialTree {
         .get_abs(axis)
     }
 
+    /// Compute the size of the node in the specified axis given the specified constraints, also returning
+    /// whether the node's inline size can depend on its block-axis constraints
+    /// (see [`LayoutOutput::depends_on_block_constraints`])
+    #[inline(always)]
+    #[allow(clippy::too_many_arguments)]
+    fn measure_child_size_with_block_dependency(
+        &mut self,
+        node_id: NodeId,
+        known_dimensions: Size<Option<f32>>,
+        parent_size: Size<Option<f32>>,
+        available_space: Size<AvailableSpace>,
+        sizing_mode: SizingMode,
+        axis: AbsoluteAxis,
+        vertical_margins_are_collapsible: Line<bool>,
+    ) -> (f32, bool) {
+        let output = self.compute_child_layout(
+            node_id,
+            LayoutInput {
+                known_dimensions,
+                known_dimensions_are_definite: Size { width: true, height: true },
+                parent_size,
+                available_space,
+                sizing_mode,
+                axis: axis.into(),
+                run_mode: RunMode::ComputeSize,
+                vertical_margins_are_collapsible,
+            },
+        );
+        (output.size.get_abs(axis), output.depends_on_block_constraints)
+    }
+
     /// Compute the size of the node given the specified constraints
     #[inline(always)]
     #[allow(clippy::too_many_arguments)]

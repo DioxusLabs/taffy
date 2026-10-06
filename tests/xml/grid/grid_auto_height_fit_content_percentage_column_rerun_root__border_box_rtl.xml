@@ -1,0 +1,15 @@
+<test name="grid_auto_height_fit_content_percentage_column_rerun_root__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" direction="rtl" position="absolute" grid-template-columns="fit-content(50%)">
+      <text direction="rtl" position="relative">
+        XXXX​XXXX
+      </text>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="80" height="20" resolved-rows="20px" resolved-columns="40px">
+      <node x="40" y="0" width="40" height="20"/>
+    </node>
+  </expectations>
+</test>
