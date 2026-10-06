@@ -6,7 +6,7 @@ use crate::geometry::Line;
 use crate::geometry::{AbsoluteAxis, InBothAbsAxis};
 use crate::style::{AlignItems, GridAutoFlow, OriginZeroGridPlacement};
 use crate::tree::NodeId;
-use crate::util::sys::{Map, Vec};
+use crate::util::sys::Vec;
 use crate::{CoreStyle, GridItemStyle};
 
 #[inline]
@@ -86,11 +86,6 @@ pub(super) fn place_grid_items<'a, S>(
     }
 
     // 2. Place remaining children with definite secondary axis positions
-    //
-    // With "sparse" packing, each item must be placed past any items previously placed by this step
-    // with the same secondary axis start line. This maps each such start line to the primary axis end
-    // line of the last item placed there.
-    let mut sparse_cursors: Map<i16, OriginZeroLine> = Map::new();
     for (item, &placement) in items.iter_mut().zip(placements.iter()) {
         if !(placement.get(secondary_axis).is_definite() && !placement.get(primary_axis).is_definite()) {
             continue;
@@ -99,16 +94,28 @@ pub(super) fn place_grid_items<'a, S>(
         println!("Definite Secondary Item {}\n==============", item.source_order);
 
         let (primary_span, secondary_span) =
-            place_definite_secondary_axis_item(&*cell_occupancy_matrix, placement, grid_auto_flow, &mut sparse_cursors);
+            place_definite_secondary_axis_item(&*cell_occupancy_matrix, placement, grid_auto_flow);
 
+        // With "sparse" packing, later items are placed past the items that this step has previously placed
+        // *starting* in the same track. So an item is only recorded as auto-placed in the track that it starts in.
+        let start_track_span = Line { start: secondary_span.start, end: secondary_span.start + 1 };
+        let spans_one_track = secondary_span == start_track_span;
         record_grid_placement(
             cell_occupancy_matrix,
             item,
             primary_axis,
             primary_span,
             secondary_span,
-            CellOccupancyState::AutoPlaced,
+            if spans_one_track { CellOccupancyState::AutoPlaced } else { CellOccupancyState::DefinitelyPlaced },
         );
+        if !spans_one_track {
+            cell_occupancy_matrix.mark_area_as(
+                primary_axis,
+                clamp_span_to_limited_grid(primary_span),
+                clamp_span_to_limited_grid(start_track_span),
+                CellOccupancyState::AutoPlaced,
+            );
+        }
     }
 
     // 3. Determine the number of columns in the implicit grid
@@ -185,7 +192,6 @@ fn place_definite_secondary_axis_item(
     cell_occupancy_matrix: &CellOccupancyMatrix,
     placement: ItemPlacement,
     auto_flow: GridAutoFlow,
-    sparse_cursors: &mut Map<i16, OriginZeroLine>,
 ) -> (Line<OriginZeroLine>, Line<OriginZeroLine>) {
     let primary_axis = auto_flow.primary_axis();
     let secondary_axis = primary_axis.other_axis();
@@ -194,7 +200,9 @@ fn place_definite_secondary_axis_item(
     let secondary_axis_placement = placement.get(secondary_axis).resolve_definite_grid_lines();
     let starting_position = match auto_flow.is_dense() {
         true => primary_axis_grid_start_line,
-        false => sparse_cursors.get(&secondary_axis_placement.start.0).copied().unwrap_or(primary_axis_grid_start_line),
+        false => cell_occupancy_matrix
+            .last_of_type(primary_axis, secondary_axis_placement.start, CellOccupancyState::AutoPlaced)
+            .unwrap_or(primary_axis_grid_start_line),
     };
     let primary_axis_span = placement.get(primary_axis).indefinite_span();
 
@@ -209,12 +217,7 @@ fn place_definite_secondary_axis_item(
         );
 
         match collision {
-            None => {
-                if !auto_flow.is_dense() {
-                    sparse_cursors.insert(secondary_axis_placement.start.0, primary_axis_placement.end);
-                }
-                return (primary_axis_placement, secondary_axis_placement);
-            }
+            None => return (primary_axis_placement, secondary_axis_placement),
             Some(next_position) => position = next_position,
         }
     }
