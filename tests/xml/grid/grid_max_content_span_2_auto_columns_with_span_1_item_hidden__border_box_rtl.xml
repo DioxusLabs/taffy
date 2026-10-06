@@ -1,0 +1,19 @@
+<test name="grid_max_content_span_2_auto_columns_with_span_1_item_hidden__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" direction="rtl" position="absolute" grid-template-columns="auto auto">
+      <text direction="rtl" position="relative" grid-row-start="1" grid-column-start="1" grid-column-end="3">
+        HH​HH​HH
+      </text>
+      <text direction="rtl" position="relative" overflow-x="hidden" overflow-y="hidden" scrollbar-width="15" grid-row-start="1" grid-column-start="2">
+        HH​HH​HH
+      </text>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="70" height="10" resolved-rows="10px" resolved-columns="10px 60px">
+      <node x="0" y="0" width="70" height="10"/>
+      <node x="0" y="0" width="60" height="10" scroll_width="0" scroll_height="0"/>
+    </node>
+  </expectations>
+</test>
