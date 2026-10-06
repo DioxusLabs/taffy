@@ -723,8 +723,7 @@ impl GridItem {
                 // it spans at least one track in that axis whose min track sizing function is auto
                 let spans_auto_min_track = item_axis_tracks
                     .iter()
-                    // TODO: should this be 'behaves as auto' rather than just literal auto?
-                    .any(|track| track.min_track_sizing_function.is_auto());
+                    .any(|track| track.min_track_sizing_function.behaves_as_auto(inner_node_size.get(axis)));
 
                 // if it spans more than one track in that axis, none of those tracks are flexible
                 let only_span_one_track = item_axis_tracks.len() == 1;
