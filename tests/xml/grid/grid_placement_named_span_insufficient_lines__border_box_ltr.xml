@@ -1,0 +1,21 @@
+<test name="grid_placement_named_span_insufficient_lines__border_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" direction="ltr" position="absolute" grid-template-rows="[row] 20px [row mid] 40px [row] 80px [row]" grid-template-columns="[col] 50px [col mid] 100px [col] 200px [col]" grid-auto-rows="10px" grid-auto-columns="5px">
+      <div direction="ltr" position="relative" grid-row-start="span 3 mid" grid-row-end="4" grid-column-start="span 2 mid" grid-column-end="4"/>
+      <div direction="ltr" position="relative" grid-row-start="1" grid-row-end="span 3 mid" grid-column-start="1" grid-column-end="span 2 mid"/>
+      <div direction="ltr" position="relative" grid-row-start="span 2 foo" grid-row-end="2" grid-column-start="span foo" grid-column-end="2"/>
+      <div direction="ltr" position="relative" grid-row-start="3" grid-row-end="span 2 foo" grid-column-start="3" grid-column-end="span foo"/>
+      <div direction="ltr" position="relative" grid-row-start="foo" grid-row-end="span 3 mid" grid-column-start="foo" grid-column-end="span 2 foo"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="370" height="200" resolved-rows="10px 10px [row] 20px [row mid] 40px [row] 80px [row] 10px 10px 10px 10px" resolved-columns="5px [col] 50px [col mid] 100px [col] 200px [col] 5px 5px 5px">
+      <node x="0" y="0" width="355" height="160"/>
+      <node x="5" y="20" width="355" height="160"/>
+      <node x="0" y="0" width="55" height="40"/>
+      <node x="155" y="80" width="205" height="100"/>
+      <node x="360" y="170" width="10" height="30"/>
+    </node>
+  </expectations>
+</test>

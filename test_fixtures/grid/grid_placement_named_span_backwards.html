@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    Spans to a named line that end at a definite line count named lines backwards from the end line
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="display: grid; grid-template-columns: [col] 50px [col mid] 100px [col] 200px [col]; grid-template-rows: [row] 20px [row mid] 40px [row] 80px [row]; grid-auto-columns: 5px; grid-auto-rows: 10px;">
+  <div style="grid-column: span col / 3; grid-row: span row / 4;"></div>
+  <div style="grid-column: span 2 col / 3; grid-row: span 2 row / 4;"></div>
+  <div style="grid-column: span 3 col / 4; grid-row: span 3 row / 4;"></div>
+  <div style="grid-column: span mid / -1; grid-row: span mid / -1;"></div>
+</div>
+
+</body>
+</html>

@@ -192,8 +192,7 @@ impl<S: CheapCloneStr> NamedLineResolverAxis<'_, S> {
     fn resolve_line_names(&self, line: &Line<GridPlacement<S>>) -> Line<NonNamedGridPlacement> {
         let start_holder;
         let start_line_resolved = if let GridPlacement::NamedLine(name, idx) = &line.start {
-            start_holder =
-                GridPlacement::Line(self.find_line_index(name, *idx as i32, GridAreaEnd::Start, false, &|lines| lines));
+            start_holder = GridPlacement::Line(self.find_named_line(name, *idx, GridAreaEnd::Start));
             &start_holder
         } else {
             &line.start
@@ -201,8 +200,7 @@ impl<S: CheapCloneStr> NamedLineResolverAxis<'_, S> {
 
         let end_holder;
         let end_line_resolved = if let GridPlacement::NamedLine(name, idx) = &line.end {
-            end_holder =
-                GridPlacement::Line(self.find_line_index(name, *idx as i32, GridAreaEnd::End, false, &|lines| lines));
+            end_holder = GridPlacement::Line(self.find_named_line(name, *idx, GridAreaEnd::End));
             &end_holder
         } else {
             &line.end
@@ -216,29 +214,23 @@ impl<S: CheapCloneStr> NamedLineResolverAxis<'_, S> {
         //
         // <https://drafts.csswg.org/css-grid-2/#grid-span>
         match (&start_line_resolved, &end_line_resolved) {
-            (GridPlacement::Line(start_line), GridPlacement::NamedSpan(name, idx)) => {
-                let normalized_start_line = if start_line.as_i16() > 0 {
-                    start_line.as_i16() as u32
-                } else {
-                    (self.explicit_track_count as i32 + 1 + start_line.as_i16() as i32).max(0) as u32
-                };
-                let end_line = self.find_line_index(name, *idx as i32, GridAreaEnd::End, true, &|lines| {
-                    let point = lines.partition_point(|line| *line <= normalized_start_line);
-                    &lines[point..]
-                });
-                Line { start: NonNamedGridPlacement::Line(*start_line), end: NonNamedGridPlacement::Line(end_line) }
+            (GridPlacement::Line(start_line), GridPlacement::NamedSpan(name, idx)) if start_line.as_i16() != 0 => {
+                let after_start_line = self.line_number(*start_line) + 1;
+                let end_line =
+                    self.nth_line_forwards(self.lines_named(name.as_ref()), after_start_line, (*idx).max(1) as i64);
+                Line {
+                    start: NonNamedGridPlacement::Line(*start_line),
+                    end: NonNamedGridPlacement::Line(self.grid_line(end_line)),
+                }
             }
-            (GridPlacement::NamedSpan(name, idx), GridPlacement::Line(end_line)) => {
-                let normalized_end_line = if end_line.as_i16() > 0 {
-                    end_line.as_i16() as u32
-                } else {
-                    (self.explicit_track_count as i32 + 1 + end_line.as_i16() as i32).max(0) as u32
-                };
-                let start_line = self.find_line_index(name, *idx as i32, GridAreaEnd::Start, true, &|lines| {
-                    let point = lines.partition_point(|line| *line < normalized_end_line);
-                    &lines[..point]
-                });
-                Line { start: NonNamedGridPlacement::Line(start_line), end: NonNamedGridPlacement::Line(*end_line) }
+            (GridPlacement::NamedSpan(name, idx), GridPlacement::Line(end_line)) if end_line.as_i16() != 0 => {
+                let before_end_line = self.line_number(*end_line) - 1;
+                let start_line =
+                    self.nth_line_backwards(self.lines_named(name.as_ref()), before_end_line, (*idx).max(1) as i64);
+                Line {
+                    start: NonNamedGridPlacement::Line(self.grid_line(start_line)),
+                    end: NonNamedGridPlacement::Line(*end_line),
+                }
             }
             (start, end) => Line {
                 start: match start {
@@ -259,79 +251,95 @@ impl<S: CheapCloneStr> NamedLineResolverAxis<'_, S> {
         }
     }
 
-    /// Resolve the grid line for a named grid line or span
-    fn find_line_index(
-        &self,
-        name: &S,
-        idx: i32,
-        end: GridAreaEnd,
-        is_span: bool,
-        filter_lines: &dyn Fn(&[u32]) -> &[u32],
-    ) -> GridLine {
+    /// Resolve the grid line for a named grid line (`<custom-ident>` or `<integer> <custom-ident>`).
+    /// An index of 0 is used to represent "no index specified".
+    ///
+    /// <https://drafts.csswg.org/css-grid-2/#line-placement>
+    fn find_named_line(&self, name: &S, idx: i16, end: GridAreaEnd) -> GridLine {
         let name = name.as_ref();
-        let mut idx = idx;
-        let explicit_track_count = self.explicit_track_count as i32;
 
-        // An index of 0 is used to represent "no index specified".
-        let is_bare_ident = idx == 0 && !is_span;
+        // A `<custom-ident>` on its own first attempts to match the edge of a named grid area:
+        // the first line named `<custom-ident>-start` (or `<custom-ident>-end` for an end line).
+        // Otherwise it is treated as if the integer 1 had been specified along with it.
         if idx == 0 {
-            idx = 1;
-        }
-
-        fn get_line(lines: &[u32], explicit_track_count: i32, idx: i32) -> i16 {
-            let abs_idx = idx.unsigned_abs() as usize;
-            let line = if abs_idx <= lines.len() {
-                if idx > 0 {
-                    lines[abs_idx - 1] as i64
-                } else {
-                    lines[lines.len() - abs_idx] as i64
-                }
-            } else {
-                let remaining_lines = (abs_idx - lines.len()) as i64 * idx.signum() as i64;
-                if idx > 0 {
-                    explicit_track_count as i64 + 1 + remaining_lines
-                } else {
-                    -(explicit_track_count as i64 + 1 + remaining_lines)
-                }
-            };
-            line.clamp(i16::MIN as i64, i16::MAX as i64) as i16
-        }
-
-        // Lookup lines
-        //
-        // A line generated by a grid area is included in the lines of its name if any line has been explicitly
-        // given the same name. Otherwise it is found from the area's edges.
-        let lines = match self.lines.get(name) {
-            Some(lines) => Some(lines.as_slice()),
-            None => split_area_edge_name(name)
-                .and_then(|(area_name, area_end)| self.area_line(area_name, area_end))
-                .map(core::slice::from_ref),
-        };
-        if let Some(lines) = lines {
-            return GridLine::from(get_line(filter_lines(lines), explicit_track_count, idx));
-        }
-
-        // A `<custom-ident>` on its own (with no integer and which is not a span) which does not match a line
-        // name matches the edge of the grid area with that name
-        if is_bare_ident {
-            if let Some(line) = self.area_line(name, end) {
-                return GridLine::from(get_line(core::slice::from_ref(line), explicit_track_count, idx));
+            if let Some(first_line) = self.area_line(name, end) {
+                return self.grid_line(*first_line as i64);
             }
         }
 
-        // The CSS Grid specification has a weird quirk where it matches non-existent line names
-        // to the first (positive) implicit line in the grid
-        //
-        // We add/subtract 2 to the explicit track count because (in each axis) a grid has one more explicit
-        // grid line than it has tracks. And the fallback line is the line *after* that.
-        //
-        // See: <https://github.com/w3c/csswg-drafts/issues/966#issuecomment-277042153>
-        let line = if idx > 0 {
-            explicit_track_count as i64 + 1 + idx as i64
+        let lines = self.lines_named(name);
+        let line = if idx >= 0 {
+            self.nth_line_forwards(lines, 1, (idx as i64).max(1))
         } else {
-            -(explicit_track_count as i64 + 1 + idx as i64)
+            self.nth_line_backwards(lines, self.last_explicit_line(), -(idx as i64))
         };
+        self.grid_line(line)
+    }
+
+    /// The sorted line numbers of the lines with the passed name
+    ///
+    /// A line generated by a grid area is included in the lines of its name if any line has been explicitly
+    /// given the same name. Otherwise it is found from the area's edges.
+    fn lines_named(&self, name: &str) -> &[u32] {
+        match self.lines.get(name) {
+            Some(lines) => lines.as_slice(),
+            None => split_area_edge_name(name)
+                .and_then(|(area_name, area_end)| self.area_line(area_name, area_end))
+                .map(core::slice::from_ref)
+                .unwrap_or(&[]),
+        }
+    }
+
+    /// The line number of the last line of the explicit grid
+    fn last_explicit_line(&self) -> i64 {
+        self.explicit_track_count as i64 + 1
+    }
+
+    /// Convert a `GridLine` into a line number where line 1 is the first line of the explicit grid
+    /// and lines before the explicit grid are numbered 0, -1, -2, etc.
+    fn line_number(&self, line: GridLine) -> i64 {
+        let line = line.as_i16() as i64;
+        if line > 0 {
+            line
+        } else {
+            self.last_explicit_line() + 1 + line
+        }
+    }
+
+    /// The inverse of `line_number`
+    fn grid_line(&self, line_number: i64) -> GridLine {
+        let line = if line_number > 0 { line_number } else { line_number - self.last_explicit_line() - 1 };
         GridLine::from(line.clamp(i16::MIN as i64, i16::MAX as i64) as i16)
+    }
+
+    /// Find the line number of the `n`th line in `lines` (searching forwards) that is not before `first_line`.
+    ///
+    /// If there are not enough such lines, then all implicit lines after the explicit grid are
+    /// assumed to be in `lines` for the purpose of counting
+    ///
+    /// <https://drafts.csswg.org/css-grid-2/#grid-placement-int>
+    fn nth_line_forwards(&self, lines: &[u32], first_line: i64, n: i64) -> i64 {
+        let first_line = first_line.max(1);
+        let lines = &lines[lines.partition_point(|line| (*line as i64) < first_line)..];
+        match lines.get(n as usize - 1) {
+            Some(line) => *line as i64,
+            None => first_line.max(self.last_explicit_line() + 1) + (n - lines.len() as i64) - 1,
+        }
+    }
+
+    /// Find the line number of the `n`th line in `lines` (searching backwards) that is not after `last_line`.
+    ///
+    /// If there are not enough such lines, then all implicit lines before the explicit grid are
+    /// assumed to be in `lines` for the purpose of counting
+    ///
+    /// <https://drafts.csswg.org/css-grid-2/#grid-placement-int>
+    fn nth_line_backwards(&self, lines: &[u32], last_line: i64, n: i64) -> i64 {
+        let last_line = last_line.min(self.last_explicit_line());
+        let lines = &lines[..lines.partition_point(|line| (*line as i64) <= last_line)];
+        match lines.len().checked_sub(n as usize) {
+            Some(index) => lines[index] as i64,
+            None => last_line.min(0) - (n - lines.len() as i64) + 1,
+        }
     }
 }
 
@@ -822,7 +830,7 @@ mod tests {
         );
         assert_eq!(
             resolved_start_line(&resolver, GridPlacement::NamedLine(DefaultCheapStr::from("missing"), i16::MIN)),
-            22_767
+            i16::MIN
         );
     }
 

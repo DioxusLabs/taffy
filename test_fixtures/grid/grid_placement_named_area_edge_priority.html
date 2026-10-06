@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    A bare custom-ident matches the -start/-end edge of a named area before a line with that exact name
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="display: grid; grid-template-columns: [a] 50px [a-start] 100px [a-end] 200px [a]; grid-template-rows: [a] 20px [a-start] 40px [a-end] 80px [a];">
+  <div style="grid-column: a; grid-row: a;"></div>
+  <div style="grid-column: 1 a / 2 a; grid-row: 1 a / 2 a;"></div>
+  <div style="grid-column: a / span a; grid-row: span a / a;"></div>
+</div>
+
+</body>
+</html>
