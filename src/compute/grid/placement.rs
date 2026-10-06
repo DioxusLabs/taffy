@@ -99,16 +99,16 @@ pub(super) fn place_grid_items<'a, S>(
         // With "sparse" packing, later items are placed past the items that this step has previously placed
         // *starting* in the same track. So an item is only recorded as auto-placed in the track that it starts in.
         let start_track_span = Line { start: secondary_span.start, end: secondary_span.start + 1 };
-        let spans_one_track = secondary_span == start_track_span;
+        let only_in_start_track = secondary_span == start_track_span;
         record_grid_placement(
             cell_occupancy_matrix,
             item,
             primary_axis,
             primary_span,
             secondary_span,
-            if spans_one_track { CellOccupancyState::AutoPlaced } else { CellOccupancyState::DefinitelyPlaced },
+            if only_in_start_track { CellOccupancyState::AutoPlaced } else { CellOccupancyState::DefinitelyPlaced },
         );
-        if !spans_one_track {
+        if !only_in_start_track {
             cell_occupancy_matrix.mark_area_as(
                 primary_axis,
                 clamp_span_to_limited_grid(primary_span),
