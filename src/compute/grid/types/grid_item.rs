@@ -704,7 +704,7 @@ impl GridItem {
             .get(axis)
             .or_else(|| {
                 self.min_size
-                    .maybe_resolve(grid_area_size, |val, basis| tree.calc(val, basis))
+                    .maybe_resolve(grid_area_size.map(|size| size.unwrap_or(0.0)), |val, basis| tree.calc(val, basis))
                     .maybe_apply_aspect_ratio(self.aspect_ratio)
                     .maybe_add(box_sizing_adjustment)
                     .get(axis)

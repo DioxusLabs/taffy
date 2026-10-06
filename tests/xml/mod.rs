@@ -31499,6 +31499,54 @@ mod grid {
 
     #[cfg(feature = "grid")]
     #[test]
+    fn grid_minimum_contribution_cyclic_percent_min_and_preferred_size__border_box_ltr() {
+        crate::run_xml_test("grid", "grid_minimum_contribution_cyclic_percent_min_and_preferred_size__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_minimum_contribution_cyclic_percent_min_and_preferred_size__content_box_ltr() {
+        crate::run_xml_test("grid", "grid_minimum_contribution_cyclic_percent_min_and_preferred_size__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_minimum_contribution_cyclic_percent_min_and_preferred_size__border_box_rtl() {
+        crate::run_xml_test("grid", "grid_minimum_contribution_cyclic_percent_min_and_preferred_size__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_minimum_contribution_cyclic_percent_min_and_preferred_size__content_box_rtl() {
+        crate::run_xml_test("grid", "grid_minimum_contribution_cyclic_percent_min_and_preferred_size__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_minimum_contribution_cyclic_percent_min_size__border_box_ltr() {
+        crate::run_xml_test("grid", "grid_minimum_contribution_cyclic_percent_min_size__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_minimum_contribution_cyclic_percent_min_size__content_box_ltr() {
+        crate::run_xml_test("grid", "grid_minimum_contribution_cyclic_percent_min_size__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_minimum_contribution_cyclic_percent_min_size__border_box_rtl() {
+        crate::run_xml_test("grid", "grid_minimum_contribution_cyclic_percent_min_size__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_minimum_contribution_cyclic_percent_min_size__content_box_rtl() {
+        crate::run_xml_test("grid", "grid_minimum_contribution_cyclic_percent_min_size__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
     fn grid_minmax_auto_fixed_0px_with_sized_item__border_box_ltr() {
         crate::run_xml_test("grid", "grid_minmax_auto_fixed_0px_with_sized_item__border_box_ltr");
     }
