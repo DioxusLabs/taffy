@@ -67,6 +67,8 @@ struct SharedTree<'t, NodeContext, MeasureFunction> {
     may_contain_floats: bool,
     /// The minimum total subtree size of a batch of jobs for the jobs to be computed in parallel
     min_batch_weight: u32,
+    /// Whether any node's child layouts could be computed in parallel
+    may_compute_in_parallel: bool,
     /// The pointers in `nodes` and `contexts` are derived from a mutable borrow of the tree
     marker: PhantomData<&'t mut TaffyTree<NodeContext>>,
 }
@@ -125,6 +127,10 @@ impl<'t, NodeContext, MeasureFunction> SharedTree<'t, NodeContext, MeasureFuncti
             .map(|(size, largest)| size.saturating_sub(1).saturating_sub(largest))
             .collect();
 
+        let min_batch_weight = config.parallel_min_batch_weight;
+        let may_compute_in_parallel = subtree_sizes[slot(root)] > min_batch_weight
+            && stealable_sizes.iter().any(|size| *size >= min_batch_weight / 2);
+
         #[cfg(not(debug_assertions))]
         let _ = parents;
 
@@ -143,7 +149,8 @@ impl<'t, NodeContext, MeasureFunction> SharedTree<'t, NodeContext, MeasureFuncti
             may_contain_floats: floated_node_count > 0,
             #[cfg(all(feature = "block_layout", not(feature = "float_layout")))]
             may_contain_floats: false,
-            min_batch_weight: config.parallel_min_batch_weight,
+            min_batch_weight,
+            may_compute_in_parallel,
             marker: PhantomData,
         }
     }
@@ -610,7 +617,8 @@ where
 
 impl<NodeContext: Send> TaffyTree<NodeContext> {
     /// Updates the stored layout of the provided `node` and its children, laying out sibling subtrees in parallel
-    /// on the current Rayon thread pool where they are large enough for that to be worthwhile.
+    /// on the current Rayon thread pool where they are large enough for that to be worthwhile. If it is called
+    /// from a thread that is not in a thread pool then the layout is computed on Rayon's global thread pool.
     ///
     /// The result is the same as that of [`compute_layout_with_measure`](Self::compute_layout_with_measure).
     ///
@@ -628,8 +636,18 @@ impl<NodeContext: Send> TaffyTree<NodeContext> {
         let use_rounding = self.config.use_rounding;
         {
             let shared = SharedTree::new(self, node_id, &measure_function);
-            let mut view = ParTaffyView::new(&shared, None);
-            compute_root_layout(&mut view, node_id, available_space);
+            let compute_layout = || {
+                let mut view = ParTaffyView::new(&shared, None);
+                compute_root_layout(&mut view, node_id, available_space);
+            };
+            // A batch that is started by a thread that is not in a thread pool is handed over to the pool while
+            // that thread sleeps, which costs far more than starting a batch from a thread of the pool. So the
+            // whole layout is run on the pool if any batch could be computed in parallel.
+            if shared.may_compute_in_parallel && rayon::current_thread_index().is_none() {
+                rayon::scope(|_| compute_layout());
+            } else {
+                compute_layout();
+            }
         }
         if use_rounding {
             let mut taffy_view = TaffyView { taffy: self, measure_function };
