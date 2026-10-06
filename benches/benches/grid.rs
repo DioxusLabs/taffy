@@ -59,6 +59,37 @@ fn build_grid_flat_hierarchy(col_count: usize, row_count: usize) -> (TaffyTree, 
     (taffy, root)
 }
 
+fn build_grid_alternating_spans(item_count: usize, flow: GridAutoFlow) -> (TaffyTree, NodeId) {
+    let mut taffy = TaffyTree::new();
+    let is_row = matches!(flow, GridAutoFlow::Row | GridAutoFlow::RowDense);
+    let children: Vec<_> = (0..item_count)
+        .map(|i| {
+            let locked_axis = if i % 2 == 0 { Line { start: line(1), end: span(2) } } else { line(2) };
+            let mut style = Style::default();
+            if is_row {
+                style.grid_row = locked_axis;
+            } else {
+                style.grid_column = locked_axis;
+            }
+            taffy.new_leaf(style).unwrap()
+        })
+        .collect();
+    let mut style = Style {
+        display: Display::Grid,
+        grid_auto_flow: flow,
+        grid_auto_columns: vec![length(1.0)],
+        grid_auto_rows: vec![length(1.0)],
+        ..Default::default()
+    };
+    if is_row {
+        style.grid_template_columns = vec![length(1.0); item_count];
+    } else {
+        style.grid_template_rows = vec![length(1.0); item_count];
+    }
+    let root = taffy.new_with_children(style, &children).unwrap();
+    (taffy, root)
+}
+
 /// A helper function to recursively construct a deep tree
 pub fn build_deep_grid_tree(
     tree: &mut TaffyTree,
@@ -102,6 +133,23 @@ fn build_taffy_deep_grid_hierarchy(levels: usize, track_count: usize) -> (TaffyT
 }
 
 fn taffy_benchmarks(c: &mut Criterion) {
+    let mut group = benchmark_group(c, "grid/alternating_spans");
+    for flow in [GridAutoFlow::Row, GridAutoFlow::RowDense, GridAutoFlow::Column, GridAutoFlow::ColumnDense] {
+        for item_count in [100, 1000] {
+            let mut tree = None;
+            group.bench_with_input(BenchmarkId::new(format!("{flow:?}"), item_count), &item_count, |b, &item_count| {
+                bench_layout(
+                    b,
+                    &mut tree,
+                    || TaffyLayoutTree::new(build_grid_alternating_spans(item_count, flow)),
+                    |tree| tree.mark_all_dirty(),
+                    |tree| tree.tree.compute_layout(tree.root, Size::MAX_CONTENT).unwrap(),
+                )
+            });
+        }
+    }
+    group.finish();
+
     let mut group = benchmark_group(c, "grid/wide");
     for track_count in [31usize, 100, 316].iter() {
         let mut tree = None;
