@@ -276,3 +276,45 @@ fn float_avoiding_auto_margins_in_nested_block_ignore_relative_insets_and_cleara
         assert_eq!(nested_layout.margin.right, 30.0);
     }
 }
+
+/// A block's cached `PerformLayout` result must not be reused after its subtree was last laid
+/// out (uncached, because floats were present in the BFC) with different inputs.
+#[test]
+fn stale_subtree_after_uncached_float_relayout() {
+    let mut taffy = new_test_tree();
+    let b = taffy
+        .new_leaf(Style {
+            display: Display::Block,
+            size: Size { width: auto(), height: length(10.0) },
+            ..Default::default()
+        })
+        .unwrap();
+    let a = taffy.new_with_children(Style { display: Display::Block, ..Default::default() }, &[b]).unwrap();
+    let float_style = |display| Style {
+        display,
+        float: Float::Left,
+        size: Size { width: length(50.0), height: length(50.0) },
+        ..Default::default()
+    };
+    let f = taffy.new_leaf(float_style(Display::None)).unwrap();
+    let root_style = |w: f32| Style {
+        display: Display::Block,
+        size: Size { width: length(w), height: auto() },
+        ..Default::default()
+    };
+    let root = taffy.new_with_children(root_style(1000.0), &[f, a]).unwrap();
+
+    taffy.compute_layout(root, Size::MAX_CONTENT).unwrap();
+    assert_eq!(taffy.layout(b).unwrap().size.width, 1000.0);
+
+    taffy.set_style(f, float_style(Display::Block)).unwrap();
+    taffy.set_style(root, root_style(800.0)).unwrap();
+    taffy.compute_layout(root, Size::MAX_CONTENT).unwrap();
+    assert_eq!(taffy.layout(b).unwrap().size.width, 800.0);
+
+    taffy.set_style(f, float_style(Display::None)).unwrap();
+    taffy.set_style(root, root_style(1000.0)).unwrap();
+    taffy.compute_layout(root, Size::MAX_CONTENT).unwrap();
+    assert_eq!(taffy.layout(a).unwrap().size.width, 1000.0);
+    assert_eq!(taffy.layout(b).unwrap().size.width, 1000.0);
+}

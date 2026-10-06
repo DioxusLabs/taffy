@@ -413,6 +413,8 @@ where
 
     if !had_floats && !has_floats {
         tree.cache_store(node, &inputs, computed_size_and_baselines.clone());
+    } else if inputs.run_mode == RunMode::PerformLayout {
+        tree.cache_clear(node);
     }
 
     debug_log!("RESULT", dbg:computed_size_and_baselines.size);
