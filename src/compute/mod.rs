@@ -386,14 +386,15 @@ where
         });
     };
 
+    // The node's layout only depends on its inputs if floats cannot affect it
     #[cfg(feature = "float_layout")]
-    let had_floats = block_ctx.has_floats();
+    let is_affected_by_floats = block_ctx.is_affected_by_floats();
     #[cfg(not(feature = "float_layout"))]
-    let had_floats = false;
+    let is_affected_by_floats = false;
 
     debug_push_node!(node);
 
-    if !had_floats {
+    if !is_affected_by_floats {
         if let Some(cached_size_and_baselines) = tree.cache_get(node, &inputs) {
             debug_log_node!(inputs);
             debug_log!("RESULT (CACHED)", dbg:cached_size_and_baselines.size);
@@ -404,14 +405,17 @@ where
 
     debug_log_node!(inputs);
 
+    #[cfg(feature = "float_layout")]
+    let outer_tracking_state = block_ctx.start_float_dependency_tracking();
+
     let computed_size_and_baselines = compute_uncached(tree, node, inputs, Some(&mut *block_ctx));
 
     #[cfg(feature = "float_layout")]
-    let has_floats = block_ctx.has_floats();
+    let is_independent_of_floats = block_ctx.finish_float_dependency_tracking(outer_tracking_state);
     #[cfg(not(feature = "float_layout"))]
-    let has_floats = false;
+    let is_independent_of_floats = true;
 
-    if !had_floats && !has_floats {
+    if !is_affected_by_floats && is_independent_of_floats {
         tree.cache_store(node, &inputs, computed_size_and_baselines.clone());
     } else if inputs.run_mode == RunMode::PerformLayout {
         tree.cache_clear(node);
