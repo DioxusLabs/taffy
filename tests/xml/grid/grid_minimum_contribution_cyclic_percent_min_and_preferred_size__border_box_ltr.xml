@@ -1,0 +1,17 @@
+<test name="grid_minimum_contribution_cyclic_percent_min_and_preferred_size__border_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" direction="ltr" position="absolute" width="50px" height="50px" grid-auto-flow="row" grid-template-rows="auto" grid-template-columns="auto" grid-auto-rows="auto" grid-auto-columns="auto">
+      <div display="grid" direction="ltr" position="relative" width="100%" height="100%" min-width="100%" min-height="100%">
+        <div direction="ltr" position="relative" width="100px" height="100px"/>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="50" height="50" resolved-rows="50px" resolved-columns="50px">
+      <node x="0" y="0" width="50" height="50" resolved-rows="100px" resolved-columns="100px">
+        <node x="0" y="0" width="100" height="100"/>
+      </node>
+    </node>
+  </expectations>
+</test>
