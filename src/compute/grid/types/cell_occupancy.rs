@@ -133,11 +133,6 @@ impl TrackIntervals {
         let interval = self.intervals.iter().rev().find(|interval| interval.overlaps(range))?;
         Some(interval.range.end - 1)
     }
-
-    /// The start line of the last (highest coordinate) cell with the specified state, if any
-    fn last_of_state(&self, state: CellOccupancyState) -> Option<i16> {
-        self.intervals.iter().rev().find(|interval| interval.state == state).map(|interval| interval.range.end - 1)
-    }
 }
 
 /// A dynamically sized matrix (2d grid) which tracks the occupancy of each grid cell during auto-placement.
@@ -354,25 +349,6 @@ impl CellOccupancyMatrix {
             AbsoluteAxis::Vertical => &self.rows,
         }
     }
-
-    /// Given an axis and a track index
-    /// Search backwards from the end of the track and find the last grid cell matching the specified state (if any)
-    /// Return the index of that cell or None.
-    pub fn last_of_type(
-        &self,
-        track_type: AbsoluteAxis,
-        start_at: OriginZeroLine,
-        kind: CellOccupancyState,
-    ) -> Option<OriginZeroLine> {
-        let track_counts = self.track_counts(track_type.other_axis());
-        let track_computed_index = track_counts.oz_line_to_next_track(start_at);
-        let track_lists = self.track_lists(track_type.other_axis());
-        if track_computed_index < 0 || track_computed_index >= track_lists.len() as i16 {
-            // Index out of bounds: no tracks to search
-            return None;
-        }
-        track_lists[track_computed_index as usize].last_of_state(kind).map(OriginZeroLine)
-    }
 }
 
 #[cfg(test)]
@@ -445,22 +421,11 @@ mod tests {
         }
 
         #[test]
-        fn last_of_state_ignores_other_states() {
-            let mut track = TrackIntervals::default();
-            track.paint(0..2, DefinitelyPlaced);
-            track.paint(2..4, AutoPlaced);
-            track.paint(6..8, AutoPlaced);
-            track.paint(8..9, DefinitelyPlaced);
-            assert_eq!(track.last_of_state(AutoPlaced), Some(7));
-            assert_eq!(track.last_of_state(DefinitelyPlaced), Some(8));
-        }
-
-        #[test]
         fn definitely_placed_overwrite_hides_auto_placed_cells() {
             let mut track = TrackIntervals::default();
             track.paint(0..4, CellOccupancyState::AutoPlaced);
             track.paint(2..4, CellOccupancyState::DefinitelyPlaced);
-            assert_eq!(track.last_of_state(CellOccupancyState::AutoPlaced), Some(1));
+            assert_eq!(track.intervals.as_slice(), &[interval(0..2, AutoPlaced), interval(2..4, DefinitelyPlaced)]);
         }
     }
 

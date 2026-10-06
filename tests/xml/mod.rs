@@ -23327,6 +23327,30 @@ mod grid {
 
     #[cfg(feature = "grid")]
     #[test]
+    fn grid_auto_placement_sparse_spanning_locked_items__border_box_ltr() {
+        crate::run_xml_test("grid", "grid_auto_placement_sparse_spanning_locked_items__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_auto_placement_sparse_spanning_locked_items__content_box_ltr() {
+        crate::run_xml_test("grid", "grid_auto_placement_sparse_spanning_locked_items__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_auto_placement_sparse_spanning_locked_items__border_box_rtl() {
+        crate::run_xml_test("grid", "grid_auto_placement_sparse_spanning_locked_items__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_auto_placement_sparse_spanning_locked_items__content_box_rtl() {
+        crate::run_xml_test("grid", "grid_auto_placement_sparse_spanning_locked_items__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
     fn grid_auto_rows__border_box_ltr() {
         crate::run_xml_test("grid", "grid_auto_rows__border_box_ltr");
     }
