@@ -263,11 +263,28 @@ impl CellOccupancyMatrix {
 
         let row_range = self.rows.oz_line_range_to_track_range(row_span);
         let col_range = self.columns.oz_line_range_to_track_range(column_span);
-        for row_index in row_range {
-            self.row_intervals[row_index as usize].paint(column_span.start.0..column_span.end.0, value);
+        let (primary_tracks, primary_range, secondary_tracks, secondary_range) = match primary_axis {
+            AbsoluteAxis::Horizontal => (&mut self.column_intervals, col_range, &mut self.row_intervals, row_range),
+            AbsoluteAxis::Vertical => (&mut self.row_intervals, row_range, &mut self.column_intervals, col_range),
+        };
+
+        // An auto-placed item is only marked as `AutoPlaced` in the first secondary axis track that it spans.
+        // "Sparse" packing places items past the last item that was auto-placed *starting* in the same track,
+        // which `last_of_type` finds by searching that track for `AutoPlaced` cells.
+        let other_tracks_value = match value {
+            CellOccupancyState::AutoPlaced => CellOccupancyState::DefinitelyPlaced,
+            _ => value,
+        };
+        let primary_cells = primary_span.start.0..primary_span.end.0;
+        for (i, track_index) in secondary_range.enumerate() {
+            let value = if i == 0 { value } else { other_tracks_value };
+            secondary_tracks[track_index as usize].paint(primary_cells.clone(), value);
         }
-        for column_index in col_range {
-            self.column_intervals[column_index as usize].paint(row_span.start.0..row_span.end.0, value);
+
+        // Only occupancy (not state) is ever read from the primary axis tracks, so each is painted as a single interval
+        let secondary_cells = secondary_span.start.0..secondary_span.end.0;
+        for track_index in primary_range {
+            primary_tracks[track_index as usize].paint(secondary_cells.clone(), value);
         }
     }
 
@@ -496,6 +513,21 @@ mod tests {
             assert!(matrix.row_is_occupied(0)); // OriginZero row -1
             assert!(matrix.row_is_occupied(1)); // OriginZero row 0
             assert!(!matrix.row_is_occupied(2)); // OriginZero row 1
+        }
+
+        #[test]
+        fn auto_placed_item_is_only_auto_placed_in_first_secondary_track() {
+            let mut matrix =
+                CellOccupancyMatrix::with_track_counts(TrackCounts::from_raw(0, 4, 0), TrackCounts::from_raw(0, 4, 0));
+            // Columns 1-2, rows 1-3
+            matrix.mark_area_as(Horizontal, line(1, 3), line(1, 4), AutoPlaced);
+
+            assert_eq!(matrix.last_of_type(Horizontal, OriginZeroLine(1), AutoPlaced), Some(OriginZeroLine(2)));
+            assert_eq!(matrix.last_of_type(Horizontal, OriginZeroLine(2), AutoPlaced), None);
+            assert_eq!(matrix.last_of_type(Horizontal, OriginZeroLine(3), AutoPlaced), None);
+
+            // The other tracks are still occupied
+            assert!(!matrix.line_area_is_unoccupied(Horizontal, line(1, 3), line(2, 4)));
         }
 
         #[test]

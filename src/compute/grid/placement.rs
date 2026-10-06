@@ -96,26 +96,14 @@ pub(super) fn place_grid_items<'a, S>(
         let (primary_span, secondary_span) =
             place_definite_secondary_axis_item(&*cell_occupancy_matrix, placement, grid_auto_flow);
 
-        // With "sparse" packing, later items are placed past the items that this step has previously placed
-        // *starting* in the same track. So an item is only recorded as auto-placed in the track that it starts in.
-        let start_track_span = Line { start: secondary_span.start, end: secondary_span.start + 1 };
-        let only_in_start_track = secondary_span == start_track_span;
         record_grid_placement(
             cell_occupancy_matrix,
             item,
             primary_axis,
             primary_span,
             secondary_span,
-            if only_in_start_track { CellOccupancyState::AutoPlaced } else { CellOccupancyState::DefinitelyPlaced },
+            CellOccupancyState::AutoPlaced,
         );
-        if !only_in_start_track {
-            cell_occupancy_matrix.mark_area_as(
-                primary_axis,
-                clamp_span_to_limited_grid(primary_span),
-                clamp_span_to_limited_grid(start_track_span),
-                CellOccupancyState::AutoPlaced,
-            );
-        }
     }
 
     // 3. Determine the number of columns in the implicit grid
