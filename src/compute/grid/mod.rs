@@ -236,7 +236,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     // Estimate the number of rows and columns in the implicit grid (= the entire grid)
     // This is necessary as part of placement. Doing it early here is a perf optimisation to reduce allocations.
     let (est_col_counts, est_row_counts) =
-        compute_grid_size_estimate(explicit_col_count, explicit_row_count, child_styles_iter);
+        compute_grid_size_estimate(explicit_col_count, explicit_row_count, child_styles_iter, &name_resolver);
 
     // 4. Grid Item Placement
     // Match items (children) to a definite grid position (row start/end and column start/end position)
