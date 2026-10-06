@@ -1366,6 +1366,12 @@ impl MinTrackSizingFunction {
         self.0.is_auto()
     }
 
+    /// Returns true if the value is `Auto`, or is a percentage and `parent_size` is `None`
+    #[inline(always)]
+    pub fn behaves_as_auto(&self, parent_size: Option<f32>) -> bool {
+        self.0.is_auto() || (parent_size.is_none() && self.0.uses_percentage())
+    }
+
     /// Returns true if value is MinContent
     #[inline(always)]
     pub fn is_min_content(&self) -> bool {
