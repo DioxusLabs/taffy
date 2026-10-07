@@ -180,11 +180,9 @@ impl LayoutInput {
 
     /// Swap the horizontal and vertical axes of every per-axis input.
     ///
-    /// Taffy's algorithms treat the horizontal axis as the inline axis and the vertical axis as
-    /// the block axis. A tree implementation that lays out a node whose inline axis is physically
-    /// vertical (a CSS vertical `writing-mode`) can transpose the inputs it receives from the
-    /// parent before running the node's algorithm, and transpose the resulting [`LayoutOutput`]
-    /// back. `vertical_margins_are_collapsible` is reset to `Line::FALSE`: margins cannot collapse
+    /// Lets a tree lay out a node in a vertical writing mode: transpose the inputs, run the
+    /// (horizontal-tb) algorithm, then transpose the [`LayoutOutput`] back.
+    /// `vertical_margins_are_collapsible` is reset to `Line::FALSE` as margins cannot collapse
     /// across a change of block axis.
     pub fn transpose(self) -> LayoutInput {
         LayoutInput {
@@ -549,12 +547,10 @@ impl LayoutOutput {
         Self::from_sizes_and_baselines(size, scrollable_overflow_rect, Baselines::NONE)
     }
 
-    /// Swap the horizontal and vertical axes of the output (the inverse of [`LayoutInput::transpose`]).
+    /// Swap the horizontal and vertical axes of the output (inverse of [`LayoutInput::transpose`]).
     ///
-    /// Baselines and collapsible margins are block-axis quantities of the algorithm that produced
-    /// the output; after transposition they would lie along the parent's inline axis, where they
-    /// have no meaning, so they are dropped (`Baselines::NONE`, `CollapsibleMarginSet::ZERO`,
-    /// `margins_can_collapse_through = false`). Out-of-flow candidates are unaffected.
+    /// Baselines and collapsible margins are block-axis quantities that have no meaning on the
+    /// parent's inline axis, so they are dropped. Out-of-flow candidates are unaffected.
     pub fn transpose(self) -> Self {
         Self {
             size: self.size.transpose(),
