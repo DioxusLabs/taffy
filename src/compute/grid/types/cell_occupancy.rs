@@ -272,19 +272,11 @@ impl CellOccupancyMatrix {
 
         let row_range = self.rows.oz_line_range_to_track_range(row_span);
         let col_range = self.columns.oz_line_range_to_track_range(column_span);
-        let (primary_tracks, primary_range, secondary_tracks, secondary_range) = match primary_axis {
-            AbsoluteAxis::Horizontal => (&mut self.column_intervals, col_range, &mut self.row_intervals, row_range),
-            AbsoluteAxis::Vertical => (&mut self.row_intervals, row_range, &mut self.column_intervals, col_range),
-        };
-
-        let primary_cells = primary_span.start.0..primary_span.end.0;
-        for track_index in secondary_range {
-            secondary_tracks[track_index as usize].paint(primary_cells.clone(), value);
+        for row_index in row_range {
+            self.row_intervals[row_index as usize].paint(column_span.start.0..column_span.end.0, value);
         }
-
-        let secondary_cells = secondary_span.start.0..secondary_span.end.0;
-        for track_index in primary_range {
-            primary_tracks[track_index as usize].paint(secondary_cells.clone(), value);
+        for column_index in col_range {
+            self.column_intervals[column_index as usize].paint(row_span.start.0..row_span.end.0, value);
         }
     }
 
