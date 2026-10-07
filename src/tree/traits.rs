@@ -182,6 +182,10 @@ pub trait LayoutPartialTree: TraversePartialTree {
     type CustomIdent: CheapCloneStr;
 
     /// Get core style
+    ///
+    /// Only called for the node being laid out, never for its children (those go through the
+    /// `get_*_child_style` methods), so it may be expressed in the node's own axes while child
+    /// styles are expressed in the axes of the node laying them out.
     fn get_core_container_style(&self, node_id: NodeId) -> Self::CoreContainerStyle<'_>;
 
     /// Resolve calc value
@@ -213,6 +217,8 @@ pub trait LayoutContainingBlock: LayoutPartialTree {
         Self: 'a;
 
     /// Get the style of an out-of-flow box being positioned by its containing block
+    ///
+    /// Interpreted in the containing block's axes (see [`LayoutPartialTree::get_core_container_style`]).
     fn get_oof_item_style(&self, node_id: NodeId) -> Self::OofItemStyle<'_>;
 
     /// Clear the list of out-of-flow (absolute/fixed) boxes whose containing block is `node_id`.
@@ -312,6 +318,8 @@ pub trait LayoutFlexboxContainer: LayoutPartialTree {
     fn get_flexbox_container_style(&self, node_id: NodeId) -> Self::FlexboxContainerStyle<'_>;
 
     /// Get the child's styles
+    ///
+    /// Interpreted in the container's axes (see [`LayoutPartialTree::get_core_container_style`]).
     fn get_flexbox_child_style(&self, child_node_id: NodeId) -> Self::FlexboxItemStyle<'_>;
 }
 
@@ -332,6 +340,8 @@ pub trait LayoutGridContainer: LayoutPartialTree {
     fn get_grid_container_style(&self, node_id: NodeId) -> Self::GridContainerStyle<'_>;
 
     /// Get the child's styles
+    ///
+    /// Interpreted in the container's axes (see [`LayoutPartialTree::get_core_container_style`]).
     fn get_grid_child_style(&self, child_node_id: NodeId) -> Self::GridItemStyle<'_>;
 
     /// Set the node's detailed grid information
@@ -359,6 +369,8 @@ pub trait LayoutBlockContainer: LayoutPartialTree {
     fn get_block_container_style(&self, node_id: NodeId) -> Self::BlockContainerStyle<'_>;
 
     /// Get the child's styles
+    ///
+    /// Interpreted in the container's axes (see [`LayoutPartialTree::get_core_container_style`]).
     fn get_block_child_style(&self, child_node_id: NodeId) -> Self::BlockItemStyle<'_>;
 
     /// Compute the specified node's size or full layout given the specified constraints

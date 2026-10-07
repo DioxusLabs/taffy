@@ -37,6 +37,12 @@ impl<T> Size<T> {
             AbsoluteAxis::Vertical => self.height,
         }
     }
+
+    /// Swap the width and height components
+    #[inline(always)]
+    pub fn transpose(self) -> Size<T> {
+        Size { width: self.height, height: self.width }
+    }
 }
 
 impl<T: Add> Rect<T> {
@@ -140,6 +146,12 @@ impl<U, T: Add<U>> Add<Rect<U>> for Rect<T> {
 }
 
 impl<T> Rect<T> {
+    /// Swap the horizontal and vertical sides (`left <-> top`, `right <-> bottom`)
+    #[inline(always)]
+    pub fn transpose(self) -> Rect<T> {
+        Rect { left: self.top, right: self.bottom, top: self.left, bottom: self.right }
+    }
+
     /// Applies the function `f` to all four sides of the rect
     ///
     /// When applied to the left and right sides, the width is used

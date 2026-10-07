@@ -88,6 +88,18 @@ pub enum RequestedAxis {
     Both,
 }
 
+impl RequestedAxis {
+    /// Swap the horizontal and vertical axes (`Both` is unchanged)
+    #[inline(always)]
+    pub fn transpose(self) -> RequestedAxis {
+        match self {
+            RequestedAxis::Horizontal => RequestedAxis::Vertical,
+            RequestedAxis::Vertical => RequestedAxis::Horizontal,
+            RequestedAxis::Both => RequestedAxis::Both,
+        }
+    }
+}
+
 impl From<AbsoluteAxis> for RequestedAxis {
     fn from(value: AbsoluteAxis) -> Self {
         match value {
@@ -165,6 +177,25 @@ impl LayoutInput {
         axis: RequestedAxis::Both,
         vertical_margins_are_collapsible: Line::FALSE,
     };
+
+    /// Swap the horizontal and vertical axes of every per-axis input.
+    ///
+    /// Lets a tree lay out a node in a vertical writing mode: transpose the inputs, run the
+    /// (horizontal-tb) algorithm, then transpose the [`LayoutOutput`] back.
+    /// `vertical_margins_are_collapsible` is reset to `Line::FALSE` as margins cannot collapse
+    /// across a change of block axis.
+    pub fn transpose(self) -> LayoutInput {
+        LayoutInput {
+            run_mode: self.run_mode,
+            sizing_mode: self.sizing_mode,
+            axis: self.axis.transpose(),
+            known_dimensions: self.known_dimensions.transpose(),
+            known_dimensions_are_definite: self.known_dimensions_are_definite.transpose(),
+            parent_size: self.parent_size.transpose(),
+            available_space: self.available_space.transpose(),
+            vertical_margins_are_collapsible: Line::FALSE,
+        }
+    }
 }
 
 /// The first and last baselines of a node in the horizontal axis (i.e. baselines for horizontal text,
@@ -514,6 +545,26 @@ impl LayoutOutput {
     /// Construct a `LayoutOutput` from just the container size and scrollable overflow rectangle
     pub fn from_sizes(size: Size<f32>, scrollable_overflow_rect: Rect<f32>) -> Self {
         Self::from_sizes_and_baselines(size, scrollable_overflow_rect, Baselines::NONE)
+    }
+
+    /// Swap the horizontal and vertical axes of the output (inverse of [`LayoutInput::transpose`]).
+    ///
+    /// Baselines and collapsible margins are block-axis quantities that have no meaning on the
+    /// parent's inline axis, so they are dropped. Out-of-flow candidates are unaffected.
+    pub fn transpose(self) -> Self {
+        Self {
+            size: self.size.transpose(),
+            #[cfg(feature = "content_size")]
+            scrollable_overflow_rect: self.scrollable_overflow_rect.transpose(),
+            baselines: Baselines::NONE,
+            top_margin: CollapsibleMarginSet::ZERO,
+            bottom_margin: CollapsibleMarginSet::ZERO,
+            margins_can_collapse_through: false,
+            oof_candidates: self.oof_candidates,
+            oof_positioning_area: self
+                .oof_positioning_area
+                .map(|area| OofPositioningArea { size: area.size.transpose(), offset: area.offset.transpose() }),
+        }
     }
 
     /// Construct a `LayoutOutput` from just the container's size.
