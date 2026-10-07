@@ -6,7 +6,7 @@ use crate::{
 };
 use core::{borrow::Borrow, cmp::Ordering, fmt::Debug};
 
-use super::{GridLine, MAX_GRID_TRACKS};
+use super::{GridLine, OriginZeroLine, MAX_GRID_TRACKS, MAX_OZ_LINE, MIN_OZ_LINE};
 use crate::geometry::AbsoluteAxis;
 use crate::sys::DefaultCheapStr;
 use crate::sys::{Map, Vec};
@@ -215,20 +215,20 @@ impl<S: CheapCloneStr> NamedLineResolverAxis<'_, S> {
         // <https://drafts.csswg.org/css-grid-2/#grid-span>
         match (&start_line_resolved, &end_line_resolved) {
             (GridPlacement::Line(start_line), GridPlacement::NamedSpan(name, idx)) if start_line.as_i16() != 0 => {
-                let after_start_line = self.line_number(*start_line) + 1;
+                let after_start_line = start_line.into_origin_zero_line(self.explicit_track_count) + 1;
                 let end_line =
-                    self.nth_line_forwards(self.lines_named(name.as_ref()), after_start_line, (*idx).max(1) as i64);
+                    self.nth_line_forwards(self.lines_named(name.as_ref()), after_start_line, (*idx).max(1) as i32);
                 Line {
                     start: NonNamedGridPlacement::Line(*start_line),
-                    end: NonNamedGridPlacement::Line(self.grid_line(end_line)),
+                    end: NonNamedGridPlacement::Line(end_line.into_grid_line(self.explicit_track_count)),
                 }
             }
             (GridPlacement::NamedSpan(name, idx), GridPlacement::Line(end_line)) if end_line.as_i16() != 0 => {
-                let before_end_line = self.line_number(*end_line) - 1;
+                let before_end_line = end_line.into_origin_zero_line(self.explicit_track_count) - 1;
                 let start_line =
-                    self.nth_line_backwards(self.lines_named(name.as_ref()), before_end_line, (*idx).max(1) as i64);
+                    self.nth_line_backwards(self.lines_named(name.as_ref()), before_end_line, (*idx).max(1) as i32);
                 Line {
-                    start: NonNamedGridPlacement::Line(self.grid_line(start_line)),
+                    start: NonNamedGridPlacement::Line(start_line.into_grid_line(self.explicit_track_count)),
                     end: NonNamedGridPlacement::Line(*end_line),
                 }
             }
@@ -263,17 +263,17 @@ impl<S: CheapCloneStr> NamedLineResolverAxis<'_, S> {
         // Otherwise it is treated as if the integer 1 had been specified along with it.
         if idx == 0 {
             if let Some(first_line) = self.area_line(name, end) {
-                return self.grid_line(*first_line as i64);
+                return clamp_oz_line(oz_line(*first_line)).into_grid_line(self.explicit_track_count);
             }
         }
 
         let lines = self.lines_named(name);
         let line = if idx >= 0 {
-            self.nth_line_forwards(lines, 1, (idx as i64).max(1))
+            self.nth_line_forwards(lines, OriginZeroLine(0), (idx as i32).max(1))
         } else {
-            self.nth_line_backwards(lines, self.last_explicit_line(), -(idx as i64))
+            self.nth_line_backwards(lines, self.last_explicit_line(), -(idx as i32))
         };
-        self.grid_line(line)
+        line.into_grid_line(self.explicit_track_count)
     }
 
     /// The sorted line numbers of the lines with the passed name
@@ -290,57 +290,53 @@ impl<S: CheapCloneStr> NamedLineResolverAxis<'_, S> {
         }
     }
 
-    /// The line number of the last line of the explicit grid
-    fn last_explicit_line(&self) -> i64 {
-        self.explicit_track_count as i64 + 1
+    /// The line at the end edge of the explicit grid
+    fn last_explicit_line(&self) -> OriginZeroLine {
+        OriginZeroLine(self.explicit_track_count as i16)
     }
 
-    /// Convert a `GridLine` into a line number where line 1 is the first line of the explicit grid
-    /// and lines before the explicit grid are numbered 0, -1, -2, etc.
-    fn line_number(&self, line: GridLine) -> i64 {
-        let line = line.as_i16() as i64;
-        if line > 0 {
-            line
-        } else {
-            self.last_explicit_line() + 1 + line
-        }
-    }
-
-    /// The inverse of `line_number`
-    fn grid_line(&self, line_number: i64) -> GridLine {
-        let line = if line_number > 0 { line_number } else { line_number - self.last_explicit_line() - 1 };
-        GridLine::from(line.clamp(i16::MIN as i64, i16::MAX as i64) as i16)
-    }
-
-    /// Find the line number of the `n`th line in `lines` (searching forwards) that is not before `first_line`.
+    /// Find the `n`th line in `lines` (searching forwards) that is not before `first_line`.
     ///
     /// If there are not enough such lines, then all implicit lines after the explicit grid are
     /// assumed to be in `lines` for the purpose of counting
     ///
     /// <https://drafts.csswg.org/css-grid-2/#grid-placement-int>
-    fn nth_line_forwards(&self, lines: &[u32], first_line: i64, n: i64) -> i64 {
-        let first_line = first_line.max(1);
-        let lines = &lines[lines.partition_point(|line| (*line as i64) < first_line)..];
-        match lines.get(n as usize - 1) {
-            Some(line) => *line as i64,
-            None => first_line.max(self.last_explicit_line() + 1) + (n - lines.len() as i64) - 1,
-        }
+    fn nth_line_forwards(&self, lines: &[u32], first_line: OriginZeroLine, n: i32) -> OriginZeroLine {
+        let first_line = first_line.0.max(0) as i32;
+        let lines = &lines[lines.partition_point(|line| oz_line(*line) < first_line)..];
+        let line = match lines.get(n as usize - 1) {
+            Some(line) => oz_line(*line),
+            None => first_line.max(self.last_explicit_line().0 as i32 + 1) + (n - lines.len() as i32) - 1,
+        };
+        clamp_oz_line(line)
     }
 
-    /// Find the line number of the `n`th line in `lines` (searching backwards) that is not after `last_line`.
+    /// Find the `n`th line in `lines` (searching backwards) that is not after `last_line`.
     ///
     /// If there are not enough such lines, then all implicit lines before the explicit grid are
     /// assumed to be in `lines` for the purpose of counting
     ///
     /// <https://drafts.csswg.org/css-grid-2/#grid-placement-int>
-    fn nth_line_backwards(&self, lines: &[u32], last_line: i64, n: i64) -> i64 {
-        let last_line = last_line.min(self.last_explicit_line());
-        let lines = &lines[..lines.partition_point(|line| (*line as i64) <= last_line)];
-        match lines.len().checked_sub(n as usize) {
-            Some(index) => lines[index] as i64,
-            None => last_line.min(0) - (n - lines.len() as i64) + 1,
-        }
+    fn nth_line_backwards(&self, lines: &[u32], last_line: OriginZeroLine, n: i32) -> OriginZeroLine {
+        let last_line = last_line.0.min(self.last_explicit_line().0) as i32;
+        let lines = &lines[..lines.partition_point(|line| oz_line(*line) <= last_line)];
+        let line = match lines.len().checked_sub(n as usize) {
+            Some(index) => oz_line(lines[index]),
+            None => last_line.min(-1) - (n - lines.len() as i32) + 1,
+        };
+        clamp_oz_line(line)
     }
+}
+
+/// The named line maps store lines as 1-based "CSS Grid Line" numbers (which are always within the
+/// explicit grid). Convert one to OriginZero coordinates.
+fn oz_line(line: u32) -> i32 {
+    line as i32 - 1
+}
+
+/// Clamp a computed OriginZero line into the limited grid `[-MAX_GRID_TRACKS, MAX_GRID_TRACKS]`
+fn clamp_oz_line(line: i32) -> OriginZeroLine {
+    OriginZeroLine(line.clamp(MIN_OZ_LINE as i32, MAX_OZ_LINE as i32) as i16)
 }
 
 impl<S: CheapCloneStr> NamedLineResolver<S> {
@@ -823,14 +819,15 @@ mod tests {
 
     #[test]
     fn extreme_missing_named_line_indices_do_not_overflow() {
+        // Lines are clamped to the limits of the grid, in the same way as `GridLine::into_origin_zero_line`
         let resolver = resolver(10_000);
         assert_eq!(
             resolved_start_line(&resolver, GridPlacement::NamedLine(DefaultCheapStr::from("missing"), i16::MAX)),
-            i16::MAX
+            OriginZeroLine(MAX_OZ_LINE).into_grid_line(10_000).as_i16()
         );
         assert_eq!(
             resolved_start_line(&resolver, GridPlacement::NamedLine(DefaultCheapStr::from("missing"), i16::MIN)),
-            i16::MIN
+            OriginZeroLine(MIN_OZ_LINE).into_grid_line(10_000).as_i16()
         );
     }
 
@@ -842,7 +839,7 @@ mod tests {
             end: GridPlacement::NamedSpan(DefaultCheapStr::from("missing"), u16::MAX),
         });
         match resolved.end {
-            GenericGridPlacement::Line(line) => assert_eq!(line.as_i16(), i16::MAX),
+            GenericGridPlacement::Line(line) => assert_eq!(line, OriginZeroLine(MAX_OZ_LINE).into_grid_line(10_000)),
             _ => panic!("expected a resolved line"),
         }
     }
@@ -866,7 +863,11 @@ mod tests {
         let resolver = NamedLineResolver::new(&style, 0, 0);
         assert_eq!(
             resolved_start_line(&resolver, GridPlacement::NamedLine(DefaultCheapStr::from("area-start"), 1)),
-            i16::MAX
+            OriginZeroLine(MAX_OZ_LINE).into_grid_line(0).as_i16()
+        );
+        assert_eq!(
+            resolved_start_line(&resolver, GridPlacement::NamedLine(DefaultCheapStr::from("area"), 0)),
+            OriginZeroLine(MAX_OZ_LINE).into_grid_line(0).as_i16()
         );
     }
 
