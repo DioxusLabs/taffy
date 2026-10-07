@@ -6,7 +6,7 @@ use crate::{
 };
 use core::{borrow::Borrow, cmp::Ordering, fmt::Debug};
 
-use super::{GridLine, OriginZeroLine, MAX_GRID_TRACKS, MAX_OZ_LINE, MIN_OZ_LINE};
+use super::{GridLine, OriginZeroLine, MAX_GRID_TRACKS};
 use crate::geometry::AbsoluteAxis;
 use crate::sys::DefaultCheapStr;
 use crate::sys::{Map, Vec};
@@ -263,7 +263,7 @@ impl<S: CheapCloneStr> NamedLineResolverAxis<'_, S> {
         // Otherwise it is treated as if the integer 1 had been specified along with it.
         if idx == 0 {
             if let Some(first_line) = self.area_line(name, end) {
-                return clamp_oz_line(oz_line(*first_line)).into_grid_line(self.explicit_track_count);
+                return OriginZeroLine::clamped(oz_line(*first_line)).into_grid_line(self.explicit_track_count);
             }
         }
 
@@ -308,7 +308,7 @@ impl<S: CheapCloneStr> NamedLineResolverAxis<'_, S> {
             Some(line) => oz_line(*line),
             None => first_line.max(self.last_explicit_line().0 as i32 + 1) + (n - lines.len() as i32) - 1,
         };
-        clamp_oz_line(line)
+        OriginZeroLine::clamped(line)
     }
 
     /// Find the `n`th line in `lines` (searching backwards) that is not after `last_line`.
@@ -324,7 +324,7 @@ impl<S: CheapCloneStr> NamedLineResolverAxis<'_, S> {
             Some(index) => oz_line(lines[index]),
             None => last_line.min(-1) - (n - lines.len() as i32) + 1,
         };
-        clamp_oz_line(line)
+        OriginZeroLine::clamped(line)
     }
 }
 
@@ -332,11 +332,6 @@ impl<S: CheapCloneStr> NamedLineResolverAxis<'_, S> {
 /// explicit grid). Convert one to OriginZero coordinates.
 fn oz_line(line: u32) -> i32 {
     line as i32 - 1
-}
-
-/// Clamp a computed OriginZero line into the limited grid `[-MAX_GRID_TRACKS, MAX_GRID_TRACKS]`
-fn clamp_oz_line(line: i32) -> OriginZeroLine {
-    OriginZeroLine(line.clamp(MIN_OZ_LINE as i32, MAX_OZ_LINE as i32) as i16)
 }
 
 impl<S: CheapCloneStr> NamedLineResolver<S> {
@@ -793,6 +788,7 @@ impl<S: CheapCloneStr> ExactSizeIterator for GridLineNamesIter<'_, S> {}
 
 #[cfg(test)]
 mod tests {
+    use super::super::{MAX_OZ_LINE, MIN_OZ_LINE};
     use super::*;
     use crate::style::GenericGridPlacement;
     use crate::sys::DefaultCheapStr;
