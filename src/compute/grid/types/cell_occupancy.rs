@@ -364,6 +364,18 @@ impl CellOccupancyMatrix {
         }
     }
 
+    /// The sparse placement cursor for items starting in the given secondary-axis track.
+    pub fn auto_placement_cursor(&self, track_type: AbsoluteAxis, start_at: OriginZeroLine) -> Option<OriginZeroLine> {
+        let track_counts = self.track_counts(track_type.other_axis());
+        let track_computed_index = track_counts.oz_line_to_next_track(start_at);
+        let track_lists = self.track_lists(track_type.other_axis());
+        if track_computed_index < 0 || track_computed_index >= track_lists.len() as i16 {
+            // Index out of bounds: no tracks to search
+            return None;
+        }
+        track_lists[track_computed_index as usize].auto_placement_cursor
+    }
+
     /// Advances the sparse placement cursor to at least `primary_end`.
     /// The secondary-axis track must already exist in the matrix.
     pub fn advance_auto_placement_cursor(
@@ -379,18 +391,6 @@ impl CellOccupancyMatrix {
         };
         let cursor = &mut tracks[track_index].auto_placement_cursor;
         *cursor = max(*cursor, Some(primary_end));
-    }
-
-    /// The sparse placement cursor for items starting in the given secondary-axis track.
-    pub fn auto_placement_cursor(&self, track_type: AbsoluteAxis, start_at: OriginZeroLine) -> Option<OriginZeroLine> {
-        let track_counts = self.track_counts(track_type.other_axis());
-        let track_computed_index = track_counts.oz_line_to_next_track(start_at);
-        let track_lists = self.track_lists(track_type.other_axis());
-        if track_computed_index < 0 || track_computed_index >= track_lists.len() as i16 {
-            // Index out of bounds: no tracks to search
-            return None;
-        }
-        track_lists[track_computed_index as usize].auto_placement_cursor
     }
 }
 
