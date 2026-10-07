@@ -263,6 +263,13 @@ impl CellOccupancyMatrix {
 
         self.expand_to_fit_range(row_span, column_span);
 
+        if value == CellOccupancyState::AutoPlaced
+            && primary_span.start < primary_span.end
+            && secondary_span.start < secondary_span.end
+        {
+            self.advance_auto_placement_cursor(primary_axis, secondary_span.start, primary_span.end);
+        }
+
         let row_range = self.rows.oz_line_range_to_track_range(row_span);
         let col_range = self.columns.oz_line_range_to_track_range(column_span);
         let (primary_tracks, primary_range, secondary_tracks, secondary_range) = match primary_axis {
@@ -271,10 +278,6 @@ impl CellOccupancyMatrix {
         };
 
         let primary_cells = primary_span.start.0..primary_span.end.0;
-        if value == CellOccupancyState::AutoPlaced && !primary_cells.is_empty() && !secondary_range.is_empty() {
-            let track = &mut secondary_tracks[secondary_range.start as usize];
-            track.auto_placement_cursor = max(track.auto_placement_cursor, Some(primary_span.end));
-        }
         for track_index in secondary_range {
             secondary_tracks[track_index as usize].paint(primary_cells.clone(), value);
         }
@@ -367,6 +370,23 @@ impl CellOccupancyMatrix {
             AbsoluteAxis::Horizontal => &self.columns,
             AbsoluteAxis::Vertical => &self.rows,
         }
+    }
+
+    /// Advances the sparse placement cursor to at least `primary_end`.
+    /// The secondary-axis track must already exist in the matrix.
+    pub fn advance_auto_placement_cursor(
+        &mut self,
+        primary_axis: AbsoluteAxis,
+        secondary_start: OriginZeroLine,
+        primary_end: OriginZeroLine,
+    ) {
+        let track_index = self.track_counts(primary_axis.other_axis()).oz_line_to_next_track(secondary_start) as usize;
+        let tracks = match primary_axis {
+            AbsoluteAxis::Horizontal => &mut self.row_intervals,
+            AbsoluteAxis::Vertical => &mut self.column_intervals,
+        };
+        let cursor = &mut tracks[track_index].auto_placement_cursor;
+        *cursor = max(*cursor, Some(primary_end));
     }
 
     /// The sparse placement cursor for items starting in the given secondary-axis track.
