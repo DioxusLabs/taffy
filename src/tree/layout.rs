@@ -88,6 +88,18 @@ pub enum RequestedAxis {
     Both,
 }
 
+impl RequestedAxis {
+    /// Swap the horizontal and vertical axes (`Both` is unchanged)
+    #[inline(always)]
+    pub fn transpose(self) -> RequestedAxis {
+        match self {
+            RequestedAxis::Horizontal => RequestedAxis::Vertical,
+            RequestedAxis::Vertical => RequestedAxis::Horizontal,
+            RequestedAxis::Both => RequestedAxis::Both,
+        }
+    }
+}
+
 impl From<AbsoluteAxis> for RequestedAxis {
     fn from(value: AbsoluteAxis) -> Self {
         match value {
@@ -165,6 +177,27 @@ impl LayoutInput {
         axis: RequestedAxis::Both,
         vertical_margins_are_collapsible: Line::FALSE,
     };
+
+    /// Swap the horizontal and vertical axes of every per-axis input.
+    ///
+    /// Taffy's algorithms treat the horizontal axis as the inline axis and the vertical axis as
+    /// the block axis. A tree implementation that lays out a node whose inline axis is physically
+    /// vertical (a CSS vertical `writing-mode`) can transpose the inputs it receives from the
+    /// parent before running the node's algorithm, and transpose the resulting [`LayoutOutput`]
+    /// back. `vertical_margins_are_collapsible` is reset to `Line::FALSE`: margins cannot collapse
+    /// across a change of block axis.
+    pub fn transpose(self) -> LayoutInput {
+        LayoutInput {
+            run_mode: self.run_mode,
+            sizing_mode: self.sizing_mode,
+            axis: self.axis.transpose(),
+            known_dimensions: self.known_dimensions.transpose(),
+            known_dimensions_are_definite: self.known_dimensions_are_definite.transpose(),
+            parent_size: self.parent_size.transpose(),
+            available_space: self.available_space.transpose(),
+            vertical_margins_are_collapsible: Line::FALSE,
+        }
+    }
 }
 
 /// The first and last baselines of a node in the horizontal axis (i.e. baselines for horizontal text,
@@ -514,6 +547,28 @@ impl LayoutOutput {
     /// Construct a `LayoutOutput` from just the container size and scrollable overflow rectangle
     pub fn from_sizes(size: Size<f32>, scrollable_overflow_rect: Rect<f32>) -> Self {
         Self::from_sizes_and_baselines(size, scrollable_overflow_rect, Baselines::NONE)
+    }
+
+    /// Swap the horizontal and vertical axes of the output (the inverse of [`LayoutInput::transpose`]).
+    ///
+    /// Baselines and collapsible margins are block-axis quantities of the algorithm that produced
+    /// the output; after transposition they would lie along the parent's inline axis, where they
+    /// have no meaning, so they are dropped (`Baselines::NONE`, `CollapsibleMarginSet::ZERO`,
+    /// `margins_can_collapse_through = false`). Out-of-flow candidates are unaffected.
+    pub fn transpose(self) -> Self {
+        Self {
+            size: self.size.transpose(),
+            #[cfg(feature = "content_size")]
+            scrollable_overflow_rect: self.scrollable_overflow_rect.transpose(),
+            baselines: Baselines::NONE,
+            top_margin: CollapsibleMarginSet::ZERO,
+            bottom_margin: CollapsibleMarginSet::ZERO,
+            margins_can_collapse_through: false,
+            oof_candidates: self.oof_candidates,
+            oof_positioning_area: self
+                .oof_positioning_area
+                .map(|area| OofPositioningArea { size: area.size.transpose(), offset: area.offset.transpose() }),
+        }
     }
 
     /// Construct a `LayoutOutput` from just the container's size.
