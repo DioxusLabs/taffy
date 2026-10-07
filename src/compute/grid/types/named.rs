@@ -100,8 +100,10 @@ pub(crate) type GridAreasMap<S> = Map<StrHasher<S>, AreaLines>;
 fn split_area_edge_name(name: &str) -> Option<(&str, GridAreaEnd)> {
     if let Some(area_name) = name.strip_suffix("-start") {
         Some((area_name, GridAreaEnd::Start))
+    } else if let Some(area_name) = name.strip_suffix("-end") {
+        Some((area_name, GridAreaEnd::End))
     } else {
-        name.strip_suffix("-end").map(|area_name| (area_name, GridAreaEnd::End))
+        None
     }
 }
 
