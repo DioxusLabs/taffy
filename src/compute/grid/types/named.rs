@@ -52,50 +52,40 @@ pub(crate) type LinePositions = SmallVec<[u32; 4]>;
 /// Map from a grid line name to its one-indexed line positions
 type NamedGridLinesMap<S> = Map<StrHasher<S>, LinePositions>;
 
-/// The one-indexed positions of the first line that starts and the first line that ends a named
-/// grid area in one axis. A value of 0 means that there is no such line.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
-struct AreaEdges {
-    /// The first line named `<area-name>-start` (explicitly or by `grid-template-areas`)
-    start: u32,
-    /// The first line named `<area-name>-end` (explicitly or by `grid-template-areas`)
-    end: u32,
-}
-
-impl AreaEdges {
-    /// The line for the passed edge of the area (if there is one)
-    fn get(&self, end: GridAreaEnd) -> Option<&u32> {
-        let line = match end {
-            GridAreaEnd::Start => &self.start,
-            GridAreaEnd::End => &self.end,
-        };
-        Some(line).filter(|line| **line != 0)
-    }
-}
-
-/// The lines of the edges of a named grid area in both axes
+/// The one-indexed positions of the first line that starts and the first line that ends a named grid area in
+/// each axis, i.e. the first line named `<area-name>-start`/`<area-name>-end` (explicitly or by
+/// `grid-template-areas`). A value of 0 means that there is no such line.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub(crate) struct AreaLines {
-    /// The row lines of the area's edges
-    rows: AreaEdges,
-    /// The column lines of the area's edges
-    columns: AreaEdges,
+    /// The first line that starts the area in the row axis
+    row_start: u32,
+    /// The first line that ends the area in the row axis
+    row_end: u32,
+    /// The first line that starts the area in the column axis
+    column_start: u32,
+    /// The first line that ends the area in the column axis
+    column_end: u32,
 }
 
 impl AreaLines {
-    /// The lines of the area's edges in the passed axis
-    fn edges(&self, axis: GridAreaAxis) -> &AreaEdges {
-        match axis {
-            GridAreaAxis::Row => &self.rows,
-            GridAreaAxis::Column => &self.columns,
-        }
+    /// The line for the passed edge of the area (if there is one)
+    fn line(&self, axis: GridAreaAxis, end: GridAreaEnd) -> Option<&u32> {
+        let line = match (axis, end) {
+            (GridAreaAxis::Row, GridAreaEnd::Start) => &self.row_start,
+            (GridAreaAxis::Row, GridAreaEnd::End) => &self.row_end,
+            (GridAreaAxis::Column, GridAreaEnd::Start) => &self.column_start,
+            (GridAreaAxis::Column, GridAreaEnd::End) => &self.column_end,
+        };
+        Some(line).filter(|line| **line != 0)
     }
 
-    /// The lines of the area's edges in the passed axis
-    fn edges_mut(&mut self, axis: GridAreaAxis) -> &mut AreaEdges {
-        match axis {
-            GridAreaAxis::Row => &mut self.rows,
-            GridAreaAxis::Column => &mut self.columns,
+    /// The line for the passed edge of the area (0 if there is none)
+    fn line_mut(&mut self, axis: GridAreaAxis, end: GridAreaEnd) -> &mut u32 {
+        match (axis, end) {
+            (GridAreaAxis::Row, GridAreaEnd::Start) => &mut self.row_start,
+            (GridAreaAxis::Row, GridAreaEnd::End) => &mut self.row_end,
+            (GridAreaAxis::Column, GridAreaEnd::Start) => &mut self.column_start,
+            (GridAreaAxis::Column, GridAreaEnd::End) => &mut self.column_end,
         }
     }
 }
@@ -175,11 +165,7 @@ fn upsert_line_name_map<S: CheapCloneStr>(
         if !areas.contains_key(area_name) {
             areas.insert(StrHasher(S::from(area_name)), AreaLines::default());
         }
-        let edges = areas.get_mut(area_name).unwrap().edges_mut(axis);
-        let edge = match end {
-            GridAreaEnd::Start => &mut edges.start,
-            GridAreaEnd::End => &mut edges.end,
-        };
+        let edge = areas.get_mut(area_name).unwrap().line_mut(axis, end);
         area_line = *edge;
         *edge = if *edge == 0 { value } else { (*edge).min(value) };
     }
@@ -195,9 +181,9 @@ fn upsert_line_name_map<S: CheapCloneStr>(
 }
 
 impl<S: CheapCloneStr> NamedLineResolverAxis<'_, S> {
-    /// The lines of the edges of the named grid area in this axis (if there is such an area)
-    fn area_edges(&self, area_name: &str) -> Option<&AreaEdges> {
-        self.areas.get(area_name).map(|area| area.edges(self.axis))
+    /// The line for the passed edge of the named grid area in this axis (if there is one)
+    fn area_line(&self, area_name: &str, end: GridAreaEnd) -> Option<&u32> {
+        self.areas.get(area_name)?.line(self.axis, end)
     }
 
     /// Resolve named lines and spans into numeric placements
@@ -316,7 +302,7 @@ impl<S: CheapCloneStr> NamedLineResolverAxis<'_, S> {
         let lines = match self.lines.get(name) {
             Some(lines) => Some(lines.as_slice()),
             None => split_area_edge_name(name)
-                .and_then(|(area_name, area_end)| self.area_edges(area_name)?.get(area_end))
+                .and_then(|(area_name, area_end)| self.area_line(area_name, area_end))
                 .map(core::slice::from_ref),
         };
         if let Some(lines) = lines {
@@ -326,7 +312,7 @@ impl<S: CheapCloneStr> NamedLineResolverAxis<'_, S> {
         // A `<custom-ident>` on its own (with no integer and which is not a span) which does not match a line
         // name matches the edge of the grid area with that name
         if is_bare_ident {
-            if let Some(line) = self.area_edges(name).and_then(|edges| edges.get(end)) {
+            if let Some(line) = self.area_line(name, end) {
                 return GridLine::from(get_line(core::slice::from_ref(line), explicit_track_count, idx));
             }
         }
@@ -369,8 +355,10 @@ impl<S: CheapCloneStr> NamedLineResolver<S> {
         if let Some(area_iter) = style.grid_template_areas() {
             for area in area_iter.into_iter() {
                 let lines = AreaLines {
-                    rows: AreaEdges { start: area.row_start as u32, end: area.row_end as u32 },
-                    columns: AreaEdges { start: area.column_start as u32, end: area.column_end as u32 },
+                    row_start: area.row_start as u32,
+                    row_end: area.row_end as u32,
+                    column_start: area.column_start as u32,
+                    column_end: area.column_end as u32,
                 };
                 areas.insert(StrHasher(area.name.clone()), lines);
             }
@@ -634,8 +622,8 @@ impl<S: CheapCloneStr> Debug for NamedLineResolver<S> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         writeln!(f, "Grid Areas (row-start / column-start / row-end / column-end):")?;
         for (name, area) in self.areas.iter() {
-            let (rows, columns) = (area.rows, area.columns);
-            writeln!(f, "{}: {} / {} / {} / {}", name.0.as_ref(), rows.start, columns.start, rows.end, columns.end)?;
+            let AreaLines { row_start, column_start, row_end, column_end } = area;
+            writeln!(f, "{}: {row_start} / {column_start} / {row_end} / {column_end}", name.0.as_ref())?;
         }
 
         writeln!(f, "Grid Rows:")?;
