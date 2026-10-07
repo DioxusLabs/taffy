@@ -970,4 +970,24 @@ mod tests {
         });
         assert_eq!(span.end, NonNamedGridPlacement::Line(GridLine::from(6)));
     }
+
+    #[test]
+    fn area_edge_is_the_first_line_with_the_edge_name() {
+        // Explicit lines named after the area's edges which come after the area's generated lines (lines 2 and
+        // 4) don't replace them
+        let resolver = area_resolver([&[], &[], &["area-start"], &[], &["area-end"]]);
+        assert_eq!(resolved_start_line(&resolver, named_line("area", 0)), 2);
+        assert_eq!(resolved_end_line(&resolver, named_line("area", 0)), 4);
+        assert_eq!(resolved_start_line(&resolver, named_line("area-start", 1)), 2);
+        assert_eq!(resolved_start_line(&resolver, named_line("area-start", 2)), 3);
+        assert_eq!(resolved_start_line(&resolver, named_line("area-end", 2)), 5);
+
+        // An explicit line with the same number as the generated line is the same line
+        let resolver = area_resolver([&[], &["area-start"], &[], &["area-end"], &[]]);
+        assert_eq!(resolved_start_line(&resolver, named_line("area", 0)), 2);
+        assert_eq!(resolved_end_line(&resolver, named_line("area", 0)), 4);
+        assert_eq!(resolved_start_line(&resolver, named_line("area-start", 1)), 2);
+        assert_eq!(resolved_start_line(&resolver, named_line("area-start", 2)), 6);
+        assert_eq!(resolved_start_line(&resolver, named_line("area-end", 2)), 6);
+    }
 }
