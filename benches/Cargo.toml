@@ -31,6 +31,7 @@ content_size = ["taffy/content_size"]
 strict_provenance = ["taffy/strict_provenance"]
 small = []
 large = []
+grid-alternating-spans = []
 
 # The library only contains helpers for the benchmarks. Disabling the default `libtest` bench harness for it
 # allows Criterion's CLI options to be passed straight through (e.g. `cargo bench -- --save-baseline main`).

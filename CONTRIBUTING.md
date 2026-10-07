@@ -82,3 +82,5 @@ To add a new test case add another HTML file to `/test_fixtures` following the c
 
 Benchmarks build on the same infrastructure as testing, and actually benchmarks are automatically generated from test fixtures just like tests.
 Run `just bench` to run benchmarks locally. To run head-to-head benchmarks with Yoga, run `just bench --features yoga`. You will need `libclang-dev` or the xcode commandline tools installed in order to run the yoga benchmarks.
+
+The alternating-span grid stress benchmarks are disabled by default. Enable them with `just bench --bench grid --features grid-alternating-spans`.

@@ -1,0 +1,27 @@
+<test name="grid_auto_placement_sparse_spanning_locked_items__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" box-sizing="content-box" direction="ltr" position="absolute" grid-auto-rows="20px" grid-auto-columns="50px">
+      <div box-sizing="content-box" direction="ltr" position="relative" grid-row-start="2" grid-column-start="1"/>
+      <div box-sizing="content-box" direction="ltr" position="relative" grid-row-start="3" grid-column-start="2"/>
+      <div box-sizing="content-box" direction="ltr" position="relative" grid-row-start="2" grid-row-end="span 2"/>
+      <div box-sizing="content-box" direction="ltr" position="relative" grid-row-start="1" grid-row-end="span 2"/>
+      <div box-sizing="content-box" direction="ltr" position="relative" grid-row-start="1"/>
+      <div box-sizing="content-box" direction="ltr" position="relative" grid-row-start="3"/>
+      <div box-sizing="content-box" direction="ltr" position="relative" grid-row-start="2"/>
+      <div box-sizing="content-box" direction="ltr" position="relative"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="200" height="60" resolved-rows="20px 20px 20px" resolved-columns="50px 50px 50px 50px">
+      <node x="0" y="20" width="50" height="20"/>
+      <node x="50" y="40" width="50" height="20"/>
+      <node x="100" y="20" width="50" height="40"/>
+      <node x="50" y="0" width="50" height="40"/>
+      <node x="100" y="0" width="50" height="20"/>
+      <node x="0" y="40" width="50" height="20"/>
+      <node x="150" y="20" width="50" height="20"/>
+      <node x="0" y="0" width="50" height="20"/>
+    </node>
+  </expectations>
+</test>

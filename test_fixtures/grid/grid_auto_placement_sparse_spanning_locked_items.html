@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    With sparse packing, items locked to a row (or column) are placed after items previously auto-placed with the same start line, ignoring items that span in from other tracks
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="display: grid; grid-auto-columns: 50px; grid-auto-rows: 20px;">
+  <div style="grid-row: 2; grid-column: 1;"></div>
+  <div style="grid-row: 3; grid-column: 2;"></div>
+  <div style="grid-row: 2 / span 2;"></div>
+  <div style="grid-row: 1 / span 2;"></div>
+  <div style="grid-row: 1;"></div>
+  <div style="grid-row: 3;"></div>
+  <div style="grid-row: 2;"></div>
+  <div></div>
+</div>
+
+</body>
+</html>
