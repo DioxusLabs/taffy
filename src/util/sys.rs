@@ -11,18 +11,6 @@ pub(crate) use self::alloc::*;
 /// For when `std` is enabled
 #[cfg(feature = "std")]
 mod std {
-    // // Re-exporting a macro_rules macro doesn't work properly, so we wrap
-    // // it in a trivial new macro that just forwards it's input to the underlying
-    // // std/alloc macro
-    // macro_rules! format {
-    //     ($($tokens:tt)*) => {
-    //         ::std::format!($($tokens)*)
-    //     };
-    // }
-    // pub(crate) use format;
-
-    pub(crate) use std::format;
-
     /// A string
     pub(crate) type String = std::string::String;
     /// The default type for representing strings in Taffy styles
@@ -96,18 +84,6 @@ mod std {
 #[cfg(not(feature = "std"))]
 mod alloc {
     extern crate alloc;
-
-    // // Re-exporting a macro_rules macro doesn't work properly, so we wrap
-    // // it in a trivial new macro that just forwards it's input to the underlying
-    // // std/alloc macro
-    // macro_rules! format {
-    //     ($($tokens:tt)*) => {
-    //         ::alloc::fmt::format!($($tokens)*)
-    //     };
-    // }
-    // pub(crate) use format;
-
-    pub(crate) use alloc::format;
 
     /// A string
     pub(crate) type String = alloc::string::String;

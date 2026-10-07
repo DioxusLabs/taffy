@@ -2,15 +2,14 @@
 
 use crate::{
     CheapCloneStr, GenericGridTemplateComponent, GenericRepetition as _, GridAreaAxis, GridAreaEnd, GridContainerStyle,
-    GridPlacement, GridTemplateArea, Line, NonNamedGridPlacement, RepetitionCount,
+    GridPlacement, Line, NonNamedGridPlacement, RepetitionCount,
 };
 use core::{borrow::Borrow, cmp::Ordering, fmt::Debug};
 
 use super::{GridLine, MAX_GRID_TRACKS};
 use crate::geometry::AbsoluteAxis;
 use crate::sys::DefaultCheapStr;
-// use alloc::fmt::format;
-use crate::sys::{format, Map, Vec};
+use crate::sys::{Map, Vec};
 use smallvec::{smallvec, SmallVec};
 
 /// Wrap an `AsRef<str>` type with a type which implements Hash by first
@@ -53,10 +52,69 @@ pub(crate) type LinePositions = SmallVec<[u32; 4]>;
 /// Map from a grid line name to its one-indexed line positions
 type NamedGridLinesMap<S> = Map<StrHasher<S>, LinePositions>;
 
+/// The one-indexed positions of the first line that starts and the first line that ends a named grid area in
+/// each axis, i.e. the first line named `<area-name>-start`/`<area-name>-end` (explicitly or by
+/// `grid-template-areas`). A value of 0 means that there is no such line.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub(crate) struct AreaLines {
+    /// The first line that starts the area in the row axis
+    row_start: u32,
+    /// The first line that ends the area in the row axis
+    row_end: u32,
+    /// The first line that starts the area in the column axis
+    column_start: u32,
+    /// The first line that ends the area in the column axis
+    column_end: u32,
+}
+
+impl AreaLines {
+    /// The line for the passed edge of the area (if there is one)
+    fn line(&self, axis: GridAreaAxis, end: GridAreaEnd) -> Option<&u32> {
+        let line = match (axis, end) {
+            (GridAreaAxis::Row, GridAreaEnd::Start) => &self.row_start,
+            (GridAreaAxis::Row, GridAreaEnd::End) => &self.row_end,
+            (GridAreaAxis::Column, GridAreaEnd::Start) => &self.column_start,
+            (GridAreaAxis::Column, GridAreaEnd::End) => &self.column_end,
+        };
+        Some(line).filter(|line| **line != 0)
+    }
+
+    /// The line for the passed edge of the area (0 if there is none)
+    fn line_mut(&mut self, axis: GridAreaAxis, end: GridAreaEnd) -> &mut u32 {
+        match (axis, end) {
+            (GridAreaAxis::Row, GridAreaEnd::Start) => &mut self.row_start,
+            (GridAreaAxis::Row, GridAreaEnd::End) => &mut self.row_end,
+            (GridAreaAxis::Column, GridAreaEnd::Start) => &mut self.column_start,
+            (GridAreaAxis::Column, GridAreaEnd::End) => &mut self.column_end,
+        }
+    }
+}
+
+/// Map from the name of a grid area to the lines of its edges.
+///
+/// This is how the `<area-name>-start` and `<area-name>-end` line names that `grid-template-areas` implicitly
+/// generates are represented: storing them as line names would require allocating a string for each of them.
+pub(crate) type GridAreasMap<S> = Map<StrHasher<S>, AreaLines>;
+
+/// Split a line name of the form `<area-name>-start` or `<area-name>-end` into the area name and the edge
+fn split_area_edge_name(name: &str) -> Option<(&str, GridAreaEnd)> {
+    if let Some(area_name) = name.strip_suffix("-start") {
+        Some((area_name, GridAreaEnd::Start))
+    } else if let Some(area_name) = name.strip_suffix("-end") {
+        Some((area_name, GridAreaEnd::End))
+    } else {
+        None
+    }
+}
+
 /// Resolver for named placements in one grid axis
 struct NamedLineResolverAxis<'a, S: CheapCloneStr> {
     /// Named lines and their one-indexed positions
     lines: &'a NamedGridLinesMap<S>,
+    /// The edges of named grid areas (in both axes)
+    areas: &'a GridAreasMap<S>,
+    /// The axis being resolved
+    axis: GridAreaAxis,
     /// Number of explicit tracks in this axis
     explicit_track_count: u16,
 }
@@ -70,8 +128,8 @@ pub(crate) struct NamedLineResolver<S: CheapCloneStr> {
     /// Map of column line names to line numbers. Each line name may correspond to multiple lines
     /// so we store a `SmallVec`
     column_lines: NamedGridLinesMap<S>,
-    /// Map of area names to area definitions (start and end lines numbers in each axis)
-    areas: Map<StrHasher<S>, GridTemplateArea<S>>,
+    /// Map of area names to the lines of the area's edges
+    areas: GridAreasMap<S>,
     /// Number of columns implied by grid area definitions
     area_column_count: u16,
     /// Number of rows implied by grid area definitions
@@ -91,17 +149,51 @@ pub(crate) struct NamedLineResolver<S: CheapCloneStr> {
 }
 
 /// Utility function to create or update an entry in a line name map
-fn upsert_line_name_map<S: CheapCloneStr>(map: &mut NamedGridLinesMap<S>, key: S, value: u32) {
-    map.entry(StrHasher(key)).and_modify(|lines| lines.push(value)).or_insert_with(|| smallvec![value]);
+///
+/// `areas` must already contain the edges of the areas defined by `grid-template-areas`
+fn upsert_line_name_map<S: CheapCloneStr>(
+    map: &mut NamedGridLinesMap<S>,
+    areas: &mut GridAreasMap<S>,
+    axis: GridAreaAxis,
+    key: S,
+    value: u32,
+) {
+    // A line named `foo-start` or `foo-end` is also an edge of the (implicitly) named area `foo`. Record it as such
+    // if it is the first such line. If `foo` is also an area defined by `grid-template-areas`, then the line which
+    // that area generated also has this name.
+    let mut area_line = 0;
+    if let Some((area_name, end)) = split_area_edge_name(key.as_ref()) {
+        // The key is only created if the area is not already in the map
+        if !areas.contains_key(area_name) {
+            areas.insert(StrHasher(S::from(area_name)), AreaLines::default());
+        }
+        let edge = areas.get_mut(area_name).unwrap().line_mut(axis, end);
+        area_line = *edge;
+        *edge = if *edge == 0 { value } else { (*edge).min(value) };
+    }
+
+    map.entry(StrHasher(key)).and_modify(|lines| lines.push(value)).or_insert_with(|| {
+        // Until this entry is created, the only line that can have been recorded for this edge is the area's own
+        if area_line == 0 {
+            smallvec![value]
+        } else {
+            smallvec![area_line, value]
+        }
+    });
 }
 
 impl<S: CheapCloneStr> NamedLineResolverAxis<'_, S> {
+    /// The line for the passed edge of the named grid area in this axis (if there is one)
+    fn area_line(&self, area_name: &str, end: GridAreaEnd) -> Option<&u32> {
+        self.areas.get(area_name)?.line(self.axis, end)
+    }
+
     /// Resolve named lines and spans into numeric placements
     fn resolve_line_names(&self, line: &Line<GridPlacement<S>>) -> Line<NonNamedGridPlacement> {
         let start_holder;
         let start_line_resolved = if let GridPlacement::NamedLine(name, idx) = &line.start {
             start_holder =
-                GridPlacement::Line(self.find_line_index(name, *idx as i32, GridAreaEnd::Start, &|lines| lines));
+                GridPlacement::Line(self.find_line_index(name, *idx as i32, GridAreaEnd::Start, false, &|lines| lines));
             &start_holder
         } else {
             &line.start
@@ -109,7 +201,8 @@ impl<S: CheapCloneStr> NamedLineResolverAxis<'_, S> {
 
         let end_holder;
         let end_line_resolved = if let GridPlacement::NamedLine(name, idx) = &line.end {
-            end_holder = GridPlacement::Line(self.find_line_index(name, *idx as i32, GridAreaEnd::End, &|lines| lines));
+            end_holder =
+                GridPlacement::Line(self.find_line_index(name, *idx as i32, GridAreaEnd::End, false, &|lines| lines));
             &end_holder
         } else {
             &line.end
@@ -129,7 +222,7 @@ impl<S: CheapCloneStr> NamedLineResolverAxis<'_, S> {
                 } else {
                     (self.explicit_track_count as i32 + 1 + start_line.as_i16() as i32).max(0) as u32
                 };
-                let end_line = self.find_line_index(name, *idx as i32, GridAreaEnd::End, &|lines| {
+                let end_line = self.find_line_index(name, *idx as i32, GridAreaEnd::End, true, &|lines| {
                     let point = lines.partition_point(|line| *line <= normalized_start_line);
                     &lines[point..]
                 });
@@ -141,7 +234,7 @@ impl<S: CheapCloneStr> NamedLineResolverAxis<'_, S> {
                 } else {
                     (self.explicit_track_count as i32 + 1 + end_line.as_i16() as i32).max(0) as u32
                 };
-                let start_line = self.find_line_index(name, *idx as i32, GridAreaEnd::Start, &|lines| {
+                let start_line = self.find_line_index(name, *idx as i32, GridAreaEnd::Start, true, &|lines| {
                     let point = lines.partition_point(|line| *line < normalized_end_line);
                     &lines[..point]
                 });
@@ -172,6 +265,7 @@ impl<S: CheapCloneStr> NamedLineResolverAxis<'_, S> {
         name: &S,
         idx: i32,
         end: GridAreaEnd,
+        is_span: bool,
         filter_lines: &dyn Fn(&[u32]) -> &[u32],
     ) -> GridLine {
         let name = name.as_ref();
@@ -179,6 +273,7 @@ impl<S: CheapCloneStr> NamedLineResolverAxis<'_, S> {
         let explicit_track_count = self.explicit_track_count as i32;
 
         // An index of 0 is used to represent "no index specified".
+        let is_bare_ident = idx == 0 && !is_span;
         if idx == 0 {
             idx = 1;
         }
@@ -203,17 +298,25 @@ impl<S: CheapCloneStr> NamedLineResolverAxis<'_, S> {
         }
 
         // Lookup lines
-        if let Some(lines) = self.lines.get(name) {
+        //
+        // A line generated by a grid area is included in the lines of its name if any line has been explicitly
+        // given the same name. Otherwise it is found from the area's edges.
+        let lines = match self.lines.get(name) {
+            Some(lines) => Some(lines.as_slice()),
+            None => split_area_edge_name(name)
+                .and_then(|(area_name, area_end)| self.area_line(area_name, area_end))
+                .map(core::slice::from_ref),
+        };
+        if let Some(lines) = lines {
             return GridLine::from(get_line(filter_lines(lines), explicit_track_count, idx));
         }
 
-        // TODO: eliminate string allocations
-        let implicit_name = match end {
-            GridAreaEnd::Start => format!("{name}-start"),
-            GridAreaEnd::End => format!("{name}-end"),
-        };
-        if let Some(lines) = self.lines.get(&*implicit_name) {
-            return GridLine::from(get_line(filter_lines(lines), explicit_track_count, idx));
+        // A `<custom-ident>` on its own (with no integer and which is not a span) which does not match a line
+        // name matches the edge of the grid area with that name
+        if is_bare_ident {
+            if let Some(line) = self.area_line(name, end) {
+                return GridLine::from(get_line(core::slice::from_ref(line), explicit_track_count, idx));
+            }
         }
 
         // The CSS Grid specification has a weird quirk where it matches non-existent line names
@@ -239,12 +342,29 @@ impl<S: CheapCloneStr> NamedLineResolver<S> {
         column_auto_repetitions: u16,
         row_auto_repetitions: u16,
     ) -> Self {
-        let mut areas: Map<StrHasher<S>, GridTemplateArea<_>> = Map::new();
         let mut column_lines: NamedGridLinesMap<S> = Map::new();
         let mut row_lines: NamedGridLinesMap<S> = Map::new();
+        let mut areas: GridAreasMap<S> = Map::new();
 
         let mut column_line_name_pairs: Vec<(u32, S)> = Vec::new();
         let mut row_line_name_pairs: Vec<(u32, S)> = Vec::new();
+
+        // The size of the area template may be larger than the extents of the named areas
+        // due to unnamed (`.`) cells, so it is taken from the style rather than being derived
+        // from the areas themselves.
+        let area_column_count = style.grid_template_area_column_count();
+        let area_row_count = style.grid_template_area_row_count();
+        if let Some(area_iter) = style.grid_template_areas() {
+            for area in area_iter.into_iter() {
+                let lines = AreaLines {
+                    row_start: area.row_start as u32,
+                    row_end: area.row_end as u32,
+                    column_start: area.column_start as u32,
+                    column_end: area.column_end as u32,
+                };
+                areas.insert(StrHasher(area.name.clone()), lines);
+            }
+        }
 
         let mut current_line = 0;
         if let Some(mut column_tracks) = style.grid_template_columns() {
@@ -253,7 +373,13 @@ impl<S: CheapCloneStr> NamedLineResolver<S> {
                     current_line += 1;
                     for line_name in line_names.into_iter() {
                         column_line_name_pairs.push((current_line, line_name.clone()));
-                        upsert_line_name_map(&mut column_lines, line_name.clone(), current_line);
+                        upsert_line_name_map(
+                            &mut column_lines,
+                            &mut areas,
+                            GridAreaAxis::Column,
+                            line_name.clone(),
+                            current_line,
+                        );
                     }
 
                     if let Some(GenericGridTemplateComponent::Repeat(repeat)) = column_tracks.next() {
@@ -280,7 +406,13 @@ impl<S: CheapCloneStr> NamedLineResolver<S> {
                             for (line, line_name_set) in (current_line..).zip(repeat.lines_names()) {
                                 for line_name in line_name_set {
                                     column_line_name_pairs.push((line, line_name.clone()));
-                                    upsert_line_name_map(&mut column_lines, line_name.clone(), line);
+                                    upsert_line_name_map(
+                                        &mut column_lines,
+                                        &mut areas,
+                                        GridAreaAxis::Column,
+                                        line_name.clone(),
+                                        line,
+                                    );
                                 }
                             }
                             current_line += lines_per_repetition;
@@ -307,7 +439,13 @@ impl<S: CheapCloneStr> NamedLineResolver<S> {
                     current_line += 1;
                     for line_name in line_names.into_iter() {
                         row_line_name_pairs.push((current_line, line_name.clone()));
-                        upsert_line_name_map(&mut row_lines, line_name.clone(), current_line);
+                        upsert_line_name_map(
+                            &mut row_lines,
+                            &mut areas,
+                            GridAreaAxis::Row,
+                            line_name.clone(),
+                            current_line,
+                        );
                     }
 
                     if let Some(GenericGridTemplateComponent::Repeat(repeat)) = row_tracks.next() {
@@ -334,7 +472,13 @@ impl<S: CheapCloneStr> NamedLineResolver<S> {
                             for (line, line_name_set) in (current_line..).zip(repeat.lines_names()) {
                                 for line_name in line_name_set {
                                     row_line_name_pairs.push((line, line_name.clone()));
-                                    upsert_line_name_map(&mut row_lines, line_name.clone(), line);
+                                    upsert_line_name_map(
+                                        &mut row_lines,
+                                        &mut areas,
+                                        GridAreaAxis::Row,
+                                        line_name.clone(),
+                                        line,
+                                    );
                                 }
                             }
                             current_line += lines_per_repetition;
@@ -353,27 +497,6 @@ impl<S: CheapCloneStr> NamedLineResolver<S> {
                 }
             }
         }
-        // The size of the area template may be larger than the extents of the named areas
-        // due to unnamed (`.`) cells, so it is taken from the style rather than being derived
-        // from the areas themselves.
-        let area_column_count = style.grid_template_area_column_count();
-        let area_row_count = style.grid_template_area_row_count();
-        if let Some(area_iter) = style.grid_template_areas() {
-            for area in area_iter.into_iter() {
-                // TODO: Investigate eliminating clones
-                areas.insert(StrHasher(area.name.clone()), area.clone());
-
-                let col_start_name = S::from(format!("{}-start", area.name.as_ref()));
-                upsert_line_name_map(&mut column_lines, col_start_name, area.column_start as u32);
-                let col_end_name = S::from(format!("{}-end", area.name.as_ref()));
-                upsert_line_name_map(&mut column_lines, col_end_name, area.column_end as u32);
-                let row_start_name = S::from(format!("{}-start", area.name.as_ref()));
-                upsert_line_name_map(&mut row_lines, row_start_name, area.row_start as u32);
-                let row_end_name = S::from(format!("{}-end", area.name.as_ref()));
-                upsert_line_name_map(&mut row_lines, row_end_name, area.row_end as u32);
-            }
-        }
-
         // Sort and dedup lines for each column name
         for lines in column_lines.values_mut() {
             lines.sort_unstable();
@@ -390,9 +513,9 @@ impl<S: CheapCloneStr> NamedLineResolver<S> {
             area_row_count,
             explicit_column_count: 0, // Overwritten later
             explicit_row_count: 0,    // Overwritten later
-            areas,
             row_lines,
             column_lines,
+            areas,
             column_line_name_pairs,
             row_line_name_pairs,
         }
@@ -457,21 +580,23 @@ impl<S: CheapCloneStr> NamedLineResolver<S> {
         line: &Line<GridPlacement<S>>,
         axis: GridAreaAxis,
     ) -> Line<NonNamedGridPlacement> {
-        match axis {
-            GridAreaAxis::Row => {
-                NamedLineResolverAxis { lines: &self.row_lines, explicit_track_count: self.explicit_row_count }
-            }
-            GridAreaAxis::Column => {
-                NamedLineResolverAxis { lines: &self.column_lines, explicit_track_count: self.explicit_column_count }
-            }
-        }
-        .resolve_line_names(line)
+        let (lines, explicit_track_count) = match axis {
+            GridAreaAxis::Row => (&self.row_lines, self.explicit_row_count),
+            GridAreaAxis::Column => (&self.column_lines, self.explicit_column_count),
+        };
+        NamedLineResolverAxis { lines, areas: &self.areas, axis, explicit_track_count }.resolve_line_names(line)
     }
 
-    /// Move the row and column line-name maps into the detailed grid information
-    pub(crate) fn populate_detailed_line_resolvers(self, rows: &mut GridLineNames<S>, columns: &mut GridLineNames<S>) {
+    /// Move the row and column line-name maps into the detailed grid information, and return the grid area map
+    /// for the same purpose
+    pub(crate) fn populate_detailed_line_resolvers(
+        self,
+        rows: &mut GridLineNames<S>,
+        columns: &mut GridLineNames<S>,
+    ) -> GridAreasMap<S> {
         rows.resolver = self.row_lines;
         columns.resolver = self.column_lines;
+        self.areas
     }
 
     /// Get the number of columns defined by the grid areas
@@ -497,17 +622,10 @@ impl<S: CheapCloneStr> NamedLineResolver<S> {
 
 impl<S: CheapCloneStr> Debug for NamedLineResolver<S> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        writeln!(f, "Grid Areas:")?;
-        for area in self.areas.values() {
-            writeln!(
-                f,
-                "{}: row:{}/{} col: {}/{}",
-                area.name.as_ref(),
-                area.row_start,
-                area.row_end,
-                area.column_start,
-                area.column_end
-            )?;
+        writeln!(f, "Grid Areas (row-start / column-start / row-end / column-end):")?;
+        for (name, area) in self.areas.iter() {
+            let AreaLines { row_start, column_start, row_end, column_end } = area;
+            writeln!(f, "{}: {row_start} / {column_start} / {row_end} / {column_end}", name.0.as_ref())?;
         }
 
         writeln!(f, "Grid Rows:")?;
@@ -578,13 +696,15 @@ impl<S: CheapCloneStr> GridLineNames<S> {
         self.line(self.line_count().wrapping_sub(1)).iter().any(|n| n.as_ref() == name)
     }
 
-    /// Resolve named lines and spans using the retained line-name map
+    /// Resolve named lines and spans using the retained line-name map and the passed grid area map
     pub(crate) fn resolve_line_names(
         &self,
         line: &Line<GridPlacement<S>>,
+        areas: &GridAreasMap<S>,
+        axis: GridAreaAxis,
         explicit_track_count: u16,
     ) -> Line<NonNamedGridPlacement> {
-        NamedLineResolverAxis { lines: &self.resolver, explicit_track_count }.resolve_line_names(line)
+        NamedLineResolverAxis { lines: &self.resolver, areas, axis, explicit_track_count }.resolve_line_names(line)
     }
 
     /// Whether the axis has any named lines at all
@@ -674,6 +794,7 @@ mod tests {
     use crate::sys::DefaultCheapStr;
     use crate::GridTemplateAreas;
     use crate::Style;
+    use crate::{GridTemplateArea, NonNamedGridPlacement};
 
     fn resolver(explicit_track_count: u16) -> NamedLineResolver<DefaultCheapStr> {
         let mut resolver = NamedLineResolver::new(&Style::DEFAULT, 0, 0);
@@ -739,5 +860,134 @@ mod tests {
             resolved_start_line(&resolver, GridPlacement::NamedLine(DefaultCheapStr::from("area-start"), 1)),
             i16::MAX
         );
+    }
+
+    /// A resolver for a grid with 4 explicit columns, the passed names for each of the 5 column lines, and a
+    /// single grid area named "area" which spans columns 2 and 3 (lines 2 to 4)
+    fn area_resolver(column_line_names: [&[&str]; 5]) -> NamedLineResolver<DefaultCheapStr> {
+        let style = Style {
+            grid_template_column_names: column_line_names
+                .iter()
+                .map(|names| names.iter().map(|name| DefaultCheapStr::from(*name)).collect())
+                .collect(),
+            grid_template_areas: Some(GridTemplateAreas {
+                areas: vec![GridTemplateArea {
+                    name: DefaultCheapStr::from("area"),
+                    row_start: 1,
+                    row_end: 2,
+                    column_start: 2,
+                    column_end: 4,
+                }],
+                row_count: 1,
+                column_count: 4,
+            }),
+            ..Style::DEFAULT
+        };
+        let mut resolver = NamedLineResolver::new(&style, 0, 0);
+        resolver.set_explicit_column_count(4);
+        resolver.set_explicit_row_count(1);
+        resolver
+    }
+
+    fn named_line(name: &str, index: i16) -> GridPlacement<DefaultCheapStr> {
+        GridPlacement::NamedLine(DefaultCheapStr::from(name), index)
+    }
+
+    fn resolved_end_line(
+        resolver: &NamedLineResolver<DefaultCheapStr>,
+        placement: GridPlacement<DefaultCheapStr>,
+    ) -> i16 {
+        let resolved = resolver.resolve_column_names(&Line { start: GridPlacement::Auto, end: placement });
+        match resolved.end {
+            GenericGridPlacement::Line(line) => line.as_i16(),
+            _ => panic!("expected a resolved line"),
+        }
+    }
+
+    #[test]
+    fn bare_ident_resolves_to_area_edge() {
+        let resolver = area_resolver([&[], &[], &[], &[], &[]]);
+        assert_eq!(resolved_start_line(&resolver, named_line("area", 0)), 2);
+        assert_eq!(resolved_end_line(&resolver, named_line("area", 0)), 4);
+
+        let rows = resolver.resolve_row_names(&Line { start: named_line("area", 0), end: named_line("area", 0) });
+        assert_eq!(rows.start, NonNamedGridPlacement::Line(GridLine::from(1)));
+        assert_eq!(rows.end, NonNamedGridPlacement::Line(GridLine::from(2)));
+    }
+
+    #[test]
+    fn bare_ident_resolves_to_edge_of_implicitly_named_area() {
+        let resolver = area_resolver([&[], &["foo-start"], &["foo-start"], &["foo-end"], &["foo-end"]]);
+        assert_eq!(resolved_start_line(&resolver, named_line("foo", 0)), 2);
+        assert_eq!(resolved_end_line(&resolver, named_line("foo", 0)), 4);
+    }
+
+    #[test]
+    fn area_edges_are_lines_named_with_start_and_end_suffixes() {
+        let resolver = area_resolver([&[], &[], &[], &[], &[]]);
+        assert_eq!(resolved_start_line(&resolver, named_line("area-start", 0)), 2);
+        assert_eq!(resolved_start_line(&resolver, named_line("area-start", 1)), 2);
+        assert_eq!(resolved_start_line(&resolver, named_line("area-end", 1)), 4);
+        assert_eq!(resolved_start_line(&resolver, named_line("area-end", -1)), 4);
+        // There is only one such line, so the second is the first implicit line after the grid
+        assert_eq!(resolved_start_line(&resolver, named_line("area-start", 2)), 6);
+    }
+
+    #[test]
+    fn area_edges_are_merged_with_explicitly_named_lines() {
+        // The area's start edge is line 2 and its end edge is line 4
+        let resolver = area_resolver([&["area-start"], &[], &["area-start"], &["area-end"], &["area-end"]]);
+        assert_eq!(resolved_start_line(&resolver, named_line("area-start", 1)), 1);
+        assert_eq!(resolved_start_line(&resolver, named_line("area-start", 2)), 2);
+        assert_eq!(resolved_start_line(&resolver, named_line("area-start", 3)), 3);
+        assert_eq!(resolved_start_line(&resolver, named_line("area-start", -1)), 3);
+        assert_eq!(resolved_start_line(&resolver, named_line("area-start", 4)), 6);
+        // The area's end edge has the same line number as an explicitly named line
+        assert_eq!(resolved_start_line(&resolver, named_line("area-end", 1)), 4);
+        assert_eq!(resolved_start_line(&resolver, named_line("area-end", 2)), 5);
+        assert_eq!(resolved_start_line(&resolver, named_line("area-end", 3)), 6);
+        // A bare ident matches the first line of the edge
+        assert_eq!(resolved_start_line(&resolver, named_line("area", 0)), 1);
+        assert_eq!(resolved_end_line(&resolver, named_line("area", 0)), 4);
+
+        let span = resolver.resolve_column_names(&Line {
+            start: GridPlacement::Line(GridLine::from(1)),
+            end: GridPlacement::NamedSpan(DefaultCheapStr::from("area-start"), 2),
+        });
+        assert_eq!(span.end, NonNamedGridPlacement::Line(GridLine::from(3)));
+    }
+
+    #[test]
+    fn area_edges_are_only_matched_by_bare_idents() {
+        let resolver = area_resolver([&[], &[], &[], &[], &[]]);
+        // There are no lines named "area", so these resolve to implicit lines after the grid
+        assert_eq!(resolved_start_line(&resolver, named_line("area", 1)), 6);
+        assert_eq!(resolved_start_line(&resolver, named_line("area", 2)), 7);
+
+        let span = resolver.resolve_column_names(&Line {
+            start: GridPlacement::Line(GridLine::from(1)),
+            end: GridPlacement::NamedSpan(DefaultCheapStr::from("area"), 0),
+        });
+        assert_eq!(span.end, NonNamedGridPlacement::Line(GridLine::from(6)));
+    }
+
+    #[test]
+    fn area_edge_is_the_first_line_with_the_edge_name() {
+        // Explicit lines named after the area's edges which come after the area's generated lines (lines 2 and
+        // 4) don't replace them
+        let resolver = area_resolver([&[], &[], &["area-start"], &[], &["area-end"]]);
+        assert_eq!(resolved_start_line(&resolver, named_line("area", 0)), 2);
+        assert_eq!(resolved_end_line(&resolver, named_line("area", 0)), 4);
+        assert_eq!(resolved_start_line(&resolver, named_line("area-start", 1)), 2);
+        assert_eq!(resolved_start_line(&resolver, named_line("area-start", 2)), 3);
+        assert_eq!(resolved_start_line(&resolver, named_line("area-end", 2)), 5);
+
+        // An explicit line with the same number as the generated line is the same line
+        let resolver = area_resolver([&[], &["area-start"], &[], &["area-end"], &[]]);
+        assert_eq!(resolved_start_line(&resolver, named_line("area", 0)), 2);
+        assert_eq!(resolved_end_line(&resolver, named_line("area", 0)), 4);
+        assert_eq!(resolved_start_line(&resolver, named_line("area-start", 1)), 2);
+        assert_eq!(resolved_start_line(&resolver, named_line("area-start", 2)), 6);
+        assert_eq!(resolved_start_line(&resolver, named_line("area-end", 2)), 6);
     }
 }

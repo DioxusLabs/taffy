@@ -22,10 +22,10 @@ use placement::place_grid_items;
 use track_sizing::{
     determine_if_item_crosses_flexible_or_intrinsic_tracks, resolve_item_track_indexes, track_sizing_algorithm,
 };
-use types::{CellOccupancyMatrix, GridTrack, NamedLineResolver};
+use types::{CellOccupancyMatrix, GridAreasMap, GridTrack, NamedLineResolver};
 
 use crate::sys::{DefaultCheapStr, String};
-use crate::{CheapCloneStr, GridPlacement};
+use crate::{CheapCloneStr, GridAreaAxis, GridPlacement};
 use types::{GridItem, GridTrackKind, TrackCounts};
 
 pub(crate) use types::{GridCoordinate, GridLine, OriginZeroLine, MAX_GRID_TRACKS, MAX_OZ_LINE, MIN_OZ_LINE};
@@ -745,7 +745,8 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     let absolute_position_offset = Point { x: absolute_position_inset.left, y: absolute_position_inset.top };
     // Store the detailed grid info before the out-of-flow positioning pass so that the pass can
     // resolve the grid areas of out-of-flow boxes whose containing block is this grid
-    name_resolver.populate_detailed_line_resolvers(&mut detailed_row_line_names, &mut detailed_column_line_names);
+    let areas =
+        name_resolver.populate_detailed_line_resolvers(&mut detailed_row_line_names, &mut detailed_column_line_names);
     tree.set_detailed_grid_info(
         node,
         DetailedGridInfo {
@@ -760,6 +761,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
                 detailed_column_line_names,
             ),
             items: items.iter().map(DetailedGridItemsInfo::from_grid_item).collect(),
+            areas,
         },
     );
 
@@ -953,6 +955,8 @@ pub struct DetailedGridInfo<S: CheapCloneStr = DefaultCheapStr> {
     pub columns: DetailedGridTracksInfo<S>,
     /// <https://drafts.csswg.org/css-grid-1/#grid-items>
     pub items: Vec<DetailedGridItemsInfo>,
+    /// Grid area edge lookup used to resolve the grid placements of absolutely positioned children
+    areas: GridAreasMap<S>,
 }
 
 impl<S: CheapCloneStr> DetailedGridTracksInfo<S> {
@@ -960,6 +964,8 @@ impl<S: CheapCloneStr> DetailedGridTracksInfo<S> {
     fn resolve_absolute_grid_axis(
         &self,
         placement: Line<GridPlacement<S>>,
+        areas: &GridAreasMap<S>,
+        axis: GridAreaAxis,
         padding_start: f32,
         padding_end: f32,
         is_reversed: bool,
@@ -978,7 +984,7 @@ impl<S: CheapCloneStr> DetailedGridTracksInfo<S> {
         // 2-column grid resolves to the area between line 3 and the end padding edge.
         let placement = self
             .line_names
-            .resolve_line_names(&placement, self.explicit_tracks)
+            .resolve_line_names(&placement, areas, axis, self.explicit_tracks)
             .into_origin_zero(self.explicit_tracks)
             .resolve_absolutely_positioned_grid_tracks()
             .map(|line| line.filter(|line| line.0 >= min_line && line.0 <= max_line))
@@ -1046,11 +1052,20 @@ impl<S: CheapCloneStr> DetailedGridInfo<S> {
     ) -> Rect<f32> {
         let columns = self.columns.resolve_absolute_grid_axis(
             grid_column,
+            &self.areas,
+            GridAreaAxis::Column,
             padding_box.left,
             padding_box.right,
             direction.is_rtl(),
         );
-        let rows = self.rows.resolve_absolute_grid_axis(grid_row, padding_box.top, padding_box.bottom, false);
+        let rows = self.rows.resolve_absolute_grid_axis(
+            grid_row,
+            &self.areas,
+            GridAreaAxis::Row,
+            padding_box.top,
+            padding_box.bottom,
+            false,
+        );
         Rect { left: columns.start, right: columns.end, top: rows.start, bottom: rows.end }
     }
 
