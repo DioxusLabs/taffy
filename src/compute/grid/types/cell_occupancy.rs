@@ -263,20 +263,15 @@ impl CellOccupancyMatrix {
 
         self.expand_to_fit_range(row_span, column_span);
 
-        let row_range = self.rows.oz_line_range_to_track_range(row_span);
-        let col_range = self.columns.oz_line_range_to_track_range(column_span);
-
         if value == CellOccupancyState::AutoPlaced
             && primary_span.start < primary_span.end
             && secondary_span.start < secondary_span.end
         {
-            let track = match primary_axis {
-                AbsoluteAxis::Horizontal => &mut self.row_intervals[row_range.start as usize],
-                AbsoluteAxis::Vertical => &mut self.column_intervals[col_range.start as usize],
-            };
-            track.auto_placement_cursor = max(track.auto_placement_cursor, Some(primary_span.end));
+            self.advance_auto_placement_cursor(primary_axis, secondary_span.start, primary_span.end);
         }
 
+        let row_range = self.rows.oz_line_range_to_track_range(row_span);
+        let col_range = self.columns.oz_line_range_to_track_range(column_span);
         for row_index in row_range {
             self.row_intervals[row_index as usize].paint(column_span.start.0..column_span.end.0, value);
         }
@@ -379,6 +374,23 @@ impl CellOccupancyMatrix {
             return None;
         }
         track_lists[track_computed_index as usize].auto_placement_cursor
+    }
+
+    /// Advances the sparse placement cursor to at least `primary_end`.
+    /// The secondary-axis track must already exist in the matrix.
+    fn advance_auto_placement_cursor(
+        &mut self,
+        primary_axis: AbsoluteAxis,
+        secondary_start: OriginZeroLine,
+        primary_end: OriginZeroLine,
+    ) {
+        let track_index = self.track_counts(primary_axis.other_axis()).oz_line_to_next_track(secondary_start) as usize;
+        let tracks = match primary_axis {
+            AbsoluteAxis::Horizontal => &mut self.row_intervals,
+            AbsoluteAxis::Vertical => &mut self.column_intervals,
+        };
+        let cursor = &mut tracks[track_index].auto_placement_cursor;
+        *cursor = max(*cursor, Some(primary_end));
     }
 }
 
