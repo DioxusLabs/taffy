@@ -84,6 +84,8 @@
 ### Fixed
 
 - Absolute positioning: `safe` static alignment with two `auto` insets checks overflow and falls back within the inset-modified containing block, matching Chrome's interpretation of [CSSWG #11934](https://github.com/w3c/csswg-drafts/issues/11934).
+- Absolute grid placement now excludes overlapping gutters when grid lines fall within collapsed `auto-fit` tracks. `DetailedGridTracksInfo::collapsed_tracks` records collapsed ranges without changing stored track positions or used track-size serialization.
+
 - Grid: the edges of a grid area are now only matched by a `<custom-ident>` on its own. `grid-column: 2 foo` and `grid-column: span foo` no longer fall back to the edges of the area named `foo` when there is no line named `foo`.
 - Grid: resolve cyclic percentages in an item's minimum size against zero when computing its minimum contribution, preserving the length component of `calc()` minimum sizes rather than falling back to the automatic minimum size.
 

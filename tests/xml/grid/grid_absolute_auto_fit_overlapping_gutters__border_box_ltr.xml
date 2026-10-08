@@ -1,0 +1,23 @@
+<test name="grid_absolute_auto_fit_overlapping_gutters__border_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" direction="ltr" position="relative" width="250px" height="250px" row-gap="5px" column-gap="5px" grid-template-rows="repeat(auto-fit, 30px) 50px" grid-template-columns="repeat(auto-fit, 30px) 50px">
+      <div direction="ltr" position="relative" grid-row-start="2" grid-row-end="4" grid-column-start="2" grid-column-end="4"/>
+      <div direction="ltr" position="absolute" top="0px" left="0px" bottom="0px" right="0px" grid-row-start="2" grid-row-end="5" grid-column-start="2" grid-column-end="5"/>
+      <div direction="ltr" position="absolute" top="0px" left="0px" bottom="0px" right="0px" grid-row-start="2" grid-row-end="6" grid-column-start="2" grid-column-end="6"/>
+      <div direction="ltr" position="absolute" top="0px" left="0px" bottom="0px" right="0px" grid-row-start="4" grid-row-end="7" grid-column-start="4" grid-column-end="7"/>
+      <div direction="ltr" position="absolute" top="0px" left="0px" bottom="0px" right="0px" grid-row-start="5" grid-row-end="7" grid-column-start="5" grid-column-end="7"/>
+      <div direction="ltr" position="absolute" top="0px" left="0px" bottom="0px" right="0px" grid-row-start="4" grid-row-end="5" grid-column-start="4" grid-column-end="5"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="250" height="250" resolved-rows="0px 30px 30px 0px 0px 50px" resolved-columns="0px 30px 30px 0px 0px 50px">
+      <node x="0" y="0" width="65" height="65"/>
+      <node x="0" y="0" width="65" height="65"/>
+      <node x="0" y="0" width="65" height="65"/>
+      <node x="70" y="70" width="50" height="50"/>
+      <node x="70" y="70" width="50" height="50"/>
+      <node x="70" y="70" width="0" height="0"/>
+    </node>
+  </expectations>
+</test>

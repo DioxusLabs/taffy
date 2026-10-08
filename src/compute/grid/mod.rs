@@ -26,6 +26,7 @@ use types::{CellOccupancyMatrix, GridAreasMap, GridTrack, NamedLineResolver};
 
 use crate::sys::{DefaultCheapStr, String};
 use crate::{CheapCloneStr, GridAreaAxis, GridPlacement};
+use core::ops::Range;
 use types::{GridItem, GridTrackKind, TrackCounts};
 
 pub(crate) use types::{GridCoordinate, GridLine, OriginZeroLine, MAX_GRID_TRACKS, MAX_OZ_LINE, MIN_OZ_LINE};
@@ -994,7 +995,7 @@ impl<S: CheapCloneStr> DetailedGridTracksInfo<S> {
             .and_then(|line| {
                 self.positions
                     .get(line)
-                    .map(|track| if is_reversed { track.end } else { track.start })
+                    .map(|_| self.absolute_track_edge(line, true, is_reversed))
                     .or_else(|| self.positions.last().map(|track| if is_reversed { track.start } else { track.end }))
                     .or(self.empty_axis_line)
             })
@@ -1003,14 +1004,37 @@ impl<S: CheapCloneStr> DetailedGridTracksInfo<S> {
             .end
             .and_then(|line| {
                 line.checked_sub(1)
-                    .and_then(|line| self.positions.get(line))
-                    .map(|track| if is_reversed { track.start } else { track.end })
+                    .filter(|&line| line < self.positions.len())
+                    .map(|line| self.absolute_track_edge(line, false, is_reversed))
                     .or_else(|| self.positions.first().map(|track| if is_reversed { track.end } else { track.start }))
                     .or(self.empty_axis_line)
             })
             .unwrap_or(if is_reversed { padding_start } else { padding_end });
 
-        Line { start: f32_min(start_position, end_position), end: f32_max(start_position, end_position) }
+        if is_reversed {
+            Line { start: f32_min(start_position, end_position), end: start_position }
+        } else {
+            Line { start: start_position, end: f32_max(start_position, end_position) }
+        }
+    }
+
+    /// Resolve a track edge, excluding gutters that overlap across a collapsed track run.
+    fn absolute_track_edge(&self, index: usize, is_start: bool, is_reversed: bool) -> f32 {
+        let range_index = self.collapsed_tracks.partition_point(|range| range.end <= index);
+        let range = self.collapsed_tracks.get(range_index).filter(|range| range.contains(&index));
+        let track = range
+            .and_then(|range| {
+                let adjacent = if is_start { Some(range.end) } else { range.start.checked_sub(1) };
+                adjacent.and_then(|index| self.positions.get(index))
+            })
+            .unwrap_or(&self.positions[index]);
+        // Collapsed gutters overlap: a start edge follows the shared gutter, while an end
+        // edge precedes it. Keep the stored track positions unchanged for serialization.
+        if is_start != is_reversed {
+            track.start
+        } else {
+            track.end
+        }
     }
 }
 
@@ -1104,6 +1128,10 @@ pub struct DetailedGridTracksInfo<S: CheapCloneStr = DefaultCheapStr> {
     /// content alignment (`align-content`/`justify-content`), and collapsed tracks.
     pub positions: Vec<Line<f32>>,
 
+    /// Sorted, disjoint ranges of collapsed auto-fit tracks (indices into `positions`).
+    /// Their adjacent gutters overlap when resolving absolute grid-area edges.
+    pub collapsed_tracks: Vec<Range<usize>>,
+
     /// The position of the axis' single grid line relative to the grid container's border box
     /// when the axis has no tracks (an empty grid still contains one grid line in each axis,
     /// positioned by content alignment). `None` when the axis has tracks.
@@ -1133,6 +1161,16 @@ impl<S: CheapCloneStr> DetailedGridTracksInfo<S> {
         line_names: GridLineNames<S>,
     ) -> Self {
         let positions = DetailedGridTracksInfo::<S>::positions_from_grid_track_layout(&grid_tracks);
+        let mut collapsed_tracks: Vec<Range<usize>> = Vec::new();
+        for (index, track) in grid_tracks.iter().filter(|track| track.kind == GridTrackKind::Track).enumerate() {
+            if track.is_collapsed {
+                if let Some(range) = collapsed_tracks.last_mut().filter(|range| range.end == index) {
+                    range.end += 1;
+                } else {
+                    collapsed_tracks.push(index..index + 1);
+                }
+            }
+        }
         // An axis with no tracks consists of a single gutter whose offset is where the axis'
         // single grid line was positioned by content alignment
         let empty_axis_line = if positions.is_empty() { grid_tracks.first().map(|track| track.offset) } else { None };
@@ -1141,6 +1179,7 @@ impl<S: CheapCloneStr> DetailedGridTracksInfo<S> {
             explicit_tracks: track_count.explicit,
             positive_implicit_tracks: track_count.positive_implicit,
             positions,
+            collapsed_tracks,
             empty_axis_line,
             line_names,
         }
