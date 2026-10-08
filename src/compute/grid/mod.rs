@@ -993,9 +993,8 @@ impl<S: CheapCloneStr> DetailedGridTracksInfo<S> {
         let start_position = placement
             .start
             .and_then(|line| {
-                self.positions
-                    .get(line)
-                    .map(|_| self.absolute_track_edge(line, true, is_reversed))
+                (line < self.positions.len())
+                    .then(|| self.absolute_track_edge(line, true, is_reversed))
                     .or_else(|| self.positions.last().map(|track| if is_reversed { track.start } else { track.end }))
                     .or(self.empty_axis_line)
             })
@@ -1011,6 +1010,8 @@ impl<S: CheapCloneStr> DetailedGridTracksInfo<S> {
             })
             .unwrap_or(if is_reversed { padding_start } else { padding_end });
 
+        // An area whose lines all fall within a collapsed run is zero-sized and anchored at its
+        // logical start edge (as in Chrome; Gecko anchors it before the shared gutter instead).
         if is_reversed {
             Line { start: f32_min(start_position, end_position), end: start_position }
         } else {
@@ -1029,7 +1030,7 @@ impl<S: CheapCloneStr> DetailedGridTracksInfo<S> {
             })
             .unwrap_or(&self.positions[index]);
         // Collapsed gutters overlap: a start edge follows the shared gutter, while an end
-        // edge precedes it. Keep the stored track positions unchanged for serialization.
+        // edge precedes it.
         if is_start != is_reversed {
             track.start
         } else {
@@ -1128,8 +1129,9 @@ pub struct DetailedGridTracksInfo<S: CheapCloneStr = DefaultCheapStr> {
     /// content alignment (`align-content`/`justify-content`), and collapsed tracks.
     pub positions: Vec<Line<f32>>,
 
-    /// Sorted, disjoint ranges of collapsed auto-fit tracks (indices into `positions`).
-    /// Their adjacent gutters overlap when resolving absolute grid-area edges.
+    /// Sorted, disjoint ranges of collapsed `auto-fit` tracks (indices into `positions`), whose
+    /// adjacent gutters overlap when resolving absolute grid-area edges. Empty (and never
+    /// allocated) unless a track collapsed.
     pub collapsed_tracks: Vec<Range<usize>>,
 
     /// The position of the axis' single grid line relative to the grid container's border box
@@ -1145,13 +1147,22 @@ pub struct DetailedGridTracksInfo<S: CheapCloneStr = DefaultCheapStr> {
 }
 
 impl<S: CheapCloneStr> DetailedGridTracksInfo<S> {
-    /// Get the start and end position of each track relative to the grid container's border box
-    fn positions_from_grid_track_layout(grid_tracks: &[GridTrack]) -> Vec<Line<f32>> {
-        grid_tracks
-            .iter()
-            .filter(|track| track.kind == GridTrackKind::Track)
-            .map(|track| Line { start: track.offset, end: track.offset + track.base_size })
-            .collect()
+    /// Get the start and end position of each track relative to the grid container's border box,
+    /// along with the index ranges of any runs of collapsed `auto-fit` tracks
+    fn positions_from_grid_track_layout(grid_tracks: &[GridTrack]) -> (Vec<Line<f32>>, Vec<Range<usize>>) {
+        let mut positions = Vec::with_capacity(grid_tracks.len() / 2);
+        let mut collapsed_tracks: Vec<Range<usize>> = Vec::new();
+        for track in grid_tracks.iter().filter(|track| track.kind == GridTrackKind::Track) {
+            if track.is_collapsed {
+                let index = positions.len();
+                match collapsed_tracks.last_mut() {
+                    Some(range) if range.end == index => range.end += 1,
+                    _ => collapsed_tracks.push(index..index + 1),
+                }
+            }
+            positions.push(Line { start: track.offset, end: track.offset + track.base_size });
+        }
+        (positions, collapsed_tracks)
     }
 
     /// Construct DetailedGridTracksInfo from TrackCounts and GridTracks
@@ -1160,17 +1171,7 @@ impl<S: CheapCloneStr> DetailedGridTracksInfo<S> {
         grid_tracks: Vec<GridTrack>,
         line_names: GridLineNames<S>,
     ) -> Self {
-        let positions = DetailedGridTracksInfo::<S>::positions_from_grid_track_layout(&grid_tracks);
-        let mut collapsed_tracks: Vec<Range<usize>> = Vec::new();
-        for (index, track) in grid_tracks.iter().filter(|track| track.kind == GridTrackKind::Track).enumerate() {
-            if track.is_collapsed {
-                if let Some(range) = collapsed_tracks.last_mut().filter(|range| range.end == index) {
-                    range.end += 1;
-                } else {
-                    collapsed_tracks.push(index..index + 1);
-                }
-            }
-        }
+        let (positions, collapsed_tracks) = DetailedGridTracksInfo::<S>::positions_from_grid_track_layout(&grid_tracks);
         // An axis with no tracks consists of a single gutter whose offset is where the axis'
         // single grid line was positioned by content alignment
         let empty_axis_line = if positions.is_empty() { grid_tracks.first().map(|track| track.offset) } else { None };
