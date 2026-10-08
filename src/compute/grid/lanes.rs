@@ -233,7 +233,13 @@ pub fn compute_grid_lanes_layout<Tree: LayoutGridContainer>(
     initialize_grid_tracks(&mut g_tracks, g_counts, &style, grid_axis, g_auto_repetition_count, |_| true);
     let mut s_tracks: GridTrackVec<GridTrack> = GridTrackVec::new();
     s_tracks.push(GridTrack::gutter(LengthPercentage::ZERO));
-    s_tracks.push(GridTrack::new(MinTrackSizingFunction::AUTO, MaxTrackSizingFunction::AUTO));
+    // The stacking-axis track is the stacking-axis content box, so items are measured at that size when it is
+    // definite, as grid items are measured at their column sizes once those are known
+    let s_max_sizing_function = match inner_node_size.get(s_axis) {
+        Some(size) => MaxTrackSizingFunction::from_length(size),
+        None => MaxTrackSizingFunction::AUTO,
+    };
+    s_tracks.push(GridTrack::new(MinTrackSizingFunction::AUTO, s_max_sizing_function));
     s_tracks.push(GridTrack::gutter(LengthPercentage::ZERO));
 
     drop(style);
