@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    A grid root with a max-width (and an auto width) sizes its children into its max-width
+  </title>
+</head>
+<body>
+
+<!-- 200px of wrappable content: the text wraps at the max-width of the root, so it is 2 lines high -->
+<div id="test-root" style="display: grid; max-width: 100px;">
+  <div>HH&ZeroWidthSpace;HH&ZeroWidthSpace;HH&ZeroWidthSpace;HH&ZeroWidthSpace;HH&ZeroWidthSpace;HH&ZeroWidthSpace;HH&ZeroWidthSpace;HH&ZeroWidthSpace;HH&ZeroWidthSpace;HH</div>
+  <div>HH&ZeroWidthSpace;HH&ZeroWidthSpace;HH&ZeroWidthSpace;HH&ZeroWidthSpace;HH&ZeroWidthSpace;HH&ZeroWidthSpace;HH&ZeroWidthSpace;HH&ZeroWidthSpace;HH&ZeroWidthSpace;HH</div>
+</div>
+
+</body>
+</html>

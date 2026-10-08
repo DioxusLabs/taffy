@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    A grid root with a max-width (and an auto width) and a flexible row sizes its children into its max-width
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="display: grid; grid-template-rows: 1fr; max-width: 100px;">
+  <div>HH&ZeroWidthSpace;HH&ZeroWidthSpace;HH&ZeroWidthSpace;HH&ZeroWidthSpace;HH&ZeroWidthSpace;HH&ZeroWidthSpace;HH&ZeroWidthSpace;HH&ZeroWidthSpace;HH&ZeroWidthSpace;HH</div>
+  <div>HH&ZeroWidthSpace;HH&ZeroWidthSpace;HH&ZeroWidthSpace;HH&ZeroWidthSpace;HH&ZeroWidthSpace;HH&ZeroWidthSpace;HH&ZeroWidthSpace;HH&ZeroWidthSpace;HH&ZeroWidthSpace;HH</div>
+</div>
+
+</body>
+</html>
