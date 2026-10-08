@@ -16,7 +16,7 @@ use super::track_sizing::{
 use super::types::{GridItem, GridTrack, NamedLineResolver, TrackCounts};
 use super::{compute_container_constants, resolve_static_position_grid_area, GridContainerConstants, MAX_GRID_TRACKS};
 use crate::geometry::{AbsoluteAxis, AbstractAxis, InBothAbsAxis, Line, Point, Rect, Size};
-use crate::style::OriginZeroGridPlacement;
+use crate::style::{AlignSelf, OriginZeroGridPlacement};
 use crate::tree::{
     AxisStaticPosition, Baselines, Layout, LayoutInput, LayoutOutput, LayoutPartialTreeExt, NodeId, OofCandidate,
     OofCandidates, OofPositioningArea, RunMode, SizingMode,
@@ -197,8 +197,16 @@ pub fn compute_grid_lanes_layout<Tree: LayoutGridContainer>(
             AbsoluteAxis::Horizontal => InBothAbsAxis { horizontal: g_placement, vertical: s_placement },
             AbsoluteAxis::Vertical => InBothAbsAxis { horizontal: s_placement, vertical: g_placement },
         };
-        let item =
+        let mut item =
             GridItem::new_with_style_and_order(child_node, child_style, align_items, justify_items, index as u16);
+        // Items are not stretched in the stacking axis when measured: they take their max-content size
+        let s_self_alignment = match stacking_axis {
+            AbsoluteAxis::Horizontal => &mut item.justify_self,
+            AbsoluteAxis::Vertical => &mut item.align_self,
+        };
+        if s_self_alignment.is_stretch_or_normal() {
+            *s_self_alignment = AlignSelf::START;
+        }
         if g_placement.is_definite() {
             items.insert(definite_count, item);
             placements.insert(definite_count, placement);
@@ -233,13 +241,7 @@ pub fn compute_grid_lanes_layout<Tree: LayoutGridContainer>(
     initialize_grid_tracks(&mut g_tracks, g_counts, &style, grid_axis, g_auto_repetition_count, |_| true);
     let mut s_tracks: GridTrackVec<GridTrack> = GridTrackVec::new();
     s_tracks.push(GridTrack::gutter(LengthPercentage::ZERO));
-    // The stacking-axis track is the stacking-axis content box, so items are measured at that size when it is
-    // definite, as grid items are measured at their column sizes once those are known
-    let s_max_sizing_function = match inner_node_size.get(s_axis) {
-        Some(size) => MaxTrackSizingFunction::from_length(size),
-        None => MaxTrackSizingFunction::AUTO,
-    };
-    s_tracks.push(GridTrack::new(MinTrackSizingFunction::AUTO, s_max_sizing_function));
+    s_tracks.push(GridTrack::new(MinTrackSizingFunction::AUTO, MaxTrackSizingFunction::AUTO));
     s_tracks.push(GridTrack::gutter(LengthPercentage::ZERO));
 
     drop(style);
@@ -278,6 +280,18 @@ pub fn compute_grid_lanes_layout<Tree: LayoutGridContainer>(
     }
 
     // 6. Size the grid-axis tracks. Only definitely placed items contribute (see module docs).
+    // Items are measured at the stacking-axis content-box size when it is definite, as grid items are measured at
+    // their column sizes once those are known
+    let s_inner_size = inner_node_size.get(s_axis);
+    let s_track_size_estimate: fn(&GridTrack, Option<f32>, &Tree) -> Option<f32> = match s_inner_size {
+        Some(size) => {
+            s_tracks[1].base_size = size;
+            |track, _, _| Some(track.base_size)
+        }
+        None => |track, parent_size, tree| {
+            track.max_track_sizing_function.definite_value(parent_size, |val, basis| tree.calc(val, basis))
+        },
+    };
     track_sizing_algorithm(
         tree,
         g_axis,
@@ -290,9 +304,7 @@ pub fn compute_grid_lanes_layout<Tree: LayoutGridContainer>(
         &mut g_tracks,
         &mut s_tracks,
         &mut items[..definite_count],
-        |track: &GridTrack, parent_size: Option<f32>, tree: &Tree| {
-            track.max_track_sizing_function.definite_value(parent_size, |val, basis| tree.calc(val, basis))
-        },
+        s_track_size_estimate,
         false,
     );
     let g_track_sum = g_tracks.iter().map(|track| track.base_size).sum::<f32>();
