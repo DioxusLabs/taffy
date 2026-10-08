@@ -1,7 +1,7 @@
 <test name="grid_lanes_gap__border_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="grid-lanes" direction="ltr" position="absolute" width="130px" row-gap="10px" column-gap="5px" flow-tolerance="10px" grid-template-columns="40px 40px 40px">
+    <div display="grid-lanes" direction="ltr" position="absolute" width="130px" row-gap="10px" column-gap="5px" fit-tolerance="10px" grid-template-columns="40px 40px 40px">
       <div direction="ltr" position="relative" height="20px"/>
       <div direction="ltr" position="relative" height="30px"/>
       <div direction="ltr" position="relative" height="10px"/>

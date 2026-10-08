@@ -1,7 +1,7 @@
 <test name="grid_lanes_percentage_height__border_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="grid-lanes" direction="ltr" position="absolute" width="120px" height="100px" flow-tolerance="10px" grid-template-columns="40px 40px">
+    <div display="grid-lanes" direction="ltr" position="absolute" width="120px" height="100px" fit-tolerance="10px" grid-template-columns="40px 40px">
       <div direction="ltr" position="relative" height="50%"/>
       <div direction="ltr" position="relative" height="25%"/>
       <div direction="ltr" position="relative" height="10px"/>

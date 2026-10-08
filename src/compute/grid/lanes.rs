@@ -103,7 +103,7 @@ pub fn compute_grid_lanes_layout<Tree: LayoutGridContainer>(
     let stacking_axis = style.grid_lanes_direction().stacking_axis();
     let g_axis = abstract_axis(grid_axis);
     let s_axis = abstract_axis(stacking_axis);
-    let flow_tolerance = style.flow_tolerance();
+    let fit_tolerance = style.fit_tolerance();
     let stacking_gap_style: LengthPercentage = match stacking_axis {
         AbsoluteAxis::Horizontal => style.gap().width,
         AbsoluteAxis::Vertical => style.gap().height,
@@ -312,7 +312,7 @@ pub fn compute_grid_lanes_layout<Tree: LayoutGridContainer>(
     }
 
     // 7. Place items along the stacking axis (spec §4.4), measuring each item's stacking-axis size as it is placed
-    let tie_threshold = flow_tolerance.resolve_or_zero(Some(g_content_box), |val, basis| tree.calc(val, basis));
+    let tie_threshold = fit_tolerance.resolve_or_zero(Some(g_content_box), |val, basis| tree.calc(val, basis));
     let stacking_gap =
         stacking_gap_style.resolve_or_zero(inner_node_size.get(s_axis), |val, basis| tree.calc(val, basis));
     let mut running_positions: Vec<f32> = Vec::with_capacity(track_count);

@@ -865,7 +865,7 @@ pub struct Style<S: CheapCloneStr = DefaultCheapStr> {
     /// The tie threshold for grid lanes auto-placement. `infinite` is `LengthPercentage::length(f32::INFINITY)`;
     /// `normal` (1em) must be resolved by the style source, as Taffy has no font-size
     #[cfg(feature = "grid_lanes")]
-    pub flow_tolerance: LengthPercentage,
+    pub fit_tolerance: LengthPercentage,
 
     // Grid container named properties
     /// Defines the rectangular grid areas
@@ -962,7 +962,7 @@ impl<S: CheapCloneStr> Style<S> {
         #[cfg(feature = "grid_lanes")]
         grid_lanes_direction: GridLanesDirection::Column,
         #[cfg(feature = "grid_lanes")]
-        flow_tolerance: LengthPercentage::length(0.0),
+        fit_tolerance: LengthPercentage::length(0.0),
         #[cfg(feature = "grid")]
         grid_row: Line { start: GridPlacement::<S>::Auto, end: GridPlacement::<S>::Auto },
         #[cfg(feature = "grid")]
@@ -1460,8 +1460,8 @@ impl<S: CheapCloneStr> GridContainerStyle for Style<S> {
     }
     #[cfg(feature = "grid_lanes")]
     #[inline(always)]
-    fn flow_tolerance(&self) -> LengthPercentage {
-        self.flow_tolerance
+    fn fit_tolerance(&self) -> LengthPercentage {
+        self.fit_tolerance
     }
     #[inline(always)]
     fn gap(&self) -> Size<LengthPercentage> {
@@ -1592,8 +1592,8 @@ impl<T: GridContainerStyle> GridContainerStyle for &'_ T {
     }
     #[cfg(feature = "grid_lanes")]
     #[inline(always)]
-    fn flow_tolerance(&self) -> LengthPercentage {
-        (*self).flow_tolerance()
+    fn fit_tolerance(&self) -> LengthPercentage {
+        (*self).fit_tolerance()
     }
     #[inline(always)]
     fn gap(&self) -> Size<LengthPercentage> {
@@ -1740,7 +1740,7 @@ mod tests {
             #[cfg(feature = "grid_lanes")]
             grid_lanes_direction: Default::default(),
             #[cfg(feature = "grid_lanes")]
-            flow_tolerance: crate::style::LengthPercentage::length(0.0),
+            fit_tolerance: crate::style::LengthPercentage::length(0.0),
             #[cfg(feature = "grid")]
             grid_row: Line { start: GridPlacement::Auto, end: GridPlacement::Auto },
             #[cfg(feature = "grid")]

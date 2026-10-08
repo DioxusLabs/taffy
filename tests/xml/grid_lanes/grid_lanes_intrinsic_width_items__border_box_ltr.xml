@@ -1,7 +1,7 @@
 <test name="grid_lanes_intrinsic_width_items__border_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="grid-lanes" direction="ltr" position="absolute" width="120px" flow-tolerance="10px" grid-template-columns="60px 60px">
+    <div display="grid-lanes" direction="ltr" position="absolute" width="120px" fit-tolerance="10px" grid-template-columns="60px 60px">
       <div direction="ltr" position="relative" width="30px" height="20px"/>
       <div direction="ltr" position="relative" justify-self="center" width="20px" height="30px"/>
       <div direction="ltr" position="relative" height="10px"/>

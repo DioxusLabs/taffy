@@ -1,7 +1,7 @@
-<test name="grid_lanes_flow_tolerance_infinite__content_box_ltr" use-rounding="true">
+<test name="grid_lanes_fit_tolerance_infinite__content_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="grid-lanes" box-sizing="content-box" direction="ltr" position="absolute" width="120px" flow-tolerance="infinite" grid-template-columns="40px 40px 40px">
+    <div display="grid-lanes" box-sizing="content-box" direction="ltr" position="absolute" width="120px" fit-tolerance="infinite" grid-template-columns="40px 40px 40px">
       <div box-sizing="content-box" direction="ltr" position="relative" height="30px"/>
       <div box-sizing="content-box" direction="ltr" position="relative" height="10px"/>
       <div box-sizing="content-box" direction="ltr" position="relative" height="50px"/>
