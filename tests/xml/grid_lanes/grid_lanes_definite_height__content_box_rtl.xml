@@ -1,7 +1,7 @@
 <test name="grid_lanes_definite_height__content_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="grid-lanes" box-sizing="content-box" direction="rtl" position="absolute" width="120px" height="100px" flow-tolerance="10px" grid-template-columns="40px 40px 40px">
+    <div display="grid-lanes" box-sizing="content-box" direction="rtl" position="absolute" width="120px" height="100px" fit-tolerance="10px" grid-template-columns="40px 40px 40px">
       <div box-sizing="content-box" direction="rtl" position="relative" height="60px"/>
       <div box-sizing="content-box" direction="rtl" position="relative" height="30px"/>
       <div box-sizing="content-box" direction="rtl" position="relative" height="10px"/>

@@ -1,7 +1,7 @@
-<test name="grid_lanes_flow_tolerance__content_box_rtl" use-rounding="true">
+<test name="grid_lanes_fit_tolerance__content_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="grid-lanes" box-sizing="content-box" direction="rtl" position="absolute" width="120px" flow-tolerance="15px" grid-template-columns="40px 40px 40px">
+    <div display="grid-lanes" box-sizing="content-box" direction="rtl" position="absolute" width="120px" fit-tolerance="15px" grid-template-columns="40px 40px 40px">
       <div box-sizing="content-box" direction="rtl" position="relative" height="30px"/>
       <div box-sizing="content-box" direction="rtl" position="relative" height="20px"/>
       <div box-sizing="content-box" direction="rtl" position="relative" height="25px"/>

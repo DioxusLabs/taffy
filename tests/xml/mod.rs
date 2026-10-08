@@ -35835,50 +35835,50 @@ mod grid_lanes {
 
     #[cfg(feature = "grid_lanes")]
     #[test]
-    fn grid_lanes_flow_tolerance__border_box_ltr() {
-        crate::run_xml_test("grid_lanes", "grid_lanes_flow_tolerance__border_box_ltr");
+    fn grid_lanes_fit_tolerance__border_box_ltr() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_fit_tolerance__border_box_ltr");
     }
 
     #[cfg(feature = "grid_lanes")]
     #[test]
-    fn grid_lanes_flow_tolerance__content_box_ltr() {
-        crate::run_xml_test("grid_lanes", "grid_lanes_flow_tolerance__content_box_ltr");
+    fn grid_lanes_fit_tolerance__content_box_ltr() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_fit_tolerance__content_box_ltr");
     }
 
     #[cfg(feature = "grid_lanes")]
     #[test]
-    fn grid_lanes_flow_tolerance__border_box_rtl() {
-        crate::run_xml_test("grid_lanes", "grid_lanes_flow_tolerance__border_box_rtl");
+    fn grid_lanes_fit_tolerance__border_box_rtl() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_fit_tolerance__border_box_rtl");
     }
 
     #[cfg(feature = "grid_lanes")]
     #[test]
-    fn grid_lanes_flow_tolerance__content_box_rtl() {
-        crate::run_xml_test("grid_lanes", "grid_lanes_flow_tolerance__content_box_rtl");
+    fn grid_lanes_fit_tolerance__content_box_rtl() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_fit_tolerance__content_box_rtl");
     }
 
     #[cfg(feature = "grid_lanes")]
     #[test]
-    fn grid_lanes_flow_tolerance_infinite__border_box_ltr() {
-        crate::run_xml_test("grid_lanes", "grid_lanes_flow_tolerance_infinite__border_box_ltr");
+    fn grid_lanes_fit_tolerance_infinite__border_box_ltr() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_fit_tolerance_infinite__border_box_ltr");
     }
 
     #[cfg(feature = "grid_lanes")]
     #[test]
-    fn grid_lanes_flow_tolerance_infinite__content_box_ltr() {
-        crate::run_xml_test("grid_lanes", "grid_lanes_flow_tolerance_infinite__content_box_ltr");
+    fn grid_lanes_fit_tolerance_infinite__content_box_ltr() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_fit_tolerance_infinite__content_box_ltr");
     }
 
     #[cfg(feature = "grid_lanes")]
     #[test]
-    fn grid_lanes_flow_tolerance_infinite__border_box_rtl() {
-        crate::run_xml_test("grid_lanes", "grid_lanes_flow_tolerance_infinite__border_box_rtl");
+    fn grid_lanes_fit_tolerance_infinite__border_box_rtl() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_fit_tolerance_infinite__border_box_rtl");
     }
 
     #[cfg(feature = "grid_lanes")]
     #[test]
-    fn grid_lanes_flow_tolerance_infinite__content_box_rtl() {
-        crate::run_xml_test("grid_lanes", "grid_lanes_flow_tolerance_infinite__content_box_rtl");
+    fn grid_lanes_fit_tolerance_infinite__content_box_rtl() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_fit_tolerance_infinite__content_box_rtl");
     }
 
     #[cfg(feature = "grid_lanes")]

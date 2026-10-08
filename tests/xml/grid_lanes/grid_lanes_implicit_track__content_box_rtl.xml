@@ -1,7 +1,7 @@
 <test name="grid_lanes_implicit_track__content_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="grid-lanes" box-sizing="content-box" direction="rtl" position="absolute" width="200px" flow-tolerance="10px" grid-template-columns="40px 40px" grid-auto-columns="30px">
+    <div display="grid-lanes" box-sizing="content-box" direction="rtl" position="absolute" width="200px" fit-tolerance="10px" grid-template-columns="40px 40px" grid-auto-columns="30px">
       <div box-sizing="content-box" direction="rtl" position="relative" height="20px" grid-column-start="4"/>
       <div box-sizing="content-box" direction="rtl" position="relative" height="30px"/>
       <div box-sizing="content-box" direction="rtl" position="relative" height="10px"/>

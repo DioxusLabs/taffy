@@ -1,7 +1,7 @@
 <test name="grid_lanes_item_margins__border_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="grid-lanes" direction="rtl" position="absolute" width="120px" flow-tolerance="10px" grid-template-columns="40px 40px 40px">
+    <div display="grid-lanes" direction="rtl" position="absolute" width="120px" fit-tolerance="10px" grid-template-columns="40px 40px 40px">
       <div direction="rtl" position="relative" height="20px" margin-top="5px" margin-left="5px" margin-bottom="5px" margin-right="5px"/>
       <div direction="rtl" position="relative" height="30px" margin-top="10px"/>
       <div direction="rtl" position="relative" height="10px"/>

@@ -231,8 +231,8 @@ pub trait GridContainerStyle: CoreStyle {
     /// The tie threshold for grid lanes auto-placement
     #[cfg(feature = "grid_lanes")]
     #[inline(always)]
-    fn flow_tolerance(&self) -> LengthPercentage {
-        Style::<Self::CustomIdent>::DEFAULT.flow_tolerance
+    fn fit_tolerance(&self) -> LengthPercentage {
+        Style::<Self::CustomIdent>::DEFAULT.fit_tolerance
     }
 
     /// How large should the gaps between items in a grid or flex container be?

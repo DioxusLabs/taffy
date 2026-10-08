@@ -1,7 +1,7 @@
 <test name="grid_lanes_row_direction__border_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="grid-lanes" direction="ltr" position="absolute" height="80px" grid-lanes-direction="row" flow-tolerance="10px" grid-template-rows="40px 40px">
+    <div display="grid-lanes" direction="ltr" position="absolute" height="80px" grid-lanes-direction="row" fit-tolerance="10px" grid-template-rows="40px 40px">
       <div direction="ltr" position="relative" width="20px"/>
       <div direction="ltr" position="relative" width="30px"/>
       <div direction="ltr" position="relative" width="10px"/>
