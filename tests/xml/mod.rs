@@ -36075,6 +36075,66 @@ mod grid_lanes {
 
     #[cfg(feature = "grid_lanes")]
     #[test]
+    fn grid_lanes_row_definite_text_items__border_box_ltr() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_row_definite_text_items__border_box_ltr");
+    }
+
+    #[test]
+    fn grid_lanes_row_definite_text_items__border_box_rtl() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_row_definite_text_items__border_box_rtl");
+    }
+
+    #[test]
+    fn grid_lanes_row_definite_text_items__content_box_ltr() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_row_definite_text_items__content_box_ltr");
+    }
+
+    #[test]
+    fn grid_lanes_row_definite_text_items__content_box_rtl() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_row_definite_text_items__content_box_rtl");
+    }
+
+    #[test]
+    fn grid_lanes_row_definite_text_items_auto_height__border_box_ltr() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_row_definite_text_items_auto_height__border_box_ltr");
+    }
+
+    #[test]
+    fn grid_lanes_row_definite_text_items_auto_height__border_box_rtl() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_row_definite_text_items_auto_height__border_box_rtl");
+    }
+
+    #[test]
+    fn grid_lanes_row_definite_text_items_auto_height__content_box_ltr() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_row_definite_text_items_auto_height__content_box_ltr");
+    }
+
+    #[test]
+    fn grid_lanes_row_definite_text_items_auto_height__content_box_rtl() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_row_definite_text_items_auto_height__content_box_rtl");
+    }
+
+    #[test]
+    fn grid_lanes_row_definite_text_items_tall__border_box_ltr() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_row_definite_text_items_tall__border_box_ltr");
+    }
+
+    #[test]
+    fn grid_lanes_row_definite_text_items_tall__border_box_rtl() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_row_definite_text_items_tall__border_box_rtl");
+    }
+
+    #[test]
+    fn grid_lanes_row_definite_text_items_tall__content_box_ltr() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_row_definite_text_items_tall__content_box_ltr");
+    }
+
+    #[test]
+    fn grid_lanes_row_definite_text_items_tall__content_box_rtl() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_row_definite_text_items_tall__content_box_rtl");
+    }
+
+    #[test]
     fn grid_lanes_row_direction__border_box_ltr() {
         crate::run_xml_test("grid_lanes", "grid_lanes_row_direction__border_box_ltr");
     }
