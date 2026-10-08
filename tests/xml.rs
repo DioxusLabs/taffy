@@ -319,7 +319,9 @@ fn get_computed_expectations(tree: &TaffyTree<TestNodeContext>, node_id: NodeId)
 #[cfg(all(feature = "grid", feature = "detailed_layout_info"))]
 fn get_resolved_track_lists(tree: &TaffyTree<TestNodeContext>, node_id: NodeId) -> (Option<String>, Option<String>) {
     match tree.detailed_layout_info(node_id) {
-        taffy::DetailedLayoutInfo::Grid(info) => (Some(info.grid_template_rows()), Some(info.grid_template_columns())),
+        taffy::DetailedLayoutInfo::Grid(info) => {
+            (Some(info.grid_template_rows(1.0)), Some(info.grid_template_columns(1.0)))
+        }
         taffy::DetailedLayoutInfo::None => (None, None),
     }
 }
