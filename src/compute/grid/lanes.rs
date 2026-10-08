@@ -319,6 +319,32 @@ pub fn compute_grid_lanes_layout<Tree: LayoutGridContainer>(
     let g_content_box = f32_max(0.0, g_border_box - axis_sum(content_box_inset, grid_axis));
     inner_node_size.set(g_axis, Some(g_content_box));
 
+    // Percentage track sizes and gaps resolve against the now-definite content box, so track sizing is re-run once
+    // when the container's grid-axis size was indefinite, as the grid algorithm does
+    if outer_node_size.get(g_axis).is_none() && g_tracks.iter().any(|track| track.uses_percentage()) {
+        for item in items[..definite_count].iter_mut() {
+            item.grid_area_size_cache = None;
+            item.min_content_contribution_cache.set(g_axis, None);
+            item.max_content_contribution_cache.set(g_axis, None);
+            item.minimum_contribution_cache.set(g_axis, None);
+        }
+        track_sizing_algorithm(
+            tree,
+            g_axis,
+            inner_min_size.get(g_axis),
+            inner_max_size.get(g_axis),
+            g_align_content,
+            s_align_content,
+            available_grid_space,
+            inner_node_size,
+            &mut g_tracks,
+            &mut s_tracks,
+            &mut items[..definite_count],
+            s_track_size_estimate,
+            false,
+        );
+    }
+
     let only_grid_axis_requested = matches!(
         (inputs.axis, grid_axis),
         (RequestedAxis::Horizontal, AbsoluteAxis::Horizontal) | (RequestedAxis::Vertical, AbsoluteAxis::Vertical)

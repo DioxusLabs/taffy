@@ -1,0 +1,23 @@
+<test name="grid_lanes_fit_content_percentage_indefinite_width__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="flex" direction="rtl" position="absolute" align-items="flex-start" width="400px">
+      <div display="grid-lanes" direction="rtl" position="relative" fit-tolerance="0px" grid-template-columns="fit-content(50%)">
+        <text direction="rtl" position="relative" grid-column-start="1">
+          XXXX​XXXX​XXXX
+        </text>
+        <text direction="rtl" position="relative" grid-column-start="1">
+          XX​XX
+        </text>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="400" height="40">
+      <node x="280" y="0" width="120" height="40">
+        <node x="60" y="0" width="60" height="30"/>
+        <node x="60" y="30" width="60" height="10"/>
+      </node>
+    </node>
+  </expectations>
+</test>

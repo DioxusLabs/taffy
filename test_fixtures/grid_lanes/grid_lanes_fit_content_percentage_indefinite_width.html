@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    Grid Lanes: fit-content(percentage) tracks re-resolve against the container width once it is known
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="display: flex; align-items: flex-start; width: 400px;">
+  <div style="display: grid-lanes; grid-template-columns: fit-content(50%); flow-tolerance: 0;">
+    <div style="grid-column: 1;">XXXX​XXXX​XXXX</div>
+    <div style="grid-column: 1;">XX​XX</div>
+  </div>
+</div>
+
+</body>
+</html>

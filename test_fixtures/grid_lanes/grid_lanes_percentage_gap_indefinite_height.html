@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    Grid Lanes: percentage grid-axis gap re-resolves against the container height once it is known
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="display: grid-lanes; grid-lanes-direction: row; grid-template-rows: 50px 50px; gap: 20%; width: 300px; flow-tolerance: 0;">
+  <div style="grid-row: 1; width: 100px;"></div>
+  <div style="grid-row: 2; width: 100px;"></div>
+  <div style="grid-row: 1; width: 100px;"></div>
+  <div style="grid-row: 2; width: 100px;"></div>
+</div>
+
+</body>
+</html>
