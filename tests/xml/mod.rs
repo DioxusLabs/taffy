@@ -36147,6 +36147,30 @@ mod grid_lanes {
 
     #[cfg(feature = "grid_lanes")]
     #[test]
+    fn grid_lanes_fr_tracks_contribution_space__border_box_ltr() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_fr_tracks_contribution_space__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_fr_tracks_contribution_space__content_box_ltr() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_fr_tracks_contribution_space__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_fr_tracks_contribution_space__border_box_rtl() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_fr_tracks_contribution_space__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_fr_tracks_contribution_space__content_box_rtl() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_fr_tracks_contribution_space__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
     fn grid_lanes_gap__border_box_ltr() {
         crate::run_xml_test("grid_lanes", "grid_lanes_gap__border_box_ltr");
     }

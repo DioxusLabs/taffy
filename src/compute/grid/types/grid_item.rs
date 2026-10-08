@@ -153,7 +153,7 @@ impl GridItem {
     }
 
     /// Whether the item has an auto margin in the block axis
-    #[inline(always)]
+    #[inline]
     pub fn has_auto_block_margin(&self) -> bool {
         self.margin.top.is_auto() || self.margin.bottom.is_auto()
     }
@@ -162,7 +162,7 @@ impl GridItem {
     /// dependency with baseline alignment (which affects row sizing). Per
     /// <https://www.w3.org/TR/css-grid-1/#row-align> such items do not participate in baseline
     /// alignment and are aligned using their fallback alignment instead.
-    #[inline(always)]
+    #[inline]
     pub fn has_cyclic_block_size_dependency(&self) -> bool {
         self.size.height.0.uses_percentage() && (self.crosses_intrinsic_row || self.crosses_flexible_row)
     }
@@ -170,7 +170,7 @@ impl GridItem {
     /// Returns true if the item participates in baseline alignment: it has `align-self: baseline`
     /// and neither of its block-axis margins are `auto`.
     /// See <https://www.w3.org/TR/css-align-3/#baseline-align-self>
-    #[inline(always)]
+    #[inline]
     pub fn participates_in_baseline_alignment(&self) -> bool {
         self.align_self.keyword == AlignItemsKeyword::Baseline
             && !self.has_auto_block_margin()
@@ -291,7 +291,7 @@ impl GridItem {
 
     /// Retrieve the known_dimensions for the given grid area size from the cache or compute them.
     /// The min-content and max-content contributions of an item are both computed from the same known_dimensions.
-    #[inline(always)]
+    #[inline]
     fn known_dimensions_cached(
         &mut self,
         tree: &mut impl LayoutPartialTree,
@@ -502,7 +502,7 @@ impl GridItem {
 
     /// Compute the item's resolved margins for size contributions. Horizontal percentage margins always resolve
     /// to zero if the container size is indefinite as otherwise this would introduce a cyclic dependency.
-    #[inline(always)]
+    #[inline]
     pub fn margins_axis_sums_with_baseline_shims(
         &self,
         inner_node_width: Option<f32>,
@@ -556,7 +556,7 @@ impl GridItem {
     }
 
     /// Retrieve the item's min content contribution from the cache or compute it using the provided parameters
-    #[inline(always)]
+    #[inline]
     pub fn min_content_contribution_cached(
         &mut self,
         axis: AbstractAxis,
@@ -610,7 +610,7 @@ impl GridItem {
     /// to the item's margin box, giving the available space that is passed to the item.
     /// As when the item is laid out into its final position, margins resolve against the width
     /// of the grid area and `auto` margins are treated as zero.
-    #[inline(always)]
+    #[inline]
     fn available_space_minus_margins(
         &self,
         grid_area_size: Size<Option<f32>>,
@@ -661,7 +661,7 @@ impl GridItem {
     }
 
     /// Retrieve the item's max content contribution from the cache or compute it using the provided parameters
-    #[inline(always)]
+    #[inline]
     pub fn max_content_contribution_cached(
         &mut self,
         axis: AbstractAxis,
@@ -807,7 +807,7 @@ impl GridItem {
     }
 
     /// Retrieve the item's minimum contribution from the cache or compute it using the provided parameters
-    #[inline(always)]
+    #[inline]
     pub fn minimum_contribution_cached(
         &mut self,
         tree: &mut impl LayoutPartialTree,

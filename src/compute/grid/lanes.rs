@@ -106,8 +106,10 @@ fn collect_item_groups(
     for item in items.iter_mut() {
         let span = item.span(g_axis);
         let margin = item.margins_axis_sums_with_baseline_shims(None, tree).get(g_axis);
-        let min_content = item.min_content_contribution_cached(g_axis, tree, Size::NONE, inner_node_size);
-        let max_content = item.max_content_contribution_cached(g_axis, tree, Size::NONE, inner_node_size);
+        // Contributions are measured under min-/max-content in the grid axis, as in the shared track sizing
+        let available_space = inner_node_size.with(g_axis, None);
+        let min_content = item.min_content_contribution_cached(g_axis, tree, Size::NONE, available_space);
+        let max_content = item.max_content_contribution_cached(g_axis, tree, Size::NONE, available_space);
         let padding_border = item.padding_border_size(tree, Size::NONE);
         let explicit_minimum = item.explicit_minimum_contribution(tree, g_axis, Size::NONE, padding_border);
         let content_minimum = if explicit_minimum.is_some() {
