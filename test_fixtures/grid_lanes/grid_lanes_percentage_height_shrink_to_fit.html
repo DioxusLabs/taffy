@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    Grid Lanes: auto-placed items contributing to intrinsic tracks resolve percentage heights against the definite stacking content box
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="display: flex; align-items: flex-start; width: 400px;">
+  <div style="display: grid-lanes; grid-template-columns: auto; height: 100px;">
+    <div style="aspect-ratio: 1; height: 100%;"></div>
+  </div>
+</div>
+
+</body>
+</html>
