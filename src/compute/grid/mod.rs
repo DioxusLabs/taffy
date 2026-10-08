@@ -2,7 +2,7 @@
 //! <https://www.w3.org/TR/css-grid-1>
 use crate::geometry::{AbsoluteAxis, AbstractAxis, InBothAbsAxis};
 use crate::geometry::{Line, Point, Rect, Size};
-use crate::style::{AvailableSpace, Overflow};
+use crate::style::{AlignContent, AlignItems, AvailableSpace, Contain, ContainingBlockClaims, Overflow};
 use crate::tree::{
     AxisStaticPosition, Baselines, Layout, LayoutInput, LayoutOutput, LayoutPartialTreeExt, NodeId, OofCandidate,
     OofCandidates, OofPositioningArea, RunMode, SizingMode,
@@ -40,21 +40,63 @@ mod placement;
 mod track_sizing;
 mod types;
 mod util;
+/// The grid container's resolved box, size constraints, alignment styles and available space,
+/// computed once from the container's style and the layout inputs before the grid is laid out
+#[derive(Clone, Copy)]
+struct GridContainerConstants {
+    /// The container's `direction` style
+    direction: Direction,
+    /// The container's `contain` style
+    contain: Contain,
+    /// Which positioning schemes the container is a containing block for
+    containing_block_claims: ContainingBlockClaims,
+    /// The container's resolved padding
+    padding: Rect<f32>,
+    /// The container's resolved border
+    border: Rect<f32>,
+    /// The sum of padding and border in each axis
+    padding_border_size: Size<f32>,
+    /// The container's border-box min size, if definite
+    min_size: Size<Option<f32>>,
+    /// The container's border-box max size, if definite
+    max_size: Size<Option<f32>>,
+    /// The container's border-box preferred size, if definite
+    preferred_size: Size<Option<f32>>,
+    /// The space reserved for scrollbars in each axis
+    scrollbar_gutter: Point<f32>,
+    /// Whether the container's overflow makes it a scroll container
+    #[cfg(feature = "content_size")]
+    is_scroll_container: bool,
+    /// Padding, border and scrollbar gutter combined
+    content_box_inset: Rect<f32>,
+    /// The container's `align-content` style
+    align_content: AlignContent,
+    /// The container's `justify-content` style
+    justify_content: AlignContent,
+    /// The container's `align-items` style
+    align_items: AlignItems,
+    /// The container's `justify-items` style
+    justify_items: AlignItems,
+    /// The space available to size the grid tracks in each axis
+    available_grid_space: Size<AvailableSpace>,
+    /// The container's border-box size, if definite
+    outer_node_size: Size<Option<f32>>,
+    /// The container's content-box min size, if definite
+    inner_min_size: Size<Option<f32>>,
+    /// The container's content-box max size, if definite
+    inner_max_size: Size<Option<f32>>,
+    /// The container's content-box size, if definite
+    inner_node_size: Size<Option<f32>>,
+}
 
-/// Grid layout algorithm
-/// This consists of a few phases:
-///   - Resolving the explicit grid
-///   - Placing items (which also resolves the implicit grid)
-///   - Track (row/column) sizing
-///   - Alignment & Final item placement
-pub fn compute_grid_layout<Tree: LayoutGridContainer>(
-    tree: &mut Tree,
-    node: NodeId,
+/// Resolve the grid container's style against the layout inputs (step 1 of `compute_grid_layout`)
+fn compute_container_constants<Tree: LayoutGridContainer>(
+    tree: &Tree,
+    style: &Tree::GridContainerStyle<'_>,
     inputs: LayoutInput,
-) -> LayoutOutput {
-    let LayoutInput { known_dimensions, parent_size, available_space, run_mode, .. } = inputs;
+) -> GridContainerConstants {
+    let LayoutInput { known_dimensions, parent_size, available_space, .. } = inputs;
 
-    let style = tree.get_grid_container_style(node);
     let direction = style.direction();
     let contain = style.contain();
     let containing_block_claims = style.is_containing_block();
@@ -114,14 +156,6 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     let justify_content = style.grid_align_content(AbstractAxis::Inline);
     let align_items = style.align_items();
     let justify_items = style.justify_items();
-
-    // Note: we avoid accessing the grid rows/columns methods more than once as this can
-    // cause an expensive-ish computation
-    let grid_template_columns = style.grid_template_columns();
-    let grid_template_rows = style.grid_template_rows();
-    let grid_auto_columns = style.grid_auto_columns();
-    let grid_auto_rows = style.grid_auto_rows();
-
     let constrained_available_space = known_dimensions
         .or(preferred_size)
         .map(|size| size.map(AvailableSpace::Definite))
@@ -145,31 +179,63 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     // (which are border-box sizes) need converting to content-box sizes before being passed to it
     let inner_min_size = min_size.maybe_sub(content_box_inset.sum_axes());
     let inner_max_size = max_size.maybe_sub(content_box_inset.sum_axes());
-    let mut inner_node_size = Size {
+    let inner_node_size = Size {
         width: outer_node_size.width.map(|space| space - content_box_inset.horizontal_axis_sum()),
         height: outer_node_size.height.map(|space| space - content_box_inset.vertical_axis_sum()),
     };
 
-    debug_log!("parent_size", dbg:parent_size);
-    debug_log!("outer_node_size", dbg:outer_node_size);
-    debug_log!("inner_node_size", dbg:inner_node_size);
-
-    // Short-circuit layout if the container's size is fully determined by the container's size and the run mode
-    // is ComputeSize (and thus the container's size is all that we're interested in)
-    if run_mode == RunMode::ComputeSize {
-        if let Size { width: Some(width), height: Some(height) } = outer_node_size {
-            return LayoutOutput::from_outer_size(Size { width, height });
-        }
-
-        // We can also short-circuit if the width is known and only the width has been requested.
-        if inputs.axis == RequestedAxis::Horizontal {
-            if let Some(width) = outer_node_size.width {
-                return LayoutOutput::from_outer_size(Size { width, height: 0.0 });
-            }
-        }
+    GridContainerConstants {
+        direction,
+        contain,
+        containing_block_claims,
+        padding,
+        border,
+        padding_border_size,
+        min_size,
+        max_size,
+        preferred_size,
+        scrollbar_gutter,
+        #[cfg(feature = "content_size")]
+        is_scroll_container,
+        content_box_inset,
+        align_content,
+        justify_content,
+        align_items,
+        justify_items,
+        available_grid_space,
+        outer_node_size,
+        inner_min_size,
+        inner_max_size,
+        inner_node_size,
     }
+}
 
-    // 2. Resolve the explicit grid
+/// The explicit grid: track counts (including resolved `auto-fill`/`auto-fit` repetitions) and line names
+struct ExplicitGrid<S: CheapCloneStr> {
+    /// The number of `auto-fill`/`auto-fit` repetitions in the column template
+    col_auto_repetition_count: u16,
+    /// The number of `auto-fill`/`auto-fit` repetitions in the row template
+    row_auto_repetition_count: u16,
+    /// The number of explicit columns (from the template and `grid-template-areas`)
+    col_count: u16,
+    /// The number of explicit rows (from the template and `grid-template-areas`)
+    row_count: u16,
+    /// Resolves named lines and areas to line indexes
+    name_resolver: NamedLineResolver<S>,
+    /// The names of each explicit column line
+    detailed_column_line_names: GridLineNames<S>,
+    /// The names of each explicit row line
+    detailed_row_line_names: GridLineNames<S>,
+}
+
+/// Resolve the explicit grid from the container's template styles (step 2 of `compute_grid_layout`)
+fn resolve_explicit_grid<'a, Tree: LayoutGridContainer>(
+    tree: &Tree,
+    style: &Tree::GridContainerStyle<'a>,
+    constants: &GridContainerConstants,
+) -> ExplicitGrid<Tree::CustomIdent> {
+    let GridContainerConstants { outer_node_size, min_size, max_size, padding_border_size, content_box_inset, .. } =
+        *constants;
 
     // This is very similar to the inner_node_size except if the inner_node_size is not definite but the node
     // has a min- or max- size style then that will be used in it's place.
@@ -220,8 +286,96 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     name_resolver.set_explicit_row_count(explicit_row_count);
 
     // Build the per-line names of the explicit grid from the name resolver's collected pairs
-    let mut detailed_column_line_names = name_resolver.detailed_line_names(AbsoluteAxis::Horizontal);
-    let mut detailed_row_line_names = name_resolver.detailed_line_names(AbsoluteAxis::Vertical);
+    let detailed_column_line_names = name_resolver.detailed_line_names(AbsoluteAxis::Horizontal);
+    let detailed_row_line_names = name_resolver.detailed_line_names(AbsoluteAxis::Vertical);
+
+    ExplicitGrid {
+        col_auto_repetition_count,
+        row_auto_repetition_count,
+        col_count: explicit_col_count,
+        row_count: explicit_row_count,
+        name_resolver,
+        detailed_column_line_names,
+        detailed_row_line_names,
+    }
+}
+
+/// Grid layout algorithm
+/// This consists of a few phases:
+///   - Resolving the explicit grid
+///   - Placing items (which also resolves the implicit grid)
+///   - Track (row/column) sizing
+///   - Alignment & Final item placement
+pub fn compute_grid_layout<Tree: LayoutGridContainer>(
+    tree: &mut Tree,
+    node: NodeId,
+    inputs: LayoutInput,
+) -> LayoutOutput {
+    let LayoutInput { known_dimensions, parent_size, run_mode, .. } = inputs;
+
+    let style = tree.get_grid_container_style(node);
+    let constants = compute_container_constants(tree, &style, inputs);
+    let GridContainerConstants {
+        direction,
+        contain,
+        containing_block_claims,
+        padding,
+        border,
+        padding_border_size,
+        min_size,
+        max_size,
+        preferred_size,
+        scrollbar_gutter,
+        #[cfg(feature = "content_size")]
+        is_scroll_container,
+        content_box_inset,
+        align_content,
+        justify_content,
+        align_items,
+        justify_items,
+        available_grid_space,
+        outer_node_size,
+        inner_min_size,
+        inner_max_size,
+        mut inner_node_size,
+    } = constants;
+
+    // Note: we avoid accessing the grid rows/columns methods more than once as this can
+    // cause an expensive-ish computation
+    let grid_template_columns = style.grid_template_columns();
+    let grid_template_rows = style.grid_template_rows();
+    let grid_auto_columns = style.grid_auto_columns();
+    let grid_auto_rows = style.grid_auto_rows();
+
+    debug_log!("parent_size", dbg:parent_size);
+    debug_log!("outer_node_size", dbg:outer_node_size);
+    debug_log!("inner_node_size", dbg:inner_node_size);
+
+    // Short-circuit layout if the container's size is fully determined by the container's size and the run mode
+    // is ComputeSize (and thus the container's size is all that we're interested in)
+    if run_mode == RunMode::ComputeSize {
+        if let Size { width: Some(width), height: Some(height) } = outer_node_size {
+            return LayoutOutput::from_outer_size(Size { width, height });
+        }
+
+        // We can also short-circuit if the width is known and only the width has been requested.
+        if inputs.axis == RequestedAxis::Horizontal {
+            if let Some(width) = outer_node_size.width {
+                return LayoutOutput::from_outer_size(Size { width, height: 0.0 });
+            }
+        }
+    }
+
+    // 2. Resolve the explicit grid
+    let ExplicitGrid {
+        col_auto_repetition_count,
+        row_auto_repetition_count,
+        col_count: explicit_col_count,
+        row_count: explicit_row_count,
+        name_resolver,
+        mut detailed_column_line_names,
+        mut detailed_row_line_names,
+    } = resolve_explicit_grid(tree, &style, &constants);
 
     // 3. Create the grid items (in document order) and resolve the named lines in their `grid-row`/`grid-column` styles
     // Absolutely positioned children do not take part in grid placement and do not create implicit tracks,
