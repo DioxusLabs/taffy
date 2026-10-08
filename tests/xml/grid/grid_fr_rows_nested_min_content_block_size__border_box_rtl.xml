@@ -1,0 +1,23 @@
+<test name="grid_fr_rows_nested_min_content_block_size__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" direction="rtl" position="absolute" width="100px" height="200px">
+      <div display="grid" direction="rtl" position="relative" grid-template-rows="50px 1fr">
+        <div direction="rtl" position="relative"/>
+        <div direction="rtl" position="relative" overflow-x="hidden" overflow-y="hidden" scrollbar-width="15">
+          <div direction="rtl" position="relative" height="400px"/>
+        </div>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="100" height="200" resolved-rows="450px" resolved-columns="100px">
+      <node x="0" y="0" width="100" height="450" resolved-rows="50px 400px" resolved-columns="100px">
+        <node x="0" y="0" width="100" height="50"/>
+        <node x="0" y="50" width="100" height="400" scroll_width="0" scroll_height="0">
+          <node x="100" y="0" width="0" height="400"/>
+        </node>
+      </node>
+    </node>
+  </expectations>
+</test>
