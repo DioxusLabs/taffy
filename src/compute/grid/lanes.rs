@@ -209,9 +209,10 @@ pub fn compute_grid_lanes_layout<Tree: LayoutGridContainer>(
         }
     }
 
-    // 4. Grid-axis track counts: definitely placed items may create implicit tracks, auto-placed items never do
+    // 4. Grid-axis track counts: definitely placed items may create implicit tracks, auto-placed items never do.
+    // A grid axis with no explicit tracks still gets one implicit track for auto-placed items.
     let mut min_line: i16 = 0;
-    let mut max_line: i16 = explicit_g_count as i16;
+    let mut max_line: i16 = (explicit_g_count as i16).max(1);
     for placement in placements[..definite_count].iter() {
         let lines = placement.get(grid_axis).resolve_definite_grid_lines();
         min_line = min_line.min(lines.start.0);
