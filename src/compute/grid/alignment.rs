@@ -89,6 +89,9 @@ pub(super) fn align_and_position_item(
     node: NodeId,
     order: u32,
     grid_area: Rect<f32>,
+    // Percentage basis for the item's styles. Grid passes the grid area size; grid lanes (css-grid-3) items
+    // have the container's content box as their containing block in the stacking axis.
+    containing_block_size: Size<f32>,
     container_alignment_styles: InBothAbsAxis<AlignItems>,
     baseline_shim: f32,
     direction: Direction,
@@ -126,15 +129,17 @@ pub(super) fn align_and_position_item(
     let inset_horizontal = style
         .inset()
         .horizontal_components()
-        .map(|size| size.resolve_to_option(grid_area_size.width, |val, basis| tree.calc(val, basis)));
+        .map(|size| size.resolve_to_option(containing_block_size.width, |val, basis| tree.calc(val, basis)));
     let inset_vertical = style
         .inset()
         .vertical_components()
-        .map(|size| size.resolve_to_option(grid_area_size.height, |val, basis| tree.calc(val, basis)));
-    let padding =
-        style.padding().map(|p| p.resolve_or_zero(Some(grid_area_size.width), |val, basis| tree.calc(val, basis)));
-    let border =
-        style.border().map(|p| p.resolve_or_zero(Some(grid_area_size.width), |val, basis| tree.calc(val, basis)));
+        .map(|size| size.resolve_to_option(containing_block_size.height, |val, basis| tree.calc(val, basis)));
+    let padding = style
+        .padding()
+        .map(|p| p.resolve_or_zero(Some(containing_block_size.width), |val, basis| tree.calc(val, basis)));
+    let border = style
+        .border()
+        .map(|p| p.resolve_or_zero(Some(containing_block_size.width), |val, basis| tree.calc(val, basis)));
     let padding_border_size = (padding + border).sum_axes();
 
     let box_sizing_adjustment =
@@ -142,19 +147,19 @@ pub(super) fn align_and_position_item(
 
     let size_style = style.size();
     let inherent_size = size_style
-        .maybe_resolve(grid_area_size, |val, basis| tree.calc(val, basis))
+        .maybe_resolve(containing_block_size, |val, basis| tree.calc(val, basis))
         .maybe_apply_aspect_ratio(aspect_ratio)
         .maybe_add(box_sizing_adjustment);
     let min_size = style
         .min_size()
-        .maybe_resolve(grid_area_size, |val, basis| tree.calc(val, basis))
+        .maybe_resolve(containing_block_size, |val, basis| tree.calc(val, basis))
         .maybe_add(box_sizing_adjustment)
         .or(padding_border_size.map(Some))
         .maybe_max(padding_border_size)
         .maybe_apply_aspect_ratio(aspect_ratio);
     let max_size = style
         .max_size()
-        .maybe_resolve(grid_area_size, |val, basis| tree.calc(val, basis))
+        .maybe_resolve(containing_block_size, |val, basis| tree.calc(val, basis))
         .maybe_apply_aspect_ratio(aspect_ratio)
         .maybe_add(box_sizing_adjustment);
 
@@ -187,8 +192,9 @@ pub(super) fn align_and_position_item(
 
     // Note: This is not a bug. It is part of the CSS spec that both horizontal and vertical margins
     // resolve against the WIDTH of the grid area.
-    let margin =
-        style.margin().map(|margin| margin.resolve_to_option(grid_area_size.width, |val, basis| tree.calc(val, basis)));
+    let margin = style
+        .margin()
+        .map(|margin| margin.resolve_to_option(containing_block_size.width, |val, basis| tree.calc(val, basis)));
 
     drop(style);
 
@@ -204,7 +210,7 @@ pub(super) fn align_and_position_item(
         resolve_sizing_keyword(
             size_style.width,
             Some(grid_area_minus_item_margins_size.width),
-            Some(grid_area_size.width),
+            Some(containing_block_size.width),
             |val, basis| tree.calc(val, basis),
         )
     });
@@ -212,7 +218,7 @@ pub(super) fn align_and_position_item(
         resolve_sizing_keyword(
             size_style.height,
             Some(grid_area_minus_item_margins_size.height),
-            Some(grid_area_size.height),
+            Some(containing_block_size.height),
             |val, basis| tree.calc(val, basis),
         )
     });
@@ -226,7 +232,7 @@ pub(super) fn align_and_position_item(
             .measure_child_size_both(
                 node,
                 Size::NONE,
-                grid_area_size.map(Option::Some),
+                containing_block_size.map(Option::Some),
                 Size { width: *available_width, height: *available_height },
                 SizingMode::InherentSize,
                 Line::FALSE,
@@ -253,7 +259,7 @@ pub(super) fn align_and_position_item(
                     tree.measure_child_size(
                         node,
                         Size::NONE,
-                        grid_area_size.map(Option::Some),
+                        containing_block_size.map(Option::Some),
                         Size {
                             width: available_width,
                             height: AvailableSpace::Definite(grid_area_minus_item_margins_size.height),
@@ -299,7 +305,7 @@ pub(super) fn align_and_position_item(
                         tree.measure_child_size(
                             node,
                             Size { width, height: None },
-                            grid_area_size.map(Option::Some),
+                            containing_block_size.map(Option::Some),
                             Size {
                                 width: width
                                     .map(AvailableSpace::Definite)
@@ -340,7 +346,7 @@ pub(super) fn align_and_position_item(
         tree.measure_child_size_both(
             node,
             Size { width, height },
-            grid_area_size.map(Option::Some),
+            containing_block_size.map(Option::Some),
             grid_area_minus_item_margins_size.map(AvailableSpace::Definite),
             SizingMode::InherentSize,
             Line::FALSE,
@@ -353,7 +359,7 @@ pub(super) fn align_and_position_item(
     let mut layout_output = tree.perform_child_layout(
         node,
         size,
-        grid_area_size.map(Option::Some),
+        containing_block_size.map(Option::Some),
         grid_area_minus_item_margins_size.map(AvailableSpace::Definite),
         SizingMode::InherentSize,
         Line::FALSE,

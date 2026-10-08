@@ -749,12 +749,13 @@ impl GridItem {
                     // The content-based minimum size is additionally clamped by the sum of any fixed max track sizing
                     // functions of the tracks the item spans. Note that this clamp does not apply to explicitly specified
                     // preferred or minimum sizes, and that the argument to fit-content() does not clamp the content-based
-                    // minimum size in the same way as a fixed max track sizing function.
+                    // minimum size in the same way as a fixed max track sizing function. The clamp is a stretch fit into
+                    // the limit, so it does not shrink the item below its padding + border.
                     let limit =
                         self.spanned_fixed_track_limit(axis, axis_tracks, inner_node_size.get(axis), &|val, basis| {
                             tree.resolve_calc_value(val, basis)
                         });
-                    minimum_contribution.maybe_min(limit)
+                    minimum_contribution.maybe_min(limit.map(|limit| f32_max(limit, padding_border_size.get(axis))))
                 } else {
                     0.0
                 }

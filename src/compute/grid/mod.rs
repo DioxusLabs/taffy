@@ -728,6 +728,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
             item.node,
             index as u32,
             grid_area,
+            Size { width: grid_area.right - grid_area.left, height: grid_area.bottom - grid_area.top },
             container_alignment_styles,
             item.baseline_shim,
             direction,
