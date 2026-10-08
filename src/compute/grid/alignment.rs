@@ -109,6 +109,7 @@ pub(super) fn align_and_position_item(
     let contain = style.contain();
     let scrollbar_width = style.scrollbar_width();
     let aspect_ratio = style.aspect_ratio();
+    let is_replaced = style.is_replaced();
     // Fall back to the container's justify-items/align-items if unset (`None`), and then resolve
     // writing-mode-relative self-start/self-end keywords against the item's own direction.
     // The horizontal axis is the inline axis (Taffy only supports horizontal-tb); the vertical
@@ -166,11 +167,12 @@ pub(super) fn align_and_position_item(
     // Resolve `normal` alignment (the default if alignment is set on neither the parent or the node itself)
     // Note: if the child has a preferred aspect ratio but neither width or height are set, then the width is stretched
     // and the then height is calculated from the width according the aspect ratio
+    // Replaced elements are not stretched: they are sized as for `start`.
     // See: https://www.w3.org/TR/css-grid-1/#grid-item-sizing
     let alignment_styles = InBothAbsAxis {
         horizontal: match justify_self.keyword {
             AlignItemsKeyword::Normal => {
-                if inherent_size.width.is_some() || size_style.width.is_sizing_keyword() {
+                if inherent_size.width.is_some() || size_style.width.is_sizing_keyword() || is_replaced {
                     AlignSelf::START
                 } else {
                     AlignSelf::STRETCH
@@ -180,7 +182,11 @@ pub(super) fn align_and_position_item(
         },
         vertical: match align_self.keyword {
             AlignItemsKeyword::Normal => {
-                if inherent_size.height.is_some() || size_style.height.is_sizing_keyword() || aspect_ratio.is_some() {
+                if inherent_size.height.is_some()
+                    || size_style.height.is_sizing_keyword()
+                    || aspect_ratio.is_some()
+                    || is_replaced
+                {
                     AlignSelf::START
                 } else {
                     AlignSelf::STRETCH
