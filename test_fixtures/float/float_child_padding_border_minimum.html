@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    Floats use the child's padding-border minimum width
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="display: block; width: 300px;">
+  <div style="display: block; width: 100px; height: 20px; padding-left: 150px;">
+    <div style="float: right; width: 20px; height: 20px;"></div>
+  </div>
+  <div style="display: block; width: 100px; height: 20px; border-left: 150px solid;">
+    <div style="float: right; width: 20px; height: 20px;"></div>
+  </div>
+  <div style="display: block; width: 100px; height: 20px; padding-left: 75px; border-left: 75px solid;">
+    <div style="float: right; width: 20px; height: 20px;"></div>
+  </div>
+  <div style="display: block; width: 100px; height: 20px; padding-left: 50%;">
+    <div style="float: right; width: 20px; height: 20px;"></div>
+  </div>
+</div>
+
+</body>
+</html>
