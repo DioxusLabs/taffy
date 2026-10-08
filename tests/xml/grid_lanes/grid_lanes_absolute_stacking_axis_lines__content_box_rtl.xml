@@ -1,0 +1,25 @@
+<test name="grid_lanes_absolute_stacking_axis_lines__content_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid-lanes" box-sizing="content-box" direction="rtl" position="relative" align-content="end" width="140px" height="100px" row-gap="10px" column-gap="10px" fit-tolerance="10px" grid-template-columns="40px 40px 40px">
+      <div box-sizing="content-box" direction="rtl" position="relative" height="30px"/>
+      <div box-sizing="content-box" direction="rtl" position="relative" height="20px"/>
+      <div box-sizing="content-box" direction="rtl" position="relative" height="10px"/>
+      <div box-sizing="content-box" direction="rtl" position="absolute" top="0px" left="0px" bottom="0px" right="0px" grid-row-start="1" grid-row-end="2" grid-column-start="1" grid-column-end="2"/>
+      <div box-sizing="content-box" direction="rtl" position="absolute" width="20px" height="20px" grid-row-start="1" grid-column-start="2" grid-column-end="3"/>
+      <div box-sizing="content-box" direction="rtl" position="absolute" align-self="end" width="20px" height="20px" grid-row-start="2" grid-column-start="3" grid-column-end="4"/>
+      <div box-sizing="content-box" direction="rtl" position="absolute" align-self="center" width="20px" height="20px" grid-row-start="1" grid-row-end="2"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="140" height="100">
+      <node x="100" y="70" width="40" height="30"/>
+      <node x="50" y="70" width="40" height="20"/>
+      <node x="0" y="70" width="40" height="10"/>
+      <node x="100" y="0" width="40" height="100"/>
+      <node x="70" y="0" width="20" height="20"/>
+      <node x="20" y="80" width="20" height="20"/>
+      <node x="120" y="40" width="20" height="20"/>
+    </node>
+  </expectations>
+</test>

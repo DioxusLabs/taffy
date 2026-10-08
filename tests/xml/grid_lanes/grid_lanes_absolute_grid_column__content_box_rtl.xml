@@ -1,0 +1,23 @@
+<test name="grid_lanes_absolute_grid_column__content_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid-lanes" box-sizing="content-box" direction="rtl" position="relative" width="140px" height="100px" row-gap="10px" column-gap="10px" padding-top="5px" padding-left="5px" padding-bottom="5px" padding-right="5px" fit-tolerance="10px" grid-template-columns="40px 40px 40px">
+      <div box-sizing="content-box" direction="rtl" position="relative" height="30px"/>
+      <div box-sizing="content-box" direction="rtl" position="relative" height="20px"/>
+      <div box-sizing="content-box" direction="rtl" position="relative" height="10px"/>
+      <div box-sizing="content-box" direction="rtl" position="absolute" top="0px" left="0px" bottom="0px" right="0px" grid-column-start="2" grid-column-end="3"/>
+      <div box-sizing="content-box" direction="rtl" position="absolute" width="20px" height="20px" top="10px" left="10px" grid-column-start="1" grid-column-end="3"/>
+      <div box-sizing="content-box" direction="rtl" position="absolute" width="20px" height="20px" bottom="0px" right="0px" grid-column-start="3" grid-column-end="4"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="150" height="110">
+      <node x="105" y="5" width="40" height="30"/>
+      <node x="55" y="5" width="40" height="20"/>
+      <node x="5" y="5" width="40" height="10"/>
+      <node x="55" y="0" width="40" height="110"/>
+      <node x="65" y="10" width="20" height="20"/>
+      <node x="25" y="90" width="20" height="20"/>
+    </node>
+  </expectations>
+</test>

@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    Grid Lanes: absolutely positioned children with grid-axis content alignment
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="position: relative; display: grid-lanes; grid-template-columns: 40px 40px; gap: 10px; width: 150px; height: 100px; justify-content: center; align-content: center;">
+  <div style="height: 30px;"></div>
+  <div style="height: 20px;"></div>
+  <div style="height: 10px;"></div>
+  <div style="position: absolute; grid-column: 1 / 2; inset: 0;"></div>
+  <div style="position: absolute; grid-column: 2 / 3; top: 0; left: 0; width: 20px; height: 20px;"></div>
+  <div style="position: absolute; grid-column: 2 / 3; width: 20px; height: 20px; justify-self: end; align-self: end;"></div>
+  <div style="position: absolute; width: 20px; height: 20px; justify-self: end; align-self: center;"></div>
+</div>
+
+</body>
+</html>

@@ -35763,6 +35763,126 @@ mod grid {
 mod grid_lanes {
     #[cfg(feature = "grid_lanes")]
     #[test]
+    fn grid_lanes_absolute_content_alignment__border_box_ltr() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_absolute_content_alignment__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_absolute_content_alignment__content_box_ltr() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_absolute_content_alignment__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_absolute_content_alignment__border_box_rtl() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_absolute_content_alignment__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_absolute_content_alignment__content_box_rtl() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_absolute_content_alignment__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_absolute_grid_column__border_box_ltr() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_absolute_grid_column__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_absolute_grid_column__content_box_ltr() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_absolute_grid_column__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_absolute_grid_column__border_box_rtl() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_absolute_grid_column__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_absolute_grid_column__content_box_rtl() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_absolute_grid_column__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_absolute_row_direction__border_box_ltr() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_absolute_row_direction__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_absolute_row_direction__content_box_ltr() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_absolute_row_direction__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_absolute_row_direction__border_box_rtl() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_absolute_row_direction__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_absolute_row_direction__content_box_rtl() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_absolute_row_direction__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_absolute_stacking_axis_lines__border_box_ltr() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_absolute_stacking_axis_lines__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_absolute_stacking_axis_lines__content_box_ltr() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_absolute_stacking_axis_lines__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_absolute_stacking_axis_lines__border_box_rtl() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_absolute_stacking_axis_lines__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_absolute_stacking_axis_lines__content_box_rtl() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_absolute_stacking_axis_lines__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_absolute_static_position__border_box_ltr() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_absolute_static_position__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_absolute_static_position__content_box_ltr() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_absolute_static_position__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_absolute_static_position__border_box_rtl() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_absolute_static_position__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_absolute_static_position__content_box_rtl() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_absolute_static_position__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
     fn grid_lanes_align_content_center__border_box_ltr() {
         crate::run_xml_test("grid_lanes", "grid_lanes_align_content_center__border_box_ltr");
     }
