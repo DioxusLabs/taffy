@@ -38,6 +38,8 @@ pub use self::grid::{
     GridTemplateComponent, GridTemplateRepetition, GridTemplateTracks, MaxTrackSizingFunction, MinTrackSizingFunction,
     RepetitionCount, TrackSizingFunction,
 };
+#[cfg(feature = "grid_lanes")]
+pub use self::grid::{FlowTolerance, GridLanesDirection};
 #[cfg(feature = "grid")]
 pub(crate) use self::grid::{GridAreaAxis, GridAreaEnd};
 #[cfg(feature = "grid")]
@@ -261,6 +263,9 @@ pub enum Display {
     /// The children will follow the CSS Grid layout algorithm
     #[cfg(feature = "grid")]
     Grid,
+    /// The children will follow the CSS Grid Level 3 Grid Lanes layout algorithm
+    #[cfg(feature = "grid_lanes")]
+    GridLanes,
     /// The node is hidden, and it's children will also be hidden
     None,
 }
@@ -296,6 +301,8 @@ crate::util::parse::impl_parse_for_keyword_enum!(Display,
     "flex" => Flex,
     #[cfg(feature = "grid")]
     "grid" => Grid,
+    #[cfg(feature = "grid_lanes")]
+    "grid-lanes" => GridLanes,
     #[cfg(feature = "block_layout")]
     "block" => Block,
     #[cfg(feature = "block_layout")]
@@ -314,6 +321,8 @@ impl core::fmt::Display for Display {
             Display::Flex => write!(f, "FLEX"),
             #[cfg(feature = "grid")]
             Display::Grid => write!(f, "GRID"),
+            #[cfg(feature = "grid_lanes")]
+            Display::GridLanes => write!(f, "GRID-LANES"),
         }
     }
 }
@@ -850,6 +859,12 @@ pub struct Style<S: CheapCloneStr = DefaultCheapStr> {
     /// Controls how items get placed into the grid for auto-placed items
     #[cfg(feature = "grid")]
     pub grid_auto_flow: GridAutoFlow,
+    /// Which axis of a grid lanes container has tracks (the other axis is the stacking axis)
+    #[cfg(feature = "grid_lanes")]
+    pub grid_lanes_direction: GridLanesDirection,
+    /// The tie threshold for grid lanes auto-placement
+    #[cfg(feature = "grid_lanes")]
+    pub flow_tolerance: FlowTolerance,
 
     // Grid container named properties
     /// Defines the rectangular grid areas
@@ -943,6 +958,10 @@ impl<S: CheapCloneStr> Style<S> {
         grid_auto_columns: GridTrackVec::new(),
         #[cfg(feature = "grid")]
         grid_auto_flow: GridAutoFlow::Row,
+        #[cfg(feature = "grid_lanes")]
+        grid_lanes_direction: GridLanesDirection::Column,
+        #[cfg(feature = "grid_lanes")]
+        flow_tolerance: FlowTolerance::ZERO,
         #[cfg(feature = "grid")]
         grid_row: Line { start: GridPlacement::<S>::Auto, end: GridPlacement::<S>::Auto },
         #[cfg(feature = "grid")]
@@ -1433,6 +1452,16 @@ impl<S: CheapCloneStr> GridContainerStyle for Style<S> {
     fn grid_auto_flow(&self) -> GridAutoFlow {
         self.grid_auto_flow
     }
+    #[cfg(feature = "grid_lanes")]
+    #[inline(always)]
+    fn grid_lanes_direction(&self) -> GridLanesDirection {
+        self.grid_lanes_direction
+    }
+    #[cfg(feature = "grid_lanes")]
+    #[inline(always)]
+    fn flow_tolerance(&self) -> FlowTolerance {
+        self.flow_tolerance
+    }
     #[inline(always)]
     fn gap(&self) -> Size<LengthPercentage> {
         self.gap
@@ -1554,6 +1583,16 @@ impl<T: GridContainerStyle> GridContainerStyle for &'_ T {
     #[inline(always)]
     fn grid_auto_flow(&self) -> GridAutoFlow {
         (*self).grid_auto_flow()
+    }
+    #[cfg(feature = "grid_lanes")]
+    #[inline(always)]
+    fn grid_lanes_direction(&self) -> GridLanesDirection {
+        (*self).grid_lanes_direction()
+    }
+    #[cfg(feature = "grid_lanes")]
+    #[inline(always)]
+    fn flow_tolerance(&self) -> FlowTolerance {
+        (*self).flow_tolerance()
     }
     #[inline(always)]
     fn gap(&self) -> Size<LengthPercentage> {
@@ -1697,6 +1736,10 @@ mod tests {
             grid_auto_columns: Default::default(),
             #[cfg(feature = "grid")]
             grid_auto_flow: Default::default(),
+            #[cfg(feature = "grid_lanes")]
+            grid_lanes_direction: Default::default(),
+            #[cfg(feature = "grid_lanes")]
+            flow_tolerance: Default::default(),
             #[cfg(feature = "grid")]
             grid_row: Line { start: GridPlacement::Auto, end: GridPlacement::Auto },
             #[cfg(feature = "grid")]
@@ -1795,6 +1838,10 @@ mod tests {
 
         // CSS Grid Container
         assert_type_size::<GridAutoFlow>(1);
+        #[cfg(feature = "grid_lanes")]
+        assert_type_size::<GridLanesDirection>(1);
+        #[cfg(feature = "grid_lanes")]
+        assert_type_size::<FlowTolerance>(16);
         assert_type_size::<MinTrackSizingFunction>(8);
         assert_type_size::<MaxTrackSizingFunction>(8);
         assert_type_size::<TrackSizingFunction>(16);
@@ -1805,12 +1852,18 @@ mod tests {
         assert_type_size::<GridTemplateComponent<String>>(56);
         assert_type_size::<GridPlacement<String>>(32);
         assert_type_size::<Line<GridPlacement<String>>>(64);
+        #[cfg(feature = "grid_lanes")]
+        assert_type_size::<Style<String>>(576);
+        #[cfg(not(feature = "grid_lanes"))]
         assert_type_size::<Style<String>>(560);
 
         // String-type dependent (Arc<str>)
         assert_type_size::<GridTemplateComponent<Arc<str>>>(56);
         assert_type_size::<GridPlacement<Arc<str>>>(24);
         assert_type_size::<Line<GridPlacement<Arc<str>>>>(48);
+        #[cfg(feature = "grid_lanes")]
+        assert_type_size::<Style<Arc<str>>>(544);
+        #[cfg(not(feature = "grid_lanes"))]
         assert_type_size::<Style<Arc<str>>>(528);
     }
 }

@@ -1,0 +1,17 @@
+<test name="grid_lanes_padding_border__content_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid-lanes" box-sizing="content-box" direction="rtl" position="absolute" width="150px" padding-top="10px" padding-left="10px" padding-bottom="10px" padding-right="10px" border-top="5px" border-left="5px" border-bottom="5px" border-right="5px" flow-tolerance="10px" grid-template-columns="40px 40px">
+      <div box-sizing="content-box" direction="rtl" position="relative" height="20px"/>
+      <div box-sizing="content-box" direction="rtl" position="relative" height="30px"/>
+      <div box-sizing="content-box" direction="rtl" position="relative" height="10px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="180" height="60">
+      <node x="125" y="15" width="40" height="20"/>
+      <node x="85" y="15" width="40" height="30"/>
+      <node x="125" y="35" width="40" height="10"/>
+    </node>
+  </expectations>
+</test>

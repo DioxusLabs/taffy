@@ -221,6 +221,20 @@ pub trait GridContainerStyle: CoreStyle {
         Style::<Self::CustomIdent>::DEFAULT.grid_auto_flow
     }
 
+    /// Which axis of a grid lanes container has tracks (the other axis is the stacking axis)
+    #[cfg(feature = "grid_lanes")]
+    #[inline(always)]
+    fn grid_lanes_direction(&self) -> GridLanesDirection {
+        Style::<Self::CustomIdent>::DEFAULT.grid_lanes_direction
+    }
+
+    /// The tie threshold for grid lanes auto-placement
+    #[cfg(feature = "grid_lanes")]
+    #[inline(always)]
+    fn flow_tolerance(&self) -> FlowTolerance {
+        Style::<Self::CustomIdent>::DEFAULT.flow_tolerance
+    }
+
     /// How large should the gaps between items in a grid or flex container be?
     #[inline(always)]
     fn gap(&self) -> Size<LengthPercentage> {
@@ -391,6 +405,90 @@ impl GridAutoFlow {
         }
     }
 }
+
+/// Controls which axis of a grid lanes container has grid tracks. Items are stacked along the other
+/// ("stacking") axis.
+///
+/// Defaults to [`GridLanesDirection::Column`] (column tracks, items stack vertically)
+///
+/// Tentative name and values: <https://github.com/w3c/csswg-drafts/issues/12803>
+#[cfg(feature = "grid_lanes")]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub enum GridLanesDirection {
+    /// Row tracks (from `grid-template-rows`); items stack along the inline axis
+    Row,
+    /// Column tracks (from `grid-template-columns`); items stack along the block axis
+    #[default]
+    Column,
+}
+
+#[cfg(all(feature = "grid_lanes", feature = "parse"))]
+crate::util::parse::impl_parse_for_keyword_enum!(GridLanesDirection,
+    "row" => Row,
+    "column" => Column,
+);
+
+#[cfg(feature = "grid_lanes")]
+impl GridLanesDirection {
+    /// The axis that has grid tracks
+    pub const fn grid_axis(&self) -> AbsoluteAxis {
+        match self {
+            Self::Row => AbsoluteAxis::Vertical,
+            Self::Column => AbsoluteAxis::Horizontal,
+        }
+    }
+
+    /// The axis along which items are stacked
+    pub const fn stacking_axis(&self) -> AbsoluteAxis {
+        match self {
+            Self::Row => AbsoluteAxis::Horizontal,
+            Self::Column => AbsoluteAxis::Vertical,
+        }
+    }
+}
+
+/// The tie threshold for grid lanes auto-placement: candidate positions within this distance of the
+/// shortest track are considered equally good, and the first one at or after the placement cursor wins.
+///
+/// CSS `flow-tolerance: normal` resolves to `1em`, which Taffy cannot compute, so style sources must
+/// pass a resolved length. Defaults to [`FlowTolerance::ZERO`].
+///
+/// <https://drafts.csswg.org/css-grid-3/#flow-tolerance>
+#[cfg(feature = "grid_lanes")]
+#[derive(Copy, Clone, PartialEq, Debug)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub enum FlowTolerance {
+    /// A length or a percentage of the grid lanes container's content box size in the grid axis
+    Length(LengthPercentage),
+    /// Items are placed strictly in order, ignoring track lengths
+    Infinite,
+}
+
+#[cfg(feature = "grid_lanes")]
+impl FlowTolerance {
+    /// A zero tie threshold: an item always goes to the shortest track
+    pub const ZERO: Self = Self::Length(LengthPercentage::ZERO);
+}
+
+#[cfg(feature = "grid_lanes")]
+impl Default for FlowTolerance {
+    fn default() -> Self {
+        Self::ZERO
+    }
+}
+
+#[cfg(all(feature = "grid_lanes", feature = "parse"))]
+impl FromCss for FlowTolerance {
+    fn from_css<'i>(parser: &mut Parser<'i, '_>) -> CssParseResult<'i, Self> {
+        if parser.try_parse(|parser| parser.expect_ident_matching("infinite")).is_ok() {
+            return Ok(Self::Infinite);
+        }
+        LengthPercentage::from_css(parser).map(Self::Length)
+    }
+}
+#[cfg(all(feature = "grid_lanes", feature = "parse"))]
+from_str_from_css!(FlowTolerance);
 
 /// A grid line placement specification which is generic over the coordinate system that it uses to define
 /// grid line positions.

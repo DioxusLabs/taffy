@@ -100,6 +100,9 @@ mod readme_doctest {
 #[cfg(feature = "flexbox")]
 #[doc(inline)]
 pub use crate::compute::compute_flexbox_layout;
+#[cfg(feature = "grid_lanes")]
+#[doc(inline)]
+pub use crate::compute::compute_grid_lanes_layout;
 #[cfg(feature = "grid")]
 #[doc(inline)]
 pub use crate::compute::compute_grid_layout;

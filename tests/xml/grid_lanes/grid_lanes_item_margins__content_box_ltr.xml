@@ -1,0 +1,19 @@
+<test name="grid_lanes_item_margins__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid-lanes" box-sizing="content-box" direction="ltr" position="absolute" width="120px" flow-tolerance="10px" grid-template-columns="40px 40px 40px">
+      <div box-sizing="content-box" direction="ltr" position="relative" height="20px" margin-top="5px" margin-left="5px" margin-bottom="5px" margin-right="5px"/>
+      <div box-sizing="content-box" direction="ltr" position="relative" height="30px" margin-top="10px"/>
+      <div box-sizing="content-box" direction="ltr" position="relative" height="10px"/>
+      <div box-sizing="content-box" direction="ltr" position="relative" height="10px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="120" height="40">
+      <node x="5" y="5" width="30" height="20"/>
+      <node x="40" y="10" width="40" height="30"/>
+      <node x="80" y="0" width="40" height="10"/>
+      <node x="80" y="10" width="40" height="10"/>
+    </node>
+  </expectations>
+</test>
