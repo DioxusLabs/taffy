@@ -44,8 +44,30 @@ mod detailed_grid_info {
         assert!(info.columns.line_names.is_empty());
         assert!(info.rows.line_names.is_empty());
         assert_eq!(info.columns.iter_line_names().count(), 0);
-        assert_eq!(info.grid_template_columns(), "40px 60px");
-        assert_eq!(info.grid_template_rows(), "50px");
+        assert_eq!(info.grid_template_columns(1.0), "40px 60px");
+        assert_eq!(info.grid_template_rows(1.0), "50px");
+    }
+
+    #[test]
+    fn zoomed_track_list() {
+        let mut tree = new_test_tree();
+        let child = tree.new_leaf(Style::default()).unwrap();
+        let root = tree
+            .new_with_children(
+                Style {
+                    display: Display::Grid,
+                    grid_template_columns: vec![length(80.0), length(120.0)],
+                    grid_template_rows: vec![length(100.0)],
+                    ..Default::default()
+                },
+                &[child],
+            )
+            .unwrap();
+        tree.compute_layout(root, definite(200.0, 100.0)).unwrap();
+
+        let info = get_detailed_grid_info(&tree, root);
+        assert_eq!(info.grid_template_columns(2.0), "40px 60px");
+        assert_eq!(info.grid_template_rows(2.0), "50px");
     }
 
     #[test]
@@ -93,8 +115,8 @@ mod detailed_grid_info {
         // Implicit `<area>-start`/`<area>-end` names are not part of the resolved track list
         assert_eq!(info.rows.iter_line_names().count(), 0);
 
-        assert_eq!(info.grid_template_columns(), "[full-start] 40px [main-start] 60px [main-end full-end]");
-        assert_eq!(info.grid_template_rows(), "50px");
+        assert_eq!(info.grid_template_columns(1.0), "[full-start] 40px [main-start] 60px [main-end full-end]");
+        assert_eq!(info.grid_template_rows(1.0), "50px");
 
         // ...but they still resolve for placement
         assert_eq!(
@@ -144,7 +166,7 @@ mod detailed_grid_info {
         assert_eq!(column_lines[2], ["col-end".to_string(), "outer-end".to_string()]);
 
         assert_eq!(
-            info.grid_template_columns(),
+            info.grid_template_columns(1.0),
             "[outer-start col-start] 50px [col-end col-start] 50px [col-end outer-end]"
         );
     }
@@ -182,7 +204,7 @@ mod detailed_grid_info {
         assert_eq!(column_lines[1], ["a".to_string()]);
         assert_eq!(column_lines[2], ["b".to_string()]);
         let expected = format!("{}px [a] 50px [b]", info.columns.positions[0].end - info.columns.positions[0].start);
-        assert_eq!(info.grid_template_columns(), expected);
+        assert_eq!(info.grid_template_columns(1.0), expected);
     }
 
     #[test]
@@ -341,7 +363,7 @@ mod detailed_grid_info {
         assert_eq!(column_lines[0], ["a".to_string()]);
         assert_eq!(column_lines[1], ["b".to_string()]);
         assert_eq!(column_lines[2], ["c".to_string()]);
-        assert_eq!(info.grid_template_columns(), "[a] 40px [b] 60px [c]");
+        assert_eq!(info.grid_template_columns(1.0), "[a] 40px [b] 60px [c]");
 
         // Positions hold physical coordinates: logical track 1 is physically rightmost in RTL
         assert_eq!(info.columns.positions[0], Line { start: 60.0, end: 100.0 });
