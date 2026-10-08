@@ -1,10 +1,26 @@
 //! Helpers for use in unit tests within the grid module
-use super::super::types::{ItemPlacement, NamedLineResolver};
+use super::super::types::{GridItem, ItemPlacement, NamedLineResolver};
 use super::super::OriginZeroLine;
 use crate::geometry::InBothAbsAxis;
 use crate::prelude::*;
 use crate::style::{Dimension, GridPlacement, Style};
 use crate::util::sys::Vec;
+
+/// Create a `GridItem` (with start alignment) for each `(index, style)` pair, as `compute_grid_layout` does
+/// for the in-flow children of a grid container
+pub(crate) fn grid_items<'a>(children: impl Iterator<Item = (usize, &'a Style)>) -> Vec<GridItem> {
+    children
+        .map(|(index, style)| {
+            GridItem::new_with_style_and_order(
+                NodeId::from(index),
+                style,
+                AlignSelf::START,
+                AlignSelf::START,
+                index as u16,
+            )
+        })
+        .collect()
+}
 
 /// Resolve the placement styles of the given child styles, as `compute_grid_layout` does before estimating
 /// the grid size and placing items

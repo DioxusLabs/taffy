@@ -349,8 +349,8 @@ mod tests {
 
     mod test_placement_algorithm {
         use crate::compute::grid::implicit_grid::compute_grid_size_estimate;
-        use crate::compute::grid::types::{GridItem, TrackCounts};
-        use crate::compute::grid::util::test_helpers::resolve_placements;
+        use crate::compute::grid::types::TrackCounts;
+        use crate::compute::grid::util::test_helpers::{grid_items, resolve_placements};
         use crate::compute::grid::util::*;
         use crate::compute::grid::CellOccupancyMatrix;
         use crate::compute::grid::NamedLineResolver;
@@ -374,18 +374,7 @@ mod tests {
             let mut name_resolver = NamedLineResolver::new(&Style::DEFAULT, 0, 0);
             name_resolver.set_explicit_column_count(explicit_col_count);
             name_resolver.set_explicit_row_count(explicit_row_count);
-            let mut items: Vec<GridItem> = children
-                .iter()
-                .map(|(index, style, _)| {
-                    GridItem::new_with_style_and_order(
-                        NodeId::from(*index),
-                        style,
-                        AlignSelf::START,
-                        AlignSelf::START,
-                        *index as u16,
-                    )
-                })
-                .collect();
+            let mut items = grid_items(children.iter().map(|(index, style, _)| (*index, style)));
             // TODO: actually test named line resolution
             let placements = resolve_placements(
                 children.iter().map(|(_, style, _)| style),
@@ -617,18 +606,7 @@ mod tests {
             let mut name_resolver = NamedLineResolver::new(&Style::DEFAULT, 0, 0);
             name_resolver.set_explicit_column_count(explicit_col_count);
             name_resolver.set_explicit_row_count(explicit_row_count);
-            let mut items: Vec<GridItem> = children
-                .iter()
-                .map(|(index, style)| {
-                    GridItem::new_with_style_and_order(
-                        NodeId::from(*index),
-                        style,
-                        AlignSelf::START,
-                        AlignSelf::START,
-                        *index as u16,
-                    )
-                })
-                .collect();
+            let mut items = grid_items(children.iter().map(|(index, style)| (*index, style)));
             let placements = resolve_placements(
                 children.iter().map(|(_, style)| style),
                 &name_resolver,
