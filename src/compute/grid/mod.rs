@@ -766,8 +766,12 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
         },
     );
 
-    let oof_positioning_area =
-        Some(OofPositioningArea { size: absolute_position_area, offset: absolute_position_offset });
+    let oof_positioning_area = Some(OofPositioningArea {
+        size: absolute_position_area,
+        offset: absolute_position_offset,
+        #[cfg(feature = "content_size")]
+        scrollable_overflow_reversed: Point { x: false, y: false },
+    });
 
     // If there are no in-flow items then return the container size and the overflow (no baseline)
     if items.is_empty() {

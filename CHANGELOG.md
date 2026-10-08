@@ -4,6 +4,8 @@
 
 ### Breaking
 
+- `OofPositioningArea` gains a `scrollable_overflow_reversed: Point<bool>` field (with `content_size` enabled). Custom non-flex positioning areas should set it to `Point { x: false, y: false }`.
+
 - **`normal` is now a first-class keyword for `align-content` / `justify-content`, which are no longer wrapped in `Option`**. `AlignContentKeyword` gains a `Normal` variant, exposed as the constant `AlignContent::NORMAL` (= `JustifyContent::NORMAL`), which is the initial value of both properties. Layout is unchanged: `NORMAL` behaves exactly as `None` did (as `stretch` in Flexbox and CSS Grid containers, and as `start` in block containers, where it is also the only value that does not make the container establish an independent formatting context).
   - `Style::align_content` and `Style::justify_content` are now `AlignContent` / `JustifyContent` (default `AlignContent::NORMAL`). Replace `Some(AlignContent::X)` with `AlignContent::X`, and `None` with `AlignContent::NORMAL`
   - The style trait getters `FlexboxContainerStyle::{align_content, justify_content}`, `GridContainerStyle::{align_content, justify_content}` and `BlockContainerStyle::align_content` return `AlignContent` / `JustifyContent` rather than `Option<_>`
@@ -83,6 +85,7 @@
 
 ### Fixed
 
+- Flexbox: scrollable overflow now follows main-start/cross-start for reversed flex directions and `wrap-reverse`, including absolutely positioned children and end padding. Overflowing `stretch`/`space-between` alignment now falls back to `flex-start`, without changing explicit `safe` alignment.
 - Absolute positioning: `safe` static alignment with two `auto` insets checks overflow and falls back within the inset-modified containing block, matching Chrome's interpretation of [CSSWG #11934](https://github.com/w3c/csswg-drafts/issues/11934).
 - Grid: absolute grid placement now excludes overlapping gutters when grid lines fall within collapsed `auto-fit` tracks. `DetailedGridTracksInfo` gains a `collapsed_tracks` field recording the collapsed ranges; stored track positions and used track-size serialization are unchanged.
 - Grid: the edges of a grid area are now only matched by a `<custom-ident>` on its own. `grid-column: 2 foo` and `grid-column: span foo` no longer fall back to the edges of the area named `foo` when there is no line named `foo`.

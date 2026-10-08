@@ -721,6 +721,7 @@ fn compute_inner(
                             item.overflow,
                             item.contain,
                             is_scroll_container,
+                            Size::NONE,
                         ));
                     }
                 }
@@ -826,8 +827,12 @@ fn compute_inner(
     let absolute_position_area = final_outer_size - absolute_position_inset.sum_axes();
     let absolute_position_offset = Point { x: absolute_position_inset.left, y: absolute_position_inset.top };
     output.oof_candidates = candidates;
-    output.oof_positioning_area =
-        Some(OofPositioningArea { size: absolute_position_area, offset: absolute_position_offset });
+    output.oof_positioning_area = Some(OofPositioningArea {
+        size: absolute_position_area,
+        offset: absolute_position_offset,
+        #[cfg(feature = "content_size")]
+        scrollable_overflow_reversed: Point { x: false, y: false },
+    });
 
     #[cfg(feature = "content_size")]
     {
@@ -1234,6 +1239,7 @@ fn perform_final_layout_on_in_flow_children(
                         item.overflow,
                         item.contain,
                         is_scroll_container,
+                        Size::NONE,
                     ));
                 }
 
@@ -1731,6 +1737,7 @@ fn perform_final_layout_on_in_flow_children(
                     item.overflow,
                     item.contain,
                     is_scroll_container,
+                    Size::NONE,
                 ));
             }
 

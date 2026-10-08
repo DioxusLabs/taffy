@@ -168,6 +168,8 @@ pub fn compute_root_layout(
             candidates,
             area_size,
             area_offset,
+            #[cfg(feature = "content_size")]
+            Point { x: false, y: false },
             direction,
             // The root is the initial containing block and claims all remaining candidates
             ContainingBlockClaims::ALL,
