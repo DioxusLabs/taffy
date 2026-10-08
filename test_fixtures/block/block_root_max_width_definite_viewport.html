@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    A block root with a max-width does not stretch to the full width of the viewport
+  </title>
+</head>
+<body>
+
+<!-- 200px of wrappable content in a 150px wide viewport: the root is limited to its max-width of 100px -->
+<div class="viewport" style="width: 150px;">
+  <div id="test-root" style="display: block; max-width: 100px;">
+    <div>HH&ZeroWidthSpace;HH&ZeroWidthSpace;HH&ZeroWidthSpace;HH&ZeroWidthSpace;HH&ZeroWidthSpace;HH&ZeroWidthSpace;HH&ZeroWidthSpace;HH&ZeroWidthSpace;HH&ZeroWidthSpace;HH</div>
+  </div>
+</div>
+
+</body>
+</html>
