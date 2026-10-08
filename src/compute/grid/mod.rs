@@ -210,96 +210,6 @@ fn compute_container_constants<Tree: LayoutGridContainer>(
     }
 }
 
-/// The explicit grid: track counts (including resolved `auto-fill`/`auto-fit` repetitions) and line names
-struct ExplicitGrid<S: CheapCloneStr> {
-    /// The number of `auto-fill`/`auto-fit` repetitions in the column template
-    col_auto_repetition_count: u16,
-    /// The number of `auto-fill`/`auto-fit` repetitions in the row template
-    row_auto_repetition_count: u16,
-    /// The number of explicit columns (from the template and `grid-template-areas`)
-    col_count: u16,
-    /// The number of explicit rows (from the template and `grid-template-areas`)
-    row_count: u16,
-    /// Resolves named lines and areas to line indexes
-    name_resolver: NamedLineResolver<S>,
-    /// The names of each explicit column line
-    detailed_column_line_names: GridLineNames<S>,
-    /// The names of each explicit row line
-    detailed_row_line_names: GridLineNames<S>,
-}
-
-/// Resolve the explicit grid from the container's template styles (step 2 of `compute_grid_layout`)
-fn resolve_explicit_grid<'a, Tree: LayoutGridContainer>(
-    tree: &Tree,
-    style: &Tree::GridContainerStyle<'a>,
-    constants: &GridContainerConstants,
-) -> ExplicitGrid<Tree::CustomIdent> {
-    let GridContainerConstants { outer_node_size, min_size, max_size, padding_border_size, content_box_inset, .. } =
-        *constants;
-
-    // This is very similar to the inner_node_size except if the inner_node_size is not definite but the node
-    // has a min- or max- size style then that will be used in it's place.
-    let auto_fit_container_size = outer_node_size
-        .or(max_size)
-        .or(min_size)
-        .maybe_clamp(min_size, max_size)
-        .maybe_max(padding_border_size)
-        .maybe_sub(content_box_inset.sum_axes());
-
-    // If the grid container has a definite size or max size in the relevant axis:
-    //   - then the number of repetitions is the largest possible positive integer that does not cause the grid to overflow the content
-    //     box of its grid container.
-    // Otherwise, if the grid container has a definite min size in the relevant axis:
-    //   - then the number of repetitions is the smallest possible positive integer that fulfills that minimum requirement
-    // Otherwise, the specified track list repeats only once.
-    let auto_repeat_fit_strategy = outer_node_size.or(max_size).map(|val| match val {
-        Some(_) => AutoRepeatStrategy::MaxRepetitionsThatDoNotOverflow,
-        None => AutoRepeatStrategy::MinRepetitionsThatDoOverflow,
-    });
-
-    // Compute the number of rows and columns in the explicit grid *template*
-    // (explicit tracks from grid_areas are computed separately below)
-    let (col_auto_repetition_count, grid_template_col_count) = compute_explicit_grid_size_in_axis(
-        style,
-        auto_fit_container_size.width,
-        auto_repeat_fit_strategy.width,
-        |val, basis| tree.calc(val, basis),
-        AbsoluteAxis::Horizontal,
-    );
-    let (row_auto_repetition_count, grid_template_row_count) = compute_explicit_grid_size_in_axis(
-        style,
-        auto_fit_container_size.height,
-        auto_repeat_fit_strategy.height,
-        |val, basis| tree.calc(val, basis),
-        AbsoluteAxis::Vertical,
-    );
-
-    // type CustomIdent<'a> = <<Tree as LayoutPartialTree>::CoreContainerStyle<'_> as CoreStyle>::CustomIdent;
-    let mut name_resolver = NamedLineResolver::new(style, col_auto_repetition_count, row_auto_repetition_count);
-
-    // Clamp the explicit grid to MAX_GRID_TRACKS tracks in each axis
-    // https://www.w3.org/TR/css-grid-1/#overlarge-grids
-    let explicit_col_count = grid_template_col_count.max(name_resolver.area_column_count()).min(MAX_GRID_TRACKS);
-    let explicit_row_count = grid_template_row_count.max(name_resolver.area_row_count()).min(MAX_GRID_TRACKS);
-
-    name_resolver.set_explicit_column_count(explicit_col_count);
-    name_resolver.set_explicit_row_count(explicit_row_count);
-
-    // Build the per-line names of the explicit grid from the name resolver's collected pairs
-    let detailed_column_line_names = name_resolver.detailed_line_names(AbsoluteAxis::Horizontal);
-    let detailed_row_line_names = name_resolver.detailed_line_names(AbsoluteAxis::Vertical);
-
-    ExplicitGrid {
-        col_auto_repetition_count,
-        row_auto_repetition_count,
-        col_count: explicit_col_count,
-        row_count: explicit_row_count,
-        name_resolver,
-        detailed_column_line_names,
-        detailed_row_line_names,
-    }
-}
-
 /// Grid layout algorithm
 /// This consists of a few phases:
 ///   - Resolving the explicit grid
@@ -367,15 +277,58 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     }
 
     // 2. Resolve the explicit grid
-    let ExplicitGrid {
-        col_auto_repetition_count,
-        row_auto_repetition_count,
-        col_count: explicit_col_count,
-        row_count: explicit_row_count,
-        name_resolver,
-        mut detailed_column_line_names,
-        mut detailed_row_line_names,
-    } = resolve_explicit_grid(tree, &style, &constants);
+
+    // This is very similar to the inner_node_size except if the inner_node_size is not definite but the node
+    // has a min- or max- size style then that will be used in it's place.
+    let auto_fit_container_size = outer_node_size
+        .or(max_size)
+        .or(min_size)
+        .maybe_clamp(min_size, max_size)
+        .maybe_max(padding_border_size)
+        .maybe_sub(content_box_inset.sum_axes());
+
+    // If the grid container has a definite size or max size in the relevant axis:
+    //   - then the number of repetitions is the largest possible positive integer that does not cause the grid to overflow the content
+    //     box of its grid container.
+    // Otherwise, if the grid container has a definite min size in the relevant axis:
+    //   - then the number of repetitions is the smallest possible positive integer that fulfills that minimum requirement
+    // Otherwise, the specified track list repeats only once.
+    let auto_repeat_fit_strategy = outer_node_size.or(max_size).map(|val| match val {
+        Some(_) => AutoRepeatStrategy::MaxRepetitionsThatDoNotOverflow,
+        None => AutoRepeatStrategy::MinRepetitionsThatDoOverflow,
+    });
+
+    // Compute the number of rows and columns in the explicit grid *template*
+    // (explicit tracks from grid_areas are computed separately below)
+    let (col_auto_repetition_count, grid_template_col_count) = compute_explicit_grid_size_in_axis(
+        &style,
+        auto_fit_container_size.width,
+        auto_repeat_fit_strategy.width,
+        |val, basis| tree.calc(val, basis),
+        AbsoluteAxis::Horizontal,
+    );
+    let (row_auto_repetition_count, grid_template_row_count) = compute_explicit_grid_size_in_axis(
+        &style,
+        auto_fit_container_size.height,
+        auto_repeat_fit_strategy.height,
+        |val, basis| tree.calc(val, basis),
+        AbsoluteAxis::Vertical,
+    );
+
+    // type CustomIdent<'a> = <<Tree as LayoutPartialTree>::CoreContainerStyle<'_> as CoreStyle>::CustomIdent;
+    let mut name_resolver = NamedLineResolver::new(&style, col_auto_repetition_count, row_auto_repetition_count);
+
+    // Clamp the explicit grid to MAX_GRID_TRACKS tracks in each axis
+    // https://www.w3.org/TR/css-grid-1/#overlarge-grids
+    let explicit_col_count = grid_template_col_count.max(name_resolver.area_column_count()).min(MAX_GRID_TRACKS);
+    let explicit_row_count = grid_template_row_count.max(name_resolver.area_row_count()).min(MAX_GRID_TRACKS);
+
+    name_resolver.set_explicit_column_count(explicit_col_count);
+    name_resolver.set_explicit_row_count(explicit_row_count);
+
+    // Build the per-line names of the explicit grid from the name resolver's collected pairs
+    let mut detailed_column_line_names = name_resolver.detailed_line_names(AbsoluteAxis::Horizontal);
+    let mut detailed_row_line_names = name_resolver.detailed_line_names(AbsoluteAxis::Vertical);
 
     // 3. Create the grid items (in document order) and resolve the named lines in their `grid-row`/`grid-column` styles
     // Absolutely positioned children do not take part in grid placement and do not create implicit tracks,
