@@ -1,0 +1,15 @@
+<test name="grid_min_contribution_size_clamped_by_max_size_columns__border_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" direction="ltr" position="absolute" justify-content="start" width="100px" height="100px" grid-template-columns="auto">
+      <div direction="ltr" position="relative" width="25px" max-width="10px"/>
+      <div direction="ltr" position="relative"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="100" height="100" resolved-rows="50px 50px" resolved-columns="10px">
+      <node x="0" y="0" width="10" height="50"/>
+      <node x="0" y="50" width="10" height="50"/>
+    </node>
+  </expectations>
+</test>
