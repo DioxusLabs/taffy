@@ -1,7 +1,26 @@
 //! Helpers for use in unit tests within the grid module
+use super::super::types::{ItemPlacement, NamedLineResolver};
 use super::super::OriginZeroLine;
+use crate::geometry::InBothAbsAxis;
 use crate::prelude::*;
 use crate::style::{Dimension, GridPlacement, Style};
+use crate::util::sys::Vec;
+
+/// Resolve the placement styles of the given child styles, as `compute_grid_layout` does before estimating
+/// the grid size and placing items
+pub(crate) fn resolve_placements<'a>(
+    child_styles: impl Iterator<Item = &'a Style>,
+    name_resolver: &NamedLineResolver<String>,
+    explicit_col_count: u16,
+    explicit_row_count: u16,
+) -> Vec<ItemPlacement> {
+    child_styles
+        .map(|style| InBothAbsAxis {
+            horizontal: name_resolver.resolve_column_names(&style.grid_column).into_origin_zero(explicit_col_count),
+            vertical: name_resolver.resolve_row_names(&style.grid_row).into_origin_zero(explicit_row_count),
+        })
+        .collect()
+}
 
 pub(crate) trait CreateParentTestNode {
     fn into_grid(self) -> Style;

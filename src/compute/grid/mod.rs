@@ -27,7 +27,7 @@ use types::{CellOccupancyMatrix, GridAreasMap, GridTrack, NamedLineResolver};
 use crate::sys::{DefaultCheapStr, String};
 use crate::{CheapCloneStr, GridAreaAxis, GridPlacement};
 use core::ops::Range;
-use types::{GridItem, GridTrackKind, TrackCounts};
+use types::{GridItem, GridTrackKind, ItemPlacement, TrackCounts};
 
 pub(crate) use types::{GridCoordinate, GridLine, OriginZeroLine, MAX_GRID_TRACKS, MAX_OZ_LINE, MIN_OZ_LINE};
 
@@ -169,15 +169,6 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
         }
     }
 
-    // Absolutely positioned children do not take part in grid placement and do not create
-    // implicit tracks, so they are excluded from the grid size estimate.
-    let get_child_styles_iter = |node| {
-        tree.child_ids(node).map(|child_node: NodeId| tree.get_grid_child_style(child_node)).filter(|style| {
-            style.box_generation_mode() != BoxGenerationMode::None && !style.position().is_out_of_flow()
-        })
-    };
-    let child_styles_iter = get_child_styles_iter(node);
-
     // 2. Resolve the explicit grid
 
     // This is very similar to the inner_node_size except if the inner_node_size is not definite but the node
@@ -232,34 +223,45 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     let mut detailed_column_line_names = name_resolver.detailed_line_names(AbsoluteAxis::Horizontal);
     let mut detailed_row_line_names = name_resolver.detailed_line_names(AbsoluteAxis::Vertical);
 
-    // 3. Implicit Grid: Estimate Track Counts
+    // 3. Create the grid items (in document order) and resolve their placement styles
+    // Absolutely positioned children do not take part in grid placement and do not create implicit tracks,
+    // so they are excluded here. Each child's style is read and its named lines resolved exactly once; the
+    // resolved placements drive both the grid size estimate and placement below.
+    let child_count = tree.child_count(node);
+    let mut items: Vec<GridItem> = Vec::with_capacity(child_count);
+    let mut placements: Vec<ItemPlacement> = Vec::with_capacity(child_count);
+    for (index, child_node) in tree.child_ids(node).enumerate() {
+        let child_style = tree.get_grid_child_style(child_node);
+        if child_style.box_generation_mode() == BoxGenerationMode::None || child_style.position().is_out_of_flow() {
+            continue;
+        }
+        placements.push(InBothAbsAxis {
+            horizontal: name_resolver
+                .resolve_column_names(&child_style.grid_column())
+                .into_origin_zero(explicit_col_count),
+            vertical: name_resolver.resolve_row_names(&child_style.grid_row()).into_origin_zero(explicit_row_count),
+        });
+        items.push(GridItem::new_with_style_and_order(
+            child_node,
+            child_style,
+            align_items,
+            justify_items,
+            index as u16,
+        ));
+    }
+
+    // 4. Implicit Grid: Estimate Track Counts
     // Estimate the number of rows and columns in the implicit grid (= the entire grid)
     // This is necessary as part of placement. Doing it early here is a perf optimisation to reduce allocations.
     let (est_col_counts, est_row_counts) =
-        compute_grid_size_estimate(explicit_col_count, explicit_row_count, child_styles_iter, &name_resolver);
+        compute_grid_size_estimate(explicit_col_count, explicit_row_count, &placements);
 
-    // 4. Grid Item Placement
+    // 5. Grid Item Placement
     // Match items (children) to a definite grid position (row start/end and column start/end position)
-    let mut items = Vec::with_capacity(tree.child_count(node));
     let mut cell_occupancy_matrix = CellOccupancyMatrix::with_track_counts(est_col_counts, est_row_counts);
-    let in_flow_children_iter = tree
-        .child_ids(node)
-        .enumerate()
-        .map(|(index, child_node)| (index, child_node, tree.get_grid_child_style(child_node)))
-        .filter(|(_, _, style)| {
-            style.box_generation_mode() != BoxGenerationMode::None && !style.position().is_out_of_flow()
-        });
     // `items` is in document order from here on (placement only fills in each item's grid area). The track
     // sizing and baseline passes sort references to the items rather than the items themselves.
-    place_grid_items(
-        &mut cell_occupancy_matrix,
-        &mut items,
-        in_flow_children_iter,
-        style.grid_auto_flow(),
-        align_items,
-        justify_items,
-        &name_resolver,
-    );
+    place_grid_items(&mut cell_occupancy_matrix, &mut items, &placements, style.grid_auto_flow());
 
     // Extract track counts from previous step (auto-placement can expand the number of tracks)
     let final_col_counts = *cell_occupancy_matrix.track_counts(AbsoluteAxis::Horizontal);
