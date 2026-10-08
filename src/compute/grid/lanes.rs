@@ -452,10 +452,15 @@ pub fn compute_grid_lanes_layout<Tree: LayoutGridContainer>(
 
     // Auto-placed items are assumed to be placed at every possible start line for track sizing (spec §3.4).
     // Rather than copying every item, one virtual item per span group stands in for the group at each start
-    // line (§3.4.2). Virtual items only matter if some grid-axis track is intrinsically sized.
+    // line (§3.4.2). Virtual items only matter if some grid-axis track is intrinsically sized, which includes
+    // percentage tracks while the container's grid-axis size is indefinite (track sizing treats them as auto).
     let s_lines = Line { start: s_counts.track_to_prev_oz_line(0), end: s_counts.track_to_prev_oz_line(1) };
     let mut virtual_count = 0usize;
-    if g_tracks.iter().any(|track| track.has_intrinsic_sizing_function()) {
+    let g_size_indefinite = inner_node_size.get(g_axis).is_none();
+    if g_tracks
+        .iter()
+        .any(|track| track.has_intrinsic_sizing_function() || (g_size_indefinite && track.uses_percentage()))
+    {
         let groups = collect_item_groups(tree, &mut items[definite_count..], g_axis, inner_node_size);
         for group in groups.iter() {
             let span = (group.span as usize).clamp(1, track_count.max(1));
