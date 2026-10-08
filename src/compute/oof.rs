@@ -838,7 +838,7 @@ pub(crate) fn perform_oof_layout(
 
 #[cfg(test)]
 mod tests {
-    use super::{resolve_static_offset, OofAlignment, OofAxis};
+    use super::resolve_static_offset;
     use crate::geometry::{Line, Point, Rect, Size};
     use crate::style::AlignmentSafety;
     use crate::tree::{AxisStaticAlign, AxisStaticEdge, AxisStaticPosition};
@@ -860,57 +860,6 @@ mod tests {
     const AREA: Line<f32> = Line { start: 10.0, end: 110.0 };
     const NO_MARGIN: Rect<f32> = Rect { left: 0.0, right: 0.0, top: 0.0, bottom: 0.0 };
     const MARGIN: Rect<f32> = Rect { left: 5.0, right: 15.0, top: 0.0, bottom: 0.0 };
-
-    fn static_axis(area: Line<f32>, keyword: AxisStaticEdge, reversed: bool) -> OofAxis {
-        OofAxis {
-            cb_size: 200.0,
-            inset: Line { start: None, end: None },
-            margin: Line { start: Some(0.0), end: Some(0.0) },
-            static_position: sp(area, keyword, AlignmentSafety::Safe, AxisStaticEdge::Start),
-            alignment: OofAlignment::End,
-            safety: AlignmentSafety::Default,
-            is_inline: true,
-            reversed,
-            is_scroll_axis: false,
-        }
-    }
-
-    #[test]
-    fn safe_static_alignment_uses_imcb_for_overflow() {
-        let axis = static_axis(Line { start: 10.0, end: 30.0 }, AxisStaticEdge::End, false);
-        let margin = Line { start: 0.0, end: 0.0 };
-        assert_eq!(axis.position(25.0, margin), 5.0);
-        assert_eq!(axis.position(30.0, margin), 0.0);
-        assert_eq!(axis.position(40.0, margin), 0.0);
-        assert_eq!(axis.position(25.0, Line { start: 4.0, end: 6.0 }), 4.0);
-    }
-
-    #[test]
-    fn safe_static_center_falls_back_within_imcb() {
-        let axis = static_axis(Line { start: 10.0, end: 30.0 }, AxisStaticEdge::Center, false);
-        let margin = Line { start: 0.0, end: 0.0 };
-        assert_eq!(axis.position(35.0, margin), 2.5);
-        assert_eq!(axis.position(50.0, margin), 0.0);
-        let axis = static_axis(Line { start: 160.0, end: 180.0 }, AxisStaticEdge::Center, false);
-        assert_eq!(axis.position(70.0, margin), 140.0);
-    }
-
-    #[test]
-    fn safe_static_overflow_uses_containing_block_direction() {
-        let axis = static_axis(Line { start: 170.0, end: 190.0 }, AxisStaticEdge::Start, true);
-        assert_eq!(axis.position(40.0, Line { start: 0.0, end: 0.0 }), 160.0);
-        let axis = static_axis(Line { start: 160.0, end: 180.0 }, AxisStaticEdge::Center, true);
-        assert_eq!(axis.position(70.0, Line { start: 0.0, end: 0.0 }), 130.0);
-    }
-
-    #[test]
-    fn default_and_unsafe_static_alignment_are_unchanged() {
-        let mut axis = static_axis(Line { start: 10.0, end: 30.0 }, AxisStaticEdge::End, false);
-        for safety in [AlignmentSafety::Default, AlignmentSafety::Unsafe] {
-            axis.static_position.align.safety = safety;
-            assert_eq!(axis.position(40.0, Line { start: 0.0, end: 0.0 }), -10.0);
-        }
-    }
 
     #[test]
     fn start_alignment() {

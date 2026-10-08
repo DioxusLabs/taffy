@@ -6,6 +6,10 @@
   <title>Safe static alignment uses the inset-modified outer containing block</title>
 </head>
 <body>
+    <!--
+    https://github.com/web-platform-tests/wpt/blob/master/css/css-grid/abspos/grid-abspos-staticpos-align-self-safe-outer-cb-001.tentative.html
+    https://github.com/web-platform-tests/wpt/blob/master/css/css-grid/abspos/grid-abspos-staticpos-align-self-safe-outer-cb-003.tentative.html
+    -->
 <div id="test-root" style="display: block; position: relative; width: 200px; height: 25px; border: 3px solid blue; box-sizing: content-box;">
   <div style="display: grid; position: static; width: 30px; height: 25px; padding: 2px 1px; border: 1px solid black; grid-template-rows: 3px 14px 3px; grid-template-columns: 2px 20px 2px; box-sizing: content-box;">
     <div style="position: absolute; grid-area: 2 / 2 / 3 / 3; width: 45px; height: 35px; justify-self: safe end; align-self: safe center;"></div>

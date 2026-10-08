@@ -1,4 +1,4 @@
-<test name="grid_absolute_safe_static_outer_cb__content_box_ltr" use-rounding="true">
+<test name="grid_absolute_safe_static_outer_cb_tentative__content_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
     <div display="block" box-sizing="content-box" direction="ltr" position="relative" width="200px" height="25px" border-top="3px" border-left="3px" border-bottom="3px" border-right="3px">
