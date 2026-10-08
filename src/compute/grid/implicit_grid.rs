@@ -55,8 +55,8 @@ pub(crate) fn compute_grid_size_estimate(
     (column_counts, row_counts)
 }
 
-/// Iterate over the children's resolved placements, producing an estimate of the min and max grid *lines* along
-/// with the span of each item
+/// Iterate over the children's `grid-row`/`grid-column` styles (named lines resolved), producing an estimate of the
+/// min and max grid *lines* along with the span of each item
 ///
 /// Min and max grid lines are returned in origin-zero coordinates)
 /// The span is measured in tracks spanned
@@ -208,7 +208,7 @@ mod tests {
             name_resolver.set_explicit_column_count(explicit_col_count);
             name_resolver.set_explicit_row_count(explicit_row_count);
             let placements =
-                resolve_placements(child_styles.iter(), &name_resolver, explicit_col_count, explicit_row_count);
+                resolve_named_lines(child_styles.iter(), &name_resolver, explicit_col_count, explicit_row_count);
             compute_grid_size_estimate(explicit_col_count, explicit_row_count, &placements)
         }
 

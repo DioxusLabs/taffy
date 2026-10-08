@@ -21,15 +21,15 @@ fn resolve_indefinite_grid_span(position: OriginZeroLine, span: u16) -> Line<Ori
     Line { start: line(position), end: line(position + span) }
 }
 
-/// A grid item's placement styles (`grid-row`/`grid-column`) resolved to origin-zero coordinates
+/// A grid item's `grid-row`/`grid-column` styles with named lines resolved, in origin-zero coordinates
 pub(super) type ItemPlacement = InBothAbsAxis<Line<OriginZeroGridPlacement>>;
 
 /// 8.5. Grid Item Placement Algorithm
 /// Place items into the grid, generating new rows/column into the implicit grid as required
 ///
-/// `items` and `placements` are parallel slices in document order: `placements[i]` holds the already-resolved
-/// placement styles of `items[i]`. The placement passes run over the (small) resolved placements rather than
-/// re-reading the children's styles.
+/// `items` and `placements` are parallel slices in document order: `placements[i]` holds the `grid-row`/`grid-column`
+/// styles of `items[i]`, with named lines already resolved. The placement passes run over these (small) values rather
+/// than re-reading the children's styles.
 ///
 /// [Specification](https://www.w3.org/TR/css-grid-2/#auto-placement-algo)
 pub(super) fn place_grid_items(
@@ -353,7 +353,7 @@ mod tests {
     mod test_placement_algorithm {
         use crate::compute::grid::implicit_grid::compute_grid_size_estimate;
         use crate::compute::grid::types::TrackCounts;
-        use crate::compute::grid::util::test_helpers::{grid_items, resolve_placements};
+        use crate::compute::grid::util::test_helpers::{grid_items, resolve_named_lines};
         use crate::compute::grid::util::*;
         use crate::compute::grid::CellOccupancyMatrix;
         use crate::compute::grid::NamedLineResolver;
@@ -379,7 +379,7 @@ mod tests {
             name_resolver.set_explicit_row_count(explicit_row_count);
             let mut items = grid_items(children.iter().map(|(index, style, _)| (*index, style)));
             // TODO: actually test named line resolution
-            let placements = resolve_placements(
+            let placements = resolve_named_lines(
                 children.iter().map(|(_, style, _)| style),
                 &name_resolver,
                 explicit_col_count,
@@ -610,7 +610,7 @@ mod tests {
             name_resolver.set_explicit_column_count(explicit_col_count);
             name_resolver.set_explicit_row_count(explicit_row_count);
             let mut items = grid_items(children.iter().map(|(index, style)| (*index, style)));
-            let placements = resolve_placements(
+            let placements = resolve_named_lines(
                 children.iter().map(|(_, style)| style),
                 &name_resolver,
                 explicit_col_count,

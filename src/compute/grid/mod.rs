@@ -223,10 +223,10 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     let mut detailed_column_line_names = name_resolver.detailed_line_names(AbsoluteAxis::Horizontal);
     let mut detailed_row_line_names = name_resolver.detailed_line_names(AbsoluteAxis::Vertical);
 
-    // 3. Create the grid items (in document order) and resolve their placement styles
+    // 3. Create the grid items (in document order) and resolve the named lines in their `grid-row`/`grid-column` styles
     // Absolutely positioned children do not take part in grid placement and do not create implicit tracks,
     // so they are excluded here. Each child's style is read and its named lines resolved exactly once; the
-    // resolved placements drive both the grid size estimate and placement below.
+    // results drive both the grid size estimate and item placement below.
     let child_count = tree.child_count(node);
     let mut items: Vec<GridItem> = Vec::with_capacity(child_count);
     let mut placements: Vec<ItemPlacement> = Vec::with_capacity(child_count);

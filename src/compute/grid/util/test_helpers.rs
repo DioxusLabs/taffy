@@ -22,9 +22,9 @@ pub(crate) fn grid_items<'a>(children: impl Iterator<Item = (usize, &'a Style)>)
         .collect()
 }
 
-/// Resolve the placement styles of the given child styles, as `compute_grid_layout` does before estimating
-/// the grid size and placing items
-pub(crate) fn resolve_placements<'a>(
+/// Resolve the named lines in the `grid-row`/`grid-column` styles of the given child styles (and convert them to
+/// origin-zero coordinates), as `compute_grid_layout` does before estimating the grid size and placing items
+pub(crate) fn resolve_named_lines<'a>(
     child_styles: impl Iterator<Item = &'a Style>,
     name_resolver: &NamedLineResolver<String>,
     explicit_col_count: u16,
