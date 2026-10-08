@@ -4,8 +4,7 @@
 //! "stacking axis") by placing each one into the shortest run of tracks it can span.
 //! Shares the explicit-grid, track-sizing and item-positioning machinery of [`super::compute_grid_layout`].
 //!
-//! Current limitations: no dense packing (§4.3), no stacking-axis alignment other than start (§6.3/§6.4), no baselines
-//! (§6.5) and no detailed layout info.
+//! Current limitations: no stacking-axis baselines (§6.5) and no detailed layout info.
 use super::alignment::{align_and_position_item, align_tracks};
 use super::explicit_grid::{compute_explicit_grid_size_in_axis, initialize_grid_tracks, AutoRepeatStrategy};
 use super::placement::ItemPlacement;
@@ -23,8 +22,9 @@ use crate::tree::{
 use crate::util::sys::{f32_max, f32_min, GridTrackVec, Vec};
 use crate::util::{MaybeMath, MaybeResolve, ResolveOrZero};
 use crate::{
-    style_helpers::*, BoxGenerationMode, BoxSizing, CoreStyle, GridContainerStyle, GridItemStyle, LayoutGridContainer,
-    LengthPercentage, MaxTrackSizingFunction, MinTrackSizingFunction, Overflow, RequestedAxis,
+    style_helpers::*, AlignContentKeyword, AlignItems, AlignItemsKeyword, AlignmentSafety, BoxGenerationMode,
+    BoxSizing, CoreStyle, GridContainerStyle, GridItemStyle, LayoutGridContainer, LengthPercentage,
+    MaxTrackSizingFunction, MinTrackSizingFunction, Overflow, RequestedAxis,
 };
 
 /// Where an item ended up in the grid axis and the stacking axis
@@ -38,6 +38,9 @@ struct LanePlacement {
     position: f32,
     /// Stacking-axis size of the item's margin box (floored at zero)
     outer_size: f32,
+    /// Free space after the item's margin box and gutter, up to the next item in every spanned track or the content
+    /// box end: the stacking-axis alignment container minus the alignment subject (spec §6.4). Infinite until known.
+    alignment_space: f32,
 }
 
 /// The abstract axis corresponding to an absolute axis (horizontal writing mode)
@@ -94,11 +97,20 @@ fn set_item_grid_axis_lines(
     }
 }
 
+/// A skipped space in a track and the item placed directly before it, which may align into it (spec §6.4)
+#[derive(Clone, Copy)]
+struct Opening {
+    /// Stacking-axis range of the skipped space
+    range: Line<f32>,
+    /// Index of the item placed directly before the space, if it was placed by normal placement or backfilling
+    item_above: Option<usize>,
+}
+
 /// The stacking-axis ranges of a track an item can be backfilled into when `dense` packing is on (spec §4.3).
 /// The bounded ranges are skipped spaces; the open end of the track starts at its running position.
 struct TrackOpenings {
     /// Bounded skipped spaces, in stacking-axis order
-    skipped: Vec<Line<f32>>,
+    skipped: Vec<Opening>,
     /// Start of the open end of the track (the track's running position)
     running_position: f32,
 }
@@ -106,40 +118,50 @@ struct TrackOpenings {
 impl TrackOpenings {
     /// All openings of the track, the unbounded open end last
     fn skipped_and_open_end(&self) -> impl Iterator<Item = Line<f32>> + '_ {
-        self.skipped.iter().copied().chain(core::iter::once(Line { start: self.running_position, end: f32::INFINITY }))
+        self.skipped
+            .iter()
+            .map(|opening| opening.range)
+            .chain(core::iter::once(Line { start: self.running_position, end: f32::INFINITY }))
     }
 
     /// Record the skipped space between the track's running position and `position` (if any) and advance the track
-    fn place(&mut self, position: f32, new_running_position: f32) {
+    fn place(&mut self, position: f32, new_running_position: f32, item_above: Option<usize>) {
         if self.running_position < position {
-            self.skipped.push(Line { start: self.running_position, end: position });
+            self.skipped.push(Opening { range: Line { start: self.running_position, end: position }, item_above });
         }
         self.running_position = new_running_position;
     }
 
-    /// Carve the range `start..start + extent` out of the opening that contains it
-    fn occupy(&mut self, start: f32, extent: f32) {
+    /// Carve the range `start..start + extent` of item `item` out of the opening that contains it. For a skipped space,
+    /// returns the item placed before it and the end of the remaining space below the item (`None` if it fills it).
+    fn occupy(&mut self, start: f32, extent: f32, item: usize) -> Option<(Option<usize>, Option<f32>)> {
         let end = start + extent;
-        match self.skipped.iter().position(|opening| opening.start <= start && end <= opening.end) {
+        match self.skipped.iter().position(|opening| opening.range.start <= start && end <= opening.range.end) {
             Some(index) => {
                 let opening = self.skipped[index];
-                if opening.start < start {
-                    self.skipped[index].end = start;
-                    if end < opening.end {
-                        self.skipped.insert(index + 1, Line { start: end, end: opening.end });
+                let below = (end < opening.range.end).then_some(opening.range.end);
+                if opening.range.start < start {
+                    self.skipped[index].range.end = start;
+                    if let Some(below_end) = below {
+                        let range = Line { start: end, end: below_end };
+                        self.skipped.insert(index + 1, Opening { range, item_above: Some(item) });
                     }
-                } else if end < opening.end {
-                    self.skipped[index].start = end;
+                } else if below.is_some() {
+                    self.skipped[index].range.start = end;
+                    self.skipped[index].item_above = Some(item);
                 } else {
                     self.skipped.remove(index);
                 }
+                Some((opening.item_above, below))
             }
             None => {
                 debug_assert!(self.running_position <= start);
                 if self.running_position < start {
-                    self.skipped.push(Line { start: self.running_position, end: start });
+                    let range = Line { start: self.running_position, end: start };
+                    self.skipped.push(Opening { range, item_above: None });
                 }
                 self.running_position = end;
+                None
             }
         }
     }
@@ -204,6 +226,21 @@ fn find_dense_placement(
                 && (position < normal_position || (position == normal_position && start < normal_start))
         },
     )
+}
+
+/// An item placed at `position` in `track` bounds the stacking-axis alignment container of the item placed before it
+fn close_alignment_space(
+    lane_placements: &mut [LanePlacement],
+    last_in_track: &[Option<usize>],
+    track: usize,
+    position: f32,
+    stacking_gap: f32,
+) {
+    if let Some(previous) = last_in_track[track] {
+        let previous = &mut lane_placements[previous];
+        let space = position - stacking_gap - (previous.position + previous.outer_size);
+        previous.alignment_space = f32_min(previous.alignment_space, space);
+    }
 }
 
 /// The largest grid-axis size contributions (margins included) of the auto-placed items sharing a span.
@@ -735,7 +772,13 @@ pub fn compute_grid_lanes_layout<Tree: LayoutGridContainer>(
     let mut cursor: usize = 0;
     let mut stacking_range_end: f32 = 0.0;
     let mut lane_placements: Vec<LanePlacement> = Vec::with_capacity(items.len());
-    lane_placements.resize(items.len(), LanePlacement { start_track: 0, span: 0, position: 0.0, outer_size: 0.0 });
+    lane_placements.resize(
+        items.len(),
+        LanePlacement { start_track: 0, span: 0, position: 0.0, outer_size: 0.0, alignment_space: f32::INFINITY },
+    );
+    // The item placed last in each track so far: the one that may align into the space after it (spec §6.4)
+    let mut last_in_track: Vec<Option<usize>> = Vec::with_capacity(track_count);
+    last_in_track.resize(track_count, None);
     // Items are placed in document order (the definite-first order of `items` only serves track sizing)
     let mut document_order: Vec<usize> = (0..items.len()).collect();
     document_order.sort_unstable_by_key(|&index| items[index].source_order);
@@ -786,14 +829,36 @@ pub fn compute_grid_lanes_layout<Tree: LayoutGridContainer>(
         } else {
             None
         };
+        let mut alignment_space = f32::INFINITY;
         match backfill {
             Some((dense_start, dense_position)) => {
                 if dense_start != start_track {
                     set_item_grid_axis_lines(item, grid_axis, g_counts, dense_start, span);
                 }
-                openings[dense_start..dense_start + span]
-                    .iter_mut()
-                    .for_each(|track| track.occupy(dense_position, extent));
+                for track in dense_start..dense_start + span {
+                    match openings[track].occupy(dense_position, extent, index) {
+                        // The item before the skipped space now aligns only up to this item
+                        Some((item_above, below_end)) => {
+                            if let Some(above) = item_above {
+                                let above = &mut lane_placements[above];
+                                let space = dense_position - stacking_gap - (above.position + above.outer_size);
+                                above.alignment_space = f32_min(above.alignment_space, space);
+                            }
+                            let space = below_end.map_or(0.0, |end| end - stacking_gap - (dense_position + outer_size));
+                            alignment_space = f32_min(alignment_space, space);
+                        }
+                        None => {
+                            close_alignment_space(
+                                &mut lane_placements,
+                                &last_in_track,
+                                track,
+                                dense_position,
+                                stacking_gap,
+                            );
+                            last_in_track[track] = Some(index);
+                        }
+                    }
+                }
                 start_track = dense_start;
                 position = dense_position;
             }
@@ -802,16 +867,18 @@ pub fn compute_grid_lanes_layout<Tree: LayoutGridContainer>(
                     cursor = start_track + span;
                 }
                 let new_position = position + extent;
-                running_positions[start_track..start_track + span].iter_mut().for_each(|pos| *pos = new_position);
-                if dense {
-                    openings[start_track..start_track + span]
-                        .iter_mut()
-                        .for_each(|track| track.place(position, new_position));
+                for track in start_track..start_track + span {
+                    close_alignment_space(&mut lane_placements, &last_in_track, track, position, stacking_gap);
+                    if dense {
+                        openings[track].place(position, new_position, last_in_track[track]);
+                    }
+                    last_in_track[track] = Some(index);
+                    running_positions[track] = new_position;
                 }
             }
         }
         stacking_range_end = f32_max(stacking_range_end, position + outer_size);
-        lane_placements[index] = LanePlacement { start_track, span, position, outer_size };
+        lane_placements[index] = LanePlacement { start_track, span, position, outer_size, alignment_space };
     }
     drop(openings);
     drop(document_order);
@@ -830,6 +897,26 @@ pub fn compute_grid_lanes_layout<Tree: LayoutGridContainer>(
     }
     let s_content_box = f32_max(0.0, s_border_box - axis_sum(content_box_inset, stacking_axis));
     inner_node_size.set(s_axis, Some(s_content_box));
+    // The last item in each track may align into the space up to the content box end (spec §6.4)
+    for item_index in last_in_track.into_iter().flatten() {
+        let lane = &mut lane_placements[item_index];
+        lane.alignment_space = f32_min(lane.alignment_space, s_content_box - (lane.position + lane.outer_size));
+    }
+    // Content distribution moves the stacking range as a whole (spec §6.3)
+    let s_free_space = s_content_box - stacking_range_end;
+    let s_free_space =
+        if s_align_content.safety == AlignmentSafety::Safe { f32_max(0.0, s_free_space) } else { s_free_space };
+    let s_content_offset = match s_align_content.keyword {
+        AlignContentKeyword::Center | AlignContentKeyword::SpaceAround | AlignContentKeyword::SpaceEvenly => {
+            s_free_space / 2.0
+        }
+        AlignContentKeyword::End | AlignContentKeyword::FlexEnd => s_free_space,
+        AlignContentKeyword::Normal
+        | AlignContentKeyword::Start
+        | AlignContentKeyword::FlexStart
+        | AlignContentKeyword::Stretch
+        | AlignContentKeyword::SpaceBetween => 0.0,
+    };
 
     // 9. Align the grid-axis tracks and position the items
     let inline_size_without_scrollbar = f32_max(container_border_box.width - padding_border_size.width, 0.0);
@@ -858,17 +945,31 @@ pub fn compute_grid_lanes_layout<Tree: LayoutGridContainer>(
     // Items stack from the content box's start edge; a horizontal stacking axis follows the container's direction
     let stacking_reversed = stacking_axis == AbsoluteAxis::Horizontal && direction.is_rtl();
     let stacking_origin = match stacking_axis {
-        AbsoluteAxis::Vertical => border.top + padding.top,
+        AbsoluteAxis::Vertical => border.top + padding.top + s_content_offset,
         AbsoluteAxis::Horizontal if stacking_reversed => {
-            container_border_box.width - border.right - padding.right - inline_scrollbar_gutter_for_alignment
+            container_border_box.width
+                - border.right
+                - padding.right
+                - inline_scrollbar_gutter_for_alignment
+                - s_content_offset
         }
-        AbsoluteAxis::Horizontal => border.left + padding.left,
+        AbsoluteAxis::Horizontal => border.left + padding.left + s_content_offset,
     };
 
     #[cfg_attr(not(feature = "content_size"), allow(unused_mut))]
     let mut item_overflow_rect = Rect::ZERO;
     let mut oof_candidates = OofCandidates::new();
-    let container_alignment_styles = InBothAbsAxis { horizontal: justify_items, vertical: align_items };
+    // `normal` self-alignment behaves as `start` in the stacking axis (spec §6.4), not as `stretch`
+    let s_align_items = match stacking_axis {
+        AbsoluteAxis::Horizontal => justify_items,
+        AbsoluteAxis::Vertical => align_items,
+    };
+    let s_align_items =
+        if s_align_items.keyword == AlignItemsKeyword::Normal { AlignItems::START } else { s_align_items };
+    let container_alignment_styles = match stacking_axis {
+        AbsoluteAxis::Horizontal => InBothAbsAxis { horizontal: s_align_items, vertical: align_items },
+        AbsoluteAxis::Vertical => InBothAbsAxis { horizontal: justify_items, vertical: s_align_items },
+    };
     for (index, (item, lane)) in items.iter_mut().zip(lane_placements.iter()).enumerate() {
         let start_index = 2 * lane.start_track;
         let end_index = 2 * (lane.start_track + lane.span);
@@ -877,10 +978,12 @@ pub fn compute_grid_lanes_layout<Tree: LayoutGridContainer>(
         } else {
             Line { start: g_tracks[start_index + 1].offset, end: g_tracks[end_index].offset }
         };
+        // The stacking-axis alignment container is the item's margin box plus the free space after it (spec §6.4)
+        let s_extent = lane.outer_size + f32_max(0.0, lane.alignment_space);
         let s_area = if stacking_reversed {
-            Line { start: stacking_origin - lane.position - lane.outer_size, end: stacking_origin - lane.position }
+            Line { start: stacking_origin - lane.position - s_extent, end: stacking_origin - lane.position }
         } else {
-            Line { start: stacking_origin + lane.position, end: stacking_origin + lane.position + lane.outer_size }
+            Line { start: stacking_origin + lane.position, end: stacking_origin + lane.position + s_extent }
         };
         // The item's containing block is its grid area in the grid axis and the container's content box in the stacking axis
         let mut containing_block_size = Size::ZERO;
