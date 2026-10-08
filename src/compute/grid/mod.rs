@@ -260,14 +260,14 @@ fn resolve_explicit_grid<'a, Tree: LayoutGridContainer>(
     // Compute the number of rows and columns in the explicit grid *template*
     // (explicit tracks from grid_areas are computed separately below)
     let (col_auto_repetition_count, grid_template_col_count) = compute_explicit_grid_size_in_axis(
-        &style,
+        style,
         auto_fit_container_size.width,
         auto_repeat_fit_strategy.width,
         |val, basis| tree.calc(val, basis),
         AbsoluteAxis::Horizontal,
     );
     let (row_auto_repetition_count, grid_template_row_count) = compute_explicit_grid_size_in_axis(
-        &style,
+        style,
         auto_fit_container_size.height,
         auto_repeat_fit_strategy.height,
         |val, basis| tree.calc(val, basis),
@@ -275,7 +275,7 @@ fn resolve_explicit_grid<'a, Tree: LayoutGridContainer>(
     );
 
     // type CustomIdent<'a> = <<Tree as LayoutPartialTree>::CoreContainerStyle<'_> as CoreStyle>::CustomIdent;
-    let mut name_resolver = NamedLineResolver::new(&style, col_auto_repetition_count, row_auto_repetition_count);
+    let mut name_resolver = NamedLineResolver::new(style, col_auto_repetition_count, row_auto_repetition_count);
 
     // Clamp the explicit grid to MAX_GRID_TRACKS tracks in each axis
     // https://www.w3.org/TR/css-grid-1/#overlarge-grids
