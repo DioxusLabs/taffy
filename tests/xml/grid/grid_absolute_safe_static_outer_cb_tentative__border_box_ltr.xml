@@ -1,0 +1,25 @@
+<test name="grid_absolute_safe_static_outer_cb_tentative__border_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="block" box-sizing="content-box" direction="ltr" position="relative" width="200px" height="25px" border-top="3px" border-left="3px" border-bottom="3px" border-right="3px">
+      <div display="grid" box-sizing="content-box" direction="ltr" width="30px" height="25px" padding-top="2px" padding-left="1px" padding-bottom="2px" padding-right="1px" border-top="1px" border-left="1px" border-bottom="1px" border-right="1px" grid-template-rows="3px 14px 3px" grid-template-columns="2px 20px 2px">
+        <div direction="ltr" position="absolute" align-self="safe center" justify-self="safe end" width="45px" height="35px" grid-row-start="2" grid-row-end="3" grid-column-start="2" grid-column-end="3"/>
+        <div direction="ltr" position="absolute" align-self="safe center" justify-self="safe end" width="45px" height="35px" top="20px" grid-row-start="2" grid-row-end="3" grid-column-start="2" grid-column-end="3"/>
+        <div direction="ltr" position="absolute" align-self="safe center" justify-self="safe end" width="15px" height="10px" grid-row-start="2" grid-row-end="3" grid-column-start="2" grid-column-end="3"/>
+        <div direction="ltr" position="absolute" align-self="safe center" justify-self="safe end" width="45px" height="35px" margin-top="2px" margin-left="4px" margin-bottom="2px" margin-right="4px" grid-row-start="2" grid-row-end="3" grid-column-start="2" grid-column-end="3"/>
+        <div direction="ltr" position="absolute" align-self="unsafe center" justify-self="unsafe end" width="45px" height="35px" grid-row-start="2" grid-row-end="3" grid-column-start="2" grid-column-end="3"/>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="206" height="31">
+      <node x="3" y="3" width="34" height="31" resolved-rows="3px 14px 3px" resolved-columns="2px 20px 2px">
+        <node x="3" y="9" width="45" height="35"/>
+        <node x="3" y="23" width="45" height="35"/>
+        <node x="20" y="14" width="15" height="10"/>
+        <node x="7" y="11" width="45" height="35"/>
+        <node x="-10" y="1" width="45" height="35"/>
+      </node>
+    </node>
+  </expectations>
+</test>

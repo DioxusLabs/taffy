@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>Safe block static alignment uses the outer containing block</title>
+</head>
+<body>
+    <!--
+    Block analogue of the tentative grid test:
+    https://github.com/web-platform-tests/wpt/blob/master/css/css-grid/abspos/grid-abspos-staticpos-align-self-safe-outer-cb-001.tentative.html
+    https://github.com/w3c/csswg-drafts/issues/11934
+    -->
+<div id="test-root" style="display: block; position: relative; width: 200px; height: 200px; border: 3px solid blue;">
+  <div style="display: block; position: static; width: 30px; height: 25px; padding: 2px 1px; border: 1px solid black;">
+    <div style="position: absolute; width: 45px; height: 35px; justify-self: safe end;"></div>
+    <div style="position: absolute; width: 15px; height: 10px; justify-self: safe end;"></div>
+    <div style="position: absolute; width: 45px; height: 35px; margin: 2px 4px; justify-self: safe end;"></div>
+    <div style="position: absolute; width: 45px; height: 35px; justify-self: unsafe end;"></div>
+  </div>
+  <div style="display: block; position: relative; width: 30px; height: 25px; padding: 2px 1px; border: 1px solid black;">
+    <div style="position: absolute; width: 45px; height: 35px; justify-self: safe end;"></div>
+    <div style="position: absolute; width: 15px; height: 10px; justify-self: safe end;"></div>
+  </div>
+</div>
+</body>
+</html>

@@ -265,8 +265,17 @@ impl OofAxis {
     fn position(&self, size: f32, margin: Line<f32>) -> f32 {
         let imcb = self.inset_modified_containing_block();
         match (self.inset.start, self.inset.end) {
-            // Both insets are auto: the box is aligned within its static-position rectangle
-            (None, None) => resolve_static_offset_axis(self.static_position, size, margin),
+            // Both insets are auto: static alignment, with safe overflow relative to the IMCB
+            (None, None) => {
+                let sp = self.static_position;
+                let margin_box_size = size + margin.start + margin.end;
+                let offset = if sp.align.safety == AlignmentSafety::Safe && margin_box_size > imcb.end - imcb.start {
+                    align_in_line(imcb, margin_box_size, self.start_edge())
+                } else {
+                    align_in_line(sp.area, margin_box_size, sp.align.keyword)
+                };
+                offset + margin.start
+            }
             // One auto inset: the margin box is aligned to the edge of the stronger inset
             (Some(_), None) => imcb.start + margin.start,
             (None, Some(_)) => imcb.end - size - margin.end,

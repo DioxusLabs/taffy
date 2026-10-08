@@ -1346,6 +1346,26 @@ mod block {
     }
 
     #[test]
+    fn block_absolute_safe_static_outer_cb_tentative__border_box_ltr() {
+        crate::run_xml_test("block", "block_absolute_safe_static_outer_cb_tentative__border_box_ltr");
+    }
+
+    #[test]
+    fn block_absolute_safe_static_outer_cb_tentative__content_box_ltr() {
+        crate::run_xml_test("block", "block_absolute_safe_static_outer_cb_tentative__content_box_ltr");
+    }
+
+    #[test]
+    fn block_absolute_safe_static_outer_cb_tentative__border_box_rtl() {
+        crate::run_xml_test("block", "block_absolute_safe_static_outer_cb_tentative__border_box_rtl");
+    }
+
+    #[test]
+    fn block_absolute_safe_static_outer_cb_tentative__content_box_rtl() {
+        crate::run_xml_test("block", "block_absolute_safe_static_outer_cb_tentative__content_box_rtl");
+    }
+
+    #[test]
     fn block_absolute_shrink_to_fit_excludes_inset__border_box_ltr() {
         crate::run_xml_test("block", "block_absolute_shrink_to_fit_excludes_inset__border_box_ltr");
     }
@@ -7651,6 +7671,26 @@ mod flex {
     #[test]
     fn absolute_safe_justify_content_end_overflow__content_box_rtl() {
         crate::run_xml_test("flex", "absolute_safe_justify_content_end_overflow__content_box_rtl");
+    }
+
+    #[test]
+    fn absolute_safe_static_outer_cb_tentative__border_box_ltr() {
+        crate::run_xml_test("flex", "absolute_safe_static_outer_cb_tentative__border_box_ltr");
+    }
+
+    #[test]
+    fn absolute_safe_static_outer_cb_tentative__content_box_ltr() {
+        crate::run_xml_test("flex", "absolute_safe_static_outer_cb_tentative__content_box_ltr");
+    }
+
+    #[test]
+    fn absolute_safe_static_outer_cb_tentative__border_box_rtl() {
+        crate::run_xml_test("flex", "absolute_safe_static_outer_cb_tentative__border_box_rtl");
+    }
+
+    #[test]
+    fn absolute_safe_static_outer_cb_tentative__content_box_rtl() {
+        crate::run_xml_test("flex", "absolute_safe_static_outer_cb_tentative__content_box_rtl");
     }
 
     #[test]
@@ -21691,6 +21731,30 @@ mod grid {
     #[test]
     fn grid_absolute_row_start__content_box_rtl() {
         crate::run_xml_test("grid", "grid_absolute_row_start__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_absolute_safe_static_outer_cb_tentative__border_box_ltr() {
+        crate::run_xml_test("grid", "grid_absolute_safe_static_outer_cb_tentative__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_absolute_safe_static_outer_cb_tentative__content_box_ltr() {
+        crate::run_xml_test("grid", "grid_absolute_safe_static_outer_cb_tentative__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_absolute_safe_static_outer_cb_tentative__border_box_rtl() {
+        crate::run_xml_test("grid", "grid_absolute_safe_static_outer_cb_tentative__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_absolute_safe_static_outer_cb_tentative__content_box_rtl() {
+        crate::run_xml_test("grid", "grid_absolute_safe_static_outer_cb_tentative__content_box_rtl");
     }
 
     #[cfg(feature = "grid")]
