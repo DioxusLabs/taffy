@@ -6,6 +6,8 @@
 
 - Flexbox: `align-content: stretch` (and `normal`) and `justify-content: stretch` fall back to `flex-start` rather than `start` when the lines/items overflow the container, so overflowing lines in a `wrap-reverse` container (and items in a `row-reverse`/`column-reverse` container) are packed to the flex-start edge like in Chrome.
 - Grid: the clamp of an item's content-based minimum size to the fixed max track sizing functions it spans now leaves room for its margins and baseline shim (#1362).
+- Flexbox/Grid: the space available to the children of a container with an `auto` size is now limited by the container's `max-width`/`max-height`, also when the container is sized under a max-content constraint. Previously the children were sized as if the max size was not set and only the container itself was clamped, so e.g. text in a flex column or grid with `max-width: 200px` was wrapped at the unclamped width (#884).
+- `compute_root_layout`: the width that a block root takes from a definite available space is now clamped by its `min-width`/`max-width`.
 
 ### Changes
 
