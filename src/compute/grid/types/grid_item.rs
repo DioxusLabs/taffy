@@ -732,7 +732,7 @@ impl GridItem {
                 // in a given axis is the content-based minimum size if all of the following are true:
                 let item_axis_tracks = &axis_tracks[self.track_range_excluding_lines(axis)];
 
-                // it is not a scroll container
+                // it is not a scroll container (handled above)
 
                 // it spans at least one track in that axis whose min track sizing function is auto
                 let spans_auto_min_track = item_axis_tracks
