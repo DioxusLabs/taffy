@@ -717,6 +717,20 @@ impl GridItem {
             .maybe_apply_aspect_ratio(self.aspect_ratio)
             .maybe_add(box_sizing_adjustment)
             .get(axis)
+            .map(|size| {
+                // A definite preferred size is clamped by the minimum and maximum sizes. For a compressible replaced
+                // element, an indefinite percentage maximum size is resolved against zero.
+                if self.min_size.get(axis).is_auto() && self.max_size.get(axis).is_auto() {
+                    return size;
+                }
+                let basis = grid_area_size.get(axis);
+                let max_size_basis = if self.is_compressible_replaced { basis.or(Some(0.0)) } else { basis };
+                let adjustment = box_sizing_adjustment.get(axis);
+                let min_size = self.min_size.get(axis).maybe_resolve(basis, |val, basis| tree.calc(val, basis));
+                let max_size =
+                    self.max_size.get(axis).maybe_resolve(max_size_basis, |val, basis| tree.calc(val, basis));
+                size.maybe_clamp(min_size.maybe_add(adjustment), max_size.maybe_add(adjustment))
+            })
             .or_else(|| {
                 self.min_size
                     .maybe_resolve(grid_area_size.map(|size| size.unwrap_or(0.0)), |val, basis| tree.calc(val, basis))
