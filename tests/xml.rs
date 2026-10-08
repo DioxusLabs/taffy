@@ -440,7 +440,7 @@ fn build_style<S: CheapCloneStr>(xnode: roxmltree::Node) -> taffy::Style<S> {
         #[cfg(feature = "grid_lanes")]
         grid_lanes_direction: parse_or_default(xnode.attribute("grid-lanes-direction")),
         #[cfg(feature = "grid_lanes")]
-        flow_tolerance: match xnode.attribute("flow-tolerance") {
+        fit_tolerance: match xnode.attribute("fit-tolerance") {
             Some("infinite") => LengthPercentage::length(f32::INFINITY),
             attr => parse_or(attr, LengthPercentage::length(0.0)),
         },
