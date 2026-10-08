@@ -733,6 +733,13 @@ impl GridItem {
                 size.maybe_clamp(min_size.maybe_add(adjustment), max_size.maybe_add(adjustment))
             })
             .or_else(|| {
+                // A preferred size that is a sizing keyword other than `stretch` does not behave as auto,
+                // so the minimum contribution is the min-content contribution.
+                let size = self.size.get(axis);
+                (size.is_sizing_keyword() && !size.is_stretch())
+                    .then(|| self.min_content_contribution_cached(axis, tree, grid_area_size, grid_area_size))
+            })
+            .or_else(|| {
                 self.min_size
                     .maybe_resolve(grid_area_size.map(|size| size.unwrap_or(0.0)), |val, basis| tree.calc(val, basis))
                     .maybe_apply_aspect_ratio(self.aspect_ratio)
