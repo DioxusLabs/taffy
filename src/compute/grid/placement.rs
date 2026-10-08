@@ -378,7 +378,6 @@ mod tests {
             name_resolver.set_explicit_column_count(explicit_col_count);
             name_resolver.set_explicit_row_count(explicit_row_count);
             let mut items = grid_items(children.iter().map(|(index, style, _)| (*index, style)));
-            // TODO: actually test named line resolution
             let placements = resolve_named_lines(
                 children.iter().map(|(_, style, _)| style),
                 &name_resolver,
