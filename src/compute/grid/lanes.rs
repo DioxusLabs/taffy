@@ -16,7 +16,7 @@ use super::track_sizing::{
 use super::types::{GridItem, GridTrack, NamedLineResolver, TrackCounts};
 use super::{compute_container_constants, resolve_static_position_grid_area, GridContainerConstants, MAX_GRID_TRACKS};
 use crate::geometry::{AbsoluteAxis, AbstractAxis, InBothAbsAxis, Line, Point, Rect, Size};
-use crate::style::{FlowTolerance, OriginZeroGridPlacement};
+use crate::style::OriginZeroGridPlacement;
 use crate::tree::{
     AxisStaticPosition, Baselines, Layout, LayoutInput, LayoutOutput, LayoutPartialTreeExt, NodeId, OofCandidate,
     OofCandidates, OofPositioningArea, RunMode, SizingMode,
@@ -311,12 +311,7 @@ pub fn compute_grid_lanes_layout<Tree: LayoutGridContainer>(
     }
 
     // 7. Place items along the stacking axis (spec §4.4), measuring each item's stacking-axis size as it is placed
-    let tie_threshold = match flow_tolerance {
-        FlowTolerance::Infinite => f32::INFINITY,
-        FlowTolerance::Length(length) => {
-            length.resolve_or_zero(Some(g_content_box), |val, basis| tree.calc(val, basis))
-        }
-    };
+    let tie_threshold = flow_tolerance.resolve_or_zero(Some(g_content_box), |val, basis| tree.calc(val, basis));
     let stacking_gap =
         stacking_gap_style.resolve_or_zero(inner_node_size.get(s_axis), |val, basis| tree.calc(val, basis));
     let mut running_positions: Vec<f32> = Vec::with_capacity(track_count);
