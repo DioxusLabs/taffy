@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    Implicit tracks are only created where items placed using named lines require them (column flow)
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="display: grid; grid-auto-flow: column; grid-template-columns: [first] 50px [mid] 100px [last]; grid-template-rows: [first] 20px [mid] 40px [last]; grid-auto-columns: 5px; grid-auto-rows: 10px;">
+  <div style="grid-row: foo / 1; grid-column: 1 / foo;"></div>
+  <div style="grid-row: span 2 / last; grid-column: span 3 / last;"></div>
+  <div style="grid-row: mid / 1; grid-column: last / first;"></div>
+  <div></div>
+</div>
+
+</body>
+</html>

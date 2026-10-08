@@ -1,0 +1,19 @@
+<test name="grid_implicit_tracks_named_line_placement_auto_flow_column__content_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" box-sizing="content-box" direction="rtl" position="absolute" grid-auto-flow="column" grid-template-rows="[first] 20px [mid] 40px [last]" grid-template-columns="[first] 50px [mid] 100px [last]" grid-auto-rows="10px" grid-auto-columns="5px">
+      <div box-sizing="content-box" direction="rtl" position="relative" grid-row-start="foo" grid-row-end="1" grid-column-start="1" grid-column-end="foo"/>
+      <div box-sizing="content-box" direction="rtl" position="relative" grid-row-start="span 2" grid-row-end="last" grid-column-start="span 3" grid-column-end="last"/>
+      <div box-sizing="content-box" direction="rtl" position="relative" grid-row-start="mid" grid-row-end="1" grid-column-start="last" grid-column-end="first"/>
+      <div box-sizing="content-box" direction="rtl" position="relative"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="160" height="70" resolved-rows="[first] 20px [mid] 40px [last] 10px" resolved-columns="5px [first] 50px [mid] 100px [last] 5px">
+      <node x="0" y="0" width="155" height="70"/>
+      <node x="5" y="0" width="155" height="60"/>
+      <node x="5" y="0" width="150" height="20"/>
+      <node x="155" y="60" width="5" height="10"/>
+    </node>
+  </expectations>
+</test>
