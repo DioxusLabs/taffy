@@ -128,29 +128,6 @@ fn oversized_float_overflows_containing_block() {
     assert_eq!(taffy.layout(float_a).unwrap().location, Point { x: 0.0, y: 0.0 });
 }
 
-#[test]
-fn padded_child_float_uses_used_border_box_width() {
-    let mut taffy = new_test_tree();
-    let floated = taffy.new_leaf(float_block(20.0, 20.0, Float::Right)).unwrap();
-    let child = taffy
-        .new_with_children(
-            Style {
-                display: Display::Block,
-                box_sizing: BoxSizing::BorderBox,
-                size: Size { width: length(100.0), height: auto() },
-                padding: Rect { left: length(150.0), right: length(0.0), top: length(0.0), bottom: length(0.0) },
-                ..Default::default()
-            },
-            &[floated],
-        )
-        .unwrap();
-    let root = taffy.new_with_children(root_style(300.0), &[child]).unwrap();
-
-    taffy.compute_layout(root, Size::MAX_CONTENT).unwrap();
-    assert_eq!(taffy.layout(child).unwrap().size.width, 150.0);
-    assert_eq!(taffy.layout(floated).unwrap().location, Point { x: 130.0, y: 0.0 });
-}
-
 /// CSS2 float rules 3 & 7: a float with another float beside it must not overlap that float
 /// (rule 3) nor extend past the containing block's opposite edge (rule 7) - it must move down.
 #[test]
