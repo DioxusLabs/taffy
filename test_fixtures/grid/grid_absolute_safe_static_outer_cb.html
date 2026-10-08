@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>Safe static alignment uses the inset-modified outer containing block</title>
+</head>
+<body>
+<div id="test-root" style="display: block; position: relative; width: 200px; height: 25px; border: 3px solid blue; box-sizing: content-box;">
+  <div style="display: grid; position: static; width: 30px; height: 25px; padding: 2px 1px; border: 1px solid black; grid-template-rows: 3px 14px 3px; grid-template-columns: 2px 20px 2px; box-sizing: content-box;">
+    <div style="position: absolute; grid-area: 2 / 2 / 3 / 3; width: 45px; height: 35px; justify-self: safe end; align-self: safe center;"></div>
+    <div style="position: absolute; grid-area: 2 / 2 / 3 / 3; width: 45px; height: 35px; top: 20px; justify-self: safe end; align-self: safe center;"></div>
+    <div style="position: absolute; grid-area: 2 / 2 / 3 / 3; width: 15px; height: 10px; justify-self: safe end; align-self: safe center;"></div>
+    <div style="position: absolute; grid-area: 2 / 2 / 3 / 3; width: 45px; height: 35px; margin: 2px 4px; justify-self: safe end; align-self: safe center;"></div>
+    <div style="position: absolute; grid-area: 2 / 2 / 3 / 3; width: 45px; height: 35px; justify-self: unsafe end; align-self: unsafe center;"></div>
+  </div>
+</div>
+</body>
+</html>
