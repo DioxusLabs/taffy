@@ -1,0 +1,21 @@
+<test name="grid_lanes_span__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid-lanes" box-sizing="content-box" direction="ltr" position="absolute" width="120px" flow-tolerance="10px" grid-template-columns="40px 40px 40px">
+      <div box-sizing="content-box" direction="ltr" position="relative" height="20px"/>
+      <div box-sizing="content-box" direction="ltr" position="relative" height="50px"/>
+      <div box-sizing="content-box" direction="ltr" position="relative" height="10px"/>
+      <div box-sizing="content-box" direction="ltr" position="relative" height="20px" grid-column-start="span 2"/>
+      <div box-sizing="content-box" direction="ltr" position="relative" height="30px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="120" height="70">
+      <node x="0" y="0" width="40" height="20"/>
+      <node x="40" y="0" width="40" height="50"/>
+      <node x="80" y="0" width="40" height="10"/>
+      <node x="0" y="50" width="80" height="20"/>
+      <node x="80" y="10" width="40" height="30"/>
+    </node>
+  </expectations>
+</test>

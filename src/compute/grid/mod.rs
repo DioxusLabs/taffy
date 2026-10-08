@@ -31,11 +31,15 @@ use types::{GridItem, GridTrackKind, TrackCounts};
 
 pub(crate) use types::{GridCoordinate, GridLine, OriginZeroLine, MAX_GRID_TRACKS, MAX_OZ_LINE, MIN_OZ_LINE};
 
+#[cfg(feature = "grid_lanes")]
+pub use lanes::compute_grid_lanes_layout;
 pub use types::{GridLineNames, GridLineNamesIter};
 
 mod alignment;
 mod explicit_grid;
 mod implicit_grid;
+#[cfg(feature = "grid_lanes")]
+mod lanes;
 mod placement;
 mod track_sizing;
 mod types;

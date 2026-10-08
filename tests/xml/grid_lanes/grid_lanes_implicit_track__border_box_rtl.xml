@@ -1,0 +1,21 @@
+<test name="grid_lanes_implicit_track__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid-lanes" direction="rtl" position="absolute" width="200px" flow-tolerance="10px" grid-template-columns="40px 40px" grid-auto-columns="30px">
+      <div direction="rtl" position="relative" height="20px" grid-column-start="4"/>
+      <div direction="rtl" position="relative" height="30px"/>
+      <div direction="rtl" position="relative" height="10px"/>
+      <div direction="rtl" position="relative" height="40px"/>
+      <div direction="rtl" position="relative" height="20px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="200" height="40">
+      <node x="60" y="0" width="30" height="20"/>
+      <node x="160" y="0" width="40" height="30"/>
+      <node x="120" y="0" width="40" height="10"/>
+      <node x="90" y="0" width="30" height="40"/>
+      <node x="60" y="20" width="30" height="20"/>
+    </node>
+  </expectations>
+</test>

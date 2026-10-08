@@ -437,6 +437,10 @@ fn build_style<S: CheapCloneStr>(xnode: roxmltree::Node) -> taffy::Style<S> {
         flex_basis: parse_or(xnode.attribute("flex-basis"), Dimension::auto()),
 
         grid_auto_flow: parse_or_default(xnode.attribute("grid-auto-flow")),
+        #[cfg(feature = "grid_lanes")]
+        grid_lanes_direction: parse_or_default(xnode.attribute("grid-lanes-direction")),
+        #[cfg(feature = "grid_lanes")]
+        flow_tolerance: parse_or_default(xnode.attribute("flow-tolerance")),
 
         grid_template_rows: grid_template_rows.tracks,
         grid_template_row_names: grid_template_rows.line_names,
