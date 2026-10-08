@@ -83,6 +83,8 @@
 
 ### Fixed
 
+- Block: floor same-BFC child context widths at padding + border so float geometry matches the child's used border-box size.
+
 - Absolute positioning: `safe` static alignment with two `auto` insets checks overflow and falls back within the inset-modified containing block, matching Chrome's interpretation of [CSSWG #11934](https://github.com/w3c/csswg-drafts/issues/11934).
 - Grid: absolute grid placement now excludes overlapping gutters when grid lines fall within collapsed `auto-fit` tracks. `DetailedGridTracksInfo` gains a `collapsed_tracks` field recording the collapsed ranges; stored track positions and used track-size serialization are unchanged.
 - Grid: the edges of a grid area are now only matched by a `<custom-ident>` on its own. `grid-column: 2 foo` and `grid-column: span foo` no longer fall back to the edges of the area named `foo` when there is no line named `foo`.

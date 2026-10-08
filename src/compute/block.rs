@@ -1414,7 +1414,7 @@ fn perform_final_layout_on_in_flow_children(
             let mut item_layout = if item.is_in_same_bfc {
                 // Replaced elements may not have a known width (they are sized by their
                 // measure function rather than stretch-sized)
-                let width = known_dimensions.width.unwrap_or(stretch_width);
+                let width = known_dimensions.width.unwrap_or(stretch_width).max(item.padding_border_sum.width);
 
                 // TODO: account for auto margins
                 let inset_left = item_non_auto_margin.left + content_box_inset.left;
