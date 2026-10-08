@@ -33833,6 +33833,102 @@ mod grid {
 
     #[cfg(feature = "grid")]
     #[test]
+    fn grid_placement_named_area_edge_priority__border_box_ltr() {
+        crate::run_xml_test("grid", "grid_placement_named_area_edge_priority__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_placement_named_area_edge_priority__content_box_ltr() {
+        crate::run_xml_test("grid", "grid_placement_named_area_edge_priority__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_placement_named_area_edge_priority__border_box_rtl() {
+        crate::run_xml_test("grid", "grid_placement_named_area_edge_priority__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_placement_named_area_edge_priority__content_box_rtl() {
+        crate::run_xml_test("grid", "grid_placement_named_area_edge_priority__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_placement_named_line_negative_index__border_box_ltr() {
+        crate::run_xml_test("grid", "grid_placement_named_line_negative_index__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_placement_named_line_negative_index__content_box_ltr() {
+        crate::run_xml_test("grid", "grid_placement_named_line_negative_index__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_placement_named_line_negative_index__border_box_rtl() {
+        crate::run_xml_test("grid", "grid_placement_named_line_negative_index__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_placement_named_line_negative_index__content_box_rtl() {
+        crate::run_xml_test("grid", "grid_placement_named_line_negative_index__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_placement_named_span_backwards__border_box_ltr() {
+        crate::run_xml_test("grid", "grid_placement_named_span_backwards__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_placement_named_span_backwards__content_box_ltr() {
+        crate::run_xml_test("grid", "grid_placement_named_span_backwards__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_placement_named_span_backwards__border_box_rtl() {
+        crate::run_xml_test("grid", "grid_placement_named_span_backwards__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_placement_named_span_backwards__content_box_rtl() {
+        crate::run_xml_test("grid", "grid_placement_named_span_backwards__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_placement_named_span_insufficient_lines__border_box_ltr() {
+        crate::run_xml_test("grid", "grid_placement_named_span_insufficient_lines__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_placement_named_span_insufficient_lines__content_box_ltr() {
+        crate::run_xml_test("grid", "grid_placement_named_span_insufficient_lines__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_placement_named_span_insufficient_lines__border_box_rtl() {
+        crate::run_xml_test("grid", "grid_placement_named_span_insufficient_lines__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_placement_named_span_insufficient_lines__content_box_rtl() {
+        crate::run_xml_test("grid", "grid_placement_named_span_insufficient_lines__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
     fn grid_relative_all_sides__border_box_ltr() {
         crate::run_xml_test("grid", "grid_relative_all_sides__border_box_ltr");
     }

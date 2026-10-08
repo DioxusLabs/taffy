@@ -47,13 +47,13 @@ impl GridLine {
     ///
     /// The result is clamped into the limited grid `[-MAX_GRID_TRACKS, MAX_GRID_TRACKS]`
     pub(crate) fn into_origin_zero_line(self, explicit_track_count: u16) -> OriginZeroLine {
-        let explicit_line_count = explicit_track_count + 1;
+        let explicit_line_count = explicit_track_count as i32 + 1;
         let oz_line = match self.0.cmp(&0) {
-            Ordering::Greater => self.0 - 1,
-            Ordering::Less => self.0 + explicit_line_count as i16,
+            Ordering::Greater => self.0 as i32 - 1,
+            Ordering::Less => self.0 as i32 + explicit_line_count,
             Ordering::Equal => panic!("Grid line of zero is invalid"),
         };
-        OriginZeroLine(oz_line.clamp(MIN_OZ_LINE, MAX_OZ_LINE))
+        OriginZeroLine::clamped(oz_line)
     }
 }
 
@@ -101,6 +101,23 @@ impl Sub<u16> for OriginZeroLine {
 }
 
 impl OriginZeroLine {
+    /// Create an `OriginZeroLine`, clamping the line into the limited grid `[-MAX_GRID_TRACKS, MAX_GRID_TRACKS]`
+    pub(crate) fn clamped(line: i32) -> Self {
+        OriginZeroLine(line.clamp(MIN_OZ_LINE as i32, MAX_OZ_LINE as i32) as i16)
+    }
+
+    /// Convert into "CSS Grid Line" coordinates using the specified explicit track count.
+    ///
+    /// The inverse of [`GridLine::into_origin_zero_line`]
+    pub(crate) fn into_grid_line(self, explicit_track_count: u16) -> GridLine {
+        let explicit_line_count = explicit_track_count + 1;
+        if self.0 >= 0 {
+            GridLine(self.0 + 1)
+        } else {
+            GridLine(self.0 - explicit_line_count as i16)
+        }
+    }
+
     /// Converts a grid line in OriginZero coordinates into the index of that same grid line in the GridTrackVec.
     pub(crate) fn into_track_vec_index(self, track_counts: TrackCounts) -> usize {
         self.try_into_track_vec_index(track_counts).unwrap_or_else(|| {

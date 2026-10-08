@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    Spans to a named line with fewer matching lines than the span count continue into the implicit lines in the direction of the span
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="display: grid; grid-template-columns: [col] 50px [col mid] 100px [col] 200px [col]; grid-template-rows: [row] 20px [row mid] 40px [row] 80px [row]; grid-auto-columns: 5px; grid-auto-rows: 10px;">
+  <div style="grid-column: span 2 mid / 4; grid-row: span 3 mid / 4;"></div>
+  <div style="grid-column: 1 / span 2 mid; grid-row: 1 / span 3 mid;"></div>
+  <div style="grid-column: span foo / 2; grid-row: span 2 foo / 2;"></div>
+  <div style="grid-column: 3 / span foo; grid-row: 3 / span 2 foo;"></div>
+  <div style="grid-column: foo / span 2 foo; grid-row: foo / span 3 mid;"></div>
+</div>
+
+</body>
+</html>

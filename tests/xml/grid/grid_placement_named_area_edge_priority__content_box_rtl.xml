@@ -1,0 +1,17 @@
+<test name="grid_placement_named_area_edge_priority__content_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" box-sizing="content-box" direction="rtl" position="absolute" grid-template-rows="[a] 20px [a-start] 40px [a-end] 80px [a]" grid-template-columns="[a] 50px [a-start] 100px [a-end] 200px [a]">
+      <div box-sizing="content-box" direction="rtl" position="relative" grid-row-start="a" grid-row-end="a" grid-column-start="a" grid-column-end="a"/>
+      <div box-sizing="content-box" direction="rtl" position="relative" grid-row-start="1 a" grid-row-end="2 a" grid-column-start="1 a" grid-column-end="2 a"/>
+      <div box-sizing="content-box" direction="rtl" position="relative" grid-row-start="span a" grid-row-end="a" grid-column-start="a" grid-column-end="span a"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="350" height="140" resolved-rows="[a] 20px [a-start] 40px [a-end] 80px [a]" resolved-columns="[a] 50px [a-start] 100px [a-end] 200px [a]">
+      <node x="200" y="20" width="100" height="40"/>
+      <node x="0" y="0" width="350" height="140"/>
+      <node x="0" y="0" width="300" height="60"/>
+    </node>
+  </expectations>
+</test>
