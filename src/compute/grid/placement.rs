@@ -1,10 +1,10 @@
 //! Implements placing items in the grid and resolving the implicit grid.
 //! <https://www.w3.org/TR/css-grid-1/#placement>
-use super::types::{CellOccupancyMatrix, CellOccupancyState, GridItem, ItemPlacement};
+use super::types::{CellOccupancyMatrix, CellOccupancyState, GridItem};
 use super::{OriginZeroLine, MAX_OZ_LINE, MIN_OZ_LINE};
-use crate::geometry::AbsoluteAxis;
 use crate::geometry::Line;
-use crate::style::GridAutoFlow;
+use crate::geometry::{AbsoluteAxis, InBothAbsAxis};
+use crate::style::{GridAutoFlow, OriginZeroGridPlacement};
 
 #[inline]
 /// Advances the cursor by one track.
@@ -20,6 +20,9 @@ fn resolve_indefinite_grid_span(position: OriginZeroLine, span: u16) -> Line<Ori
     let line = |value: i32| OriginZeroLine(value.clamp(i16::MIN as i32, i16::MAX as i32) as i16);
     Line { start: line(position), end: line(position + span) }
 }
+
+/// A grid item's placement styles (`grid-row`/`grid-column`) resolved to origin-zero coordinates
+pub(super) type ItemPlacement = InBothAbsAxis<Line<OriginZeroGridPlacement>>;
 
 /// 8.5. Grid Item Placement Algorithm
 /// Place items into the grid, generating new rows/column into the implicit grid as required

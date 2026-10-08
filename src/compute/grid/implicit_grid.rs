@@ -4,8 +4,8 @@ use crate::geometry::Line;
 use crate::style::{GenericGridPlacement, OriginZeroGridPlacement};
 use core::cmp::{max, min};
 
-use super::types::{ItemPlacement, TrackCounts};
-use super::{OriginZeroLine, MAX_OZ_LINE, MIN_OZ_LINE};
+use super::types::TrackCounts;
+use super::{ItemPlacement, OriginZeroLine, MAX_OZ_LINE, MIN_OZ_LINE};
 
 /// Estimate the number of rows and columns in the grid
 /// This is used as a performance optimisation to pre-size vectors and reduce allocations. It also forms a necessary step

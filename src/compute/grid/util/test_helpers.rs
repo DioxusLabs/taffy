@@ -1,6 +1,6 @@
 //! Helpers for use in unit tests within the grid module
-use super::super::types::{GridItem, ItemPlacement, NamedLineResolver};
-use super::super::OriginZeroLine;
+use super::super::types::{GridItem, NamedLineResolver};
+use super::super::{ItemPlacement, OriginZeroLine};
 use crate::geometry::InBothAbsAxis;
 use crate::prelude::*;
 use crate::style::{Dimension, GridPlacement, Style};

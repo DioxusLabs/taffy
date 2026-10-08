@@ -18,7 +18,7 @@ use crate::{
 use alignment::{align_and_position_item, align_tracks};
 use explicit_grid::{compute_explicit_grid_size_in_axis, initialize_grid_tracks, AutoRepeatStrategy};
 use implicit_grid::compute_grid_size_estimate;
-use placement::place_grid_items;
+use placement::{place_grid_items, ItemPlacement};
 use track_sizing::{
     determine_if_item_crosses_flexible_or_intrinsic_tracks, resolve_item_track_indexes, track_sizing_algorithm,
 };
@@ -27,7 +27,7 @@ use types::{CellOccupancyMatrix, GridAreasMap, GridTrack, NamedLineResolver};
 use crate::sys::{DefaultCheapStr, String};
 use crate::{CheapCloneStr, GridAreaAxis, GridPlacement};
 use core::ops::Range;
-use types::{GridItem, GridTrackKind, ItemPlacement, TrackCounts};
+use types::{GridItem, GridTrackKind, TrackCounts};
 
 pub(crate) use types::{GridCoordinate, GridLine, OriginZeroLine, MAX_GRID_TRACKS, MAX_OZ_LINE, MIN_OZ_LINE};
 
