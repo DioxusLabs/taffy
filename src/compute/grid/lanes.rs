@@ -12,7 +12,10 @@ use super::track_sizing::{
     determine_if_item_crosses_flexible_or_intrinsic_tracks, resolve_item_track_indexes, track_sizing_algorithm,
 };
 use super::types::{GridItem, GridTrack, NamedLineResolver, OriginZeroLine, TrackCounts};
-use super::{compute_container_constants, resolve_static_position_grid_area, GridContainerConstants, MAX_GRID_TRACKS};
+use super::{
+    compute_container_constants, resolve_static_position_grid_area, DetailedGridInfo, DetailedGridItemsInfo,
+    DetailedGridTracksInfo, GridContainerConstants, MAX_GRID_TRACKS,
+};
 use crate::geometry::{AbsoluteAxis, AbstractAxis, InBothAbsAxis, Line, Point, Rect, Size};
 use crate::style::{AlignSelf, OriginZeroGridPlacement};
 use crate::tree::{
@@ -897,6 +900,20 @@ pub fn compute_grid_lanes_layout<Tree: LayoutGridContainer>(
     }
     let s_content_box = f32_max(0.0, s_border_box - axis_sum(content_box_inset, stacking_axis));
     inner_node_size.set(s_axis, Some(s_content_box));
+    // Absolutely positioned children see a single stacking-axis track spanning the padding box (spec §8), so
+    // stacking-axis grid lines resolve to the padding box edges. Track offsets are physical, as in `align_tracks`.
+    let (s_padding_start, s_padding_end) = match stacking_axis {
+        AbsoluteAxis::Horizontal => (
+            border.left + if direction.is_rtl() { scrollbar_gutter.x } else { 0.0 },
+            container_border_box.width - border.right - if direction.is_rtl() { 0.0 } else { scrollbar_gutter.x },
+        ),
+        AbsoluteAxis::Vertical => (border.top, container_border_box.height - border.bottom - scrollbar_gutter.y),
+    };
+    let s_reversed = stacking_axis == AbsoluteAxis::Horizontal && direction.is_rtl();
+    s_tracks[0].offset = if s_reversed { s_padding_end } else { s_padding_start };
+    s_tracks[1].offset = s_padding_start;
+    s_tracks[1].base_size = s_padding_end - s_padding_start;
+    s_tracks[2].offset = if s_reversed { s_padding_start } else { s_padding_end };
     // The last item in each track may align into the space up to the content box end (spec §6.4)
     for item_index in last_in_track.into_iter().flatten() {
         let lane = &mut lane_placements[item_index];
@@ -1115,6 +1132,34 @@ pub fn compute_grid_lanes_layout<Tree: LayoutGridContainer>(
             order += 1;
         }
     });
+
+    // Store the detailed grid info before the out-of-flow positioning pass so that the pass can
+    // resolve the grid areas of out-of-flow boxes whose containing block is this container
+    let mut detailed_column_line_names = name_resolver.detailed_line_names(AbsoluteAxis::Horizontal);
+    let mut detailed_row_line_names = name_resolver.detailed_line_names(AbsoluteAxis::Vertical);
+    let areas =
+        name_resolver.populate_detailed_line_resolvers(&mut detailed_row_line_names, &mut detailed_column_line_names);
+    let (row_tracks, column_tracks) = match grid_axis {
+        AbsoluteAxis::Horizontal => (s_tracks, g_tracks),
+        AbsoluteAxis::Vertical => (g_tracks, s_tracks),
+    };
+    tree.set_detailed_grid_info(
+        node,
+        DetailedGridInfo {
+            rows: DetailedGridTracksInfo::from_grid_tracks_and_track_count(
+                row_counts,
+                row_tracks,
+                detailed_row_line_names,
+            ),
+            columns: DetailedGridTracksInfo::from_grid_tracks_and_track_count(
+                col_counts,
+                column_tracks,
+                detailed_column_line_names,
+            ),
+            items: items.iter().map(DetailedGridItemsInfo::from_grid_item).collect(),
+            areas,
+        },
+    );
 
     let absolute_position_inset = border
         + Rect {
