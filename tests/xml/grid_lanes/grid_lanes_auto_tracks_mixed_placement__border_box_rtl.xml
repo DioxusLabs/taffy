@@ -1,0 +1,21 @@
+<test name="grid_lanes_auto_tracks_mixed_placement__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid-lanes" direction="rtl" position="absolute" width="300px" fit-tolerance="10px" grid-template-columns="auto auto auto">
+      <div direction="rtl" position="relative" width="120px" height="20px" grid-column-start="2"/>
+      <div direction="rtl" position="relative" width="40px" height="30px"/>
+      <div direction="rtl" position="relative" width="60px" height="10px"/>
+      <div direction="rtl" position="relative" width="20px" height="40px"/>
+      <div direction="rtl" position="relative" width="30px" height="20px" grid-column-start="3"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="300" height="60">
+      <node x="100" y="0" width="120" height="20"/>
+      <node x="260" y="0" width="40" height="30"/>
+      <node x="20" y="0" width="60" height="10"/>
+      <node x="200" y="20" width="20" height="40"/>
+      <node x="50" y="10" width="30" height="20"/>
+    </node>
+  </expectations>
+</test>
