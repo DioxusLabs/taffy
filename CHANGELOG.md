@@ -16,6 +16,8 @@
 - Flexbox: a column flex container's baseline taken from a scroll container item is now clamped to the item's border box (matching row flex containers, Block and Grid).
 - Flexbox: fix the intrinsic main size of a flex container that has an item with a negative main-axis margin and a flex basis equal to its padding and border. The margin was ignored, and for some padding and border values a floating-point rounding error made the container tens of millions of pixels large.
 - Grid: a percentage `max-width`/`max-height` no longer shrinks the minimum contribution of a compressible replaced item that is not a replaced element (e.g. `<input>` with `width: 100px; max-width: 100%`). Only replaced elements resolve it against zero, matching browsers.
+- Flexbox/Grid: the space available to the children of a container with an `auto` size is now limited by the container's `max-width`/`max-height`, also when the container is sized under a max-content constraint. Previously the children were sized as if the max size was not set and only the container itself was clamped, so e.g. text in a flex column or grid with `max-width: 200px` was wrapped at the unclamped width (#884).
+- `compute_root_layout`: the width that a block root takes from a definite available space is now clamped by its `min-width`/`max-width`.
 
 ## 0.15.0
 

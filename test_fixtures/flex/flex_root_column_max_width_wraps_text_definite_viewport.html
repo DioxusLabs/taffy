@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    A column flex root with a max-width (and an auto width) sizes its children into its max-width
+  </title>
+</head>
+<body>
+
+<!-- 200px of wrappable content in a 250px wide viewport: the text wraps at the max-width of the root, not at the width of the viewport -->
+<div class="viewport" style="width: 250px;">
+  <div id="test-root" style="flex-direction: column; max-width: 100px;">
+    <div>HH&ZeroWidthSpace;HH&ZeroWidthSpace;HH&ZeroWidthSpace;HH&ZeroWidthSpace;HH&ZeroWidthSpace;HH&ZeroWidthSpace;HH&ZeroWidthSpace;HH&ZeroWidthSpace;HH&ZeroWidthSpace;HH</div>
+    <div>HH&ZeroWidthSpace;HH&ZeroWidthSpace;HH&ZeroWidthSpace;HH&ZeroWidthSpace;HH&ZeroWidthSpace;HH&ZeroWidthSpace;HH&ZeroWidthSpace;HH&ZeroWidthSpace;HH&ZeroWidthSpace;HH</div>
+  </div>
+</div>
+
+</body>
+</html>
