@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    Grid Lanes: auto-placed items take part in the second track sizing pass of a shrink-to-fit container with percentage tracks
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="display: flex; align-items: flex-start; width: 400px;">
+  <div style="display: grid-lanes; grid-template-columns: 25% auto; justify-content: start; flow-tolerance: 0;">
+    <div>XXX​XXX</div>
+    <div>XX​XX</div>
+  </div>
+</div>
+
+</body>
+</html>
