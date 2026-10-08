@@ -36003,6 +36003,30 @@ mod grid_lanes {
 
     #[cfg(feature = "grid_lanes")]
     #[test]
+    fn grid_lanes_no_explicit_tracks__border_box_ltr() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_no_explicit_tracks__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_no_explicit_tracks__content_box_ltr() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_no_explicit_tracks__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_no_explicit_tracks__border_box_rtl() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_no_explicit_tracks__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_no_explicit_tracks__content_box_rtl() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_no_explicit_tracks__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
     fn grid_lanes_padding_border__border_box_ltr() {
         crate::run_xml_test("grid_lanes", "grid_lanes_padding_border__border_box_ltr");
     }
