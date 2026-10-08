@@ -39,8 +39,6 @@ pub(in super::super) struct GridItem {
     /// Is it a compressible replaced element?
     /// https://drafts.csswg.org/css-sizing-3/#min-content-zero
     pub is_compressible_replaced: bool,
-    /// Whether the item is a replaced element. Such items are not stretched by `normal` alignment.
-    pub is_replaced: bool,
     /// The item's overflow style
     pub overflow: Point<Overflow>,
     /// The item's box_sizing style
@@ -124,7 +122,6 @@ impl GridItem {
             row: UNPLACED,
             column: UNPLACED,
             is_compressible_replaced: style.is_compressible_replaced(),
-            is_replaced: style.is_replaced(),
             overflow: style.overflow(),
             box_sizing: style.box_sizing(),
             size: style.size(),
@@ -310,16 +307,6 @@ impl GridItem {
         known_dimensions
     }
 
-    /// Whether the given self-alignment stretches the item: `stretch`, or `normal` unless the item is replaced
-    #[inline(always)]
-    fn is_stretch_aligned(&self, alignment: AlignSelf) -> bool {
-        match alignment.keyword {
-            AlignItemsKeyword::Stretch => true,
-            AlignItemsKeyword::Normal => !self.is_replaced,
-            _ => false,
-        }
-    }
-
     /// Compute the known_dimensions to be passed to the child sizing functions
     /// The key thing that is being done here is applying stretch alignment, which is necessary to
     /// allow percentage sizes further down the tree to resolve properly in some cases
@@ -384,11 +371,9 @@ impl GridItem {
             //  - Alignment style is "stretch" or "normal". Note that "normal" is treated as "stretch"
             //    here regardless of whether the item has a preferred size or aspect ratio in this axis,
             //    which differs from the rule used when the item is finally aligned (see `align_and_position_item`).
-            //    Replaced elements are not stretched by "normal".
             //  - The node is not absolutely positioned
             //  - The node does not have auto margins in this axis.
-            if !self.margin.left.is_auto() && !self.margin.right.is_auto() && self.is_stretch_aligned(self.justify_self)
-            {
+            if !self.margin.left.is_auto() && !self.margin.right.is_auto() && self.justify_self.is_stretch_or_normal() {
                 return grid_area_minus_item_margins_size.width;
             }
 
@@ -417,7 +402,7 @@ impl GridItem {
             //  - Alignment style is "stretch" or "normal" (see the note on width above)
             //  - The node is not absolutely positioned
             //  - The node does not have auto margins in this axis.
-            if !self.margin.top.is_auto() && !self.margin.bottom.is_auto() && self.is_stretch_aligned(self.align_self) {
+            if !self.margin.top.is_auto() && !self.margin.bottom.is_auto() && self.align_self.is_stretch_or_normal() {
                 return grid_area_minus_item_margins_size.height;
             }
 
@@ -691,25 +676,29 @@ impl GridItem {
         })
     }
 
-    /// The minimum contribution of an item is the smallest outer size it can have.
-    /// Specifically:
-    ///   - If the item’s computed preferred size behaves as auto or depends on the size of its containing block in the relevant axis:
-    ///     Its minimum contribution is the outer size that would result from assuming the item’s used minimum size as its preferred size;
-    ///   - Else the item’s minimum contribution is its min-content contribution.
-    ///
-    /// Because the minimum contribution often depends on the size of the item’s content, it is considered a type of intrinsic size contribution.
-    /// See: https://www.w3.org/TR/css-grid-1/#min-size-auto
-    pub fn minimum_contribution(
+    /// Resolve the item's padding + border sums in both axes against the grid area
+    #[inline]
+    pub fn padding_border_size(
+        &self,
+        tree: &mut impl LayoutPartialTree,
+        grid_area_size: Size<Option<f32>>,
+    ) -> Size<f32> {
+        let padding = self.padding.resolve_or_zero(grid_area_size.width, |val, basis| tree.calc(val, basis));
+        let border = self.border.resolve_or_zero(grid_area_size.width, |val, basis| tree.calc(val, basis));
+        (padding + border).sum_axes()
+    }
+
+    /// The part of the item's minimum contribution that does not depend on the tracks it spans: its preferred
+    /// size if definite, else its minimum size if definite, else zero for scroll containers.
+    /// `None` means the automatic minimum size applies.
+    #[inline]
+    pub fn explicit_minimum_contribution(
         &mut self,
         tree: &mut impl LayoutPartialTree,
         axis: AbstractAxis,
-        axis_tracks: &[GridTrack],
         grid_area_size: Size<Option<f32>>,
-        inner_node_size: Size<Option<f32>>,
-    ) -> f32 {
-        let padding = self.padding.resolve_or_zero(grid_area_size.width, |val, basis| tree.calc(val, basis));
-        let border = self.border.resolve_or_zero(grid_area_size.width, |val, basis| tree.calc(val, basis));
-        let padding_border_size = (padding + border).sum_axes();
+        padding_border_size: Size<f32>,
+    ) -> Option<f32> {
         let box_sizing_adjustment =
             if self.box_sizing == BoxSizing::ContentBox { padding_border_size } else { Size::ZERO };
         self.size
@@ -747,55 +736,74 @@ impl GridItem {
                     .get(axis)
             })
             .or_else(|| self.overflow.get(axis).maybe_into_automatic_min_size())
-            .unwrap_or_else(|| {
-                // Automatic minimum size. See https://www.w3.org/TR/css-grid-1/#min-size-auto
+    }
 
-                // To provide a more reasonable default minimum size for grid items, the used value of its automatic minimum size
-                // in a given axis is the content-based minimum size if all of the following are true:
-                let item_axis_tracks = &axis_tracks[self.track_range_excluding_lines(axis)];
+    /// The minimum contribution of an item is the smallest outer size it can have.
+    /// Specifically:
+    ///   - If the item’s computed preferred size behaves as auto or depends on the size of its containing block in the relevant axis:
+    ///     Its minimum contribution is the outer size that would result from assuming the item’s used minimum size as its preferred size;
+    ///   - Else the item’s minimum contribution is its min-content contribution.
+    ///
+    /// Because the minimum contribution often depends on the size of the item’s content, it is considered a type of intrinsic size contribution.
+    /// See: https://www.w3.org/TR/css-grid-1/#min-size-auto
+    pub fn minimum_contribution(
+        &mut self,
+        tree: &mut impl LayoutPartialTree,
+        axis: AbstractAxis,
+        axis_tracks: &[GridTrack],
+        grid_area_size: Size<Option<f32>>,
+        inner_node_size: Size<Option<f32>>,
+    ) -> f32 {
+        let padding_border_size = self.padding_border_size(tree, grid_area_size);
+        self.explicit_minimum_contribution(tree, axis, grid_area_size, padding_border_size).unwrap_or_else(|| {
+            // Automatic minimum size. See https://www.w3.org/TR/css-grid-1/#min-size-auto
 
-                // it is not a scroll container (handled above)
+            // To provide a more reasonable default minimum size for grid items, the used value of its automatic minimum size
+            // in a given axis is the content-based minimum size if all of the following are true:
+            let item_axis_tracks = &axis_tracks[self.track_range_excluding_lines(axis)];
 
-                // it spans at least one track in that axis whose min track sizing function is auto
-                let spans_auto_min_track = item_axis_tracks
-                    .iter()
-                    .any(|track| track.min_track_sizing_function.behaves_as_auto(inner_node_size.get(axis)));
+            // it is not a scroll container
+            // TODO: support overflow property
 
-                // if it spans more than one track in that axis, none of those tracks are flexible
-                let only_span_one_track = item_axis_tracks.len() == 1;
-                let use_content_based_minimum = spans_auto_min_track
-                    && (only_span_one_track
-                        || !item_axis_tracks.iter().any(|track| track.max_track_sizing_function.is_fr()));
+            // it spans at least one track in that axis whose min track sizing function is auto
+            let spans_auto_min_track = item_axis_tracks
+                .iter()
+                .any(|track| track.min_track_sizing_function.behaves_as_auto(inner_node_size.get(axis)));
 
-                // Otherwise, the automatic minimum size is zero, as usual.
-                if use_content_based_minimum {
-                    let mut minimum_contribution =
-                        self.min_content_contribution_cached(axis, tree, grid_area_size, grid_area_size);
+            // if it spans more than one track in that axis, none of those tracks are flexible
+            let only_span_one_track = item_axis_tracks.len() == 1;
+            let use_content_based_minimum = spans_auto_min_track
+                && (only_span_one_track
+                    || !item_axis_tracks.iter().any(|track| track.max_track_sizing_function.is_fr()));
 
-                    // If the item is a compressible replaced element, and has a definite preferred size or maximum size in the
-                    // relevant axis, the size suggestion is capped by those sizes; for this purpose, any indefinite percentages
-                    // in these sizes are resolved against zero (and considered definite).
-                    if self.is_compressible_replaced {
-                        let size = self.size.get(axis).maybe_resolve(Some(0.0), |val, basis| tree.calc(val, basis));
-                        let max_size =
-                            self.max_size.get(axis).maybe_resolve(Some(0.0), |val, basis| tree.calc(val, basis));
-                        minimum_contribution = minimum_contribution.maybe_min(size).maybe_min(max_size);
-                    }
+            // Otherwise, the automatic minimum size is zero, as usual.
+            if use_content_based_minimum {
+                let mut minimum_contribution =
+                    self.min_content_contribution_cached(axis, tree, grid_area_size, grid_area_size);
 
-                    // The content-based minimum size is additionally clamped by the sum of any fixed max track sizing
-                    // functions of the tracks the item spans. Note that this clamp does not apply to explicitly specified
-                    // preferred or minimum sizes, and that the argument to fit-content() does not clamp the content-based
-                    // minimum size in the same way as a fixed max track sizing function. The clamp is a stretch fit into
-                    // the limit, so it does not shrink the item below its padding + border.
-                    let limit =
-                        self.spanned_fixed_track_limit(axis, axis_tracks, inner_node_size.get(axis), &|val, basis| {
-                            tree.resolve_calc_value(val, basis)
-                        });
-                    minimum_contribution.maybe_min(limit.map(|limit| f32_max(limit, padding_border_size.get(axis))))
-                } else {
-                    0.0
+                // If the item is a compressible replaced element, and has a definite preferred size or maximum size in the
+                // relevant axis, the size suggestion is capped by those sizes; for this purpose, any indefinite percentages
+                // in these sizes are resolved against zero (and considered definite).
+                if self.is_compressible_replaced {
+                    let size = self.size.get(axis).maybe_resolve(Some(0.0), |val, basis| tree.calc(val, basis));
+                    let max_size = self.max_size.get(axis).maybe_resolve(Some(0.0), |val, basis| tree.calc(val, basis));
+                    minimum_contribution = minimum_contribution.maybe_min(size).maybe_min(max_size);
                 }
-            })
+
+                // The content-based minimum size is additionally clamped by the sum of any fixed max track sizing
+                // functions of the tracks the item spans. Note that this clamp does not apply to explicitly specified
+                // preferred or minimum sizes, and that the argument to fit-content() does not clamp the content-based
+                // minimum size in the same way as a fixed max track sizing function. The clamp is a stretch fit into
+                // the limit, so it does not shrink the item below its padding + border.
+                let limit =
+                    self.spanned_fixed_track_limit(axis, axis_tracks, inner_node_size.get(axis), &|val, basis| {
+                        tree.resolve_calc_value(val, basis)
+                    });
+                minimum_contribution.maybe_min(limit.map(|limit| f32_max(limit, padding_border_size.get(axis))))
+            } else {
+                0.0
+            }
+        })
     }
 
     /// Retrieve the item's minimum contribution from the cache or compute it using the provided parameters
