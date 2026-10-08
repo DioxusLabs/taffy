@@ -231,7 +231,7 @@ pub trait GridContainerStyle: CoreStyle {
     /// The tie threshold for grid lanes auto-placement
     #[cfg(feature = "grid_lanes")]
     #[inline(always)]
-    fn flow_tolerance(&self) -> FlowTolerance {
+    fn flow_tolerance(&self) -> LengthPercentage {
         Style::<Self::CustomIdent>::DEFAULT.flow_tolerance
     }
 
@@ -447,48 +447,6 @@ impl GridLanesDirection {
         }
     }
 }
-
-/// The tie threshold for grid lanes auto-placement: candidate positions within this distance of the
-/// shortest track are considered equally good, and the first one at or after the placement cursor wins.
-///
-/// CSS `flow-tolerance: normal` resolves to `1em`, which Taffy cannot compute, so style sources must
-/// pass a resolved length. Defaults to [`FlowTolerance::ZERO`].
-///
-/// <https://drafts.csswg.org/css-grid-3/#flow-tolerance>
-#[cfg(feature = "grid_lanes")]
-#[derive(Copy, Clone, PartialEq, Debug)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-pub enum FlowTolerance {
-    /// A length or a percentage of the grid lanes container's content box size in the grid axis
-    Length(LengthPercentage),
-    /// Items are placed strictly in order, ignoring track lengths
-    Infinite,
-}
-
-#[cfg(feature = "grid_lanes")]
-impl FlowTolerance {
-    /// A zero tie threshold: an item always goes to the shortest track
-    pub const ZERO: Self = Self::Length(LengthPercentage::ZERO);
-}
-
-#[cfg(feature = "grid_lanes")]
-impl Default for FlowTolerance {
-    fn default() -> Self {
-        Self::ZERO
-    }
-}
-
-#[cfg(all(feature = "grid_lanes", feature = "parse"))]
-impl FromCss for FlowTolerance {
-    fn from_css<'i>(parser: &mut Parser<'i, '_>) -> CssParseResult<'i, Self> {
-        if parser.try_parse(|parser| parser.expect_ident_matching("infinite")).is_ok() {
-            return Ok(Self::Infinite);
-        }
-        LengthPercentage::from_css(parser).map(Self::Length)
-    }
-}
-#[cfg(all(feature = "grid_lanes", feature = "parse"))]
-from_str_from_css!(FlowTolerance);
 
 /// A grid line placement specification which is generic over the coordinate system that it uses to define
 /// grid line positions.

@@ -31,6 +31,8 @@ pub use self::block::{BlockContainerStyle, BlockItemStyle, TextAlign};
 pub use self::flex::{FlexDirection, FlexWrap, FlexboxContainerStyle, FlexboxItemStyle};
 #[cfg(feature = "float_layout")]
 pub use self::float::{Clear, Float, FloatDirection};
+#[cfg(feature = "grid_lanes")]
+pub use self::grid::GridLanesDirection;
 #[cfg(feature = "grid")]
 pub use self::grid::{
     ExpandedMaxTrackSizingFunction, ExpandedMinTrackSizingFunction, GenericGridPlacement, GenericGridTemplateComponent,
@@ -38,8 +40,6 @@ pub use self::grid::{
     GridTemplateComponent, GridTemplateRepetition, GridTemplateTracks, MaxTrackSizingFunction, MinTrackSizingFunction,
     RepetitionCount, TrackSizingFunction,
 };
-#[cfg(feature = "grid_lanes")]
-pub use self::grid::{FlowTolerance, GridLanesDirection};
 #[cfg(feature = "grid")]
 pub(crate) use self::grid::{GridAreaAxis, GridAreaEnd};
 #[cfg(feature = "grid")]
@@ -862,9 +862,10 @@ pub struct Style<S: CheapCloneStr = DefaultCheapStr> {
     /// Which axis of a grid lanes container has tracks (the other axis is the stacking axis)
     #[cfg(feature = "grid_lanes")]
     pub grid_lanes_direction: GridLanesDirection,
-    /// The tie threshold for grid lanes auto-placement
+    /// The tie threshold for grid lanes auto-placement. `infinite` is `LengthPercentage::length(f32::INFINITY)`;
+    /// `normal` (1em) must be resolved by the style source, as Taffy has no font-size
     #[cfg(feature = "grid_lanes")]
-    pub flow_tolerance: FlowTolerance,
+    pub flow_tolerance: LengthPercentage,
 
     // Grid container named properties
     /// Defines the rectangular grid areas
@@ -961,7 +962,7 @@ impl<S: CheapCloneStr> Style<S> {
         #[cfg(feature = "grid_lanes")]
         grid_lanes_direction: GridLanesDirection::Column,
         #[cfg(feature = "grid_lanes")]
-        flow_tolerance: FlowTolerance::ZERO,
+        flow_tolerance: LengthPercentage::length(0.0),
         #[cfg(feature = "grid")]
         grid_row: Line { start: GridPlacement::<S>::Auto, end: GridPlacement::<S>::Auto },
         #[cfg(feature = "grid")]
@@ -1459,7 +1460,7 @@ impl<S: CheapCloneStr> GridContainerStyle for Style<S> {
     }
     #[cfg(feature = "grid_lanes")]
     #[inline(always)]
-    fn flow_tolerance(&self) -> FlowTolerance {
+    fn flow_tolerance(&self) -> LengthPercentage {
         self.flow_tolerance
     }
     #[inline(always)]
@@ -1591,7 +1592,7 @@ impl<T: GridContainerStyle> GridContainerStyle for &'_ T {
     }
     #[cfg(feature = "grid_lanes")]
     #[inline(always)]
-    fn flow_tolerance(&self) -> FlowTolerance {
+    fn flow_tolerance(&self) -> LengthPercentage {
         (*self).flow_tolerance()
     }
     #[inline(always)]
@@ -1739,7 +1740,7 @@ mod tests {
             #[cfg(feature = "grid_lanes")]
             grid_lanes_direction: Default::default(),
             #[cfg(feature = "grid_lanes")]
-            flow_tolerance: Default::default(),
+            flow_tolerance: crate::style::LengthPercentage::length(0.0),
             #[cfg(feature = "grid")]
             grid_row: Line { start: GridPlacement::Auto, end: GridPlacement::Auto },
             #[cfg(feature = "grid")]
@@ -1840,8 +1841,6 @@ mod tests {
         assert_type_size::<GridAutoFlow>(1);
         #[cfg(feature = "grid_lanes")]
         assert_type_size::<GridLanesDirection>(1);
-        #[cfg(feature = "grid_lanes")]
-        assert_type_size::<FlowTolerance>(16);
         assert_type_size::<MinTrackSizingFunction>(8);
         assert_type_size::<MaxTrackSizingFunction>(8);
         assert_type_size::<TrackSizingFunction>(16);
@@ -1853,7 +1852,7 @@ mod tests {
         assert_type_size::<GridPlacement<String>>(32);
         assert_type_size::<Line<GridPlacement<String>>>(64);
         #[cfg(feature = "grid_lanes")]
-        assert_type_size::<Style<String>>(576);
+        assert_type_size::<Style<String>>(568);
         #[cfg(not(feature = "grid_lanes"))]
         assert_type_size::<Style<String>>(560);
 
@@ -1862,7 +1861,7 @@ mod tests {
         assert_type_size::<GridPlacement<Arc<str>>>(24);
         assert_type_size::<Line<GridPlacement<Arc<str>>>>(48);
         #[cfg(feature = "grid_lanes")]
-        assert_type_size::<Style<Arc<str>>>(544);
+        assert_type_size::<Style<Arc<str>>>(536);
         #[cfg(not(feature = "grid_lanes"))]
         assert_type_size::<Style<Arc<str>>>(528);
     }
