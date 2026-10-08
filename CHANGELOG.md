@@ -4,6 +4,8 @@
 
 ### Breaking
 
+- The `DetailedGridInfo` track-list serializers (`grid_template_rows`, `grid_template_columns`, `write_grid_template_rows`, `write_grid_template_columns`) and `DetailedGridTracksInfo::{write_track_list, to_track_list_string}` take a `zoom: f32` argument. Track sizes are divided by it, so callers implementing CSS `zoom` get unzoomed px; pass `1.0` for the previous behaviour.
+
 - **`normal` is now a first-class keyword for `align-content` / `justify-content`, which are no longer wrapped in `Option`**. `AlignContentKeyword` gains a `Normal` variant, exposed as the constant `AlignContent::NORMAL` (= `JustifyContent::NORMAL`), which is the initial value of both properties. Layout is unchanged: `NORMAL` behaves exactly as `None` did (as `stretch` in Flexbox and CSS Grid containers, and as `start` in block containers, where it is also the only value that does not make the container establish an independent formatting context).
   - `Style::align_content` and `Style::justify_content` are now `AlignContent` / `JustifyContent` (default `AlignContent::NORMAL`). Replace `Some(AlignContent::X)` with `AlignContent::X`, and `None` with `AlignContent::NORMAL`
   - The style trait getters `FlexboxContainerStyle::{align_content, justify_content}`, `GridContainerStyle::{align_content, justify_content}` and `BlockContainerStyle::align_content` return `AlignContent` / `JustifyContent` rather than `Option<_>`

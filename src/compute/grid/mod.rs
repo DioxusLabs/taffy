@@ -1153,27 +1153,31 @@ impl<S: CheapCloneStr> DetailedGridInfo<S> {
     /// Write the used row track sizes and line names to the passed writer in the resolved value
     /// format of the `grid-template-rows` property
     /// (see <https://www.w3.org/TR/css-grid-1/#resolved-track-list>)
-    pub fn write_grid_template_rows(&self, out: &mut impl core::fmt::Write) -> core::fmt::Result {
-        self.rows.write_track_list(out)
+    /// Track sizes are divided by `zoom` (the container's effective CSS `zoom`, or `1.0`) to give unzoomed px.
+    pub fn write_grid_template_rows(&self, out: &mut impl core::fmt::Write, zoom: f32) -> core::fmt::Result {
+        self.rows.write_track_list(out, zoom)
     }
 
     /// Write the used column track sizes and line names to the passed writer in the resolved value
     /// format of the `grid-template-columns` property
     /// (see <https://www.w3.org/TR/css-grid-1/#resolved-track-list>)
-    pub fn write_grid_template_columns(&self, out: &mut impl core::fmt::Write) -> core::fmt::Result {
-        self.columns.write_track_list(out)
+    /// Track sizes are divided by `zoom` (the container's effective CSS `zoom`, or `1.0`) to give unzoomed px.
+    pub fn write_grid_template_columns(&self, out: &mut impl core::fmt::Write, zoom: f32) -> core::fmt::Result {
+        self.columns.write_track_list(out, zoom)
     }
 
     /// Serialize the used row track sizes and line names in the resolved value format of the
     /// `grid-template-rows` property (see <https://www.w3.org/TR/css-grid-1/#resolved-track-list>)
-    pub fn grid_template_rows(&self) -> String {
-        self.rows.to_track_list_string()
+    /// Track sizes are divided by `zoom` (the container's effective CSS `zoom`, or `1.0`) to give unzoomed px.
+    pub fn grid_template_rows(&self, zoom: f32) -> String {
+        self.rows.to_track_list_string(zoom)
     }
 
     /// Serialize the used column track sizes and line names in the resolved value format of the
     /// `grid-template-columns` property (see <https://www.w3.org/TR/css-grid-1/#resolved-track-list>)
-    pub fn grid_template_columns(&self) -> String {
-        self.columns.to_track_list_string()
+    /// Track sizes are divided by `zoom` (the container's effective CSS `zoom`, or `1.0`) to give unzoomed px.
+    pub fn grid_template_columns(&self, zoom: f32) -> String {
+        self.columns.to_track_list_string(zoom)
     }
 
     /// Resolve the physical grid area for an absolutely positioned box from its grid placement.
@@ -1322,7 +1326,8 @@ impl<S: CheapCloneStr> DetailedGridTracksInfo<S> {
     /// Write the used track sizes and line names of this axis to the passed writer in the
     /// resolved value format of the `grid-template-rows`/`grid-template-columns` properties
     /// (see <https://www.w3.org/TR/css-grid-1/#resolved-track-list>)
-    pub fn write_track_list(&self, out: &mut impl core::fmt::Write) -> core::fmt::Result {
+    /// Track sizes are divided by `zoom` (the container's effective CSS `zoom`, or `1.0`) to give unzoomed px.
+    pub fn write_track_list(&self, out: &mut impl core::fmt::Write, zoom: f32) -> core::fmt::Result {
         /// Write a bracketed line name group (e.g. `[foo bar]`)
         fn write_line_names<S: CheapCloneStr>(out: &mut impl core::fmt::Write, names: &[S]) -> core::fmt::Result {
             out.write_char('[')?;
@@ -1352,7 +1357,7 @@ impl<S: CheapCloneStr> DetailedGridTracksInfo<S> {
             if needs_space {
                 out.write_char(' ')?;
             }
-            write!(out, "{}px", position.end - position.start)?;
+            write!(out, "{}px", (position.end - position.start) / zoom)?;
             needs_space = true;
         }
         let trailing_names = self.names_for_line(self.positions.len());
@@ -1366,9 +1371,10 @@ impl<S: CheapCloneStr> DetailedGridTracksInfo<S> {
     /// Serialize the used track sizes and line names of this axis in the resolved value format of
     /// the `grid-template-rows`/`grid-template-columns` properties
     /// (see <https://www.w3.org/TR/css-grid-1/#resolved-track-list>)
-    pub fn to_track_list_string(&self) -> String {
+    /// Track sizes are divided by `zoom` (the container's effective CSS `zoom`, or `1.0`) to give unzoomed px.
+    pub fn to_track_list_string(&self, zoom: f32) -> String {
         let mut out = String::new();
-        self.write_track_list(&mut out).expect("writing to a String cannot fail");
+        self.write_track_list(&mut out, zoom).expect("writing to a String cannot fail");
         out
     }
 }
