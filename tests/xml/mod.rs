@@ -35835,6 +35835,30 @@ mod grid_lanes {
 
     #[cfg(feature = "grid_lanes")]
     #[test]
+    fn grid_lanes_fit_content_percentage_indefinite_width__border_box_ltr() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_fit_content_percentage_indefinite_width__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_fit_content_percentage_indefinite_width__content_box_ltr() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_fit_content_percentage_indefinite_width__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_fit_content_percentage_indefinite_width__border_box_rtl() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_fit_content_percentage_indefinite_width__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_fit_content_percentage_indefinite_width__content_box_rtl() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_fit_content_percentage_indefinite_width__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
     fn grid_lanes_fit_tolerance__border_box_ltr() {
         crate::run_xml_test("grid_lanes", "grid_lanes_fit_tolerance__border_box_ltr");
     }
@@ -36051,6 +36075,30 @@ mod grid_lanes {
 
     #[cfg(feature = "grid_lanes")]
     #[test]
+    fn grid_lanes_percentage_gap_indefinite_height__border_box_ltr() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_percentage_gap_indefinite_height__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_percentage_gap_indefinite_height__content_box_ltr() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_percentage_gap_indefinite_height__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_percentage_gap_indefinite_height__border_box_rtl() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_percentage_gap_indefinite_height__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_percentage_gap_indefinite_height__content_box_rtl() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_percentage_gap_indefinite_height__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
     fn grid_lanes_percentage_height__border_box_ltr() {
         crate::run_xml_test("grid_lanes", "grid_lanes_percentage_height__border_box_ltr");
     }
@@ -36071,6 +36119,30 @@ mod grid_lanes {
     #[test]
     fn grid_lanes_percentage_height__content_box_rtl() {
         crate::run_xml_test("grid_lanes", "grid_lanes_percentage_height__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_percentage_rows_indefinite_height__border_box_ltr() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_percentage_rows_indefinite_height__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_percentage_rows_indefinite_height__content_box_ltr() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_percentage_rows_indefinite_height__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_percentage_rows_indefinite_height__border_box_rtl() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_percentage_rows_indefinite_height__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_percentage_rows_indefinite_height__content_box_rtl() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_percentage_rows_indefinite_height__content_box_rtl");
     }
 
     #[cfg(feature = "grid_lanes")]
