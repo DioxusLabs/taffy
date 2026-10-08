@@ -39,6 +39,8 @@ pub(in super::super) struct GridItem {
     /// Is it a compressible replaced element?
     /// https://drafts.csswg.org/css-sizing-3/#min-content-zero
     pub is_compressible_replaced: bool,
+    /// Whether the item is a replaced element. Such items are not stretched by `normal` alignment.
+    pub is_replaced: bool,
     /// The item's overflow style
     pub overflow: Point<Overflow>,
     /// The item's box_sizing style
@@ -122,6 +124,7 @@ impl GridItem {
             row: UNPLACED,
             column: UNPLACED,
             is_compressible_replaced: style.is_compressible_replaced(),
+            is_replaced: style.is_replaced(),
             overflow: style.overflow(),
             box_sizing: style.box_sizing(),
             size: style.size(),
@@ -307,6 +310,16 @@ impl GridItem {
         known_dimensions
     }
 
+    /// Whether the given self-alignment stretches the item: `stretch`, or `normal` unless the item is replaced
+    #[inline(always)]
+    fn is_stretch_aligned(&self, alignment: AlignSelf) -> bool {
+        match alignment.keyword {
+            AlignItemsKeyword::Stretch => true,
+            AlignItemsKeyword::Normal => !self.is_replaced,
+            _ => false,
+        }
+    }
+
     /// Compute the known_dimensions to be passed to the child sizing functions
     /// The key thing that is being done here is applying stretch alignment, which is necessary to
     /// allow percentage sizes further down the tree to resolve properly in some cases
@@ -371,9 +384,11 @@ impl GridItem {
             //  - Alignment style is "stretch" or "normal". Note that "normal" is treated as "stretch"
             //    here regardless of whether the item has a preferred size or aspect ratio in this axis,
             //    which differs from the rule used when the item is finally aligned (see `align_and_position_item`).
+            //    Replaced elements are not stretched by "normal".
             //  - The node is not absolutely positioned
             //  - The node does not have auto margins in this axis.
-            if !self.margin.left.is_auto() && !self.margin.right.is_auto() && self.justify_self.is_stretch_or_normal() {
+            if !self.margin.left.is_auto() && !self.margin.right.is_auto() && self.is_stretch_aligned(self.justify_self)
+            {
                 return grid_area_minus_item_margins_size.width;
             }
 
@@ -402,7 +417,7 @@ impl GridItem {
             //  - Alignment style is "stretch" or "normal" (see the note on width above)
             //  - The node is not absolutely positioned
             //  - The node does not have auto margins in this axis.
-            if !self.margin.top.is_auto() && !self.margin.bottom.is_auto() && self.align_self.is_stretch_or_normal() {
+            if !self.margin.top.is_auto() && !self.margin.bottom.is_auto() && self.is_stretch_aligned(self.align_self) {
                 return grid_area_minus_item_margins_size.height;
             }
 
