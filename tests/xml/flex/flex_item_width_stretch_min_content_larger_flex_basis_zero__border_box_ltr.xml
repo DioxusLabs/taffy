@@ -1,0 +1,15 @@
+<test name="flex_item_width_stretch_min_content_larger_flex_basis_zero__border_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="flex" direction="ltr" position="absolute" width="100px" height="100px">
+      <text direction="ltr" position="relative" flex-basis="0px" width="stretch" margin-top="5px" margin-left="5px" margin-bottom="5px" margin-right="5px">
+        HHHHHHHHHHH
+      </text>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="100" height="100">
+      <node x="5" y="5" width="90" height="90"/>
+    </node>
+  </expectations>
+</test>
