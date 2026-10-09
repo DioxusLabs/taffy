@@ -1,0 +1,17 @@
+<test name="flex_row_reverse_wrap_reverse_negative_overflow__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="flex" box-sizing="content-box" direction="ltr" position="absolute" flex-direction="row-reverse" flex-wrap="wrap-reverse" overflow-x="scroll" overflow-y="scroll" scrollbar-width="15" align-items="start" width="100px" height="100px" row-gap="10px" column-gap="10px" padding-top="5px" padding-left="20px" padding-bottom="15px" padding-right="10px" border-top="3px" border-left="3px" border-bottom="3px" border-right="3px">
+      <div box-sizing="content-box" direction="ltr" position="relative" min-width="110px" min-height="110px"/>
+      <div box-sizing="content-box" direction="ltr" position="relative" min-width="110px" min-height="110px"/>
+      <div box-sizing="content-box" direction="ltr" position="relative" min-width="110px" min-height="110px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="136" height="126" scroll_width="25" scroll_height="265">
+      <node x="-2" y="-17" width="110" height="110"/>
+      <node x="-2" y="-137" width="110" height="110"/>
+      <node x="-2" y="-257" width="110" height="110"/>
+    </node>
+  </expectations>
+</test>

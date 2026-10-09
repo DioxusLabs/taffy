@@ -213,6 +213,15 @@ struct AlgoConstants {
 }
 
 impl AlgoConstants {
+    /// Axes whose scroll origin follows reversed flex main-start or cross-start.
+    #[cfg(feature = "content_size")]
+    fn scrollable_overflow_reversed(&self) -> Point<bool> {
+        Point {
+            x: self.is_scroll_container && if self.is_row { self.dir.is_reverse() } else { self.is_wrap_reverse },
+            y: self.is_scroll_container && if self.is_row { self.is_wrap_reverse } else { self.dir.is_reverse() },
+        }
+    }
+
     /// When a multi-line container requests a minimum number of lines (`flex-line-count`),
     /// definite cross-axis available space for measuring items is divided between the requested
     /// number of lines (after subtracting the cross-axis gaps between them).
@@ -559,8 +568,12 @@ fn compute_preliminary(tree: &mut impl LayoutFlexboxContainer, node: NodeId, inp
         Baselines::from_first(first_vertical_baseline),
     );
     output.oof_candidates = candidates;
-    output.oof_positioning_area =
-        Some(OofPositioningArea { size: absolute_position_area, offset: absolute_position_offset });
+    output.oof_positioning_area = Some(OofPositioningArea {
+        size: absolute_position_area,
+        offset: absolute_position_offset,
+        #[cfg(feature = "content_size")]
+        scrollable_overflow_reversed: constants.scrollable_overflow_reversed(),
+    });
     output
 }
 
@@ -2635,6 +2648,17 @@ fn calculate_flex_item(
             item.overflow,
             item.contain,
             constants.is_scroll_container,
+            {
+                let reversed = constants.scrollable_overflow_reversed();
+                Size {
+                    width: reversed
+                        .x
+                        .then_some(container_size.width - border.horizontal_axis_sum() - constants.scrollbar_gutter.x),
+                    height: reversed
+                        .y
+                        .then_some(container_size.height - border.vertical_axis_sum() - constants.scrollbar_gutter.y),
+                }
+            },
         ));
     }
 }
@@ -2751,13 +2775,21 @@ fn final_layout_pass(
     // containers do not extend their overflow region by their own padding.
     #[cfg(feature = "content_size")]
     if constants.is_scroll_container {
-        overflow_rect.right += if constants.layout_direction.is_rtl() {
-            constants.content_box_inset.left - constants.border.left - constants.scrollbar_gutter.x
+        let reversed = constants.scrollable_overflow_reversed();
+        overflow_rect.right += if constants.layout_direction.is_rtl() ^ reversed.x {
+            constants.content_box_inset.left
+                - constants.border.left
+                - if constants.layout_direction.is_rtl() { constants.scrollbar_gutter.x } else { 0.0 }
         } else {
-            constants.content_box_inset.right - constants.border.right - constants.scrollbar_gutter.x
+            constants.content_box_inset.right
+                - constants.border.right
+                - if constants.layout_direction.is_rtl() { 0.0 } else { constants.scrollbar_gutter.x }
         };
-        overflow_rect.bottom +=
-            constants.content_box_inset.bottom - constants.border.bottom - constants.scrollbar_gutter.y;
+        overflow_rect.bottom += if reversed.y {
+            constants.content_box_inset.top - constants.border.top
+        } else {
+            constants.content_box_inset.bottom - constants.border.bottom - constants.scrollbar_gutter.y
+        };
     }
 
     overflow_rect

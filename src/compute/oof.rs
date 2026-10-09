@@ -404,6 +404,8 @@ pub fn compute_oof_layout_for_area(
         candidates,
         area.size,
         area.offset,
+        #[cfg(feature = "content_size")]
+        area.scrollable_overflow_reversed,
         direction,
         claims,
         overflow,
@@ -739,6 +741,7 @@ pub(crate) fn perform_oof_layout(
     candidates: &[OofCandidate],
     area_size: Size<f32>,
     area_offset: Point<f32>,
+    #[cfg(feature = "content_size")] scrollable_overflow_reversed: Point<bool>,
     direction: Direction,
     claims: ContainingBlockClaims,
     container_overflow: Point<Overflow>,
@@ -829,6 +832,10 @@ pub(crate) fn perform_oof_layout(
                 overflow,
                 contain,
                 is_scroll_container,
+                Size {
+                    width: scrollable_overflow_reversed.x.then_some(area_size.width),
+                    height: scrollable_overflow_reversed.y.then_some(area_size.height),
+                },
             ));
         }
     }

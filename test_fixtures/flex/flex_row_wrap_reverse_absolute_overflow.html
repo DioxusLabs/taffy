@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>Absolute overflow follows the flex container's scroll origin</title>
+</head>
+<body>
+<div id="test-root" style="display: flex; position: relative; width: 100px; height: 100px; border: 3px solid; overflow: scroll; flex-direction: row; flex-wrap: wrap-reverse;">
+  <div style="position: absolute; left: -200px; top: 0; width: 20px; height: 20px;"></div>
+  <div style="position: absolute; left: 200px; top: 0; width: 20px; height: 20px;"></div>
+  <div style="position: absolute; left: 0; top: -200px; width: 20px; height: 20px;"></div>
+  <div style="position: absolute; left: 0; top: 200px; width: 20px; height: 20px;"></div>
+</div>
+</body>
+</html>

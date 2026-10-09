@@ -441,6 +441,7 @@ pub(super) fn align_and_position_item(
             overflow,
             contain,
             container_is_scroll_container,
+            Size::NONE,
         )
     };
     #[cfg(not(feature = "content_size"))]

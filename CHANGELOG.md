@@ -4,6 +4,8 @@
 
 ### Breaking
 
+- `OofPositioningArea` gains a `scrollable_overflow_reversed: Point<bool>` field (with `content_size` enabled). Custom non-flex positioning areas should set it to `Point { x: false, y: false }`.
+
 - The `DetailedGridInfo` track-list serializers (`grid_template_rows`, `grid_template_columns`, `write_grid_template_rows`, `write_grid_template_columns`) and `DetailedGridTracksInfo::{write_track_list, to_track_list_string}` take a `zoom: f32` argument. Track sizes are divided by it, so callers implementing CSS `zoom` get unzoomed px; pass `1.0` for the previous behaviour.
 
 - **`normal` is now a first-class keyword for `align-content` / `justify-content`, which are no longer wrapped in `Option`**. `AlignContentKeyword` gains a `Normal` variant, exposed as the constant `AlignContent::NORMAL` (= `JustifyContent::NORMAL`), which is the initial value of both properties. Layout is unchanged: `NORMAL` behaves exactly as `None` did (as `stretch` in Flexbox and CSS Grid containers, and as `start` in block containers, where it is also the only value that does not make the container establish an independent formatting context).
@@ -84,6 +86,8 @@
 - Grid: the min-/max-content contribution of a grid item whose size in the axis being measured is already known (from its `size` style or from stretch alignment in a definite grid area) is now taken directly from that known size rather than by calling into the item's layout. The known size computed for grid items during track sizing is also now floored by the item's padding and border, as it already was during final layout.
 
 ### Fixed
+
+- Flexbox: scrollable overflow now follows main-start/cross-start for reversed flex directions and `wrap-reverse`, including absolutely positioned children and end padding. Overflowing `stretch`/`space-between` alignment now falls back to `flex-start`, without changing explicit `safe` alignment.
 
 - Flexbox: treat percentage flex bases in an indefinite main size as content, rather than falling back to the item's preferred main size.
 

@@ -459,6 +459,9 @@ pub struct OofPositioningArea {
     pub size: Size<f32>,
     /// The offset of the area from the container's border box origin
     pub offset: Point<f32>,
+    #[cfg(feature = "content_size")]
+    /// Axes whose scroll origin is reversed relative to inline/block-start.
+    pub scrollable_overflow_reversed: Point<bool>,
 }
 
 /// A struct containing the result of laying a single node, which is returned up to the parent node
@@ -561,9 +564,12 @@ impl LayoutOutput {
             bottom_margin: CollapsibleMarginSet::ZERO,
             margins_can_collapse_through: false,
             oof_candidates: self.oof_candidates,
-            oof_positioning_area: self
-                .oof_positioning_area
-                .map(|area| OofPositioningArea { size: area.size.transpose(), offset: area.offset.transpose() }),
+            oof_positioning_area: self.oof_positioning_area.map(|area| OofPositioningArea {
+                size: area.size.transpose(),
+                offset: area.offset.transpose(),
+                #[cfg(feature = "content_size")]
+                scrollable_overflow_reversed: area.scrollable_overflow_reversed.transpose(),
+            }),
         }
     }
 
@@ -595,7 +601,8 @@ pub struct Layout {
     ///
     /// Coordinates are measured from the node's *scroll origin*: the corner of the padding box at
     /// the block-start/inline-start edge (the top-left corner in LTR, the top-*right* corner in
-    /// RTL), with `left`/`right` measuring along the inline axis in the direction of reachable
+    /// RTL), except flex scroll containers use main-start/cross-start. `left`/`right` measure
+    /// along the inline axis in the direction of reachable
     /// scrolling. The rectangle always contains the origin, so `left`/`top` are `<= 0.0` (negative
     /// values represent overflow before the scroll origin, which is unreachable by scrolling) and
     /// `right`/`bottom` are `>= 0.0` (representing the reachable extent of the content, which is

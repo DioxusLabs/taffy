@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>Reachable overflow follows flex main-start and cross-start</title>
+</head>
+<body>
+<div id="test-root" style="display: flex; width: 100px; height: 100px; padding: 5px 10px 15px 20px; border: 3px solid; overflow: scroll; flex-direction: row-reverse; flex-wrap: nowrap; gap: 10px; align-items: start;">
+  <div style="min-width: 110px; min-height: 110px;"></div>
+  <div style="min-width: 110px; min-height: 110px;"></div>
+  <div style="min-width: 110px; min-height: 110px;"></div>
+</div>
+</body>
+</html>
