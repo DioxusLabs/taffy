@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    Grid Lanes: safe end alignment falls back to start when the stacking range overflows
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="display: grid-lanes; grid-template-columns: 40px 40px 40px; width: 120px; height: 40px; align-content: safe end;">
+  <div style="height: 30px;"></div>
+  <div style="height: 20px;"></div>
+  <div style="height: 10px;"></div>
+  <div style="height: 40px;"></div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    Grid Lanes: distributed content alignment falls back in the stacking axis
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="display: grid-lanes; grid-template-columns: 40px 40px 40px; width: 120px; height: 100px; align-content: space-around;">
+  <div style="height: 30px;"></div>
+  <div style="height: 20px;"></div>
+  <div style="height: 10px;"></div>
+  <div style="height: 20px;"></div>
+</div>
+
+</body>
+</html>

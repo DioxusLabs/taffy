@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    Grid Lanes: dense-packed items take part in stacking-axis alignment
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="display: grid-lanes; grid-template-columns: 40px 40px 40px; width: 120px; height: 100px; grid-auto-flow: dense; grid-lanes-pack: dense; align-items: end;">
+  <div style="height: 30px;"></div>
+  <div style="height: 10px;"></div>
+  <div style="height: 20px;"></div>
+  <div style="height: 10px; grid-column: span 2;"></div>
+  <div style="height: 10px;"></div>
+  <div style="height: 15px;"></div>
+</div>
+
+</body>
+</html>

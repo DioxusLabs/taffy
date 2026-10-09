@@ -1,0 +1,21 @@
+<test name="grid_lanes_justify_items_end_row__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid-lanes" direction="rtl" position="absolute" justify-items="end" width="120px" height="90px" grid-lanes-direction="row" fit-tolerance="10px" grid-template-rows="30px 30px 30px">
+      <div direction="rtl" position="relative" width="30px"/>
+      <div direction="rtl" position="relative" width="10px"/>
+      <div direction="rtl" position="relative" width="20px"/>
+      <div direction="rtl" position="relative" width="10px" grid-row-start="span 3"/>
+      <div direction="rtl" position="relative" width="15px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="120" height="90">
+      <node x="90" y="0" width="30" height="30"/>
+      <node x="90" y="30" width="10" height="30"/>
+      <node x="90" y="60" width="20" height="30"/>
+      <node x="80" y="0" width="10" height="90"/>
+      <node x="0" y="0" width="15" height="30"/>
+    </node>
+  </expectations>
+</test>
