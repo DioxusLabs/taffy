@@ -105,6 +105,8 @@
 - Grid: keep sparse placement cursors separate from occupied intervals to avoid fragmented collision searches for spanning items in both sparse and dense packing
 - Grid: percentage row track sizing functions are now re-resolved against the container's height whenever that height was initially indefinite, even if column sizing did not need to be re-run (e.g. `grid-template-rows: auto 20% auto` in an auto-height grid without percentage columns). Previously this only happened when the available height was indefinite *and* columns were re-run, so such rows were left at their `auto` size.
 - Grid: when distributing a spanning item's size contribution to growth limits, space is now only distributed (up to limits) to tracks that are marked infinitely growable or whose growth limit is still infinite, and such tracks are capped by their `fit-content()` argument. Previously a `fit-content()` track with an infinite growth limit was not considered growable (so space could be distributed "beyond limits" to tracks whose growth limit was already fixed, e.g. by a non-spanning item), and growable tracks could grow past their `fit-content()` argument.
+- Flexbox: the content size suggestion used for the automatic minimum size of a flex item with an aspect ratio is now clamped by min/max cross sizes transferred through the aspect ratio, per [css-sizing-3 §5.1](https://www.w3.org/TR/css-sizing-3/#min-content-zero). Previously only the transferred max size was applied ([WPT: flexbox-min-height-auto-002b](https://wpt.live/css/css-flexbox/flexbox-min-height-auto-002b.html))
+- Flexbox: the used cross size of a flex item whose cross size is transferred from its main size through its aspect ratio is now re-derived from the used (post-flexing) main size, instead of being transferred from the flex base size before flexing
 
 - `TaffyTree::remove` and `TaffyTree::clear` now drop the removed nodes' contexts. Both are documented as dropping nodes, but neither touched `node_context_data`, so a node's context outlived the node — for a `TaffyTree` whose context is a measure function, that kept a boxed closure and everything it captured alive indefinitely. It is worst for callers that rebuild their tree every frame.
 - Block: the height consumed by floats inside a same-BFC block child is now propagated to the parent relative to the child's final (margin-collapsed) position. Floats no longer end up omitted from the parent's auto height when block `align-content` shifts the child
@@ -247,6 +249,8 @@ Taffy now supports `self-start` and `self-end` alignment for in-flow and absolut
 - Block/float: correct placement and margin behavior for zero-width, overflowing, and formatting-context-establishing floats (#988, #1056, #1062, #1064, #1065).
 - Block/float: use definite available widths when laying out floats (#994).
 - Block/float: include floats when calculating intrinsic width under definite available space (#1055).
+- Flexbox: clamp the cross-axis available space by the item's own cross-axis margins rather than the container's margins when sizing flex items; previously a container margin could inflate a stretched item's cross size beyond the container
+- Block/float: floated flex and grid containers with `width: auto` are now shrink-to-fit (fit-content) sized; previously they treated the definite available space as stretch-fit
 
 ## 0.12.2
 
