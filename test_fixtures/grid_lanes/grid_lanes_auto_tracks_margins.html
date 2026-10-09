@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    Grid Lanes: auto tracks include the margins of auto-placed items
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="width: 300px; display: grid-lanes; grid-template-columns: auto auto;">
+  <div style="width: 50px; height: 20px; margin: 0 10px;"></div>
+  <div style="width: 80px; height: 30px; margin-left: 5px;"></div>
+  <div style="width: 30px; height: 10px; margin: 0 30px 0 0;"></div>
+  <div style="width: 60px; height: 40px;"></div>
+</div>
+
+</body>
+</html>

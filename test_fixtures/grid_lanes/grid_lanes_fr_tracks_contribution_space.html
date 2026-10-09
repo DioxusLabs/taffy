@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    Grid Lanes: item contributions to flexible grid-axis tracks are measured under max-content, not the container width
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="display: grid-lanes; grid-template-columns: repeat(4, 1fr); gap: 5px; width: 250px; height: 100px;">
+  <div style="height: 20px;"></div>
+  <div style="display: flex; flex-wrap: wrap; height: 30px;">
+    <div style="width: 40px; height: 10px;"></div>
+    <div style="width: 40px; height: 10px;"></div>
+    <div style="width: 40px; height: 10px;"></div>
+  </div>
+  <div style="height: 20px;"><div style="width: 100%; height: 10px;"></div></div>
+  <div style="display: flex; height: 20px;">
+    <div style="flex: 1 0 30px; height: 10px;"></div>
+  </div>
+  <div style="height: 20px;"></div>
+</div>
+
+</body>
+</html>

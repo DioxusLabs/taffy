@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    Grid Lanes: spanning auto-placed items contribute at every start line
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="width: 400px; display: grid-lanes; grid-template-columns: auto 100px auto;">
+  <div style="width: 220px; height: 20px; grid-column: span 2;"></div>
+  <div style="width: 40px; height: 30px;"></div>
+  <div style="width: 60px; height: 10px;"></div>
+  <div style="width: 220px; height: 40px; grid-column: span 2;"></div>
+</div>
+
+</body>
+</html>

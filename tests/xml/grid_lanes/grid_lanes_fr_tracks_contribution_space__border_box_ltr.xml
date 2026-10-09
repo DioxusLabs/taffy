@@ -1,0 +1,37 @@
+<test name="grid_lanes_fr_tracks_contribution_space__border_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid-lanes" direction="ltr" position="absolute" width="250px" height="100px" row-gap="5px" column-gap="5px" fit-tolerance="10px" grid-template-columns="repeat(4, 1fr)">
+      <div direction="ltr" position="relative" height="20px"/>
+      <div display="flex" direction="ltr" position="relative" flex-wrap="wrap" height="30px">
+        <div direction="ltr" position="relative" width="40px" height="10px"/>
+        <div direction="ltr" position="relative" width="40px" height="10px"/>
+        <div direction="ltr" position="relative" width="40px" height="10px"/>
+      </div>
+      <div direction="ltr" position="relative" height="20px">
+        <div direction="ltr" position="relative" width="100%" height="10px"/>
+      </div>
+      <div display="flex" direction="ltr" position="relative" height="20px">
+        <div direction="ltr" position="relative" flex-grow="1" flex-shrink="0" flex-basis="30px" height="10px"/>
+      </div>
+      <div direction="ltr" position="relative" height="20px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="250" height="100">
+      <node x="0" y="0" width="59" height="20"/>
+      <node x="64" y="0" width="59" height="30">
+        <node x="0" y="0" width="40" height="10"/>
+        <node x="0" y="10" width="40" height="10"/>
+        <node x="0" y="20" width="40" height="10"/>
+      </node>
+      <node x="128" y="0" width="58" height="20">
+        <node x="0" y="0" width="58" height="10"/>
+      </node>
+      <node x="191" y="0" width="59" height="20">
+        <node x="0" y="0" width="59" height="10"/>
+      </node>
+      <node x="0" y="25" width="59" height="20"/>
+    </node>
+  </expectations>
+</test>
