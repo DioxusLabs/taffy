@@ -88,6 +88,9 @@
 ### Fixed
 
 - Flexbox: scrollable overflow now follows main-start/cross-start for reversed flex directions and `wrap-reverse`, including absolutely positioned children and end padding. Overflowing `stretch`/`space-between` alignment now falls back to `flex-start`, without changing explicit `safe` alignment.
+
+- Flexbox: treat percentage flex bases in an indefinite main size as content, rather than falling back to the item's preferred main size.
+
 - Block: floor same-BFC child context widths at padding + border so float geometry matches the child's used border-box size.
 
 - Absolute positioning: `safe` static alignment with two `auto` insets checks overflow and falls back within the inset-modified containing block, matching Chrome's interpretation of [CSSWG #11934](https://github.com/w3c/csswg-drafts/issues/11934).
@@ -137,6 +140,7 @@
 - Grid: the check for whether column/row sizing needs to be re-run now refreshes the cached grid area size and intrinsic contributions of *every* item crossing an intrinsic track, rather than stopping at the first item whose min-content contribution changed. Later items previously kept contributions computed against the first-pass track estimates, so e.g. two percentage-height `aspect-ratio` items in `auto` columns could leave one column at `0px` depending on item order. The row re-run check also now considers items crossing an intrinsic *row* (it previously tested for an intrinsic column), so an item in an `auto` row and a `minmax(0, 1fr)` column has its row re-sized when its column changes width
 - Grid: a grid item whose preferred size is `min-content`, `max-content`, `fit-content` or `fit-content(...)` no longer has its minimum contribution clamped by fixed max track sizing functions. Its minimum contribution is its min-content contribution.
 - Grid: a percentage min track sizing function (e.g. `minmax(20%, 100px)`) is now treated as `auto` rather than `min-content` while the size of the grid container is indefinite, so the automatic minimum size of the items in the track is clamped by a fixed max track sizing function.
+- Block: `Layout::margin` of an in-flow block child now holds the child's own top and bottom margins. Previously it held the result of collapsing them with the margins of descendants that collapse through the child's edges (e.g. `margin-top: 8px` with a first child with `margin-top: 13px` reported `13px`). Positions are unchanged.
 
 ## 0.14.0
 

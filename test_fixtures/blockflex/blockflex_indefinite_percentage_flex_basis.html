@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>Unresolved percentage flex basis uses content, not the preferred height</title>
+</head>
+<body>
+
+<!-- https://wpt.live/css/css-flexbox/percentage-heights-018.html -->
+<div id="test-root" style="display: block; width: 100px;">
+  <div style="flex-direction: column;">
+    <div style="display: block; flex: 1 1 0%; height: 100px; min-height: 0px;">
+      <div style="display: block; height: 100px;"></div>
+      <div style="display: block; height: 100%;"></div>
+    </div>
+  </div>
+  <div style="flex-direction: column;">
+    <div style="display: block; flex: 1 1 auto; height: 200px; min-height: 0px;">
+      <div style="display: block; height: 100px;"></div>
+      <div style="display: block; height: 100%;"></div>
+    </div>
+  </div>
+  <div style="flex-direction: column; height: 200px;">
+    <div style="display: block; flex: 1 1 0%; height: 100px; min-height: 0px;">
+      <div style="display: block; height: 100px;"></div>
+      <div style="display: block; height: 100%;"></div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
