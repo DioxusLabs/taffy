@@ -19,7 +19,7 @@ jobs:
         uses: actions/checkout@v5
         with:
           repository: DioxusLabs/blitz
-          ref: 3f334e09c6f6eb9cfdc28436c26ea84920a31119
+          ref: 1a3bee7ca57e3f62a569d70319c76ec18bffe4bb
           persist-credentials: false
       - name: Resolve revisions
         id: revisions
@@ -34,6 +34,6 @@ jobs:
     concurrency:
       group: blitz-wpt-${{ github.event.pull_request.number }}
       cancel-in-progress: true
-    uses: DioxusLabs/blitz/.github/workflows/wpt-compare.yml@3f334e09c6f6eb9cfdc28436c26ea84920a31119
+    uses: DioxusLabs/blitz/.github/workflows/wpt-compare.yml@1a3bee7ca57e3f62a569d70319c76ec18bffe4bb
     with:
       run-info: ${{ needs.prepare.outputs.run-info }}
