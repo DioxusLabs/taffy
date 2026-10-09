@@ -979,8 +979,6 @@ fn determine_flex_base_size(
             //    then the flex base size is calculated from its inner
             //    cross size and the flex item’s intrinsic aspect ratio.
 
-            // Note: `child.size` has already been resolved against aspect_ratio in generate_anonymous_flex_items
-            // So B will just work here by using main_size without special handling for aspect_ratio
             let main_size = child.size.main(dir);
             let main_stretch_size =
                 percent_resolution_main_size.maybe_sub(child.margin.main_axis_sum(dir)).maybe_max(0.0);
@@ -1010,25 +1008,29 @@ fn determine_flex_base_size(
                     None => None,
                 }
             } else {
-                if let Some(flex_basis) = flex_basis.or(main_size) {
+                if let Some(flex_basis) = flex_basis.or(main_size.filter(|_| flex_basis_style.is_auto())) {
                     child.flex_basis_is_definite = true;
                     break 'flex_basis flex_basis;
                 };
 
                 // A main size that is a sizing keyword either resolves to an exact size or
                 // determines the available space constraint the item is measured under
-                match resolve_sizing_keyword(
-                    child.size_style.main(dir),
-                    main_stretch_size,
-                    percent_resolution_main_size,
-                    |val, basis| tree.calc(val, basis),
-                ) {
-                    Some(SizingKeywordResolution::Exact(size)) => {
-                        child.flex_basis_is_definite = true;
-                        break 'flex_basis size;
+                if flex_basis_style.is_auto() {
+                    match resolve_sizing_keyword(
+                        child.size_style.main(dir),
+                        main_stretch_size,
+                        percent_resolution_main_size,
+                        |val, basis| tree.calc(val, basis),
+                    ) {
+                        Some(SizingKeywordResolution::Exact(size)) => {
+                            child.flex_basis_is_definite = true;
+                            break 'flex_basis size;
+                        }
+                        Some(SizingKeywordResolution::Measure(available)) => Some(available),
+                        None => None,
                     }
-                    Some(SizingKeywordResolution::Measure(available)) => Some(available),
-                    None => None,
+                } else {
+                    None
                 }
             };
 

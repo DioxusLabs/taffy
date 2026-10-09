@@ -85,6 +85,8 @@
 
 ### Fixed
 
+- Flexbox: treat percentage flex bases in an indefinite main size as content, rather than falling back to the item's preferred main size.
+
 - Block: floor same-BFC child context widths at padding + border so float geometry matches the child's used border-box size.
 
 - Absolute positioning: `safe` static alignment with two `auto` insets checks overflow and falls back within the inset-modified containing block, matching Chrome's interpretation of [CSSWG #11934](https://github.com/w3c/csswg-drafts/issues/11934).
