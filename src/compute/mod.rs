@@ -241,7 +241,8 @@ fn compute_in_flow_root_layout(
             });
 
             // Block nodes automatically stretch fit their width to fit available space if available space is definite
-            let available_space_based_size = Size { width: root_available_space.width.into_option(), height: None };
+            let available_space_based_size =
+                Size { width: root_available_space.width.into_option(), height: None }.maybe_clamp(min_size, max_size);
 
             let styled_based_known_dimensions = known_dimensions
                 .or(min_max_definite_size)

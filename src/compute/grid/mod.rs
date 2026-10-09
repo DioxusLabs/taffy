@@ -159,7 +159,7 @@ fn compute_container_constants<Tree: LayoutGridContainer>(
     let constrained_available_space = known_dimensions
         .or(preferred_size)
         .map(|size| size.map(AvailableSpace::Definite))
-        .unwrap_or(available_space)
+        .unwrap_or(available_space.zip_map(max_size, AvailableSpace::limit_to_max_size))
         .maybe_clamp(min_size, max_size)
         .maybe_max(padding_border_size);
 

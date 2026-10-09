@@ -311,10 +311,18 @@ pub fn compute_flexbox_layout(
         .known_dimensions_are_definite
         .zip_map(known_dimensions, |is_definite, known_dimension| is_definite || known_dimension.is_none());
 
+    // The container cannot become larger than its max size, so that is all the space its content can use
+    let available_space = inputs.available_space.zip_map(max_size, AvailableSpace::limit_to_max_size);
+
     let mut output = compute_preliminary(
         tree,
         node,
-        LayoutInput { known_dimensions: styled_based_known_dimensions, known_dimensions_are_definite, ..inputs },
+        LayoutInput {
+            known_dimensions: styled_based_known_dimensions,
+            known_dimensions_are_definite,
+            available_space,
+            ..inputs
+        },
     );
 
     // Layout containment suppresses the box's baseline for baseline-alignment purposes
