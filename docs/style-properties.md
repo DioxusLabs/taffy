@@ -57,7 +57,7 @@ N = Supported in spec but not implemented in Taffy
 pub struct AlignContent {
     pub keyword: AlignContentKeyword,   // Normal, Start, End, FlexStart, FlexEnd, Center,
                                         // Stretch, SpaceBetween, SpaceEvenly, SpaceAround
-    pub safety: AlignmentSafety,        // Safe | Unsafe
+    pub safety: AlignmentSafety,        // Default | Safe | Unsafe
 }
 ```
 
@@ -69,7 +69,11 @@ The `safety` field corresponds to the spec's
 [overflow-position keyword](https://www.w3.org/TR/css-align-3/#overflow-values). When the
 alignment subject would overflow its alignment container, `AlignmentSafety::Safe` falls back
 to logical `Start` so the start edge of the content stays visible. `AlignmentSafety::Unsafe`
-(the default) keeps the requested alignment even when that causes overflow at the start edge.
+keeps the requested alignment even when that causes overflow at the start edge.
+
+When no modifier is specified, `AlignmentSafety::Default` behaves as `Safe` for block content
+alignment and `Unsafe` for Flexbox/Grid. Absolutely positioned boxes adjust alignment to
+minimize overflow of their containing block.
 
 The spec only defines `safe`/`unsafe` against the position keywords `start`, `end`,
 `flex-start`, `flex-end`, `center`. Combinations such as `safe stretch`, `safe baseline`, and
