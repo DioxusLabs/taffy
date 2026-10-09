@@ -664,6 +664,7 @@ impl FloatContext {
     ///     negative margin lets the border box extend outside the containing block.
     ///
     /// When there are no floats beside the box, its (possibly negative) margins apply as usual.
+    #[allow(clippy::too_many_arguments)]
     pub fn find_bfc_slot(
         &self,
         min_y: f32,
