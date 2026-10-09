@@ -1,0 +1,17 @@
+<test name="flex_row_item_height_stretch_definite_container_align_start__border_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="flex" direction="ltr" position="absolute" align-items="start" width="100px" height="100px">
+      <text direction="ltr" position="relative" width="30px" height="stretch" margin-top="5px" margin-left="5px" margin-bottom="5px" margin-right="5px">
+        HH
+      </text>
+      <div direction="ltr" position="relative" width="10px" height="150px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="100" height="100">
+      <node x="5" y="5" width="30" height="90"/>
+      <node x="40" y="0" width="10" height="150"/>
+    </node>
+  </expectations>
+</test>
