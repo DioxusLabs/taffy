@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    Grid Lanes: dense packing accounts for the stacking-axis gap
+  </title>
+</head>
+<body>
+
+<!-- Chrome selects dense packing with its grid-lanes-pack property; Taffy reads the dense keyword of grid-auto-flow -->
+<div id="test-root" style="width: 150px; display: grid-lanes; grid-template-columns: 50px 50px 50px; flow-tolerance: 0px; row-gap: 5px; column-gap: 10px; width: 170px; grid-lanes-pack: dense; grid-auto-flow: dense;">
+  <div style="height: 40px;"></div>
+  <div style="height: 10px;"></div>
+  <div style="height: 20px;"></div>
+  <div style="height: 20px; grid-column: span 2;"></div>
+  <div style="height: 10px;"></div>
+  <div style="height: 10px;"></div>
+</div>
+
+</body>
+</html>
