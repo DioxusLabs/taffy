@@ -971,6 +971,8 @@ fn determine_flex_base_size(
 
         drop(child_style);
 
+        let main_stretch_size = percent_resolution_main_size.maybe_sub(child.margin.main_axis_sum(dir)).maybe_max(0.0);
+
         child.flex_basis = 'flex_basis: {
             // A. If the item has a definite used flex basis, that’s the flex base size.
 
@@ -980,8 +982,6 @@ fn determine_flex_base_size(
             //    cross size and the flex item’s intrinsic aspect ratio.
 
             let main_size = child.size.main(dir);
-            let main_stretch_size =
-                percent_resolution_main_size.maybe_sub(child.margin.main_axis_sum(dir)).maybe_max(0.0);
 
             // A flex basis that is a sizing keyword (min-content, max-content, fit-content,
             // fit-content(...), stretch) is used in place of the main size property: `stretch`
@@ -1139,8 +1139,15 @@ fn determine_flex_base_size(
 
             // 4.5. Automatic Minimum Size of Flex Items
             // https://www.w3.org/TR/css-flexbox-1/#min-size-auto
+            //
+            // The specified size suggestion is the item's preferred main size if it is definite.
+            // That includes a main size of `stretch` that resolves against a definite container size.
+            let specified_size_suggestion = match child.size.main(dir) {
+                None if child.size_style.main(dir).is_stretch() => main_stretch_size,
+                size => size,
+            };
             let clamped_min_content_size =
-                min_content_main_size.maybe_min(child.size.main(dir)).maybe_min(transferred_max_size.main(dir));
+                min_content_main_size.maybe_min(specified_size_suggestion).maybe_min(transferred_max_size.main(dir));
             clamped_min_content_size.maybe_max(padding_border_axes_sums.main(dir))
         });
 
