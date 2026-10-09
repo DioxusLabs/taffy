@@ -1,0 +1,45 @@
+name: Post Blitz WPT results
+
+on:
+  workflow_run:
+    workflows: [Blitz WPT]
+    types: [completed]
+
+permissions:
+  actions: read
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: blitz-wpt-post-${{ github.event.workflow_run.head_sha }}
+  cancel-in-progress: false
+
+jobs:
+  post-results:
+    if: github.event.workflow_run.event == 'pull_request' && github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout trusted WPT tools
+        uses: actions/checkout@v5
+        with:
+          repository: DioxusLabs/blitz
+          ref: 3f334e09c6f6eb9cfdc28436c26ea84920a31119
+          persist-credentials: false
+      - name: Find WPT comparison artifact
+        id: artifact
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python3 .github/scripts/wpt_pr.py find-artifact
+      - name: Download WPT comparison
+        if: steps.artifact.outputs.found == 'true'
+        uses: actions/download-artifact@v7
+        with:
+          name: wpt-diff
+          path: wpt-results
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Publish current results
+        if: steps.artifact.outputs.found == 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python3 .github/scripts/wpt_pr.py publish wpt-results

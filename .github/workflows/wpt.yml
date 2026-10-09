@@ -1,0 +1,39 @@
+name: Blitz WPT
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize, edited]
+
+permissions:
+  contents: read
+
+jobs:
+  prepare:
+    name: Resolve WPT revisions
+    runs-on: ubuntu-latest
+    outputs:
+      run: ${{ steps.revisions.outputs.run }}
+      run-info: ${{ steps.revisions.outputs.run-info }}
+    steps:
+      - name: Checkout trusted WPT tools
+        uses: actions/checkout@v5
+        with:
+          repository: DioxusLabs/blitz
+          ref: 3f334e09c6f6eb9cfdc28436c26ea84920a31119
+          persist-credentials: false
+      - name: Resolve revisions
+        id: revisions
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python3 .github/scripts/wpt_pr.py prepare
+
+  compare:
+    name: Blitz WPT
+    needs: prepare
+    if: needs.prepare.outputs.run == 'true'
+    concurrency:
+      group: blitz-wpt-${{ github.event.pull_request.number }}
+      cancel-in-progress: true
+    uses: DioxusLabs/blitz/.github/workflows/wpt-compare.yml@3f334e09c6f6eb9cfdc28436c26ea84920a31119
+    with:
+      run-info: ${{ needs.prepare.outputs.run-info }}
