@@ -21,7 +21,7 @@ jobs:
   # version. Building is likely sufficient as runtime errors varying between rust versions is very unlikely.
   build-features-msrv:
     name: "MSRV Build [Rust 1.71]"
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@master
@@ -31,7 +31,7 @@ jobs:
 
   build-features-debug:
     name: "Build [debug feature]"
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
@@ -39,7 +39,7 @@ jobs:
 
   build-examples:
     name: "Build Examples"
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
@@ -49,7 +49,7 @@ jobs:
   # than Taffy's MSRV
   build-parley-example:
     name: "Build Parley example"
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
@@ -60,7 +60,7 @@ jobs:
   # No features
   test-features-none:
     name: "Test Suite [no features]"
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
@@ -70,7 +70,7 @@ jobs:
   # Default
   test-features-default:
     name: "Test Suite [default features]"
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
@@ -79,7 +79,7 @@ jobs:
 
   test-features-all:
     name: "Test Suite [all features]"
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
@@ -89,7 +89,7 @@ jobs:
   # The main reason for this target is to test compilation on 32bit targets
   test-features-android-32bit:
     name: "Test Suite [all features (i686-linux-android)]"
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
@@ -101,7 +101,7 @@ jobs:
 
   test-features-default-with-serde:
     name: "Test Suite [default + serde]"
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
@@ -110,7 +110,7 @@ jobs:
 
   test-features-default-with-parse-faster:
     name: "Test Suite [default + parse_faster]"
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
@@ -119,7 +119,7 @@ jobs:
 
   test-features-default-except-content-size:
     name: "Test Suite [default except content_size]"
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
@@ -128,7 +128,7 @@ jobs:
 
   test-features-default-except-calc:
     name: "Test Suite [default except calc]"
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
@@ -137,7 +137,7 @@ jobs:
 
   test-features-no-grid-nor-flexbox:
     name: "Test Suite [std (no algorithms)]"
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
@@ -148,7 +148,7 @@ jobs:
   # With std feature
   test-features-flexbox:
     name: "Test Suite [std + flexbox]"
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
@@ -158,7 +158,7 @@ jobs:
 
   test-features-grid:
     name: "Test Suite [std + grid]"
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
@@ -168,7 +168,7 @@ jobs:
 
   test-features-block:
     name: "Test Suite [std + block)]"
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
@@ -179,7 +179,7 @@ jobs:
   # With detailed layout info
   test-features-grid-detailed-info:
     name: "Test Suite [std + grid + detailed_layout_info]"
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
@@ -190,7 +190,7 @@ jobs:
   # With detailed layout info
   test-features-flex-detailed-info:
     name: "Test Suite [std + flexbox + detailed_layout_info]"
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
@@ -202,7 +202,7 @@ jobs:
 
   test-features-grid-with-alloc:
     name: "Test Suite [alloc + no algorithms]"
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
@@ -212,7 +212,7 @@ jobs:
 
   test-features-alloc:
     name: "Test Suite [alloc + all algorithms]"
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
@@ -222,7 +222,7 @@ jobs:
 
   fmt:
     name: Rustfmt
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@master
@@ -233,7 +233,7 @@ jobs:
 
   clippy:
     name: Clippy
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@master
@@ -247,7 +247,7 @@ jobs:
   # Also checks that the examples can be scraped.
   doc:
     name: Documentation
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     env:
       RUSTDOCFLAGS: "--cfg docsrs"
     steps:
@@ -260,7 +260,7 @@ jobs:
 
   markdownlint:
     name: Markdown Lint
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v7
       - name: Run Markdown Lint
@@ -270,7 +270,7 @@ jobs:
 
   fixture-format:
     name: Test Fixture Formatting
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v7
       - name: Run format script
@@ -286,7 +286,7 @@ jobs:
 
   gentest:
     name: Generated Test Freshness
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
@@ -309,7 +309,7 @@ jobs:
   # benches is excluded from the workspace as Parley requires a newer Rust version than Taffy's MSRV
   benchmarks:
     name: Build Benchmarks
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
@@ -322,7 +322,7 @@ jobs:
 
   benchmarks-with-yoga:
     name: Build Benchmarks (w/ yoga)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
