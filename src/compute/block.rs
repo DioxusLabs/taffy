@@ -1467,8 +1467,8 @@ fn perform_final_layout_on_in_flow_children(
             let resolved_margin = Rect {
                 left: item_margin.left.unwrap_or(x_axis_auto_margin_size),
                 right: item_margin.right.unwrap_or(x_axis_auto_margin_size),
-                top: top_margin_set.resolve(),
-                bottom: bottom_margin_set.resolve(),
+                top: item_margin.top.unwrap_or(0.0),
+                bottom: item_margin.bottom.unwrap_or(0.0),
             };
 
             // Resolve item inset

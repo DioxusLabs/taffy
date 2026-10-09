@@ -5756,6 +5756,26 @@ mod blockflex {
     }
 
     #[test]
+    fn blockflex_indefinite_percentage_flex_basis__border_box_ltr() {
+        crate::run_xml_test("blockflex", "blockflex_indefinite_percentage_flex_basis__border_box_ltr");
+    }
+
+    #[test]
+    fn blockflex_indefinite_percentage_flex_basis__content_box_ltr() {
+        crate::run_xml_test("blockflex", "blockflex_indefinite_percentage_flex_basis__content_box_ltr");
+    }
+
+    #[test]
+    fn blockflex_indefinite_percentage_flex_basis__border_box_rtl() {
+        crate::run_xml_test("blockflex", "blockflex_indefinite_percentage_flex_basis__border_box_rtl");
+    }
+
+    #[test]
+    fn blockflex_indefinite_percentage_flex_basis__content_box_rtl() {
+        crate::run_xml_test("blockflex", "blockflex_indefinite_percentage_flex_basis__content_box_rtl");
+    }
+
+    #[test]
     fn blockflex_margin_y_collapse_through_blocked_by_flex__border_box_ltr() {
         crate::run_xml_test("blockflex", "blockflex_margin_y_collapse_through_blocked_by_flex__border_box_ltr");
     }
