@@ -36040,6 +36040,560 @@ mod grid {
     }
 }
 
+mod grid_lanes {
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_basic__border_box_ltr() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_basic__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_basic__content_box_ltr() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_basic__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_basic__border_box_rtl() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_basic__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_basic__content_box_rtl() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_basic__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_definite_height__border_box_ltr() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_definite_height__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_definite_height__content_box_ltr() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_definite_height__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_definite_height__border_box_rtl() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_definite_height__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_definite_height__content_box_rtl() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_definite_height__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_definite_placement__border_box_ltr() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_definite_placement__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_definite_placement__content_box_ltr() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_definite_placement__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_definite_placement__border_box_rtl() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_definite_placement__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_definite_placement__content_box_rtl() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_definite_placement__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_fit_content_percentage_indefinite_width__border_box_ltr() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_fit_content_percentage_indefinite_width__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_fit_content_percentage_indefinite_width__content_box_ltr() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_fit_content_percentage_indefinite_width__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_fit_content_percentage_indefinite_width__border_box_rtl() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_fit_content_percentage_indefinite_width__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_fit_content_percentage_indefinite_width__content_box_rtl() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_fit_content_percentage_indefinite_width__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_fit_tolerance__border_box_ltr() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_fit_tolerance__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_fit_tolerance__content_box_ltr() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_fit_tolerance__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_fit_tolerance__border_box_rtl() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_fit_tolerance__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_fit_tolerance__content_box_rtl() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_fit_tolerance__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_fit_tolerance_infinite__border_box_ltr() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_fit_tolerance_infinite__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_fit_tolerance_infinite__content_box_ltr() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_fit_tolerance_infinite__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_fit_tolerance_infinite__border_box_rtl() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_fit_tolerance_infinite__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_fit_tolerance_infinite__content_box_rtl() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_fit_tolerance_infinite__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_fr_tracks__border_box_ltr() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_fr_tracks__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_fr_tracks__content_box_ltr() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_fr_tracks__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_fr_tracks__border_box_rtl() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_fr_tracks__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_fr_tracks__content_box_rtl() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_fr_tracks__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_gap__border_box_ltr() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_gap__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_gap__content_box_ltr() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_gap__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_gap__border_box_rtl() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_gap__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_gap__content_box_rtl() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_gap__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_implicit_track__border_box_ltr() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_implicit_track__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_implicit_track__content_box_ltr() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_implicit_track__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_implicit_track__border_box_rtl() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_implicit_track__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_implicit_track__content_box_rtl() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_implicit_track__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_intrinsic_width_items__border_box_ltr() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_intrinsic_width_items__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_intrinsic_width_items__content_box_ltr() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_intrinsic_width_items__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_intrinsic_width_items__border_box_rtl() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_intrinsic_width_items__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_intrinsic_width_items__content_box_rtl() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_intrinsic_width_items__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_item_margins__border_box_ltr() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_item_margins__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_item_margins__content_box_ltr() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_item_margins__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_item_margins__border_box_rtl() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_item_margins__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_item_margins__content_box_rtl() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_item_margins__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_no_explicit_tracks__border_box_ltr() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_no_explicit_tracks__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_no_explicit_tracks__content_box_ltr() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_no_explicit_tracks__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_no_explicit_tracks__border_box_rtl() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_no_explicit_tracks__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_no_explicit_tracks__content_box_rtl() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_no_explicit_tracks__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_padding_border__border_box_ltr() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_padding_border__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_padding_border__content_box_ltr() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_padding_border__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_padding_border__border_box_rtl() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_padding_border__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_padding_border__content_box_rtl() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_padding_border__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_percentage_gap_indefinite_height__border_box_ltr() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_percentage_gap_indefinite_height__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_percentage_gap_indefinite_height__content_box_ltr() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_percentage_gap_indefinite_height__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_percentage_gap_indefinite_height__border_box_rtl() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_percentage_gap_indefinite_height__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_percentage_gap_indefinite_height__content_box_rtl() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_percentage_gap_indefinite_height__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_percentage_height__border_box_ltr() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_percentage_height__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_percentage_height__content_box_ltr() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_percentage_height__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_percentage_height__border_box_rtl() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_percentage_height__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_percentage_height__content_box_rtl() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_percentage_height__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_percentage_rows_indefinite_height__border_box_ltr() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_percentage_rows_indefinite_height__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_percentage_rows_indefinite_height__content_box_ltr() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_percentage_rows_indefinite_height__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_percentage_rows_indefinite_height__border_box_rtl() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_percentage_rows_indefinite_height__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_percentage_rows_indefinite_height__content_box_rtl() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_percentage_rows_indefinite_height__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_row_definite_text_items__border_box_ltr() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_row_definite_text_items__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_row_definite_text_items__content_box_ltr() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_row_definite_text_items__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_row_definite_text_items__border_box_rtl() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_row_definite_text_items__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_row_definite_text_items__content_box_rtl() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_row_definite_text_items__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_row_definite_text_items_auto_height__border_box_ltr() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_row_definite_text_items_auto_height__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_row_definite_text_items_auto_height__content_box_ltr() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_row_definite_text_items_auto_height__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_row_definite_text_items_auto_height__border_box_rtl() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_row_definite_text_items_auto_height__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_row_definite_text_items_auto_height__content_box_rtl() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_row_definite_text_items_auto_height__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_row_definite_text_items_tall__border_box_ltr() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_row_definite_text_items_tall__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_row_definite_text_items_tall__content_box_ltr() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_row_definite_text_items_tall__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_row_definite_text_items_tall__border_box_rtl() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_row_definite_text_items_tall__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_row_definite_text_items_tall__content_box_rtl() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_row_definite_text_items_tall__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_row_direction__border_box_ltr() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_row_direction__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_row_direction__content_box_ltr() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_row_direction__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_row_direction__border_box_rtl() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_row_direction__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_row_direction__content_box_rtl() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_row_direction__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_row_direction_definite_width__border_box_ltr() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_row_direction_definite_width__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_row_direction_definite_width__content_box_ltr() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_row_direction_definite_width__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_row_direction_definite_width__border_box_rtl() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_row_direction_definite_width__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_row_direction_definite_width__content_box_rtl() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_row_direction_definite_width__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_rtl__border_box_ltr() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_rtl__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_rtl__content_box_ltr() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_rtl__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_rtl__border_box_rtl() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_rtl__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_rtl__content_box_rtl() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_rtl__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_span__border_box_ltr() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_span__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_span__content_box_ltr() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_span__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_span__border_box_rtl() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_span__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid_lanes")]
+    #[test]
+    fn grid_lanes_span__content_box_rtl() {
+        crate::run_xml_test("grid_lanes", "grid_lanes_span__content_box_rtl");
+    }
+}
+
 mod gridflex {
     #[cfg(feature = "grid")]
     #[test]

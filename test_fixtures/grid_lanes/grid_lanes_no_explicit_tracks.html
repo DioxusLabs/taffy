@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    Grid Lanes: a container with no explicit grid-axis tracks gets a single implicit track
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="width: 200px; display: grid-lanes; grid-auto-columns: 50px;">
+  <div style="height: 20px;"></div>
+  <div style="height: 30px;"></div>
+  <div style="height: 10px;"></div>
+</div>
+
+</body>
+</html>

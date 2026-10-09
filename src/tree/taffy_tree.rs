@@ -23,6 +23,8 @@ use crate::compute::{
 };
 use crate::CacheTree;
 
+#[cfg(feature = "grid_lanes")]
+use crate::compute::compute_grid_lanes_layout;
 #[cfg(feature = "block_layout")]
 use crate::{compute::compute_block_layout, LayoutBlockContainer};
 #[cfg(feature = "flexbox")]
@@ -251,6 +253,8 @@ impl<NodeContext> PrintTree for TaffyTree<NodeContext> {
             }
             #[cfg(feature = "grid")]
             (_, Display::Grid) => "GRID",
+            #[cfg(feature = "grid_lanes")]
+            (_, Display::GridLanes) => "GRID-LANES",
         }
     }
 
@@ -320,6 +324,8 @@ where
                 (Display::Flex, true) => compute_flexbox_layout(tree, node_id, inputs),
                 #[cfg(feature = "grid")]
                 (Display::Grid, true) => compute_grid_layout(tree, node_id, inputs),
+                #[cfg(feature = "grid_lanes")]
+                (Display::GridLanes, true) => compute_grid_lanes_layout(tree, node_id, inputs),
                 (_, false) => {
                     let node_key = node_id.into();
                     let style = &tree.taffy.nodes[node_key].style;
