@@ -2,6 +2,7 @@ mod hand_written {
     mod absolute_replaced;
     mod adversarial_styles;
     mod baseline;
+    mod block_margin;
     mod block_replaced;
     mod border_and_padding;
     mod caching;
