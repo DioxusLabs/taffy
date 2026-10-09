@@ -1,0 +1,13 @@
+<test name="block_height_stretch_margins_border__content_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="block" box-sizing="content-box" direction="rtl" position="absolute" width="100px" height="100px" border-top="3px" border-left="3px" border-bottom="3px" border-right="3px">
+      <div display="block" box-sizing="content-box" direction="rtl" position="relative" height="stretch" margin-top="10px" margin-left="10px" margin-bottom="10px" margin-right="10px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="106" height="106">
+      <node x="13" y="13" width="80" height="80"/>
+    </node>
+  </expectations>
+</test>
