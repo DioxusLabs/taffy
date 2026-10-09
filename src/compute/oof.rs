@@ -354,7 +354,7 @@ pub fn compute_oof_layout(tree: &mut impl LayoutContainingBlock, node_id: NodeId
     drop(style);
 
     let candidates = output.oof_candidates.take();
-    let result = compute_oof_layout_for_area(tree, node_id, candidates, area, direction, claims);
+    let result = compute_oof_layout_for_area(tree, node_id, candidates.as_slice(), area, direction, claims);
     // Always record the hoisted child list (even when empty) so that lists recorded by previous
     // layout runs do not persist
     tree.clear_hoisted_children(node_id);
@@ -389,7 +389,7 @@ pub struct OofLayoutResult {
 pub fn compute_oof_layout_for_area(
     tree: &mut impl LayoutContainingBlock,
     geometry_owner: NodeId,
-    candidates: OofCandidates,
+    candidates: &[OofCandidate],
     area: OofPositioningArea,
     direction: Direction,
     claims: ContainingBlockClaims,
@@ -736,7 +736,7 @@ pub(crate) fn layout_oof_box<Tree: LayoutContainingBlock>(
 pub(crate) fn perform_oof_layout(
     tree: &mut impl LayoutContainingBlock,
     node_id: NodeId,
-    candidates: OofCandidates,
+    candidates: &[OofCandidate],
     area_size: Size<f32>,
     area_offset: Point<f32>,
     direction: Direction,
@@ -759,7 +759,7 @@ pub(crate) fn perform_oof_layout(
     // remainder. Further claimed candidates surfaced while laying out a claimed box are appended
     // to the work list (Blink-style re-sweep).
     let mut worklist: Vec<OofCandidate> = Vec::new();
-    for candidate in candidates.iter() {
+    for candidate in candidates {
         if claims.for_position(candidate.position) {
             worklist.push(*candidate);
         } else {

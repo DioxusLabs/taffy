@@ -165,7 +165,7 @@ pub fn compute_root_layout(
         oof::perform_oof_layout(
             tree,
             root,
-            candidates,
+            candidates.as_slice(),
             area_size,
             area_offset,
             direction,
