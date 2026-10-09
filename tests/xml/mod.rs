@@ -31643,6 +31643,54 @@ mod grid {
 
     #[cfg(feature = "grid")]
     #[test]
+    fn grid_max_content_span_2_auto_columns_with_span_1_item__border_box_ltr() {
+        crate::run_xml_test("grid", "grid_max_content_span_2_auto_columns_with_span_1_item__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_max_content_span_2_auto_columns_with_span_1_item__content_box_ltr() {
+        crate::run_xml_test("grid", "grid_max_content_span_2_auto_columns_with_span_1_item__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_max_content_span_2_auto_columns_with_span_1_item__border_box_rtl() {
+        crate::run_xml_test("grid", "grid_max_content_span_2_auto_columns_with_span_1_item__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_max_content_span_2_auto_columns_with_span_1_item__content_box_rtl() {
+        crate::run_xml_test("grid", "grid_max_content_span_2_auto_columns_with_span_1_item__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_max_content_span_2_auto_columns_with_span_1_item_hidden__border_box_ltr() {
+        crate::run_xml_test("grid", "grid_max_content_span_2_auto_columns_with_span_1_item_hidden__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_max_content_span_2_auto_columns_with_span_1_item_hidden__content_box_ltr() {
+        crate::run_xml_test("grid", "grid_max_content_span_2_auto_columns_with_span_1_item_hidden__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_max_content_span_2_auto_columns_with_span_1_item_hidden__border_box_rtl() {
+        crate::run_xml_test("grid", "grid_max_content_span_2_auto_columns_with_span_1_item_hidden__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_max_content_span_2_auto_columns_with_span_1_item_hidden__content_box_rtl() {
+        crate::run_xml_test("grid", "grid_max_content_span_2_auto_columns_with_span_1_item_hidden__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
     fn grid_max_width_greater_than_max_content__border_box_ltr() {
         crate::run_xml_test("grid", "grid_max_width_greater_than_max_content__border_box_ltr");
     }

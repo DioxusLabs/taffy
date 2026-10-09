@@ -828,94 +828,15 @@ fn resolve_intrinsic_track_sizes<Tree: LayoutPartialTree>(
         flush_planned_base_size_increases(axis_tracks);
 
         // 3. For max-content minimums:
-
-        // If the grid container is being sized under a max-content constraint, continue to increase the base size of tracks with
-        // a min track sizing function of auto or max-content by distributing extra space as needed to account for these items'
-        // limited max-content contributions.
-
-        // Define fit_content_limited_growth_limit function. This is passed to the distribute_space_up_to_limits
-        // helper function, and is used to compute the limit to distribute up to for each track.
-        // Wrapping the method on GridTrack is necessary in order to resolve percentage fit-content arguments.
-        if axis_available_grid_space == AvailableSpace::MaxContent {
-            /// Whether a track:
-            ///   - has an Auto MIN track sizing function
-            ///   - Does not have a MinContent MAX track sizing function
-            ///
-            /// The latter condition was added in order to match Chrome. But I believe it is due to the provision
-            /// under minmax here https://www.w3.org/TR/css-grid-1/#track-sizes which states that:
-            ///
-            ///    "If the max is less than the min, then the max will be floored by the min (essentially yielding minmax(min, min))"
-            #[inline(always)]
-            fn has_auto_min_track_sizing_function(track: &GridTrack) -> bool {
-                track.min_track_sizing_function.is_auto() && !track.max_track_sizing_function.is_min_content()
-            }
-
-            /// Whether a track has a MaxContent min track sizing function
-            #[inline(always)]
-            fn has_max_content_min_track_sizing_function(track: &GridTrack) -> bool {
-                track.min_track_sizing_function.is_max_content()
-            }
-
-            for item in batch.iter_mut() {
-                if !item.spans_track_matching(axis, axis_tracks, |track| {
-                    has_auto_min_track_sizing_function(track) || has_max_content_min_track_sizing_function(track)
-                }) {
-                    continue;
-                }
-                let axis_max_content_size = item_sizer.max_content_contribution(item, axis_tracks);
-                let limit = item.spanned_track_limit(axis, axis_tracks, axis_inner_node_size, &|val, basis| {
-                    item_sizer.calc(val, basis)
-                });
-                let mut space = axis_max_content_size.maybe_min(limit);
-
-                // As for the intrinsic minimums above: scale the space beyond the spanned inflexible
-                // tracks by the crossed flex factor sum, clamped at one. Anchoring at the inflexible
-                // track sizes rather than the current base sizes keeps this pass from compounding with
-                // the scaling already applied to the min-content contribution.
-                if is_flex {
-                    let spanned_tracks = &axis_tracks[item.track_range_excluding_lines(axis)];
-                    let inflexible_sizes: f32 =
-                        spanned_tracks.iter().filter(|track| !track.is_flexible()).map(|track| track.base_size).sum();
-                    let scale = f32_min(crossed_flex_factor_sum(spanned_tracks), 1.0);
-                    space = inflexible_sizes + f32_max(space - inflexible_sizes, 0.0) * scale;
-                }
-                let tracks = &mut axis_tracks[item.track_range_excluding_lines(axis)];
-                if space > 0.0 {
-                    // If any of the tracks spanned by the item have a MaxContent min track sizing function then
-                    // distribute space only to those tracks. Otherwise distribute space to tracks with an Auto min
-                    // track sizing function.
-                    //
-                    // Note: this prioritisation of MaxContent over Auto is not mentioned in the spec (which suggests that
-                    // we ought to distribute space evenly between MaxContent and Auto tracks). But it is implemented like
-                    // this in both Chrome and Firefox (and it does have a certain logic to it), so we implement it too for
-                    // compatibility.
-                    //
-                    // See: https://www.w3.org/TR/css-grid-1/#track-size-max-content-min
-                    if tracks.iter().any(has_max_content_min_track_sizing_function) {
-                        distribute_item_space_to_base_size(
-                            is_flex,
-                            space,
-                            tracks,
-                            has_max_content_min_track_sizing_function,
-                            |_| f32::INFINITY,
-                            IntrinsicContributionType::Maximum,
-                        );
-                    } else {
-                        let fit_content_limited_growth_limit =
-                            move |track: &GridTrack| track.fit_content_limited_growth_limit();
-                        distribute_item_space_to_base_size(
-                            is_flex,
-                            space,
-                            tracks,
-                            has_auto_min_track_sizing_function,
-                            fit_content_limited_growth_limit,
-                            IntrinsicContributionType::Maximum,
-                        );
-                    }
-                }
-            }
-            flush_planned_base_size_increases(axis_tracks);
-        }
+        //
+        // QUIRK: The spec says that:
+        //
+        //   If the grid container is being sized under a max-content constraint, continue to increase the base size of tracks with
+        //   a min track sizing function of auto or max-content by distributing extra space as needed to account for these items'
+        //   limited max-content contributions.
+        //
+        // However, Chrome does not implement this (and nor do we). Instead, tracks with an auto min track sizing function only
+        // accommodate max-content contributions through their growth limits (which their base sizes grow to when maximising tracks).
 
         // In all cases, continue to increase the base size of tracks with a min track sizing function of max-content by distributing
         // extra space as needed to account for these items' max-content contributions.
