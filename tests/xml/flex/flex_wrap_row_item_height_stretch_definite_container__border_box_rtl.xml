@@ -1,0 +1,19 @@
+<test name="flex_wrap_row_item_height_stretch_definite_container__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="flex" direction="rtl" position="absolute" flex-wrap="wrap" align-content="start" width="100px" height="100px">
+      <text direction="rtl" position="relative" width="75px" height="stretch">
+        HH
+      </text>
+      <text direction="rtl" position="relative" width="75px" height="stretch">
+        HH
+      </text>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="100" height="100">
+      <node x="25" y="0" width="75" height="100"/>
+      <node x="25" y="100" width="75" height="100"/>
+    </node>
+  </expectations>
+</test>

@@ -1923,22 +1923,28 @@ fn determine_hypothetical_cross_size(
 
         // A cross size that is a sizing keyword (min-content, max-content, fit-content,
         // fit-content(...)) determines the available space constraint the item is measured under.
-        // The `stretch` keyword is not resolved here: it stretches to the flex line, which is
-        // handled in `determine_used_cross_size`
+        // If the container has a definite cross size then the `stretch` keyword resolves against
+        // it for the purpose of sizing the flex lines (https://github.com/w3c/csswg-drafts/issues/11784).
+        // Otherwise it is not resolved here. In both cases the item is then stretched to its
+        // flex line in `determine_used_cross_size`.
         let cross_stretch_size = constants
             .node_inner_size
             .cross(constants.dir)
             .map(|val| constants.divided_cross_space(val))
             .maybe_sub(child.margin.cross_axis_sum(constants.dir))
             .maybe_max(0.0);
-        let child_available_cross = match resolve_sizing_keyword(
+        let (child_cross, child_available_cross) = match resolve_sizing_keyword(
             child.size_style.cross(constants.dir),
             cross_stretch_size,
             constants.node_inner_size.cross(constants.dir),
             |val, basis| tree.calc(val, basis),
         ) {
-            Some(SizingKeywordResolution::Measure(available)) => available,
-            _ => child_available_cross,
+            Some(SizingKeywordResolution::Measure(available)) => (child_cross, available),
+            Some(SizingKeywordResolution::Exact(size)) if constants.has_definite_cross_size => (
+                Some(size.maybe_clamp(transferred_min_cross, transferred_max_cross).max(padding_border_sum)),
+                child_available_cross,
+            ),
+            _ => (child_cross, child_available_cross),
         };
 
         let child_inner_cross = child_cross.unwrap_or_else(|| {
