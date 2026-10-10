@@ -24,6 +24,8 @@ use crate::{
 use super::float::{BfcSlot, ContentSlot, FloatContext, FloatIntrinsicWidthCalculator, FIT_TOLERANCE};
 #[cfg(feature = "float_layout")]
 use crate::{Clear, Float, FloatDirection};
+#[cfg(feature = "float_layout")]
+use core::cell::Cell;
 
 /// Compute the block-axis offset that `align-content` applies to the in-flow content of a block
 /// container, given the free space between the container's content box and its content.
@@ -42,6 +44,10 @@ pub struct BlockFormattingContext {
     /// The float positioning context that handles positioning floats within this Block Formatting Context
     #[cfg(feature = "float_layout")]
     float_context: FloatContext,
+    /// The topmost y position at which layout has depended on the float context since tracking was
+    /// last started (`f32::NEG_INFINITY` if a float has been placed)
+    #[cfg(feature = "float_layout")]
+    float_dependency_top: Cell<f32>,
 }
 
 impl Default for BlockFormattingContext {
@@ -49,6 +55,8 @@ impl Default for BlockFormattingContext {
         Self {
             #[cfg(feature = "float_layout")]
             float_context: FloatContext::new(),
+            #[cfg(feature = "float_layout")]
+            float_dependency_top: Cell::new(f32::INFINITY),
         }
     }
 }
@@ -110,6 +118,8 @@ pub struct BlockContext<'bfc> {
 impl BlockContext<'_> {
     /// Create a sub-`BlockContext` for a child block node
     pub fn sub_context(&mut self, additional_y_offset: f32, insets: [f32; 2]) -> BlockContext<'_> {
+        #[cfg(feature = "float_layout")]
+        self.record_float_dependency(additional_y_offset);
         let insets = [self.insets[0] + insets[0], self.insets[1] + insets[1]];
         BlockContext {
             bfc: self.bfc,
@@ -160,7 +170,40 @@ impl BlockContext<'_> {
     /// Whether the float context contains any floats that extend to or below min_y
     #[inline(always)]
     pub fn has_active_floats(&self, min_y: f32) -> bool {
+        self.record_float_dependency(min_y);
         self.bfc.float_context.has_active_floats(min_y + self.y_offset)
+    }
+
+    /// Whether floats placed by preceding content can affect the layout of this block: either a float
+    /// extends below the top of the block, or a float adjoins the block's unresolved margin strut
+    #[inline(always)]
+    pub(crate) fn is_affected_by_floats(&self) -> bool {
+        self.adjoining_floats != [false, false]
+            || self.cleared_threshold(Clear::Both).is_some_and(|bottom| bottom > 0.0)
+    }
+
+    /// Record that layout depends on the float context at `y` (relative to the top of this block)
+    #[inline(always)]
+    fn record_float_dependency(&self, y: f32) {
+        let top = &self.bfc.float_dependency_top;
+        top.set(top.get().min(y + self.y_offset));
+    }
+
+    /// Start tracking whether the layout of this block depends on the float context. Returns the
+    /// outer tracking state, which must be passed to [`Self::finish_float_dependency_tracking`]
+    #[inline(always)]
+    pub(crate) fn start_float_dependency_tracking(&self) -> f32 {
+        self.bfc.float_dependency_top.replace(f32::INFINITY)
+    }
+
+    /// Finish tracking. Returns whether the layout of this block was independent of the float context:
+    /// it placed no floats, and placed no content above the top of the block (where floats that end
+    /// above the block could affect it).
+    #[inline(always)]
+    pub(crate) fn finish_float_dependency_tracking(&self, outer_state: f32) -> bool {
+        let top = self.bfc.float_dependency_top.get();
+        self.bfc.float_dependency_top.set(top.min(outer_state));
+        top >= self.y_offset
     }
 
     /// Position a floated box with the context
@@ -175,6 +218,7 @@ impl BlockContext<'_> {
         if adjoins_unresolved_strut {
             self.adjoining_floats[direction as usize] = true;
         }
+        self.bfc.float_dependency_top.set(f32::NEG_INFINITY);
         let mut pos = self.bfc.float_context.place_floated_box(
             floated_box,
             min_y + self.y_offset,
@@ -192,6 +236,7 @@ impl BlockContext<'_> {
 
     /// Search a space suitable for laying out non-floated content into
     pub fn find_content_slot(&self, min_y: f32, clear: Clear, after: Option<usize>) -> ContentSlot {
+        self.record_float_dependency(min_y);
         let mut slot =
             self.bfc.float_context.find_content_slot(min_y + self.y_offset, self.content_box_insets, clear, after);
         slot.y -= self.y_offset;
@@ -209,6 +254,7 @@ impl BlockContext<'_> {
         clear: Clear,
         after: Option<usize>,
     ) -> BfcSlot {
+        self.record_float_dependency(min_y);
         let mut slot = self.bfc.float_context.find_bfc_slot(
             min_y + self.y_offset,
             self.content_box_insets,

@@ -276,3 +276,104 @@ fn float_avoiding_auto_margins_in_nested_block_ignore_relative_insets_and_cleara
         assert_eq!(nested_layout.margin.right, 30.0);
     }
 }
+
+/// A block's cached `PerformLayout` result must not be reused after its subtree was last laid
+/// out (uncached, because floats were present in the BFC) with different inputs.
+#[test]
+fn stale_subtree_after_uncached_float_relayout() {
+    let mut taffy = new_test_tree();
+    let b = taffy
+        .new_leaf(Style {
+            display: Display::Block,
+            size: Size { width: auto(), height: length(10.0) },
+            ..Default::default()
+        })
+        .unwrap();
+    let a = taffy.new_with_children(Style { display: Display::Block, ..Default::default() }, &[b]).unwrap();
+    let float_style = |display| Style {
+        display,
+        float: Float::Left,
+        size: Size { width: length(50.0), height: length(50.0) },
+        ..Default::default()
+    };
+    let f = taffy.new_leaf(float_style(Display::None)).unwrap();
+    let root_style = |w: f32| Style {
+        display: Display::Block,
+        size: Size { width: length(w), height: auto() },
+        ..Default::default()
+    };
+    let root = taffy.new_with_children(root_style(1000.0), &[f, a]).unwrap();
+
+    taffy.compute_layout(root, Size::MAX_CONTENT).unwrap();
+    assert_eq!(taffy.layout(b).unwrap().size.width, 1000.0);
+
+    taffy.set_style(f, float_style(Display::Block)).unwrap();
+    taffy.set_style(root, root_style(800.0)).unwrap();
+    taffy.compute_layout(root, Size::MAX_CONTENT).unwrap();
+    assert_eq!(taffy.layout(b).unwrap().size.width, 800.0);
+
+    taffy.set_style(f, float_style(Display::None)).unwrap();
+    taffy.set_style(root, root_style(1000.0)).unwrap();
+    taffy.compute_layout(root, Size::MAX_CONTENT).unwrap();
+    assert_eq!(taffy.layout(a).unwrap().size.width, 1000.0);
+    assert_eq!(taffy.layout(b).unwrap().size.width, 1000.0);
+}
+
+/// A block that is below all floats may contain content that a negative margin pulls up beside a
+/// float. Its cached layout must not be reused when that float changes.
+#[test]
+fn content_pulled_above_block_top_is_relaid_out_when_float_changes() {
+    let mut taffy = new_test_tree();
+    let pulled_up = taffy
+        .new_leaf(Style {
+            display: Display::FlowRoot,
+            size: Size { width: length(20.0), height: length(20.0) },
+            margin: Rect { left: zero(), right: zero(), top: length(-60.0), bottom: zero() },
+            ..Default::default()
+        })
+        .unwrap();
+    let block = taffy
+        .new_with_children(
+            Style {
+                display: Display::Block,
+                padding: Rect { left: zero(), right: zero(), top: length(10.0), bottom: zero() },
+                ..Default::default()
+            },
+            &[pulled_up],
+        )
+        .unwrap();
+    let float_style = |height: f32| Style {
+        display: Display::Block,
+        float: Float::Left,
+        size: Size { width: length(50.0), height: length(height) },
+        ..Default::default()
+    };
+    let float = taffy.new_leaf(float_style(40.0)).unwrap();
+    let spacer = taffy
+        .new_leaf(Style {
+            display: Display::Block,
+            size: Size { width: auto(), height: length(100.0) },
+            ..Default::default()
+        })
+        .unwrap();
+    let root = taffy
+        .new_with_children(
+            Style {
+                display: Display::Block,
+                size: Size { width: length(200.0), height: auto() },
+                ..Default::default()
+            },
+            &[float, spacer, block],
+        )
+        .unwrap();
+
+    // The float ends at y=40, above `pulled_up` (which is at y=50)
+    taffy.compute_layout(root, Size::MAX_CONTENT).unwrap();
+    assert_eq!(taffy.layout(block).unwrap().location.y, 100.0);
+    assert_eq!(taffy.layout(pulled_up).unwrap().location, Point { x: 0.0, y: -50.0 });
+
+    // The float now ends at y=80: below the top of `pulled_up`, but still above the top of `block`
+    taffy.set_style(float, float_style(80.0)).unwrap();
+    taffy.compute_layout(root, Size::MAX_CONTENT).unwrap();
+    assert_eq!(taffy.layout(pulled_up).unwrap().location, Point { x: 50.0, y: -50.0 });
+}
