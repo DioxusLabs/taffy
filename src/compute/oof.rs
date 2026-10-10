@@ -16,7 +16,7 @@ use crate::tree::{
     OofCandidate, OofCandidates, OofPositioningArea, RequestedAxis, RunMode, SizingMode,
 };
 use crate::util::sys::{f32_max, Vec};
-use crate::util::{MaybeMath, MaybeResolve, ResolveOrZero};
+use crate::util::{MaybeMath, MaybeResolve, OptF32, ResolveOrZero};
 use crate::{AxisStaticEdge, BoxSizing, Direction};
 
 #[cfg(feature = "content_size")]
@@ -128,9 +128,9 @@ struct OofAxis {
     /// The size of the containing block in this axis
     cb_size: f32,
     /// The box's resolved inset properties (`None` = `auto`)
-    inset: Line<Option<f32>>,
+    inset: Line<OptF32>,
     /// The box's resolved margins (`None` = `auto`)
-    margin: Line<Option<f32>>,
+    margin: Line<OptF32>,
     /// The box's static position (relative to the containing block's inset-resolution area)
     static_position: AxisStaticPosition,
     /// The box's self-alignment in this axis
@@ -168,7 +168,7 @@ impl OofAxis {
     /// The inset-modified containing block (IMCB) in this axis
     /// <https://www.w3.org/TR/css-position-3/#resolving-insets>
     fn inset_modified_containing_block(&self) -> Line<f32> {
-        let (mut imcb, weaker_edge) = match (self.inset.start, self.inset.end) {
+        let (mut imcb, weaker_edge) = match (self.inset.start.into_option(), self.inset.end.into_option()) {
             (Some(start), Some(end)) => (Line { start, end: self.cb_size - end }, self.end_edge()),
             // A lone auto inset resolves to zero, and is the weaker inset
             (Some(start), None) => (Line { start, end: self.cb_size }, AxisStaticEdge::End),
@@ -239,7 +239,7 @@ impl OofAxis {
         let both_insets = self.inset.start.is_some() && self.inset.end.is_some();
         let imcb = self.inset_modified_containing_block();
         let free_space = imcb.end - imcb.start - size;
-        match (self.margin.start, self.margin.end) {
+        match (self.margin.start.into_option(), self.margin.end.into_option()) {
             (Some(start), Some(end)) => Line { start, end },
             // If either inset is auto then auto margins resolve to zero
             _ if !both_insets => Line { start: self.margin.start.unwrap_or(0.0), end: self.margin.end.unwrap_or(0.0) },
@@ -264,7 +264,7 @@ impl OofAxis {
     /// <https://www.w3.org/TR/css-position-3/#abspos-alignment>
     fn position(&self, size: f32, margin: Line<f32>) -> f32 {
         let imcb = self.inset_modified_containing_block();
-        match (self.inset.start, self.inset.end) {
+        match (self.inset.start.into_option(), self.inset.end.into_option()) {
             // Both insets are auto: static alignment, with safe overflow relative to the IMCB
             (None, None) => {
                 let sp = self.static_position;
@@ -485,8 +485,8 @@ pub(crate) fn layout_oof_box<Tree: LayoutContainingBlock>(
     let aspect_ratio = child_style.aspect_ratio();
     let margin =
         child_style.margin().map(|margin| margin.resolve_to_option(area_width, |val, basis| tree.calc(val, basis)));
-    let padding = child_style.padding().resolve_or_zero(Some(area_width), |val, basis| tree.calc(val, basis));
-    let border = child_style.border().resolve_or_zero(Some(area_width), |val, basis| tree.calc(val, basis));
+    let padding = child_style.padding().resolve_or_zero(OptF32::some(area_width), |val, basis| tree.calc(val, basis));
+    let border = child_style.border().resolve_or_zero(OptF32::some(area_width), |val, basis| tree.calc(val, basis));
     let padding_border_sum = (padding + border).sum_axes();
     let box_sizing_adjustment =
         if child_style.box_sizing() == BoxSizing::ContentBox { padding_border_sum } else { Size::ZERO };
@@ -508,7 +508,7 @@ pub(crate) fn layout_oof_box<Tree: LayoutContainingBlock>(
         .maybe_resolve(area_size, |val, basis| tree.calc(val, basis))
         .maybe_apply_aspect_ratio(aspect_ratio)
         .maybe_add(box_sizing_adjustment)
-        .or(padding_border_sum.map(Some))
+        .or(padding_border_sum.map(OptF32::some))
         .maybe_max(padding_border_sum);
     let max_size = child_style
         .max_size()
@@ -618,30 +618,30 @@ pub(crate) fn layout_oof_box<Tree: LayoutContainingBlock>(
     if stretch_width {
         if is_table {
             // A table cannot be stretched smaller than its content: stretch-fit is a minimum
-            min_size.width = Some(f32_max(min_size.width.unwrap_or(0.0), stretch_fit_size.width));
+            min_size.width = OptF32::some(f32_max(min_size.width.unwrap_or(0.0), stretch_fit_size.width));
         } else {
-            known_dimensions.width = Some(stretch_fit_size.width);
+            known_dimensions.width = OptF32::some(stretch_fit_size.width);
             known_dimensions =
                 known_dimensions.maybe_apply_aspect_ratio(stretch_aspect_ratio).maybe_clamp(min_size, max_size);
         }
     }
     if known_dimensions.height.is_none() && stretch_height {
         if is_table {
-            min_size.height = Some(f32_max(min_size.height.unwrap_or(0.0), stretch_fit_size.height));
+            min_size.height = OptF32::some(f32_max(min_size.height.unwrap_or(0.0), stretch_fit_size.height));
         } else {
-            known_dimensions.height = Some(stretch_fit_size.height);
+            known_dimensions.height = OptF32::some(stretch_fit_size.height);
             known_dimensions =
                 known_dimensions.maybe_apply_aspect_ratio(stretch_aspect_ratio).maybe_clamp(min_size, max_size);
         }
     }
 
-    let final_size = match (known_dimensions.width, known_dimensions.height) {
+    let final_size = match (known_dimensions.width.into_option(), known_dimensions.height.into_option()) {
         (Some(width), Some(height)) => Size { width, height },
         _ => {
             let measured_size = tree.measure_child_size_both(
                 candidate.node,
                 known_dimensions,
-                area_size.map(Some),
+                area_size.map(OptF32::some),
                 available_space,
                 SizingMode::ContentSize,
                 Line::FALSE,
@@ -652,9 +652,9 @@ pub(crate) fn layout_oof_box<Tree: LayoutContainingBlock>(
     .maybe_clamp(min_size, max_size);
 
     let layout_input = LayoutInput {
-        known_dimensions: final_size.map(Some),
+        known_dimensions: final_size.map(OptF32::some),
         known_dimensions_are_definite: Size { width: true, height: true },
-        parent_size: area_size.map(Some),
+        parent_size: area_size.map(OptF32::some),
         available_space,
         sizing_mode: SizingMode::ContentSize,
         axis: RequestedAxis::Both,

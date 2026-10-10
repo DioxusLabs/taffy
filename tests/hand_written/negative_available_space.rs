@@ -46,7 +46,7 @@ mod negative_available_space {
                 |inputs: LayoutInput, node_id: NodeId, context: Option<&mut TestNodeContext>, style: &Style| {
                     let known = inputs.known_dimensions;
                     let avail = inputs.available_space;
-                    let is_negative = |value: Option<f32>| value.is_some_and(|v| v < 0.0);
+                    let is_negative = |value: taffy::OptF32| value.into_option().is_some_and(|v| v < 0.0);
                     let is_negative_avail =
                         |value: AvailableSpace| matches!(value, AvailableSpace::Definite(v) if v < 0.0);
                     if is_negative(known.width)

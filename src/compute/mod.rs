@@ -60,7 +60,7 @@ use crate::tree::{
 };
 use crate::util::debug::{debug_log, debug_log_node, debug_pop_node, debug_push_node};
 use crate::util::sys::{round, Vec};
-use crate::util::ResolveOrZero;
+use crate::util::{OptF32, ResolveOrZero};
 use crate::{CacheTree, MaybeMath, MaybeResolve};
 
 /// Compute layout for the root node in the tree
@@ -85,7 +85,7 @@ pub fn compute_root_layout(
     drop(style);
 
     let icb_size = available_space.into_options();
-    let oof_root_area = match (position.is_out_of_flow(), icb_size.width, icb_size.height) {
+    let oof_root_area = match (position.is_out_of_flow(), icb_size.width.into_option(), icb_size.height.into_option()) {
         (true, Some(width), Some(height)) => Some(Size { width, height }),
         _ => None,
     };
@@ -149,11 +149,11 @@ pub fn compute_root_layout(
             };
         let root_padding_box_size =
             layout.size - Size { width: area_inset.horizontal_axis_sum(), height: area_inset.vertical_axis_sum() };
-        let (area_width, area_x) = match icb_size.width {
+        let (area_width, area_x) = match icb_size.width.into_option() {
             Some(width) => ((width - layout.scrollbar_size.width).max(0.0), -layout.location.x),
             None => (root_padding_box_size.width, area_inset.left),
         };
-        let (area_height, area_y) = match icb_size.height {
+        let (area_height, area_y) = match icb_size.height.into_option() {
             Some(height) => ((height - layout.scrollbar_size.height).max(0.0), -layout.location.y),
             None => (root_padding_box_size.height, area_inset.top),
         };
@@ -235,13 +235,15 @@ fn compute_in_flow_root_layout(
                 .maybe_clamp(min_size, max_size);
 
             // If both min and max in a given axis are set and max <= min then this determines the size in that axis
-            let min_max_definite_size = min_size.zip_map(max_size, |min, max| match (min, max) {
-                (Some(min), Some(max)) if max <= min => Some(min),
-                _ => None,
-            });
+            let min_max_definite_size =
+                min_size.zip_map(max_size, |min, max| match (min.into_option(), max.into_option()) {
+                    (Some(min), Some(max)) if max <= min => OptF32::some(min),
+                    _ => OptF32::NONE,
+                });
 
             // Block nodes automatically stretch fit their width to fit available space if available space is definite
-            let available_space_based_size = Size { width: root_available_space.width.into_option(), height: None };
+            let available_space_based_size =
+                Size { width: root_available_space.width.into_option(), height: OptF32::NONE };
 
             let styled_based_known_dimensions = known_dimensions
                 .or(min_max_definite_size)
@@ -282,7 +284,7 @@ fn compute_in_flow_root_layout(
 
     // The root's margin box is placed at the origin of the initial containing block
     let mut location = Point {
-        x: match (is_rtl, available_space.width.into_option()) {
+        x: match (is_rtl, available_space.width.into_option().into_option()) {
             (true, Some(available_width)) => available_width - output.size.width - margin.right,
             _ => margin.left,
         },
