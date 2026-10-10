@@ -126,7 +126,9 @@
 //! }
 //! ```
 //!
-use super::{DetailedLayoutInfo, Layout, LayoutInput, LayoutOutput, NodeId, RequestedAxis, RunMode, SizingMode};
+use super::{
+    ChildLayoutJob, DetailedLayoutInfo, Layout, LayoutInput, LayoutOutput, NodeId, RequestedAxis, RunMode, SizingMode,
+};
 use crate::debug::debug_log;
 use crate::geometry::{AbsoluteAxis, Line, Size};
 use crate::style::{AvailableSpace, CoreStyle, OofItemStyle};
@@ -136,7 +138,7 @@ use crate::style::{FlexboxContainerStyle, FlexboxItemStyle};
 use crate::style::{GridContainerStyle, GridItemStyle};
 use crate::CheapCloneStr;
 #[cfg(feature = "block_layout")]
-use crate::{BlockContainerStyle, BlockContext, BlockItemStyle};
+use crate::{BlockContainerStyle, BlockContext, BlockFormattingContext, BlockItemStyle};
 
 #[cfg(feature = "grid")]
 use crate::compute::grid::DetailedGridInfo;
@@ -201,6 +203,39 @@ pub trait LayoutPartialTree: TraversePartialTree {
 
     /// Compute the specified node's size or full layout given the specified constraints
     fn compute_child_layout(&mut self, node_id: NodeId, inputs: LayoutInput) -> LayoutOutput;
+
+    /// Whether [`compute_child_layouts`](Self::compute_child_layouts) computes the jobs of a batch concurrently.
+    ///
+    /// Collecting child layouts into batches has a cost, so where an algorithm can only build a batch by doing
+    /// extra work it only does so if this is `true`.
+    const COMPUTES_CHILD_LAYOUTS_IN_PARALLEL: bool = false;
+
+    /// Whether the child layouts of `parent_node_id` should be collected into batches and computed using
+    /// [`compute_child_layouts`](Self::compute_child_layouts).
+    ///
+    /// This is only consulted if [`COMPUTES_CHILD_LAYOUTS_IN_PARALLEL`](Self::COMPUTES_CHILD_LAYOUTS_IN_PARALLEL)
+    /// is `true`. A tree that computes batches in parallel can return `false` for a node whose batches would
+    /// be too small to be worth computing in parallel, so that the node is laid out without the cost of
+    /// collecting batches. The value returned for a node must not change while the node is being laid out.
+    #[inline(always)]
+    fn batches_child_layouts(&self, parent_node_id: NodeId) -> bool {
+        let _ = parent_node_id;
+        true
+    }
+
+    /// Compute a batch of child layouts, writing the result of each job to its `output` field.
+    ///
+    /// The jobs are for distinct children of `parent_node_id`, and no job's input depends on another job's
+    /// output. Implementations may therefore compute them in any order, or concurrently. The result must be
+    /// the same as calling [`compute_child_layout`](Self::compute_child_layout) for each job in order,
+    /// which is what the default implementation does.
+    #[inline(always)]
+    fn compute_child_layouts(&mut self, parent_node_id: NodeId, jobs: &mut [ChildLayoutJob]) {
+        let _ = parent_node_id;
+        for job in jobs {
+            job.output = self.compute_child_layout(job.node, job.input);
+        }
+    }
 }
 
 /// Extends [`LayoutPartialTree`] with the operations needed by the out-of-flow positioning pass
@@ -290,6 +325,44 @@ pub trait RoundTree: TraverseTree {
     /// Get the nth out-of-flow box whose containing block is `node_id`
     /// (as recorded by [`LayoutContainingBlock::add_hoisted_children`])
     fn get_hoisted_child_id(&self, node_id: NodeId, index: usize) -> NodeId;
+
+    /// Round the layouts of the subtrees below a node, by calling `round_subtree` once for each of
+    /// the node's in-flow children and once for each out-of-flow box whose containing block is the
+    /// node, passing on `cumulative_x` and `cumulative_y` (the unrounded position of the node
+    /// relative to the root).
+    ///
+    /// The calls are independent of each other: each one only reads and writes the layouts of the
+    /// nodes in its subtree. The default implementation makes them in order. A tree can override
+    /// this method to make them in parallel.
+    #[inline(always)]
+    fn round_child_subtrees(
+        &mut self,
+        node_id: NodeId,
+        cumulative_x: f32,
+        cumulative_y: f32,
+        round_subtree: impl Fn(&mut Self, NodeId, f32, f32) + Copy + Send + Sync,
+    ) where
+        Self: Sized,
+    {
+        // Recurse into in-flow children. Out-of-flow (absolute/fixed) children are skipped here:
+        // they are instead visited via their containing block's hoisted child list below, which
+        // ensures each node is visited exactly once and that its cumulative offset is accumulated
+        // relative to its containing block (which its `location` is relative to).
+        let child_count = self.child_count(node_id);
+        for index in 0..child_count {
+            let child = self.get_child_id(node_id, index);
+            if !self.is_out_of_flow(child) {
+                round_subtree(self, child, cumulative_x, cumulative_y);
+            }
+        }
+
+        // Recurse into out-of-flow boxes for which this node is the containing block
+        let hoisted_count = self.hoisted_child_count(node_id);
+        for index in 0..hoisted_count {
+            let child = self.get_hoisted_child_id(node_id, index);
+            round_subtree(self, child, cumulative_x, cumulative_y);
+        }
+    }
 }
 
 /// Trait used by the `print_tree` method which prints a debug representation
@@ -383,6 +456,42 @@ pub trait LayoutBlockContainer: LayoutPartialTree {
     ) -> LayoutOutput {
         let _ = block_ctx;
         self.compute_child_layout(node_id, inputs)
+    }
+
+    /// Whether the Block Formatting Context rooted at `bfc_root_node_id` may contain floats.
+    ///
+    /// Returning `false` is a promise that no box in that Block Formatting Context is floated. The
+    /// layouts of the in-flow children of a block in such a context do not depend on each other, so
+    /// block layout computes them as a batch using [`compute_block_child_layouts`](Self::compute_block_child_layouts).
+    ///
+    /// The default implementation returns `true`, which is always correct.
+    #[cfg(feature = "block_layout")]
+    #[inline(always)]
+    fn bfc_may_contain_floats(&self, bfc_root_node_id: NodeId) -> bool {
+        let _ = bfc_root_node_id;
+        true
+    }
+
+    /// Compute a batch of layouts of in-flow children of a block in a Block Formatting Context that
+    /// does not contain floats, writing the result of each job to its `output` field.
+    ///
+    /// This is the block layout version of [`compute_child_layouts`](LayoutPartialTree::compute_child_layouts),
+    /// and the same rules apply. A job whose `is_in_parent_bfc` flag is set must be computed using
+    /// [`compute_block_child_layout`](Self::compute_block_child_layout) with a `BlockContext` created by
+    /// [`BlockFormattingContext::detached_block_context`]. Other jobs are computed with `compute_child_layout`.
+    #[cfg(feature = "block_layout")]
+    #[inline(always)]
+    fn compute_block_child_layouts(&mut self, parent_node_id: NodeId, jobs: &mut [ChildLayoutJob]) {
+        let _ = parent_node_id;
+        for job in jobs {
+            job.output = if job.is_in_parent_bfc {
+                let mut bfc = BlockFormattingContext::float_free();
+                let mut block_ctx = bfc.detached_block_context();
+                self.compute_block_child_layout(job.node, job.input, Some(&mut block_ctx))
+            } else {
+                self.compute_child_layout(job.node, job.input)
+            };
+        }
     }
 }
 

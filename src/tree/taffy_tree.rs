@@ -34,6 +34,10 @@ use crate::{compute::compute_grid_layout, LayoutGridContainer};
 use crate::compute::grid::DetailedGridInfo;
 use crate::tree::layout::DetailedLayoutInfo;
 
+#[cfg(feature = "parallel")]
+#[path = "taffy_tree_parallel.rs"]
+mod parallel;
+
 /// The error Taffy generates on invalid operations
 pub type TaffyResult<T> = Result<T, TaffyError>;
 
@@ -80,11 +84,19 @@ impl std::error::Error for TaffyError {}
 pub(crate) struct TaffyConfig {
     /// Whether to round layout values
     pub(crate) use_rounding: bool,
+    /// The minimum total number of nodes in the subtrees that a batch of child layouts
+    /// would lay out for the batch to be computed in parallel
+    #[cfg(feature = "parallel")]
+    pub(crate) parallel_min_batch_weight: u32,
 }
 
 impl Default for TaffyConfig {
     fn default() -> Self {
-        Self { use_rounding: true }
+        Self {
+            use_rounding: true,
+            #[cfg(feature = "parallel")]
+            parallel_min_batch_weight: parallel::DEFAULT_MIN_BATCH_WEIGHT,
+        }
     }
 }
 
@@ -166,6 +178,11 @@ pub struct TaffyTree<NodeContext = ()> {
 
     /// Layout mode configuration
     config: TaffyConfig,
+
+    /// The number of nodes in the tree whose style floats them. While this is zero, no Block
+    /// Formatting Context in the tree can contain floats.
+    #[cfg(feature = "float_layout")]
+    floated_node_count: usize,
 }
 
 impl Default for TaffyTree {
@@ -493,6 +510,14 @@ where
     ) -> LayoutOutput {
         self.compute_child_layout(node_id, inputs, block_ctx)
     }
+
+    #[inline(always)]
+    fn bfc_may_contain_floats(&self, _bfc_root_node_id: NodeId) -> bool {
+        #[cfg(feature = "float_layout")]
+        return self.taffy.floated_node_count > 0;
+        #[cfg(not(feature = "float_layout"))]
+        return false;
+    }
 }
 
 #[cfg(feature = "flexbox")]
@@ -603,6 +628,8 @@ impl<NodeContext> TaffyTree<NodeContext> {
             parents: SlotMap::with_capacity(capacity),
             node_context_data: SecondaryMap::with_capacity(capacity),
             config: TaffyConfig::default(),
+            #[cfg(feature = "float_layout")]
+            floated_node_count: 0,
         }
     }
 
@@ -618,6 +645,7 @@ impl<NodeContext> TaffyTree<NodeContext> {
 
     /// Creates and adds a new unattached leaf node to the tree, and returns the node of the new node
     pub fn new_leaf(&mut self, layout: Style) -> TaffyResult<NodeId> {
+        self.count_floated_style(&layout, true);
         let id = self.nodes.insert(NodeData::new(layout));
         let _ = self.children.insert(new_vec_with_capacity(0));
         let _ = self.parents.insert(None);
@@ -629,6 +657,7 @@ impl<NodeContext> TaffyTree<NodeContext> {
     ///
     /// Creates and adds a new leaf node with a supplied context
     pub fn new_leaf_with_context(&mut self, layout: Style, context: NodeContext) -> TaffyResult<NodeId> {
+        self.count_floated_style(&layout, true);
         let mut data = NodeData::new(layout);
         data.has_context = true;
 
@@ -643,6 +672,7 @@ impl<NodeContext> TaffyTree<NodeContext> {
 
     /// Creates and adds a new node, which may have any number of `children`
     pub fn new_with_children(&mut self, layout: Style, children: &[NodeId]) -> TaffyResult<NodeId> {
+        self.count_floated_style(&layout, true);
         let id = NodeId::from(self.nodes.insert(NodeData::new(layout)));
 
         for child in children {
@@ -664,6 +694,25 @@ impl<NodeContext> TaffyTree<NodeContext> {
         // user data -- for a measure function, a boxed closure and everything it
         // captures -- alive after the node it belonged to is gone.
         self.node_context_data.clear();
+        #[cfg(feature = "float_layout")]
+        {
+            self.floated_node_count = 0;
+        }
+    }
+
+    /// Update the count of floated nodes for a style that is being added to (or removed from) the tree
+    #[inline(always)]
+    fn count_floated_style(&mut self, style: &Style, added: bool) {
+        #[cfg(feature = "float_layout")]
+        if style.float != crate::style::Float::None {
+            if added {
+                self.floated_node_count += 1;
+            } else {
+                self.floated_node_count -= 1;
+            }
+        }
+        #[cfg(not(feature = "float_layout"))]
+        let _ = (style, added);
     }
 
     /// Remove a specific node from the tree and drop it
@@ -687,7 +736,9 @@ impl<NodeContext> TaffyTree<NodeContext> {
 
         let _ = self.children.remove(key);
         let _ = self.parents.remove(key);
-        let _ = self.nodes.remove(key);
+        if let Some(data) = self.nodes.remove(key) {
+            self.count_floated_style(&data.style, false);
+        }
         let _ = self.node_context_data.remove(key);
 
         Ok(node)
@@ -895,7 +946,9 @@ impl<NodeContext> TaffyTree<NodeContext> {
     /// Sets the [`Style`] of the provided `node`
     #[inline]
     pub fn set_style(&mut self, node: NodeId, style: Style) -> TaffyResult<()> {
-        self.nodes[node.into()].style = style;
+        self.count_floated_style(&style, true);
+        let old_style = core::mem::replace(&mut self.nodes[node.into()].style, style);
+        self.count_floated_style(&old_style, false);
         self.mark_dirty(node)?;
         Ok(())
     }

@@ -59,7 +59,7 @@ use crate::tree::{
     LayoutPartialTreeExt, NodeId, OofCandidate, OofCandidates, RequestedAxis, RoundTree, RunMode, SizingMode,
 };
 use crate::util::debug::{debug_log, debug_log_node, debug_pop_node, debug_push_node};
-use crate::util::sys::{round, Vec};
+use crate::util::sys::Vec;
 use crate::util::ResolveOrZero;
 use crate::{CacheTree, MaybeMath, MaybeResolve};
 
@@ -373,82 +373,155 @@ where
 /// In order to prevent innacuracies caused by rounding already-rounded values, we read from `unrounded_layout`
 /// and write to `final_layout`.
 pub fn round_layout(tree: &mut impl RoundTree, node_id: NodeId) {
-    return round_layout_inner(tree, node_id, 0.0, 0.0);
+    // Detect the instructions that the CPU supports once, and use them to round every node
+    #[cfg(feature = "simd_rounding")]
+    return fearless_simd::dispatch!(fearless_simd::Level::new(), simd => {
+        round_layout_inner(tree, node_id, 0.0, 0.0, SimdRounder(simd))
+    });
 
-    /// Recursive function to apply rounding to all descendents
-    fn round_layout_inner(tree: &mut impl RoundTree, node_id: NodeId, cumulative_x: f32, cumulative_y: f32) {
-        let unrounded_layout = tree.get_unrounded_layout(node_id);
-        let mut layout = unrounded_layout;
+    #[cfg(not(feature = "simd_rounding"))]
+    round_layout_inner(tree, node_id, 0.0, 0.0, ScalarRounder)
+}
 
-        let parent_x = cumulative_x;
-        let parent_y = cumulative_y;
-        let cumulative_x = cumulative_x + unrounded_layout.location.x;
-        let cumulative_y = cumulative_y + unrounded_layout.location.y;
+/// A way of rounding values to the nearest whole number
+trait Rounder: Copy + Send + Sync {
+    /// Rounds four values to the nearest whole number.
+    /// Gives the same result as [`round`](crate::util::sys::round) for every value.
+    fn round(self, values: [f32; 4]) -> [f32; 4];
+    /// Call a function in a context where [`Rounder::round`] can be inlined
+    fn vectorize<R>(self, f: impl FnOnce() -> R) -> R;
+}
 
-        layout.location.x = round(cumulative_x) - round(parent_x);
-        layout.location.y = round(cumulative_y) - round(parent_y);
-        layout.size.width = round(cumulative_x + unrounded_layout.size.width) - round(cumulative_x);
-        layout.size.height = round(cumulative_y + unrounded_layout.size.height) - round(cumulative_y);
-        layout.scrollbar_size.width = round(unrounded_layout.scrollbar_size.width);
-        layout.scrollbar_size.height = round(unrounded_layout.scrollbar_size.height);
-        layout.border.left = round(cumulative_x + unrounded_layout.border.left) - round(cumulative_x);
-        layout.border.right = round(cumulative_x + unrounded_layout.size.width)
-            - round(cumulative_x + unrounded_layout.size.width - unrounded_layout.border.right);
-        layout.border.top = round(cumulative_y + unrounded_layout.border.top) - round(cumulative_y);
-        layout.border.bottom = round(cumulative_y + unrounded_layout.size.height)
-            - round(cumulative_y + unrounded_layout.size.height - unrounded_layout.border.bottom);
-        layout.padding.left = round(cumulative_x + unrounded_layout.padding.left) - round(cumulative_x);
-        layout.padding.right = round(cumulative_x + unrounded_layout.size.width)
-            - round(cumulative_x + unrounded_layout.size.width - unrounded_layout.padding.right);
-        layout.padding.top = round(cumulative_y + unrounded_layout.padding.top) - round(cumulative_y);
-        layout.padding.bottom = round(cumulative_y + unrounded_layout.size.height)
-            - round(cumulative_y + unrounded_layout.size.height - unrounded_layout.padding.bottom);
+/// Rounds using [`round`](crate::util::sys::round)
+#[cfg_attr(feature = "simd_rounding", allow(dead_code))]
+#[derive(Copy, Clone)]
+struct ScalarRounder;
 
-        #[cfg(feature = "content_size")]
-        round_scrollable_overflow_rect(
-            &mut layout,
-            unrounded_layout.scrollable_overflow_rect,
-            cumulative_x,
-            cumulative_y,
-        );
-
-        tree.set_final_layout(node_id, &layout);
-
-        // Recurse into in-flow children. Out-of-flow (absolute/fixed) children are skipped here:
-        // they are instead visited via their containing block's hoisted child list below, which
-        // ensures each node is visited exactly once and that its cumulative offset is accumulated
-        // relative to its containing block (which its `location` is relative to).
-        let child_count = tree.child_count(node_id);
-        for index in 0..child_count {
-            let child = tree.get_child_id(node_id, index);
-            if !tree.is_out_of_flow(child) {
-                round_layout_inner(tree, child, cumulative_x, cumulative_y);
-            }
-        }
-
-        // Recurse into out-of-flow boxes for which this node is the containing block
-        let hoisted_count = tree.hoisted_child_count(node_id);
-        for index in 0..hoisted_count {
-            let child = tree.get_hoisted_child_id(node_id, index);
-            round_layout_inner(tree, child, cumulative_x, cumulative_y);
-        }
+impl Rounder for ScalarRounder {
+    #[inline(always)]
+    fn round(self, values: [f32; 4]) -> [f32; 4] {
+        values.map(crate::util::sys::round)
     }
+    #[inline(always)]
+    fn vectorize<R>(self, f: impl FnOnce() -> R) -> R {
+        f()
+    }
+}
+
+/// Rounds using the best instructions that the CPU was detected to support
+#[cfg(feature = "simd_rounding")]
+#[derive(Copy, Clone)]
+struct SimdRounder<S: fearless_simd::Simd>(S);
+
+#[cfg(feature = "simd_rounding")]
+impl<S: fearless_simd::Simd> Rounder for SimdRounder<S> {
+    #[inline(always)]
+    fn round(self, values: [f32; 4]) -> [f32; 4] {
+        use fearless_simd::SimdInto;
+        let values: fearless_simd::f32x4<S> = values.simd_into(self.0);
+        *self.0.floor_f32x4(self.0.add_f32x4(values, self.0.splat_f32x4(0.5)))
+    }
+    #[inline(always)]
+    fn vectorize<R>(self, f: impl FnOnce() -> R) -> R {
+        self.0.vectorize(f)
+    }
+}
+
+/// Recursive function to apply rounding to all descendents
+fn round_layout_inner<R: Rounder>(
+    tree: &mut impl RoundTree,
+    node_id: NodeId,
+    parent_x: f32,
+    parent_y: f32,
+    rounder: R,
+) {
+    // The layout is read and written within the same context as it is rounded in,
+    // so that it does not need to be copied into and out of that context
+    let (cumulative_x, cumulative_y) = rounder.vectorize(
+        #[inline(always)]
+        || {
+            let unrounded_layout = tree.get_unrounded_layout(node_id);
+            let cumulative_x = parent_x + unrounded_layout.location.x;
+            let cumulative_y = parent_y + unrounded_layout.location.y;
+            let layout = round_node_layout(rounder, &unrounded_layout, parent_x, parent_y, cumulative_x, cumulative_y);
+            tree.set_final_layout(node_id, &layout);
+            (cumulative_x, cumulative_y)
+        },
+    );
+
+    // Recurse into the node's in-flow children and into the out-of-flow boxes
+    // for which this node is the containing block
+    tree.round_child_subtrees(node_id, cumulative_x, cumulative_y, move |tree, node_id, x, y| {
+        round_layout_inner(tree, node_id, x, y, rounder)
+    });
+}
+
+/// Round the layout of a single node, given the unrounded position of its parent (`parent_x`, `parent_y`)
+/// and of the node itself (`cumulative_x`, `cumulative_y`) relative to the root
+#[inline(always)]
+fn round_node_layout<R: Rounder>(
+    rounder: R,
+    unrounded_layout: &Layout,
+    parent_x: f32,
+    parent_y: f32,
+    cumulative_x: f32,
+    cumulative_y: f32,
+) -> Layout {
+    let mut layout = *unrounded_layout;
+    let Layout { size, border, padding, scrollbar_size, .. } = *unrounded_layout;
+
+    // The far edges of the node
+    let right = cumulative_x + size.width;
+    let bottom = cumulative_y + size.height;
+
+    // Four values are rounded at a time, so that they can be rounded by a single instruction
+    let [parent_x, parent_y, x, y] = rounder.round([parent_x, parent_y, cumulative_x, cumulative_y]);
+    let [rounded_right, rounded_bottom, scrollbar_width, scrollbar_height] =
+        rounder.round([right, bottom, scrollbar_size.width, scrollbar_size.height]);
+    let [border_left, border_right, border_top, border_bottom] = rounder.round([
+        cumulative_x + border.left,
+        right - border.right,
+        cumulative_y + border.top,
+        bottom - border.bottom,
+    ]);
+    let [padding_left, padding_right, padding_top, padding_bottom] = rounder.round([
+        cumulative_x + padding.left,
+        right - padding.right,
+        cumulative_y + padding.top,
+        bottom - padding.bottom,
+    ]);
+
+    layout.location.x = x - parent_x;
+    layout.location.y = y - parent_y;
+    layout.size.width = rounded_right - x;
+    layout.size.height = rounded_bottom - y;
+    layout.scrollbar_size.width = scrollbar_width;
+    layout.scrollbar_size.height = scrollbar_height;
+    layout.border.left = border_left - x;
+    layout.border.right = rounded_right - border_right;
+    layout.border.top = border_top - y;
+    layout.border.bottom = rounded_bottom - border_bottom;
+    layout.padding.left = padding_left - x;
+    layout.padding.right = rounded_right - padding_right;
+    layout.padding.top = padding_top - y;
+    layout.padding.bottom = rounded_bottom - padding_bottom;
 
     #[cfg(feature = "content_size")]
-    #[inline(always)]
-    /// Round the scrollable overflow rect.
-    /// This is split into a separate function to make it easier to feature flag.
-    fn round_scrollable_overflow_rect(
-        layout: &mut Layout,
-        unrounded_rect: crate::geometry::Rect<f32>,
-        cumulative_x: f32,
-        cumulative_y: f32,
-    ) {
-        layout.scrollable_overflow_rect.left = round(cumulative_x + unrounded_rect.left) - round(cumulative_x);
-        layout.scrollable_overflow_rect.right = round(cumulative_x + unrounded_rect.right) - round(cumulative_x);
-        layout.scrollable_overflow_rect.top = round(cumulative_y + unrounded_rect.top) - round(cumulative_y);
-        layout.scrollable_overflow_rect.bottom = round(cumulative_y + unrounded_rect.bottom) - round(cumulative_y);
+    {
+        let unrounded_rect = unrounded_layout.scrollable_overflow_rect;
+        let [left, right, top, bottom] = rounder.round([
+            cumulative_x + unrounded_rect.left,
+            cumulative_x + unrounded_rect.right,
+            cumulative_y + unrounded_rect.top,
+            cumulative_y + unrounded_rect.bottom,
+        ]);
+        layout.scrollable_overflow_rect.left = left - x;
+        layout.scrollable_overflow_rect.right = right - x;
+        layout.scrollable_overflow_rect.top = top - y;
+        layout.scrollable_overflow_rect.bottom = bottom - y;
     }
+
+    layout
 }
 
 /// Creates a layout for this node and its children, recursively.
@@ -481,6 +554,44 @@ mod tests {
     use crate::geometry::{Point, Size};
     use crate::style::{Display, Style};
     use crate::TaffyTree;
+
+    /// Rounding with the detected instructions gives exactly the same result as scalar rounding
+    #[cfg(feature = "simd_rounding")]
+    #[test]
+    fn simd_rounding_matches_scalar_rounding() {
+        use super::{Rounder, ScalarRounder, SimdRounder};
+
+        fearless_simd::dispatch!(fearless_simd::Level::new(), simd => {
+            let rounder = SimdRounder(simd);
+            rounder.vectorize(|| {
+                // Every 4099th bit pattern (4099 is odd, so this visits a spread of all exponents and signs),
+                // and the values on either side of each multiple of 0.5 up to 4096
+                let spread = (0..=u32::MAX).step_by(4099).map(f32::from_bits);
+                let halves = (-8192..=8192).flat_map(|i| {
+                    let value = i as f32 * 0.5;
+                    [f32::from_bits(value.to_bits().wrapping_sub(1)), value, f32::from_bits(value.to_bits() + 1)]
+                });
+                for value in spread.chain(halves) {
+                    // Each value is rounded in a different position, next to different values
+                    let values = [value, -value, value + 1.0, 0.25];
+                    for rotation in 0..4 {
+                        let mut values = values;
+                        values.rotate_left(rotation);
+                        let expected = ScalarRounder.round(values);
+                        let actual = rounder.round(values);
+                        for index in 0..4 {
+                            let (expected, actual) = (expected[index], actual[index]);
+                            assert!(
+                                expected.to_bits() == actual.to_bits() || (expected.is_nan() && actual.is_nan()),
+                                "round({:?}): expected {expected:?}, got {actual:?}",
+                                values[index]
+                            );
+                        }
+                    }
+                }
+            })
+        });
+    }
 
     #[test]
     fn hidden_layout_should_hide_recursively() {

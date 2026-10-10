@@ -1,10 +1,12 @@
 //! Implements the track sizing algorithm
 //! <https://www.w3.org/TR/css-grid-1/#layout-algorithm>
-use super::types::{GridItem, GridTrack, TrackCounts};
+use super::types::{GridItem, GridTrack, TrackCounts, NO_CONTRIBUTION_JOB};
 use crate::geometry::{AbstractAxis, Line, Size};
 use crate::style::{AlignContent, AlignContentKeyword, AvailableSpace};
 use crate::style_helpers::TaffyMinContent;
-use crate::tree::{LayoutPartialTree, LayoutPartialTreeExt, SizingMode};
+use crate::tree::{
+    ChildLayoutJob, LayoutInput, LayoutPartialTree, LayoutPartialTreeExt, NodeId, RequestedAxis, RunMode, SizingMode,
+};
 use crate::util::sys::{f32_max, f32_min, Vec};
 use crate::util::{FrontBackVecBuilder, MaybeMath, ResolveOrZero};
 use crate::CompactLength;
@@ -69,7 +71,7 @@ impl ItemBatcher {
 
 /// This struct captures a bunch of variables which are used to compute the intrinsic sizes of children so that those variables
 /// don't have to be passed around all over the place below. It then has methods that implement the intrinsic sizing computations
-struct IntrinsicSizeMeasurer<'tree, 'oat, Tree, EstimateFunction>
+struct IntrinsicSizeMeasurer<'tree, 'oat, 'jobs, Tree, EstimateFunction>
 where
     Tree: LayoutPartialTree,
     EstimateFunction: Fn(&GridTrack, Option<f32>, &Tree) -> Option<f32>,
@@ -85,9 +87,21 @@ where
     axis: AbstractAxis,
     /// The available grid space
     inner_node_size: Size<Option<f32>>,
+    /// If set then contributions are not computed (the methods that compute them return zero).
+    /// Instead, a job is collected for each contribution that would have been measured.
+    collect_jobs: Option<&'jobs mut ContributionJobs>,
 }
 
-impl<Tree, EstimateFunction> IntrinsicSizeMeasurer<'_, '_, Tree, EstimateFunction>
+/// The jobs that measure the contributions of the items of a grid that will be used to size the tracks in an axis
+#[derive(Default)]
+struct ContributionJobs {
+    /// Jobs that measure the min-content contribution of an item
+    min_content: Vec<ChildLayoutJob>,
+    /// Jobs that measure the max-content contribution of an item
+    max_content: Vec<ChildLayoutJob>,
+}
+
+impl<Tree, EstimateFunction> IntrinsicSizeMeasurer<'_, '_, '_, Tree, EstimateFunction>
 where
     Tree: LayoutPartialTree,
     EstimateFunction: Fn(&GridTrack, Option<f32>, &Tree) -> Option<f32>,
@@ -126,6 +140,11 @@ where
     fn min_content_contribution(&mut self, item: &mut GridItem, axis_tracks: &[GridTrack]) -> f32 {
         let grid_area_size = self.grid_area_size(item, axis_tracks);
         let available_space = grid_area_size.with(self.axis, None);
+        if let Some(jobs) = self.collect_jobs.as_mut() {
+            let jobs = &mut jobs.min_content;
+            item.collect_min_content_contribution_job(self.axis, self.tree, grid_area_size, available_space, jobs);
+            return 0.0;
+        }
         let margin_axis_sums = self.margins_axis_sums_with_baseline_shims(item, available_space.width);
         let contribution = item.min_content_contribution_cached(self.axis, self.tree, grid_area_size, available_space);
         contribution + margin_axis_sums.get(self.axis)
@@ -136,6 +155,11 @@ where
     fn max_content_contribution(&mut self, item: &mut GridItem, axis_tracks: &[GridTrack]) -> f32 {
         let grid_area_size = self.grid_area_size(item, axis_tracks);
         let available_space = grid_area_size.with(self.axis, None);
+        if let Some(jobs) = self.collect_jobs.as_mut() {
+            let jobs = &mut jobs.max_content;
+            item.collect_max_content_contribution_job(self.axis, self.tree, grid_area_size, available_space, jobs);
+            return 0.0;
+        }
         let margin_axis_sums = self.margins_axis_sums_with_baseline_shims(item, available_space.width);
         let contribution = item.max_content_contribution_cached(self.axis, self.tree, grid_area_size, available_space);
         contribution + margin_axis_sums.get(self.axis)
@@ -152,6 +176,19 @@ where
     fn minimum_contribution(&mut self, item: &mut GridItem, axis_tracks: &[GridTrack]) -> f32 {
         let grid_area_size = self.grid_area_size(item, axis_tracks);
         let available_space = grid_area_size.with(self.axis, None);
+        if let Some(jobs) = self.collect_jobs.as_mut() {
+            if item.minimum_contribution_cache.get(self.axis).is_none() {
+                item.minimum_contribution(
+                    self.tree,
+                    self.axis,
+                    axis_tracks,
+                    grid_area_size,
+                    self.inner_node_size,
+                    Some(&mut jobs.min_content),
+                );
+            }
+            return 0.0;
+        }
         let margin_axis_sums = self.margins_axis_sums_with_baseline_shims(item, available_space.width);
         let contribution =
             item.minimum_contribution_cached(self.tree, self.axis, axis_tracks, grid_area_size, self.inner_node_size);
@@ -256,6 +293,7 @@ pub(super) fn determine_if_item_crosses_flexible_or_intrinsic_tracks(
 #[allow(clippy::too_many_arguments)]
 pub(super) fn track_sizing_algorithm<Tree: LayoutPartialTree>(
     tree: &mut Tree,
+    node: NodeId,
     axis: AbstractAxis,
     axis_min_size: Option<f32>,
     axis_max_size: Option<f32>,
@@ -282,7 +320,7 @@ pub(super) fn track_sizing_algorithm<Tree: LayoutPartialTree>(
 
     // 11.5.1 Shim item baselines
     if has_baseline_aligned_item {
-        resolve_item_baselines(tree, axis, items, inner_node_size);
+        resolve_item_baselines(tree, node, axis, items, inner_node_size);
     }
 
     // If all tracks have a fixed min track sizing function and base_size = growth_limit,
@@ -317,22 +355,6 @@ pub(super) fn track_sizing_algorithm<Tree: LayoutPartialTree>(
         }
     }
 
-    // 11.5 Resolve Intrinsic Track Sizes
-    resolve_intrinsic_track_sizes(
-        tree,
-        axis,
-        axis_tracks,
-        other_axis_tracks,
-        items,
-        available_grid_space.get(axis),
-        inner_node_size,
-        get_track_size_estimate,
-    );
-
-    // 11.6. Maximise Tracks
-    // Distributes free space (if any) to tracks with FINITE growth limits, up to their limits.
-    maximise_tracks(axis_tracks, available_grid_space.get(axis));
-
     // For the purpose of the final two expansion steps ("Expand Flexible Tracks" and "Stretch auto Tracks"), we only want to expand
     // into space generated by the grid container's size (as defined by either it's preferred size style or by it's parent node through
     // something like stretch alignment), not just any available space. To do this we map definite available space to AvailableSpace::MaxContent
@@ -346,6 +368,87 @@ pub(super) fn track_sizing_algorithm<Tree: LayoutPartialTree>(
             _ => AvailableSpace::MaxContent,
         }
     };
+
+    // If the tree computes batches of child layouts in parallel then measure the contributions of the items that the
+    // steps below will use as batches. Otherwise each contribution is measured when a step first uses it.
+    //
+    // Which contributions of an item are used depends only on styles, track sizing functions and the available space, and
+    // the inputs they are measured with depend only on the sizes of fixed-size tracks and on the other axis. Neither depends
+    // on the contributions of other items. So the contributions that will be used are found by running the steps on a scratch
+    // copy of the tracks with the measurer set to collect a job for each contribution that would be measured instead of
+    // measuring it. The results of the jobs are then written to the items' caches, where the steps below find them.
+    if Tree::COMPUTES_CHILD_LAYOUTS_IN_PARALLEL && items.len() > 1 && tree.batches_child_layouts(node) {
+        let mut jobs = ContributionJobs::default();
+        let mut scratch_axis_tracks: Vec<GridTrack> = axis_tracks.to_vec();
+        resolve_intrinsic_track_sizes(
+            tree,
+            axis,
+            &mut scratch_axis_tracks,
+            other_axis_tracks,
+            items,
+            available_grid_space.get(axis),
+            inner_node_size,
+            get_track_size_estimate,
+            Some(&mut jobs),
+        );
+        // The "Expand Flexible Tracks" step uses the max-content contribution of each item that crosses a flexible
+        // track if the available space is indefinite
+        if axis_available_space_for_expansion == AvailableSpace::MaxContent {
+            let mut item_sizer = IntrinsicSizeMeasurer {
+                tree,
+                other_axis_tracks,
+                axis,
+                inner_node_size,
+                get_track_size_estimate,
+                collect_jobs: Some(&mut jobs),
+            };
+            for item in items.iter_mut().filter(|item| item.crosses_flexible_track(axis)) {
+                item_sizer.max_content_contribution(item, axis_tracks);
+            }
+        }
+
+        // The min-content and max-content contributions of an item are separate batches,
+        // as the jobs in a batch must be for distinct children
+        if !jobs.min_content.is_empty() {
+            tree.compute_child_layouts(node, &mut jobs.min_content);
+        }
+        if !jobs.max_content.is_empty() {
+            tree.compute_child_layouts(node, &mut jobs.max_content);
+        }
+        if !jobs.min_content.is_empty() || !jobs.max_content.is_empty() {
+            for item in items.iter_mut() {
+                let min_content_job =
+                    core::mem::replace(&mut item.pending_min_content_contribution_job, NO_CONTRIBUTION_JOB);
+                if min_content_job != NO_CONTRIBUTION_JOB {
+                    let size = jobs.min_content[min_content_job as usize].output.size.get(axis);
+                    item.min_content_contribution_cache.set(axis, Some(size));
+                }
+                let max_content_job =
+                    core::mem::replace(&mut item.pending_max_content_contribution_job, NO_CONTRIBUTION_JOB);
+                if max_content_job != NO_CONTRIBUTION_JOB {
+                    let size = jobs.max_content[max_content_job as usize].output.size.get(axis);
+                    item.max_content_contribution_cache.set(axis, Some(size));
+                }
+            }
+        }
+    }
+
+    // 11.5 Resolve Intrinsic Track Sizes
+    resolve_intrinsic_track_sizes(
+        tree,
+        axis,
+        axis_tracks,
+        other_axis_tracks,
+        items,
+        available_grid_space.get(axis),
+        inner_node_size,
+        get_track_size_estimate,
+        None,
+    );
+
+    // 11.6. Maximise Tracks
+    // Distributes free space (if any) to tracks with FINITE growth limits, up to their limits.
+    maximise_tracks(axis_tracks, available_grid_space.get(axis));
 
     // 11.7. Expand Flexible Tracks
     // This step sizes flexible tracks using the largest value it can assign to an fr without exceeding the available space.
@@ -449,8 +552,9 @@ fn initialize_track_sizes(
 }
 
 /// 11.5.1 Shim baseline-aligned items so their intrinsic size contributions reflect their baseline alignment.
-fn resolve_item_baselines(
-    tree: &mut impl LayoutPartialTree,
+fn resolve_item_baselines<Tree: LayoutPartialTree>(
+    tree: &mut Tree,
+    node: NodeId,
     axis: AbstractAxis,
     items: &mut [GridItem],
     inner_node_size: Size<Option<f32>>,
@@ -461,29 +565,48 @@ fn resolve_item_baselines(
     let mut items: Vec<&mut GridItem> = items.iter_mut().collect();
     items.sort_by_key(|item| item.placement(other_axis).start);
 
+    // The input with which the baseline of an item is computed
+    let baseline_layout_input = LayoutInput {
+        known_dimensions: Size::NONE,
+        known_dimensions_are_definite: Size { width: true, height: true },
+        parent_size: inner_node_size,
+        available_space: Size::MIN_CONTENT,
+        sizing_mode: SizingMode::InherentSize,
+        axis: RequestedAxis::Both,
+        run_mode: RunMode::PerformLayout,
+        vertical_margins_are_collapsible: Line::FALSE,
+    };
+
+    // If the tree computes batches of child layouts in parallel then find the items in each grid row whose baselines
+    // need to be computed (see below), and compute the layouts of all such items as a batch.
+    let mut jobs: Vec<ChildLayoutJob> = Vec::new();
+    if Tree::COMPUTES_CHILD_LAYOUTS_IN_PARALLEL && tree.batches_child_layouts(node) {
+        let mut remaining_items = &items[0..];
+        while !remaining_items.is_empty() {
+            let (row_items, tail) = split_first_row(remaining_items, other_axis);
+            remaining_items = tail;
+
+            let row_baseline_item_count =
+                row_items.iter().filter(|item| item.participates_in_baseline_alignment()).count();
+            if row_baseline_item_count <= 1 {
+                continue;
+            }
+            for item in row_items.iter().filter(|item| item.participates_in_baseline_alignment()) {
+                jobs.push(ChildLayoutJob::new(item.node, baseline_layout_input));
+            }
+        }
+        if jobs.is_empty() {
+            return;
+        }
+        tree.compute_child_layouts(node, &mut jobs);
+    }
+    let mut jobs = jobs.into_iter();
+
     // Iterate over grid rows
     let mut remaining_items = &mut items[0..];
     while !remaining_items.is_empty() {
-        // Get the row index of the current row
-        let current_row = remaining_items[0].placement(other_axis).start;
-
-        // Find the item index of the first item that is in a different row (or None if we've reached the end of the list)
-        let next_row_first_item =
-            remaining_items.iter().position(|item| item.placement(other_axis).start != current_row);
-
-        // Use this index to split the `remaining_items` slice in two slices:
-        //    - A `row_items` slice containing the items (that start) in the current row
-        //    - A new `remaining_items` consisting of the remainder of the `remaining_items` slice
-        //      that hasn't been split off into `row_items
-        let row_items = if let Some(index) = next_row_first_item {
-            let (row_items, tail) = remaining_items.split_at_mut(index);
-            remaining_items = tail;
-            row_items
-        } else {
-            let row_items = remaining_items;
-            remaining_items = &mut [];
-            row_items
-        };
+        let (row_items, tail) = split_first_row_mut(remaining_items, other_axis);
+        remaining_items = tail;
 
         // Count how many items in *this row* are baseline aligned
         // If a row has one or zero items participating in baseline alignment then baseline alignment is a no-op
@@ -499,14 +622,10 @@ fn resolve_item_baselines(
                 continue;
             }
 
-            let measured_size_and_baselines = tree.perform_child_layout(
-                item.node,
-                Size::NONE,
-                inner_node_size,
-                Size::MIN_CONTENT,
-                SizingMode::InherentSize,
-                Line::FALSE,
-            );
+            let measured_size_and_baselines = match jobs.next() {
+                Some(job) => job.output,
+                None => tree.compute_child_layout(item.node, baseline_layout_input),
+            };
 
             let baseline = measured_size_and_baselines.baselines.first;
             let height = measured_size_and_baselines.size.height;
@@ -543,6 +662,29 @@ fn resolve_item_baselines(
     }
 }
 
+/// Split a slice of items that is sorted by the track that the items start in in `other_axis` into the
+/// items that start in the same track as the first item, and the remaining items.
+#[inline(always)]
+fn split_first_row<'a, 'b>(
+    items: &'a [&'b mut GridItem],
+    other_axis: AbstractAxis,
+) -> (&'a [&'b mut GridItem], &'a [&'b mut GridItem]) {
+    let current_row = items[0].placement(other_axis).start;
+    let next_row_first_item = items.iter().position(|item| item.placement(other_axis).start != current_row);
+    items.split_at(next_row_first_item.unwrap_or(items.len()))
+}
+
+/// The same as `split_first_row`, but for a mutable slice
+#[inline(always)]
+fn split_first_row_mut<'a, 'b>(
+    items: &'a mut [&'b mut GridItem],
+    other_axis: AbstractAxis,
+) -> (&'a mut [&'b mut GridItem], &'a mut [&'b mut GridItem]) {
+    let current_row = items[0].placement(other_axis).start;
+    let next_row_first_item = items.iter().position(|item| item.placement(other_axis).start != current_row);
+    items.split_at_mut(next_row_first_item.unwrap_or(items.len()))
+}
+
 /// 11.5 Resolve Intrinsic Track Sizes
 #[allow(clippy::too_many_arguments)]
 fn resolve_intrinsic_track_sizes<Tree: LayoutPartialTree>(
@@ -554,6 +696,7 @@ fn resolve_intrinsic_track_sizes<Tree: LayoutPartialTree>(
     axis_available_grid_space: AvailableSpace,
     inner_node_size: Size<Option<f32>>,
     get_track_size_estimate: impl Fn(&GridTrack, Option<f32>, &Tree) -> Option<f32>,
+    collect_jobs: Option<&mut ContributionJobs>,
 ) {
     // Step 1. Shim baseline-aligned items so their intrinsic size contributions reflect their baseline alignment.
 
@@ -597,7 +740,7 @@ fn resolve_intrinsic_track_sizes<Tree: LayoutPartialTree>(
 
     let axis_inner_node_size = inner_node_size.get(axis);
     let mut item_sizer =
-        IntrinsicSizeMeasurer { tree, other_axis_tracks, axis, inner_node_size, get_track_size_estimate };
+        IntrinsicSizeMeasurer { tree, other_axis_tracks, axis, inner_node_size, get_track_size_estimate, collect_jobs };
 
     let mut batched_item_iterator = ItemBatcher::new(axis);
     while let Some((batch, is_flex)) = batched_item_iterator.next(items) {
@@ -1254,8 +1397,14 @@ fn expand_flexible_tracks<Tree: LayoutPartialTree>(
     inner_node_size: Size<Option<f32>>,
     get_track_size_estimate: impl Fn(&GridTrack, Option<f32>, &Tree) -> Option<f32>,
 ) {
-    let mut item_sizer =
-        IntrinsicSizeMeasurer { tree, other_axis_tracks, axis, inner_node_size, get_track_size_estimate };
+    let mut item_sizer = IntrinsicSizeMeasurer {
+        tree,
+        other_axis_tracks,
+        axis,
+        inner_node_size,
+        get_track_size_estimate,
+        collect_jobs: None,
+    };
 
     // First, find the grid’s used flex fraction:
     let flex_fraction = match axis_available_space_for_expansion {
