@@ -1,0 +1,21 @@
+<test name="contents_flex_absolute_child__content_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="flex" box-sizing="content-box" direction="rtl" position="relative" width="200px" height="100px" padding-top="10px" padding-left="10px" padding-bottom="10px" padding-right="10px">
+      <div box-sizing="content-box" direction="rtl" position="relative" width="30px"/>
+      <div display="contents" box-sizing="content-box" direction="rtl" position="relative" padding-top="20px" padding-left="20px" padding-bottom="20px" padding-right="20px">
+        <div box-sizing="content-box" direction="rtl" position="absolute" width="20px" height="20px" top="5px" left="5px"/>
+        <div box-sizing="content-box" direction="rtl" position="relative" width="40px"/>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="220" height="120">
+      <node x="180" y="10" width="30" height="100"/>
+      <node x="0" y="0" width="0" height="0">
+        <node x="5" y="5" width="20" height="20"/>
+        <node x="140" y="10" width="40" height="100"/>
+      </node>
+    </node>
+  </expectations>
+</test>

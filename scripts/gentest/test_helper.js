@@ -214,20 +214,30 @@ function containingBlockElement(e) {
   if (e.id !== "test-root" && (position === "absolute" || position === "fixed")) {
     let ancestor = e.parentElement;
     while (ancestor.id !== "test-root") {
-      if (position !== "fixed" && getComputedStyle(ancestor).position !== "static") return ancestor;
+      if (position !== "fixed" && !isDisplayContents(ancestor) && getComputedStyle(ancestor).position !== "static") return ancestor;
       ancestor = ancestor.parentElement;
     }
     return ancestor;
   }
-  return e.parentNode;
+  let parent = e.parentNode;
+  while (parent.id !== "test-root" && isDisplayContents(parent)) parent = parent.parentNode;
+  return parent;
+}
+
+// `display: contents` elements generate no box, so their children are positioned relative to
+// the nearest ancestor that does, and they themselves are given an empty layout at its origin.
+function isDisplayContents(e) {
+  return getComputedStyle(e).display === "contents";
 }
 
 function describeElement(e) {
 
   // Get precise, unrounded dimensions for the current element and its position reference
   // (parent for in-flow elements, containing block for out-of-flow elements)
-  let boundingRect = e.getBoundingClientRect();
   let containingBlockElementBoundingRect = containingBlockElement(e).getBoundingClientRect();
+  let boundingRect = isDisplayContents(e)
+    ? new DOMRect(containingBlockElementBoundingRect.x, containingBlockElementBoundingRect.y, 0, 0)
+    : e.getBoundingClientRect();
 
   const computedStyle = getComputedStyle(e);
 

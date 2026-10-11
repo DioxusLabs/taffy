@@ -1,0 +1,17 @@
+<test name="contents_block_ignores_box_styles__content_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="block" box-sizing="content-box" direction="rtl" position="absolute" width="100px">
+      <div display="contents" box-sizing="content-box" direction="rtl" position="relative" width="50px" height="50px" margin-top="7px" margin-left="7px" margin-bottom="7px" margin-right="7px" padding-top="10px" padding-left="10px" padding-bottom="10px" padding-right="10px" border-top="5px" border-left="5px" border-bottom="5px" border-right="5px">
+        <div box-sizing="content-box" direction="rtl" position="relative" height="10px"/>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="100" height="10">
+      <node x="0" y="0" width="0" height="0">
+        <node x="0" y="0" width="100" height="10"/>
+      </node>
+    </node>
+  </expectations>
+</test>

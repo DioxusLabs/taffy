@@ -4,6 +4,8 @@
 
 ### Breaking
 
+- `Display` gains a `Contents` variant (CSS `display: contents`). Code that exhaustively matches on `Display` must handle it. `TaffyTree` flattens contents nodes out of the child lists that it lays out: a contents node gets an empty layout at its parent's origin, and its children are positioned relative to the nearest ancestor that is not `display: contents`. `TaffyTree::children` and `TaffyTree::parent` still return the tree as constructed. Custom trees must do the flattening themselves.
+
 - The `DetailedGridInfo` track-list serializers (`grid_template_rows`, `grid_template_columns`, `write_grid_template_rows`, `write_grid_template_columns`) and `DetailedGridTracksInfo::{write_track_list, to_track_list_string}` take a `zoom: f32` argument. Track sizes are divided by it, so callers implementing CSS `zoom` get unzoomed px; pass `1.0` for the previous behaviour.
 
 - **`normal` is now a first-class keyword for `align-content` / `justify-content`, which are no longer wrapped in `Option`**. `AlignContentKeyword` gains a `Normal` variant, exposed as the constant `AlignContent::NORMAL` (= `JustifyContent::NORMAL`), which is the initial value of both properties. Layout is unchanged: `NORMAL` behaves exactly as `None` did (as `stretch` in Flexbox and CSS Grid containers, and as `start` in block containers, where it is also the only value that does not make the container establish an independent formatting context).

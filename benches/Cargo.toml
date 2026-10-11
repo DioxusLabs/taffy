@@ -39,6 +39,11 @@ grid-alternating-spans = []
 bench = false
 
 [[bench]]
+name = "display_contents"
+path = "benches/display_contents.rs"
+harness = false
+
+[[bench]]
 name = "tree_creation"
 path = "benches/tree_creation.rs"
 harness = false
