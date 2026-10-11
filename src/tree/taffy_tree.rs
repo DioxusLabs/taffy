@@ -719,7 +719,12 @@ impl<NodeContext> TaffyTree<NodeContext> {
         let mut has_contents_child = false;
         for child in children {
             self.parents[(*child).into()] = Some(id);
-            has_contents_child |= self.reset_if_contents(*child);
+            has_contents_child |= self.is_contents(*child);
+        }
+        if has_contents_child {
+            for child in children {
+                self.reset_if_contents(*child);
+            }
         }
 
         let _ = self.children.insert(NodeChildren::new(children.iter().copied().collect::<_>()));
