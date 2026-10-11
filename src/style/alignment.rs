@@ -133,9 +133,9 @@ impl AlignContentKeyword {
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[repr(u8)]
 pub enum AlignmentSafety {
-    /// No overflow-position keyword specified. Behaves as `Unsafe`, except for absolutely
-    /// positioned boxes, whose alignment is adjusted to minimize overflow of their
-    /// containing block.
+    /// No overflow-position keyword specified. Behaves as `Safe` for block content alignment
+    /// and `Unsafe` otherwise, except for absolutely positioned boxes, whose alignment is
+    /// adjusted to minimize overflow of their containing block.
     #[default]
     Default,
     /// Keeps the requested alignment even when the subject overflows the alignment

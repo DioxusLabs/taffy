@@ -27,12 +27,16 @@ use crate::{Clear, Float, FloatDirection};
 
 /// Compute the block-axis offset that `align-content` applies to the in-flow content of a block
 /// container, given the free space between the container's content box and its content.
+/// Default overflow alignment is safe.
 ///
 /// The entire stack of in-flow content is treated as a single alignment subject, so the
 /// distribution keywords (`space-*`, `stretch`) invoke their single-subject fallbacks. This is
 /// used both by block layout and by inline formatting contexts (line boxes) which are laid out
 /// externally to Taffy.
-pub fn compute_block_align_content_offset(align_content: AlignContent, free_space: f32) -> f32 {
+pub fn compute_block_align_content_offset(mut align_content: AlignContent, free_space: f32) -> f32 {
+    if align_content.safety == AlignmentSafety::Default {
+        align_content.safety = AlignmentSafety::Safe;
+    }
     let keyword = apply_alignment_fallback(free_space, 1, align_content);
     compute_alignment_offset(free_space, 1, 0.0, keyword, false, true)
 }

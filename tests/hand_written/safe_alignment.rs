@@ -3,12 +3,31 @@
 //! Spec: <https://www.w3.org/TR/css-align-3/#overflow-values>
 //!
 //! When the alignment subject overflows the alignment container, a `safe` value behaves
-//! as logical `start`; an `unsafe` value (the default) keeps its requested position even
-//! when that causes data loss at the start edge.
+//! as logical `start`; an `unsafe` value keeps its requested position even when that
+//! causes data loss at the start edge. Block content alignment defaults to `safe`.
 
 use taffy::prelude::*;
 use taffy::style::Direction;
 use taffy_test_helpers::new_test_tree;
+
+#[cfg(feature = "block_layout")]
+#[test]
+fn block_align_content_defaults_to_safe_without_overriding_explicit_unsafe() {
+    use taffy::{compute_block_align_content_offset, AlignmentSafety};
+
+    for (alignment, unsafe_offset) in
+        [(AlignContent::END, -100.0), (AlignContent::FLEX_END, -100.0), (AlignContent::CENTER, -50.0)]
+    {
+        assert_eq!(compute_block_align_content_offset(alignment, -100.0), 0.0);
+        assert_eq!(compute_block_align_content_offset(alignment, 0.0), 0.0);
+        assert_eq!(compute_block_align_content_offset(alignment, 100.0), -unsafe_offset);
+        assert_eq!(compute_block_align_content_offset(alignment.with_safety(AlignmentSafety::Safe), -100.0), 0.0);
+        assert_eq!(
+            compute_block_align_content_offset(alignment.with_safety(AlignmentSafety::Unsafe), -100.0),
+            unsafe_offset
+        );
+    }
+}
 
 #[cfg(feature = "grid")]
 #[test]

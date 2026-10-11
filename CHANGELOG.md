@@ -85,6 +85,8 @@
 
 ### Fixed
 
+- Block: default `align-content` overflow alignment now falls back to `start` when the content is too tall, preserving explicit `unsafe` alignment.
+
 - Flexbox: treat percentage flex bases in an indefinite main size as content, rather than falling back to the item's preferred main size.
 
 - Block: floor same-BFC child context widths at padding + border so float geometry matches the child's used border-box size.

@@ -1,0 +1,27 @@
+<test name="block_align_content_default_scroll_overflow__content_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="block" box-sizing="content-box" direction="rtl" position="absolute" width="100px">
+      <div display="block" box-sizing="content-box" direction="rtl" position="relative" overflow-x="hidden" overflow-y="hidden" scrollbar-width="15" align-content="end" width="100px" height="100px">
+        <div box-sizing="content-box" direction="rtl" position="relative" width="50px" height="80px"/>
+        <div box-sizing="content-box" direction="rtl" position="relative" width="50px" height="80px"/>
+      </div>
+      <div display="block" box-sizing="content-box" direction="rtl" position="relative" overflow-x="hidden" overflow-y="hidden" scrollbar-width="15" align-content="center" width="100px" height="100px">
+        <div box-sizing="content-box" direction="rtl" position="relative" width="50px" height="80px"/>
+        <div box-sizing="content-box" direction="rtl" position="relative" width="50px" height="80px"/>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="100" height="200">
+      <node x="0" y="0" width="100" height="100" scroll_width="0" scroll_height="60">
+        <node x="50" y="0" width="50" height="80"/>
+        <node x="50" y="80" width="50" height="80"/>
+      </node>
+      <node x="0" y="100" width="100" height="100" scroll_width="0" scroll_height="60">
+        <node x="50" y="0" width="50" height="80"/>
+        <node x="50" y="80" width="50" height="80"/>
+      </node>
+    </node>
+  </expectations>
+</test>
