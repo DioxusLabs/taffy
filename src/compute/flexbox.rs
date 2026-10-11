@@ -1526,16 +1526,12 @@ fn determine_container_main_size(
                             //   - capped by its flex base size if it is not growable
                             //   - floored by its flex base size if it is not shrinkable
                             //   - then further clamped by the item's used min and max main sizes
-                            // The flex base size used for capping/flooring is itself floored by the item's
-                            // preferred main size, which matches both Chrome and Firefox as of 9th March 2023
-                            // despite the spec being a bit unclear on this point.
                             //
                             // Spec modification: https://www.w3.org/TR/css-flexbox-1/#change-2016-max-contribution
                             // Issue: https://github.com/w3c/csswg-drafts/issues/1435
                             // Gentest: padding_border_overrides_size_flex_basis_0.html
-                            let clamping_basis = Some(item.flex_basis).maybe_max(style_preferred);
-                            let flex_basis_cap = clamping_basis.filter(|_| item.flex_grow == 0.0);
-                            let flex_basis_floor = clamping_basis.filter(|_| item.flex_shrink == 0.0);
+                            let flex_basis_cap = Some(item.flex_basis).filter(|_| item.flex_grow == 0.0);
+                            let flex_basis_floor = Some(item.flex_basis).filter(|_| item.flex_shrink == 0.0);
 
                             let margin_sum = item.margin.main_axis_sum(constants.dir);
                             let resolved_minimum_main_size = item.resolved_minimum_main_size;

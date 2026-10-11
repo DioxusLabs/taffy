@@ -20062,6 +20062,26 @@ mod flex {
     }
 
     #[test]
+    fn row_intrinsic_mincontent_basis50_width200_grow0_shrink0__border_box_ltr() {
+        crate::run_xml_test("flex", "row_intrinsic_mincontent_basis50_width200_grow0_shrink0__border_box_ltr");
+    }
+
+    #[test]
+    fn row_intrinsic_mincontent_basis50_width200_grow0_shrink0__content_box_ltr() {
+        crate::run_xml_test("flex", "row_intrinsic_mincontent_basis50_width200_grow0_shrink0__content_box_ltr");
+    }
+
+    #[test]
+    fn row_intrinsic_mincontent_basis50_width200_grow0_shrink0__border_box_rtl() {
+        crate::run_xml_test("flex", "row_intrinsic_mincontent_basis50_width200_grow0_shrink0__border_box_rtl");
+    }
+
+    #[test]
+    fn row_intrinsic_mincontent_basis50_width200_grow0_shrink0__content_box_rtl() {
+        crate::run_xml_test("flex", "row_intrinsic_mincontent_basis50_width200_grow0_shrink0__content_box_rtl");
+    }
+
+    #[test]
     fn row_intrinsic_mincontent_basis75_grow0_shrink0__border_box_ltr() {
         crate::run_xml_test("flex", "row_intrinsic_mincontent_basis75_grow0_shrink0__border_box_ltr");
     }
@@ -20219,6 +20239,26 @@ mod flex {
     #[test]
     fn row_intrinsic_mincontent_negative_margin__content_box_rtl() {
         crate::run_xml_test("flex", "row_intrinsic_mincontent_negative_margin__content_box_rtl");
+    }
+
+    #[test]
+    fn row_intrinsic_mincontent_three_items_basis_width_mixed__border_box_ltr() {
+        crate::run_xml_test("flex", "row_intrinsic_mincontent_three_items_basis_width_mixed__border_box_ltr");
+    }
+
+    #[test]
+    fn row_intrinsic_mincontent_three_items_basis_width_mixed__content_box_ltr() {
+        crate::run_xml_test("flex", "row_intrinsic_mincontent_three_items_basis_width_mixed__content_box_ltr");
+    }
+
+    #[test]
+    fn row_intrinsic_mincontent_three_items_basis_width_mixed__border_box_rtl() {
+        crate::run_xml_test("flex", "row_intrinsic_mincontent_three_items_basis_width_mixed__border_box_rtl");
+    }
+
+    #[test]
+    fn row_intrinsic_mincontent_three_items_basis_width_mixed__content_box_rtl() {
+        crate::run_xml_test("flex", "row_intrinsic_mincontent_three_items_basis_width_mixed__content_box_rtl");
     }
 
     #[test]
