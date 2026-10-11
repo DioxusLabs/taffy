@@ -1530,8 +1530,8 @@ fn determine_container_main_size(
                             // Spec modification: https://www.w3.org/TR/css-flexbox-1/#change-2016-max-contribution
                             // Issue: https://github.com/w3c/csswg-drafts/issues/1435
                             // Gentest: padding_border_overrides_size_flex_basis_0.html
-                            let flex_basis_cap = Some(item.flex_basis).filter(|_| item.flex_grow == 0.0);
-                            let flex_basis_floor = Some(item.flex_basis).filter(|_| item.flex_shrink == 0.0);
+                            let flex_basis_cap = (item.flex_grow == 0.0).then_some(item.flex_basis);
+                            let flex_basis_floor = (item.flex_shrink == 0.0).then_some(item.flex_basis);
 
                             let margin_sum = item.margin.main_axis_sum(constants.dir);
                             let resolved_minimum_main_size = item.resolved_minimum_main_size;
