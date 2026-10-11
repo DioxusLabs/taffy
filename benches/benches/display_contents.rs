@@ -20,10 +20,7 @@ fn build_flat_tree(n: usize) -> (TaffyTree<()>, NodeId) {
         .new_with_children(
             Style {
                 display: Display::Flex,
-                size: Size {
-                    width: Dimension::from_length(1000.0),
-                    height: Dimension::from_length(500.0),
-                },
+                size: Size { width: Dimension::from_length(1000.0), height: Dimension::from_length(500.0) },
                 ..Default::default()
             },
             &children,
@@ -46,12 +43,8 @@ fn build_tree_with_contents(n: usize) -> (TaffyTree<()>, NodeId) {
             .unwrap();
         if i % 5 == 0 {
             // Wrap in contents node
-            let contents = taffy
-                .new_with_children(
-                    Style { display: Display::Contents, ..Default::default() },
-                    &[leaf],
-                )
-                .unwrap();
+            let contents =
+                taffy.new_with_children(Style { display: Display::Contents, ..Default::default() }, &[leaf]).unwrap();
             children.push(contents);
         } else {
             children.push(leaf);
@@ -61,10 +54,7 @@ fn build_tree_with_contents(n: usize) -> (TaffyTree<()>, NodeId) {
         .new_with_children(
             Style {
                 display: Display::Flex,
-                size: Size {
-                    width: Dimension::from_length(1000.0),
-                    height: Dimension::from_length(500.0),
-                },
+                size: Size { width: Dimension::from_length(1000.0), height: Dimension::from_length(500.0) },
                 ..Default::default()
             },
             &children,
@@ -93,12 +83,7 @@ fn build_deep_node(taffy: &mut TaffyTree<()>, depth: usize, breadth: usize) -> N
     for _ in 0..breadth {
         children.push(build_deep_node(taffy, depth - 1, breadth));
     }
-    taffy
-        .new_with_children(
-            Style { display: Display::Flex, ..Default::default() },
-            &children,
-        )
-        .unwrap()
+    taffy.new_with_children(Style { display: Display::Flex, ..Default::default() }, &children).unwrap()
 }
 
 fn bench_no_contents(c: &mut Criterion) {
