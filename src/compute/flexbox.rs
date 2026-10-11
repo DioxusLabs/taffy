@@ -22,6 +22,7 @@ use super::common::alignment::apply_alignment_fallback;
 #[cfg(feature = "content_size")]
 use super::common::scrollable_overflow::compute_scrollable_overflow_contribution;
 use super::common::sizing_keyword::{resolve_sizing_keyword, SizingKeywordResolution};
+use super::common::FIT_TOLERANCE;
 
 /// The intermediate results of a flexbox calculation for a single item
 struct FlexItem {
@@ -1248,7 +1249,7 @@ fn collect_flex_lines<'a>(
                             // So first item in the line does not contribute a gap to the line length
                             let gap_contribution = if idx == 0 { 0.0 } else { main_axis_gap };
                             line_length += child.hypothetical_outer_size.main(constants.dir) + gap_contribution;
-                            line_length > main_axis_available_space && idx != 0
+                            line_length > main_axis_available_space + FIT_TOLERANCE && idx != 0
                         })
                         .map(|(idx, _)| idx)
                         .unwrap_or(flex_items.len());
@@ -1318,7 +1319,7 @@ fn collect_balanced_flex_lines<'a>(
         return lines;
     }
 
-    let line_break_size = main_axis_available_space.into_option().unwrap_or(f32::INFINITY);
+    let line_break_size = main_axis_available_space.into_option().map_or(f32::INFINITY, |size| size + FIT_TOLERANCE);
     let min_line_count = constants.line_count.unwrap_or(1) as usize;
     let item_counts = balance::balanced_line_item_counts(
         flex_items.iter().map(|item| item.hypothetical_outer_size.main(constants.dir)),

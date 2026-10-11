@@ -20042,6 +20042,26 @@ mod flex {
     }
 
     #[test]
+    fn wrap_items_sum_to_max_content_width__border_box_ltr() {
+        crate::run_xml_test("flex", "wrap_items_sum_to_max_content_width__border_box_ltr");
+    }
+
+    #[test]
+    fn wrap_items_sum_to_max_content_width__content_box_ltr() {
+        crate::run_xml_test("flex", "wrap_items_sum_to_max_content_width__content_box_ltr");
+    }
+
+    #[test]
+    fn wrap_items_sum_to_max_content_width__border_box_rtl() {
+        crate::run_xml_test("flex", "wrap_items_sum_to_max_content_width__border_box_rtl");
+    }
+
+    #[test]
+    fn wrap_items_sum_to_max_content_width__content_box_rtl() {
+        crate::run_xml_test("flex", "wrap_items_sum_to_max_content_width__content_box_rtl");
+    }
+
+    #[test]
     fn wrap_nodes_with_content_sizing_margin_cross__border_box_ltr() {
         crate::run_xml_test("flex", "wrap_nodes_with_content_sizing_margin_cross__border_box_ltr");
     }

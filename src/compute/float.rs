@@ -30,10 +30,7 @@ use core::ops::Range;
 
 use crate::{debug::debug_log, sys::Vec, AvailableSpace, Clear, Direction, FloatDirection, Point, Size};
 
-/// Tolerance used when checking whether a box fits in a horizontal space, to absorb `f32`
-/// rounding errors (e.g. percentage widths and margins that sum to exactly 100% may otherwise
-/// exceed the container width and spuriously wrap)
-pub(crate) const FIT_TOLERANCE: f32 = 0.001;
+use super::common::FIT_TOLERANCE;
 
 /// An empty "slot" that avoids floats that is suitable for non-floated content
 /// to be laid out into
