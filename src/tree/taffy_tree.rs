@@ -15,7 +15,7 @@ use crate::tree::{
     RoundTree, RunMode, TraversePartialTree, TraverseTree,
 };
 use crate::util::debug::{debug_log, debug_log_node};
-use crate::util::sys::{new_const_children_vec, new_vec_with_capacity, Box, ChildrenVec, Map, Vec};
+use crate::util::sys::{new_const_children_vec, new_vec_with_capacity, Box, ChildrenVec, Vec};
 
 use crate::compute::{
     compute_cached_layout, compute_hidden_layout, compute_leaf_layout, compute_oof_layout, compute_root_layout,
@@ -107,10 +107,6 @@ struct NodeData {
     /// Whether the node has context data associated with it or not
     pub(crate) has_context: bool,
 
-    /// Whether this node has any `display: contents` children, in which case its layout children are in
-    /// [`TaffyTree::layout_children`]
-    pub(crate) has_contents_children: bool,
-
     /// Out-of-flow (absolute/fixed) boxes whose containing block is this node,
     /// as recorded by the out-of-flow positioning pass
     pub(crate) hoisted_children: ChildrenVec<NodeId>,
@@ -132,7 +128,6 @@ impl NodeData {
             unrounded_layout: Layout::new(),
             final_layout: Layout::new(),
             has_context: false,
-            has_contents_children: false,
             hoisted_children: new_const_children_vec(),
             detailed_layout_info: DetailedLayoutInfo::None,
         }
@@ -145,6 +140,32 @@ impl NodeData {
     #[inline]
     pub fn mark_dirty(&mut self) -> ClearState {
         self.cache.clear()
+    }
+}
+
+/// The children of a node
+#[derive(Debug, Clone, PartialEq, Default)]
+struct NodeChildren {
+    /// The node's actual children
+    children: ChildrenVec<NodeId>,
+    /// The node's children with any `display: contents` children replaced by their own layout children.
+    /// `None` if the node has no `display: contents` children, in which case these are `children`.
+    layout_children: Option<Box<ChildrenVec<NodeId>>>,
+}
+
+impl NodeChildren {
+    /// Create the children of a node with no `display: contents` children
+    fn new(children: ChildrenVec<NodeId>) -> Self {
+        Self { children, layout_children: None }
+    }
+
+    /// The children that the node lays out
+    #[inline(always)]
+    fn layout_children(&self) -> &[NodeId] {
+        match &self.layout_children {
+            Some(layout_children) => layout_children,
+            None => &self.children,
+        }
     }
 }
 
@@ -162,11 +183,7 @@ pub struct TaffyTree<NodeContext = ()> {
     /// The children of each node
     ///
     /// The indexes in the outer vector correspond to the position of the parent [`NodeData`]
-    children: SlotMap<DefaultKey, ChildrenVec<NodeId>>,
-
-    /// The children of each node that has `display: contents` children, with each of those
-    /// replaced by its own layout children
-    layout_children: Map<DefaultKey, ChildrenVec<NodeId>>,
+    children: SlotMap<DefaultKey, NodeChildren>,
 
     /// The parents of each node
     ///
@@ -203,17 +220,17 @@ impl<NodeContext> TraversePartialTree for TaffyTree<NodeContext> {
 
     #[inline(always)]
     fn child_ids(&self, parent_node_id: NodeId) -> Self::ChildIter<'_> {
-        TaffyTreeChildIter(self.children[parent_node_id.into()].iter())
+        TaffyTreeChildIter(self.children[parent_node_id.into()].children.iter())
     }
 
     #[inline(always)]
     fn child_count(&self, parent_node_id: NodeId) -> usize {
-        self.children[parent_node_id.into()].len()
+        self.children[parent_node_id.into()].children.len()
     }
 
     #[inline(always)]
     fn get_child_id(&self, parent_node_id: NodeId, id: usize) -> NodeId {
-        self.children[parent_node_id.into()][id]
+        self.children[parent_node_id.into()].children[id]
     }
 }
 
@@ -369,17 +386,17 @@ where
 
     #[inline(always)]
     fn child_ids(&self, parent_node_id: NodeId) -> Self::ChildIter<'_> {
-        TaffyTreeChildIter(self.taffy.layout_children(parent_node_id).iter())
+        TaffyTreeChildIter(self.taffy.children[parent_node_id.into()].layout_children().iter())
     }
 
     #[inline(always)]
     fn child_count(&self, parent_node_id: NodeId) -> usize {
-        self.taffy.layout_children(parent_node_id).len()
+        self.taffy.children[parent_node_id.into()].layout_children().len()
     }
 
     #[inline(always)]
     fn get_child_id(&self, parent_node_id: NodeId, child_index: usize) -> NodeId {
-        self.taffy.layout_children(parent_node_id)[child_index]
+        self.taffy.children[parent_node_id.into()].layout_children()[child_index]
     }
 }
 
@@ -614,7 +631,6 @@ impl<NodeContext> TaffyTree<NodeContext> {
             // so constructors here can be const
             nodes: SlotMap::with_capacity(capacity),
             children: SlotMap::with_capacity(capacity),
-            layout_children: Map::new(),
             parents: SlotMap::with_capacity(capacity),
             node_context_data: SecondaryMap::with_capacity(capacity),
             config: TaffyConfig::default(),
@@ -634,7 +650,7 @@ impl<NodeContext> TaffyTree<NodeContext> {
     /// Creates and adds a new unattached leaf node to the tree, and returns the node of the new node
     pub fn new_leaf(&mut self, layout: Style) -> TaffyResult<NodeId> {
         let id = self.nodes.insert(NodeData::new(layout));
-        let _ = self.children.insert(new_vec_with_capacity(0));
+        let _ = self.children.insert(NodeChildren::new(new_vec_with_capacity(0)));
         let _ = self.parents.insert(None);
 
         Ok(id.into())
@@ -650,7 +666,7 @@ impl<NodeContext> TaffyTree<NodeContext> {
         let id = self.nodes.insert(data);
         self.node_context_data.insert(id, context);
 
-        let _ = self.children.insert(new_vec_with_capacity(0));
+        let _ = self.children.insert(NodeChildren::new(new_vec_with_capacity(0)));
         let _ = self.parents.insert(None);
 
         Ok(id.into())
@@ -666,7 +682,7 @@ impl<NodeContext> TaffyTree<NodeContext> {
             has_contents_child |= self.is_contents(*child);
         }
 
-        let _ = self.children.insert(children.iter().copied().collect::<_>());
+        let _ = self.children.insert(NodeChildren::new(children.iter().copied().collect::<_>()));
         let _ = self.parents.insert(None);
 
         if has_contents_child {
@@ -680,7 +696,6 @@ impl<NodeContext> TaffyTree<NodeContext> {
     pub fn clear(&mut self) {
         self.nodes.clear();
         self.children.clear();
-        self.layout_children.clear();
         self.parents.clear();
         // A context belongs to the node that owns it. Leaving it behind keeps arbitrary
         // user data -- for a measure function, a boxed closure and everything it
@@ -695,7 +710,7 @@ impl<NodeContext> TaffyTree<NodeContext> {
         let key = node.into();
         if let Some(parent) = self.parents[key] {
             if let Some(children) = self.children.get_mut(parent.into()) {
-                children.retain(|f| *f != node);
+                children.children.retain(|f| *f != node);
             }
             if self.is_contents(node) || self.needs_layout_children_update(parent) {
                 self.update_layout_children(parent);
@@ -705,13 +720,12 @@ impl<NodeContext> TaffyTree<NodeContext> {
 
         // Remove "parent" references to a node when removing that node
         if let Some(children) = self.children.get(key) {
-            for child in children.iter().copied() {
+            for child in children.children.iter().copied() {
                 self.parents[child.into()] = None;
             }
         }
 
         let _ = self.children.remove(key);
-        let _ = self.layout_children.remove(&key);
         let _ = self.parents.remove(key);
         let _ = self.nodes.remove(key);
         let _ = self.node_context_data.remove(key);
@@ -761,7 +775,7 @@ impl<NodeContext> TaffyTree<NodeContext> {
         let parent_key = parent.into();
         let child_key = child.into();
         self.parents[child_key] = Some(parent);
-        self.children[parent_key].push(child);
+        self.children[parent_key].children.push(child);
         if self.is_contents(child) || self.needs_layout_children_update(parent) {
             self.update_layout_children(parent);
         }
@@ -774,13 +788,13 @@ impl<NodeContext> TaffyTree<NodeContext> {
     pub fn insert_child_at_index(&mut self, parent: NodeId, child_index: usize, child: NodeId) -> TaffyResult<()> {
         let parent_key = parent.into();
 
-        let child_count = self.children[parent_key].len();
+        let child_count = self.children[parent_key].children.len();
         if child_index > child_count {
             return Err(TaffyError::ChildIndexOutOfBounds { parent, child_index, child_count });
         }
 
         self.parents[child.into()] = Some(parent);
-        self.children[parent_key].insert(child_index, child);
+        self.children[parent_key].children.insert(child_index, child);
         if self.is_contents(child) || self.needs_layout_children_update(parent) {
             self.update_layout_children(parent);
         }
@@ -794,7 +808,7 @@ impl<NodeContext> TaffyTree<NodeContext> {
         let parent_key = parent.into();
 
         // Remove node as parent from all its current children.
-        for child in &self.children[parent_key] {
+        for child in &self.children[parent_key].children {
             self.parents[(*child).into()] = None;
         }
 
@@ -807,7 +821,7 @@ impl<NodeContext> TaffyTree<NodeContext> {
             self.parents[child.into()] = Some(parent);
         }
 
-        let parent_children = &mut self.children[parent_key];
+        let parent_children = &mut self.children[parent_key].children;
         parent_children.clear();
         children.iter().for_each(|child| parent_children.push(*child));
 
@@ -823,7 +837,7 @@ impl<NodeContext> TaffyTree<NodeContext> {
     ///
     /// The child is not removed from the tree entirely, it is simply no longer attached to its previous parent.
     pub fn remove_child(&mut self, parent: NodeId, child: NodeId) -> TaffyResult<NodeId> {
-        let index = self.children[parent.into()].iter().position(|n| *n == child).unwrap();
+        let index = self.children[parent.into()].children.iter().position(|n| *n == child).unwrap();
         self.remove_child_at_index(parent, index)
     }
 
@@ -832,12 +846,12 @@ impl<NodeContext> TaffyTree<NodeContext> {
     /// The child is not removed from the tree entirely, it is simply no longer attached to its previous parent.
     pub fn remove_child_at_index(&mut self, parent: NodeId, child_index: usize) -> TaffyResult<NodeId> {
         let parent_key = parent.into();
-        let child_count = self.children[parent_key].len();
+        let child_count = self.children[parent_key].children.len();
         if child_index >= child_count {
             return Err(TaffyError::ChildIndexOutOfBounds { parent, child_index, child_count });
         }
 
-        let child = self.children[parent_key].remove(child_index);
+        let child = self.children[parent_key].children.remove(child_index);
         self.parents[child.into()] = None;
 
         if self.is_contents(child) || self.needs_layout_children_update(parent) {
@@ -859,7 +873,7 @@ impl<NodeContext> TaffyTree<NodeContext> {
     {
         let parent_key = parent.into();
         let mut removed_contents = false;
-        for child in self.children[parent_key].drain(range) {
+        for child in self.children[parent_key].children.drain(range) {
             self.parents[child.into()] = None;
             removed_contents |= self.nodes[child.into()].style.display == Display::Contents;
         }
@@ -882,13 +896,13 @@ impl<NodeContext> TaffyTree<NodeContext> {
     ) -> TaffyResult<NodeId> {
         let parent_key = parent.into();
 
-        let child_count = self.children[parent_key].len();
+        let child_count = self.children[parent_key].children.len();
         if child_index >= child_count {
             return Err(TaffyError::ChildIndexOutOfBounds { parent, child_index, child_count });
         }
 
         self.parents[new_child.into()] = Some(parent);
-        let old_child = core::mem::replace(&mut self.children[parent_key][child_index], new_child);
+        let old_child = core::mem::replace(&mut self.children[parent_key].children[child_index], new_child);
         self.parents[old_child.into()] = None;
 
         if self.is_contents(new_child) || self.is_contents(old_child) || self.needs_layout_children_update(parent) {
@@ -903,12 +917,12 @@ impl<NodeContext> TaffyTree<NodeContext> {
     #[inline]
     pub fn child_at_index(&self, parent: NodeId, child_index: usize) -> TaffyResult<NodeId> {
         let parent_key = parent.into();
-        let child_count = self.children[parent_key].len();
+        let child_count = self.children[parent_key].children.len();
         if child_index >= child_count {
             return Err(TaffyError::ChildIndexOutOfBounds { parent, child_index, child_count });
         }
 
-        Ok(self.children[parent_key][child_index])
+        Ok(self.children[parent_key].children[child_index])
     }
 
     /// Returns the total number of nodes in the tree
@@ -928,7 +942,7 @@ impl<NodeContext> TaffyTree<NodeContext> {
 
     /// Returns a list of children that belong to the parent node
     pub fn children(&self, parent: NodeId) -> TaffyResult<Vec<NodeId>> {
-        Ok(self.children[parent.into()].clone())
+        Ok(self.children[parent.into()].children.clone())
     }
 
     /// Returns the out-of-flow (absolute/fixed) boxes whose containing block is `node`, as
@@ -1000,22 +1014,11 @@ impl<NodeContext> TaffyTree<NodeContext> {
         self.nodes[node.into()].style.display == Display::Contents
     }
 
-    /// The children that `node` lays out: its children with any `display: contents` children replaced by their own layout children
-    #[inline(always)]
-    fn layout_children(&self, node: NodeId) -> &[NodeId] {
-        let key = node.into();
-        if self.nodes[key].has_contents_children {
-            &self.layout_children[&key]
-        } else {
-            &self.children[key]
-        }
-    }
-
     /// Whether a change to the children of `node` may change the layout children of it or an ancestor,
     /// even though no `display: contents` child was added or removed
     #[inline(always)]
     fn needs_layout_children_update(&self, node: NodeId) -> bool {
-        self.nodes[node.into()].has_contents_children || self.is_contents(node)
+        self.children[node.into()].layout_children.is_some() || self.is_contents(node)
     }
 
     /// Recomputes the layout children of `node`, and of each `display: contents` ancestor that it is flattened into
@@ -1023,22 +1026,21 @@ impl<NodeContext> TaffyTree<NodeContext> {
         let mut node = node;
         loop {
             let key = node.into();
-            let has_contents_child = self.children[key].iter().any(|child| self.is_contents(*child));
+            let has_contents_child = self.children[key].children.iter().any(|child| self.is_contents(*child));
             if has_contents_child {
-                let mut layout_children = self.layout_children.remove(&key).unwrap_or_default();
+                let mut layout_children = self.children[key].layout_children.take().unwrap_or_default();
                 layout_children.clear();
-                for &child in &self.children[key] {
+                for &child in &self.children[key].children {
                     if self.is_contents(child) {
-                        layout_children.extend_from_slice(self.layout_children(child));
+                        layout_children.extend_from_slice(self.children[child.into()].layout_children());
                     } else {
                         layout_children.push(child);
                     }
                 }
-                let _ = self.layout_children.insert(key, layout_children);
+                self.children[key].layout_children = Some(layout_children);
             } else {
-                let _ = self.layout_children.remove(&key);
+                self.children[key].layout_children = None;
             }
-            self.nodes[key].has_contents_children = has_contents_child;
 
             match self.parents[key] {
                 Some(parent) if self.is_contents(node) => node = parent,
