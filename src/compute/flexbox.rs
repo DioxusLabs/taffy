@@ -1452,11 +1452,41 @@ fn determine_container_main_size(
                     return f32_max(size, f32_min(max_content_size, main_axis_available_space));
                 }
 
+                // A container whose items wrapped onto multiple lines has a max-content size larger than the available space
                 if lines.len() > 1 {
-                    f32_max(size, main_axis_available_space)
-                } else {
-                    size
+                    return f32_max(size, main_axis_available_space);
                 }
+                if !constants.is_row {
+                    return size;
+                }
+
+                // Fit-content: the max-content size, limited by the available space and floored by the min-content size
+                let max_content_size = compute_intrinsic_main_size(
+                    tree,
+                    available_space.with_main(dir, AvailableSpace::MaxContent),
+                    lines,
+                    constants,
+                );
+                if max_content_size <= main_axis_available_space {
+                    return max_content_size;
+                }
+                let min_content_size = if constants.is_wrap {
+                    let longest_item = lines
+                        .iter()
+                        .flat_map(|line| line.items.iter())
+                        .map(item_main_length)
+                        .max_by(|a, b| a.total_cmp(b))
+                        .unwrap_or(0.0);
+                    longest_item + main_content_box_inset
+                } else {
+                    compute_intrinsic_main_size(
+                        tree,
+                        available_space.with_main(dir, AvailableSpace::MinContent),
+                        lines,
+                        constants,
+                    )
+                };
+                main_axis_available_space.max(min_content_size)
             }
             AvailableSpace::MinContent if constants.is_wrap && !constants.is_row => {
                 let longest_line_length: f32 = lines

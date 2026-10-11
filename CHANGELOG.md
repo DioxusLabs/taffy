@@ -4,6 +4,7 @@
 
 ### Fixes
 
+- Flexbox: size an auto-width row flex container laid out in definite available space as fit-content (its max-content size, limited by the available space and floored by its min-content size), rather than from the sum of its items' flex base sizes.
 - Flexbox: the min-content main size of a multi-line row flex container is now the largest of the items' min-content contributions (per <https://drafts.csswg.org/css-flexbox-1/#intrinsic-main-sizes-compat>) instead of being derived from the items' hypothetical main sizes, matching browsers.
 - Flexbox: an item's intrinsic main-size contribution in a row flex container is now capped/floored by its flex base size *before* being clamped by its min/max main sizes (per <https://drafts.csswg.org/css-flexbox-1/#intrinsic-item-contributions>), so min/max sizes now take precedence over the flex base size, matching browsers.
 - Flexbox: the flex base size used to cap/floor an item's intrinsic main-size contribution in a row flex container is no longer floored by the item's preferred main size, matching Chrome (e.g. `flex: 0 0 50px; width: 200px` now contributes 50px, clamped up to its 100px min-content size, rather than 200px).
