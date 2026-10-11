@@ -6552,6 +6552,7 @@ mod contain {
     }
 }
 
+#[cfg(feature = "taffy_tree_display_contents")]
 mod contents {
     #[test]
     fn contents_block_ignores_box_styles__border_box_ltr() {

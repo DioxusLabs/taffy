@@ -4,7 +4,7 @@
 
 ### Breaking
 
-- `Display` gains a `Contents` variant (CSS `display: contents`). Code that exhaustively matches on `Display` must handle it. `TaffyTree` flattens contents nodes out of the child lists that it lays out: a contents node gets an empty layout at its parent's origin, and its children are positioned relative to the nearest ancestor that is not `display: contents`. `TaffyTree::children` and `TaffyTree::parent` still return the tree as constructed. Custom trees must do the flattening themselves.
+- `Display` gains a `Contents` variant (CSS `display: contents`), behind the new default-enabled `taffy_tree_display_contents` feature (which implies `taffy_tree`). Code that exhaustively matches on `Display` must handle it. `TaffyTree` flattens contents nodes out of the child lists that it lays out: a contents node gets an empty layout at its parent's origin, and its children are positioned relative to the nearest ancestor that is not `display: contents`. `TaffyTree::children` and `TaffyTree::parent` still return the tree as constructed. Custom trees must do the flattening themselves.
 
 - The `DetailedGridInfo` track-list serializers (`grid_template_rows`, `grid_template_columns`, `write_grid_template_rows`, `write_grid_template_columns`) and `DetailedGridTracksInfo::{write_track_list, to_track_list_string}` take a `zoom: f32` argument. Track sizes are divided by it, so callers implementing CSS `zoom` get unzoomed px; pass `1.0` for the previous behaviour.
 

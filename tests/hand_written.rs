@@ -8,7 +8,7 @@ mod hand_written {
     mod caching;
     mod compressible_replaced;
     mod detailed_grid_info;
-    #[cfg(all(feature = "flexbox", feature = "block_layout"))]
+    #[cfg(all(feature = "taffy_tree_display_contents", feature = "flexbox", feature = "block_layout"))]
     mod display_contents;
     mod fit_content_calc;
     #[cfg(feature = "flexbox_balance")]

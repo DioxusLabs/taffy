@@ -267,6 +267,7 @@ pub enum Display {
     ///
     /// [`TaffyTree`](crate::TaffyTree) flattens contents nodes out of the child lists it gives to the layout algorithms.
     /// Custom trees must do the same.
+    #[cfg(feature = "taffy_tree_display_contents")]
     Contents,
     /// The node is hidden, and it's children will also be hidden
     None,
@@ -299,6 +300,7 @@ impl Default for Display {
 #[cfg(feature = "parse")]
 crate::util::parse::impl_parse_for_keyword_enum!(Display,
     "none" => None,
+    #[cfg(feature = "taffy_tree_display_contents")]
     "contents" => Contents,
     #[cfg(feature = "flexbox")]
     "flex" => Flex,
@@ -314,6 +316,7 @@ impl core::fmt::Display for Display {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
             Display::None => write!(f, "NONE"),
+            #[cfg(feature = "taffy_tree_display_contents")]
             Display::Contents => write!(f, "CONTENTS"),
             #[cfg(feature = "block_layout")]
             Display::Block => write!(f, "BLOCK"),
@@ -979,7 +982,12 @@ impl<S: CheapCloneStr> CoreStyle for Style<S> {
     #[cfg(feature = "block_layout")]
     fn is_block(&self) -> bool {
         // A contents node is only laid out if it is the root, in which case it computes to `display: block`
-        matches!(self.display, Display::Block | Display::Contents)
+        match self.display {
+            Display::Block => true,
+            #[cfg(feature = "taffy_tree_display_contents")]
+            Display::Contents => true,
+            _ => false,
+        }
     }
     #[inline(always)]
     fn is_compressible_replaced(&self) -> bool {

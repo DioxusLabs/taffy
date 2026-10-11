@@ -150,23 +150,43 @@ struct NodeChildren {
     children: ChildrenVec<NodeId>,
     /// The node's children with any `display: contents` children replaced by their own layout children.
     /// `None` if the node has no `display: contents` children, in which case these are `children`.
+    #[cfg(feature = "taffy_tree_display_contents")]
     layout_children: Option<Box<ChildrenVec<NodeId>>>,
 }
 
 impl NodeChildren {
     /// Create the children of a node with no `display: contents` children
     fn new(children: ChildrenVec<NodeId>) -> Self {
-        Self { children, layout_children: None }
+        Self {
+            children,
+            #[cfg(feature = "taffy_tree_display_contents")]
+            layout_children: None,
+        }
     }
 
     /// The children that the node lays out
     #[inline(always)]
     fn layout_children(&self) -> &[NodeId] {
-        match &self.layout_children {
-            Some(layout_children) => layout_children,
-            None => &self.children,
+        #[cfg(feature = "taffy_tree_display_contents")]
+        if let Some(layout_children) = &self.layout_children {
+            return layout_children;
         }
+        &self.children
     }
+}
+
+/// Whether the node is `display: contents`
+#[cfg(feature = "taffy_tree_display_contents")]
+#[inline(always)]
+fn node_is_contents(nodes: &SlotMap<DefaultKey, NodeData>, key: DefaultKey) -> bool {
+    nodes[key].style.display == Display::Contents
+}
+
+/// Whether the node is `display: contents`
+#[cfg(not(feature = "taffy_tree_display_contents"))]
+#[inline(always)]
+fn node_is_contents(_nodes: &SlotMap<DefaultKey, NodeData>, _key: DefaultKey) -> bool {
+    false
 }
 
 /// An entire tree of UI nodes. The entry point to Taffy's high-level API.
@@ -262,6 +282,7 @@ impl<NodeContext> PrintTree for TaffyTree<NodeContext> {
 
         match (num_children, display) {
             (_, Display::None) => "NONE",
+            #[cfg(feature = "taffy_tree_display_contents")]
             (_, Display::Contents) => "CONTENTS",
             (0, _) => "LEAF",
             #[cfg(feature = "block_layout")]
@@ -341,10 +362,12 @@ where
                 (Display::None, _) => compute_hidden_layout(tree, node_id),
                 // Contents nodes are flattened out of child lists, so are only laid out here if they are the root,
                 // in which case they compute to `display: block`
-                #[cfg(feature = "block_layout")]
-                (Display::Block | Display::Contents, true) => compute_block_layout(tree, node_id, inputs, block_ctx),
-                #[cfg(not(feature = "block_layout"))]
+                #[cfg(all(feature = "taffy_tree_display_contents", feature = "block_layout"))]
+                (Display::Contents, true) => compute_block_layout(tree, node_id, inputs, block_ctx),
+                #[cfg(all(feature = "taffy_tree_display_contents", not(feature = "block_layout")))]
                 (Display::Contents, true) => compute_hidden_layout(tree, node_id),
+                #[cfg(feature = "block_layout")]
+                (Display::Block, true) => compute_block_layout(tree, node_id, inputs, block_ctx),
                 #[cfg(feature = "block_layout")]
                 (Display::FlowRoot, true) => compute_block_layout(tree, node_id, inputs, None),
                 #[cfg(feature = "flexbox")]
@@ -875,7 +898,7 @@ impl<NodeContext> TaffyTree<NodeContext> {
         let mut removed_contents = false;
         for child in self.children[parent_key].children.drain(range) {
             self.parents[child.into()] = None;
-            removed_contents |= self.nodes[child.into()].style.display == Display::Contents;
+            removed_contents |= node_is_contents(&self.nodes, child.into());
         }
 
         if removed_contents || self.needs_layout_children_update(parent) {
@@ -1011,17 +1034,27 @@ impl<NodeContext> TaffyTree<NodeContext> {
     /// Whether the node is `display: contents`
     #[inline(always)]
     fn is_contents(&self, node: NodeId) -> bool {
-        self.nodes[node.into()].style.display == Display::Contents
+        node_is_contents(&self.nodes, node.into())
     }
 
     /// Whether a change to the children of `node` may change the layout children of it or an ancestor,
     /// even though no `display: contents` child was added or removed
+    #[cfg(feature = "taffy_tree_display_contents")]
     #[inline(always)]
     fn needs_layout_children_update(&self, node: NodeId) -> bool {
         self.children[node.into()].layout_children.is_some() || self.is_contents(node)
     }
 
+    /// Whether a change to the children of `node` may change the layout children of it or an ancestor,
+    /// even though no `display: contents` child was added or removed
+    #[cfg(not(feature = "taffy_tree_display_contents"))]
+    #[inline(always)]
+    fn needs_layout_children_update(&self, _node: NodeId) -> bool {
+        false
+    }
+
     /// Recomputes the layout children of `node`, and of each `display: contents` ancestor that it is flattened into
+    #[cfg(feature = "taffy_tree_display_contents")]
     fn update_layout_children(&mut self, node: NodeId) {
         let mut node = node;
         loop {
@@ -1049,6 +1082,11 @@ impl<NodeContext> TaffyTree<NodeContext> {
         }
     }
 
+    /// Recomputes the layout children of `node`, and of each `display: contents` ancestor that it is flattened into
+    #[cfg(not(feature = "taffy_tree_display_contents"))]
+    #[inline(always)]
+    fn update_layout_children(&mut self, _node: NodeId) {}
+
     /// Marks the layout of this node and its ancestors as outdated
     pub fn mark_dirty(&mut self, node: NodeId) -> TaffyResult<()> {
         fn mark_dirty_recursive(
@@ -1058,7 +1096,7 @@ impl<NodeContext> TaffyTree<NodeContext> {
         ) {
             match nodes[node_key].mark_dirty() {
                 // A `display: contents` node is never laid out, so its cache is always empty
-                ClearState::AlreadyEmpty if nodes[node_key].style.display != Display::Contents => {
+                ClearState::AlreadyEmpty if !node_is_contents(nodes, node_key) => {
                     // Node was already marked as dirty.
                     // No need to visit ancestors
                     // as they should be marked as dirty already.
