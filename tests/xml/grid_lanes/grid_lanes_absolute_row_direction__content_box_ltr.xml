@@ -1,0 +1,25 @@
+<test name="grid_lanes_absolute_row_direction__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid-lanes" box-sizing="content-box" direction="ltr" position="relative" width="100px" height="140px" row-gap="10px" column-gap="10px" padding-top="5px" padding-left="5px" padding-bottom="5px" padding-right="5px" grid-lanes-direction="row" fit-tolerance="10px" grid-template-rows="40px 40px 40px">
+      <div box-sizing="content-box" direction="ltr" position="relative" width="30px"/>
+      <div box-sizing="content-box" direction="ltr" position="relative" width="20px"/>
+      <div box-sizing="content-box" direction="ltr" position="relative" width="10px"/>
+      <div box-sizing="content-box" direction="ltr" position="absolute" top="0px" left="0px" bottom="0px" right="0px" grid-row-start="2" grid-row-end="3"/>
+      <div box-sizing="content-box" direction="ltr" position="absolute" width="20px" height="20px" top="10px" left="10px" grid-row-start="1" grid-row-end="3"/>
+      <div box-sizing="content-box" direction="ltr" position="absolute" align-self="center" justify-self="end" width="20px" height="20px" grid-row-start="3" grid-row-end="4"/>
+      <div box-sizing="content-box" direction="ltr" position="absolute" justify-self="end" width="20px" height="20px" grid-column-start="1" grid-column-end="2"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="110" height="150">
+      <node x="5" y="5" width="30" height="40"/>
+      <node x="5" y="55" width="20" height="40"/>
+      <node x="5" y="105" width="10" height="40"/>
+      <node x="0" y="55" width="110" height="40"/>
+      <node x="10" y="15" width="20" height="20"/>
+      <node x="90" y="115" width="20" height="20"/>
+      <node x="90" y="0" width="20" height="20"/>
+    </node>
+  </expectations>
+</test>
