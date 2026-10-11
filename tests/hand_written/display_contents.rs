@@ -194,3 +194,62 @@ fn contents_root_is_laid_out_as_block() {
     assert_eq!(taffy.layout(a).unwrap().location, Point { x: 0.0, y: 0.0 });
     assert_eq!(taffy.layout(b).unwrap().location, Point { x: 0.0, y: 10.0 });
 }
+
+#[test]
+fn switching_a_wrapper_back_to_a_box_rebuilds_its_layout_children() {
+    let mut taffy = new_test_tree();
+    let a = leaf(&mut taffy, 10.0);
+    let b = leaf(&mut taffy, 20.0);
+    let inner = contents(&mut taffy, &[a]);
+    let wrapper = taffy.new_with_children(Style { display: Display::Flex, ..Default::default() }, &[inner]).unwrap();
+    let root = flex_row(&mut taffy, &[wrapper]);
+    taffy.compute_layout(root, Size::MAX_CONTENT).unwrap();
+    assert_eq!(taffy.layout(wrapper).unwrap().size.width, 10.0);
+
+    taffy.set_style(wrapper, Style { display: Display::Contents, ..Default::default() }).unwrap();
+    taffy.add_child(wrapper, b).unwrap();
+    taffy.remove(a).unwrap();
+    taffy.set_style(wrapper, Style { display: Display::Flex, ..Default::default() }).unwrap();
+    taffy.compute_layout(root, Size::MAX_CONTENT).unwrap();
+    assert_eq!(taffy.layout(wrapper).unwrap().size.width, 20.0);
+    assert_eq!(x(&taffy, b), 0.0);
+}
+
+#[test]
+fn former_contents_root_is_reset_when_given_a_parent() {
+    let mut taffy = new_test_tree();
+    let a = leaf(&mut taffy, 10.0);
+    let b = leaf(&mut taffy, 20.0);
+    let wrapper = contents(&mut taffy, &[a, b]);
+    taffy.compute_layout(wrapper, Size::MAX_CONTENT).unwrap();
+    assert_eq!(taffy.layout(wrapper).unwrap().size, Size { width: 20.0, height: 20.0 });
+    assert_eq!(taffy.layout(b).unwrap().location, Point { x: 0.0, y: 10.0 });
+
+    let root = flex_row(&mut taffy, &[wrapper]);
+    assert_eq!(*taffy.layout(wrapper).unwrap(), Layout::new());
+    taffy.compute_layout(root, Size::MAX_CONTENT).unwrap();
+    assert_eq!(*taffy.layout(wrapper).unwrap(), Layout::new());
+    assert_eq!(taffy.layout(b).unwrap().location, Point { x: 10.0, y: 0.0 });
+
+    // The block layout from before must not be served from the cache
+    taffy.remove_child(root, wrapper).unwrap();
+    taffy.compute_layout(wrapper, Size::MAX_CONTENT).unwrap();
+    assert_eq!(taffy.layout(wrapper).unwrap().size, Size { width: 20.0, height: 20.0 });
+    assert_eq!(taffy.layout(b).unwrap().location, Point { x: 0.0, y: 10.0 });
+}
+
+#[test]
+fn computing_an_attached_contents_node_uses_its_current_children() {
+    let mut taffy = new_test_tree();
+    let a = leaf(&mut taffy, 10.0);
+    let b = leaf(&mut taffy, 20.0);
+    let inner = contents(&mut taffy, &[a]);
+    let outer = contents(&mut taffy, &[inner]);
+    let root = flex_row(&mut taffy, &[outer]);
+    taffy.compute_layout(root, Size::MAX_CONTENT).unwrap();
+
+    taffy.add_child(inner, b).unwrap();
+    taffy.compute_layout(outer, Size::MAX_CONTENT).unwrap();
+    assert_eq!(taffy.layout(outer).unwrap().size.height, 20.0);
+    assert_eq!(taffy.layout(b).unwrap().location, Point { x: 0.0, y: 10.0 });
+}
