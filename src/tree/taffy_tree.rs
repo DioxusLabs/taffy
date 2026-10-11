@@ -143,15 +143,25 @@ impl NodeData {
     }
 }
 
-/// The children of a node
+/// The children that a node with `display: contents` children lays out
+#[cfg(feature = "taffy_tree_display_contents")]
 #[derive(Debug, Clone, PartialEq, Default)]
+struct LayoutChildren {
+    /// The node's children with each `display: contents` child replaced by its own layout children
+    children: ChildrenVec<NodeId>,
+    /// Whether `children` is out of date. Set by the mutators, and cleared when the list is rebuilt before the next layout.
+    dirty: bool,
+}
+
+/// The children of a node
+#[derive(Debug, Clone, PartialEq)]
 struct NodeChildren {
     /// The node's actual children
     children: ChildrenVec<NodeId>,
-    /// The node's children with any `display: contents` children replaced by their own layout children.
-    /// `None` if the node has no `display: contents` children, in which case these are `children`.
+    /// The children that the node lays out. `None` if the node has no `display: contents` children,
+    /// in which case these are `children`.
     #[cfg(feature = "taffy_tree_display_contents")]
-    layout_children: Option<Box<ChildrenVec<NodeId>>>,
+    layout_children: Option<Box<LayoutChildren>>,
 }
 
 impl NodeChildren {
@@ -169,7 +179,7 @@ impl NodeChildren {
     fn layout_children(&self) -> &[NodeId] {
         #[cfg(feature = "taffy_tree_display_contents")]
         if let Some(layout_children) = &self.layout_children {
-            return layout_children;
+            return &layout_children.children;
         }
         &self.children
     }
@@ -209,6 +219,11 @@ pub struct TaffyTree<NodeContext = ()> {
     ///
     /// The indexes in the outer vector correspond to the position of the child [`NodeData`]
     parents: SlotMap<DefaultKey, Option<NodeId>>,
+
+    /// Nodes whose layout children are out of date and are rebuilt before the next layout.
+    /// A node is in this list exactly when its `LayoutChildren::dirty` flag is set.
+    #[cfg(feature = "taffy_tree_display_contents")]
+    dirty_layout_children: Vec<NodeId>,
 
     /// Layout mode configuration
     config: TaffyConfig,
@@ -656,6 +671,8 @@ impl<NodeContext> TaffyTree<NodeContext> {
             children: SlotMap::with_capacity(capacity),
             parents: SlotMap::with_capacity(capacity),
             node_context_data: SecondaryMap::with_capacity(capacity),
+            #[cfg(feature = "taffy_tree_display_contents")]
+            dirty_layout_children: Vec::new(),
             config: TaffyConfig::default(),
         }
     }
@@ -709,7 +726,7 @@ impl<NodeContext> TaffyTree<NodeContext> {
         let _ = self.parents.insert(None);
 
         if has_contents_child {
-            self.update_layout_children(id);
+            self.mark_layout_children_dirty(id);
         }
 
         Ok(id)
@@ -720,6 +737,8 @@ impl<NodeContext> TaffyTree<NodeContext> {
         self.nodes.clear();
         self.children.clear();
         self.parents.clear();
+        #[cfg(feature = "taffy_tree_display_contents")]
+        self.dirty_layout_children.clear();
         // A context belongs to the node that owns it. Leaving it behind keeps arbitrary
         // user data -- for a measure function, a boxed closure and everything it
         // captures -- alive after the node it belonged to is gone.
@@ -736,7 +755,7 @@ impl<NodeContext> TaffyTree<NodeContext> {
                 children.children.retain(|f| *f != node);
             }
             if self.is_contents(node) || self.needs_layout_children_update(parent) {
-                self.update_layout_children(parent);
+                self.mark_layout_children_dirty(parent);
             }
             self.mark_dirty(parent)?;
         }
@@ -800,7 +819,7 @@ impl<NodeContext> TaffyTree<NodeContext> {
         self.parents[child_key] = Some(parent);
         self.children[parent_key].children.push(child);
         if self.is_contents(child) || self.needs_layout_children_update(parent) {
-            self.update_layout_children(parent);
+            self.mark_layout_children_dirty(parent);
         }
         self.mark_dirty(parent)?;
 
@@ -819,7 +838,7 @@ impl<NodeContext> TaffyTree<NodeContext> {
         self.parents[child.into()] = Some(parent);
         self.children[parent_key].children.insert(child_index, child);
         if self.is_contents(child) || self.needs_layout_children_update(parent) {
-            self.update_layout_children(parent);
+            self.mark_layout_children_dirty(parent);
         }
         self.mark_dirty(parent)?;
 
@@ -849,7 +868,7 @@ impl<NodeContext> TaffyTree<NodeContext> {
         children.iter().for_each(|child| parent_children.push(*child));
 
         if children.iter().any(|child| self.is_contents(*child)) || self.needs_layout_children_update(parent) {
-            self.update_layout_children(parent);
+            self.mark_layout_children_dirty(parent);
         }
         self.mark_dirty(parent)?;
 
@@ -878,7 +897,7 @@ impl<NodeContext> TaffyTree<NodeContext> {
         self.parents[child.into()] = None;
 
         if self.is_contents(child) || self.needs_layout_children_update(parent) {
-            self.update_layout_children(parent);
+            self.mark_layout_children_dirty(parent);
         }
         self.mark_dirty(parent)?;
 
@@ -902,7 +921,7 @@ impl<NodeContext> TaffyTree<NodeContext> {
         }
 
         if removed_contents || self.needs_layout_children_update(parent) {
-            self.update_layout_children(parent);
+            self.mark_layout_children_dirty(parent);
         }
         self.mark_dirty(parent)?;
         Ok(())
@@ -929,7 +948,7 @@ impl<NodeContext> TaffyTree<NodeContext> {
         self.parents[old_child.into()] = None;
 
         if self.is_contents(new_child) || self.is_contents(old_child) || self.needs_layout_children_update(parent) {
-            self.update_layout_children(parent);
+            self.mark_layout_children_dirty(parent);
         }
         self.mark_dirty(parent)?;
 
@@ -993,7 +1012,7 @@ impl<NodeContext> TaffyTree<NodeContext> {
                 data.detailed_layout_info = DetailedLayoutInfo::None;
             }
             if let Some(parent) = self.parents[key] {
-                self.update_layout_children(parent);
+                self.mark_layout_children_dirty(parent);
                 self.mark_dirty(parent)?;
             }
         }
@@ -1053,39 +1072,65 @@ impl<NodeContext> TaffyTree<NodeContext> {
         false
     }
 
-    /// Recomputes the layout children of `node`, and of each `display: contents` ancestor that it is flattened into
+    /// Marks the layout children of `node`, or of the nearest ancestor that is not `display: contents`,
+    /// as out of date. They are rebuilt before the next layout.
     #[cfg(feature = "taffy_tree_display_contents")]
-    fn update_layout_children(&mut self, node: NodeId) {
+    fn mark_layout_children_dirty(&mut self, node: NodeId) {
         let mut node = node;
-        loop {
-            let key = node.into();
-            let has_contents_child = self.children[key].children.iter().any(|child| self.is_contents(*child));
-            if has_contents_child {
-                let mut layout_children = self.children[key].layout_children.take().unwrap_or_default();
-                layout_children.clear();
-                for &child in &self.children[key].children {
-                    if self.is_contents(child) {
-                        layout_children.extend_from_slice(self.children[child.into()].layout_children());
-                    } else {
-                        layout_children.push(child);
-                    }
-                }
-                self.children[key].layout_children = Some(layout_children);
-            } else {
-                self.children[key].layout_children = None;
+        while self.is_contents(node) {
+            match self.parents[node.into()] {
+                Some(parent) => node = parent,
+                None => break,
             }
-
-            match self.parents[key] {
-                Some(parent) if self.is_contents(node) => node = parent,
-                _ => break,
-            }
+        }
+        let layout_children = self.children[node.into()].layout_children.get_or_insert_with(Default::default);
+        if !layout_children.dirty {
+            layout_children.dirty = true;
+            self.dirty_layout_children.push(node);
         }
     }
 
-    /// Recomputes the layout children of `node`, and of each `display: contents` ancestor that it is flattened into
+    /// Marks the layout children of `node`, or of the nearest ancestor that is not `display: contents`,
+    /// as out of date. They are rebuilt before the next layout.
     #[cfg(not(feature = "taffy_tree_display_contents"))]
     #[inline(always)]
-    fn update_layout_children(&mut self, _node: NodeId) {}
+    fn mark_layout_children_dirty(&mut self, _node: NodeId) {}
+
+    /// Rebuilds the layout children of every node marked by [`Self::mark_layout_children_dirty`]
+    #[cfg(feature = "taffy_tree_display_contents")]
+    fn update_layout_children(&mut self) {
+        while let Some(node) = self.dirty_layout_children.pop() {
+            let key = node.into();
+            // The node may have been removed since it was marked
+            let Some(node_children) = self.children.get_mut(key) else { continue };
+            let Some(mut layout_children) = node_children.layout_children.take() else { continue };
+            layout_children.children.clear();
+            layout_children.dirty = false;
+            let has_contents_child = self.collect_layout_children(node, &mut layout_children.children);
+            self.children[key].layout_children = has_contents_child.then_some(layout_children);
+        }
+    }
+
+    /// Rebuilds the layout children of every node marked by [`Self::mark_layout_children_dirty`]
+    #[cfg(not(feature = "taffy_tree_display_contents"))]
+    #[inline(always)]
+    fn update_layout_children(&mut self) {}
+
+    /// Appends the layout children of `node` to `out`: its children with each `display: contents` child
+    /// replaced by its own layout children. Returns whether `node` has a `display: contents` child.
+    #[cfg(feature = "taffy_tree_display_contents")]
+    fn collect_layout_children(&self, node: NodeId, out: &mut ChildrenVec<NodeId>) -> bool {
+        let mut has_contents_child = false;
+        for &child in &self.children[node.into()].children {
+            if self.is_contents(child) {
+                has_contents_child = true;
+                self.collect_layout_children(child, out);
+            } else {
+                out.push(child);
+            }
+        }
+        has_contents_child
+    }
 
     /// Marks the layout of this node and its ancestors as outdated
     pub fn mark_dirty(&mut self, node: NodeId) -> TaffyResult<()> {
@@ -1130,6 +1175,12 @@ impl<NodeContext> TaffyTree<NodeContext> {
     where
         MeasureFunction: FnMut(LayoutInput, NodeId, Option<&mut NodeContext>, &Style) -> LayoutOutput,
     {
+        // A `display: contents` root is laid out as a block, so it needs its own layout children.
+        // Mutations only keep those current while it has no parent, so they may be stale if it was detached.
+        if self.is_contents(node_id) {
+            self.mark_layout_children_dirty(node_id);
+        }
+        self.update_layout_children();
         let use_rounding = self.config.use_rounding;
         let mut taffy_view = TaffyView { taffy: self, measure_function };
         compute_root_layout(&mut taffy_view, node_id, available_space);
@@ -1155,6 +1206,7 @@ impl<NodeContext> TaffyTree<NodeContext> {
     /// Returns an instance of LayoutTree representing the TaffyTree
     #[cfg(test)]
     pub(crate) fn as_layout_tree(&mut self) -> impl LayoutPartialTree + CacheTree + '_ {
+        self.update_layout_children();
         TaffyView {
             taffy: self,
             measure_function: |inputs, _, _, style| compute_leaf_layout(inputs, style, |_, _| 0.0, |_, _| Size::ZERO),

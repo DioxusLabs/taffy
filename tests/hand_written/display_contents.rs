@@ -126,6 +126,60 @@ fn child_list_changes_inside_contents_update_box_parent() {
 }
 
 #[test]
+fn removing_a_node_with_pending_layout_children_update_is_harmless() {
+    let mut taffy = new_test_tree();
+    let a = leaf(&mut taffy, 10.0);
+    let b = leaf(&mut taffy, 20.0);
+    let wrapper = contents(&mut taffy, &[a]);
+    let removed = flex_row(&mut taffy, &[wrapper]);
+    taffy.add_child(removed, b).unwrap();
+    taffy.remove(removed).unwrap();
+
+    let root = flex_row(&mut taffy, &[wrapper, b]);
+    taffy.compute_layout(root, Size::MAX_CONTENT).unwrap();
+    assert_eq!((x(&taffy, a), x(&taffy, b)), (0.0, 10.0));
+}
+
+#[test]
+fn toggling_display_contents_under_a_contents_parent_updates_box_ancestor() {
+    let mut taffy = new_test_tree();
+    let a = leaf(&mut taffy, 10.0);
+    let b = leaf(&mut taffy, 20.0);
+    let inner = taffy
+        .new_with_children(Style { size: Size { width: length(100.0), height: auto() }, ..Default::default() }, &[a])
+        .unwrap();
+    let outer = contents(&mut taffy, &[inner]);
+    let root = flex_row(&mut taffy, &[outer, b]);
+    taffy.compute_layout(root, Size::MAX_CONTENT).unwrap();
+    assert_eq!(x(&taffy, b), 100.0);
+
+    taffy.set_style(inner, Style { display: Display::Contents, ..Default::default() }).unwrap();
+    taffy.compute_layout(root, Size::MAX_CONTENT).unwrap();
+    assert_eq!((x(&taffy, a), x(&taffy, b)), (0.0, 10.0));
+}
+
+#[test]
+fn detached_contents_node_lays_out_its_current_children_as_root() {
+    let mut taffy = new_test_tree();
+    let a = leaf(&mut taffy, 10.0);
+    let b = leaf(&mut taffy, 20.0);
+    let inner = contents(&mut taffy, &[a]);
+    let outer = contents(&mut taffy, &[inner]);
+    taffy.compute_layout(outer, Size::MAX_CONTENT).unwrap();
+    assert_eq!(taffy.layout(outer).unwrap().size.height, 10.0);
+
+    let root = flex_row(&mut taffy, &[outer]);
+    taffy.add_child(inner, b).unwrap();
+    taffy.compute_layout(root, Size::MAX_CONTENT).unwrap();
+    assert_eq!(x(&taffy, b), 10.0);
+
+    taffy.remove_child(root, outer).unwrap();
+    taffy.compute_layout(outer, Size::MAX_CONTENT).unwrap();
+    assert_eq!(taffy.layout(outer).unwrap().size.height, 20.0);
+    assert_eq!(taffy.layout(b).unwrap().location.y, 10.0);
+}
+
+#[test]
 fn contents_root_is_laid_out_as_block() {
     let mut taffy = new_test_tree();
     let a = leaf(&mut taffy, 10.0);
