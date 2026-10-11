@@ -4,8 +4,7 @@
 //! "stacking axis") by placing each one into the shortest run of tracks it can span.
 //! Shares the explicit-grid, track-sizing and item-positioning machinery of [`super::compute_grid_layout`].
 //!
-//! Current limitations: auto-placed items do not contribute to intrinsic track sizes (spec §3.4),
-//! no dense packing (§4.3), no stacking-axis alignment other than start (§6.3/§6.4), no baselines
+//! Current limitations: no dense packing (§4.3), no stacking-axis alignment other than start (§6.3/§6.4), no baselines
 //! (§6.5) and no detailed layout info.
 use super::alignment::{align_and_position_item, align_tracks};
 use super::explicit_grid::{compute_explicit_grid_size_in_axis, initialize_grid_tracks, AutoRepeatStrategy};
@@ -13,7 +12,7 @@ use super::placement::ItemPlacement;
 use super::track_sizing::{
     determine_if_item_crosses_flexible_or_intrinsic_tracks, resolve_item_track_indexes, track_sizing_algorithm,
 };
-use super::types::{GridItem, GridTrack, NamedLineResolver, TrackCounts};
+use super::types::{GridItem, GridTrack, NamedLineResolver, OriginZeroLine, TrackCounts};
 use super::{compute_container_constants, resolve_static_position_grid_area, GridContainerConstants, MAX_GRID_TRACKS};
 use crate::geometry::{AbsoluteAxis, AbstractAxis, InBothAbsAxis, Line, Point, Rect, Size};
 use crate::style::{AlignSelf, OriginZeroGridPlacement};
@@ -22,10 +21,10 @@ use crate::tree::{
     OofCandidates, OofPositioningArea, RunMode, SizingMode,
 };
 use crate::util::sys::{f32_max, f32_min, GridTrackVec, Vec};
-use crate::util::{MaybeMath, ResolveOrZero};
+use crate::util::{MaybeMath, MaybeResolve, ResolveOrZero};
 use crate::{
-    style_helpers::*, BoxGenerationMode, CoreStyle, GridContainerStyle, GridItemStyle, LayoutGridContainer,
-    LengthPercentage, MaxTrackSizingFunction, MinTrackSizingFunction, RequestedAxis,
+    style_helpers::*, BoxGenerationMode, BoxSizing, CoreStyle, GridContainerStyle, GridItemStyle, LayoutGridContainer,
+    LengthPercentage, MaxTrackSizingFunction, MinTrackSizingFunction, Overflow, RequestedAxis,
 };
 
 /// Where an item ended up in the grid axis and the stacking axis
@@ -63,6 +62,187 @@ fn axis_sum(rect: Rect<f32>, axis: AbsoluteAxis) -> f32 {
 #[inline(always)]
 fn max_running_position(running_positions: &[f32], start: usize, span: usize) -> f32 {
     running_positions[start..start + span].iter().copied().fold(0.0, f32_max)
+}
+
+/// The largest grid-axis size contributions (margins included) of the auto-placed items sharing a span.
+/// One virtual item per possible start line stands in for the group during track sizing (spec §3.4.2).
+struct ItemGroup {
+    /// Node of one of the group's items. Never laid out: the virtual items' contribution caches are pre-filled.
+    node: NodeId,
+    /// Grid-axis span shared by the items
+    span: u16,
+    /// Largest min-content contribution
+    min_content: f32,
+    /// Largest max-content contribution
+    max_content: f32,
+    /// Largest minimum contribution among items whose minimum does not depend on the spanned tracks
+    /// (definite preferred or minimum size, or scroll containers)
+    explicit_minimum: f32,
+    /// Largest content-based automatic minimum among items whose minimum depends on the spanned tracks
+    content_minimum: Option<ContentMinimum>,
+}
+
+/// A content-based automatic minimum before the fixed-track limit clamp, with the margin and the
+/// padding + border (the clamp's floor) that go with it
+#[derive(Copy, Clone)]
+struct ContentMinimum {
+    /// Content-based minimum contribution
+    contribution: f32,
+    /// Grid-axis margin sum
+    margin: f32,
+    /// Grid-axis padding + border sum
+    padding_border: f32,
+}
+
+/// Group the auto-placed items by span and measure their grid-axis contributions (spec §3.4.2 steps 1 and 2).
+/// Items are measured with an indefinite grid area, as they would be when contributing to intrinsic tracks.
+fn collect_item_groups(
+    tree: &mut impl LayoutGridContainer,
+    items: &mut [GridItem],
+    g_axis: AbstractAxis,
+    inner_node_size: Size<Option<f32>>,
+) -> Vec<ItemGroup> {
+    let mut groups: Vec<ItemGroup> = Vec::new();
+    for item in items.iter_mut() {
+        let span = item.span(g_axis);
+        let margin = item.margins_axis_sums_with_baseline_shims(None, tree).get(g_axis);
+        // Contributions are measured under min-/max-content in the grid axis, as in the shared track sizing, and at
+        // the stacking-axis content-box size when it is definite, as the definitely placed items are
+        let available_space = inner_node_size.with(g_axis, None);
+        let grid_area_size = Size::NONE.with(g_axis.other(), inner_node_size.get(g_axis.other()));
+        let min_content = item.min_content_contribution_cached(g_axis, tree, grid_area_size, available_space);
+        let max_content = item.max_content_contribution_cached(g_axis, tree, grid_area_size, available_space);
+        let padding_border = item.padding_border_size(tree, Size::NONE);
+        let explicit_minimum = item.explicit_minimum_contribution(tree, g_axis, Size::NONE, padding_border);
+        let content_minimum = if explicit_minimum.is_some() {
+            None
+        } else {
+            // Compressible replaced elements cap their content-based minimum at their definite preferred and
+            // maximum sizes, with indefinite percentages resolved against zero
+            let mut content_minimum = min_content;
+            if item.is_compressible_replaced {
+                let size = item.size.get(g_axis).maybe_resolve(Some(0.0), |val, basis| tree.calc(val, basis));
+                let max_size = item.max_size.get(g_axis).maybe_resolve(Some(0.0), |val, basis| tree.calc(val, basis));
+                content_minimum = content_minimum.maybe_min(size).maybe_min(max_size);
+            }
+            Some(ContentMinimum { contribution: content_minimum, margin, padding_border: padding_border.get(g_axis) })
+        };
+
+        let group = match groups.iter_mut().position(|group| group.span == span) {
+            Some(index) => &mut groups[index],
+            None => {
+                groups.push(ItemGroup {
+                    node: item.node,
+                    span,
+                    min_content: 0.0,
+                    max_content: 0.0,
+                    explicit_minimum: 0.0,
+                    content_minimum: None,
+                });
+                groups.last_mut().unwrap()
+            }
+        };
+        group.min_content = f32_max(group.min_content, min_content + margin);
+        group.max_content = f32_max(group.max_content, max_content + margin);
+        if let Some(explicit_minimum) = explicit_minimum {
+            group.explicit_minimum = f32_max(group.explicit_minimum, explicit_minimum + margin);
+        }
+        if let Some(content_minimum) = content_minimum {
+            group.content_minimum = Some(match group.content_minimum {
+                Some(largest) => ContentMinimum {
+                    contribution: f32_max(largest.contribution, content_minimum.contribution),
+                    margin: f32_max(largest.margin, content_minimum.margin),
+                    padding_border: f32_max(largest.padding_border, content_minimum.padding_border),
+                },
+                None => content_minimum,
+            });
+        }
+    }
+    groups
+}
+
+impl ItemGroup {
+    /// Synthesize the group's virtual item for the grid-axis tracks `g_lines` (spec §3.4.2 step 3). The item has
+    /// no styles of its own: the contribution caches are pre-filled, so track sizing never reaches the tree.
+    #[allow(clippy::too_many_arguments)]
+    fn virtual_item(
+        &self,
+        tree: &mut impl LayoutGridContainer,
+        grid_axis: AbsoluteAxis,
+        g_axis: AbstractAxis,
+        g_tracks: &[GridTrack],
+        g_lines: Line<OriginZeroLine>,
+        g_indexes: Line<u16>,
+        s_lines: Line<OriginZeroLine>,
+        inner_node_size: Size<Option<f32>>,
+    ) -> GridItem {
+        let s_indexes = Line { start: 0, end: 2 };
+        let (row, column, row_indexes, column_indexes) = match grid_axis {
+            AbsoluteAxis::Horizontal => (s_lines, g_lines, s_indexes, g_indexes),
+            AbsoluteAxis::Vertical => (g_lines, s_lines, g_indexes, s_indexes),
+        };
+        let mut item = GridItem {
+            node: self.node,
+            source_order: u16::MAX,
+            row,
+            column,
+            is_compressible_replaced: false,
+            overflow: Point { x: Overflow::Visible, y: Overflow::Visible },
+            box_sizing: BoxSizing::BorderBox,
+            size: Size::auto(),
+            min_size: Size::auto(),
+            max_size: Size::auto(),
+            aspect_ratio: None,
+            padding: Rect::zero(),
+            border: Rect::zero(),
+            margin: Rect::zero(),
+            align_self: AlignSelf::START,
+            justify_self: AlignSelf::START,
+            baseline: None,
+            baseline_shim: 0.0,
+            row_indexes,
+            column_indexes,
+            crosses_flexible_row: false,
+            crosses_flexible_column: false,
+            crosses_intrinsic_row: false,
+            crosses_intrinsic_column: false,
+            grid_area_size_cache: None,
+            known_dimensions_cache: None,
+            min_content_contribution_cache: Size::NONE.with(g_axis, Some(self.min_content)),
+            minimum_contribution_cache: Size::NONE,
+            max_content_contribution_cache: Size::NONE.with(g_axis, Some(self.max_content)),
+            y_position: 0.0,
+            height: 0.0,
+            oof_candidates: OofCandidates::NONE,
+        };
+
+        // The automatic minimum size depends on the spanned tracks (css-grid-1 §6.6), so it is resolved per copy:
+        // the content-based minimum applies if the item spans an auto-min track and, when spanning several
+        // tracks, no flexible track. It is clamped by the sum of fixed max track sizing functions, floored at the
+        // item's padding + border.
+        let spanned_tracks = &g_tracks[item.track_range_excluding_lines(g_axis)];
+        let spans_auto_min_track = spanned_tracks
+            .iter()
+            .any(|track| track.min_track_sizing_function.behaves_as_auto(inner_node_size.get(g_axis)));
+        let use_content_based_minimum = spans_auto_min_track
+            && (spanned_tracks.len() == 1
+                || !spanned_tracks.iter().any(|track| track.max_track_sizing_function.is_fr()));
+        let minimum = match self.content_minimum {
+            Some(ContentMinimum { contribution, margin, padding_border }) if use_content_based_minimum => {
+                let limit =
+                    item.spanned_fixed_track_limit(g_axis, g_tracks, inner_node_size.get(g_axis), &|val, basis| {
+                        tree.resolve_calc_value(val, basis)
+                    });
+                f32_max(
+                    self.explicit_minimum,
+                    contribution.maybe_min(limit.map(|limit| f32_max(limit, padding_border))) + margin,
+                )
+            }
+            _ => self.explicit_minimum,
+        };
+        item.minimum_contribution_cache.set(g_axis, Some(minimum));
+        item
+    }
 }
 
 /// Grid Lanes layout algorithm
@@ -269,6 +449,48 @@ pub fn compute_grid_lanes_layout<Tree: LayoutGridContainer>(
         }
     }
     drop(placements);
+
+    // Auto-placed items are assumed to be placed at every possible start line for track sizing (spec §3.4).
+    // Rather than copying every item, one virtual item per span group stands in for the group at each start
+    // line (§3.4.2). Virtual items only matter if some grid-axis track is intrinsically sized, which includes
+    // percentage tracks while the container's grid-axis size is indefinite (track sizing treats them as auto).
+    let s_lines = Line { start: s_counts.track_to_prev_oz_line(0), end: s_counts.track_to_prev_oz_line(1) };
+    let mut virtual_count = 0usize;
+    let g_size_indefinite = inner_node_size.get(g_axis).is_none();
+    if g_tracks
+        .iter()
+        .any(|track| track.has_intrinsic_sizing_function() || (g_size_indefinite && track.uses_percentage()))
+    {
+        let groups = collect_item_groups(tree, &mut items[definite_count..], g_axis, inner_node_size);
+        for group in groups.iter() {
+            let span = (group.span as usize).clamp(1, track_count.max(1));
+            virtual_count += track_count.saturating_sub(span) + 1;
+        }
+        let mut virtual_items: Vec<GridItem> = Vec::with_capacity(virtual_count);
+        for group in groups.iter() {
+            let span = (group.span as usize).clamp(1, track_count.max(1));
+            for start in 0..=track_count.saturating_sub(span) {
+                let g_lines = Line {
+                    start: g_counts.track_to_prev_oz_line(start as u16),
+                    end: g_counts.track_to_prev_oz_line((start + span) as u16),
+                };
+                let g_indexes = Line { start: (2 * start) as u16, end: (2 * (start + span)) as u16 };
+                virtual_items.push(group.virtual_item(
+                    tree,
+                    grid_axis,
+                    g_axis,
+                    &g_tracks,
+                    g_lines,
+                    g_indexes,
+                    s_lines,
+                    inner_node_size,
+                ));
+            }
+        }
+        items.splice(definite_count..definite_count, virtual_items);
+    }
+    let sizing_count = definite_count + virtual_count;
+
     resolve_item_track_indexes(&mut items, col_counts, row_counts);
     match grid_axis {
         AbsoluteAxis::Horizontal => {
@@ -279,7 +501,7 @@ pub fn compute_grid_lanes_layout<Tree: LayoutGridContainer>(
         }
     }
 
-    // 6. Size the grid-axis tracks. Only definitely placed items contribute (see module docs).
+    // 6. Size the grid-axis tracks from the definitely placed items and the virtual items
     // Items are measured at the stacking-axis content-box size when it is definite, as grid items are measured at
     // their column sizes once those are known
     let s_inner_size = inner_node_size.get(s_axis);
@@ -303,10 +525,11 @@ pub fn compute_grid_lanes_layout<Tree: LayoutGridContainer>(
         inner_node_size,
         &mut g_tracks,
         &mut s_tracks,
-        &mut items[..definite_count],
+        &mut items[..sizing_count],
         s_track_size_estimate,
         false,
     );
+    items.drain(definite_count..sizing_count);
     let g_track_sum = g_tracks.iter().map(|track| track.base_size).sum::<f32>();
 
     // The container's grid-axis size is now final
@@ -339,7 +562,7 @@ pub fn compute_grid_lanes_layout<Tree: LayoutGridContainer>(
             inner_node_size,
             &mut g_tracks,
             &mut s_tracks,
-            &mut items[..definite_count],
+            &mut items[..sizing_count],
             s_track_size_estimate,
             false,
         );

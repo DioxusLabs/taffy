@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    Grid Lanes: min-content and max-content tracks
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="width: 400px; display: grid-lanes; grid-template-columns: min-content max-content;">
+  <div style="display: grid; grid-template-columns: minmax(70px, 120px); height: 20px;"></div>
+  <div style="width: 40px; height: 30px;"></div>
+  <div style="width: 90px; height: 10px;"></div>
+  <div style="width: 60px; height: 40px;"></div>
+</div>
+
+</body>
+</html>
