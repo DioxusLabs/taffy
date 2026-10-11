@@ -1,0 +1,19 @@
+<test name="grid_fr_auto_width_fit_content_justify_self_center__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" direction="rtl" position="absolute" width="300px" grid-template-columns="300px">
+      <div display="grid" direction="rtl" position="relative" justify-self="center" grid-template-columns="1fr">
+        <text direction="rtl" position="relative">
+          HHHHHHHHHH​HHHHHHHHHH​HHHHHHHHHH​HHHHHHHHHH​HHHHHHHHHH​HHHHHHHHHH
+        </text>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="300" height="20" resolved-rows="20px" resolved-columns="300px">
+      <node x="0" y="0" width="300" height="20" resolved-rows="20px" resolved-columns="300px">
+        <node x="0" y="0" width="300" height="20"/>
+      </node>
+    </node>
+  </expectations>
+</test>

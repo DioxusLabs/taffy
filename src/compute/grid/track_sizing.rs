@@ -347,6 +347,13 @@ pub(super) fn track_sizing_algorithm<Tree: LayoutPartialTree>(
         }
     };
 
+    // A container with an indefinite size that is laid out into definite available space is sized
+    // as fit-content: its max-content size is limited by the available space
+    let axis_max_size_for_expansion = match (inner_node_size.get(axis), available_grid_space.get(axis)) {
+        (None, AvailableSpace::Definite(space)) => Some(axis_max_size.map_or(space, |max| max.min(space))),
+        _ => axis_max_size,
+    };
+
     // 11.7. Expand Flexible Tracks
     // This step sizes flexible tracks using the largest value it can assign to an fr without exceeding the available space.
     expand_flexible_tracks(
@@ -356,7 +363,7 @@ pub(super) fn track_sizing_algorithm<Tree: LayoutPartialTree>(
         other_axis_tracks,
         items,
         axis_min_size,
-        axis_max_size,
+        axis_max_size_for_expansion,
         axis_available_space_for_expansion,
         inner_node_size,
         get_track_size_estimate,
