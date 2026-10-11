@@ -1,0 +1,23 @@
+<test name="grid_lanes_dense_row_direction__content_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid-lanes" box-sizing="content-box" direction="rtl" position="absolute" width="200px" height="150px" grid-auto-flow="row dense" grid-lanes-direction="row" fit-tolerance="0px" grid-template-rows="50px 50px 50px">
+      <div box-sizing="content-box" direction="rtl" position="relative" width="40px"/>
+      <div box-sizing="content-box" direction="rtl" position="relative" width="10px"/>
+      <div box-sizing="content-box" direction="rtl" position="relative" width="20px"/>
+      <div box-sizing="content-box" direction="rtl" position="relative" width="20px" grid-row-start="span 2"/>
+      <div box-sizing="content-box" direction="rtl" position="relative" width="10px"/>
+      <div box-sizing="content-box" direction="rtl" position="relative" width="10px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="200" height="150">
+      <node x="160" y="0" width="40" height="50"/>
+      <node x="190" y="50" width="10" height="50"/>
+      <node x="180" y="100" width="20" height="50"/>
+      <node x="160" y="50" width="20" height="100"/>
+      <node x="180" y="50" width="10" height="50"/>
+      <node x="150" y="0" width="10" height="50"/>
+    </node>
+  </expectations>
+</test>

@@ -64,6 +64,148 @@ fn max_running_position(running_positions: &[f32], start: usize, span: usize) ->
     running_positions[start..start + span].iter().copied().fold(0.0, f32_max)
 }
 
+/// The total base size of the `span` tracks starting at `start` (gutters excluded, the same for every start line)
+fn spanned_track_size(g_tracks: &[GridTrack], start: usize, span: usize) -> f32 {
+    g_tracks[2 * start + 1..2 * (start + span)].iter().map(|track| track.base_size).sum()
+}
+
+/// Point an auto-placed item at the `span` grid-axis tracks starting at `start`
+fn set_item_grid_axis_lines(
+    item: &mut GridItem,
+    grid_axis: AbsoluteAxis,
+    g_counts: TrackCounts,
+    start: usize,
+    span: usize,
+) {
+    let lines = Line {
+        start: g_counts.track_to_prev_oz_line(start as u16),
+        end: g_counts.track_to_prev_oz_line((start + span) as u16),
+    };
+    let indexes = Line { start: (2 * start) as u16, end: (2 * (start + span)) as u16 };
+    match grid_axis {
+        AbsoluteAxis::Horizontal => {
+            item.column = lines;
+            item.column_indexes = indexes;
+        }
+        AbsoluteAxis::Vertical => {
+            item.row = lines;
+            item.row_indexes = indexes;
+        }
+    }
+}
+
+/// The stacking-axis ranges of a track an item can be backfilled into when `dense` packing is on (spec §4.3).
+/// The bounded ranges are skipped spaces; the open end of the track starts at its running position.
+struct TrackOpenings {
+    /// Bounded skipped spaces, in stacking-axis order
+    skipped: Vec<Line<f32>>,
+    /// Start of the open end of the track (the track's running position)
+    running_position: f32,
+}
+
+impl TrackOpenings {
+    /// All openings of the track, the unbounded open end last
+    fn skipped_and_open_end(&self) -> impl Iterator<Item = Line<f32>> + '_ {
+        self.skipped.iter().copied().chain(core::iter::once(Line { start: self.running_position, end: f32::INFINITY }))
+    }
+
+    /// Record the skipped space between the track's running position and `position` (if any) and advance the track
+    fn place(&mut self, position: f32, new_running_position: f32) {
+        if self.running_position < position {
+            self.skipped.push(Line { start: self.running_position, end: position });
+        }
+        self.running_position = new_running_position;
+    }
+
+    /// Carve the range `start..start + extent` out of the opening that contains it
+    fn occupy(&mut self, start: f32, extent: f32) {
+        let end = start + extent;
+        match self.skipped.iter().position(|opening| opening.start <= start && end <= opening.end) {
+            Some(index) => {
+                let opening = self.skipped[index];
+                if opening.start < start {
+                    self.skipped[index].end = start;
+                    if end < opening.end {
+                        self.skipped.insert(index + 1, Line { start: end, end: opening.end });
+                    }
+                } else if end < opening.end {
+                    self.skipped[index].start = end;
+                } else {
+                    self.skipped.remove(index);
+                }
+            }
+            None => {
+                debug_assert!(self.running_position <= start);
+                if self.running_position < start {
+                    self.skipped.push(Line { start: self.running_position, end: start });
+                }
+                self.running_position = end;
+            }
+        }
+    }
+}
+
+/// The lowest stacking-axis position of a skipped space, common to tracks `track..=track + remaining`
+/// and within `range`, that is at least `extent` tall. Paths through only the tracks' open ends do not count.
+fn lowest_opening_in_span(
+    openings: &[TrackOpenings],
+    track: usize,
+    remaining: usize,
+    range: Line<f32>,
+    extent: f32,
+) -> Option<f32> {
+    let mut lowest: Option<f32> = None;
+    for opening in openings[track].skipped_and_open_end() {
+        let overlap = Line { start: f32_max(range.start, opening.start), end: f32_min(range.end, opening.end) };
+        if overlap.end - overlap.start < extent {
+            continue;
+        }
+        let candidate = if remaining == 0 {
+            if overlap.end == f32::INFINITY {
+                continue;
+            }
+            Some(overlap.start)
+        } else {
+            lowest_opening_in_span(openings, track + 1, remaining - 1, overlap, extent)
+        };
+        if let Some(position) = candidate {
+            lowest = Some(lowest.map_or(position, |lowest| f32_min(lowest, position)));
+        }
+    }
+    lowest
+}
+
+/// Spec §4.4 step 4: the highest skipped space the item fits into whose tracks have the same total size as its
+/// normal placement, preferring the start-most of those within the tie threshold. Returns the start track and position.
+#[allow(clippy::too_many_arguments)]
+fn find_dense_placement(
+    openings: &[TrackOpenings],
+    g_tracks: &[GridTrack],
+    normal_start: usize,
+    span: usize,
+    is_definite: bool,
+    extent: f32,
+    normal_position: f32,
+    tie_threshold: f32,
+) -> Option<(usize, f32)> {
+    let normal_track_size = spanned_track_size(g_tracks, normal_start, span);
+    let candidate_starts = if is_definite { normal_start..=normal_start } else { 0..=openings.len() - span };
+    let full_range = Line { start: 0.0, end: f32::INFINITY };
+    let opening_at = |start: usize| -> Option<f32> {
+        if spanned_track_size(g_tracks, start, span) != normal_track_size {
+            return None;
+        }
+        lowest_opening_in_span(openings, start, span - 1, full_range, extent)
+    };
+    let highest = candidate_starts.clone().filter_map(opening_at).fold(f32::INFINITY, f32_min);
+    candidate_starts.filter_map(|start| opening_at(start).map(|position| (start, position))).find(
+        |&(start, position)| {
+            position <= highest + tie_threshold
+                && (position < normal_position || (position == normal_position && start < normal_start))
+        },
+    )
+}
+
 /// The largest grid-axis size contributions (margins included) of the auto-placed items sharing a span.
 /// One virtual item per possible start line stands in for the group during track sizing (spec §3.4.2).
 struct ItemGroup {
@@ -284,6 +426,7 @@ pub fn compute_grid_lanes_layout<Tree: LayoutGridContainer>(
     let g_axis = abstract_axis(grid_axis);
     let s_axis = abstract_axis(stacking_axis);
     let fit_tolerance = style.fit_tolerance();
+    let dense = style.grid_auto_flow().is_dense();
     let stacking_gap_style: LengthPercentage = match stacking_axis {
         AbsoluteAxis::Horizontal => style.gap().width,
         AbsoluteAxis::Vertical => style.gap().height,
@@ -584,6 +727,11 @@ pub fn compute_grid_lanes_layout<Tree: LayoutGridContainer>(
         stacking_gap_style.resolve_or_zero(inner_node_size.get(s_axis), |val, basis| tree.calc(val, basis));
     let mut running_positions: Vec<f32> = Vec::with_capacity(track_count);
     running_positions.resize(track_count, 0.0);
+    // Skipped spaces are only tracked for dense packing
+    let mut openings: Vec<TrackOpenings> = Vec::new();
+    if dense {
+        openings.resize_with(track_count, || TrackOpenings { skipped: Vec::new(), running_position: 0.0 });
+    }
     let mut cursor: usize = 0;
     let mut stacking_range_end: f32 = 0.0;
     let mut lane_placements: Vec<LanePlacement> = Vec::with_capacity(items.len());
@@ -593,12 +741,13 @@ pub fn compute_grid_lanes_layout<Tree: LayoutGridContainer>(
     document_order.sort_unstable_by_key(|&index| items[index].source_order);
     for &index in document_order.iter() {
         let item = &mut items[index];
+        let is_definite = index < definite_count;
         let indexes = match grid_axis {
             AbsoluteAxis::Horizontal => item.column_indexes,
             AbsoluteAxis::Vertical => item.row_indexes,
         };
         let span = ((indexes.end - indexes.start) / 2) as usize;
-        let start_track = if index < definite_count {
+        let mut start_track = if is_definite {
             (indexes.start / 2) as usize
         } else {
             // Candidate start lines are those within the tie threshold of the lowest running position;
@@ -615,42 +764,56 @@ pub fn compute_grid_lanes_layout<Tree: LayoutGridContainer>(
             } else {
                 candidates.find(|&start| start >= cursor).unwrap_or(first_candidate)
             };
-            cursor = start + span;
-            let g_lines = Line {
-                start: g_counts.track_to_prev_oz_line(start as u16),
-                end: g_counts.track_to_prev_oz_line((start + span) as u16),
-            };
-            let g_indexes = Line { start: (2 * start) as u16, end: (2 * (start + span)) as u16 };
-            match grid_axis {
-                AbsoluteAxis::Horizontal => {
-                    item.column = g_lines;
-                    item.column_indexes = g_indexes;
-                }
-                AbsoluteAxis::Vertical => {
-                    item.row = g_lines;
-                    item.row_indexes = g_indexes;
-                }
-            }
+            set_item_grid_axis_lines(item, grid_axis, g_counts, start, span);
             start
         };
-        let position = max_running_position(&running_positions, start_track, span);
+        let mut position = max_running_position(&running_positions, start_track, span);
 
         // The item's containing block is its grid area in the grid axis and the container's content box in the stacking axis
-        let g_area_size: f32 =
-            g_tracks[2 * start_track + 1..2 * (start_track + span)].iter().map(|track| track.base_size).sum();
         let mut grid_area_size = inner_node_size;
-        grid_area_size.set(g_axis, Some(g_area_size));
+        grid_area_size.set(g_axis, Some(spanned_track_size(&g_tracks, start_track, span)));
         let margins = item.margins_axis_sums_with_baseline_shims(grid_area_size.width, tree);
         let outer_size = f32_max(
             0.0,
             item.max_content_contribution(s_axis, tree, grid_area_size, grid_area_size) + margins.get(s_axis),
         );
+        let extent = outer_size + stacking_gap;
 
-        let new_position = position + outer_size + stacking_gap;
-        running_positions[start_track..start_track + span].iter_mut().for_each(|pos| *pos = new_position);
+        // Dense packing backfills a skipped space of the same track size instead, leaving the cursor
+        // and running positions as they were (spec §4.4 step 4)
+        let backfill = if dense {
+            find_dense_placement(&openings, &g_tracks, start_track, span, is_definite, extent, position, tie_threshold)
+        } else {
+            None
+        };
+        match backfill {
+            Some((dense_start, dense_position)) => {
+                if dense_start != start_track {
+                    set_item_grid_axis_lines(item, grid_axis, g_counts, dense_start, span);
+                }
+                openings[dense_start..dense_start + span]
+                    .iter_mut()
+                    .for_each(|track| track.occupy(dense_position, extent));
+                start_track = dense_start;
+                position = dense_position;
+            }
+            None => {
+                if !is_definite {
+                    cursor = start_track + span;
+                }
+                let new_position = position + extent;
+                running_positions[start_track..start_track + span].iter_mut().for_each(|pos| *pos = new_position);
+                if dense {
+                    openings[start_track..start_track + span]
+                        .iter_mut()
+                        .for_each(|track| track.place(position, new_position));
+                }
+            }
+        }
         stacking_range_end = f32_max(stacking_range_end, position + outer_size);
         lane_placements[index] = LanePlacement { start_track, span, position, outer_size };
     }
+    drop(openings);
     drop(document_order);
 
     // 8. The container's stacking-axis size (spec §5: the stacking range when indefinite)
