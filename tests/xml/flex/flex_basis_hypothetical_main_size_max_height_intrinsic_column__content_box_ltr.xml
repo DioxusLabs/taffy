@@ -1,8 +1,8 @@
 <test name="flex_basis_hypothetical_main_size_max_height_intrinsic_column__content_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="flex" box-sizing="content-box" direction="ltr" flex-direction="column" width="100px">
-      <div box-sizing="content-box" direction="ltr" flex-grow="1" flex-shrink="0" flex-basis="300px" min-height="0px" max-height="100px"/>
+    <div display="flex" box-sizing="content-box" direction="ltr" position="absolute" flex-direction="column" width="100px">
+      <div box-sizing="content-box" direction="ltr" position="relative" flex-grow="1" flex-shrink="0" flex-basis="300px" min-height="0px" max-height="100px"/>
     </div>
   </input>
   <expectations>
