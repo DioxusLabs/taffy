@@ -676,14 +676,16 @@ impl<NodeContext> TaffyTree<NodeContext> {
     pub fn new_with_children(&mut self, layout: Style, children: &[NodeId]) -> TaffyResult<NodeId> {
         let id = NodeId::from(self.nodes.insert(NodeData::new(layout)));
 
+        let mut has_contents_child = false;
         for child in children {
             self.parents[(*child).into()] = Some(id);
+            has_contents_child |= self.is_contents(*child);
         }
 
         let _ = self.children.insert(NodeChildren::new(children.iter().copied().collect::<_>()));
         let _ = self.parents.insert(None);
 
-        if children.iter().any(|child| self.is_contents(*child)) {
+        if has_contents_child {
             self.update_layout_children(id);
         }
 
