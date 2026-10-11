@@ -1,0 +1,13 @@
+<test name="static_position_insets_have_no_effect_left_top__content_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div box-sizing="content-box" direction="rtl" position="absolute" flex-direction="column" align-content="flex-start" flex-shrink="0">
+      <div box-sizing="content-box" direction="rtl" flex-direction="column" align-content="flex-start" flex-shrink="0" width="100px" height="100px" top="50px" left="50px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="100" height="100">
+      <node x="0" y="0" width="100" height="100"/>
+    </node>
+  </expectations>
+</test>

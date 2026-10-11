@@ -1,0 +1,9 @@
+<test name="box_sizing_content_box_padding_only__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div box-sizing="content-box" direction="rtl" position="absolute" flex-direction="column" align-content="flex-start" flex-shrink="0" width="100px" height="100px" padding-top="5px" padding-left="5px" padding-bottom="5px" padding-right="5px"/>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="110" height="110"/>
+  </expectations>
+</test>

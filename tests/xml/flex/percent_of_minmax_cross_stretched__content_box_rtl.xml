@@ -1,0 +1,13 @@
+<test name="percent_of_minmax_cross_stretched__content_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div box-sizing="content-box" direction="rtl" position="absolute" flex-direction="column" align-content="flex-start" flex-shrink="0" height="50px" min-width="60px" max-width="60px">
+      <div box-sizing="content-box" direction="rtl" position="relative" flex-direction="column" align-content="flex-start" flex-shrink="0" width="50%" height="20px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="60" height="50">
+      <node x="30" y="0" width="30" height="20"/>
+    </node>
+  </expectations>
+</test>
