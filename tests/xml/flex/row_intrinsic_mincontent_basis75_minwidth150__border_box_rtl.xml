@@ -1,8 +1,8 @@
 <test name="row_intrinsic_mincontent_basis75_minwidth150__border_box_rtl" use-rounding="true">
   <viewport width="min-content" height="max-content"/>
   <input>
-    <div display="flex" direction="rtl">
-      <text direction="rtl" flex-grow="1" flex-basis="75px" min-width="150px">
+    <div display="flex" direction="rtl" position="relative">
+      <text direction="rtl" position="relative" flex-grow="1" flex-basis="75px" min-width="150px">
         XX​XXX​XX​XXX
       </text>
     </div>

@@ -1,8 +1,8 @@
 <test name="row_intrinsic_maxcontent_basis0_grow1_shrink1__border_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="flex" direction="ltr">
-      <text direction="ltr" flex-grow="1" flex-basis="0px">
+    <div display="flex" direction="ltr" position="absolute">
+      <text direction="ltr" position="relative" flex-grow="1" flex-basis="0px">
         XX​XXX​XX​XXX
       </text>
     </div>
