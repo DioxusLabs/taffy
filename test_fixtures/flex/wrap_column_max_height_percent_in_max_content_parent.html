@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    Column wrap container with a percentage max-height inside a max-content width parent
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="display: block; width: max-content; height: 100px;">
+  <div style="flex-direction: column; flex-wrap: wrap; max-height: 100%;">
+    <div style="min-width: 50px; min-height: 100px;"></div>
+    <div style="min-width: 50px; min-height: 100px;"></div>
+  </div>
+</div>
+
+</body>
+</html>

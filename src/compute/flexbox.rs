@@ -377,10 +377,10 @@ fn compute_preliminary(tree: &mut impl LayoutFlexboxContainer, node: NodeId, inp
     let mut flex_lines = if constants.is_balance {
         collect_balanced_flex_lines(&constants, available_space, &mut flex_items)
     } else {
-        collect_flex_lines(&constants, available_space, &mut flex_items)
+        collect_flex_lines(&constants, available_space, false, &mut flex_items)
     };
     #[cfg(not(feature = "flexbox_balance"))]
-    let mut flex_lines = collect_flex_lines(&constants, available_space, &mut flex_items);
+    let mut flex_lines = collect_flex_lines(&constants, available_space, false, &mut flex_items);
 
     // If container size is undefined, determine the container's main size
     // and then re-resolve gaps based on newly determined size
@@ -436,12 +436,12 @@ fn compute_preliminary(tree: &mut impl LayoutFlexboxContainer, node: NodeId, inp
             flex_lines = if constants.is_balance {
                 collect_balanced_flex_lines(&constants, resolved_available_space, &mut flex_items)
             } else {
-                collect_flex_lines(&constants, resolved_available_space, &mut flex_items)
+                collect_flex_lines(&constants, resolved_available_space, true, &mut flex_items)
             };
         }
         #[cfg(not(feature = "flexbox_balance"))]
         {
-            flex_lines = collect_flex_lines(&constants, resolved_available_space, &mut flex_items);
+            flex_lines = collect_flex_lines(&constants, resolved_available_space, true, &mut flex_items);
         }
     }
 
@@ -1203,6 +1203,7 @@ fn determine_flex_base_size(
 fn collect_flex_lines<'a>(
     constants: &AlgoConstants,
     available_space: Size<AvailableSpace>,
+    main_size_is_resolved: bool,
     flex_items: &'a mut Vec<FlexItem>,
 ) -> Vec<FlexLine<'a>> {
     if !constants.is_wrap || !constants.known_main_size_is_definite {
@@ -1221,7 +1222,8 @@ fn collect_flex_lines<'a>(
             // A column container's automatic main size is content-based, so definite available space
             // handed down by an ancestor does not constrain where its lines wrap. Automatic widths
             // resolve against available space, so rows do wrap against it.
-            None if !constants.dir.is_row()
+            None if !main_size_is_resolved
+                && !constants.dir.is_row()
                 && !constants.has_definite_main_size
                 && available_space.main(constants.dir).is_definite() =>
             {
