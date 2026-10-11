@@ -1480,240 +1480,7 @@ fn determine_container_main_size(
                 longest_line_length + main_content_box_inset
             }
             AvailableSpace::MinContent | AvailableSpace::MaxContent => {
-                // Define a base main_size variable. This is mutated once for iteration over the outer
-                // loop over the flex lines as:
-                //   "The flex container’s max-content size is the largest sum of the afore-calculated sizes of all items within a single line."
-                let mut main_size = 0.0;
-
-                // The min-content main size of a multi-line row container is the largest of the items'
-                // min-content contributions (each item ends up on its own line), rather than a sum.
-                // https://drafts.csswg.org/css-flexbox-1/#intrinsic-main-sizes-compat
-                let use_largest_item_contribution =
-                    constants.is_row && constants.is_wrap && available_space.main(dir) == AvailableSpace::MinContent;
-
-                for line in lines.iter_mut() {
-                    for item in line.items.iter_mut() {
-                        let style_min = item.min_size.main(constants.dir);
-                        let style_preferred = item.size.main(constants.dir);
-                        let style_max = item.max_size.main(constants.dir);
-
-                        // The intrinsic contribution of an item differs between the inline and block axes:
-                        //
-                        //   - Inline axis (row containers): items contribute their min-/max-content size, capped/floored
-                        //     by their flex base size depending on their grow/shrink factors, per the current spec's
-                        //     "intrinsic item contributions" rules (https://drafts.csswg.org/css-flexbox-1/#intrinsic-item-contributions).
-                        //     This is the algorithm Chrome shipped in version 136 ("LayoutFlexNewRowAlgorithm").
-                        //
-                        //   - Block axis (column containers): items contribute their outer *hypothetical main size*
-                        //     (flex base size clamped by min/max main sizes, including the automatic minimum size),
-                        //     independent of their grow/shrink factors and of their content except via `min-height: auto`.
-                        //     This is the item contribution rule from the 2015-era spec
-                        //     (https://www.w3.org/TR/2015/WD-css-flexbox-1-20150514/#intrinsic-sizes), which browsers
-                        //     never migrated off for the block axis.
-                        //
-                        // The asymmetry is not sanctioned by the current spec (whose rules are axis-symmetric), but it is
-                        // what browsers ship: Chromium migrated only the row axis to the new algorithm after extensive web
-                        // compatibility experiments (https://issues.chromium.org/issues/40077556), and the spec is expected
-                        // (though not certain) to be updated to match (https://github.com/w3c/csswg-drafts/issues/8884).
-                        let content_contribution = if !constants.is_row {
-                            let hypothetical_inner_size = item
-                                .hypothetical_inner_size
-                                .main(constants.dir)
-                                .maybe_min(style_max)
-                                .max(item.resolved_minimum_main_size);
-                            hypothetical_inner_size + item.margin.main_axis_sum(constants.dir)
-                        } else {
-                            // Per https://drafts.csswg.org/css-flexbox-1/#intrinsic-item-contributions, an item's
-                            // content contribution is:
-                            //   - capped by its flex base size if it is not growable
-                            //   - floored by its flex base size if it is not shrinkable
-                            //   - then further clamped by the item's used min and max main sizes
-                            //
-                            // Spec modification: https://www.w3.org/TR/css-flexbox-1/#change-2016-max-contribution
-                            // Issue: https://github.com/w3c/csswg-drafts/issues/1435
-                            // Gentest: padding_border_overrides_size_flex_basis_0.html
-                            let flex_basis_cap = (item.flex_grow == 0.0).then_some(item.flex_basis);
-                            let flex_basis_floor = (item.flex_shrink == 0.0).then_some(item.flex_basis);
-
-                            let margin_sum = item.margin.main_axis_sum(constants.dir);
-                            let resolved_minimum_main_size = item.resolved_minimum_main_size;
-                            let clamp_content_contribution = |content: f32| {
-                                content
-                                    .maybe_min(flex_basis_cap)
-                                    .maybe_max(flex_basis_floor)
-                                    .maybe_clamp(style_min, style_max)
-                                    .max(resolved_minimum_main_size)
-                                    + margin_sum
-                            };
-
-                            match (flex_basis_cap, style_preferred) {
-                                // If the item is capped by its flex base size and the clamping values are such that
-                                // the result does not depend on the item's content size, then we can avoid the
-                                // expensive step of measuring the item's content
-                                (Some(cap), _)
-                                    if clamp_content_contribution(cap)
-                                        == clamp_content_contribution(f32::NEG_INFINITY) =>
-                                {
-                                    clamp_content_contribution(cap)
-                                }
-
-                                _ if item.is_scroll_container() => item.flex_basis + margin_sum,
-
-                                // If the item has a definite preferred main size then that is its content
-                                // contribution (an inherent-size measure of the item would return it), floored
-                                // by the item's main-axis padding+border, so measuring the item can be skipped.
-                                (_, Some(pref)) => {
-                                    let item_pb_main = item.padding.main_axis_sum(constants.dir)
-                                        + item.border.main_axis_sum(constants.dir);
-                                    clamp_content_contribution(pref.max(item_pb_main))
-                                }
-
-                                _ => {
-                                    // Parent size for child sizing
-                                    let cross_axis_parent_size = constants.node_inner_size.cross(dir);
-
-                                    // Available space for child sizing (excluding the child's margins)
-                                    let child_min_cross = item.min_size.cross(dir);
-                                    let child_max_cross = item.max_size.cross(dir);
-                                    let cross_axis_available_space: AvailableSpace = available_space
-                                        .cross(dir)
-                                        .map_definite_value(|val| {
-                                            (constants.divided_cross_space(cross_axis_parent_size.unwrap_or(val))
-                                                - item.margin.cross_axis_sum(dir))
-                                            .max(0.0)
-                                        })
-                                        .maybe_clamp(child_min_cross, child_max_cross);
-
-                                    let child_available_space =
-                                        available_space.with_cross(dir, cross_axis_available_space);
-
-                                    // Known dimensions for child sizing
-                                    let child_known_dimensions = {
-                                        let mut ckd = item.size.with_main(dir, None);
-                                        // Clamp the definite cross size by the cross min/max sizes, as
-                                        // `determine_flex_base_size` does: an item measured wider than its
-                                        // max-width wraps onto fewer lines and under-reports its height.
-                                        let transferred_min_size =
-                                            item.min_size.maybe_apply_aspect_ratio(item.aspect_ratio);
-                                        let transferred_max_size =
-                                            item.max_size.maybe_apply_aspect_ratio(item.aspect_ratio);
-                                        ckd.set_cross(
-                                            dir,
-                                            ckd.cross(dir).maybe_clamp(
-                                                transferred_min_size.cross(dir),
-                                                transferred_max_size.cross(dir),
-                                            ),
-                                        );
-                                        if item.align_self == AlignSelf::STRETCH && ckd.cross(dir).is_none() {
-                                            ckd.set_cross(dir, cross_axis_available_space.into_option());
-                                        }
-                                        ckd
-                                    };
-
-                                    // Either the min- or max- content size depending on which constraint we are sizing under.
-                                    // TODO: Optimise by using already computed values where available
-                                    debug_log!("COMPUTE CHILD BASE SIZE (for intrinsic main size):");
-                                    let measured_main_size = tree.measure_child_size(
-                                        item.node,
-                                        child_known_dimensions,
-                                        constants.node_inner_size,
-                                        child_available_space,
-                                        SizingMode::ContentSize,
-                                        dir.main_axis(),
-                                        Line::FALSE,
-                                    );
-
-                                    // A known cross size is transferred through the item's aspect-ratio
-                                    // and floors the measured content size
-                                    let transferred_main_size =
-                                        item.aspect_ratio.zip(child_known_dimensions.cross(dir)).map(
-                                            |(ratio, cross)| {
-                                                if constants.is_row {
-                                                    cross * ratio
-                                                } else {
-                                                    cross / ratio
-                                                }
-                                            },
-                                        );
-
-                                    let inner_main_size = measured_main_size.maybe_max(transferred_main_size);
-
-                                    clamp_content_contribution(inner_main_size)
-                                }
-                            }
-                        };
-
-                        if use_largest_item_contribution {
-                            main_size = f32_max(main_size, content_contribution);
-                            continue;
-                        }
-
-                        item.content_flex_fraction = {
-                            let diff = content_contribution - item.flex_basis;
-                            if diff > 0.0 {
-                                diff / f32_max(1.0, item.flex_grow)
-                            } else if diff < 0.0 {
-                                let scaled_shrink_factor = f32_max(1.0, item.flex_shrink) * item.inner_flex_basis;
-                                diff / scaled_shrink_factor
-                            } else {
-                                // We are assuming that diff is 0.0 here and that we haven't accidentally introduced a NaN
-                                0.0
-                            }
-                        };
-                    }
-
-                    if use_largest_item_contribution {
-                        continue;
-                    }
-
-                    // TODO Spec says to scale everything by the line's max flex fraction. But neither Chrome nor firefox implement this
-                    // so we don't either. But if we did want to, we'd need this computation here (and to use it below):
-                    //
-                    // Within each line, find the largest max-content flex fraction among all the flex items.
-                    // let line_flex_fraction = line
-                    //     .items
-                    //     .iter()
-                    //     .map(|item| item.content_flex_fraction)
-                    //     .max_by(|a, b| a.total_cmp(b))
-                    //     .unwrap_or(0.0); // Unwrap case never gets hit because there is always at least one item a line
-
-                    // Add each item’s flex base size to the product of:
-                    //   - its flex grow factor (or scaled flex shrink factor,if the chosen max-content flex fraction was negative)
-                    //   - the chosen max-content flex fraction
-                    // then clamp that result by the max main size floored by the min main size.
-                    //
-                    // The flex container’s max-content size is the largest sum of the afore-calculated sizes of all items within a single line.
-                    let item_main_size_sum = line
-                        .items
-                        .iter_mut()
-                        .map(|item| {
-                            let flex_fraction = item.content_flex_fraction;
-                            // let flex_fraction = line_flex_fraction;
-
-                            let flex_contribution = if item.content_flex_fraction > 0.0 {
-                                f32_max(1.0, item.flex_grow) * flex_fraction
-                            } else if item.content_flex_fraction < 0.0 {
-                                let scaled_shrink_factor = f32_max(1.0, item.flex_shrink) * item.inner_flex_basis;
-                                if scaled_shrink_factor == 0.0 {
-                                    0.0
-                                } else {
-                                    scaled_shrink_factor * flex_fraction
-                                }
-                            } else {
-                                0.0
-                            };
-                            let size = item.flex_basis + flex_contribution;
-                            item.outer_target_size.set_main(constants.dir, size);
-                            item.target_size.set_main(constants.dir, size);
-                            size
-                        })
-                        .sum::<f32>();
-
-                    let gap_sum = sum_axis_gaps(constants.gap.main(constants.dir), line.items.len());
-                    main_size = f32_max(main_size, item_main_size_sum + gap_sum)
-                }
-
-                main_size + main_content_box_inset
+                compute_intrinsic_main_size(tree, available_space, lines, constants)
             }
         }
     });
@@ -1727,6 +1494,243 @@ fn determine_container_main_size(
     constants.container_size.set_main(constants.dir, outer_main_size);
     constants.inner_container_size.set_main(constants.dir, inner_main_size);
     constants.node_inner_size.set_main(constants.dir, Some(inner_main_size));
+}
+
+/// The flex container’s min-content or max-content main size (9.9.1), depending on the constraint in `available_space`
+fn compute_intrinsic_main_size(
+    tree: &mut impl LayoutFlexboxContainer,
+    available_space: Size<AvailableSpace>,
+    lines: &mut [FlexLine<'_>],
+    constants: &AlgoConstants,
+) -> f32 {
+    let dir = constants.dir;
+    let main_content_box_inset = constants.content_box_inset.main_axis_sum(constants.dir);
+    // Define a base main_size variable. This is mutated once for iteration over the outer
+    // loop over the flex lines as:
+    //   "The flex container’s max-content size is the largest sum of the afore-calculated sizes of all items within a single line."
+    let mut main_size = 0.0;
+
+    // The min-content main size of a multi-line row container is the largest of the items'
+    // min-content contributions (each item ends up on its own line), rather than a sum.
+    // https://drafts.csswg.org/css-flexbox-1/#intrinsic-main-sizes-compat
+    let use_largest_item_contribution =
+        constants.is_row && constants.is_wrap && available_space.main(dir) == AvailableSpace::MinContent;
+
+    for line in lines.iter_mut() {
+        for item in line.items.iter_mut() {
+            let style_min = item.min_size.main(constants.dir);
+            let style_preferred = item.size.main(constants.dir);
+            let style_max = item.max_size.main(constants.dir);
+
+            // The intrinsic contribution of an item differs between the inline and block axes:
+            //
+            //   - Inline axis (row containers): items contribute their min-/max-content size, capped/floored
+            //     by their flex base size depending on their grow/shrink factors, per the current spec's
+            //     "intrinsic item contributions" rules (https://drafts.csswg.org/css-flexbox-1/#intrinsic-item-contributions).
+            //     This is the algorithm Chrome shipped in version 136 ("LayoutFlexNewRowAlgorithm").
+            //
+            //   - Block axis (column containers): items contribute their outer *hypothetical main size*
+            //     (flex base size clamped by min/max main sizes, including the automatic minimum size),
+            //     independent of their grow/shrink factors and of their content except via `min-height: auto`.
+            //     This is the item contribution rule from the 2015-era spec
+            //     (https://www.w3.org/TR/2015/WD-css-flexbox-1-20150514/#intrinsic-sizes), which browsers
+            //     never migrated off for the block axis.
+            //
+            // The asymmetry is not sanctioned by the current spec (whose rules are axis-symmetric), but it is
+            // what browsers ship: Chromium migrated only the row axis to the new algorithm after extensive web
+            // compatibility experiments (https://issues.chromium.org/issues/40077556), and the spec is expected
+            // (though not certain) to be updated to match (https://github.com/w3c/csswg-drafts/issues/8884).
+            let content_contribution = if !constants.is_row {
+                let hypothetical_inner_size = item
+                    .hypothetical_inner_size
+                    .main(constants.dir)
+                    .maybe_min(style_max)
+                    .max(item.resolved_minimum_main_size);
+                hypothetical_inner_size + item.margin.main_axis_sum(constants.dir)
+            } else {
+                // Per https://drafts.csswg.org/css-flexbox-1/#intrinsic-item-contributions, an item's
+                // content contribution is:
+                //   - capped by its flex base size if it is not growable
+                //   - floored by its flex base size if it is not shrinkable
+                //   - then further clamped by the item's used min and max main sizes
+                //
+                // Spec modification: https://www.w3.org/TR/css-flexbox-1/#change-2016-max-contribution
+                // Issue: https://github.com/w3c/csswg-drafts/issues/1435
+                // Gentest: padding_border_overrides_size_flex_basis_0.html
+                let flex_basis_cap = (item.flex_grow == 0.0).then_some(item.flex_basis);
+                let flex_basis_floor = (item.flex_shrink == 0.0).then_some(item.flex_basis);
+
+                let margin_sum = item.margin.main_axis_sum(constants.dir);
+                let resolved_minimum_main_size = item.resolved_minimum_main_size;
+                let clamp_content_contribution = |content: f32| {
+                    content
+                        .maybe_min(flex_basis_cap)
+                        .maybe_max(flex_basis_floor)
+                        .maybe_clamp(style_min, style_max)
+                        .max(resolved_minimum_main_size)
+                        + margin_sum
+                };
+
+                match (flex_basis_cap, style_preferred) {
+                    // If the item is capped by its flex base size and the clamping values are such that
+                    // the result does not depend on the item's content size, then we can avoid the
+                    // expensive step of measuring the item's content
+                    (Some(cap), _)
+                        if clamp_content_contribution(cap) == clamp_content_contribution(f32::NEG_INFINITY) =>
+                    {
+                        clamp_content_contribution(cap)
+                    }
+
+                    _ if item.is_scroll_container() => item.flex_basis + margin_sum,
+
+                    // If the item has a definite preferred main size then that is its content
+                    // contribution (an inherent-size measure of the item would return it), floored
+                    // by the item's main-axis padding+border, so measuring the item can be skipped.
+                    (_, Some(pref)) => {
+                        let item_pb_main =
+                            item.padding.main_axis_sum(constants.dir) + item.border.main_axis_sum(constants.dir);
+                        clamp_content_contribution(pref.max(item_pb_main))
+                    }
+
+                    _ => {
+                        // Parent size for child sizing
+                        let cross_axis_parent_size = constants.node_inner_size.cross(dir);
+
+                        // Available space for child sizing (excluding the child's margins)
+                        let child_min_cross = item.min_size.cross(dir);
+                        let child_max_cross = item.max_size.cross(dir);
+                        let cross_axis_available_space: AvailableSpace = available_space
+                            .cross(dir)
+                            .map_definite_value(|val| {
+                                (constants.divided_cross_space(cross_axis_parent_size.unwrap_or(val))
+                                    - item.margin.cross_axis_sum(dir))
+                                .max(0.0)
+                            })
+                            .maybe_clamp(child_min_cross, child_max_cross);
+
+                        let child_available_space = available_space.with_cross(dir, cross_axis_available_space);
+
+                        // Known dimensions for child sizing
+                        let child_known_dimensions = {
+                            let mut ckd = item.size.with_main(dir, None);
+                            // Clamp the definite cross size by the cross min/max sizes, as
+                            // `determine_flex_base_size` does: an item measured wider than its
+                            // max-width wraps onto fewer lines and under-reports its height.
+                            let transferred_min_size = item.min_size.maybe_apply_aspect_ratio(item.aspect_ratio);
+                            let transferred_max_size = item.max_size.maybe_apply_aspect_ratio(item.aspect_ratio);
+                            ckd.set_cross(
+                                dir,
+                                ckd.cross(dir)
+                                    .maybe_clamp(transferred_min_size.cross(dir), transferred_max_size.cross(dir)),
+                            );
+                            if item.align_self == AlignSelf::STRETCH && ckd.cross(dir).is_none() {
+                                ckd.set_cross(dir, cross_axis_available_space.into_option());
+                            }
+                            ckd
+                        };
+
+                        // Either the min- or max- content size depending on which constraint we are sizing under.
+                        // TODO: Optimise by using already computed values where available
+                        debug_log!("COMPUTE CHILD BASE SIZE (for intrinsic main size):");
+                        let measured_main_size = tree.measure_child_size(
+                            item.node,
+                            child_known_dimensions,
+                            constants.node_inner_size,
+                            child_available_space,
+                            SizingMode::ContentSize,
+                            dir.main_axis(),
+                            Line::FALSE,
+                        );
+
+                        // A known cross size is transferred through the item's aspect-ratio
+                        // and floors the measured content size
+                        let transferred_main_size =
+                            item.aspect_ratio.zip(child_known_dimensions.cross(dir)).map(|(ratio, cross)| {
+                                if constants.is_row {
+                                    cross * ratio
+                                } else {
+                                    cross / ratio
+                                }
+                            });
+
+                        let inner_main_size = measured_main_size.maybe_max(transferred_main_size);
+
+                        clamp_content_contribution(inner_main_size)
+                    }
+                }
+            };
+
+            if use_largest_item_contribution {
+                main_size = f32_max(main_size, content_contribution);
+                continue;
+            }
+
+            item.content_flex_fraction = {
+                let diff = content_contribution - item.flex_basis;
+                if diff > 0.0 {
+                    diff / f32_max(1.0, item.flex_grow)
+                } else if diff < 0.0 {
+                    let scaled_shrink_factor = f32_max(1.0, item.flex_shrink) * item.inner_flex_basis;
+                    diff / scaled_shrink_factor
+                } else {
+                    // We are assuming that diff is 0.0 here and that we haven't accidentally introduced a NaN
+                    0.0
+                }
+            };
+        }
+
+        if use_largest_item_contribution {
+            continue;
+        }
+
+        // TODO Spec says to scale everything by the line's max flex fraction. But neither Chrome nor firefox implement this
+        // so we don't either. But if we did want to, we'd need this computation here (and to use it below):
+        //
+        // Within each line, find the largest max-content flex fraction among all the flex items.
+        // let line_flex_fraction = line
+        //     .items
+        //     .iter()
+        //     .map(|item| item.content_flex_fraction)
+        //     .max_by(|a, b| a.total_cmp(b))
+        //     .unwrap_or(0.0); // Unwrap case never gets hit because there is always at least one item a line
+
+        // Add each item’s flex base size to the product of:
+        //   - its flex grow factor (or scaled flex shrink factor,if the chosen max-content flex fraction was negative)
+        //   - the chosen max-content flex fraction
+        // then clamp that result by the max main size floored by the min main size.
+        //
+        // The flex container’s max-content size is the largest sum of the afore-calculated sizes of all items within a single line.
+        let item_main_size_sum = line
+            .items
+            .iter_mut()
+            .map(|item| {
+                let flex_fraction = item.content_flex_fraction;
+                // let flex_fraction = line_flex_fraction;
+
+                let flex_contribution = if item.content_flex_fraction > 0.0 {
+                    f32_max(1.0, item.flex_grow) * flex_fraction
+                } else if item.content_flex_fraction < 0.0 {
+                    let scaled_shrink_factor = f32_max(1.0, item.flex_shrink) * item.inner_flex_basis;
+                    if scaled_shrink_factor == 0.0 {
+                        0.0
+                    } else {
+                        scaled_shrink_factor * flex_fraction
+                    }
+                } else {
+                    0.0
+                };
+                let size = item.flex_basis + flex_contribution;
+                item.outer_target_size.set_main(constants.dir, size);
+                item.target_size.set_main(constants.dir, size);
+                size
+            })
+            .sum::<f32>();
+
+        let gap_sum = sum_axis_gaps(constants.gap.main(constants.dir), line.items.len());
+        main_size = f32_max(main_size, item_main_size_sum + gap_sum)
+    }
+
+    main_size + main_content_box_inset
 }
 
 /// Resolve the flexible lengths of the items within a flex line.
