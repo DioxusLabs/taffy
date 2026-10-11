@@ -58,6 +58,8 @@ flexbox = []
 flexbox_balance = ["flexbox"]
 ## Enables the CSS Grid layout algorithm. See [`compute_grid_layout`](crate::compute_grid_layout).
 grid = ["dep:smallvec"]
+## Enables the CSS Grid Level 3 Grid Lanes layout algorithm (`display: grid-lanes`). See [`compute_grid_lanes_layout`](crate::compute_grid_lanes_layout).
+grid_lanes = ["grid"]
 ## Enables calc() values for all layout algorithms
 calc = []
 ## Causes all algorithms to compute and output a content size for each node

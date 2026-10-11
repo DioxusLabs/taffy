@@ -124,7 +124,9 @@ async fn main() {
             writeln!(&mut mod_file, "mod {} {{", module.display()).unwrap();
         }
 
-        if name.starts_with("grid") {
+        if name.starts_with("grid_lanes") {
+            writeln!(&mut mod_file, r#"#[cfg(feature = "grid_lanes")]"#).unwrap();
+        } else if name.starts_with("grid") {
             writeln!(&mut mod_file, r#"#[cfg(feature = "grid")]"#).unwrap();
         }
         if name.starts_with("balance") {
@@ -256,7 +258,14 @@ impl WebDriver {
         let mut caps = serde_json::map::Map::new();
         let chrome_opts = serde_json::json!({
             "binary": chrome_path,
-            "args": ["--headless", "--no-sandbox", "--disable-gpu", format!("--user-data-dir={}", self.profile_dir.display())],
+            "args": [
+                "--headless",
+                "--no-sandbox",
+                "--disable-gpu",
+                // Grid Lanes (display: grid-lanes) is behind this flag in Chrome 151
+                "--enable-experimental-web-platform-features",
+                format!("--user-data-dir={}", self.profile_dir.display()),
+            ],
         });
         caps.insert("goog:chromeOptions".to_string(), chrome_opts);
 
@@ -718,6 +727,12 @@ fn generate_node(w: &mut XmlWriter, node: &Value) {
     maybe_write(w, "right", get_dim_attr(&style["inset"]["right"], None));
 
     maybe_write(w, "grid-auto-flow", serialize_grid_auto_flow(&style["gridAutoFlow"]));
+    maybe_write(w, "grid-lanes-direction", get_str_attr(&style["gridLanesDirection"], None));
+    maybe_write(
+        w,
+        "fit-tolerance",
+        get_str_attr(&style["fitTolerance"], None).or_else(|| get_str_attr(&style["flowTolerance"], None)),
+    );
     maybe_write(w, "grid-template-rows", get_str_attr(&style["gridTemplateRows"], None));
     maybe_write(w, "grid-template-columns", get_str_attr(&style["gridTemplateColumns"], None));
     maybe_write(w, "grid-auto-rows", serialize_array(&style["gridAutoRows"], ' ', serialize_track_definition));

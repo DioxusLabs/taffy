@@ -1,0 +1,17 @@
+<test name="grid_lanes_percentage_rows_indefinite_height__border_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid-lanes" direction="ltr" position="absolute" width="50px" grid-lanes-direction="row" fit-tolerance="0px" grid-template-rows="60% 140%">
+      <div direction="ltr" position="relative" width="20px" height="20px" grid-row-start="1"/>
+      <div direction="ltr" position="relative" width="20px" height="20px" grid-row-start="2"/>
+      <div direction="ltr" position="relative" width="20px" height="20px" grid-row-start="1"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="50" height="40">
+      <node x="0" y="0" width="20" height="20"/>
+      <node x="0" y="24" width="20" height="20"/>
+      <node x="20" y="0" width="20" height="20"/>
+    </node>
+  </expectations>
+</test>

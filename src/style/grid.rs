@@ -221,6 +221,20 @@ pub trait GridContainerStyle: CoreStyle {
         Style::<Self::CustomIdent>::DEFAULT.grid_auto_flow
     }
 
+    /// Which axis of a grid lanes container has tracks (the other axis is the stacking axis)
+    #[cfg(feature = "grid_lanes")]
+    #[inline(always)]
+    fn grid_lanes_direction(&self) -> GridLanesDirection {
+        Style::<Self::CustomIdent>::DEFAULT.grid_lanes_direction
+    }
+
+    /// The tie threshold for grid lanes auto-placement
+    #[cfg(feature = "grid_lanes")]
+    #[inline(always)]
+    fn fit_tolerance(&self) -> LengthPercentage {
+        Style::<Self::CustomIdent>::DEFAULT.fit_tolerance
+    }
+
     /// How large should the gaps between items in a grid or flex container be?
     #[inline(always)]
     fn gap(&self) -> Size<LengthPercentage> {
@@ -388,6 +402,48 @@ impl GridAutoFlow {
         match self {
             Self::Row | Self::RowDense => AbsoluteAxis::Horizontal,
             Self::Column | Self::ColumnDense => AbsoluteAxis::Vertical,
+        }
+    }
+}
+
+/// Controls which axis of a grid lanes container has grid tracks. Items are stacked along the other
+/// ("stacking") axis.
+///
+/// Defaults to [`GridLanesDirection::Column`] (column tracks, items stack vertically)
+///
+/// Tentative name and values: <https://github.com/w3c/csswg-drafts/issues/12803>
+#[cfg(feature = "grid_lanes")]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub enum GridLanesDirection {
+    /// Row tracks (from `grid-template-rows`); items stack along the inline axis
+    Row,
+    /// Column tracks (from `grid-template-columns`); items stack along the block axis
+    #[default]
+    Column,
+}
+
+#[cfg(all(feature = "grid_lanes", feature = "parse"))]
+crate::util::parse::impl_parse_for_keyword_enum!(GridLanesDirection,
+    "row" => Row,
+    "column" => Column,
+);
+
+#[cfg(feature = "grid_lanes")]
+impl GridLanesDirection {
+    /// The axis that has grid tracks
+    pub const fn grid_axis(&self) -> AbsoluteAxis {
+        match self {
+            Self::Row => AbsoluteAxis::Vertical,
+            Self::Column => AbsoluteAxis::Horizontal,
+        }
+    }
+
+    /// The axis along which items are stacked
+    pub const fn stacking_axis(&self) -> AbsoluteAxis {
+        match self {
+            Self::Row => AbsoluteAxis::Horizontal,
+            Self::Column => AbsoluteAxis::Vertical,
         }
     }
 }

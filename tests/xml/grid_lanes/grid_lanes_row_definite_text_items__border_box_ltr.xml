@@ -1,0 +1,23 @@
+<test name="grid_lanes_row_definite_text_items__border_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid-lanes" direction="ltr" position="absolute" width="300px" height="200px" row-gap="20px" column-gap="20px" padding-top="20px" padding-left="20px" padding-bottom="20px" padding-right="20px" grid-lanes-direction="row" fit-tolerance="10px">
+      <text direction="ltr" position="relative" grid-row-start="1">
+        HH​HH​HH
+      </text>
+      <text direction="ltr" position="relative" grid-row-start="2">
+        HH​HH​HH​HH​HH
+      </text>
+      <text direction="ltr" position="relative" grid-row-start="3">
+        HH​HH​HH​HH
+      </text>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="300" height="200">
+      <node x="20" y="20" width="60" height="40"/>
+      <node x="20" y="80" width="100" height="40"/>
+      <node x="20" y="140" width="80" height="40"/>
+    </node>
+  </expectations>
+</test>

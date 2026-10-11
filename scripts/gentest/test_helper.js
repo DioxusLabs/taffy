@@ -189,6 +189,13 @@ function parseGridTrackDefinitions(input) {
   return new TrackSizingParser(input).parseList();
 }
 
+// Taffy has no font-size, so the `normal` keyword (1em in grid lanes containers) is emitted as a resolved length
+function parseFlowTolerance(input, computedStyle) {
+  if (computedStyle.display !== "grid-lanes") return undefined;
+  if (input === "" || input === "normal") return computedStyle.fontSize;
+  return input;
+}
+
 function parseGridAutoFlow(input) {
   if (!/column/.test(input) && !/row/.test(input) && !/dense/.test(input)) return undefined;
   const direction = /column/.test(input) ? 'column' : 'row';
@@ -277,6 +284,8 @@ function describeElement(e) {
       gridAutoRows: parseGridTrackDefinitions(e.style.gridAutoRows),
       gridAutoColumns: parseGridTrackDefinitions(e.style.gridAutoColumns),
       gridAutoFlow: parseGridAutoFlow(e.style.gridAutoFlow),
+      gridLanesDirection: e.style.gridLanesDirection || undefined,
+      flowTolerance: parseFlowTolerance(e.style.flowTolerance, computedStyle),
 
       gridRowStart: parseGridPosition(e.style.gridRowStart),
       gridRowEnd: parseGridPosition(e.style.gridRowEnd),
