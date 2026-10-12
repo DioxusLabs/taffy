@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Fixes
+
+- Grid: limit `fr` tracks of an auto-sized grid container laid out in definite available space by that available space (fit-content sizing), rather than sizing them to the items' max-content contributions.
+
 ## 0.15.0
 
 The MSRV for this release is 1.71.
