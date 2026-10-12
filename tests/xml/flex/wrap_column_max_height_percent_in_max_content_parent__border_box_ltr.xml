@@ -1,0 +1,19 @@
+<test name="wrap_column_max_height_percent_in_max_content_parent__border_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="block" direction="ltr" position="absolute" width="max-content" height="100px">
+      <div direction="ltr" position="relative" flex-direction="column" flex-wrap="wrap" max-height="100%">
+        <div direction="ltr" position="relative" min-width="50px" min-height="100px"/>
+        <div direction="ltr" position="relative" min-width="50px" min-height="100px"/>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="100" height="100">
+      <node x="0" y="0" width="100" height="100">
+        <node x="0" y="0" width="50" height="100"/>
+        <node x="50" y="0" width="50" height="100"/>
+      </node>
+    </node>
+  </expectations>
+</test>
