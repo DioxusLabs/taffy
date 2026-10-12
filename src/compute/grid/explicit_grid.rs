@@ -743,6 +743,55 @@ mod test {
         assert_eq!((repetitions, track_count), (0, 10_000));
     }
 
+    /// `repeat(auto-fit, minmax(min(100%, 300px), 1fr))`: a `calc()` min track sizing function is a
+    /// fixed sizing function, so the template is valid and the repetition count uses its resolved
+    /// value (here two 300px tracks and a 8px gap fit in 800px).
+    #[test]
+    #[cfg(feature = "calc")]
+    fn explicit_grid_sizing_auto_fit_calc_min_track() {
+        use RepetitionCount::{AutoFill, AutoFit};
+
+        #[repr(align(8))]
+        struct Handle(#[allow(dead_code)] u64);
+        static MIN_100_PERCENT_300PX: Handle = Handle(0);
+        let calc_ptr = &MIN_100_PERCENT_300PX as *const Handle as *const ();
+        let resolve_calc = |ptr: *const (), basis: f32| {
+            assert_eq!(ptr, calc_ptr);
+            basis.min(300.0)
+        };
+
+        for count in [AutoFit, AutoFill] {
+            let grid_style: Style<DefaultCheapStr> = Style {
+                display: Display::Grid,
+                size: Size { width: length(800.0), height: auto() },
+                gap: Size { width: length(8.0), height: zero() },
+                grid_template_columns: vec![repeat(
+                    count,
+                    vec![minmax(MinTrackSizingFunction::calc(calc_ptr), fr(1.0))],
+                )],
+                ..Default::default()
+            };
+            let (auto_col_reps, col_count) = compute_explicit_grid_size_in_axis(
+                &grid_style,
+                Some(800.0),
+                AutoRepeatStrategy::MaxRepetitionsThatDoNotOverflow,
+                resolve_calc,
+                AbsoluteAxis::Horizontal,
+            );
+            assert_eq!((auto_col_reps, col_count), (2, 2), "{count:?}");
+
+            // The calc() resolves against the container: in a 250px container it is 250px, one track
+            let (auto_col_reps, col_count) = compute_explicit_grid_size_in_axis(
+                &grid_style,
+                Some(250.0),
+                AutoRepeatStrategy::MaxRepetitionsThatDoNotOverflow,
+                resolve_calc,
+                AbsoluteAxis::Horizontal,
+            );
+            assert_eq!((auto_col_reps, col_count), (1, 1), "{count:?}");
+        }
+    }
+
     #[test]
     fn explicit_track_count_accumulation_saturates() {
         use RepetitionCount::{AutoFill, Count};

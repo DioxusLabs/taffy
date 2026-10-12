@@ -1495,8 +1495,12 @@ impl TrackSizingFunction {
         self.max
     }
     /// Determine whether at least one of the components ("min" and "max") are fixed sizing function
+    ///
+    /// A fixed sizing function is a `<length-percentage>`, which includes `calc()` values (and so
+    /// `min()`, `max()` and `clamp()`) such as `minmax(min(100%, 300px), 1fr)`.
+    /// <https://www.w3.org/TR/css-grid-1/#fixed-sizing-function>
     pub fn has_fixed_component(&self) -> bool {
-        self.min.0.is_length_or_percentage() || self.max.0.is_length_or_percentage()
+        self.min.0.is_length_percentage_or_calc() || self.max.0.is_length_percentage_or_calc()
     }
 }
 impl TaffyAuto for TrackSizingFunction {
