@@ -226,7 +226,6 @@ fn former_contents_root_is_reset_when_given_a_parent() {
     assert_eq!(taffy.layout(b).unwrap().location, Point { x: 0.0, y: 10.0 });
 
     let root = flex_row(&mut taffy, &[wrapper]);
-    assert_eq!(*taffy.layout(wrapper).unwrap(), Layout::new());
     taffy.compute_layout(root, Size::MAX_CONTENT).unwrap();
     assert_eq!(*taffy.layout(wrapper).unwrap(), Layout::new());
     assert_eq!(taffy.layout(b).unwrap().location, Point { x: 10.0, y: 0.0 });
@@ -251,5 +250,32 @@ fn computing_an_attached_contents_node_uses_its_current_children() {
     taffy.add_child(inner, b).unwrap();
     taffy.compute_layout(outer, Size::MAX_CONTENT).unwrap();
     assert_eq!(taffy.layout(outer).unwrap().size.height, 20.0);
+    assert_eq!(taffy.layout(b).unwrap().location, Point { x: 0.0, y: 10.0 });
+}
+
+#[test]
+fn contents_node_laid_out_as_root_is_reset_when_its_ancestor_is_laid_out_again() {
+    let mut taffy = new_test_tree();
+    let a = leaf(&mut taffy, 10.0);
+    let b = leaf(&mut taffy, 10.0);
+    let wrapper = contents(&mut taffy, &[a, b]);
+    let root = flex_row(&mut taffy, &[wrapper]);
+    taffy.compute_layout(root, Size::MAX_CONTENT).unwrap();
+    assert_eq!(taffy.layout(b).unwrap().location, Point { x: 10.0, y: 0.0 });
+
+    // As a root the wrapper is a block, so its children stack vertically
+    taffy.compute_layout(wrapper, Size::MAX_CONTENT).unwrap();
+    assert_eq!(taffy.layout(wrapper).unwrap().size, Size { width: 10.0, height: 20.0 });
+    assert_eq!(taffy.layout(b).unwrap().location, Point { x: 0.0, y: 10.0 });
+
+    // Laid out by its flex parent again, without any mutation in between
+    taffy.mark_dirty(root).unwrap();
+    taffy.compute_layout(root, Size::MAX_CONTENT).unwrap();
+    assert_eq!(*taffy.layout(wrapper).unwrap(), Layout::new());
+    assert_eq!(taffy.layout(b).unwrap().location, Point { x: 10.0, y: 0.0 });
+
+    // And as a root again: the block layout must be recomputed rather than served from the cache
+    taffy.compute_layout(wrapper, Size::MAX_CONTENT).unwrap();
+    assert_eq!(taffy.layout(wrapper).unwrap().size, Size { width: 10.0, height: 20.0 });
     assert_eq!(taffy.layout(b).unwrap().location, Point { x: 0.0, y: 10.0 });
 }
