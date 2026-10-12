@@ -121,6 +121,9 @@ async fn main() {
                 writeln!(&mut mod_file, "}}\n").unwrap();
             }
             current_module = Some(module.to_owned());
+            if module == Path::new("contents") {
+                writeln!(&mut mod_file, r#"#[cfg(feature = "taffy_tree_display_contents")]"#).unwrap();
+            }
             writeln!(&mut mod_file, "mod {} {{", module.display()).unwrap();
         }
 

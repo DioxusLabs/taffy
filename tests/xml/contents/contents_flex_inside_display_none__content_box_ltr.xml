@@ -1,0 +1,23 @@
+<test name="contents_flex_inside_display_none__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="flex" box-sizing="content-box" direction="ltr" position="absolute" width="200px" height="100px">
+      <div box-sizing="content-box" direction="ltr" position="relative" width="30px"/>
+      <div display="none" box-sizing="content-box" direction="ltr" position="relative">
+        <div display="contents" box-sizing="content-box" direction="ltr" position="relative">
+          <div box-sizing="content-box" direction="ltr" position="relative" width="40px"/>
+        </div>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="200" height="100">
+      <node x="0" y="0" width="30" height="100"/>
+      <node x="0" y="0" width="0" height="0">
+        <node x="0" y="0" width="0" height="0">
+          <node x="0" y="0" width="0" height="0"/>
+        </node>
+      </node>
+    </node>
+  </expectations>
+</test>

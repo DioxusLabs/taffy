@@ -43,6 +43,7 @@ default = [
     "calc",
     "content_size",
     "detailed_layout_info",
+    "taffy_tree_display_contents",
 ]
 #! ## Feature Flags
 #!
@@ -71,6 +72,8 @@ strict_provenance = []
 
 ## Enable the built-in Taffy node tree. See [`TaffyTree`](crate::TaffyTree).
 taffy_tree = ["dep:slotmap"]
+## Enables `Display::Contents` (CSS `display: contents`), which [`TaffyTree`](crate::TaffyTree) flattens out of the child lists it lays out.
+taffy_tree_display_contents = ["taffy_tree"]
 
 #! ### Other
 

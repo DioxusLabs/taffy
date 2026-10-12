@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- `Display` gains a `Contents` variant (CSS `display: contents`), behind the new default-enabled `taffy_tree_display_contents` feature (which implies `taffy_tree`). Code that exhaustively matches on `Display` must handle it. `TaffyTree` flattens contents nodes out of the child lists that it lays out: a contents node gets an empty layout at its parent's origin, and its children are positioned relative to the nearest ancestor that is not `display: contents`. `TaffyTree::children` and `TaffyTree::parent` still return the tree as constructed. Custom trees must do the flattening themselves.
+
 ## 0.15.0
 
 The MSRV for this release is 1.71.

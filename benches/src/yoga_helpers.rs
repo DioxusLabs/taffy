@@ -202,6 +202,7 @@ fn apply_taffy_style(node: &mut yg::Node, style: &tf::Style) {
         tf::Display::Grid => panic!("Yoga does not support CSS Grid layout"),
         tf::Display::Block => panic!("Yoga does not support CSS Block layout"),
         tf::Display::FlowRoot => panic!("Yoga does not support CSS Block layout"),
+        tf::Display::Contents => panic!("Display::Contents is not supported by the Yoga bindings"),
     });
 
     // box_sizing

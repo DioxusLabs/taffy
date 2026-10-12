@@ -135,6 +135,15 @@ jobs:
       - run: cargo build --no-default-features --features std,taffy_tree,grid,flexbox,block_layout
       - run: cargo test --tests --no-default-features --features std,taffy_tree,grid,flexbox,block_layout
 
+  test-features-default-except-taffy-tree-display-contents:
+    name: "Test Suite [default except taffy_tree_display_contents]"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+      - run: cargo build --no-default-features --features std,taffy_tree,flexbox,flexbox_balance,grid,block_layout,float_layout,calc,content_size,detailed_layout_info
+      - run: cargo test --tests --no-default-features --features std,taffy_tree,flexbox,flexbox_balance,grid,block_layout,float_layout,calc,content_size,detailed_layout_info
+
   test-features-no-grid-nor-flexbox:
     name: "Test Suite [std (no algorithms)]"
     runs-on: ubuntu-latest

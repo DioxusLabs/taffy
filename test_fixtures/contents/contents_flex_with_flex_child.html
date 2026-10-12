@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    Test description
+  </title>
+</head>
+<body>
+
+<!-- Contents child with flex-grow should participate in parent's flex layout -->
+<div id="test-root" style="display: flex; width: 300px; height: 100px;">
+  <div style="width: 50px;"></div>
+  <div style="display: contents;">
+    <div style="flex-grow: 1;"></div>
+  </div>
+  <div style="width: 50px;"></div>
+</div>
+
+</body>
+</html>
