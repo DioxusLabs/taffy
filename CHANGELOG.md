@@ -5,6 +5,7 @@
 ### Changes
 
 - `BlockContext::place_floated_box` (and `FloatContext::place_floated_box`) now take a caller-defined `id: u64` for the box, which is stored on `PlacedFloatedBox`. `BlockContext::float_mark` and `BlockContext::floats_placed_since` read back the id and position of the floats placed since a mark, so that custom formatting contexts which place floats do not need to keep their own list of placements.
+- `Cache` now keeps the first baseline of `RunMode::ComputeSize` results, so a size-only measurement returns the same `LayoutOutput::baselines.first` whether or not it comes from the cache (cache hits used to return no baselines). The size of `Cache` is unchanged.
 
 ## 0.15.0
 
