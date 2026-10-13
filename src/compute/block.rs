@@ -76,6 +76,17 @@ impl BlockFormattingContext {
     }
 }
 
+/// A mark of how many floats a Block Formatting Context held when it was taken.
+/// See [`BlockContext::float_mark`].
+#[cfg(feature = "float_layout")]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct FloatMark {
+    /// The number of left floats
+    left: usize,
+    /// The number of right floats
+    right: usize,
+}
+
 /// Context for each individual Block within a Block Formatting Context
 ///
 /// Contains a mutable reference to the BlockFormattingContext + block-specific data
@@ -163,9 +174,10 @@ impl BlockContext<'_> {
         self.bfc.float_context.has_active_floats(min_y + self.y_offset)
     }
 
-    /// Position a floated box with the context
+    /// Position a floated box with the context. `id` identifies the box in [`Self::floats_placed_since`].
     pub fn place_floated_box(
         &mut self,
+        id: u64,
         floated_box: Size<f32>,
         min_y: f32,
         direction: FloatDirection,
@@ -176,6 +188,7 @@ impl BlockContext<'_> {
             self.adjoining_floats[direction as usize] = true;
         }
         let mut pos = self.bfc.float_context.place_floated_box(
+            id,
             floated_box,
             min_y + self.y_offset,
             self.content_box_insets,
@@ -188,6 +201,25 @@ impl BlockContext<'_> {
         self.float_content_contribution = self.float_content_contribution.max(pos.y + floated_box.height);
 
         pos
+    }
+
+    /// A mark of the floats placed in the Block Formatting Context so far, for [`Self::floats_placed_since`]
+    pub fn float_mark(&self) -> FloatMark {
+        let float_context = &self.bfc.float_context;
+        FloatMark { left: float_context.left_floats().len(), right: float_context.right_floats().len() }
+    }
+
+    /// The id and position of each floated box placed since `mark` was taken: left floats in the
+    /// order they were placed, then right floats. Positions are relative to this block, as
+    /// returned by [`Self::place_floated_box`].
+    pub fn floats_placed_since(&self, mark: FloatMark) -> impl Iterator<Item = (u64, Point<f32>)> + '_ {
+        let float_context = &self.bfc.float_context;
+        let left = float_context.left_floats()[mark.left..].iter().map(|placed| (placed, FloatDirection::Left));
+        let right = float_context.right_floats()[mark.right..].iter().map(|placed| (placed, FloatDirection::Right));
+        left.chain(right).map(move |(placed, direction)| {
+            let pos = float_context.placed_position(placed, direction);
+            (placed.id, Point { x: pos.x - self.insets[0], y: pos.y - self.y_offset })
+        })
     }
 
     /// Search a space suitable for laying out non-floated content into
@@ -1197,6 +1229,7 @@ fn perform_final_layout_on_in_flow_children(
                 };
 
                 let mut location = block_ctx.place_floated_box(
+                    item.node_id.into(),
                     margin_box,
                     y_offset_for_float,
                     float_direction,

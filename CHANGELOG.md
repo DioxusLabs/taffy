@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Changes
+
+- `BlockContext::place_floated_box` (and `FloatContext::place_floated_box`) now take a caller-defined `id: u64` for the box, which is stored on `PlacedFloatedBox`. `BlockContext::float_mark` and `BlockContext::floats_placed_since` read back the id and position of the floats placed since a mark, so that custom formatting contexts which place floats do not need to keep their own list of placements.
+
 ## 0.15.0
 
 The MSRV for this release is 1.71.

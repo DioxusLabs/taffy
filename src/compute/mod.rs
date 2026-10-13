@@ -50,6 +50,8 @@ pub use self::flexbox::compute_flexbox_layout;
 pub use self::grid::compute_grid_layout;
 
 #[cfg(feature = "float_layout")]
+pub use self::block::FloatMark;
+#[cfg(feature = "float_layout")]
 pub use self::float::{BfcSlot, ContentSlot, FloatContext, FloatIntrinsicWidthCalculator};
 
 use crate::geometry::{Line, Point, Size};

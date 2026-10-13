@@ -77,8 +77,8 @@ pub struct BfcSlot {
 /// A floated box
 #[derive(Debug, Clone, Default)]
 pub struct PlacedFloatedBox {
-    /// A user defined ID for the box
-    // id: u64,
+    /// The caller-defined id that the box was placed with
+    pub id: u64,
     /// The width of the box
     pub width: f32,
     /// The height of the box
@@ -300,6 +300,14 @@ impl FloatContext {
         self.segments.splice((idx + 1)..(idx + 1), core::iter::once(new_segment));
     }
 
+    /// The (x, y) coordinates of a box previously placed in the context on the `direction` side
+    pub(crate) fn placed_position(&self, placed: &PlacedFloatedBox, direction: FloatDirection) -> Point<f32> {
+        match direction {
+            FloatDirection::Left => Point { x: placed.x_inset, y: placed.y },
+            FloatDirection::Right => Point { x: self.available_width - placed.x_inset - placed.width, y: placed.y },
+        }
+    }
+
     /// Update the last placed float start and end values
     fn update_last_placed_float(&mut self, direction: FloatDirection, placement: Range<usize>) {
         let slot = direction as usize;
@@ -307,9 +315,11 @@ impl FloatContext {
         self.last_placed_floats[slot].end = self.last_placed_floats[slot].end.max(placement.end);
     }
 
-    /// Position a floated box with the context, returning the (x, y) coordinates
+    /// Position a floated box with the context, returning the (x, y) coordinates.
+    /// `id` is stored with the placed box and is not otherwise interpreted.
     pub fn place_floated_box(
         &mut self,
+        id: u64,
         floated_box: Size<f32>,
         min_y: f32,
         containing_block_insets: [f32; 2],
@@ -319,7 +329,7 @@ impl FloatContext {
         self.has_floats = true;
 
         let placed_floated_box =
-            self.place_floated_box_inner(floated_box, min_y, containing_block_insets, direction, clear);
+            self.place_floated_box_inner(id, floated_box, min_y, containing_block_insets, direction, clear);
 
         let slot = direction as usize;
         let bottom = placed_floated_box.y + placed_floated_box.height;
@@ -327,23 +337,18 @@ impl FloatContext {
         let y = placed_floated_box.y;
         self.float_ceiling = Some(self.float_ceiling.map_or(y, |ceiling| ceiling.max(y)));
 
-        let x_inset = placed_floated_box.x_inset;
-        let y = placed_floated_box.y;
+        let pos = self.placed_position(&placed_floated_box, direction);
         match direction {
-            FloatDirection::Left => {
-                self.left_floats.push(placed_floated_box);
-                Point { x: x_inset, y }
-            }
-            FloatDirection::Right => {
-                self.right_floats.push(placed_floated_box);
-                Point { x: self.available_width - x_inset - floated_box.width, y }
-            }
+            FloatDirection::Left => self.left_floats.push(placed_floated_box),
+            FloatDirection::Right => self.right_floats.push(placed_floated_box),
         }
+        pos
     }
 
     /// Inner implementation of float placement, split into a separate function so that it can early-return
     fn place_floated_box_inner(
         &mut self,
+        id: u64,
         floated_box: Size<f32>,
         min_y: f32,
         containing_block_insets: [f32; 2],
@@ -470,6 +475,7 @@ impl FloatContext {
             // TODO: need to update last_placed_float?
 
             return PlacedFloatedBox {
+                id,
                 width: floated_box.width,
                 height: floated_box.height,
                 y: start_y,
@@ -498,6 +504,7 @@ impl FloatContext {
             self.update_last_placed_float(direction, start_idx..end_idx);
 
             return PlacedFloatedBox {
+                id,
                 width: floated_box.width,
                 height: floated_box.height,
                 y: start_y,
@@ -560,7 +567,7 @@ impl FloatContext {
         // Update last_placed_float
         self.update_last_placed_float(direction, start_idx..(end_idx + 1));
 
-        PlacedFloatedBox { width: floated_box.width, height: floated_box.height, y: start_y, x_inset: placed_inset }
+        PlacedFloatedBox { id, width: floated_box.width, height: floated_box.height, y: start_y, x_inset: placed_inset }
     }
 
     /// Get the end segment of the last float on side(s) specified by the clear parameter (if any)
