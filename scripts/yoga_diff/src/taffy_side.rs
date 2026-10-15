@@ -155,7 +155,11 @@ pub fn to_taffy_style(s: &StyleMap, is_root: bool, rtl: bool, no_auto_min: bool)
         st.flex_shrink = 0.0;
     }
     st.size = Size { width: dim(gv("width")), height: dim(gv("height")) };
-    let min = |v: V| if v == V::Undef && no_auto_min { LengthPercentageAuto::length(0.0) } else { lpa(v) };
+    // An unset minimum stays `auto`: the Yoga mode treats it as undefined under the
+    // `MinSizeUndefinedInsteadOfAuto` errata, which differs from an explicit 0 when a box is smaller
+    // than its own padding (`calculateAvailableInnerDimension` clamps to 0 only for undefined).
+    let _ = no_auto_min;
+    let min = |v: V| lpa(v);
     st.min_size = Size { width: min(gv("min-width")), height: min(gv("min-height")) };
     st.max_size = Size { width: lpa(gv("max-width")), height: lpa(gv("max-height")) };
     let zero_if_unset = |v: V| if v == V::Undef { LengthPercentageAuto::length(0.0) } else { lpa(v) };
@@ -313,58 +317,88 @@ impl TaffySide {
         let mut log = CallLog::default();
         self.tree
             .compute_layout_with_measure(self.root, available, |layout_input, _id, ctx, style| {
-                taffy::compute_leaf_layout(
-                    layout_input,
-                    style,
-                    |_, _| 0.0,
-                    |known, avail| match ctx {
-                        Some(ctx) => {
-                            // Taffy hands the measure function border-box known sizes; Yoga's measure
-                            // callback receives content-box sizes clamped to zero.
-                            use taffy::ResolveOrZero;
-                            let pw = layout_input.parent_size.width;
-                            let pb = style.padding.resolve_or_zero(pw, |_, _| 0.0)
-                                + style.border.resolve_or_zero(pw, |_, _| 0.0);
-                            let known = Size {
-                                width: known.width.map(|k| (k - pb.left - pb.right).max(0.0)),
-                                height: known.height.map(|k| (k - pb.top - pb.bottom).max(0.0)),
-                            };
-                            let axis = |known: Option<f32>, avail: AvailableSpace| match (known, avail) {
-                                (Some(k), _) => (k, Mode::Exactly),
-                                (None, AvailableSpace::Definite(a)) => (a.max(0.0), Mode::AtMost),
-                                (None, AvailableSpace::MinContent) => (0.0, Mode::AtMost),
-                                (None, AvailableSpace::MaxContent) => (f32::NAN, Mode::Undefined),
-                            };
-                            let (w, wm) = axis(known.width, avail.width);
-                            let (h, hm) = axis(known.height, avail.height);
-                            let (width, height) = text::measure(&ctx.text, MeasureInput { w, wm, h, hm });
-                            log.measure.push(MeasureCall {
-                                path: ctx.path.clone(),
-                                w: (wm != Mode::Undefined).then_some(w),
-                                wm,
-                                h: (hm != Mode::Undefined).then_some(h),
-                                hm,
-                                out: [width, height],
-                            });
-                            Size { width, height }
-                        }
-                        None => Size::ZERO,
-                    },
-                )
+                // Yoga leaves ignore their own style sizes: the parent has already resolved them into
+                // the sizing modes, so the measure callback must not go through
+                // `taffy::compute_leaf_layout` (which would re-apply `style.size`). The callback
+                // receives border-box known sizes and returns a border-box size.
+                use taffy::ResolveOrZero;
+                let pw = layout_input.parent_size.width;
+                let pb = style.padding.resolve_or_zero(pw, |_, _| 0.0) + style.border.resolve_or_zero(pw, |_, _| 0.0);
+                let pb_size = Size { width: pb.left + pb.right, height: pb.top + pb.bottom };
+                match ctx {
+                    Some(ctx) => {
+                        // Yoga's measure callback receives content-box sizes clamped to zero.
+                        let known = Size {
+                            width: layout_input.known_dimensions.width.map(|k| (k - pb_size.width).max(0.0)),
+                            height: layout_input.known_dimensions.height.map(|k| (k - pb_size.height).max(0.0)),
+                        };
+                        // `measureNodeWithMeasureFunc`: `innerWidth = max(0, availableWidth - paddingAndBorder)`
+                        // for both the exact and the at-most modes.
+                        let axis = |known: Option<f32>, avail: AvailableSpace, pb: f32| match (known, avail) {
+                            (Some(k), _) => (k, Mode::Exactly),
+                            (None, AvailableSpace::Definite(a)) => ((a - pb).max(0.0), Mode::AtMost),
+                            (None, AvailableSpace::MinContent) => (0.0, Mode::AtMost),
+                            (None, AvailableSpace::MaxContent) => (f32::NAN, Mode::Undefined),
+                        };
+                        let avail = layout_input.available_space;
+                        let (w, wm) = axis(known.width, avail.width, pb_size.width);
+                        let (h, hm) = axis(known.height, avail.height, pb_size.height);
+                        let (width, height) = text::measure(&ctx.text, MeasureInput { w, wm, h, hm });
+                        log.measure.push(MeasureCall {
+                            path: ctx.path.clone(),
+                            w: (wm != Mode::Undefined).then_some(w),
+                            wm,
+                            h: (hm != Mode::Undefined).then_some(h),
+                            hm,
+                            out: [width, height],
+                        });
+                        taffy::LayoutOutput::from_outer_size(Size {
+                            width: width + pb_size.width,
+                            height: height + pb_size.height,
+                        })
+                    }
+                    None => taffy::LayoutOutput::from_outer_size(pb_size),
+                }
             })
             .unwrap();
 
-        let layout = self
-            .nodes
-            .iter()
-            .map(|id| match id {
-                Some(id) => {
-                    let l = self.tree.layout(*id).unwrap();
-                    NodeLayout([l.location.x, l.location.y, l.size.width, l.size.height])
+        // Positions are compared in root coordinates: Taffy stores hoisted (absolute) boxes relative
+        // to their containing block, Yoga relative to their parent.
+        let mut containing_block: std::collections::HashMap<NodeId, usize> = std::collections::HashMap::new();
+        for (index, id) in self.nodes.iter().enumerate() {
+            if let Some(id) = id {
+                for hoisted in self.tree.hoisted_children(*id).unwrap() {
+                    containing_block.insert(*hoisted, index);
                 }
-                None => NodeLayout([0.0; 4]),
-            })
-            .collect();
+            }
+        }
+        let parents: Vec<Option<usize>> = tree.preorder().into_iter().map(|(_, p)| p).collect();
+        let mut origin = vec![[0.0f32; 2]; self.nodes.len()];
+        let mut layout = Vec::with_capacity(self.nodes.len());
+        for index in 0..self.nodes.len() {
+            let mut ancestor = parents[index];
+            while let Some(a) = ancestor {
+                if self.nodes[a].is_some() {
+                    break;
+                }
+                ancestor = parents[a];
+            }
+            match self.nodes[index] {
+                Some(id) => {
+                    let l = self.tree.layout(id).unwrap();
+                    let base = match containing_block.get(&id).copied().or(ancestor) {
+                        Some(base) => origin[base],
+                        None => [0.0, 0.0],
+                    };
+                    origin[index] = [base[0] + l.location.x, base[1] + l.location.y];
+                    layout.push(NodeLayout([origin[index][0], origin[index][1], l.size.width, l.size.height]));
+                }
+                None => {
+                    origin[index] = ancestor.map(|a| origin[a]).unwrap_or([0.0, 0.0]);
+                    layout.push(NodeLayout([0.0; 4]));
+                }
+            }
+        }
         Run { layout, measure: log.measure, baseline: log.baseline }
     }
 }
