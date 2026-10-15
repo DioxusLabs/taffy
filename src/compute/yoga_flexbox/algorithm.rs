@@ -1323,6 +1323,7 @@ pub fn compute_yoga_flexbox_layout(
     let gap_style = style.gap();
     let style_min_size = style.min_size();
     let style_max_size = style.max_size();
+    let own_margin = style.margin().resolve_or_zero(owner_width, calc).sum_axes();
     drop(style);
 
     // A Yoga parent folds this node's style size into the known dimensions; at the root or under a
@@ -1334,9 +1335,26 @@ pub fn compute_yoga_flexbox_layout(
         };
         let resolved =
             processed.maybe_resolve(owner_opt, calc).map(|v| v.filter(|v| *v >= 0.0)).maybe_add(box_sizing_adjustment);
-        for (known, resolved, max, available, mode) in [
-            (inputs.known_dimensions.width, resolved.width, max_size.width, &mut available_width, &mut width_mode),
-            (inputs.known_dimensions.height, resolved.height, max_size.height, &mut available_height, &mut height_mode),
+        // Yoga's calculateLayout adds the margin to a definite size but not to the max size; the
+        // margin comes off again inside, so only the max branch subtracts it here
+        let margin_sums = own_margin;
+        for (known, resolved, max, margin, available, mode) in [
+            (
+                inputs.known_dimensions.width,
+                resolved.width,
+                max_size.width,
+                margin_sums.width,
+                &mut available_width,
+                &mut width_mode,
+            ),
+            (
+                inputs.known_dimensions.height,
+                resolved.height,
+                max_size.height,
+                margin_sums.height,
+                &mut available_height,
+                &mut height_mode,
+            ),
         ] {
             if known.is_some() {
                 continue;
@@ -1345,7 +1363,7 @@ pub fn compute_yoga_flexbox_layout(
                 *available = size;
                 *mode = YogaSizingMode::StretchFit;
             } else if let Some(max) = max {
-                *available = max;
+                *available = max - margin;
                 *mode = YogaSizingMode::FitContent;
             }
         }

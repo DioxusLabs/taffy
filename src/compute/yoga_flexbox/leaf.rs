@@ -110,20 +110,23 @@ pub fn compute_yoga_leaf_layout(
             .maybe_resolve(parent_size, &resolve_calc_value)
             .map(|v| v.filter(|v| *v >= 0.0))
             .maybe_add(box_sizing_adjustment);
-        let root_axis = |axis: AxisInput, known: Option<f32>, resolved: Option<f32>, max: Option<f32>| {
+        // calculateLayout adds the margin to a definite size but not to the max size; the margin
+        // comes off again inside, so only the max branch subtracts it here
+        let margin = style.margin().resolve_or_zero(parent_size.width, &resolve_calc_value).sum_axes();
+        let root_axis = |axis: AxisInput, known: Option<f32>, resolved: Option<f32>, max: Option<f32>, margin: f32| {
             if known.is_some() {
                 axis
             } else if let Some(size) = resolved {
                 AxisInput { mode: YogaSizingMode::StretchFit, available: size }
             } else if let Some(max) = max {
-                AxisInput { mode: YogaSizingMode::FitContent, available: max }
+                AxisInput { mode: YogaSizingMode::FitContent, available: max - margin }
             } else {
                 axis
             }
         };
         (
-            root_axis(width, inputs.known_dimensions.width, resolved.width, max_size.width),
-            root_axis(height, inputs.known_dimensions.height, resolved.height, max_size.height),
+            root_axis(width, inputs.known_dimensions.width, resolved.width, max_size.width, margin.width),
+            root_axis(height, inputs.known_dimensions.height, resolved.height, max_size.height, margin.height),
         )
     } else {
         (width, height)
