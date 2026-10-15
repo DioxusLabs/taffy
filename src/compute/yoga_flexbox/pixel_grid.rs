@@ -21,9 +21,7 @@ pub(crate) fn round_value_to_pixel_grid(
     if inexact_equals_f64(fractional, 0.0) {
         // Already rounded.
         scaled_value -= fractional;
-    } else if inexact_equals_f64(fractional, 1.0) {
-        scaled_value = scaled_value - fractional + 1.0;
-    } else if force_ceil {
+    } else if inexact_equals_f64(fractional, 1.0) || force_ceil {
         scaled_value = scaled_value - fractional + 1.0;
     } else if force_floor {
         scaled_value -= fractional;
