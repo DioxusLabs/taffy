@@ -1101,6 +1101,32 @@ impl<NodeContext> TaffyTree<NodeContext> {
     }
 }
 
+impl<NodeContext> TaffyTree<NodeContext> {
+    /// Cache lookup that applies Yoga's matching rules to `Display::YogaFlexbox` nodes
+    #[inline]
+    fn cache_get_for_display(&mut self, node_id: NodeId, input: &LayoutInput) -> Option<LayoutOutput> {
+        let key = node_id.into();
+        #[cfg(feature = "yoga_flexbox")]
+        if self.nodes[key].style.display == Display::YogaFlexbox {
+            let params = YogaCacheParams {
+                point_scale_factor: self.config.yoga_config.point_scale_factor,
+                has_measure_func: self.has_measure_func(node_id),
+                margin: self.nodes[key].style.margin.resolve_or_zero(input.parent_size.width, |_, _| 0.0).sum_axes(),
+            };
+            return self.nodes[key].cache.get_yoga(input, &params);
+        }
+        self.nodes[key].cache.get(input)
+    }
+
+    /// Whether the node is a leaf with a node context, i.e. is measured by the measure function
+    #[cfg(feature = "yoga_flexbox")]
+    #[inline]
+    fn has_measure_func(&self, node_id: NodeId) -> bool {
+        let key = node_id.into();
+        self.nodes[key].has_context && self.children[key].is_empty()
+    }
+}
+
 #[cfg(test)]
 mod tests {
 
@@ -1635,31 +1661,5 @@ mod tests {
             8,
             "clear() drops all nodes, so it must drop their contexts too"
         );
-    }
-}
-
-impl<NodeContext> TaffyTree<NodeContext> {
-    /// Cache lookup that applies Yoga's matching rules to `Display::YogaFlexbox` nodes
-    #[inline]
-    fn cache_get_for_display(&mut self, node_id: NodeId, input: &LayoutInput) -> Option<LayoutOutput> {
-        let key = node_id.into();
-        #[cfg(feature = "yoga_flexbox")]
-        if self.nodes[key].style.display == Display::YogaFlexbox {
-            let params = YogaCacheParams {
-                point_scale_factor: self.config.yoga_config.point_scale_factor,
-                has_measure_func: self.has_measure_func(node_id),
-                margin: self.nodes[key].style.margin.resolve_or_zero(input.parent_size.width, |_, _| 0.0).sum_axes(),
-            };
-            return self.nodes[key].cache.get_yoga(input, &params);
-        }
-        self.nodes[key].cache.get(input)
-    }
-
-    /// Whether the node is a leaf with a node context, i.e. is measured by the measure function
-    #[cfg(feature = "yoga_flexbox")]
-    #[inline]
-    fn has_measure_func(&self, node_id: NodeId) -> bool {
-        let key = node_id.into();
-        self.nodes[key].has_context && self.children[key].is_empty()
     }
 }

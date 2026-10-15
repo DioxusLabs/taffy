@@ -98,8 +98,7 @@ mod tests {
 
         tree.compute_layout(root, Size::MAX_CONTENT).unwrap();
         assert!(!tree.dirty(root).unwrap());
-        let mut config = YogaConfig::default();
-        config.point_scale_factor = 2.0;
+        let config = YogaConfig { point_scale_factor: 2.0, ..YogaConfig::default() };
         tree.set_yoga_config(config);
         assert!(tree.dirty(root).unwrap());
         assert_eq!(tree.yoga_config().point_scale_factor, 2.0);
