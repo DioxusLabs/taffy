@@ -43,7 +43,7 @@ impl YogaExperimentalFeatures {
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub struct YogaConfig {
     /// Use CSS flexbox defaults (`flex-direction: row`, `align-content: stretch`, `flex-shrink: 1`,
-    /// `position: static`) instead of Yoga's.
+    /// `flex-basis: auto` for `flex: n`) instead of Yoga's.
     pub use_web_defaults: bool,
     /// Opt-in behaviour changes.
     pub experimental_features: YogaExperimentalFeatures,
