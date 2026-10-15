@@ -5,7 +5,7 @@
 
 #![allow(dead_code)]
 
-use crate::geometry::{AbsoluteAxis, Line, Rect, Size};
+use crate::geometry::{AbsoluteAxis, Line, Point, Rect, Size};
 use crate::style::{
     AlignItems, AvailableSpace, BoxSizing, CompactLength, Dimension, Direction, FlexDirection, JustifyContent,
     Overflow, Position,
@@ -20,10 +20,19 @@ use super::axis::{
     flex_end_edge, flex_start_edge, inline_end_edge, inline_start_edge, is_row, resolve_cross_direction,
     resolve_direction, PhysicalEdge,
 };
+use super::axis::{
+    bound_axis_within_min_and_max as bound_within, calculate_available_inner_dimension, needs_trailing_position,
+    position_of_opposite_edge,
+};
 use super::config::YogaConfig;
 use super::enums::YogaErrata;
 use super::enums::YogaSizingMode;
+use super::numeric::min_or_defined;
 use super::numeric::{inexact_equals, is_defined, is_undefined, max_or_defined};
+use crate::style::{AlignContent, FlexWrap};
+use crate::tree::{
+    AxisStaticEdge, AxisStaticPosition, Baselines, Layout, OofCandidate, OofCandidates, OofPositioningArea,
+};
 
 /// Convert Yoga's NaN-as-undefined into Taffy's `Option`
 #[inline]
@@ -80,6 +89,8 @@ pub(crate) struct YogaItem {
     pub(crate) inset_is_auto: Rect<bool>,
     /// `position: static` (Yoga ignores insets on static children)
     pub(crate) is_static: bool,
+    /// The child's own `flex-direction` (its `setPosition` uses its own axes)
+    pub(crate) own_flex_direction: FlexDirection,
     /// Layout position per physical edge (`LayoutResults::position`)
     pub(crate) position: Rect<f32>,
     /// Baseline of the most recent layout (`calculateBaseline`), NaN before any
@@ -200,6 +211,15 @@ impl YogaContainer {
     }
 }
 
+/// Write one axis of a `Size`
+#[inline]
+fn set_abs(size: &mut Size<f32>, axis: AbsoluteAxis, value: f32) {
+    match axis {
+        AbsoluteAxis::Horizontal => size.width = value,
+        AbsoluteAxis::Vertical => size.height = value,
+    }
+}
+
 /// Read one physical edge of a `Rect`
 #[inline]
 fn edge_value<T: Copy>(rect: &Rect<T>, edge: PhysicalEdge) -> T {
@@ -269,6 +289,7 @@ pub(crate) fn gather_item(
     let align =
         if align == AlignItems::BASELINE && !is_row(container.main_axis) { AlignItems::FLEX_START } else { align };
 
+    let own_flex_direction = tree.get_flexbox_container_style(child).flex_direction();
     let state = tree.yoga_node_state(child);
     YogaItem {
         node: child,
@@ -298,6 +319,7 @@ pub(crate) fn gather_item(
         },
         inset_is_auto: style.inset().map(|i| i.is_auto()),
         is_static: style.position() == Position::Static,
+        own_flex_direction,
         position: Rect::ZERO,
         baseline: f32::NAN,
         computed_flex_basis: state.computed_flex_basis.unwrap_or(f32::NAN),
@@ -518,6 +540,11 @@ pub(crate) fn compute_flex_basis_for_children(
                 tree.compute_child_layout(item.node, LayoutInput::HIDDEN);
             }
             continue;
+        }
+        if perform_layout {
+            let child_main_axis = resolve_direction(item.own_flex_direction, container.direction);
+            let child_cross_axis = resolve_cross_direction(child_main_axis, container.direction);
+            item.set_position(child_main_axis, child_cross_axis, container.direction);
         }
         if item.is_absolute {
             continue;
@@ -1130,4 +1157,681 @@ pub(crate) fn justify_main_axis(
     if container.is_baseline_layout {
         line.layout.cross_dim = max_ascent_for_current_line + max_descent_for_current_line;
     }
+}
+
+/// Translate Taffy's constraints for one axis into Yoga's `availableWidth`/`availableHeight` and
+/// sizing mode (Taffy constraints exclude the node's margin, as Yoga's do after subtracting it).
+#[inline]
+fn axis_constraint(known: Option<f32>, available: AvailableSpace) -> (f32, YogaSizingMode) {
+    match (known, available) {
+        (Some(size), _) => (size, YogaSizingMode::StretchFit),
+        (None, AvailableSpace::Definite(size)) => (size, YogaSizingMode::FitContent),
+        (None, AvailableSpace::MaxContent) => (f32::NAN, YogaSizingMode::MaxContent),
+        (None, AvailableSpace::MinContent) => (0.0, YogaSizingMode::FitContent),
+    }
+}
+
+/// Yoga's `calculateLayoutImpl` for a container (the leaf paths live in [`compute_yoga_leaf_layout`]).
+pub fn compute_yoga_flexbox_layout(
+    tree: &mut impl LayoutYogaFlexboxContainer,
+    node: NodeId,
+    inputs: LayoutInput,
+) -> LayoutOutput {
+    let perform_layout = inputs.run_mode == RunMode::PerformLayout;
+    let config = *tree.yoga_config();
+    let owner_size = Size {
+        width: inputs.parent_size.width.unwrap_or(f32::NAN),
+        height: inputs.parent_size.height.unwrap_or(f32::NAN),
+    };
+    let (mut available_width, mut width_mode) =
+        axis_constraint(inputs.known_dimensions.width, inputs.available_space.width);
+    let (mut available_height, mut height_mode) =
+        axis_constraint(inputs.known_dimensions.height, inputs.available_space.height);
+
+    // Container styles (percentages resolve against the owner, as Yoga's `ownerWidth`)
+    let style = tree.get_flexbox_container_style(node);
+    let calc = |val, basis| tree.resolve_calc_value(val, basis);
+    let direction = style.direction();
+    let main_axis = resolve_direction(style.flex_direction(), direction);
+    let cross_axis = resolve_cross_direction(main_axis, direction);
+    let is_main_axis_row = is_row(main_axis);
+    let flex_wrap = style.flex_wrap();
+    let is_wrap = flex_wrap != FlexWrap::NoWrap;
+    let owner_width = defined(owner_size.width);
+    let owner_opt = Size { width: owner_width, height: defined(owner_size.height) };
+    let padding = style.padding().resolve_or_zero(owner_width, calc);
+    let border = style.border().resolve_or_zero(owner_width, calc);
+    let padding_border = padding + border;
+    let padding_border_sum = padding_border.sum_axes();
+    let box_sizing_adjustment =
+        if style.box_sizing() == BoxSizing::ContentBox { padding_border_sum } else { Size::ZERO };
+    let min_size = style.min_size().maybe_resolve(owner_opt, calc).maybe_add(box_sizing_adjustment);
+    let max_size = style.max_size().maybe_resolve(owner_opt, calc).maybe_add(box_sizing_adjustment);
+    let min_size_is_set = style.min_size().map(|min| !min.is_auto());
+    let size_style = style.size();
+    let overflow = style.overflow().x;
+    // Taffy's `normal` keyword has no Yoga equivalent and takes Yoga's defaults
+    let align_items = style.align_items();
+    let align_items = if align_items == AlignItems::NORMAL { AlignItems::STRETCH } else { align_items };
+    let align_content = style.align_content();
+    let align_content = if align_content == AlignContent::NORMAL { AlignContent::FLEX_START } else { align_content };
+    let justify_content = style.justify_content();
+    let justify_content =
+        if justify_content == JustifyContent::NORMAL { JustifyContent::FLEX_START } else { justify_content };
+    let gap_style = style.gap();
+    let style_min_size = style.min_size();
+    let style_max_size = style.max_size();
+    drop(style);
+
+    // A Yoga parent folds this node's style size into the known dimensions; at the root or under a
+    // non-Yoga parent Yoga's `calculateLayout` applies the style size (or max size) itself.
+    if inputs.sizing_mode == SizingMode::InherentSize {
+        let processed = Size {
+            width: processed_dimension(size_style.width, style_min_size.width, style_max_size.width),
+            height: processed_dimension(size_style.height, style_min_size.height, style_max_size.height),
+        };
+        let resolved =
+            processed.maybe_resolve(owner_opt, calc).map(|v| v.filter(|v| *v >= 0.0)).maybe_add(box_sizing_adjustment);
+        for (known, resolved, max, available, mode) in [
+            (inputs.known_dimensions.width, resolved.width, max_size.width, &mut available_width, &mut width_mode),
+            (inputs.known_dimensions.height, resolved.height, max_size.height, &mut available_height, &mut height_mode),
+        ] {
+            if known.is_some() {
+                continue;
+            }
+            if let Some(size) = resolved {
+                *available = size;
+                *mode = YogaSizingMode::StretchFit;
+            } else if let Some(max) = max {
+                *available = max;
+                *mode = YogaSizingMode::FitContent;
+            }
+        }
+    }
+    let available = Size { width: available_width, height: available_height };
+    let sizing_mode = Size { width: width_mode, height: height_mode };
+
+    let bound_node_axis = |axis: FlexDirection, value: f32| -> f32 {
+        let dim = dimension(axis);
+        bound_axis(value, min_size.get_abs(dim), max_size.get_abs(dim), padding_border_sum.get_abs(dim))
+    };
+
+    // measureNodeWithFixedSize
+    if !perform_layout {
+        let is_fixed = |size: f32, mode: YogaSizingMode| {
+            mode == YogaSizingMode::StretchFit
+                || (is_defined(size) && mode == YogaSizingMode::FitContent && size <= 0.0)
+        };
+        if is_fixed(available.width, width_mode) && is_fixed(available.height, height_mode) {
+            let fixed = |size: f32, mode: YogaSizingMode| {
+                if is_undefined(size) || (mode == YogaSizingMode::FitContent && size < 0.0) {
+                    0.0
+                } else {
+                    size
+                }
+            };
+            let size = Size {
+                width: bound_node_axis(FlexDirection::Row, fixed(available.width, width_mode)),
+                height: bound_node_axis(FlexDirection::Column, fixed(available.height, height_mode)),
+            };
+            return LayoutOutput::from_outer_size(size);
+        }
+    }
+
+    let mut had_overflow = false;
+    let padding_border_axis_main = padding_border_sum.get_abs(dimension(main_axis));
+    let padding_border_axis_cross = padding_border_sum.get_abs(dimension(cross_axis));
+    let leading_padding_border_cross = edge_value(&padding_border, flex_start_edge(cross_axis));
+    let mut sizing_mode_main = sizing_mode.get_abs(dimension(main_axis));
+    let sizing_mode_cross = sizing_mode.get_abs(dimension(cross_axis));
+    let main_axis_owner_size = owner_size.get_abs(dimension(main_axis));
+    let cross_axis_owner_size = owner_size.get_abs(dimension(cross_axis));
+
+    let available_inner = Size {
+        width: calculate_available_inner_dimension(
+            available.width,
+            padding_border_sum.width,
+            min_size.width,
+            max_size.width,
+        ),
+        height: calculate_available_inner_dimension(
+            available.height,
+            padding_border_sum.height,
+            min_size.height,
+            max_size.height,
+        ),
+    };
+    let mut available_inner_main = available_inner.get_abs(dimension(main_axis));
+    let available_inner_cross = available_inner.get_abs(dimension(cross_axis));
+    let gap = Size {
+        width: gap_style.width.maybe_resolve(defined(available_inner.width), calc).unwrap_or(0.0),
+        height: gap_style.height.maybe_resolve(defined(available_inner.height), calc).unwrap_or(0.0),
+    };
+
+    // The container's own definite cross size (`hasDefiniteLength` + `getResolvedDimension`), used
+    // by the multi-line alignment pass
+    let node_cross_size = size_style
+        .get_abs(dimension(cross_axis))
+        .maybe_resolve(defined(cross_axis_owner_size), calc)
+        .filter(|v| *v >= 0.0)
+        .map(|v| v + box_sizing_adjustment.get_abs(dimension(cross_axis)));
+
+    let child_count = tree.child_count(node);
+    let mut items: Vec<YogaItem> = Vec::with_capacity(child_count);
+    let mut container = YogaContainer {
+        node,
+        direction,
+        main_axis,
+        cross_axis,
+        is_wrap,
+        overflow,
+        align_items,
+        available_inner,
+        owner_size,
+        sizing_mode,
+        padding_border,
+        min_size,
+        min_size_is_set,
+        gap,
+        justify_content,
+        is_baseline_layout: false,
+        config,
+    };
+    for order in 0..child_count {
+        let child = tree.get_child_id(node, order);
+        items.push(gather_item(tree, &container, child));
+    }
+    // isBaselineLayout
+    container.is_baseline_layout = is_main_axis_row
+        && (align_items == AlignItems::BASELINE
+            || items.iter().any(|item| !item.is_absolute && item.align == AlignItems::BASELINE));
+
+    // STEP 3: DETERMINE FLEX BASIS FOR EACH ITEM
+    let mut total_main_dim = compute_flex_basis_for_children(tree, &container, &mut items, perform_layout);
+    if child_count > 1 {
+        total_main_dim += container.gap_for_axis(main_axis) * (child_count - 1) as f32;
+    }
+    let main_axis_overflows = sizing_mode_main != YogaSizingMode::MaxContent && total_main_dim > available_inner_main;
+    if is_wrap && main_axis_overflows && sizing_mode_main == YogaSizingMode::FitContent {
+        sizing_mode_main = YogaSizingMode::StretchFit;
+        container.sizing_mode = if is_main_axis_row {
+            Size { width: sizing_mode_main, height: sizing_mode_cross }
+        } else {
+            Size { width: sizing_mode_cross, height: sizing_mode_main }
+        };
+    }
+
+    // STEP 4: COLLECT FLEX ITEMS INTO FLEX LINES
+    let mut next = 0;
+    let mut line_count = 0;
+    let mut total_line_cross_dim = 0.0;
+    let cross_axis_gap = container.gap_for_axis(cross_axis);
+    let mut max_line_main_dim: f32 = 0.0;
+    let mut lines: Vec<FlexLine> = Vec::new();
+    let node_flex_grow_is_zero = true; // the container's own flex-grow is irrelevant to its children
+    while next < items.len() {
+        let mut line = calculate_flex_line(
+            &container,
+            &mut items,
+            container.gap_for_axis(main_axis),
+            main_axis_owner_size,
+            available_inner_main,
+            &mut next,
+            line_count,
+        );
+        let can_skip_flex = !perform_layout && sizing_mode_cross == YogaSizingMode::StretchFit;
+        let mut size_based_on_content = false;
+
+        // STEP 5: RESOLVING FLEXIBLE LENGTHS ON MAIN AXIS
+        if sizing_mode_main != YogaSizingMode::StretchFit {
+            let min_inner_main = min_size.get_abs(dimension(main_axis)).unwrap_or(f32::NAN) - padding_border_axis_main;
+            let max_inner_main = max_size.get_abs(dimension(main_axis)).unwrap_or(f32::NAN) - padding_border_axis_main;
+            if is_defined(min_inner_main) && line.size_consumed < min_inner_main {
+                available_inner_main = min_inner_main;
+            } else if is_defined(max_inner_main) && line.size_consumed > max_inner_main {
+                available_inner_main = max_inner_main;
+            } else {
+                let use_legacy_stretch_behaviour = config.has_errata(YogaErrata::STRETCH_FLEX_BASIS);
+                if !use_legacy_stretch_behaviour
+                    && ((is_defined(line.layout.total_flex_grow_factors) && line.layout.total_flex_grow_factors == 0.0)
+                        || node_flex_grow_is_zero)
+                {
+                    available_inner_main = line.size_consumed;
+                }
+                size_based_on_content = !use_legacy_stretch_behaviour;
+            }
+        }
+        container.available_inner = if is_main_axis_row {
+            Size { width: available_inner_main, height: available_inner_cross }
+        } else {
+            Size { width: available_inner_cross, height: available_inner_main }
+        };
+
+        if !size_based_on_content && is_defined(available_inner_main) {
+            line.layout.remaining_free_space = available_inner_main - line.size_consumed;
+        } else if line.size_consumed < 0.0 {
+            line.layout.remaining_free_space = -line.size_consumed;
+        }
+
+        if !can_skip_flex {
+            resolve_flexible_length(
+                tree,
+                &container,
+                &mut items,
+                &mut line,
+                main_axis_overflows,
+                perform_layout,
+                &mut had_overflow,
+            );
+        }
+        had_overflow = had_overflow || line.layout.remaining_free_space < 0.0;
+
+        // STEP 6: MAIN-AXIS JUSTIFICATION & CROSS-AXIS SIZE DETERMINATION
+        justify_main_axis(&container, &mut items, &mut line, perform_layout);
+
+        let mut container_cross_axis = available_inner_cross;
+        if sizing_mode_cross == YogaSizingMode::MaxContent || sizing_mode_cross == YogaSizingMode::FitContent {
+            container_cross_axis = bound_node_axis(cross_axis, line.layout.cross_dim + padding_border_axis_cross)
+                - padding_border_axis_cross;
+        }
+        if !is_wrap && sizing_mode_cross == YogaSizingMode::StretchFit {
+            line.layout.cross_dim = available_inner_cross;
+        }
+        if !is_wrap {
+            line.layout.cross_dim = bound_node_axis(cross_axis, line.layout.cross_dim + padding_border_axis_cross)
+                - padding_border_axis_cross;
+        }
+
+        // STEP 7: CROSS-AXIS ALIGNMENT
+        if perform_layout {
+            for &index in &line.items_in_flow {
+                let item = &mut items[index];
+                let mut leading_cross_dim = leading_padding_border_cross;
+                let start_auto = margin_is_auto_at(&item.margin_is_auto, flex_start_edge(cross_axis));
+                let end_auto = margin_is_auto_at(&item.margin_is_auto, flex_end_edge(cross_axis));
+                if item.align == AlignItems::STRETCH && !start_auto && !end_auto {
+                    if !item.has_definite_size(dimension(cross_axis)) {
+                        let mut child_main_size = item.measured.get_abs(dimension(main_axis));
+                        let mut child_cross_size = match item.aspect_ratio {
+                            Some(ratio) => {
+                                item.margin_for_axis(cross_axis)
+                                    + if is_main_axis_row { child_main_size / ratio } else { child_main_size * ratio }
+                            }
+                            None => line.layout.cross_dim,
+                        };
+                        child_main_size += item.margin_for_axis(main_axis);
+                        let mut child_main_mode = YogaSizingMode::StretchFit;
+                        let mut child_cross_mode = YogaSizingMode::StretchFit;
+                        constrain_max_size_for_mode(
+                            item.max_size
+                                .get_abs(dimension(main_axis))
+                                .map(|max| max + item.margin_for_axis(main_axis)),
+                            &mut child_main_mode,
+                            &mut child_main_size,
+                        );
+                        constrain_max_size_for_mode(
+                            item.max_size
+                                .get_abs(dimension(cross_axis))
+                                .map(|max| max + item.margin_for_axis(cross_axis)),
+                            &mut child_cross_mode,
+                            &mut child_cross_size,
+                        );
+                        let (child_width, child_height) = if is_main_axis_row {
+                            (child_main_size, child_cross_size)
+                        } else {
+                            (child_cross_size, child_main_size)
+                        };
+                        let cross_axis_does_not_grow = align_content != AlignContent::STRETCH && is_wrap;
+                        let child_width_mode =
+                            if is_undefined(child_width) || (!is_main_axis_row && cross_axis_does_not_grow) {
+                                YogaSizingMode::MaxContent
+                            } else {
+                                YogaSizingMode::StretchFit
+                            };
+                        let child_height_mode =
+                            if is_undefined(child_height) || (is_main_axis_row && cross_axis_does_not_grow) {
+                                YogaSizingMode::MaxContent
+                            } else {
+                                YogaSizingMode::StretchFit
+                            };
+                        layout_yoga_child(
+                            tree,
+                            item,
+                            container.available_inner,
+                            Size { width: child_width, height: child_height },
+                            Size { width: child_width_mode, height: child_height_mode },
+                            RunMode::PerformLayout,
+                        );
+                    }
+                } else {
+                    let remaining_cross_dim = container_cross_axis - item.dimension_with_margin(cross_axis);
+                    if start_auto && end_auto {
+                        leading_cross_dim += max_or_defined(0.0, remaining_cross_dim / 2.0);
+                    } else if end_auto {
+                        // trailing auto margin: no offset
+                    } else if start_auto {
+                        leading_cross_dim += max_or_defined(0.0, remaining_cross_dim);
+                    } else if item.align == AlignItems::FLEX_START {
+                        // no offset
+                    } else if item.align == AlignItems::CENTER {
+                        leading_cross_dim += remaining_cross_dim / 2.0;
+                    } else {
+                        leading_cross_dim += remaining_cross_dim;
+                    }
+                }
+                let edge = flex_start_edge(cross_axis);
+                let position = edge_value(&item.position, edge) + total_line_cross_dim + leading_cross_dim;
+                set_edge_value(&mut item.position, edge, position);
+            }
+        }
+
+        let applied_cross_gap = if line_count != 0 { cross_axis_gap } else { 0.0 };
+        total_line_cross_dim += line.layout.cross_dim + applied_cross_gap;
+        max_line_main_dim = max_or_defined(max_line_main_dim, line.layout.main_dim);
+        lines.push(line);
+        line_count += 1;
+    }
+
+    // STEP 8: MULTI-LINE CONTENT ALIGNMENT
+    if perform_layout && (is_wrap || container.is_baseline_layout) {
+        let mut lead_per_line = 0.0;
+        let mut current_lead = leading_padding_border_cross;
+        let mut extra_space_per_line = 0.0;
+        let cross_dim = dimension(cross_axis);
+        let unclamped_cross_dim = if sizing_mode_cross == YogaSizingMode::StretchFit {
+            available_inner_cross + padding_border_axis_cross
+        } else if let Some(cross) = node_cross_size {
+            cross
+        } else {
+            total_line_cross_dim + padding_border_axis_cross
+        };
+        let inner_cross_dim = bound_node_axis(cross_axis, unclamped_cross_dim) - padding_border_axis_cross;
+        let remaining_align_content_dim = inner_cross_dim - total_line_cross_dim;
+        let align_content = if remaining_align_content_dim >= 0.0 {
+            align_content
+        } else {
+            super::axis::fallback_align_content(align_content)
+        };
+        let line_count_f = line_count as f32;
+        if align_content == AlignContent::FLEX_END {
+            current_lead += remaining_align_content_dim;
+        } else if align_content == AlignContent::CENTER {
+            current_lead += remaining_align_content_dim / 2.0;
+        } else if align_content == AlignContent::STRETCH {
+            extra_space_per_line = remaining_align_content_dim / line_count_f;
+        } else if align_content == AlignContent::SPACE_AROUND {
+            current_lead += remaining_align_content_dim / (2.0 * line_count_f);
+            lead_per_line = remaining_align_content_dim / line_count_f;
+        } else if align_content == AlignContent::SPACE_EVENLY {
+            current_lead += remaining_align_content_dim / (line_count_f + 1.0);
+            lead_per_line = remaining_align_content_dim / (line_count_f + 1.0);
+        } else if align_content == AlignContent::SPACE_BETWEEN && line_count > 1 {
+            lead_per_line = remaining_align_content_dim / (line_count_f - 1.0);
+        }
+
+        let mut end_index = 0;
+        for i in 0..line_count {
+            let start_index = end_index;
+            let mut index = start_index;
+            let mut line_height: f32 = 0.0;
+            let mut max_ascent_for_current_line: f32 = 0.0;
+            let mut max_descent_for_current_line: f32 = 0.0;
+            while index < items.len() {
+                let item = &items[index];
+                if item.is_hidden {
+                    index += 1;
+                    continue;
+                }
+                if !item.is_absolute {
+                    if item.line_index != i {
+                        break;
+                    }
+                    if is_defined(item.measured.get_abs(cross_dim)) {
+                        line_height = max_or_defined(line_height, item.dimension_with_margin(cross_axis));
+                    }
+                    if item.align == AlignItems::BASELINE {
+                        let ascent = item.baseline + item.margin.top;
+                        let descent = item.measured.height + item.margin_for_axis(FlexDirection::Column) - ascent;
+                        max_ascent_for_current_line = max_or_defined(max_ascent_for_current_line, ascent);
+                        max_descent_for_current_line = max_or_defined(max_descent_for_current_line, descent);
+                        line_height =
+                            max_or_defined(line_height, max_ascent_for_current_line + max_descent_for_current_line);
+                    }
+                }
+                index += 1;
+            }
+            end_index = index;
+            current_lead += if i != 0 { cross_axis_gap } else { 0.0 };
+            line_height += extra_space_per_line;
+            for item in items[start_index..end_index].iter_mut() {
+                if item.is_hidden || item.is_absolute {
+                    continue;
+                }
+                let cross_start = flex_start_edge(cross_axis);
+                let cross_end = flex_end_edge(cross_axis);
+                if item.align == AlignItems::FLEX_START {
+                    let inset_start =
+                        if item.is_static { 0.0 } else { edge_value(&item.inset, cross_start).unwrap_or(0.0) };
+                    set_edge_value(&mut item.position, cross_start, current_lead + inset_start);
+                } else if item.align == AlignItems::FLEX_END {
+                    set_edge_value(
+                        &mut item.position,
+                        cross_start,
+                        current_lead + line_height
+                            - edge_value(&item.margin, cross_end)
+                            - item.measured.get_abs(cross_dim),
+                    );
+                } else if item.align == AlignItems::CENTER {
+                    let child_height = item.measured.get_abs(cross_dim);
+                    set_edge_value(&mut item.position, cross_start, current_lead + (line_height - child_height) / 2.0);
+                } else if item.align == AlignItems::STRETCH {
+                    set_edge_value(
+                        &mut item.position,
+                        cross_start,
+                        current_lead + edge_value(&item.margin, cross_start),
+                    );
+                    if !item.has_definite_size(cross_dim) {
+                        let child_width = if is_main_axis_row {
+                            item.measured.width + item.margin_for_axis(main_axis)
+                        } else {
+                            lead_per_line + line_height
+                        };
+                        let child_height = if !is_main_axis_row {
+                            item.measured.height + item.margin_for_axis(cross_axis)
+                        } else {
+                            lead_per_line + line_height
+                        };
+                        if !(inexact_equals(child_width, item.measured.width)
+                            && inexact_equals(child_height, item.measured.height))
+                        {
+                            layout_yoga_child(
+                                tree,
+                                item,
+                                container.available_inner,
+                                Size { width: child_width, height: child_height },
+                                Size { width: YogaSizingMode::StretchFit, height: YogaSizingMode::StretchFit },
+                                RunMode::PerformLayout,
+                            );
+                        }
+                    }
+                } else if item.align == AlignItems::BASELINE {
+                    let inset_top = if item.is_static { 0.0 } else { item.inset.top.unwrap_or(0.0) };
+                    item.position.top = current_lead + max_ascent_for_current_line - item.baseline + inset_top;
+                }
+            }
+            current_lead = current_lead + lead_per_line + line_height;
+        }
+    }
+
+    // STEP 9: COMPUTING FINAL DIMENSIONS
+    let mut measured = Size {
+        width: bound_node_axis(FlexDirection::Row, available.width),
+        height: bound_node_axis(FlexDirection::Column, available.height),
+    };
+    let main_dim = dimension(main_axis);
+    let cross_dim = dimension(cross_axis);
+    if sizing_mode_main == YogaSizingMode::MaxContent
+        || (overflow != Overflow::Scroll && sizing_mode_main == YogaSizingMode::FitContent)
+    {
+        set_abs(&mut measured, main_dim, bound_node_axis(main_axis, max_line_main_dim));
+    } else if sizing_mode_main == YogaSizingMode::FitContent && overflow == Overflow::Scroll {
+        set_abs(
+            &mut measured,
+            main_dim,
+            max_or_defined(
+                min_or_defined(
+                    available_inner_main + padding_border_axis_main,
+                    bound_within(max_line_main_dim, min_size.get_abs(main_dim), max_size.get_abs(main_dim)),
+                ),
+                padding_border_axis_main,
+            ),
+        );
+    }
+    if sizing_mode_cross == YogaSizingMode::MaxContent
+        || (overflow != Overflow::Scroll && sizing_mode_cross == YogaSizingMode::FitContent)
+    {
+        set_abs(
+            &mut measured,
+            cross_dim,
+            bound_node_axis(cross_axis, total_line_cross_dim + padding_border_axis_cross),
+        );
+    } else if sizing_mode_cross == YogaSizingMode::FitContent && overflow == Overflow::Scroll {
+        set_abs(
+            &mut measured,
+            cross_dim,
+            max_or_defined(
+                min_or_defined(
+                    available_inner_cross + padding_border_axis_cross,
+                    bound_within(
+                        total_line_cross_dim + padding_border_axis_cross,
+                        min_size.get_abs(cross_dim),
+                        max_size.get_abs(cross_dim),
+                    ),
+                ),
+                padding_border_axis_cross,
+            ),
+        );
+    }
+
+    if perform_layout {
+        // As we only wrapped in normal direction yet, we need to reverse the positions on wrap-reverse
+        if flex_wrap == FlexWrap::WrapReverse {
+            let edge = flex_start_edge(cross_axis);
+            for item in items.iter_mut().filter(|item| !item.is_absolute) {
+                let position =
+                    measured.get_abs(cross_dim) - edge_value(&item.position, edge) - item.measured.get_abs(cross_dim);
+                set_edge_value(&mut item.position, edge, position);
+            }
+        }
+        // STEP 10: SIZING AND POSITIONING ABSOLUTE CHILDREN happens via Taffy's out-of-flow hoisting
+        // STEP 11: SETTING TRAILING POSITIONS FOR CHILDREN
+        let needs_main_trailing = needs_trailing_position(main_axis);
+        let needs_cross_trailing = needs_trailing_position(cross_axis);
+        if needs_main_trailing || needs_cross_trailing {
+            for item in items.iter_mut().filter(|item| !item.is_hidden && !item.is_absolute) {
+                for (axis, needed) in [(main_axis, needs_main_trailing), (cross_axis, needs_cross_trailing)] {
+                    if needed {
+                        let dim = dimension(axis);
+                        let position = position_of_opposite_edge(
+                            edge_value(&item.position, flex_start_edge(axis)),
+                            measured.get_abs(dim),
+                            item.measured.get_abs(dim),
+                        );
+                        set_edge_value(&mut item.position, flex_end_edge(axis), position);
+                    }
+                }
+            }
+        }
+    }
+
+    // Persist per-node Yoga state and write the children's layouts
+    let mut candidates = OofCandidates::new();
+    for (order, item) in items.iter().enumerate() {
+        let mut state = tree.yoga_node_state(item.node);
+        state.computed_flex_basis = defined(item.computed_flex_basis);
+        tree.set_yoga_node_state(item.node, state);
+        if !perform_layout {
+            continue;
+        }
+        if item.is_hidden {
+            tree.set_unrounded_layout(item.node, &Layout::with_order(order as u32));
+            continue;
+        }
+        if item.is_absolute {
+            let anchor = Point { x: padding_border.left, y: padding_border.top };
+            candidates.push(OofCandidate {
+                node: item.node,
+                order: order as u32,
+                position: Position::Absolute,
+                static_position: Point {
+                    x: AxisStaticPosition::from_edge(anchor.x, AxisStaticEdge::Start),
+                    y: AxisStaticPosition::from_edge(anchor.y, AxisStaticEdge::Start),
+                },
+            });
+            continue;
+        }
+        tree.set_unrounded_layout(
+            item.node,
+            &Layout {
+                order: order as u32,
+                size: item.measured,
+                #[cfg(feature = "content_size")]
+                scrollable_overflow_rect: Rect {
+                    left: 0.0,
+                    top: 0.0,
+                    right: item.measured.width,
+                    bottom: item.measured.height,
+                },
+                scrollbar_size: Size::ZERO,
+                location: Point { x: item.position.left, y: item.position.top },
+                padding: Rect {
+                    left: item.padding_border.left,
+                    right: item.padding_border.right,
+                    top: item.padding_border.top,
+                    bottom: item.padding_border.bottom,
+                },
+                border: Rect::ZERO,
+                margin: item.margin,
+            },
+        );
+    }
+    let mut node_state = tree.yoga_node_state(node);
+    node_state.had_overflow = had_overflow;
+    tree.set_yoga_node_state(node, node_state);
+
+    // calculateBaseline for the container
+    let baseline = {
+        let mut baseline_item: Option<&YogaItem> = None;
+        for item in items.iter().filter(|item| !item.is_hidden) {
+            if item.line_index > 0 {
+                break;
+            }
+            if item.is_absolute {
+                continue;
+            }
+            if item.align == AlignItems::BASELINE {
+                baseline_item = Some(item);
+                break;
+            }
+            if baseline_item.is_none() {
+                baseline_item = Some(item);
+            }
+        }
+        match baseline_item {
+            Some(item) => item.baseline + item.position.top,
+            None => measured.height,
+        }
+    };
+
+    let mut output = LayoutOutput::from_sizes_and_baselines(
+        measured,
+        Rect { left: 0.0, top: 0.0, right: measured.width, bottom: measured.height },
+        Baselines::from_first(Some(baseline)),
+    );
+    output.oof_candidates = candidates;
+    output.oof_positioning_area = Some(OofPositioningArea {
+        size: measured - border.sum_axes(),
+        offset: Point { x: border.left, y: border.top },
+    });
+    output
 }

@@ -24,17 +24,7 @@ pub use style::{
     default_style, YogaEdges, YogaFlex, YogaGutters, DEFAULT_FLEX_GROW, DEFAULT_FLEX_SHRINK, WEB_DEFAULT_FLEX_SHRINK,
 };
 
-/// Compute the layout of a [`Display::YogaFlexbox`](crate::style::Display::YogaFlexbox) container.
-///
-/// Placeholder until the Yoga algorithm port lands: it currently runs Taffy's native CSS flexbox
-/// algorithm so the display mode, per-node state and cache plumbing can be exercised end to end.
-pub fn compute_yoga_flexbox_layout(
-    tree: &mut impl crate::tree::LayoutYogaFlexboxContainer,
-    node: crate::NodeId,
-    inputs: crate::tree::LayoutInput,
-) -> crate::tree::LayoutOutput {
-    crate::compute::compute_flexbox_layout(tree, node, inputs)
-}
+pub use algorithm::compute_yoga_flexbox_layout;
 
 #[cfg(test)]
 mod tests {
