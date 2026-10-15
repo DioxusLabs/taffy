@@ -6,7 +6,7 @@ edition = "2021"
 publish = false
 
 [dependencies]
-taffy = { path = "../.." }
+taffy = { path = "/home/ubuntu/repos/taffy", features = ["yoga_flexbox"] }
 yoga = { git = "https://github.com/DioxusLabs/yoga-rs", rev = "d34146bcb9aff4208e36a89249cd1de238095f53" }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
