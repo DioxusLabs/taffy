@@ -1270,12 +1270,6 @@ pub fn compute_yoga_flexbox_layout(
     node: NodeId,
     inputs: LayoutInput,
 ) -> LayoutOutput {
-    if std::env::var_os("YOGA_TRACE").is_some() {
-        eprintln!(
-            "ENTER {:?} known={:?} avail={:?} run={:?}",
-            node, inputs.known_dimensions, inputs.available_space, inputs.run_mode
-        );
-    }
     let perform_layout = inputs.run_mode == RunMode::PerformLayout;
     let config = *tree.yoga_config();
     let owner_size = Size {
@@ -1333,6 +1327,9 @@ pub fn compute_yoga_flexbox_layout(
     let style_max_size = style.max_size();
     let own_margin = style.margin().yoga_resolve_or_zero(owner_width, calc).sum_axes();
     drop(style);
+    // resolveFlexGrow() is 0 for the root (no owner); a Yoga parent passes ContentSize
+    let node_flex_grow_is_zero =
+        inputs.sizing_mode == SizingMode::InherentSize || tree.get_flexbox_child_style(node).flex_grow() == 0.0;
 
     // A Yoga parent folds this node's style size into the known dimensions; at the root or under a
     // non-Yoga parent Yoga's `calculateLayout` applies the style size (or max size) itself.
@@ -1497,7 +1494,6 @@ pub fn compute_yoga_flexbox_layout(
     let cross_axis_gap = container.gap_for_axis(cross_axis);
     let mut max_line_main_dim: f32 = 0.0;
     let mut lines: Vec<FlexLine> = Vec::new();
-    let node_flex_grow_is_zero = true; // the container's own flex-grow is irrelevant to its children
     while next < items.len() {
         let mut line = calculate_flex_line(
             &container,
