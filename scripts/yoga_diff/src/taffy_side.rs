@@ -319,6 +319,16 @@ impl TaffySide {
                     |_, _| 0.0,
                     |known, avail| match ctx {
                         Some(ctx) => {
+                            // Taffy hands the measure function border-box known sizes; Yoga's measure
+                            // callback receives content-box sizes clamped to zero.
+                            use taffy::ResolveOrZero;
+                            let pw = layout_input.parent_size.width;
+                            let pb = style.padding.resolve_or_zero(pw, |_, _| 0.0)
+                                + style.border.resolve_or_zero(pw, |_, _| 0.0);
+                            let known = Size {
+                                width: known.width.map(|k| (k - pb.left - pb.right).max(0.0)),
+                                height: known.height.map(|k| (k - pb.top - pb.bottom).max(0.0)),
+                            };
                             let axis = |known: Option<f32>, avail: AvailableSpace| match (known, avail) {
                                 (Some(k), _) => (k, Mode::Exactly),
                                 (None, AvailableSpace::Definite(a)) => (a, Mode::AtMost),
