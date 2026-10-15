@@ -29,6 +29,9 @@ pub use traits::LayoutFlexboxContainer;
 #[cfg(feature = "grid")]
 pub use traits::LayoutGridContainer;
 
+#[cfg(feature = "yoga_flexbox")]
+pub use traits::LayoutYogaFlexboxContainer;
+
 #[cfg(feature = "block_layout")]
 pub use traits::LayoutBlockContainer;
 

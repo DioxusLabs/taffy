@@ -323,6 +323,23 @@ pub trait LayoutFlexboxContainer: LayoutPartialTree {
     fn get_flexbox_child_style(&self, child_node_id: NodeId) -> Self::FlexboxItemStyle<'_>;
 }
 
+#[cfg(feature = "yoga_flexbox")]
+/// Extends [`LayoutFlexboxContainer`] with the configuration and per-node state Yoga's flexbox
+/// algorithm needs beyond styles.
+pub trait LayoutYogaFlexboxContainer: LayoutFlexboxContainer {
+    /// The Yoga configuration (errata, experimental features, point scale factor, web defaults)
+    fn yoga_config(&self) -> &crate::compute::yoga_flexbox::YogaConfig;
+
+    /// Get the Yoga layout state the previous pass left on a node
+    fn yoga_node_state(&self, node_id: NodeId) -> crate::compute::yoga_flexbox::YogaFlexboxNodeState;
+
+    /// Store a node's Yoga layout state for later passes
+    fn set_yoga_node_state(&mut self, node_id: NodeId, state: crate::compute::yoga_flexbox::YogaFlexboxNodeState);
+
+    /// Whether the node is a leaf measured by a measure function (Yoga's `hasMeasureFunc`)
+    fn has_measure_func(&self, node_id: NodeId) -> bool;
+}
+
 #[cfg(feature = "grid")]
 /// Extends [`LayoutPartialTree`] with getters for the styles required for CSS Grid layout
 pub trait LayoutGridContainer: LayoutPartialTree {
