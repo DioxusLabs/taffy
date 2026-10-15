@@ -331,7 +331,7 @@ impl TaffySide {
                             };
                             let axis = |known: Option<f32>, avail: AvailableSpace| match (known, avail) {
                                 (Some(k), _) => (k, Mode::Exactly),
-                                (None, AvailableSpace::Definite(a)) => (a, Mode::AtMost),
+                                (None, AvailableSpace::Definite(a)) => (a.max(0.0), Mode::AtMost),
                                 (None, AvailableSpace::MinContent) => (0.0, Mode::AtMost),
                                 (None, AvailableSpace::MaxContent) => (f32::NAN, Mode::Undefined),
                             };
