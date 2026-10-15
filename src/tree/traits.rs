@@ -338,6 +338,11 @@ pub trait LayoutYogaFlexboxContainer: LayoutFlexboxContainer {
 
     /// Whether the node is a leaf measured by a measure function (Yoga's `hasMeasureFunc`)
     fn has_measure_func(&self, node_id: NodeId) -> bool;
+
+    /// Store the node's [`YogaDetailedInfo`](crate::compute::yoga_flexbox::YogaDetailedInfo), which the
+    /// out-of-flow layout of its absolute children reads back through
+    /// [`LayoutContainingBlock::get_detailed_layout_info`]
+    fn set_detailed_yoga_info(&mut self, node_id: NodeId, info: crate::compute::yoga_flexbox::YogaDetailedInfo);
 }
 
 #[cfg(feature = "grid")]

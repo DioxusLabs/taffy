@@ -6,11 +6,12 @@
 
 use crate::geometry::Size;
 use crate::style::AvailableSpace;
-use crate::tree::{Baselines, CollapsibleMarginSet, LayoutInput, LayoutOutput};
+use crate::tree::{Baselines, CollapsibleMarginSet, LayoutInput, LayoutOutput, SizingMode};
 use crate::util::sys::f32_max;
 use crate::util::{MaybeMath, MaybeResolve, ResolveOrZero};
 use crate::{BoxSizing, CoreStyle};
 
+use super::algorithm::processed_dimension;
 use super::config::YogaConfig;
 use super::enums::YogaSizingMode;
 
@@ -96,6 +97,37 @@ pub fn compute_yoga_leaf_layout(
 
     let width = AxisInput::new(inputs.known_dimensions.width, inputs.available_space.width);
     let height = AxisInput::new(inputs.known_dimensions.height, inputs.available_space.height);
+
+    // A Yoga parent has already folded this node's style size into the sizing modes
+    // (`SizingMode::ContentSize`); at the root or under a non-Yoga parent Yoga's `calculateLayout`
+    // applies the style size (or max size) itself.
+    let (width, height) = if inputs.sizing_mode == SizingMode::InherentSize {
+        let processed = Size {
+            width: processed_dimension(style.size().width, style.min_size().width, style.max_size().width),
+            height: processed_dimension(style.size().height, style.min_size().height, style.max_size().height),
+        };
+        let resolved = processed
+            .maybe_resolve(parent_size, &resolve_calc_value)
+            .map(|v| v.filter(|v| *v >= 0.0))
+            .maybe_add(box_sizing_adjustment);
+        let root_axis = |axis: AxisInput, known: Option<f32>, resolved: Option<f32>, max: Option<f32>| {
+            if known.is_some() {
+                axis
+            } else if let Some(size) = resolved {
+                AxisInput { mode: YogaSizingMode::StretchFit, available: size }
+            } else if let Some(max) = max {
+                AxisInput { mode: YogaSizingMode::FitContent, available: max }
+            } else {
+                axis
+            }
+        };
+        (
+            root_axis(width, inputs.known_dimensions.width, resolved.width, max_size.width),
+            root_axis(height, inputs.known_dimensions.height, resolved.height, max_size.height),
+        )
+    } else {
+        (width, height)
+    };
 
     let bound = |axis: AxisInput, measured: f32, min: Option<f32>, max: Option<f32>, pb: f32| {
         let value = match axis.mode {

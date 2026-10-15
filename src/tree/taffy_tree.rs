@@ -34,7 +34,7 @@ use crate::{compute::compute_grid_layout, LayoutGridContainer};
 use crate::compute::grid::DetailedGridInfo;
 #[cfg(feature = "yoga_flexbox")]
 use crate::compute::yoga_flexbox::{
-    compute_yoga_flexbox_layout, compute_yoga_leaf_layout, YogaConfig, YogaFlexboxNodeState,
+    compute_yoga_flexbox_layout, compute_yoga_leaf_layout, YogaConfig, YogaDetailedInfo, YogaFlexboxNodeState,
 };
 use crate::tree::layout::DetailedLayoutInfo;
 #[cfg(feature = "yoga_flexbox")]
@@ -585,6 +585,11 @@ where
     #[inline(always)]
     fn has_measure_func(&self, node_id: NodeId) -> bool {
         self.taffy.has_measure_func(node_id)
+    }
+
+    #[inline(always)]
+    fn set_detailed_yoga_info(&mut self, node_id: NodeId, info: YogaDetailedInfo) {
+        self.taffy.nodes[node_id.into()].detailed_layout_info = DetailedLayoutInfo::YogaFlexbox(info);
     }
 }
 

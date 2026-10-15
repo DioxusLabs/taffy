@@ -5,6 +5,7 @@
 //! and follows it closely, so that upstream changes can be ported diff by diff. Yoga is MIT licensed,
 //! Copyright (c) Meta Platforms, Inc. and affiliates; see `LICENSE-YOGA`.
 
+mod absolute;
 pub(crate) mod algorithm;
 pub(crate) mod axis;
 pub(crate) mod cache;
@@ -24,6 +25,8 @@ pub use style::{
     default_style, YogaEdges, YogaFlex, YogaGutters, DEFAULT_FLEX_GROW, DEFAULT_FLEX_SHRINK, WEB_DEFAULT_FLEX_SHRINK,
 };
 
+pub(crate) use absolute::layout_absolute_child;
+pub use absolute::YogaDetailedInfo;
 pub use algorithm::compute_yoga_flexbox_layout;
 
 #[cfg(test)]

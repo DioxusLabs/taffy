@@ -827,6 +827,8 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
                 node: child,
                 order,
                 position,
+                #[cfg(feature = "yoga_flexbox")]
+                yoga_parent_is_row: false,
                 static_position: Point {
                     x: AxisStaticPosition::from_alignment(
                         justify_self,

@@ -15,6 +15,7 @@ use crate::util::sys::Vec;
 use crate::util::{MaybeMath, MaybeResolve, ResolveOrZero};
 use crate::{CoreStyle, FlexboxContainerStyle, FlexboxItemStyle};
 
+use super::absolute::YogaDetailedInfo;
 use super::axis::{
     bound_axis, bound_axis_within_min_and_max, constrain_max_size_for_mode, dimension, fallback_justify_content,
     flex_end_edge, flex_start_edge, inline_end_edge, inline_start_edge, is_row, resolve_cross_direction,
@@ -29,9 +30,10 @@ use super::enums::YogaErrata;
 use super::enums::YogaSizingMode;
 use super::numeric::min_or_defined;
 use super::numeric::{inexact_equals, is_defined, is_undefined, max_or_defined};
-use crate::style::{AlignContent, FlexWrap};
+use crate::style::{AlignContent, AlignContentKeyword, AlignItemsKeyword, FlexWrap};
 use crate::tree::{
-    AxisStaticEdge, AxisStaticPosition, Baselines, Layout, OofCandidate, OofCandidates, OofPositioningArea,
+    AxisStaticAlign, AxisStaticEdge, AxisStaticPosition, Baselines, Layout, OofCandidate, OofCandidates,
+    OofPositioningArea,
 };
 
 /// Yoga has no `calc()`; calc values resolve to zero in this mode
@@ -42,7 +44,7 @@ fn no_calc(_val: *const (), _basis: f32) -> f32 {
 
 /// Convert Yoga's NaN-as-undefined into Taffy's `Option`
 #[inline]
-fn defined(value: f32) -> Option<f32> {
+pub(crate) fn defined(value: f32) -> Option<f32> {
     if is_defined(value) {
         Some(value)
     } else {
@@ -110,6 +112,8 @@ pub(crate) struct YogaItem {
     pub(crate) measured: Size<f32>,
     /// Index of the flex line the item ended up on
     pub(crate) line_index: usize,
+    /// Out-of-flow candidates surfaced by the item's final layout, in the item's coordinates
+    pub(crate) surfaced: OofCandidates,
 }
 
 impl YogaItem {
@@ -365,12 +369,13 @@ pub(crate) fn gather_item(
         min_size_is_set: style.min_size().map(|min| !min.is_auto()),
         measured: Size { width: f32::NAN, height: f32::NAN },
         line_index: 0,
+        surfaced: OofCandidates::NONE,
     }
 }
 
 /// Yoga's `processDimensions` for one axis
 #[inline]
-fn processed_dimension(
+pub(crate) fn processed_dimension(
     size: Dimension,
     min: crate::style::LengthPercentageAuto,
     max: crate::style::LengthPercentageAuto,
@@ -410,7 +415,7 @@ pub(crate) fn layout_yoga_child(
         item.node,
         LayoutInput {
             run_mode,
-            sizing_mode: SizingMode::InherentSize,
+            sizing_mode: SizingMode::ContentSize,
             axis: RequestedAxis::Both,
             known_dimensions: Size { width: known_width, height: known_height },
             known_dimensions_are_definite: Size { width: true, height: true },
@@ -419,8 +424,12 @@ pub(crate) fn layout_yoga_child(
             vertical_margins_are_collapsible: Line { start: false, end: false },
         },
     );
+    let mut output = output;
     item.measured = output.size;
     item.baseline = output.baselines.first.unwrap_or(output.size.height);
+    if run_mode == RunMode::PerformLayout {
+        item.surfaced = output.oof_candidates.take();
+    }
     output
 }
 
@@ -759,7 +768,7 @@ pub(crate) fn compute_min_content_main_size(
             node,
             LayoutInput {
                 run_mode: RunMode::ComputeSize,
-                sizing_mode: SizingMode::InherentSize,
+                sizing_mode: SizingMode::ContentSize,
                 axis: RequestedAxis::Both,
                 known_dimensions: Size::NONE,
                 known_dimensions_are_definite: Size { width: true, height: true },
@@ -1811,7 +1820,18 @@ pub fn compute_yoga_flexbox_layout(
 
     // Persist per-node Yoga state and write the children's layouts
     let mut candidates = OofCandidates::new();
-    for (order, item) in items.iter().enumerate() {
+    let excludes_padding = config.has_errata(YogaErrata::ABSOLUTE_POSITION_WITHOUT_INSETS_EXCLUDES_PADDING);
+    let static_area = |axis: FlexDirection| -> Line<f32> {
+        let (border, padding, size) = if is_row(axis) {
+            (border.horizontal_components(), padding.horizontal_components(), measured.width)
+        } else {
+            (border.vertical_components(), padding.vertical_components(), measured.height)
+        };
+        let padding = if excludes_padding { Line { start: 0.0, end: 0.0 } } else { padding };
+        Line { start: border.start + padding.start, end: size - border.end - padding.end }
+    };
+    let wrap_reverse = flex_wrap == FlexWrap::WrapReverse;
+    for (order, item) in items.iter_mut().enumerate() {
         let mut state = tree.yoga_node_state(item.node);
         state.computed_flex_basis = defined(item.computed_flex_basis);
         tree.set_yoga_node_state(item.node, state);
@@ -1823,17 +1843,31 @@ pub fn compute_yoga_flexbox_layout(
             continue;
         }
         if item.is_absolute {
-            let anchor = Point { x: padding_border.left, y: padding_border.top };
+            // justifyAbsoluteChild / alignAbsoluteChild: the static position within the parent
+            let main = absolute_static_position(main_axis, justify_placement(justify_content), static_area(main_axis));
+            let cross = absolute_static_position(
+                cross_axis,
+                align_placement(item.align, wrap_reverse),
+                static_area(cross_axis),
+            );
             candidates.push(OofCandidate {
                 node: item.node,
                 order: order as u32,
                 position: Position::Absolute,
-                static_position: Point {
-                    x: AxisStaticPosition::from_edge(anchor.x, AxisStaticEdge::Start),
-                    y: AxisStaticPosition::from_edge(anchor.y, AxisStaticEdge::Start),
+                static_position: if is_main_axis_row {
+                    Point { x: main, y: cross }
+                } else {
+                    Point { x: cross, y: main }
                 },
+                yoga_parent_is_row: is_main_axis_row,
             });
             continue;
+        }
+        // layoutAbsoluteDescendants: absolute descendants of static children position against this node
+        if !item.surfaced.is_empty() {
+            let mut surfaced = core::mem::take(&mut item.surfaced);
+            surfaced.translate(Point { x: item.position.left, y: item.position.top });
+            candidates.append(&mut surfaced);
         }
         tree.set_unrounded_layout(
             item.node,
@@ -1898,5 +1932,62 @@ pub fn compute_yoga_flexbox_layout(
         size: measured - border.sum_axes(),
         offset: Point { x: border.left, y: border.top },
     });
+    if perform_layout {
+        let containing_block_size = if config.has_errata(YogaErrata::ABSOLUTE_PERCENT_AGAINST_INNER_SIZE) {
+            container.available_inner
+        } else {
+            measured - border.sum_axes()
+        };
+        tree.set_detailed_yoga_info(
+            node,
+            YogaDetailedInfo { width_sizing_mode: sizing_mode.width, containing_block_size },
+        );
+    }
     output
+}
+
+/// Where an absolute child without insets sits along an axis of its parent
+#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+enum FlexPlacement {
+    FlexStart,
+    FlexEnd,
+    Center,
+}
+
+/// `justifyAbsoluteChild`'s mapping of the parent's `justify-content`
+fn justify_placement(justify: JustifyContent) -> FlexPlacement {
+    match justify.keyword {
+        AlignContentKeyword::End | AlignContentKeyword::FlexEnd => FlexPlacement::FlexEnd,
+        AlignContentKeyword::Center | AlignContentKeyword::SpaceAround | AlignContentKeyword::SpaceEvenly => {
+            FlexPlacement::Center
+        }
+        _ => FlexPlacement::FlexStart,
+    }
+}
+
+/// `alignAbsoluteChild`'s mapping of the child's resolved alignment, with `wrap-reverse` flipping
+fn align_placement(align: AlignItems, wrap_reverse: bool) -> FlexPlacement {
+    let placement = match align.keyword {
+        AlignItemsKeyword::End | AlignItemsKeyword::FlexEnd => FlexPlacement::FlexEnd,
+        AlignItemsKeyword::Center => FlexPlacement::Center,
+        _ => FlexPlacement::FlexStart,
+    };
+    match (wrap_reverse, placement) {
+        (true, FlexPlacement::FlexEnd) => FlexPlacement::FlexStart,
+        (true, FlexPlacement::FlexStart) => FlexPlacement::FlexEnd,
+        _ => placement,
+    }
+}
+
+/// The static position of an absolute child along one of the parent's axes, in physical terms:
+/// the parent's content box (padding box under `AbsolutePositionWithoutInsetsExcludesPadding`) and
+/// the edge the child hugs, with reversed axes swapping start and end.
+fn absolute_static_position(axis: FlexDirection, placement: FlexPlacement, area: Line<f32>) -> AxisStaticPosition {
+    let reversed = matches!(flex_start_edge(axis), PhysicalEdge::Right | PhysicalEdge::Bottom);
+    let edge = match (placement, reversed) {
+        (FlexPlacement::Center, _) => AxisStaticEdge::Center,
+        (FlexPlacement::FlexStart, false) | (FlexPlacement::FlexEnd, true) => AxisStaticEdge::Start,
+        (FlexPlacement::FlexEnd, false) | (FlexPlacement::FlexStart, true) => AxisStaticEdge::End,
+    };
+    AxisStaticPosition { area, align: AxisStaticAlign::from_keyword(edge) }
 }

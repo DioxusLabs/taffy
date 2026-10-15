@@ -107,6 +107,8 @@ pub fn compute_root_layout(
             node: root,
             order: 0,
             position,
+            #[cfg(feature = "yoga_flexbox")]
+            yoga_parent_is_row: false,
             static_position: Point {
                 x: AxisStaticPosition {
                     area: Line { start, end },

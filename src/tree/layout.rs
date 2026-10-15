@@ -347,6 +347,10 @@ pub struct OofCandidate {
     pub position: Position,
     /// The static position of the box in each axis
     pub static_position: Point<AxisStaticPosition>,
+    /// Whether the parent's main axis is a row (Yoga's absolute children of column containers fit
+    /// the containing block width); set by Yoga parents only
+    #[cfg(feature = "yoga_flexbox")]
+    pub yoga_parent_is_row: bool,
 }
 
 /// A list of [`OofCandidate`]s.
@@ -718,11 +722,14 @@ pub enum DetailedLayoutInfo<S: CheapCloneStr = DefaultCheapStr> {
     /// Enum variant for [`DetailedGridInfo`](crate::compute::grid::DetailedGridInfo)
     #[cfg(feature = "grid")]
     Grid(crate::util::sys::Box<crate::compute::grid::DetailedGridInfo<S>>),
+    /// Enum variant for [`YogaDetailedInfo`](crate::compute::yoga_flexbox::YogaDetailedInfo)
+    #[cfg(feature = "yoga_flexbox")]
+    YogaFlexbox(crate::compute::yoga_flexbox::YogaDetailedInfo),
     /// For node that hasn't had any detailed information yet
     None,
     /// Unused variant which exists only to consume the `S` type parameter when no variant
     /// carrying detailed layout info is enabled
-    #[cfg(not(feature = "grid"))]
+    #[cfg(not(any(feature = "grid", feature = "yoga_flexbox")))]
     #[doc(hidden)]
     Phantom(core::convert::Infallible, core::marker::PhantomData<S>),
 }

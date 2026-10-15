@@ -847,6 +847,8 @@ fn compute_inner(
                 node: item.node_id,
                 order: item.order,
                 position: item.position,
+                #[cfg(feature = "yoga_flexbox")]
+                yoga_parent_is_row: false,
                 static_position: Point {
                     x: AxisStaticPosition::from_alignment(justify_self, inline_area, direction.is_rtl()),
                     y: AxisStaticPosition::from_alignment(align_self, block_area, false),
