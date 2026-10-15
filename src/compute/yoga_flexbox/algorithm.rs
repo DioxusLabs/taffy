@@ -410,10 +410,20 @@ pub(crate) fn layout_yoga_child(
     };
     let (known_width, available_width) = constraint(modes.width, child_size.width, margin_row);
     let (known_height, available_height) = constraint(modes.height, child_size.height, margin_column);
+    // Yoga's MaxContent keeps the available size for the child's children
+    let max_content_size = |mode: YogaSizingMode, size: f32, margin: f32| {
+        (mode == YogaSizingMode::MaxContent && is_defined(size)).then(|| size - margin)
+    };
+    let yoga_available_size = Size {
+        width: max_content_size(modes.width, child_size.width, margin_row),
+        height: max_content_size(modes.height, child_size.height, margin_column),
+    };
 
     let output = tree.compute_child_layout(
         item.node,
         LayoutInput {
+            #[cfg(feature = "yoga_flexbox")]
+            yoga_available_size,
             run_mode,
             sizing_mode: SizingMode::ContentSize,
             axis: RequestedAxis::Both,
@@ -767,6 +777,8 @@ pub(crate) fn compute_min_content_main_size(
         let output = tree.compute_child_layout(
             node,
             LayoutInput {
+                #[cfg(feature = "yoga_flexbox")]
+                yoga_available_size: Size::NONE,
                 run_mode: RunMode::ComputeSize,
                 sizing_mode: SizingMode::ContentSize,
                 axis: RequestedAxis::Both,
@@ -1266,6 +1278,17 @@ pub fn compute_yoga_flexbox_layout(
         axis_constraint(inputs.known_dimensions.width, inputs.available_space.width);
     let (mut available_height, mut height_mode) =
         axis_constraint(inputs.known_dimensions.height, inputs.available_space.height);
+    // A Yoga parent's MaxContent still hands down the available size (see LayoutInput::yoga_available_size)
+    for (mode, available, size) in [
+        (width_mode, &mut available_width, inputs.yoga_available_size.width),
+        (height_mode, &mut available_height, inputs.yoga_available_size.height),
+    ] {
+        if mode == YogaSizingMode::MaxContent {
+            if let Some(size) = size {
+                *available = size;
+            }
+        }
+    }
 
     // Container styles (percentages resolve against the owner, as Yoga's `ownerWidth`)
     let style = tree.get_flexbox_container_style(node);

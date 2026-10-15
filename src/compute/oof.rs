@@ -652,6 +652,8 @@ pub(crate) fn layout_oof_box<Tree: LayoutContainingBlock>(
     .maybe_clamp(min_size, max_size);
 
     let layout_input = LayoutInput {
+        #[cfg(feature = "yoga_flexbox")]
+        yoga_available_size: Size::NONE,
         known_dimensions: final_size.map(Some),
         known_dimensions_are_definite: Size { width: true, height: true },
         parent_size: area_size.map(Some),

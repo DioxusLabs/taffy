@@ -144,6 +144,8 @@ pub fn compute_yoga_leaf_layout(
         let (known_width, available_width) = width.to_taffy(padding_border.width);
         let (known_height, available_height) = height.to_taffy(padding_border.height);
         let output = measure(LayoutInput {
+            #[cfg(feature = "yoga_flexbox")]
+            yoga_available_size: Size::NONE,
             known_dimensions: Size { width: known_width, height: known_height },
             available_space: Size { width: available_width, height: available_height },
             ..inputs

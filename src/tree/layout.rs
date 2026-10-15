@@ -159,6 +159,11 @@ pub struct LayoutInput {
     /// A definite available space is the space available to the node's border box: the parent
     /// subtracts the node's margins before passing it, and the node must not subtract them again.
     pub available_space: Size<AvailableSpace>,
+    /// Yoga's `availableWidth`/`availableHeight` when a Yoga parent sizes this node with its
+    /// `MaxContent` mode: the node sizes to its content, but its own children still see this size
+    /// (Yoga's `availableInnerWidth`). `None` for every other constraint and for non-Yoga parents.
+    #[cfg(feature = "yoga_flexbox")]
+    pub yoga_available_size: Size<Option<f32>>,
     /// Specific to CSS Block layout. Used for correctly computing margin collapsing. You probably want to set this to `Line::FALSE`.
     pub vertical_margins_are_collapsible: Line<bool>,
 }
@@ -166,6 +171,8 @@ pub struct LayoutInput {
 impl LayoutInput {
     /// A LayoutInput that can be used to request hidden layout
     pub const HIDDEN: LayoutInput = LayoutInput {
+        #[cfg(feature = "yoga_flexbox")]
+        yoga_available_size: Size::NONE,
         // The important property for hidden layout
         run_mode: RunMode::PerformHiddenLayout,
         // The rest will be ignored
@@ -186,6 +193,8 @@ impl LayoutInput {
     /// across a change of block axis.
     pub fn transpose(self) -> LayoutInput {
         LayoutInput {
+            #[cfg(feature = "yoga_flexbox")]
+            yoga_available_size: Size::NONE,
             run_mode: self.run_mode,
             sizing_mode: self.sizing_mode,
             axis: self.axis.transpose(),

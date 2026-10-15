@@ -32,9 +32,9 @@ impl Cache {
             return None;
         }
         let key = CacheKey::from(input);
-        let new = yoga_constraints(key.kd_available_space, params.margin);
+        let new = yoga_constraints(&key, params.margin);
         let matches = |entry_key: &CacheKey, computed: Size<f32>| {
-            let last = yoga_constraints(entry_key.kd_available_space, params.margin);
+            let last = yoga_constraints(entry_key, params.margin);
             if params.has_measure_func {
                 can_use_cached_measurement(
                     new,
@@ -82,11 +82,21 @@ fn yoga_axis_constraint(bits: u32, margin: f32) -> AxisConstraint {
 }
 
 /// Both axes of a `kd_available_space` key, `[width, height]`.
-fn yoga_constraints(kd_available_space: u64, margin: Size<f32>) -> [AxisConstraint; 2] {
-    [
-        yoga_axis_constraint((kd_available_space >> 32) as u32, margin.width),
-        yoga_axis_constraint(kd_available_space as u32, margin.height),
-    ]
+fn yoga_constraints(key: &CacheKey, margin: Size<f32>) -> [AxisConstraint; 2] {
+    let mut constraints = [
+        yoga_axis_constraint((key.kd_available_space >> 32) as u32, margin.width),
+        yoga_axis_constraint(key.kd_available_space as u32, margin.height),
+    ];
+    // A MaxContent request from a Yoga parent carries its available size
+    let yoga_sizes =
+        [f32::from_bits((key.yoga_available_size >> 32) as u32), f32::from_bits(key.yoga_available_size as u32)];
+    let margins = [margin.width, margin.height];
+    for axis in 0..2 {
+        if constraints[axis].mode == YogaSizingMode::MaxContent && yoga_sizes[axis].is_finite() {
+            constraints[axis].available = yoga_sizes[axis] + margins[axis];
+        }
+    }
+    constraints
 }
 
 /// The lookup for nodes without a measure function: same modes, available sizes equal within `1e-4`.
@@ -106,6 +116,8 @@ mod tests {
 
     fn input(run_mode: RunMode, known: Size<Option<f32>>, available: Size<AvailableSpace>) -> LayoutInput {
         LayoutInput {
+            #[cfg(feature = "yoga_flexbox")]
+            yoga_available_size: Size::NONE,
             run_mode,
             sizing_mode: SizingMode::InherentSize,
             axis: RequestedAxis::Both,

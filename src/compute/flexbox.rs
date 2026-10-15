@@ -236,7 +236,14 @@ pub fn compute_flexbox_layout(
     node: NodeId,
     inputs: LayoutInput,
 ) -> LayoutOutput {
-    let LayoutInput { known_dimensions, parent_size, run_mode, .. } = inputs;
+    let LayoutInput {
+        #[cfg(feature = "yoga_flexbox")]
+            yoga_available_size: _,
+        known_dimensions,
+        parent_size,
+        run_mode,
+        ..
+    } = inputs;
     let style = tree.get_flexbox_container_style(node);
 
     // Pull these out earlier to avoid borrowing issues
@@ -314,7 +321,13 @@ pub fn compute_flexbox_layout(
     let mut output = compute_preliminary(
         tree,
         node,
-        LayoutInput { known_dimensions: styled_based_known_dimensions, known_dimensions_are_definite, ..inputs },
+        LayoutInput {
+            #[cfg(feature = "yoga_flexbox")]
+            yoga_available_size: Size::NONE,
+            known_dimensions: styled_based_known_dimensions,
+            known_dimensions_are_definite,
+            ..inputs
+        },
     );
 
     // Layout containment suppresses the box's baseline for baseline-alignment purposes
@@ -327,7 +340,15 @@ pub fn compute_flexbox_layout(
 
 /// Compute a preliminary size for an item
 fn compute_preliminary(tree: &mut impl LayoutFlexboxContainer, node: NodeId, inputs: LayoutInput) -> LayoutOutput {
-    let LayoutInput { known_dimensions, parent_size, available_space, run_mode, .. } = inputs;
+    let LayoutInput {
+        #[cfg(feature = "yoga_flexbox")]
+            yoga_available_size: _,
+        known_dimensions,
+        parent_size,
+        available_space,
+        run_mode,
+        ..
+    } = inputs;
 
     // Define some general constants we will need for the remainder of the algorithm.
     let mut constants = compute_constants(
@@ -1945,6 +1966,8 @@ fn determine_hypothetical_cross_size(
             tree.compute_child_layout(
                 child.node,
                 LayoutInput {
+                    #[cfg(feature = "yoga_flexbox")]
+                    yoga_available_size: Size::NONE,
                     run_mode: RunMode::ComputeSize,
                     sizing_mode: SizingMode::ContentSize,
                     axis: constants.dir.cross_axis().into(),
@@ -2006,6 +2029,8 @@ fn calculate_children_base_lines(
             let measured_size_and_baselines = tree.compute_child_layout(
                 child.node,
                 LayoutInput {
+                    #[cfg(feature = "yoga_flexbox")]
+                    yoga_available_size: Size::NONE,
                     run_mode: RunMode::PerformLayout,
                     sizing_mode: SizingMode::ContentSize,
                     axis: RequestedAxis::Both,
@@ -2526,6 +2551,8 @@ fn calculate_flex_item(
     let mut layout_output = tree.compute_child_layout(
         item.node,
         LayoutInput {
+            #[cfg(feature = "yoga_flexbox")]
+            yoga_available_size: Size::NONE,
             run_mode: RunMode::PerformLayout,
             sizing_mode: SizingMode::ContentSize,
             axis: RequestedAxis::Both,

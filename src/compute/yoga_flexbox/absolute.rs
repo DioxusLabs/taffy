@@ -152,6 +152,8 @@ pub(crate) fn layout_absolute_child<Tree: LayoutContainingBlock>(
         }
     };
     let layout_input = |run_mode: RunMode, known: Size<Option<f32>>, available: Size<AvailableSpace>| LayoutInput {
+        #[cfg(feature = "yoga_flexbox")]
+        yoga_available_size: Size::NONE,
         run_mode,
         sizing_mode: SizingMode::ContentSize,
         axis: RequestedAxis::Both,
