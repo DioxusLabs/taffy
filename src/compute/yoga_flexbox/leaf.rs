@@ -8,13 +8,14 @@ use crate::geometry::Size;
 use crate::style::AvailableSpace;
 use crate::tree::{Baselines, CollapsibleMarginSet, LayoutInput, LayoutOutput, SizingMode};
 use crate::util::sys::f32_max;
-use crate::util::{MaybeMath, MaybeResolve, ResolveOrZero};
+use crate::util::MaybeMath;
 use crate::{BoxSizing, CoreStyle};
 
 use super::algorithm::processed_dimension;
 use super::axis::bound_axis;
 use super::config::YogaConfig;
 use super::enums::YogaSizingMode;
+use super::length::{YogaResolve, YogaResolveOrZero};
 
 /// One axis of a Yoga leaf's constraints: the sizing mode and the available size it applies to.
 #[derive(Copy, Clone)]
@@ -70,13 +71,13 @@ pub fn compute_yoga_leaf_layout(
     measure: impl FnOnce(LayoutInput) -> LayoutOutput,
 ) -> LayoutOutput {
     let parent_size = inputs.parent_size;
-    let padding = style.padding().resolve_or_zero(parent_size.width, &resolve_calc_value);
-    let border = style.border().resolve_or_zero(parent_size.width, &resolve_calc_value);
+    let padding = style.padding().yoga_resolve_or_zero(parent_size.width, &resolve_calc_value);
+    let border = style.border().yoga_resolve_or_zero(parent_size.width, &resolve_calc_value);
     let padding_border = (padding + border).sum_axes();
 
     let box_sizing_adjustment = if style.box_sizing() == BoxSizing::ContentBox { padding_border } else { Size::ZERO };
-    let min_size = style.min_size().maybe_resolve(parent_size, &resolve_calc_value).maybe_add(box_sizing_adjustment);
-    let max_size = style.max_size().maybe_resolve(parent_size, &resolve_calc_value).maybe_add(box_sizing_adjustment);
+    let min_size = style.min_size().yoga_resolve(parent_size, &resolve_calc_value).maybe_add(box_sizing_adjustment);
+    let max_size = style.max_size().yoga_resolve(parent_size, &resolve_calc_value).maybe_add(box_sizing_adjustment);
 
     let width = AxisInput::new(inputs.known_dimensions.width, inputs.available_space.width);
     let height = AxisInput::new(inputs.known_dimensions.height, inputs.available_space.height);
@@ -90,12 +91,12 @@ pub fn compute_yoga_leaf_layout(
             height: processed_dimension(style.size().height, style.min_size().height, style.max_size().height),
         };
         let resolved = processed
-            .maybe_resolve(parent_size, &resolve_calc_value)
+            .yoga_resolve(parent_size, &resolve_calc_value)
             .map(|v| v.filter(|v| *v >= 0.0))
             .maybe_add(box_sizing_adjustment);
         // calculateLayout adds the margin to a definite size but not to the max size; the margin
         // comes off again inside, so only the max branch subtracts it here
-        let margin = style.margin().resolve_or_zero(parent_size.width, &resolve_calc_value).sum_axes();
+        let margin = style.margin().yoga_resolve_or_zero(parent_size.width, &resolve_calc_value).sum_axes();
         let root_axis = |axis: AxisInput, known: Option<f32>, resolved: Option<f32>, max: Option<f32>, margin: f32| {
             if known.is_some() {
                 axis

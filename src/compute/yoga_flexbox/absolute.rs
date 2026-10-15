@@ -13,12 +13,13 @@ use crate::tree::{
     AxisStaticEdge, Layout, LayoutContainingBlock, LayoutInput, LayoutOutput, LayoutPartialTreeExt, OofCandidate,
     RequestedAxis, RunMode, SizingMode,
 };
-use crate::util::{MaybeMath, MaybeResolve, ResolveOrZero};
+use crate::util::MaybeMath;
 use crate::CoreStyle;
 
 use super::algorithm::{defined, processed_dimension};
 use super::axis::bound_axis;
 use super::enums::YogaSizingMode;
+use super::length::{YogaResolve, YogaResolveOrZero};
 use super::numeric::{is_defined, is_undefined};
 
 /// What a Yoga containing block records for the layout of its absolute children: the arguments of
@@ -83,14 +84,14 @@ pub(crate) fn layout_absolute_child<Tree: LayoutContainingBlock>(
     let child_style = tree.get_oof_item_style(node);
     let calc = |val, basis| tree.calc(val, basis);
     // Yoga resolves margins, padding and border against the containing block width
-    let margin = child_style.margin().map(|m| m.resolve_or_zero(cb_opt.width, calc));
-    let padding = child_style.padding().resolve_or_zero(cb_opt.width, calc);
-    let border = child_style.border().resolve_or_zero(cb_opt.width, calc);
+    let margin = child_style.margin().map(|m| m.yoga_resolve_or_zero(cb_opt.width, calc));
+    let padding = child_style.padding().yoga_resolve_or_zero(cb_opt.width, calc);
+    let border = child_style.border().yoga_resolve_or_zero(cb_opt.width, calc);
     let padding_border = (padding + border).sum_axes();
     let box_sizing_adjustment =
         if child_style.box_sizing() == BoxSizing::ContentBox { padding_border } else { Size::ZERO };
-    let min_size = child_style.min_size().maybe_resolve(cb_opt, calc).maybe_add(box_sizing_adjustment);
-    let max_size = child_style.max_size().maybe_resolve(cb_opt, calc).maybe_add(box_sizing_adjustment);
+    let min_size = child_style.min_size().yoga_resolve(cb_opt, calc).maybe_add(box_sizing_adjustment);
+    let max_size = child_style.max_size().yoga_resolve(cb_opt, calc).maybe_add(box_sizing_adjustment);
     let size_style = child_style.size();
     let processed = Size {
         width: processed_dimension(size_style.width, child_style.min_size().width, child_style.max_size().width),
@@ -98,13 +99,13 @@ pub(crate) fn layout_absolute_child<Tree: LayoutContainingBlock>(
     };
     // `hasDefiniteLength` / `getResolvedDimension`
     let resolved_size =
-        processed.maybe_resolve(cb_opt, calc).map(|v| v.filter(|v| *v >= 0.0)).maybe_add(box_sizing_adjustment);
+        processed.yoga_resolve(cb_opt, calc).map(|v| v.filter(|v| *v >= 0.0)).maybe_add(box_sizing_adjustment);
     let inset_style = child_style.inset();
     let inset = Rect {
-        left: inset_style.left.maybe_resolve(cb_opt.width, calc),
-        right: inset_style.right.maybe_resolve(cb_opt.width, calc),
-        top: inset_style.top.maybe_resolve(cb_opt.height, calc),
-        bottom: inset_style.bottom.maybe_resolve(cb_opt.height, calc),
+        left: inset_style.left.yoga_resolve(cb_opt.width, calc),
+        right: inset_style.right.yoga_resolve(cb_opt.width, calc),
+        top: inset_style.top.yoga_resolve(cb_opt.height, calc),
+        bottom: inset_style.bottom.yoga_resolve(cb_opt.height, calc),
     };
     let aspect_ratio = child_style.aspect_ratio();
     #[cfg(feature = "content_size")]

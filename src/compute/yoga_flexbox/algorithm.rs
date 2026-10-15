@@ -12,7 +12,7 @@ use crate::style::{
 };
 use crate::tree::{LayoutInput, LayoutOutput, LayoutYogaFlexboxContainer, NodeId, RequestedAxis, RunMode, SizingMode};
 use crate::util::sys::Vec;
-use crate::util::{MaybeMath, MaybeResolve, ResolveOrZero};
+use crate::util::MaybeMath;
 use crate::{CoreStyle, FlexboxContainerStyle, FlexboxItemStyle};
 
 use super::absolute::YogaDetailedInfo;
@@ -28,6 +28,7 @@ use super::axis::{
 use super::config::YogaConfig;
 use super::enums::YogaErrata;
 use super::enums::YogaSizingMode;
+use super::length::{YogaResolve, YogaResolveOrZero};
 use super::numeric::min_or_defined;
 use super::numeric::{inexact_equals, is_defined, is_undefined, max_or_defined};
 use crate::style::{AlignContent, AlignContentKeyword, AlignItemsKeyword, FlexWrap};
@@ -149,7 +150,7 @@ impl YogaItem {
     pub(crate) fn resolved_size(&self, axis: AbsoluteAxis, reference: f32) -> Option<f32> {
         self.size_style
             .get_abs(axis)
-            .maybe_resolve(defined(reference), no_calc)
+            .yoga_resolve(defined(reference), no_calc)
             .filter(|v| *v >= 0.0)
             .map(|v| v + self.box_sizing_adjustment.get_abs(axis))
     }
@@ -171,7 +172,7 @@ impl YogaItem {
     pub(crate) fn resolved_min(&self, axis: AbsoluteAxis, reference: f32) -> Option<f32> {
         self.min_style
             .get_abs(axis)
-            .maybe_resolve(defined(reference), no_calc)
+            .yoga_resolve(defined(reference), no_calc)
             .map(|v| v + self.box_sizing_adjustment.get_abs(axis))
     }
 
@@ -180,7 +181,7 @@ impl YogaItem {
     pub(crate) fn resolved_max(&self, axis: AbsoluteAxis, reference: f32) -> Option<f32> {
         self.max_style
             .get_abs(axis)
-            .maybe_resolve(defined(reference), no_calc)
+            .yoga_resolve(defined(reference), no_calc)
             .map(|v| v + self.box_sizing_adjustment.get_abs(axis))
     }
 
@@ -188,7 +189,7 @@ impl YogaItem {
     #[inline]
     pub(crate) fn resolved_flex_basis(&self, main_axis: FlexDirection, reference: f32) -> Option<f32> {
         self.flex_basis_style
-            .maybe_resolve(defined(reference), no_calc)
+            .yoga_resolve(defined(reference), no_calc)
             .map(|v| v + self.box_sizing_adjustment.get_abs(dimension(main_axis)))
     }
 
@@ -309,10 +310,10 @@ pub(crate) fn gather_item(
     let calc = |val, basis| tree.resolve_calc_value(val, basis);
 
     let margin_style = style.margin();
-    let margin = margin_style.resolve_or_zero(owner_width, calc);
+    let margin = margin_style.yoga_resolve_or_zero(owner_width, calc);
     let margin_is_auto = margin_style.map(|m| m.is_auto());
-    let padding_border =
-        style.padding().resolve_or_zero(owner_width, calc) + style.border().resolve_or_zero(owner_width, calc);
+    let padding_border = style.padding().yoga_resolve_or_zero(owner_width, calc)
+        + style.border().yoga_resolve_or_zero(owner_width, calc);
     let padding_border_sum = padding_border.sum_axes();
     let box_sizing_adjustment =
         if style.box_sizing() == BoxSizing::ContentBox { padding_border_sum } else { Size::ZERO };
@@ -353,10 +354,10 @@ pub(crate) fn gather_item(
         inset: {
             let inset = style.inset();
             Rect {
-                left: inset.left.maybe_resolve(owner_size.width, calc),
-                right: inset.right.maybe_resolve(owner_size.width, calc),
-                top: inset.top.maybe_resolve(owner_size.height, calc),
-                bottom: inset.bottom.maybe_resolve(owner_size.height, calc),
+                left: inset.left.yoga_resolve(owner_size.width, calc),
+                right: inset.right.yoga_resolve(owner_size.width, calc),
+                top: inset.top.yoga_resolve(owner_size.height, calc),
+                bottom: inset.bottom.yoga_resolve(owner_size.height, calc),
             }
         },
         inset_is_auto: style.inset().map(|i| i.is_auto()),
@@ -805,8 +806,8 @@ pub(crate) fn compute_min_content_main_size(
         let node_cross_axis = resolve_cross_direction(node_main_axis, direction);
         let owner_width = defined(owner_size.width);
         let calc = |val, basis| tree.resolve_calc_value(val, basis);
-        let padding_border =
-            style.padding().resolve_or_zero(owner_width, calc) + style.border().resolve_or_zero(owner_width, calc);
+        let padding_border = style.padding().yoga_resolve_or_zero(owner_width, calc)
+            + style.border().yoga_resolve_or_zero(owner_width, calc);
         (node_main_axis, node_cross_axis, padding_border.sum_axes())
     };
 
@@ -825,7 +826,7 @@ pub(crate) fn compute_min_content_main_size(
             let owner_width = defined(owner_size.width);
             child_style
                 .margin()
-                .resolve_or_zero(owner_width, |val, basis| tree.resolve_calc_value(val, basis))
+                .yoga_resolve_or_zero(owner_width, |val, basis| tree.resolve_calc_value(val, basis))
                 .sum_axes()
         };
         let child_main = compute_min_content_main_size(tree, child, node_main_axis, owner_size)
@@ -1301,14 +1302,14 @@ pub fn compute_yoga_flexbox_layout(
     let is_wrap = flex_wrap != FlexWrap::NoWrap;
     let owner_width = defined(owner_size.width);
     let owner_opt = Size { width: owner_width, height: defined(owner_size.height) };
-    let padding = style.padding().resolve_or_zero(owner_width, calc);
-    let border = style.border().resolve_or_zero(owner_width, calc);
+    let padding = style.padding().yoga_resolve_or_zero(owner_width, calc);
+    let border = style.border().yoga_resolve_or_zero(owner_width, calc);
     let padding_border = padding + border;
     let padding_border_sum = padding_border.sum_axes();
     let box_sizing_adjustment =
         if style.box_sizing() == BoxSizing::ContentBox { padding_border_sum } else { Size::ZERO };
-    let min_size = style.min_size().maybe_resolve(owner_opt, calc).maybe_add(box_sizing_adjustment);
-    let max_size = style.max_size().maybe_resolve(owner_opt, calc).maybe_add(box_sizing_adjustment);
+    let min_size = style.min_size().yoga_resolve(owner_opt, calc).maybe_add(box_sizing_adjustment);
+    let max_size = style.max_size().yoga_resolve(owner_opt, calc).maybe_add(box_sizing_adjustment);
     let min_size_is_set = style.min_size().map(|min| !min.is_auto());
     let size_style = style.size();
     let overflow = style.overflow().x;
@@ -1323,7 +1324,7 @@ pub fn compute_yoga_flexbox_layout(
     let gap_style = style.gap();
     let style_min_size = style.min_size();
     let style_max_size = style.max_size();
-    let own_margin = style.margin().resolve_or_zero(owner_width, calc).sum_axes();
+    let own_margin = style.margin().yoga_resolve_or_zero(owner_width, calc).sum_axes();
     drop(style);
 
     // A Yoga parent folds this node's style size into the known dimensions; at the root or under a
@@ -1334,7 +1335,7 @@ pub fn compute_yoga_flexbox_layout(
             height: processed_dimension(size_style.height, style_min_size.height, style_max_size.height),
         };
         let resolved =
-            processed.maybe_resolve(owner_opt, calc).map(|v| v.filter(|v| *v >= 0.0)).maybe_add(box_sizing_adjustment);
+            processed.yoga_resolve(owner_opt, calc).map(|v| v.filter(|v| *v >= 0.0)).maybe_add(box_sizing_adjustment);
         // Yoga's calculateLayout adds the margin to a definite size but not to the max size; the
         // margin comes off again inside, so only the max branch subtracts it here
         let margin_sums = own_margin;
@@ -1424,15 +1425,15 @@ pub fn compute_yoga_flexbox_layout(
     let mut available_inner_main = available_inner.get_abs(dimension(main_axis));
     let available_inner_cross = available_inner.get_abs(dimension(cross_axis));
     let gap = Size {
-        width: gap_style.width.maybe_resolve(defined(available_inner.width), calc).unwrap_or(0.0),
-        height: gap_style.height.maybe_resolve(defined(available_inner.height), calc).unwrap_or(0.0),
+        width: gap_style.width.yoga_resolve(defined(available_inner.width), calc).unwrap_or(0.0),
+        height: gap_style.height.yoga_resolve(defined(available_inner.height), calc).unwrap_or(0.0),
     };
 
     // The container's own definite cross size (`hasDefiniteLength` + `getResolvedDimension`), used
     // by the multi-line alignment pass
     let node_cross_size = size_style
         .get_abs(dimension(cross_axis))
-        .maybe_resolve(defined(cross_axis_owner_size), calc)
+        .yoga_resolve(defined(cross_axis_owner_size), calc)
         .filter(|v| *v >= 0.0)
         .map(|v| v + box_sizing_adjustment.get_abs(dimension(cross_axis)));
 
