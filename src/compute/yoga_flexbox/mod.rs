@@ -8,6 +8,10 @@
 mod config;
 mod enums;
 pub(crate) mod numeric;
+mod style;
 
 pub use config::{YogaConfig, YogaExperimentalFeatures};
 pub use enums::{YogaErrata, YogaExperimentalFeature, YogaMeasureMode, YogaSizingMode};
+pub use style::{
+    default_style, YogaEdges, YogaFlex, YogaGutters, DEFAULT_FLEX_GROW, DEFAULT_FLEX_SHRINK, WEB_DEFAULT_FLEX_SHRINK,
+};
