@@ -7,6 +7,11 @@ use crate::style::AvailableSpace;
 use crate::tree::{CollapsibleMarginSet, LayoutInput, LayoutOutput, RunMode, SizingMode};
 use crate::RequestedAxis;
 
+#[cfg(feature = "yoga_flexbox")]
+mod yoga;
+#[cfg(feature = "yoga_flexbox")]
+pub use yoga::YogaCacheParams;
+
 /// The number of cache entries for each node in the tree
 const CACHE_SIZE: usize = 9;
 

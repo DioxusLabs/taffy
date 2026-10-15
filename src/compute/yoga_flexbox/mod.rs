@@ -5,9 +5,11 @@
 //! and follows it closely, so that upstream changes can be ported diff by diff. Yoga is MIT licensed,
 //! Copyright (c) Meta Platforms, Inc. and affiliates; see `LICENSE-YOGA`.
 
+pub(crate) mod cache;
 mod config;
 mod enums;
 pub(crate) mod numeric;
+pub(crate) mod pixel_grid;
 mod style;
 
 pub use config::{YogaConfig, YogaExperimentalFeatures};

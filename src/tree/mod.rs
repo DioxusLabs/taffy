@@ -12,6 +12,8 @@ pub mod traits;
 #[doc(hidden)]
 #[cfg(all(debug_assertions, feature = "std"))]
 pub use cache::cache_mode_change_evictions;
+#[cfg(feature = "yoga_flexbox")]
+pub use cache::YogaCacheParams;
 pub use cache::{Cache, ClearState};
 pub use layout::{
     AxisStaticAlign, AxisStaticEdge, AxisStaticPosition, Baselines, CollapsibleMarginSet, Layout, LayoutInput,
