@@ -5,7 +5,7 @@
 
 use crate::case::{style_f32, style_str, style_value, Case, LayoutInputs, Step, StyleMap, TextSpec, TreeNode, V};
 use crate::config::Config;
-use crate::output::{CallLog, MeasureCall, NodeLayout, Run};
+use crate::output::{BaselineCall, CallLog, MeasureCall, NodeLayout, Run};
 use crate::text::{self, MeasureInput, Mode};
 use taffy::geometry::Point;
 use taffy::prelude::*;
@@ -89,6 +89,18 @@ fn align_content(s: &str) -> Option<AlignContent> {
 
 /// Yoga style keys to a Taffy `Style`, with Yoga's defaults for everything unset. `no_auto_min` is Yoga's
 /// `MinSizeUndefinedInsteadOfAuto` errata: an unset minimum is 0 rather than the CSS automatic minimum.
+/// Non-style node properties that plain `Style` hosts express through style fields:
+/// `always-forms-containing-block` on a static node becomes `position: relative` without insets
+/// (identical for layout, and claims the containing block through `CoreStyle::is_containing_block`).
+pub fn apply_node_props(style: &mut Style, node: &StyleMap) {
+    if node.get("always-forms-containing-block").and_then(|v| v.as_bool()) == Some(true)
+        && style.position == Position::Static
+    {
+        style.position = Position::Relative;
+        style.inset = Rect::auto();
+    }
+}
+
 pub fn to_taffy_style(s: &StyleMap, is_root: bool, rtl: bool, no_auto_min: bool) -> Style {
     let gs = |k: &str| style_str(s, k);
     let gf = |k: &str| style_f32(s, k);
@@ -163,6 +175,8 @@ pub fn to_taffy_style(s: &StyleMap, is_root: bool, rtl: bool, no_auto_min: bool)
     st.min_size = Size { width: min(gv("min-width")), height: min(gv("min-height")) };
     st.max_size = Size { width: lpa(gv("max-width")), height: lpa(gv("max-height")) };
     let zero_if_unset = |v: V| if v == V::Undef { LengthPercentageAuto::length(0.0) } else { lpa(v) };
+    // Yoga's `direction: inherit` default: every node gets the owner direction
+    st.direction = if rtl { taffy::style::Direction::Rtl } else { taffy::style::Direction::Ltr };
     st.margin = edges(s, "margin", rtl).map(zero_if_unset);
     st.padding = edges(s, "padding", rtl).map(lp);
     st.border = edges(s, "border", rtl).map(lp);
@@ -229,7 +243,8 @@ impl TaffySide {
             // Flattened by the host: its children were pushed into the parent's list by `build_into`.
             return None;
         }
-        let style = to_taffy_style(&j.style, path.is_empty(), self.rtl, self.no_auto_min);
+        let mut style = to_taffy_style(&j.style, path.is_empty(), self.rtl, self.no_auto_min);
+        apply_node_props(&mut style, &j.node);
         let id = match j.text {
             Some(text) => {
                 let id = self
@@ -271,7 +286,9 @@ impl TaffySide {
         match step {
             Step::SetStyle { path, .. } => {
                 if let Some(id) = self.nodes[self.index_of(path)] {
-                    let style = to_taffy_style(&tree.get(path).style, path.is_empty(), self.rtl, self.no_auto_min);
+                    let node = tree.get(path);
+                    let mut style = to_taffy_style(&node.style, path.is_empty(), self.rtl, self.no_auto_min);
+                    apply_node_props(&mut style, &node.node);
                     self.tree.set_style(id, style).unwrap();
                 }
             }
@@ -290,6 +307,7 @@ impl TaffySide {
         // Yoga root sizing: definite style size > max size (fit-content) > stretch to owner size (minus margins).
         let root_style = &tree.style;
         let mut style = to_taffy_style(root_style, true, self.rtl, self.no_auto_min);
+        apply_node_props(&mut style, &tree.node);
         let mut available = Size { width: AvailableSpace::MaxContent, height: AvailableSpace::MaxContent };
         let margins = edges(root_style, "margin", self.rtl);
         let resolve = |v: V, basis: f32| match v {
@@ -343,6 +361,23 @@ impl TaffySide {
                         let avail = layout_input.available_space;
                         let (w, wm) = axis(known.width, avail.width, pb_size.width);
                         let (h, hm) = axis(known.height, avail.height, pb_size.height);
+                        if wm == Mode::Exactly && hm == Mode::Exactly {
+                            // Yoga never measures with both axes exact; `TaffyTree` asks the measure
+                            // function for the baseline of a final size this way (Yoga's `baselineFunc`).
+                            let size = Size { width: w + pb_size.width, height: h + pb_size.height };
+                            let mut output = taffy::LayoutOutput::from_outer_size(size);
+                            if ctx.text.baseline {
+                                let out = text::baseline(&ctx.text, size.width, size.height);
+                                log.baseline.push(BaselineCall {
+                                    path: ctx.path.clone(),
+                                    w: size.width,
+                                    h: size.height,
+                                    out,
+                                });
+                                output.baselines.first = Some(out);
+                            }
+                            return output;
+                        }
                         let (width, height) = text::measure(&ctx.text, MeasureInput { w, wm, h, hm });
                         log.measure.push(MeasureCall {
                             path: ctx.path.clone(),

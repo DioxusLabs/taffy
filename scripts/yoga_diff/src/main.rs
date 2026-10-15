@@ -94,6 +94,25 @@ struct Stats {
     tolerance: f32,
 }
 
+fn print_call_diffs(e: &Run, a: &Run) {
+    for (j, (em, am)) in e.measure.iter().zip(a.measure.iter()).enumerate() {
+        if format!("{em:?}") != format!("{am:?}") {
+            println!("  measure call {j}: yoga {em:?}\n                   taffy {am:?}");
+        }
+    }
+    if e.measure.len() != a.measure.len() {
+        println!("  measure calls: yoga {} taffy {}", e.measure.len(), a.measure.len());
+    }
+    for (j, (eb, ab)) in e.baseline.iter().zip(a.baseline.iter()).enumerate() {
+        if format!("{eb:?}") != format!("{ab:?}") {
+            println!("  baseline call {j}: yoga {eb:?}\n                    taffy {ab:?}");
+        }
+    }
+    if e.baseline.len() != a.baseline.len() {
+        println!("  baseline calls: yoga {} taffy {}", e.baseline.len(), a.baseline.len());
+    }
+}
+
 impl Stats {
     fn compare(&mut self, name: &str, case: &Case, expected: &[Run], actual: &[Run]) {
         let parents: Vec<Option<usize>> = case.tree.preorder().into_iter().map(|(_, p)| p).collect();
@@ -101,8 +120,13 @@ impl Stats {
         for (run, (e, a)) in expected.iter().zip(actual).enumerate() {
             self.nodes += e.layout.len();
             let bad = differing_nodes(e, a, self.tolerance);
+            let verbose = std::env::var_os("YOGA_DIFF_VERBOSE").is_some();
             if !same_calls(e, a) {
                 self.runs_with_call_diffs += 1;
+                if verbose && bad.is_empty() {
+                    println!("{name} run {run}: layouts match, call logs differ");
+                    print_call_diffs(e, a);
+                }
             }
             if bad.is_empty() {
                 continue;
@@ -115,20 +139,13 @@ impl Stats {
                 .filter(|&i| parents.get(i).copied().flatten().is_none_or(|p| !bad.contains(&p)))
                 .collect();
             self.root_cause_nodes += root_causes.len();
-            if std::env::var_os("YOGA_DIFF_VERBOSE").is_some() {
+            if verbose {
                 let paths: Vec<Vec<usize>> = case.tree.preorder().into_iter().map(|(p, _)| p).collect();
                 println!("{name} run {run}: differing nodes {bad:?}, root causes {root_causes:?}");
                 for &i in &bad {
                     println!("  node {i} {:?}: yoga {:?} taffy {:?}", paths[i], e.layout[i].0, a.layout[i].0);
                 }
-                for (j, (em, am)) in e.measure.iter().zip(a.measure.iter()).enumerate() {
-                    if format!("{em:?}") != format!("{am:?}") {
-                        println!("  measure call {j}: yoga {em:?}\n                   taffy {am:?}");
-                    }
-                }
-                if e.measure.len() != a.measure.len() {
-                    println!("  measure calls: yoga {} taffy {}", e.measure.len(), a.measure.len());
-                }
+                print_call_diffs(e, a);
             }
             if run == 0 || self.first.iter().all(|(_, n, _)| n != name) {
                 self.first.push((e.layout.len(), name.to_string(), root_causes.first().copied().unwrap_or(bad[0])));
@@ -298,8 +315,7 @@ fn main() {
                     expected.insert(config.key(), Expected { config: config.to_spec(), runs: run_yoga(&case, config) });
                 }
                 let recorded = Recorded { case, expected };
-                std::fs::write(out.join(file.file_name().unwrap()), serde_json::to_string_pretty(&recorded).unwrap())
-                    .unwrap();
+                std::fs::write(out.join(file.file_name().unwrap()), serde_json::to_string(&recorded).unwrap()).unwrap();
             }
         }
         "check" => {
