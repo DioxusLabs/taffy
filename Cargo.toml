@@ -121,4 +121,4 @@ members = [
 ]
 # The Parley example and benches are excluded from the workspace as their dependencies require a newer
 # Rust version than Taffy's MSRV
-exclude = ["examples/parley", "benches"]
+exclude = ["examples/parley", "benches", "scripts/yoga_diff"]
