@@ -293,11 +293,17 @@ impl YogaTree {
         let w = inputs.available_width.unwrap_or(Undefined);
         let h = inputs.available_height.unwrap_or(Undefined);
         self.nodes[0].calculate_layout(w, h, self.direction);
-        let layout = self
-            .nodes
-            .iter()
-            .map(|n| NodeLayout([n.get_layout_left(), n.get_layout_top(), n.get_layout_width(), n.get_layout_height()]))
-            .collect();
+        // Positions in root coordinates (see TaffySide::calculate_layout)
+        let mut origin = vec![[0.0f32; 2]; self.nodes.len()];
+        let mut layout = Vec::with_capacity(self.nodes.len());
+        for (index, n) in self.nodes.iter().enumerate() {
+            let parent = self.paths[index]
+                .split_last()
+                .and_then(|(_, parent_path)| self.paths.iter().position(|p| p == parent_path));
+            let base = parent.map(|p| origin[p]).unwrap_or([0.0, 0.0]);
+            origin[index] = [base[0] + n.get_layout_left(), base[1] + n.get_layout_top()];
+            layout.push(NodeLayout([origin[index][0], origin[index][1], n.get_layout_width(), n.get_layout_height()]));
+        }
         let log = LOG.with(|l| std::mem::take(&mut *l.borrow_mut()));
         Run { layout, measure: log.measure, baseline: log.baseline }
     }
