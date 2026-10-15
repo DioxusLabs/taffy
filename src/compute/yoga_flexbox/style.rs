@@ -118,7 +118,9 @@ pub const WEB_DEFAULT_FLEX_SHRINK: f32 = 1.0;
 ///
 /// Differences from `Style::default()`: `flex-direction: column`, `align-content: flex-start`,
 /// `align-items: stretch`, `justify-content: flex-start`, `position: relative`, `flex-shrink: 0`, no
-/// scrollbar width. The `display` is Taffy's default and must be set by the host.
+/// scrollbar width. The `display` is Taffy's default and must be set by the host. Hosts should keep
+/// an unset `min_size` as `auto` (Yoga's undefined), since an explicit `length(0)` behaves differently
+/// when a box is smaller than its own padding.
 pub fn default_style(config: &YogaConfig) -> Style {
     let (flex_direction, align_content) = if config.use_web_defaults {
         (FlexDirection::Row, AlignContent::STRETCH)

@@ -59,10 +59,11 @@ impl AxisInput {
 
 /// Compute the layout of a `Display::YogaFlexbox` node with no children, using Yoga's leaf rules.
 ///
-/// `measure` is the host's ordinary leaf measurement (a measure function wrapped by
-/// [`compute_leaf_layout`](crate::compute::compute_leaf_layout) in `TaffyTree`). It is called with
-/// Yoga's translated constraints and is skipped entirely when both axes are `StretchFit`, exactly
-/// as Yoga skips its measure callback; the result is then bounded with Yoga's `boundAxis`.
+/// `measure` is the host's raw measure function (Yoga's `measureFunc`): it receives Yoga's translated
+/// border-box constraints and returns the border box, and must not re-apply the node's own `size`
+/// (so not [`compute_leaf_layout`](crate::compute::compute_leaf_layout)), since in Yoga the parent
+/// resolves a leaf's size. It is skipped entirely when both axes are `StretchFit`, exactly as Yoga
+/// skips its measure callback; the result is then bounded with Yoga's `boundAxis`.
 pub fn compute_yoga_leaf_layout(
     inputs: LayoutInput,
     style: &impl CoreStyle,
