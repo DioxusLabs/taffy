@@ -737,8 +737,8 @@ pub enum DetailedLayoutInfo<S: CheapCloneStr = DefaultCheapStr> {
     /// For node that hasn't had any detailed information yet
     None,
     /// Unused variant which exists only to consume the `S` type parameter when no variant
-    /// carrying detailed layout info is enabled
-    #[cfg(not(any(feature = "grid", feature = "yoga_flexbox")))]
+    /// using it is enabled
+    #[cfg(not(feature = "grid"))]
     #[doc(hidden)]
     Phantom(core::convert::Infallible, core::marker::PhantomData<S>),
 }

@@ -1264,7 +1264,7 @@ fn axis_constraint(known: Option<f32>, available: AvailableSpace) -> (f32, YogaS
     }
 }
 
-/// Yoga's `calculateLayoutImpl` for a container (the leaf paths live in [`compute_yoga_leaf_layout`]).
+/// Yoga's `calculateLayoutImpl` for a container (the leaf paths live in [`compute_yoga_leaf_layout`](super::compute_yoga_leaf_layout)).
 pub fn compute_yoga_flexbox_layout(
     tree: &mut impl LayoutYogaFlexboxContainer,
     node: NodeId,

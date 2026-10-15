@@ -37,26 +37,6 @@ pub(crate) fn round_value_to_pixel_grid(
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn rounds_to_scale() {
-        assert_eq!(round_value_to_pixel_grid(10.4, 1.0, false, false), 10.0);
-        assert_eq!(round_value_to_pixel_grid(10.5, 1.0, false, false), 11.0);
-        assert_eq!(round_value_to_pixel_grid(10.49996, 1.0, false, false), 11.0);
-        assert_eq!(round_value_to_pixel_grid(-2.2, 1.0, false, false), -2.0);
-        assert_eq!(round_value_to_pixel_grid(-2.7, 1.0, false, false), -3.0);
-        assert_eq!(round_value_to_pixel_grid(10.3, 2.0, false, false), 10.5);
-        assert_eq!(round_value_to_pixel_grid(10.2, 2.0, false, false), 10.0);
-        assert_eq!(round_value_to_pixel_grid(10.2, 1.0, true, false), 11.0);
-        assert_eq!(round_value_to_pixel_grid(10.8, 1.0, false, true), 10.0);
-        assert_eq!(round_value_to_pixel_grid(10.00005, 1.0, true, false), 10.0);
-        assert!(round_value_to_pixel_grid(f64::NAN, 1.0, false, false).is_nan());
-    }
-}
-
 /// Yoga's `roundLayoutResultsToPixelGrid`: round the unrounded layouts of `root`'s subtree to the pixel
 /// grid of `point_scale_factor` pixels per point and store them as the final layouts.
 ///
@@ -131,5 +111,25 @@ pub fn round_yoga_layout<Tree: RoundTree>(
             let child = tree.get_hoisted_child_id(node, index);
             round_inner(tree, child, absolute_node_left, absolute_node_top, scale, is_text);
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn rounds_to_scale() {
+        assert_eq!(round_value_to_pixel_grid(10.4, 1.0, false, false), 10.0);
+        assert_eq!(round_value_to_pixel_grid(10.5, 1.0, false, false), 11.0);
+        assert_eq!(round_value_to_pixel_grid(10.49996, 1.0, false, false), 11.0);
+        assert_eq!(round_value_to_pixel_grid(-2.2, 1.0, false, false), -2.0);
+        assert_eq!(round_value_to_pixel_grid(-2.7, 1.0, false, false), -3.0);
+        assert_eq!(round_value_to_pixel_grid(10.3, 2.0, false, false), 10.5);
+        assert_eq!(round_value_to_pixel_grid(10.2, 2.0, false, false), 10.0);
+        assert_eq!(round_value_to_pixel_grid(10.2, 1.0, true, false), 11.0);
+        assert_eq!(round_value_to_pixel_grid(10.8, 1.0, false, true), 10.0);
+        assert_eq!(round_value_to_pixel_grid(10.00005, 1.0, true, false), 10.0);
+        assert!(round_value_to_pixel_grid(f64::NAN, 1.0, false, false).is_nan());
     }
 }

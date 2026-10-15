@@ -9,7 +9,7 @@ use crate::style::{
     AlignItemsKeyword, AlignSelf, AlignmentSafety, AvailableSpace, ContainingBlockClaims, CoreStyle, OofItemStyle,
     Overflow,
 };
-#[cfg(feature = "grid")]
+#[cfg(any(feature = "grid", feature = "yoga_flexbox"))]
 use crate::tree::DetailedLayoutInfo;
 use crate::tree::{
     AxisStaticPosition, Layout, LayoutContainingBlock, LayoutInput, LayoutOutput, LayoutPartialTreeExt, NodeId,
