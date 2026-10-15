@@ -594,6 +594,29 @@ where
         (self.measure_function)(inputs, node_id, node_context, style)
     }
 
+    /// `TaffyTree` has no separate baseline function: the measure function is called with the final
+    /// size as known dimensions and its `baselines.first` is the baseline.
+    fn yoga_baseline(&mut self, node_id: NodeId, size: Size<f32>) -> Option<f32> {
+        let node_key = node_id.into();
+        if !self.taffy.nodes[node_key].has_context {
+            return None;
+        }
+        let style = &self.taffy.nodes[node_key].style;
+        let node_context = self.taffy.node_context_data.get_mut(node_key);
+        let inputs = LayoutInput {
+            run_mode: RunMode::ComputeSize,
+            sizing_mode: crate::tree::SizingMode::ContentSize,
+            axis: crate::tree::RequestedAxis::Both,
+            known_dimensions: size.map(Some),
+            known_dimensions_are_definite: Size { width: true, height: true },
+            parent_size: size.map(Some),
+            available_space: size.map(AvailableSpace::Definite),
+            vertical_margins_are_collapsible: crate::geometry::Line::FALSE,
+            yoga_available_size: Size::NONE,
+        };
+        (self.measure_function)(inputs, node_id, node_context, style).baselines.first
+    }
+
     #[inline(always)]
     fn set_detailed_yoga_info(&mut self, node_id: NodeId, info: YogaDetailedInfo) {
         self.taffy.nodes[node_id.into()].detailed_layout_info = DetailedLayoutInfo::YogaFlexbox(info);

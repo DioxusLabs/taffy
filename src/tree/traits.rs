@@ -344,6 +344,14 @@ pub trait LayoutYogaFlexboxContainer: LayoutFlexboxContainer {
     /// nodes where [`has_measure_func`](Self::has_measure_func) is true.
     fn measure_yoga_leaf(&mut self, node_id: NodeId, inputs: LayoutInput) -> LayoutOutput;
 
+    /// The baseline of a measured leaf at its final `size`, from the border-box top (Yoga's
+    /// `baselineFunc`, called with the measured dimensions). `None` means no baseline function, and
+    /// the leaf's height is used. Only called for nodes where `has_measure_func` is true.
+    fn yoga_baseline(&mut self, node_id: NodeId, size: Size<f32>) -> Option<f32> {
+        let _ = (node_id, size);
+        None
+    }
+
     /// Store the node's [`YogaDetailedInfo`](crate::compute::yoga_flexbox::YogaDetailedInfo), which the
     /// out-of-flow layout of its absolute children reads back through
     /// [`LayoutContainingBlock::get_detailed_layout_info`]

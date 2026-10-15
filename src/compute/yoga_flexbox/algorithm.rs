@@ -101,7 +101,8 @@ pub(crate) struct YogaItem {
     pub(crate) own_flex_direction: FlexDirection,
     /// Layout position per physical edge (`LayoutResults::position`)
     pub(crate) position: Rect<f32>,
-    /// Baseline of the most recent layout (`calculateBaseline`), NaN before any
+    /// Baseline the child's own layout reported (a Yoga container's `calculateBaseline`), NaN when
+    /// none; see [`item_baseline`]
     pub(crate) baseline: f32,
     /// `LayoutResults::computedFlexBasis` (NaN when undefined)
     pub(crate) computed_flex_basis: f32,
@@ -437,11 +438,23 @@ pub(crate) fn layout_yoga_child(
     );
     let mut output = output;
     item.measured = output.size;
-    item.baseline = output.baselines.first.unwrap_or(output.size.height);
+    item.baseline = output.baselines.first.unwrap_or(f32::NAN);
     if run_mode == RunMode::PerformLayout {
         item.surfaced = output.oof_candidates.take();
     }
     output
+}
+
+/// `calculateBaseline` for a child: a measured leaf's baseline function (its height without one),
+/// otherwise the baseline its own layout reported (its height when it reported none).
+fn item_baseline<Tree: LayoutYogaFlexboxContainer + ?Sized>(tree: &mut Tree, item: &YogaItem) -> f32 {
+    if tree.has_measure_func(item.node) {
+        tree.yoga_baseline(item.node, item.measured).unwrap_or(item.measured.height)
+    } else if item.baseline.is_nan() {
+        item.measured.height
+    } else {
+        item.baseline
+    }
 }
 
 /// Yoga's `computeFlexBasisForChild`
@@ -1147,7 +1160,8 @@ pub(crate) fn resolve_flexible_length(
 
 /// Yoga's `justifyMainAxis`: position the line's items along the main axis and compute the line's
 /// main and cross size.
-pub(crate) fn justify_main_axis(
+pub(crate) fn justify_main_axis<Tree: LayoutYogaFlexboxContainer + ?Sized>(
+    tree: &mut Tree,
     container: &YogaContainer,
     items: &mut [YogaItem],
     line: &mut FlexLine,
@@ -1237,7 +1251,7 @@ pub(crate) fn justify_main_axis(
         } else {
             line.layout.main_dim += item.dimension_with_margin(main_axis);
             if container.is_baseline_layout {
-                let ascent = item.baseline + item.margin.top;
+                let ascent = item_baseline(tree, item) + item.margin.top;
                 let descent = item.measured.height + item.margin_for_axis(FlexDirection::Column) - ascent;
                 max_ascent_for_current_line = max_or_defined(max_ascent_for_current_line, ascent);
                 max_descent_for_current_line = max_or_defined(max_descent_for_current_line, descent);
@@ -1548,7 +1562,7 @@ pub fn compute_yoga_flexbox_layout(
         had_overflow = had_overflow || line.layout.remaining_free_space < 0.0;
 
         // STEP 6: MAIN-AXIS JUSTIFICATION & CROSS-AXIS SIZE DETERMINATION
-        justify_main_axis(&container, &mut items, &mut line, perform_layout);
+        justify_main_axis(tree, &container, &mut items, &mut line, perform_layout);
 
         let mut container_cross_axis = available_inner_cross;
         if sizing_mode_cross == YogaSizingMode::MaxContent || sizing_mode_cross == YogaSizingMode::FitContent {
@@ -1709,7 +1723,7 @@ pub fn compute_yoga_flexbox_layout(
                         line_height = max_or_defined(line_height, item.dimension_with_margin(cross_axis));
                     }
                     if item.align == AlignItems::BASELINE {
-                        let ascent = item.baseline + item.margin.top;
+                        let ascent = item_baseline(tree, item) + item.margin.top;
                         let descent = item.measured.height + item.margin_for_axis(FlexDirection::Column) - ascent;
                         max_ascent_for_current_line = max_or_defined(max_ascent_for_current_line, ascent);
                         max_descent_for_current_line = max_or_defined(max_descent_for_current_line, descent);
@@ -1775,7 +1789,8 @@ pub fn compute_yoga_flexbox_layout(
                     }
                 } else if item.align == AlignItems::BASELINE {
                     let inset_top = if item.is_static { 0.0 } else { item.inset.top.unwrap_or(0.0) };
-                    item.position.top = current_lead + max_ascent_for_current_line - item.baseline + inset_top;
+                    item.position.top =
+                        current_lead + max_ascent_for_current_line - item_baseline(tree, item) + inset_top;
                 }
             }
             current_lead = current_lead + lead_per_line + line_height;
@@ -1962,7 +1977,7 @@ pub fn compute_yoga_flexbox_layout(
             }
         }
         match baseline_item {
-            Some(item) => item.baseline + item.position.top,
+            Some(item) => item_baseline(tree, item) + item.position.top,
             None => measured.height,
         }
     };
