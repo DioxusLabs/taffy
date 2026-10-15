@@ -6,6 +6,10 @@
 
 - `BlockContext::place_floated_box` (and `FloatContext::place_floated_box`) now take a caller-defined `id: u64` for the box, which is stored on `PlacedFloatedBox`. `BlockContext::float_mark` and `BlockContext::floats_placed_since` read back the id and position of the floats placed since a mark, so that custom formatting contexts which place floats do not need to keep their own list of placements.
 
+### Fixed
+
+- Flexbox: absorb `f32` rounding errors when breaking items into flex lines (greedy and `flex-wrap: balance`), using the same tolerance as the float fit checks. A wrapping container sized to the max-content sum of its items (e.g. a `flex-wrap: wrap` flex item) could previously wrap its last item, because the line-breaking loop adds the same sizes in a different order and can exceed that sum by an ulp.
+
 ## 0.15.0
 
 The MSRV for this release is 1.71.
