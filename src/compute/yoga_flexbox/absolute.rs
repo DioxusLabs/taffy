@@ -201,6 +201,17 @@ pub(crate) fn layout_absolute_child<Tree: LayoutContainingBlock>(
     );
     // The child's own layout bounds the size (`boundAxis`), and positioning uses that measured size
     let size = output.size;
+    if std::env::var_os("YOGA_TRACE").is_some() {
+        eprintln!(
+            "  ABS node={:?} cb={:?} inset={:?} requested=({},{}) got={:?}",
+            node,
+            cb,
+            inset,
+            child_width - margin_row,
+            child_height - margin_column,
+            size
+        );
+    }
 
     let area = Point {
         x: Line { start: area_offset.x, end: area_offset.x + area_size.width },

@@ -587,6 +587,13 @@ where
         self.taffy.has_measure_func(node_id)
     }
 
+    fn measure_yoga_leaf(&mut self, node_id: NodeId, inputs: LayoutInput) -> LayoutOutput {
+        let node_key = node_id.into();
+        let style = &self.taffy.nodes[node_key].style;
+        let node_context = self.taffy.node_context_data.get_mut(node_key);
+        (self.measure_function)(inputs, node_id, node_context, style)
+    }
+
     #[inline(always)]
     fn set_detailed_yoga_info(&mut self, node_id: NodeId, info: YogaDetailedInfo) {
         self.taffy.nodes[node_id.into()].detailed_layout_info = DetailedLayoutInfo::YogaFlexbox(info);

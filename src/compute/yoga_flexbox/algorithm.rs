@@ -775,7 +775,8 @@ pub(crate) fn compute_min_content_main_size(
 ) -> f32 {
     let want_row = is_row(requested_axis);
     if tree.has_measure_func(node) {
-        let output = tree.compute_child_layout(
+        // node->measure with AtMost 0 on the requested axis; the measure function returns the border box
+        let output = tree.measure_yoga_leaf(
             node,
             LayoutInput {
                 #[cfg(feature = "yoga_flexbox")]
@@ -1269,6 +1270,12 @@ pub fn compute_yoga_flexbox_layout(
     node: NodeId,
     inputs: LayoutInput,
 ) -> LayoutOutput {
+    if std::env::var_os("YOGA_TRACE").is_some() {
+        eprintln!(
+            "ENTER {:?} known={:?} avail={:?} run={:?}",
+            node, inputs.known_dimensions, inputs.available_space, inputs.run_mode
+        );
+    }
     let perform_layout = inputs.run_mode == RunMode::PerformLayout;
     let config = *tree.yoga_config();
     let owner_size = Size {

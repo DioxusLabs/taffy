@@ -339,6 +339,11 @@ pub trait LayoutYogaFlexboxContainer: LayoutFlexboxContainer {
     /// Whether the node is a leaf measured by a measure function (Yoga's `hasMeasureFunc`)
     fn has_measure_func(&self, node_id: NodeId) -> bool;
 
+    /// Call the node's measure function directly, as Yoga's `node->measure` does in the min-content
+    /// probe: no sizing-mode translation, no min/max/padding bounding and no caching. Only called for
+    /// nodes where [`has_measure_func`](Self::has_measure_func) is true.
+    fn measure_yoga_leaf(&mut self, node_id: NodeId, inputs: LayoutInput) -> LayoutOutput;
+
     /// Store the node's [`YogaDetailedInfo`](crate::compute::yoga_flexbox::YogaDetailedInfo), which the
     /// out-of-flow layout of its absolute children reads back through
     /// [`LayoutContainingBlock::get_detailed_layout_info`]
