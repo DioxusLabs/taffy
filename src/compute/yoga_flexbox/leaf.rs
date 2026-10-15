@@ -12,6 +12,7 @@ use crate::util::{MaybeMath, MaybeResolve, ResolveOrZero};
 use crate::{BoxSizing, CoreStyle};
 
 use super::algorithm::processed_dimension;
+use super::axis::bound_axis;
 use super::config::YogaConfig;
 use super::enums::YogaSizingMode;
 
@@ -53,24 +54,6 @@ impl AxisInput {
             YogaSizingMode::MaxContent => (None, AvailableSpace::MaxContent),
         }
     }
-}
-
-/// Yoga's `boundAxis`: clamp to the min/max constraints, then to at least padding + border.
-///
-/// Like Yoga, a constraint only applies when it is defined and non-negative.
-fn bound_axis(value: f32, min: Option<f32>, max: Option<f32>, padding_border: f32) -> f32 {
-    let mut bounded = value;
-    if let Some(max) = max {
-        if max >= 0.0 && bounded > max {
-            bounded = max;
-        }
-    }
-    if let Some(min) = min {
-        if min >= 0.0 && bounded < min {
-            bounded = min;
-        }
-    }
-    f32_max(bounded, padding_border)
 }
 
 /// Compute the layout of a `Display::YogaFlexbox` node with no children, using Yoga's leaf rules.
@@ -199,7 +182,8 @@ mod tests {
         assert_eq!(bound_axis(5.0, None, None, 10.0), 10.0);
         assert_eq!(bound_axis(50.0, Some(60.0), None, 0.0), 60.0);
         assert_eq!(bound_axis(50.0, None, Some(40.0), 0.0), 40.0);
-        assert_eq!(bound_axis(50.0, Some(60.0), Some(40.0), 0.0), 60.0);
+        // boundAxisWithinMinAndMax returns at the first violated constraint, so max wins over min
+        assert_eq!(bound_axis(50.0, Some(60.0), Some(40.0), 0.0), 40.0);
         assert_eq!(bound_axis(50.0, Some(-1.0), Some(-1.0), 0.0), 50.0);
         assert_eq!(bound_axis(2.0, None, Some(1.0), 8.0), 8.0);
     }
