@@ -1,0 +1,12 @@
+[package]
+name = "yoga_diff"
+version = "0.1.0"
+authors = ["Nico Burns"]
+edition = "2021"
+publish = false
+
+[dependencies]
+taffy = { path = "../.." }
+yoga = { git = "https://github.com/DioxusLabs/yoga-rs", rev = "d34146bcb9aff4208e36a89249cd1de238095f53" }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
