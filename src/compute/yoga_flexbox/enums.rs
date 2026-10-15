@@ -69,6 +69,11 @@ impl YogaErrata {
     /// Yoga's pre-3.0 behaviour (every errata but `STRETCH_FLEX_BASIS`).
     pub const CLASSIC: YogaErrata = YogaErrata(0x7fff_fffe);
 
+    /// Build a set from Yoga's raw `YGErrata` bits
+    pub const fn from_bits(bits: u32) -> YogaErrata {
+        YogaErrata(bits)
+    }
+
     /// The raw flags, with Yoga's `YGErrata` values.
     pub const fn bits(self) -> u32 {
         self.0
