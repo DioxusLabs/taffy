@@ -37,6 +37,9 @@ pub(crate) mod flexbox;
 #[cfg(feature = "grid")]
 pub(crate) mod grid;
 
+#[cfg(feature = "yoga_flexbox")]
+pub mod yoga_flexbox;
+
 pub use leaf::compute_leaf_layout;
 pub use oof::{compute_oof_layout, compute_oof_layout_for_area, resolve_static_offset, OofLayoutResult};
 

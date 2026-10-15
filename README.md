@@ -137,3 +137,7 @@ Note that the table below contains multiple different units (seconds vs. millise
 [Contributions welcome](https://github.com/DioxusLabs/taffy/blob/main/CONTRIBUTING.md):
 if you'd like to use, improve or build `taffy`, feel free to join the conversation, open an [issue](https://github.com/DioxusLabs/taffy/issues) or submit a [PR](https://github.com/DioxusLabs/taffy/pulls).
 If you have questions about how to use `taffy`, open a [discussion](https://github.com/DioxusLabs/taffy/discussions) so we can answer your questions in a way that others can find.
+
+## License
+
+Taffy is MIT licensed; see the `LICENSE` file. The `yoga_flexbox` feature contains a port of [Yoga](https://github.com/facebook/yoga), which is MIT licensed by Meta Platforms, Inc. and affiliates; see the `LICENSE-YOGA` file.

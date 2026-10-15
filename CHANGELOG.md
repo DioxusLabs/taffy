@@ -59,6 +59,8 @@ Taffy previously supported a no-std, no-alloc mode that used fixed-sized arrays.
 
 ### Added
 
+- `yoga_flexbox` feature (work in progress): a port of [Yoga](https://github.com/facebook/yoga)'s flexbox algorithm for hosts that need Yoga's exact layout, selected per node with `Display::YogaFlexbox` once complete. This release adds the `taffy::yoga_flexbox` module with `YogaConfig`, `YogaErrata`, `YogaExperimentalFeature(s)`, `YogaMeasureMode` and `YogaSizingMode`. Yoga is MIT licensed (Meta Platforms, Inc. and affiliates); see `LICENSE-YOGA`.
+
 - `Position::Fixed` and `Position::Sticky`. Sticky positioning is not implemented: sticky boxes are laid out like `static` boxes, except that they act as a containing block for absolutely positioned descendants (#1140).
 - `AlignItemsKeyword::Normal` and `AlignContentKeyword::Normal` (#1254, #1255).
 - `AlignmentSafety::Default`, representing the absence of a `safe`/`unsafe` keyword, which is used by the bare constants like `AlignItems::START`. It behaves like `Unsafe` except for absolutely positioned boxes: use `!is_safe()` rather than matching on `Unsafe` to detect "not safe" (#1206).
