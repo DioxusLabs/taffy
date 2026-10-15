@@ -48,5 +48,19 @@ configurations first (`all`, `min-size-undefined-instead-of-auto`, `none`, each 
 `fix-flex-basis-fit-content`), then `classic`, Yoga's default, each errata bit alone, `web-flex-basis`,
 and point scale factors 1, 2, 3 and 2.625.
 
-Until `Display::YogaFlexbox` lands the Taffy side runs Taffy's CSS flexbox with Yoga's defaults, so `run`
-reports the Yoga/CSS differences rather than port bugs; `record` output is what the port is checked against.
+The Taffy side builds `Display::YogaFlexbox` trees (feature `yoga_flexbox`). Its mapping is what a Yoga host
+does: unset minimums stay `auto` (Yoga's undefined, distinct from an explicit `0`), the owner direction is set
+as `Style::direction` on every node (Yoga's `direction: inherit`), a static node with
+`always-forms-containing-block` becomes `position: relative` without insets, and the measure closure receives
+border-box constraints and returns the border box without going through `taffy::compute_leaf_layout` (the
+parent has already resolved the leaf's size into the sizing modes). A measure call with both axes exact never
+comes from Yoga: it is `TaffyTree` asking for the baseline of a final size (`yoga_baseline`), and is logged as
+a baseline call.
+
+`fixtures/recorded/` holds `record --matrix` output for the hand-written fixtures and ten random trees; CI
+replays it with `check fixtures/recorded --tol 0.01` (Yoga's and Taffy's float operation order differs in the
+last bit, so bit-exact replay is not expected). Re-record after changing a fixture or the recorder:
+
+```sh
+cargo run --release -- record fixtures/*.json <random cases> --matrix --out fixtures/recorded
+```
