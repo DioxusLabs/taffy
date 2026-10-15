@@ -34,6 +34,12 @@ use crate::tree::{
     AxisStaticEdge, AxisStaticPosition, Baselines, Layout, OofCandidate, OofCandidates, OofPositioningArea,
 };
 
+/// Yoga has no `calc()`; calc values resolve to zero in this mode
+#[inline]
+fn no_calc(_val: *const (), _basis: f32) -> f32 {
+    0.0
+}
+
 /// Convert Yoga's NaN-as-undefined into Taffy's `Option`
 #[inline]
 fn defined(value: f32) -> Option<f32> {
@@ -61,15 +67,16 @@ pub(crate) struct YogaItem {
     pub(crate) margin_is_auto: Rect<bool>,
     /// Resolved padding + border per edge
     pub(crate) padding_border: Rect<f32>,
-    /// Resolved min size, box-sizing adjusted (`resolvedMinDimension`)
-    pub(crate) min_size: Size<Option<f32>>,
-    /// Resolved max size, box-sizing adjusted (`resolvedMaxDimension`)
-    pub(crate) max_size: Size<Option<f32>>,
-    /// Resolved style size after `processDimensions` (max == min → max) and box-sizing adjustment,
-    /// `None` when not definite (`getResolvedDimension` + `hasDefiniteLength`)
-    pub(crate) size: Size<Option<f32>>,
-    /// Resolved `flex-basis` in the main axis, box-sizing adjusted (`resolveFlexBasis`)
-    pub(crate) flex_basis: Option<f32>,
+    /// Style min size (resolved per call site, see [`Self::resolved_min`])
+    pub(crate) min_style: Size<crate::style::LengthPercentageAuto>,
+    /// Style max size (resolved per call site, see [`Self::resolved_max`])
+    pub(crate) max_style: Size<crate::style::LengthPercentageAuto>,
+    /// Style size after `processDimensions` (max == min → max), resolved per call site
+    pub(crate) size_style: Size<Dimension>,
+    /// Style `flex-basis`, resolved per call site
+    pub(crate) flex_basis_style: Dimension,
+    /// Padding + border added to content-box sizes (zero for border-box)
+    pub(crate) box_sizing_adjustment: Size<f32>,
     /// `resolveFlexGrow`
     pub(crate) flex_grow: f32,
     /// `resolveFlexShrink`
@@ -80,8 +87,6 @@ pub(crate) struct YogaItem {
     pub(crate) align: AlignItems,
     /// `overflow`
     pub(crate) overflow: Overflow,
-    /// Whether the (processed) style size is a percentage, per axis
-    pub(crate) size_is_percent: Size<bool>,
     /// Resolved insets for `position: relative` (`None` when auto); horizontal edges resolve against
     /// the container's available inner width, vertical edges against its height
     pub(crate) inset: Rect<Option<f32>>,
@@ -134,17 +139,60 @@ impl YogaItem {
         }
     }
 
-    /// `hasDefiniteLength`
+    /// `getResolvedDimension`: the style size resolved against `reference`, box-sizing adjusted;
+    /// `None` when undefined or negative (so `is_some()` is `hasDefiniteLength`)
     #[inline]
-    pub(crate) fn has_definite_size(&self, axis: AbsoluteAxis) -> bool {
-        self.size.get_abs(axis).is_some()
+    pub(crate) fn resolved_size(&self, axis: AbsoluteAxis, reference: f32) -> Option<f32> {
+        self.size_style
+            .get_abs(axis)
+            .maybe_resolve(defined(reference), no_calc)
+            .filter(|v| *v >= 0.0)
+            .map(|v| v + self.box_sizing_adjustment.get_abs(axis))
     }
 
-    /// `boundAxisWithinMinAndMax` for this item
+    /// `hasDefiniteLength`
     #[inline]
-    pub(crate) fn bound_within_min_and_max(&self, axis: FlexDirection, value: f32) -> f32 {
+    pub(crate) fn has_definite_size(&self, axis: AbsoluteAxis, reference: f32) -> bool {
+        self.resolved_size(axis, reference).is_some()
+    }
+
+    /// Whether the (processed) style size is a percentage
+    #[inline]
+    pub(crate) fn size_is_percent(&self, axis: AbsoluteAxis) -> bool {
+        self.size_style.get_abs(axis).into_raw().tag() == CompactLength::PERCENT_TAG
+    }
+
+    /// `resolvedMinDimension`
+    #[inline]
+    pub(crate) fn resolved_min(&self, axis: AbsoluteAxis, reference: f32) -> Option<f32> {
+        self.min_style
+            .get_abs(axis)
+            .maybe_resolve(defined(reference), no_calc)
+            .map(|v| v + self.box_sizing_adjustment.get_abs(axis))
+    }
+
+    /// `resolvedMaxDimension`
+    #[inline]
+    pub(crate) fn resolved_max(&self, axis: AbsoluteAxis, reference: f32) -> Option<f32> {
+        self.max_style
+            .get_abs(axis)
+            .maybe_resolve(defined(reference), no_calc)
+            .map(|v| v + self.box_sizing_adjustment.get_abs(axis))
+    }
+
+    /// `resolveFlexBasis`
+    #[inline]
+    pub(crate) fn resolved_flex_basis(&self, main_axis: FlexDirection, reference: f32) -> Option<f32> {
+        self.flex_basis_style
+            .maybe_resolve(defined(reference), no_calc)
+            .map(|v| v + self.box_sizing_adjustment.get_abs(dimension(main_axis)))
+    }
+
+    /// `boundAxisWithinMinAndMax` for this item, min/max resolved against `reference`
+    #[inline]
+    pub(crate) fn bound_within_min_and_max(&self, axis: FlexDirection, value: f32, reference: f32) -> f32 {
         let dim = dimension(axis);
-        bound_axis_within_min_and_max(value, self.min_size.get_abs(dim), self.max_size.get_abs(dim))
+        bound_axis_within_min_and_max(value, self.resolved_min(dim, reference), self.resolved_max(dim, reference))
     }
 }
 
@@ -165,8 +213,10 @@ pub(crate) struct YogaContainer {
     pub(crate) overflow: Overflow,
     /// `align-items`
     pub(crate) align_items: AlignItems,
-    /// `availableInnerWidth`/`availableInnerHeight` (may be undefined)
+    /// `availableInnerWidth`/`availableInnerHeight` (may be undefined); fixed for the whole layout
     pub(crate) available_inner: Size<f32>,
+    /// `availableInnerMainDim`: the main-axis inner size, adjusted per flex line
+    pub(crate) available_inner_main_dim: f32,
     /// The container's own `ownerWidth`/`ownerHeight`
     pub(crate) owner_size: Size<f32>,
     /// Width/height sizing modes the container was asked for
@@ -263,24 +313,12 @@ pub(crate) fn gather_item(
     let box_sizing_adjustment =
         if style.box_sizing() == BoxSizing::ContentBox { padding_border_sum } else { Size::ZERO };
 
-    let min_size = style.min_size().maybe_resolve(owner_size, calc).maybe_add(box_sizing_adjustment);
-    let max_size = style.max_size().maybe_resolve(owner_size, calc).maybe_add(box_sizing_adjustment);
-
     // processDimensions: a max size equal to the min size replaces the style size
     let style_size = style.size();
     let processed = Size {
         width: processed_dimension(style_size.width, style.min_size().width, style.max_size().width),
         height: processed_dimension(style_size.height, style.min_size().height, style.max_size().height),
     };
-    let size =
-        processed.maybe_resolve(owner_size, calc).map(|v| v.filter(|v| *v >= 0.0)).maybe_add(box_sizing_adjustment);
-
-    let main_axis_owner_size = if is_row(container.main_axis) { owner_size.width } else { owner_size.height };
-    let flex_basis = style
-        .flex_basis()
-        .maybe_resolve(main_axis_owner_size, calc)
-        .map(|basis| basis + box_sizing_adjustment.get_abs(dimension(container.main_axis)));
-
     let align = match style.align_self() {
         Some(align_self) => align_self,
         None => container.align_items,
@@ -298,16 +336,16 @@ pub(crate) fn gather_item(
         margin,
         margin_is_auto,
         padding_border,
-        min_size,
-        max_size,
-        size,
-        flex_basis,
+        min_style: style.min_size(),
+        max_style: style.max_size(),
+        size_style: processed,
+        flex_basis_style: style.flex_basis(),
+        box_sizing_adjustment,
         flex_grow: style.flex_grow(),
         flex_shrink: style.flex_shrink(),
         aspect_ratio: style.aspect_ratio(),
         align,
         overflow: style.overflow().x,
-        size_is_percent: processed.map(|d| d.into_raw().tag() == CompactLength::PERCENT_TAG),
         inset: {
             let inset = style.inset();
             Rect {
@@ -398,21 +436,28 @@ pub(crate) fn compute_flex_basis_for_child(
     let main_axis_size = if is_main_axis_row { available.width } else { available.height };
     let owner_size = available;
 
-    let is_row_style_dim_defined = item.has_definite_size(AbsoluteAxis::Horizontal);
-    let is_column_style_dim_defined = item.has_definite_size(AbsoluteAxis::Vertical);
+    let is_row_style_dim_defined = item.has_definite_size(AbsoluteAxis::Horizontal, available.width);
+    let is_column_style_dim_defined = item.has_definite_size(AbsoluteAxis::Vertical, available.height);
 
-    let use_resolved_flex_basis = item.flex_basis.is_some() && is_defined(main_axis_size);
+    let resolved_flex_basis = item.resolved_flex_basis(main_axis, main_axis_size);
+    let use_resolved_flex_basis = resolved_flex_basis.is_some() && is_defined(main_axis_size);
     if use_resolved_flex_basis {
         if is_undefined(item.computed_flex_basis) {
             let padding_border = item.padding_border_for_axis(main_axis);
-            item.computed_flex_basis = max_or_defined(item.flex_basis.unwrap_or(f32::NAN), padding_border);
+            item.computed_flex_basis = max_or_defined(resolved_flex_basis.unwrap_or(f32::NAN), padding_border);
         }
     } else if is_main_axis_row && is_row_style_dim_defined {
         let padding_border = item.padding_border_for_axis(FlexDirection::Row);
-        item.computed_flex_basis = max_or_defined(item.size.width.unwrap_or(f32::NAN), padding_border);
+        item.computed_flex_basis = max_or_defined(
+            item.resolved_size(AbsoluteAxis::Horizontal, available.width).unwrap_or(f32::NAN),
+            padding_border,
+        );
     } else if !is_main_axis_row && is_column_style_dim_defined {
         let padding_border = item.padding_border_for_axis(FlexDirection::Column);
-        item.computed_flex_basis = max_or_defined(item.size.height.unwrap_or(f32::NAN), padding_border);
+        item.computed_flex_basis = max_or_defined(
+            item.resolved_size(AbsoluteAxis::Vertical, available.height).unwrap_or(f32::NAN),
+            padding_border,
+        );
     } else {
         let mut child_width = f32::NAN;
         let mut child_height = f32::NAN;
@@ -421,11 +466,11 @@ pub(crate) fn compute_flex_basis_for_child(
         let margin_row = item.margin_for_axis(FlexDirection::Row);
         let margin_column = item.margin_for_axis(FlexDirection::Column);
 
-        if let Some(width) = item.size.width {
+        if let Some(width) = item.resolved_size(AbsoluteAxis::Horizontal, available.width) {
             child_width = width + margin_row;
             child_width_mode = YogaSizingMode::StretchFit;
         }
-        if let Some(height) = item.size.height {
+        if let Some(height) = item.resolved_size(AbsoluteAxis::Vertical, available.height) {
             child_height = height + margin_column;
             child_height_mode = YogaSizingMode::StretchFit;
         }
@@ -481,12 +526,12 @@ pub(crate) fn compute_flex_basis_for_child(
         }
 
         constrain_max_size_for_mode(
-            item.max_size.width.map(|max| max + margin_row),
+            item.resolved_max(AbsoluteAxis::Horizontal, available.width).map(|max| max + margin_row),
             &mut child_width_mode,
             &mut child_width,
         );
         constrain_max_size_for_mode(
-            item.max_size.height.map(|max| max + margin_column),
+            item.resolved_max(AbsoluteAxis::Vertical, available.height).map(|max| max + margin_column),
             &mut child_height_mode,
             &mut child_height,
         );
@@ -626,7 +671,8 @@ pub(crate) fn calculate_flex_line(
         item.line_index = line_count;
         let child_margin_main = item.margin_for_axis(main_axis);
         let leading_gap = if first_in_line == Some(index) { 0.0 } else { gap };
-        let flex_basis_with_min_and_max = item.bound_within_min_and_max(main_axis, item.computed_flex_basis);
+        let flex_basis_with_min_and_max =
+            item.bound_within_min_and_max(main_axis, item.computed_flex_basis, main_axis_owner_size);
         let _ = main_axis_owner_size;
 
         if size_consumed_including_min_constraint + flex_basis_with_min_and_max + child_margin_main + leading_gap
@@ -672,17 +718,22 @@ fn margin_is_auto_at(margin_is_auto: &Rect<bool>, edge: PhysicalEdge) -> bool {
 }
 
 impl YogaItem {
-    /// Yoga's `boundAxis` for this item
+    /// Yoga's `boundAxis` for this item, min/max resolved against `reference`
     #[inline]
-    pub(crate) fn bound_axis(&self, axis: FlexDirection, value: f32) -> f32 {
+    pub(crate) fn bound_axis(&self, axis: FlexDirection, value: f32, reference: f32) -> f32 {
         let dim = dimension(axis);
-        bound_axis(value, self.min_size.get_abs(dim), self.max_size.get_abs(dim), self.padding_border_for_axis(axis))
+        bound_axis(
+            value,
+            self.resolved_min(dim, reference),
+            self.resolved_max(dim, reference),
+            self.padding_border_for_axis(axis),
+        )
     }
 
     /// Yoga's `boundAxisWithAutoMin`
     #[inline]
-    pub(crate) fn bound_axis_with_auto_min(&self, axis: FlexDirection, value: f32) -> f32 {
-        let bounded = self.bound_axis(axis, value);
+    pub(crate) fn bound_axis_with_auto_min(&self, axis: FlexDirection, value: f32, reference: f32) -> f32 {
+        let bounded = self.bound_axis(axis, value, reference);
         match self.computed_auto_min_main_size {
             Some(auto_min) if bounded < auto_min => auto_min,
             _ => bounded,
@@ -793,10 +844,16 @@ pub(crate) fn compute_auto_min_main_size(
         return Some(0.0);
     }
 
-    let specified_main = item.size.get_abs(main_dim);
+    let specified_main = item.resolved_size(main_dim, container.owner_size.get_abs(main_dim));
     let transferred_main = item.aspect_ratio.and_then(|ratio| {
         let cross_dim = if is_main_axis_row { AbsoluteAxis::Vertical } else { AbsoluteAxis::Horizontal };
-        item.size.get_abs(cross_dim).map(|cross| if is_main_axis_row { cross * ratio } else { cross / ratio })
+        item.resolved_size(cross_dim, container.available_inner.get_abs(cross_dim)).map(|cross| {
+            if is_main_axis_row {
+                cross * ratio
+            } else {
+                cross / ratio
+            }
+        })
     });
 
     let content_main = compute_min_content_main_size(tree, item.node, main_axis, container.available_inner);
@@ -810,7 +867,7 @@ pub(crate) fn compute_auto_min_main_size(
             floor = transferred;
         }
     }
-    if let Some(max_main) = item.max_size.get_abs(main_dim) {
+    if let Some(max_main) = item.resolved_max(main_dim, container.owner_size.get_abs(main_dim)) {
         if floor > max_main {
             floor = max_main;
         }
@@ -866,7 +923,11 @@ pub(crate) fn distribute_free_space_first_pass(container: &YogaContainer, items:
 
     for &index in &line.items_in_flow {
         let item = &items[index];
-        let child_flex_basis = item.bound_within_min_and_max(main_axis, item.computed_flex_basis);
+        let child_flex_basis = item.bound_within_min_and_max(
+            main_axis,
+            item.computed_flex_basis,
+            container.owner_size.get_abs(dimension(main_axis)),
+        );
         if line.layout.remaining_free_space < 0.0 {
             let flex_shrink_scaled_factor = -item.flex_shrink * child_flex_basis;
             if is_defined(flex_shrink_scaled_factor) && flex_shrink_scaled_factor != 0.0 {
@@ -877,7 +938,8 @@ pub(crate) fn distribute_free_space_first_pass(container: &YogaContainer, items:
                 };
                 let base_main_size =
                     child_flex_basis + line.layout.remaining_free_space / total * flex_shrink_scaled_factor;
-                let bound_main_size = item.bound_axis_with_auto_min(main_axis, base_main_size);
+                let bound_main_size =
+                    item.bound_axis_with_auto_min(main_axis, base_main_size, container.available_inner_main_dim);
                 if is_defined(base_main_size) && is_defined(bound_main_size) && base_main_size != bound_main_size {
                     delta_free_space += bound_main_size - child_flex_basis;
                     line.layout.total_flex_shrink_scaled_factors -= -item.flex_shrink * item.computed_flex_basis;
@@ -888,7 +950,7 @@ pub(crate) fn distribute_free_space_first_pass(container: &YogaContainer, items:
             if is_defined(flex_grow_factor) && flex_grow_factor != 0.0 {
                 let total = if use_running_totals { line.layout.total_flex_grow_factors } else { original_total_grow };
                 let base_main_size = child_flex_basis + line.layout.remaining_free_space / total * flex_grow_factor;
-                let bound_main_size = item.bound_axis(main_axis, base_main_size);
+                let bound_main_size = item.bound_axis(main_axis, base_main_size, container.available_inner_main_dim);
                 if is_defined(base_main_size) && is_defined(bound_main_size) && base_main_size != bound_main_size {
                     delta_free_space += bound_main_size - child_flex_basis;
                     line.layout.total_flex_grow_factors -= flex_grow_factor;
@@ -914,7 +976,6 @@ pub(crate) fn distribute_free_space_second_pass(
     let cross_axis = container.cross_axis;
     let is_main_axis_row = is_row(main_axis);
     let available = container.available_inner;
-    let available_inner_main = available.get_abs(dimension(main_axis));
     let available_inner_cross = available.get_abs(dimension(cross_axis));
     let sizing_mode_cross = container.sizing_mode.get_abs(dimension(cross_axis));
     let cross_dim = dimension(cross_axis);
@@ -922,7 +983,11 @@ pub(crate) fn distribute_free_space_second_pass(
 
     for &index in &line.items_in_flow {
         let item = &mut items[index];
-        let child_flex_basis = item.bound_within_min_and_max(main_axis, item.computed_flex_basis);
+        let child_flex_basis = item.bound_within_min_and_max(
+            main_axis,
+            item.computed_flex_basis,
+            container.owner_size.get_abs(dimension(main_axis)),
+        );
         let mut updated_main_size = child_flex_basis;
         if is_defined(line.layout.remaining_free_space) && line.layout.remaining_free_space < 0.0 {
             let flex_shrink_scaled_factor = -item.flex_shrink * child_flex_basis;
@@ -933,7 +998,8 @@ pub(crate) fn distribute_free_space_second_pass(
                 } else {
                     child_flex_basis + (line.layout.remaining_free_space / total) * flex_shrink_scaled_factor
                 };
-                updated_main_size = item.bound_axis_with_auto_min(main_axis, child_size);
+                updated_main_size =
+                    item.bound_axis_with_auto_min(main_axis, child_size, container.available_inner_main_dim);
             }
         } else if is_defined(line.layout.remaining_free_space) && line.layout.remaining_free_space > 0.0 {
             let flex_grow_factor = item.flex_grow;
@@ -942,6 +1008,7 @@ pub(crate) fn distribute_free_space_second_pass(
                     main_axis,
                     child_flex_basis
                         + line.layout.remaining_free_space / line.layout.total_flex_grow_factors * flex_grow_factor,
+                    container.available_inner_main_dim,
                 );
             }
         }
@@ -954,7 +1021,7 @@ pub(crate) fn distribute_free_space_second_pass(
         let mut child_cross_size;
         let child_cross_mode;
 
-        let cross_is_definite = item.has_definite_size(cross_dim);
+        let cross_is_definite = item.has_definite_size(cross_dim, available_inner_cross);
         let cross_margins_not_auto = !margin_is_auto_at(&item.margin_is_auto, flex_start_edge(cross_axis))
             && !margin_is_auto_at(&item.margin_is_auto, flex_end_edge(cross_axis));
         if let Some(aspect_ratio) = item.aspect_ratio {
@@ -979,9 +1046,9 @@ pub(crate) fn distribute_free_space_second_pass(
             child_cross_mode =
                 if is_undefined(child_cross_size) { YogaSizingMode::MaxContent } else { YogaSizingMode::FitContent };
         } else {
-            child_cross_size = item.size.get_abs(cross_dim).unwrap_or(f32::NAN) + margin_cross;
+            child_cross_size = item.resolved_size(cross_dim, available_inner_cross).unwrap_or(f32::NAN) + margin_cross;
             let is_loose_percentage_measurement =
-                item.size_is_percent.get_abs(cross_dim) && sizing_mode_cross != YogaSizingMode::StretchFit;
+                item.size_is_percent(cross_dim) && sizing_mode_cross != YogaSizingMode::StretchFit;
             child_cross_mode = if is_undefined(child_cross_size) || is_loose_percentage_measurement {
                 YogaSizingMode::MaxContent
             } else {
@@ -991,12 +1058,12 @@ pub(crate) fn distribute_free_space_second_pass(
         let mut child_cross_mode = child_cross_mode;
 
         constrain_max_size_for_mode(
-            item.max_size.get_abs(dimension(main_axis)).map(|max| max + margin_main),
+            item.resolved_max(dimension(main_axis), container.available_inner_main_dim).map(|max| max + margin_main),
             &mut child_main_mode,
             &mut child_main_size,
         );
         constrain_max_size_for_mode(
-            item.max_size.get_abs(cross_dim).map(|max| max + margin_cross),
+            item.resolved_max(cross_dim, available_inner_cross).map(|max| max + margin_cross),
             &mut child_cross_mode,
             &mut child_cross_size,
         );
@@ -1016,7 +1083,6 @@ pub(crate) fn distribute_free_space_second_pass(
             if is_layout_pass { RunMode::PerformLayout } else { RunMode::ComputeSize },
         );
         *had_overflow = *had_overflow || tree.yoga_node_state(item.node).had_overflow;
-        let _ = available_inner_main;
     }
     delta_free_space
 }
@@ -1138,8 +1204,12 @@ pub(crate) fn justify_main_axis(
         }
         let can_skip_flex = !perform_layout && sizing_mode_cross == YogaSizingMode::StretchFit;
         if can_skip_flex {
-            line.layout.main_dim +=
-                item.margin_for_axis(main_axis) + item.bound_within_min_and_max(main_axis, item.computed_flex_basis);
+            line.layout.main_dim += item.margin_for_axis(main_axis)
+                + item.bound_within_min_and_max(
+                    main_axis,
+                    item.computed_flex_basis,
+                    container.owner_size.get_abs(dimension(main_axis)),
+                );
             line.layout.cross_dim = available_inner_cross;
         } else {
             line.layout.main_dim += item.dimension_with_margin(main_axis);
@@ -1327,6 +1397,7 @@ pub fn compute_yoga_flexbox_layout(
         overflow,
         align_items,
         available_inner,
+        available_inner_main_dim: available_inner_main,
         owner_size,
         sizing_mode,
         padding_border,
@@ -1401,11 +1472,7 @@ pub fn compute_yoga_flexbox_layout(
                 size_based_on_content = !use_legacy_stretch_behaviour;
             }
         }
-        container.available_inner = if is_main_axis_row {
-            Size { width: available_inner_main, height: available_inner_cross }
-        } else {
-            Size { width: available_inner_cross, height: available_inner_main }
-        };
+        container.available_inner_main_dim = available_inner_main;
 
         if !size_based_on_content && is_defined(available_inner_main) {
             line.layout.remaining_free_space = available_inner_main - line.size_consumed;
@@ -1450,7 +1517,7 @@ pub fn compute_yoga_flexbox_layout(
                 let start_auto = margin_is_auto_at(&item.margin_is_auto, flex_start_edge(cross_axis));
                 let end_auto = margin_is_auto_at(&item.margin_is_auto, flex_end_edge(cross_axis));
                 if item.align == AlignItems::STRETCH && !start_auto && !end_auto {
-                    if !item.has_definite_size(dimension(cross_axis)) {
+                    if !item.has_definite_size(dimension(cross_axis), available_inner_cross) {
                         let mut child_main_size = item.measured.get_abs(dimension(main_axis));
                         let mut child_cross_size = match item.aspect_ratio {
                             Some(ratio) => {
@@ -1463,15 +1530,13 @@ pub fn compute_yoga_flexbox_layout(
                         let mut child_main_mode = YogaSizingMode::StretchFit;
                         let mut child_cross_mode = YogaSizingMode::StretchFit;
                         constrain_max_size_for_mode(
-                            item.max_size
-                                .get_abs(dimension(main_axis))
+                            item.resolved_max(dimension(main_axis), container.available_inner_main_dim)
                                 .map(|max| max + item.margin_for_axis(main_axis)),
                             &mut child_main_mode,
                             &mut child_main_size,
                         );
                         constrain_max_size_for_mode(
-                            item.max_size
-                                .get_abs(dimension(cross_axis))
+                            item.resolved_max(dimension(cross_axis), available_inner_cross)
                                 .map(|max| max + item.margin_for_axis(cross_axis)),
                             &mut child_cross_mode,
                             &mut child_cross_size,
@@ -1630,7 +1695,7 @@ pub fn compute_yoga_flexbox_layout(
                         cross_start,
                         current_lead + edge_value(&item.margin, cross_start),
                     );
-                    if !item.has_definite_size(cross_dim) {
+                    if !item.has_definite_size(cross_dim, available_inner_cross) {
                         let child_width = if is_main_axis_row {
                             item.measured.width + item.margin_for_axis(main_axis)
                         } else {
