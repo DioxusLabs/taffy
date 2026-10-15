@@ -80,10 +80,13 @@ pub fn round_yoga_layout<Tree: RoundTree>(
             layout.location.x = round_value_to_pixel_grid(node_left, scale, false, text_rounding);
             layout.location.y = round_value_to_pixel_grid(node_top, scale, false, text_rounding);
 
+            // `round()` is not available without std; rounding to a 1.0 grid is the same thing
             let scaled_width = node_width * scale;
-            let has_fractional_width = !inexact_equals_f64(scaled_width.round(), scaled_width);
+            let has_fractional_width =
+                !inexact_equals_f64(round_value_to_pixel_grid(scaled_width, 1.0, false, false) as f64, scaled_width);
             let scaled_height = node_height * scale;
-            let has_fractional_height = !inexact_equals_f64(scaled_height.round(), scaled_height);
+            let has_fractional_height =
+                !inexact_equals_f64(round_value_to_pixel_grid(scaled_height, 1.0, false, false) as f64, scaled_height);
             layout.size.width = round_value_to_pixel_grid(
                 absolute_node_right,
                 scale,
