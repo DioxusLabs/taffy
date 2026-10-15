@@ -40,9 +40,14 @@ impl AxisInput {
 
     /// The constraints to hand to the measure function (Yoga clamps negative available space to zero
     /// before calling the measure callback).
-    fn to_taffy(self) -> (Option<f32>, AvailableSpace) {
+    fn to_taffy(self, padding_border: f32) -> (Option<f32>, AvailableSpace) {
         match self.mode {
-            YogaSizingMode::StretchFit => (Some(self.available), AvailableSpace::Definite(self.available)),
+            // Yoga measures with `max(0, available - padding_border)` inside; the host's leaf
+            // measurement subtracts padding and border itself, so clamp the outer size to them.
+            YogaSizingMode::StretchFit => {
+                let outer = f32_max(self.available, padding_border);
+                (Some(outer), AvailableSpace::Definite(outer))
+            }
             YogaSizingMode::FitContent => (None, AvailableSpace::Definite(f32_max(self.available, 0.0))),
             YogaSizingMode::MaxContent => (None, AvailableSpace::MaxContent),
         }
@@ -104,8 +109,8 @@ pub fn compute_yoga_leaf_layout(
     let (measured, mut output) = if both_exact {
         (Size::ZERO, LayoutOutput::HIDDEN)
     } else {
-        let (known_width, available_width) = width.to_taffy();
-        let (known_height, available_height) = height.to_taffy();
+        let (known_width, available_width) = width.to_taffy(padding_border.width);
+        let (known_height, available_height) = height.to_taffy(padding_border.height);
         let output = measure(LayoutInput {
             known_dimensions: Size { width: known_width, height: known_height },
             available_space: Size { width: available_width, height: available_height },
@@ -135,19 +140,20 @@ mod tests {
     fn axis_input_translates_taffy_constraints() {
         let exact = AxisInput::new(Some(40.0), AvailableSpace::Definite(100.0));
         assert_eq!(exact.mode, YogaSizingMode::StretchFit);
-        assert_eq!(exact.to_taffy(), (Some(40.0), AvailableSpace::Definite(40.0)));
+        assert_eq!(exact.to_taffy(0.0), (Some(40.0), AvailableSpace::Definite(40.0)));
+        assert_eq!(exact.to_taffy(50.0), (Some(50.0), AvailableSpace::Definite(50.0)));
 
         let fit = AxisInput::new(None, AvailableSpace::Definite(-5.0));
         assert_eq!(fit.mode, YogaSizingMode::FitContent);
-        assert_eq!(fit.to_taffy(), (None, AvailableSpace::Definite(0.0)));
+        assert_eq!(fit.to_taffy(0.0), (None, AvailableSpace::Definite(0.0)));
 
         let max = AxisInput::new(None, AvailableSpace::MaxContent);
         assert_eq!(max.mode, YogaSizingMode::MaxContent);
-        assert_eq!(max.to_taffy(), (None, AvailableSpace::MaxContent));
+        assert_eq!(max.to_taffy(0.0), (None, AvailableSpace::MaxContent));
 
         let min = AxisInput::new(None, AvailableSpace::MinContent);
         assert_eq!(min.mode, YogaSizingMode::FitContent);
-        assert_eq!(min.to_taffy(), (None, AvailableSpace::Definite(0.0)));
+        assert_eq!(min.to_taffy(0.0), (None, AvailableSpace::Definite(0.0)));
     }
 
     #[test]
