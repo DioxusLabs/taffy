@@ -96,7 +96,7 @@ pub fn to_taffy_style(s: &StyleMap, is_root: bool, rtl: bool, no_auto_min: bool)
     let mut st = Style {
         display: match gs("display") {
             Some("none") => Display::None,
-            _ => Display::Flex,
+            _ => Display::YogaFlexbox,
         },
         flex_direction: match gs("flex-direction") {
             Some("row") => FlexDirection::Row,
@@ -184,6 +184,18 @@ pub struct TaffySide {
 impl TaffySide {
     pub fn new(case: &Case, config: Config, mode: TaffyMode) -> TaffySide {
         let mut tree: TaffyTree<Ctx> = TaffyTree::new();
+        {
+            use taffy::yoga_flexbox::{YogaConfig, YogaErrata, YogaExperimentalFeature, YogaExperimentalFeatures};
+            let mut features = YogaExperimentalFeatures::default();
+            features.set(YogaExperimentalFeature::FixFlexBasisFitContent, config.fix_flex_basis_fit_content);
+            features.set(YogaExperimentalFeature::WebFlexBasis, config.web_flex_basis);
+            tree.set_yoga_config(YogaConfig {
+                use_web_defaults: config.use_web_defaults,
+                experimental_features: features,
+                errata: YogaErrata::from_bits(config.errata.0 as u32),
+                point_scale_factor: config.point_scale_factor,
+            });
+        }
         if config.point_scale_factor == 0.0 {
             tree.disable_rounding();
         } else {

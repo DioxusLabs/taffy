@@ -24,7 +24,7 @@ pub struct MeasureInput {
 pub fn measure(t: &TextSpec, i: MeasureInput) -> (f32, f32) {
     let avail = if i.wm == Mode::Undefined { f32::INFINITY } else { i.w };
     let per_line = if avail.is_infinite() { i64::MAX } else { ((avail / t.ww + 1e-4).floor() as i64).max(1) };
-    let lines = if t.n == 0 { 0 } else { (t.n + per_line - 1) / per_line };
+    let lines = if t.n == 0 { 0 } else { (t.n - 1) / per_line + 1 };
     // CSS-like fit-content: min(max-content, max(min-content, available))
     let mut width = if t.n == 0 { 0.0 } else { (t.n as f32 * t.ww).min(t.ww.max(avail)) };
     if i.wm == Mode::Exactly {

@@ -115,6 +115,21 @@ impl Stats {
                 .filter(|&i| parents.get(i).copied().flatten().is_none_or(|p| !bad.contains(&p)))
                 .collect();
             self.root_cause_nodes += root_causes.len();
+            if std::env::var_os("YOGA_DIFF_VERBOSE").is_some() {
+                let paths: Vec<Vec<usize>> = case.tree.preorder().into_iter().map(|(p, _)| p).collect();
+                println!("{name} run {run}: differing nodes {bad:?}, root causes {root_causes:?}");
+                for &i in &bad {
+                    println!("  node {i} {:?}: yoga {:?} taffy {:?}", paths[i], e.layout[i].0, a.layout[i].0);
+                }
+                for (j, (em, am)) in e.measure.iter().zip(a.measure.iter()).enumerate() {
+                    if format!("{em:?}") != format!("{am:?}") {
+                        println!("  measure call {j}: yoga {em:?}\n                   taffy {am:?}");
+                    }
+                }
+                if e.measure.len() != a.measure.len() {
+                    println!("  measure calls: yoga {} taffy {}", e.measure.len(), a.measure.len());
+                }
+            }
             if run == 0 || self.first.iter().all(|(_, n, _)| n != name) {
                 self.first.push((e.layout.len(), name.to_string(), root_causes.first().copied().unwrap_or(bad[0])));
             }
