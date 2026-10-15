@@ -8,7 +8,9 @@ use crate::style::{
     AlignContent, AlignItems, AlignItemsKeyword, AlignSelf, AvailableSpace, CoreStyle, GridItemStyle, Overflow,
     Position,
 };
-use crate::tree::{Layout, LayoutPartialTreeExt, NodeId, OofCandidates, SizingMode};
+use crate::tree::{
+    Layout, LayoutInput, LayoutOutput, LayoutPartialTreeExt, NodeId, OofCandidates, RequestedAxis, RunMode, SizingMode,
+};
 use crate::util::sys::f32_max;
 use crate::util::{MaybeMath, MaybeResolve, ResolveOrZero};
 
@@ -82,12 +84,44 @@ pub(super) fn align_tracks(
     }
 }
 
-/// Align and size a grid item into it's final position
-#[allow(clippy::too_many_arguments)]
-pub(super) fn align_and_position_item(
+/// The state of a grid item whose size has been resolved, and whose layout is yet to be computed.
+/// Created by [`prepare_item_layout`] and consumed by [`position_item`].
+pub(super) struct PreparedItemLayout {
+    /// The input with which to compute the item's layout
+    pub input: LayoutInput,
+    /// The item's resolved size
+    size: Size<Option<f32>>,
+    /// The item's resolved min size
+    min_size: Size<Option<f32>>,
+    /// The item's resolved max size
+    max_size: Size<Option<f32>>,
+    /// The alignment that applies to the item in each axis
+    alignment_styles: InBothAbsAxis<AlignSelf>,
+    /// The item's position style
+    position: Position,
+    /// The item's resolved horizontal inset
+    inset_horizontal: Line<Option<f32>>,
+    /// The item's resolved vertical inset
+    inset_vertical: Line<Option<f32>>,
+    /// The item's resolved margin
+    margin: Rect<Option<f32>>,
+    /// The item's resolved padding
+    padding: Rect<f32>,
+    /// The item's resolved border
+    border: Rect<f32>,
+    /// The item's overflow style
+    overflow: Point<Overflow>,
+    /// The item's contain style
+    #[cfg(feature = "content_size")]
+    contain: crate::Contain,
+    /// The item's scrollbar width style
+    scrollbar_width: f32,
+}
+
+/// Resolve the size of a grid item given its grid area, producing the input with which its layout should be computed
+pub(super) fn prepare_item_layout(
     tree: &mut impl LayoutGridContainer,
     node: NodeId,
-    order: u32,
     grid_area: Rect<f32>,
     // Percentage basis for the item's styles. Grid passes the grid area size; grid lanes (css-grid-3) items
     // have the container's content box as their containing block in the stacking axis.
@@ -95,11 +129,7 @@ pub(super) fn align_and_position_item(
     container_alignment_styles: InBothAbsAxis<AlignItems>,
     baseline_shim: f32,
     direction: Direction,
-    container_border_box_width: f32,
-    container_border: Rect<f32>,
-    #[cfg(feature = "content_size")] container_is_scroll_container: bool,
-    bubbled_candidates: &mut OofCandidates,
-) -> (Rect<f32>, f32, f32) {
+) -> PreparedItemLayout {
     let grid_area_size = Size { width: grid_area.right - grid_area.left, height: grid_area.bottom - grid_area.top };
 
     let style = tree.get_grid_child_style(node);
@@ -362,14 +392,67 @@ pub(super) fn align_and_position_item(
         Size { width, height }
     };
 
-    let mut layout_output = tree.perform_child_layout(
-        node,
+    PreparedItemLayout {
+        input: LayoutInput {
+            known_dimensions: size,
+            known_dimensions_are_definite: Size { width: true, height: true },
+            parent_size: containing_block_size.map(Option::Some),
+            available_space: grid_area_minus_item_margins_size.map(AvailableSpace::Definite),
+            sizing_mode: SizingMode::InherentSize,
+            axis: RequestedAxis::Both,
+            run_mode: RunMode::PerformLayout,
+            vertical_margins_are_collapsible: Line::FALSE,
+        },
         size,
-        containing_block_size.map(Option::Some),
-        grid_area_minus_item_margins_size.map(AvailableSpace::Definite),
-        SizingMode::InherentSize,
-        Line::FALSE,
-    );
+        min_size,
+        max_size,
+        alignment_styles,
+        position,
+        inset_horizontal,
+        inset_vertical,
+        margin,
+        padding,
+        border,
+        overflow,
+        #[cfg(feature = "content_size")]
+        contain,
+        scrollbar_width,
+    }
+}
+
+/// Align and position a grid item within its grid area given its computed layout, and write its final layout to the tree
+#[allow(clippy::too_many_arguments)]
+pub(super) fn position_item(
+    tree: &mut impl LayoutGridContainer,
+    node: NodeId,
+    order: u32,
+    grid_area: Rect<f32>,
+    prepared: PreparedItemLayout,
+    mut layout_output: LayoutOutput,
+    baseline_shim: f32,
+    direction: Direction,
+    container_border_box_width: f32,
+    container_border: Rect<f32>,
+    #[cfg(feature = "content_size")] container_is_scroll_container: bool,
+    bubbled_candidates: &mut OofCandidates,
+) -> (Rect<f32>, f32, f32) {
+    let PreparedItemLayout {
+        size,
+        min_size,
+        max_size,
+        alignment_styles,
+        position,
+        inset_horizontal,
+        inset_vertical,
+        margin,
+        padding,
+        border,
+        overflow,
+        #[cfg(feature = "content_size")]
+        contain,
+        scrollbar_width,
+        ..
+    } = prepared;
 
     // Resolve final size
     let Size { width, height } = size.unwrap_or(layout_output.size).maybe_clamp(min_size, max_size);

@@ -5,8 +5,11 @@ use crate::compute::grid::OriginZeroLine;
 use crate::geometry::AbstractAxis;
 use crate::geometry::{Line, Point, Rect, Size};
 use crate::style::{AlignItems, AlignSelf, AvailableSpace, Dimension, LengthPercentageAuto, Overflow};
-use crate::tree::{LayoutPartialTree, LayoutPartialTreeExt, NodeId, OofCandidates, SizingMode};
+use crate::tree::{
+    ChildLayoutJob, LayoutInput, LayoutPartialTree, LayoutPartialTreeExt, NodeId, OofCandidates, RunMode, SizingMode,
+};
 use crate::util::sys::f32_max;
+use crate::util::sys::Vec;
 use crate::util::{MaybeMath, MaybeResolve, ResolveOrZero};
 use crate::{AlignItemsKeyword, BoxSizing, GridItemStyle, LengthPercentage};
 use core::ops::Range;
@@ -19,6 +22,9 @@ pub(in super::super) struct KnownDimensionsCacheEntry {
     /// The cached known_dimensions
     known_dimensions: Size<Option<f32>>,
 }
+
+/// The value of an item's `pending_*_contribution_job` fields when there is no such job
+pub(in super::super) const NO_CONTRIBUTION_JOB: u32 = u32::MAX;
 
 /// Represents a single grid item
 #[derive(Debug)]
@@ -97,6 +103,12 @@ pub(in super::super) struct GridItem {
     pub minimum_contribution_cache: Size<Option<f32>>,
     /// Cache for the max-content size
     pub max_content_contribution_cache: Size<Option<f32>>,
+    /// The index of the job that will measure the item's min-content contribution in the axis being sized, if
+    /// that contribution is pending measurement as part of a batch. Else `NO_CONTRIBUTION_JOB`.
+    pub pending_min_content_contribution_job: u32,
+    /// The index of the job that will measure the item's max-content contribution in the axis being sized, if
+    /// that contribution is pending measurement as part of a batch. Else `NO_CONTRIBUTION_JOB`.
+    pub pending_max_content_contribution_job: u32,
 
     /// Final y position. Used to compute baseline alignment for the container.
     pub y_position: f32,
@@ -149,6 +161,8 @@ impl GridItem {
             max_content_contribution_cache: Size::NONE,
             known_dimensions_cache: None,
             minimum_contribution_cache: Size::NONE,
+            pending_min_content_contribution_job: NO_CONTRIBUTION_JOB,
+            pending_max_content_contribution_job: NO_CONTRIBUTION_JOB,
             y_position: 0.0,
             height: 0.0,
             oof_candidates: OofCandidates::NONE,
@@ -533,6 +547,73 @@ impl GridItem {
         .sum_axes()
     }
 
+    /// Compute the input with which to measure the item's min-content or max-content contribution (according
+    /// to `intrinsic_available_space`) in `axis`.
+    ///
+    /// If the item's size in the axis being measured is already known then that size is its contribution,
+    /// and we can avoid calling into the child entirely. It is returned as an `Err` in that case.
+    fn contribution_input(
+        &mut self,
+        axis: AbstractAxis,
+        tree: &mut impl LayoutPartialTree,
+        grid_area_size: Size<Option<f32>>,
+        available_space: Size<Option<f32>>,
+        intrinsic_available_space: AvailableSpace,
+    ) -> Result<LayoutInput, f32> {
+        let known_dimensions = self.known_dimensions_cached(tree, grid_area_size);
+        if let Some(size) = known_dimensions.get(axis) {
+            return Err(size);
+        }
+        // The child sees the grid area as its containing block during intrinsic measurement, so
+        // percentage box properties resolve against the grid area when that size is definite.
+        // Spec:
+        // https://www.w3.org/TR/css-grid-1/#grid-item-sizing
+        // https://www.w3.org/TR/css-grid-1/#algo-overview
+        Ok(LayoutInput {
+            known_dimensions,
+            known_dimensions_are_definite: Size { width: true, height: true },
+            parent_size: grid_area_size,
+            available_space: self.keyword_adjusted_available_space(
+                grid_area_size,
+                self.available_space_minus_margins(grid_area_size, available_space, tree).map(|opt| match opt {
+                    Some(size) => AvailableSpace::Definite(size),
+                    None => intrinsic_available_space,
+                }),
+                tree,
+            ),
+            sizing_mode: SizingMode::InherentSize,
+            axis: axis.as_abs_naive().into(),
+            run_mode: RunMode::ComputeSize,
+            vertical_margins_are_collapsible: Line::FALSE,
+        })
+    }
+
+    /// Compute the input with which to measure the item's min content contribution, or return the
+    /// contribution as an `Err` if it is known without measuring the item
+    #[inline(always)]
+    pub fn min_content_contribution_input(
+        &mut self,
+        axis: AbstractAxis,
+        tree: &mut impl LayoutPartialTree,
+        grid_area_size: Size<Option<f32>>,
+        available_space: Size<Option<f32>>,
+    ) -> Result<LayoutInput, f32> {
+        self.contribution_input(axis, tree, grid_area_size, available_space, AvailableSpace::MinContent)
+    }
+
+    /// Compute the input with which to measure the item's max content contribution, or return the
+    /// contribution as an `Err` if it is known without measuring the item
+    #[inline(always)]
+    pub fn max_content_contribution_input(
+        &mut self,
+        axis: AbstractAxis,
+        tree: &mut impl LayoutPartialTree,
+        grid_area_size: Size<Option<f32>>,
+        available_space: Size<Option<f32>>,
+    ) -> Result<LayoutInput, f32> {
+        self.contribution_input(axis, tree, grid_area_size, available_space, AvailableSpace::MaxContent)
+    }
+
     /// Compute the item's min content contribution from the provided parameters
     pub fn min_content_contribution(
         &mut self,
@@ -541,33 +622,52 @@ impl GridItem {
         grid_area_size: Size<Option<f32>>,
         available_space: Size<Option<f32>>,
     ) -> f32 {
-        let known_dimensions = self.known_dimensions_cached(tree, grid_area_size);
-        // If the item's size in the axis being measured is already known then that size is its contribution,
-        // and we can avoid calling into the child entirely.
-        if let Some(size) = known_dimensions.get(axis) {
-            return size;
+        match self.min_content_contribution_input(axis, tree, grid_area_size, available_space) {
+            Ok(input) => tree.compute_child_layout(self.node, input).size.get(axis),
+            Err(known_contribution) => known_contribution,
         }
-        // The child sees the grid area as its containing block during intrinsic measurement, so
-        // percentage box properties resolve against the grid area when that size is definite.
-        // Spec:
-        // https://www.w3.org/TR/css-grid-1/#grid-item-sizing
-        // https://www.w3.org/TR/css-grid-1/#algo-overview
-        tree.measure_child_size(
-            self.node,
-            known_dimensions,
-            grid_area_size,
-            self.keyword_adjusted_available_space(
-                grid_area_size,
-                self.available_space_minus_margins(grid_area_size, available_space, tree).map(|opt| match opt {
-                    Some(size) => AvailableSpace::Definite(size),
-                    None => AvailableSpace::MinContent,
-                }),
-                tree,
-            ),
-            SizingMode::InherentSize,
-            axis.as_abs_naive(),
-            Line::FALSE,
-        )
+    }
+
+    /// Add a job that measures the item's min content contribution to `jobs`, unless the contribution is
+    /// already cached, already has a job, or is known without measuring the item
+    pub fn collect_min_content_contribution_job(
+        &mut self,
+        axis: AbstractAxis,
+        tree: &mut impl LayoutPartialTree,
+        grid_area_size: Size<Option<f32>>,
+        available_space: Size<Option<f32>>,
+        jobs: &mut Vec<ChildLayoutJob>,
+    ) {
+        if self.min_content_contribution_cache.get(axis).is_some()
+            || self.pending_min_content_contribution_job != NO_CONTRIBUTION_JOB
+        {
+            return;
+        }
+        if let Ok(input) = self.min_content_contribution_input(axis, tree, grid_area_size, available_space) {
+            self.pending_min_content_contribution_job = jobs.len() as u32;
+            jobs.push(ChildLayoutJob::new(self.node, input));
+        }
+    }
+
+    /// Add a job that measures the item's max content contribution to `jobs`, unless the contribution is
+    /// already cached, already has a job, or is known without measuring the item
+    pub fn collect_max_content_contribution_job(
+        &mut self,
+        axis: AbstractAxis,
+        tree: &mut impl LayoutPartialTree,
+        grid_area_size: Size<Option<f32>>,
+        available_space: Size<Option<f32>>,
+        jobs: &mut Vec<ChildLayoutJob>,
+    ) {
+        if self.max_content_contribution_cache.get(axis).is_some()
+            || self.pending_max_content_contribution_job != NO_CONTRIBUTION_JOB
+        {
+            return;
+        }
+        if let Ok(input) = self.max_content_contribution_input(axis, tree, grid_area_size, available_space) {
+            self.pending_max_content_contribution_job = jobs.len() as u32;
+            jobs.push(ChildLayoutJob::new(self.node, input));
+        }
     }
 
     /// Retrieve the item's min content contribution from the cache or compute it using the provided parameters
@@ -594,31 +694,10 @@ impl GridItem {
         grid_area_size: Size<Option<f32>>,
         available_space: Size<Option<f32>>,
     ) -> f32 {
-        let known_dimensions = self.known_dimensions_cached(tree, grid_area_size);
-        // If the item's size in the axis being measured is already known then that size is its contribution,
-        // and we can avoid calling into the child entirely.
-        if let Some(size) = known_dimensions.get(axis) {
-            return size;
+        match self.max_content_contribution_input(axis, tree, grid_area_size, available_space) {
+            Ok(input) => tree.compute_child_layout(self.node, input).size.get(axis),
+            Err(known_contribution) => known_contribution,
         }
-        // See the min-content path above. Max-content measurement uses the same containing-block
-        // basis so percentage-dependent item geometry is measured from the grid area rather than
-        // from the container.
-        tree.measure_child_size(
-            self.node,
-            known_dimensions,
-            grid_area_size,
-            self.keyword_adjusted_available_space(
-                grid_area_size,
-                self.available_space_minus_margins(grid_area_size, available_space, tree).map(|opt| match opt {
-                    Some(size) => AvailableSpace::Definite(size),
-                    None => AvailableSpace::MaxContent,
-                }),
-                tree,
-            ),
-            SizingMode::InherentSize,
-            axis.as_abs_naive(),
-            Line::FALSE,
-        )
     }
 
     /// Subtract the item's margins (and baseline shim) from the definite axes of the space available
@@ -699,6 +778,10 @@ impl GridItem {
     ///
     /// Because the minimum contribution often depends on the size of the item’s content, it is considered a type of intrinsic size contribution.
     /// See: https://www.w3.org/TR/css-grid-1/#min-size-auto
+    ///
+    /// If `collect_jobs` is passed then the minimum contribution is not computed, and the return value is
+    /// meaningless. Instead, if computing it would measure the item's min-content contribution then a job
+    /// for that measurement is added to `collect_jobs`.
     pub fn minimum_contribution(
         &mut self,
         tree: &mut impl LayoutPartialTree,
@@ -706,6 +789,7 @@ impl GridItem {
         axis_tracks: &[GridTrack],
         grid_area_size: Size<Option<f32>>,
         inner_node_size: Size<Option<f32>>,
+        mut collect_jobs: Option<&mut Vec<ChildLayoutJob>>,
     ) -> f32 {
         let padding = self.padding.resolve_or_zero(grid_area_size.width, |val, basis| tree.calc(val, basis));
         let border = self.border.resolve_or_zero(grid_area_size.width, |val, basis| tree.calc(val, basis));
@@ -736,8 +820,13 @@ impl GridItem {
                 // A preferred size that is a sizing keyword other than `stretch` does not behave as auto,
                 // so the minimum contribution is the min-content contribution.
                 let size = self.size.get(axis);
-                (size.is_sizing_keyword() && !size.is_stretch())
-                    .then(|| self.min_content_contribution_cached(axis, tree, grid_area_size, grid_area_size))
+                (size.is_sizing_keyword() && !size.is_stretch()).then(|| {
+                    if let Some(jobs) = collect_jobs.as_deref_mut() {
+                        self.collect_min_content_contribution_job(axis, tree, grid_area_size, grid_area_size, jobs);
+                        return 0.0;
+                    }
+                    self.min_content_contribution_cached(axis, tree, grid_area_size, grid_area_size)
+                })
             })
             .or_else(|| {
                 self.min_size
@@ -769,6 +858,10 @@ impl GridItem {
 
                 // Otherwise, the automatic minimum size is zero, as usual.
                 if use_content_based_minimum {
+                    if let Some(jobs) = collect_jobs {
+                        self.collect_min_content_contribution_job(axis, tree, grid_area_size, grid_area_size, jobs);
+                        return 0.0;
+                    }
                     let mut minimum_contribution =
                         self.min_content_contribution_cached(axis, tree, grid_area_size, grid_area_size);
 
@@ -809,7 +902,7 @@ impl GridItem {
         inner_node_size: Size<Option<f32>>,
     ) -> f32 {
         self.minimum_contribution_cache.get(axis).unwrap_or_else(|| {
-            let size = self.minimum_contribution(tree, axis, axis_tracks, grid_area_size, inner_node_size);
+            let size = self.minimum_contribution(tree, axis, axis_tracks, grid_area_size, inner_node_size, None);
             self.minimum_contribution_cache.set(axis, Some(size));
             size
         })

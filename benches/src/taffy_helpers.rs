@@ -29,7 +29,7 @@ impl<R: Rng, G: GenStyle<TaffyStyle>> BuildTree<R, G> for TaffyTreeBuilder<R, G>
 
     fn compute_layout_inner(&mut self, available_width: Option<f32>, available_height: Option<f32>) {
         let available_space = taffy::geometry::Size { width: available_width.into(), height: available_height.into() };
-        self.tree.compute_layout(self.root, available_space).unwrap();
+        crate::compute_layout(&mut self.tree, self.root, available_space);
     }
 
     fn mark_all_dirty(&mut self) {
