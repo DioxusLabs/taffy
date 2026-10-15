@@ -1066,9 +1066,20 @@ impl<NodeContext> TaffyTree<NodeContext> {
         MeasureFunction: FnMut(LayoutInput, NodeId, Option<&mut NodeContext>, &Style) -> LayoutOutput,
     {
         let use_rounding = self.config.use_rounding;
+        // A Yoga root rounds like Yoga (point scale factor from the YogaConfig, 0 = no rounding)
+        #[cfg(feature = "yoga_flexbox")]
+        let yoga_scale = (self.nodes[node_id.into()].style.display == crate::style::Display::YogaFlexbox)
+            .then_some(self.config.yoga_config.point_scale_factor);
         let mut taffy_view = TaffyView { taffy: self, measure_function };
         compute_root_layout(&mut taffy_view, node_id, available_space);
         if use_rounding {
+            #[cfg(feature = "yoga_flexbox")]
+            if let Some(scale) = yoga_scale {
+                crate::compute::yoga_flexbox::round_yoga_layout(&mut taffy_view, node_id, scale, |view, id| {
+                    view.taffy.has_measure_func(id)
+                });
+                return Ok(());
+            }
             round_layout(&mut taffy_view, node_id);
         }
         Ok(())

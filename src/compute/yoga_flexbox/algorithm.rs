@@ -413,7 +413,7 @@ pub(crate) fn layout_yoga_child(
     let (known_height, available_height) = constraint(modes.height, child_size.height, margin_column);
     // Yoga's MaxContent keeps the available size for the child's children
     let max_content_size = |mode: YogaSizingMode, size: f32, margin: f32| {
-        (mode == YogaSizingMode::MaxContent && is_defined(size)).then(|| size - margin)
+        (mode == YogaSizingMode::MaxContent && is_defined(size)).then_some(size - margin)
     };
     let yoga_available_size = Size {
         width: max_content_size(modes.width, child_size.width, margin_row),
@@ -1991,8 +1991,11 @@ pub fn compute_yoga_flexbox_layout(
 /// Where an absolute child without insets sits along an axis of its parent
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 enum FlexPlacement {
+    /// Against the parent's flex-start edge
     FlexStart,
+    /// Against the parent's flex-end edge
     FlexEnd,
+    /// Centred in the parent
     Center,
 }
 

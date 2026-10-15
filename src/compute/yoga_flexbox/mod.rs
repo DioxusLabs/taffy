@@ -16,6 +16,7 @@ mod length;
 mod node_state;
 pub(crate) mod numeric;
 pub(crate) mod pixel_grid;
+pub use pixel_grid::round_yoga_layout;
 mod style;
 
 pub use config::{YogaConfig, YogaExperimentalFeatures};
