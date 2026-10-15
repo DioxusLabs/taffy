@@ -204,7 +204,7 @@ pub(crate) fn constrain_max_size_for_mode(
     match *mode {
         YogaSizingMode::StretchFit | YogaSizingMode::FitContent => {
             if let Some(max) = max_size_with_margin {
-                if !(*size < max) {
+                if size.is_nan() || *size >= max {
                     *size = max;
                 }
             }
