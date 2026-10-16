@@ -522,83 +522,62 @@ impl<'a> BenchmarkParser<'a> {
         false
     }
 
-    fn parse_layout_node(&mut self) -> LayoutNode {
+    /// Returns an error for the current position in the template
+    fn error<T>(&self, expected: &str) -> Result<T, String> {
+        Err(format!("Line {}: Expected {}, found {:?}", self.line, expected, self.peek()))
+    }
+
+    /// Parse a node: `.`-separated properties followed by a `{ ... }` block containing its children
+    fn parse_layout_node(&mut self) -> Result<LayoutNode, String> {
         let mut node = LayoutNode::default();
 
-        loop {
-            self.skip_whitespace_and_comments();
-
-            if self.is_at_end() {
-                break;
+        self.skip_whitespace_and_comments();
+        while !self.peek_char('{') {
+            if !self.try_parse_property(&mut node) {
+                return self.error("a property or '{'");
             }
-
-            if self.peek_char('{') {
-                // Parse children block
-                self.advance(); // consume '{'
-                self.skip_whitespace_and_comments();
-
-                while !self.is_at_end() && !self.peek_char('}') {
-                    let last_index = self.index;
-
-                    // Check for Repeat(N) construct
-                    if self.try_eat("Repeat") {
-                        if self.expect('(').is_ok() {
-                            if let Some(repeat_count) = self.try_parse_float() {
-                                if self.expect(')').is_ok() {
-                                    self.skip_whitespace_and_comments();
-                                    if self.expect('{').is_ok() {
-                                        self.skip_whitespace_and_comments();
-
-                                        // Parse all nodes until '}'
-                                        let mut template_nodes = Vec::new();
-                                        while !self.is_at_end() && !self.peek_char('}') {
-                                            let child = self.parse_layout_node();
-                                            template_nodes.push(child);
-                                            self.skip_whitespace_and_comments();
-                                        }
-
-                                        // Add N copies of the group
-                                        for _ in 0..(repeat_count as usize) {
-                                            node.children.extend(template_nodes.iter().cloned());
-                                        }
-
-                                        self.skip_whitespace_and_comments();
-                                        let _ = self.expect('}');
-                                    }
-                                }
-                            }
-                        }
-                    } else {
-                        let child = self.parse_layout_node();
-                        node.children.push(child);
-                    }
-
-                    self.skip_whitespace_and_comments();
-
-                    // Prevent infinite loop
-                    if self.index <= last_index && !self.is_at_end() {
-                        self.advance();
-                    }
-                }
-
-                if self.peek_char('}') {
-                    self.advance();
-                }
-                break;
-            } else if self.peek_char('}') || self.peek_char('#') {
-                break;
-            } else if self.try_parse_property(&mut node) {
-                self.skip_whitespace_and_comments();
-                // Try to eat the dot separator
-                if self.peek_char('.') {
-                    self.advance();
-                }
-            } else {
-                break;
+            self.skip_whitespace_and_comments();
+            if self.peek_char('.') {
+                self.advance();
+            } else if !self.peek_char('{') {
+                return self.error("'.' or '{'");
             }
         }
 
-        node
+        self.advance(); // consume '{'
+        self.parse_children(&mut node.children)?;
+        self.expect('}')?;
+
+        Ok(node)
+    }
+
+    /// Parse nodes and `Repeat(N) { ... }` groups up to the `}` that closes the block containing them
+    fn parse_children(&mut self, children: &mut Vec<LayoutNode>) -> Result<(), String> {
+        loop {
+            self.skip_whitespace_and_comments();
+            if self.is_at_end() || self.peek_char('}') {
+                return Ok(());
+            }
+
+            if self.try_eat("Repeat") {
+                self.expect('(')?;
+                let Some(repeat_count) = self.try_parse_float() else {
+                    return self.error("a repeat count");
+                };
+                self.expect(')')?;
+                self.expect('{')?;
+                let mut template_nodes = Vec::new();
+                self.parse_children(&mut template_nodes)?;
+                self.expect('}')?;
+
+                // Add N copies of the group
+                for _ in 0..(repeat_count as usize) {
+                    children.extend(template_nodes.iter().cloned());
+                }
+            } else {
+                children.push(self.parse_layout_node()?);
+            }
+        }
     }
 
     fn expect_section(&mut self, name: &str) -> Result<(), String> {
@@ -630,7 +609,13 @@ impl<'a> BenchmarkParser<'a> {
         self.skip_whitespace_and_comments();
 
         // Parse the root node
-        let root_node = self.parse_layout_node();
+        let root_node = self.parse_layout_node()?;
+
+        // Only further sections (which we do not use) may follow the root node
+        self.skip_whitespace_and_comments();
+        if !self.is_at_end() && !self.peek_char('#') {
+            return self.error("'#' or the end of the file");
+        }
 
         Ok(TestCase { name, root_node: Some(root_node) })
     }
