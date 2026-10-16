@@ -20924,6 +20924,126 @@ mod float {
     }
 
     #[test]
+    fn float_relative_inset_length__border_box_ltr() {
+        crate::run_xml_test("float", "float_relative_inset_length__border_box_ltr");
+    }
+
+    #[test]
+    fn float_relative_inset_length__content_box_ltr() {
+        crate::run_xml_test("float", "float_relative_inset_length__content_box_ltr");
+    }
+
+    #[test]
+    fn float_relative_inset_length__border_box_rtl() {
+        crate::run_xml_test("float", "float_relative_inset_length__border_box_rtl");
+    }
+
+    #[test]
+    fn float_relative_inset_length__content_box_rtl() {
+        crate::run_xml_test("float", "float_relative_inset_length__content_box_rtl");
+    }
+
+    #[test]
+    fn float_relative_inset_percentage__border_box_ltr() {
+        crate::run_xml_test("float", "float_relative_inset_percentage__border_box_ltr");
+    }
+
+    #[test]
+    fn float_relative_inset_percentage__content_box_ltr() {
+        crate::run_xml_test("float", "float_relative_inset_percentage__content_box_ltr");
+    }
+
+    #[test]
+    fn float_relative_inset_percentage__border_box_rtl() {
+        crate::run_xml_test("float", "float_relative_inset_percentage__border_box_rtl");
+    }
+
+    #[test]
+    fn float_relative_inset_percentage__content_box_rtl() {
+        crate::run_xml_test("float", "float_relative_inset_percentage__content_box_rtl");
+    }
+
+    #[test]
+    fn float_relative_inset_percentage_indefinite_height__border_box_ltr() {
+        crate::run_xml_test("float", "float_relative_inset_percentage_indefinite_height__border_box_ltr");
+    }
+
+    #[test]
+    fn float_relative_inset_percentage_indefinite_height__content_box_ltr() {
+        crate::run_xml_test("float", "float_relative_inset_percentage_indefinite_height__content_box_ltr");
+    }
+
+    #[test]
+    fn float_relative_inset_percentage_indefinite_height__border_box_rtl() {
+        crate::run_xml_test("float", "float_relative_inset_percentage_indefinite_height__border_box_rtl");
+    }
+
+    #[test]
+    fn float_relative_inset_percentage_indefinite_height__content_box_rtl() {
+        crate::run_xml_test("float", "float_relative_inset_percentage_indefinite_height__content_box_rtl");
+    }
+
+    #[test]
+    fn float_relative_inset_percentage_nested__border_box_ltr() {
+        crate::run_xml_test("float", "float_relative_inset_percentage_nested__border_box_ltr");
+    }
+
+    #[test]
+    fn float_relative_inset_percentage_nested__content_box_ltr() {
+        crate::run_xml_test("float", "float_relative_inset_percentage_nested__content_box_ltr");
+    }
+
+    #[test]
+    fn float_relative_inset_percentage_nested__border_box_rtl() {
+        crate::run_xml_test("float", "float_relative_inset_percentage_nested__border_box_rtl");
+    }
+
+    #[test]
+    fn float_relative_inset_percentage_nested__content_box_rtl() {
+        crate::run_xml_test("float", "float_relative_inset_percentage_nested__content_box_rtl");
+    }
+
+    #[test]
+    fn float_relative_inset_percentage_overconstrained__border_box_ltr() {
+        crate::run_xml_test("float", "float_relative_inset_percentage_overconstrained__border_box_ltr");
+    }
+
+    #[test]
+    fn float_relative_inset_percentage_overconstrained__content_box_ltr() {
+        crate::run_xml_test("float", "float_relative_inset_percentage_overconstrained__content_box_ltr");
+    }
+
+    #[test]
+    fn float_relative_inset_percentage_overconstrained__border_box_rtl() {
+        crate::run_xml_test("float", "float_relative_inset_percentage_overconstrained__border_box_rtl");
+    }
+
+    #[test]
+    fn float_relative_inset_percentage_overconstrained__content_box_rtl() {
+        crate::run_xml_test("float", "float_relative_inset_percentage_overconstrained__content_box_rtl");
+    }
+
+    #[test]
+    fn float_relative_inset_percentage_right_bottom__border_box_ltr() {
+        crate::run_xml_test("float", "float_relative_inset_percentage_right_bottom__border_box_ltr");
+    }
+
+    #[test]
+    fn float_relative_inset_percentage_right_bottom__content_box_ltr() {
+        crate::run_xml_test("float", "float_relative_inset_percentage_right_bottom__content_box_ltr");
+    }
+
+    #[test]
+    fn float_relative_inset_percentage_right_bottom__border_box_rtl() {
+        crate::run_xml_test("float", "float_relative_inset_percentage_right_bottom__border_box_rtl");
+    }
+
+    #[test]
+    fn float_relative_inset_percentage_right_bottom__content_box_rtl() {
+        crate::run_xml_test("float", "float_relative_inset_percentage_right_bottom__content_box_rtl");
+    }
+
+    #[test]
     fn float_shrink_to_fit_cleared_floats__border_box_ltr() {
         crate::run_xml_test("float", "float_shrink_to_fit_cleared_floats__border_box_ltr");
     }

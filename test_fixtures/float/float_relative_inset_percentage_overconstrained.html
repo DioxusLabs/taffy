@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    Over-constrained percentage insets on a relatively positioned float: top wins over bottom, and the start side wins horizontally
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="display: block; width: 400px; height: 200px; padding: 20px; border: 5px solid red;">
+  <div style="float: left; position: relative; width: 50px; height: 20px; left: 10%; right: 20%; top: 10%; bottom: 20%;"></div>
+  <div style="float: right; position: relative; width: 50px; height: 20px; left: 10%; right: 20%; top: 10%; bottom: 20%;"></div>
+</div>
+
+</body>
+</html>
