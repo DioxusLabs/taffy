@@ -1769,8 +1769,24 @@ fn resolve_flexible_lengths(line: &mut FlexLine, constants: &AlgoConstants) {
     loop {
         // a. Check for flexible items. If all the flex items on the line are frozen,
         //    free space has been distributed; exit this loop.
+        //    The space used by the items and the sums of the unfrozen items' flex factors
+        //    (both needed for step b) are computed in the same pass.
 
-        if line.items.iter().all(|child| child.frozen) {
+        let mut all_frozen = true;
+        let mut items_space: f32 = 0.0;
+        let mut sum_flex_grow: f32 = 0.0;
+        let mut sum_flex_shrink: f32 = 0.0;
+        for child in line.items.iter() {
+            if child.frozen {
+                items_space += child.outer_target_size.main(constants.dir);
+            } else {
+                all_frozen = false;
+                items_space += child.flex_basis + child.margin.main_axis_sum(constants.dir);
+                sum_flex_grow += child.flex_grow;
+                sum_flex_shrink += child.flex_shrink;
+            }
+        }
+        if all_frozen {
             break;
         }
 
@@ -1780,23 +1796,7 @@ fn resolve_flexible_lengths(line: &mut FlexLine, constants: &AlgoConstants) {
         //    value is less than the magnitude of the remaining free space, use this
         //    as the remaining free space.
 
-        let used_space: f32 = total_main_axis_gap
-            + line
-                .items
-                .iter()
-                .map(|child| {
-                    if child.frozen {
-                        child.outer_target_size.main(constants.dir)
-                    } else {
-                        child.flex_basis + child.margin.main_axis_sum(constants.dir)
-                    }
-                })
-                .sum::<f32>();
-
-        let (sum_flex_grow, sum_flex_shrink): (f32, f32) =
-            line.items.iter().filter(|child| !child.frozen).fold((0.0, 0.0), |(flex_grow, flex_shrink), item| {
-                (flex_grow + item.flex_grow, flex_shrink + item.flex_shrink)
-            });
+        let used_space: f32 = total_main_axis_gap + items_space;
 
         let free_space = if growing && sum_flex_grow < 1.0 {
             (initial_free_space * sum_flex_grow - total_main_axis_gap)
