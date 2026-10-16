@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    A relatively positioned float is offset by its inset after placement; a following float is placed as if it had not been offset
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="display: block; width: 400px;">
+  <div style="float: left; position: relative; width: 72px; height: 20px; left: 55px; top: 30px;"></div>
+  <div style="float: left; width: 52px; height: 20px;"></div>
+</div>
+
+</body>
+</html>

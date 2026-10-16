@@ -1,0 +1,15 @@
+<test name="float_relative_inset_percentage_right_bottom__content_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="block" box-sizing="content-box" direction="rtl" position="absolute" width="400px" height="200px" padding-top="20px" padding-left="20px" padding-bottom="20px" padding-right="20px" border-top="5px" border-left="5px" border-bottom="5px" border-right="5px">
+      <div box-sizing="content-box" direction="rtl" position="relative" float="right" width="50px" height="20px" bottom="20%" right="20%"/>
+      <div box-sizing="content-box" direction="rtl" position="relative" float="right" width="52px" height="20px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="450" height="250">
+      <node x="295" y="-15" width="50" height="20"/>
+      <node x="323" y="25" width="52" height="20"/>
+    </node>
+  </expectations>
+</test>
