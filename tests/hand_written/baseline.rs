@@ -301,4 +301,48 @@ mod baseline {
         assert_eq!(taffy.layout(child_a).unwrap().location.y, 0.0);
         assert_eq!(taffy.layout(child_b).unwrap().location.y, 0.0);
     }
+    #[test]
+    fn grid_container_baseline_uses_final_measurement_for_non_baseline_items() {
+        for (alignment, child_y) in [(AlignItems::START, 0.0), (AlignItems::CENTER, 10.0), (AlignItems::END, 20.0)] {
+            let mut taffy: TaffyTree<BaselineContext> = TaffyTree::new();
+            let text = taffy
+                .new_leaf_with_context(
+                    Style::default(),
+                    BaselineContext { size: Size { width: 26.0, height: 30.0 }, baseline_y: Some(21.0) },
+                )
+                .unwrap();
+            let grid = taffy
+                .new_with_children(
+                    Style {
+                        display: Display::Grid,
+                        size: Size { width: length(100.0), height: length(50.0) },
+                        align_items: alignment,
+                        ..Default::default()
+                    },
+                    &[text],
+                )
+                .unwrap();
+            let reference = taffy
+                .new_leaf_with_context(
+                    Style::default(),
+                    BaselineContext { size: Size { width: 10.0, height: 10.0 }, baseline_y: Some(10.0) },
+                )
+                .unwrap();
+            let root = taffy
+                .new_with_children(
+                    Style {
+                        display: Display::Flex,
+                        align_items: AlignItems::BASELINE,
+                        size: Size { width: length(120.0), height: length(100.0) },
+                        ..Default::default()
+                    },
+                    &[grid, reference],
+                )
+                .unwrap();
+            taffy.compute_layout_with_measure(root, Size::MAX_CONTENT, baseline_measure_function).unwrap();
+            assert_eq!(taffy.layout(grid).unwrap().location.y, 0.0);
+            assert_eq!(taffy.layout(text).unwrap().location.y, child_y);
+            assert_eq!(taffy.layout(reference).unwrap().location.y, child_y + 11.0);
+        }
+    }
 }
