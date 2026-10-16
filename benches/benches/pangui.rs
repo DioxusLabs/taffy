@@ -2,6 +2,8 @@
 //! (<https://www.pangui.io/blog/05-layout-rework-and-benchmarks/>).
 //!
 //! Each file in the `pangui` directory is one benchmark, written in PanGUI's benchmark template format.
+//! `fit_nesting_indefinite` is not one of PanGUI's: it is `fit_nesting` inside a node that is sized to fit
+//! its content, so that the nodes which expand do so along an axis in which their parent has no definite size.
 use criterion::measurement::WallTime;
 use criterion::{criterion_group, criterion_main, BenchmarkGroup, BenchmarkId, Criterion};
 use rand::Rng;
@@ -25,6 +27,22 @@ use taffy_benchmarks::yoga_helpers::YogaTreeBuilder;
 
 /// The size that the root node is laid out into along an axis in which it does not have a size in pixels
 const DEFAULT_ROOT_SIZE: f32 = 1000.0;
+
+/// How the nodes of a template are translated to Taffy styles
+#[derive(Clone, Copy, PartialEq)]
+enum Translation {
+    /// `Expand` along the main axis of the parent is `flex: <weight> 1 0` with a minimum size of 0
+    Flexbox,
+}
+
+impl Translation {
+    /// The suffix of the benchmark name for this translation (empty for the default translation)
+    fn name_suffix(self) -> &'static str {
+        match self {
+            Translation::Flexbox => "",
+        }
+    }
+}
 
 fn is_mode(size: &Option<BenchmarkSize>, mode: SizeMode) -> bool {
     size.is_some_and(|size| size.mode == mode)
@@ -50,7 +68,7 @@ fn min_max_size(size: &Option<BenchmarkSize>, property: &str) -> LengthPercentag
 
 /// Translate a node of a PanGUI template into a flexbox style. `parent_is_row` is whether the parent of the
 /// node lays out its children horizontally.
-fn style(node: &LayoutNode, parent_is_row: bool) -> TaffyStyle {
+fn style(node: &LayoutNode, parent_is_row: bool, translation: Translation) -> TaffyStyle {
     let (main_size, main_min_size) =
         if parent_is_row { (&node.width, &node.min_width) } else { (&node.height, &node.min_height) };
 
@@ -72,7 +90,7 @@ fn style(node: &LayoutNode, parent_is_row: bool) -> TaffyStyle {
     if !(!parent_is_row && is_mode(&node.min_height, SizeMode::Expand)) {
         min_size.height = min_max_size(&node.min_height, "MinHeight");
     }
-    if expands {
+    if expands && translation == Translation::Flexbox {
         if parent_is_row && node.min_width.is_none() {
             min_size.width = length(0.0);
         }
@@ -144,14 +162,18 @@ impl GenStyle<TaffyStyle> for RootStyle {
     }
 }
 
-fn build_children<R: Rng, B: BuildTree<R, RootStyle>>(builder: &mut B, parent: &LayoutNode) -> Vec<B::Node> {
+fn build_children<R: Rng, B: BuildTree<R, RootStyle>>(
+    builder: &mut B,
+    parent: &LayoutNode,
+    translation: Translation,
+) -> Vec<B::Node> {
     let parent_is_row = parent.flow_direction == Some(FlowDirection::Horizontal);
     parent
         .children
         .iter()
         .map(|child| {
-            let children = build_children(builder, child);
-            builder.create_node_with_style(style(child, parent_is_row), &children)
+            let children = build_children(builder, child, translation);
+            builder.create_node_with_style(style(child, parent_is_row, translation), &children)
         })
         .collect()
 }
@@ -165,7 +187,7 @@ fn root_size(size: &Option<BenchmarkSize>) -> f32 {
 }
 
 macro_rules! run_benchmark {
-    ($TreeBuilder: ty, $tree_builder_name: literal, $group: ident, $name: expr, $root: ident) => {
+    ($TreeBuilder: ty, $tree_builder_name: literal, $group: ident, $name: expr, $root: ident, $translation: expr) => {
         let mut tree = None;
         $group.bench_function(BenchmarkId::new($name, $tree_builder_name), |b| {
             bench_layout(
@@ -173,8 +195,8 @@ macro_rules! run_benchmark {
                 &mut tree,
                 || -> $TreeBuilder {
                     // The root node has no parent. PanGUI's own translation treats it as the child of a column.
-                    let mut builder = <$TreeBuilder>::new(RootStyle(style(&$root, false)));
-                    let children = build_children(&mut builder, &$root);
+                    let mut builder = <$TreeBuilder>::new(RootStyle(style(&$root, false, $translation)));
+                    let children = build_children(&mut builder, &$root, $translation);
                     builder.set_root_children(&children);
                     builder
                 },
@@ -186,13 +208,13 @@ macro_rules! run_benchmark {
 }
 
 macro_rules! benchmark_each_library {
-    ($group: ident, $name: expr, $root: ident) => {
+    ($group: ident, $name: expr, $root: ident, $translation: expr) => {
         #[cfg(feature = "yoga")]
-        run_benchmark!(YogaTreeBuilder<_, _>, "Yoga", $group, $name, $root);
+        run_benchmark!(YogaTreeBuilder<_, _>, "Yoga", $group, $name, $root, $translation);
         #[cfg(feature = "taffy03")]
-        run_benchmark!(Taffy03TreeBuilder<_, _>, "Taffy 0.3", $group, $name, $root);
+        run_benchmark!(Taffy03TreeBuilder<_, _>, "Taffy 0.3", $group, $name, $root, $translation);
 
-        run_benchmark!(TaffyTreeBuilder<_, _>, "Taffy main", $group, $name, $root);
+        run_benchmark!(TaffyTreeBuilder<_, _>, "Taffy main", $group, $name, $root, $translation);
     };
 }
 
@@ -238,7 +260,8 @@ fn pangui_benchmarks(c: &mut Criterion) {
     let mut group = benchmark_group(c, "PanGUI");
     for (name, root) in templates() {
         benchmark_native_libraries(&mut group, name.as_str(), &root);
-        benchmark_each_library!(group, name.as_str(), root);
+        let translation = Translation::Flexbox;
+        benchmark_each_library!(group, name.as_str(), root, translation);
     }
     group.finish();
 }
