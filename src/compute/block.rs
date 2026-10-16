@@ -1030,6 +1030,30 @@ fn resolve_stretch_height(
     Some(height)
 }
 
+/// Compute the offset applied to a box by its `inset` if it is `position: relative` (CSS2.2 9.4.3).
+///
+/// Percentages resolve against the containing block's content box (`parent_size`); a percentage
+/// that cannot be resolved behaves as `auto`. If both insets in an axis are non-auto, `top` wins
+/// over `bottom`, and `left` wins over `right` in LTR (`right` over `left` in RTL).
+#[inline]
+fn resolve_relative_offset(
+    item: &BlockItem,
+    parent_size: Size<Option<f32>>,
+    direction: Direction,
+    tree: &impl LayoutPartialTree,
+) -> Point<f32> {
+    if item.position != Position::Relative {
+        return Point::ZERO;
+    }
+    let inset = item.inset.zip_size(parent_size, |p, s| p.maybe_resolve(s, |val, basis| tree.calc(val, basis)));
+    let x = if direction.is_rtl() {
+        inset.right.map(|x| -x).or(inset.left)
+    } else {
+        inset.left.or(inset.right.map(|x| -x))
+    };
+    Point { x: x.unwrap_or(0.0), y: inset.top.or(inset.bottom.map(|x| -x)).unwrap_or(0.0) }
+}
+
 /// Compute the content-based width in the case that the width of the container is not known
 #[inline]
 fn determine_content_based_container_width(
@@ -1251,19 +1275,9 @@ fn perform_final_layout_on_in_flow_children(
 
                 // A relatively positioned float is placed as a float first, then offset by its
                 // inset. The offset does not affect the placement of other content (CSS 2.2 9.4.3).
-                if item.position == Position::Relative {
-                    let inset_percentage_basis =
-                        Size { width: Some(container_inner_width), height: container_percentage_resolution_height };
-                    let inset = item.inset.zip_size(inset_percentage_basis, |p, s| {
-                        p.maybe_resolve(s, |val, basis| tree.calc(val, basis))
-                    });
-                    location.x += if direction.is_rtl() {
-                        inset.right.map(|x| -x).or(inset.left).unwrap_or(0.0)
-                    } else {
-                        inset.left.or(inset.right.map(|x| -x)).unwrap_or(0.0)
-                    };
-                    location.y += inset.top.or(inset.bottom.map(|x| -x)).unwrap_or(0.0);
-                }
+                let inset_offset = resolve_relative_offset(item, parent_size, direction, tree);
+                location.x += inset_offset.x;
+                location.y += inset_offset.y;
 
                 // println!("BLOCK FLOATED BOX ({:?}) {:?}", item.node_id, float_direction);
                 // println!("w:{} h:{} x:{}, y:{}", margin_box.width, margin_box.height, location.x, location.y);
@@ -1535,23 +1549,7 @@ fn perform_final_layout_on_in_flow_children(
             };
 
             // Resolve item inset
-            let inset_percentage_basis =
-                Size { width: Some(container_inner_width), height: container_percentage_resolution_height };
-            let inset = item
-                .inset
-                .zip_size(inset_percentage_basis, |p, s| p.maybe_resolve(s, |val, basis| tree.calc(val, basis)));
-            let inset_offset = if item.position == Position::Relative {
-                Point {
-                    x: if direction.is_rtl() {
-                        inset.right.map(|x| -x).or(inset.left).unwrap_or(0.0)
-                    } else {
-                        inset.left.or(inset.right.map(|x| -x)).unwrap_or(0.0)
-                    },
-                    y: inset.top.or(inset.bottom.map(|x| -x)).unwrap_or(0.0),
-                }
-            } else {
-                Point::ZERO
-            };
+            let inset_offset = resolve_relative_offset(item, parent_size, direction, tree);
 
             // Set y_margin_offset (same bfc child)
             if item.is_in_same_bfc
