@@ -762,6 +762,11 @@ impl FromFr for MaxTrackSizingFunction {
         Self::fr(value.into() as f32)
     }
 }
+impl FromFill for MaxTrackSizingFunction {
+    fn from_fill<Input: Into<f64> + Copy>(factor: Input) -> Self {
+        Self::fill(factor.into() as f32)
+    }
+}
 impl From<LengthPercentage> for MaxTrackSizingFunction {
     fn from(input: LengthPercentage) -> Self {
         Self(input.0)
@@ -798,6 +803,7 @@ impl FromCss for MaxTrackSizingFunction {
             Token::Percentage { unit_value, .. } => Ok(Self::percent(unit_value)),
             Token::Dimension { unit, value, .. } if unit == "px" => Ok(Self::length(value)),
             Token::Dimension { unit, value, .. } if unit == "fr" && value.is_sign_positive() => Ok(Self::fr(value)),
+            Token::Dimension { unit, value, .. } if unit == "fl" && value.is_sign_positive() => Ok(Self::fill(value)),
             Token::Ident(ref ident) => match ident.as_ref() {
                 "auto" => Ok(Self::auto()),
                 "min-content" => Ok(Self::min_content()),
@@ -838,6 +844,7 @@ impl<'de> serde::Deserialize<'de> for MaxTrackSizingFunction {
                 | CompactLength::FIT_CONTENT_PX_TAG
                 | CompactLength::FIT_CONTENT_PERCENT_TAG
                 | CompactLength::FR_TAG
+                | CompactLength::FILL_TAG
         ) {
             Ok(Self(inner))
         } else {
@@ -919,6 +926,16 @@ impl MaxTrackSizingFunction {
         Self(CompactLength::fr(val))
     }
 
+    /// A share of the free space of the grid, in proportion to `factor` (`fl` in CSS).
+    ///
+    /// Sizes the track like `fr`, except that the content of the items in the track is never measured:
+    /// the track's minimum size is zero rather than automatic, and it does not grow to fit its items
+    /// when the grid container is sized to its content.
+    #[inline(always)]
+    pub const fn fill(factor: f32) -> Self {
+        Self(CompactLength::fill(factor))
+    }
+
     /// A `calc()` value. The value passed here is treated as an opaque handle to
     /// the actual calc representation and may be a pointer, index, etc.
     ///
@@ -970,6 +987,12 @@ impl MaxTrackSizingFunction {
     #[inline(always)]
     pub fn is_fr(&self) -> bool {
         self.0.is_fr()
+    }
+
+    /// Returns true if the value is an fl value, else false.
+    #[inline(always)]
+    pub fn is_fill(&self) -> bool {
+        self.0.is_fill()
     }
 
     /// Returns true if the is `Auto`, else false.
@@ -1107,6 +1130,7 @@ impl MaxTrackSizingFunction {
             #[cfg(feature = "calc")]
             _ if self.0.is_fit_content_calc() => ExpandedMaxTrackSizingFunction::FitContentCalc(self.0.calc_value()),
             CompactLength::FR_TAG => ExpandedMaxTrackSizingFunction::Fr(self.0.value()),
+            CompactLength::FILL_TAG => ExpandedMaxTrackSizingFunction::Fill(self.0.value()),
             #[cfg(feature = "calc")]
             _ if self.0.is_plain_calc() => ExpandedMaxTrackSizingFunction::Calc(self.0.calc_value()),
             _ => unreachable!("MaxTrackSizingFunction contains a value with an invalid tag"),
@@ -1140,6 +1164,8 @@ pub enum ExpandedMaxTrackSizingFunction {
     FitContentCalc(*const ()),
     /// A fraction of the leftover space (see [`MaxTrackSizingFunction::fr`])
     Fr(f32),
+    /// An `fl` value (see [`MaxTrackSizingFunction::fill`])
+    Fill(f32),
     /// A `calc()` value (see [`MaxTrackSizingFunction::calc`]). The pointer is an opaque handle to
     /// the calc representation, exactly as passed to the constructor.
     #[cfg(feature = "calc")]
@@ -1165,6 +1191,7 @@ impl From<ExpandedMaxTrackSizingFunction> for MaxTrackSizingFunction {
             #[cfg(feature = "calc")]
             ExpandedMaxTrackSizingFunction::FitContentCalc(ptr) => Self::fit_content_calc(ptr),
             ExpandedMaxTrackSizingFunction::Fr(val) => Self::fr(val),
+            ExpandedMaxTrackSizingFunction::Fill(val) => Self::fill(val),
             #[cfg(feature = "calc")]
             ExpandedMaxTrackSizingFunction::Calc(ptr) => Self::calc(ptr),
         }
@@ -1214,8 +1241,9 @@ impl From<LengthPercentageAuto> for MinTrackSizingFunction {
 impl From<Dimension> for MinTrackSizingFunction {
     fn from(input: Dimension) -> Self {
         // Dimension supports values that are not valid min track sizing functions.
-        // Map those to `auto`.
+        // Map those to `auto`, except for `fl` whose minimum is zero.
         match input.0.tag() {
+            CompactLength::FILL_TAG => Self::ZERO,
             CompactLength::FIT_CONTENT_PX_TAG
             | CompactLength::FIT_CONTENT_PERCENT_TAG
             | CompactLength::FIT_CONTENT_KEYWORD_TAG
@@ -1229,6 +1257,9 @@ impl From<Dimension> for MinTrackSizingFunction {
 
 impl From<MaxTrackSizingFunction> for MinTrackSizingFunction {
     fn from(input: MaxTrackSizingFunction) -> Self {
+        if input.is_fill() {
+            return Self::ZERO;
+        }
         if input.is_fr() || input.is_fit_content() {
             return Self::auto();
         }
@@ -1537,6 +1568,11 @@ impl FromFr for TrackSizingFunction {
         Self { min: MinTrackSizingFunction::AUTO, max: MaxTrackSizingFunction::from_fr(flex) }
     }
 }
+impl FromFill for TrackSizingFunction {
+    fn from_fill<Input: Into<f64> + Copy>(factor: Input) -> Self {
+        Self { min: MinTrackSizingFunction::ZERO, max: MaxTrackSizingFunction::from_fill(factor) }
+    }
+}
 impl From<LengthPercentage> for TrackSizingFunction {
     fn from(input: LengthPercentage) -> Self {
         Self { min: input.into(), max: input.into() }
@@ -1744,6 +1780,11 @@ impl<S: CheapCloneStr> FromFr for GridTemplateComponent<S> {
         Self::Single(TrackSizingFunction::from_fr(flex))
     }
 }
+impl<S: CheapCloneStr> FromFill for GridTemplateComponent<S> {
+    fn from_fill<Input: Into<f64> + Copy>(factor: Input) -> Self {
+        Self::Single(TrackSizingFunction::from_fill(factor))
+    }
+}
 impl<S: CheapCloneStr> From<MinMax<MinTrackSizingFunction, MaxTrackSizingFunction>> for GridTemplateComponent<S> {
     fn from(input: MinMax<MinTrackSizingFunction, MaxTrackSizingFunction>) -> Self {
         Self::Single(input)
@@ -1918,6 +1959,7 @@ mod expand_tests {
             MaxTrackSizingFunction::fit_content_px(30.0),
             MaxTrackSizingFunction::fit_content_percent(0.75),
             MaxTrackSizingFunction::fr(2.0),
+            MaxTrackSizingFunction::fill(2.0),
         ];
         for value in cases {
             assert_eq!(MaxTrackSizingFunction::from(value.expand()), value);
@@ -1928,6 +1970,20 @@ mod expand_tests {
             MaxTrackSizingFunction::fit_content_px(30.0).expand(),
             ExpandedMaxTrackSizingFunction::FitContentPx(30.0)
         );
+    }
+
+    #[test]
+    fn fill_track_sizing_function_has_zero_minimum() {
+        let track: TrackSizingFunction = fill(2.0);
+        assert_eq!(track, minmax(MinTrackSizingFunction::ZERO, MaxTrackSizingFunction::fill(2.0)));
+        assert_eq!(TrackSizingFunction::from(Dimension::fill(2.0)), track);
+        assert_eq!(MinTrackSizingFunction::from(track.max), MinTrackSizingFunction::ZERO);
+        #[cfg(feature = "parse")]
+        {
+            assert_eq!("2fl".parse::<TrackSizingFunction>().unwrap(), track);
+            assert_eq!("2fl".parse::<Dimension>().unwrap(), Dimension::fill(2.0));
+            assert!("-2fl".parse::<Dimension>().is_err());
+        }
     }
 
     #[test]
