@@ -1376,7 +1376,7 @@ fn item_known_dimension_definiteness(constants: &AlgoConstants, item: &FlexItem)
     let has_cross_auto_margins = item.margin_is_auto.cross_start(dir) || item.margin_is_auto.cross_end(dir);
     let cross_size = item.size_style.cross(dir);
     let is_stretched = !has_cross_auto_margins
-        && (cross_size.is_stretch() || (item.align_self == AlignSelf::STRETCH && cross_size.is_auto()));
+        && (cross_size.is_stretch_or_fill() || (item.align_self == AlignSelf::STRETCH && cross_size.is_auto()));
     let cross_is_definite = is_stretched
         || item.size.cross(dir).is_some()
         || (!dir.is_row() && constants.cross_axis_available_space_is_definite);
@@ -2265,7 +2265,7 @@ fn determine_used_cross_size(
             let child_style = tree.get_flexbox_child_style(child.node);
             // A cross size of `stretch` stretches to the flex line like align-self: stretch
             // (but regardless of the alignment style)
-            let cross_is_stretch = child.size_style.cross(constants.dir).is_stretch();
+            let cross_is_stretch = child.size_style.cross(constants.dir).is_stretch_or_fill();
             child.target_size.set_cross(
                 constants.dir,
                 if !child.margin_is_auto.cross_start(constants.dir)

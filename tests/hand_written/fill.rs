@@ -294,4 +294,73 @@ mod fill {
             assert_eq!(items.map(|item| tree.layout(item).unwrap().size.height), [30.0, 70.0]);
         }
     }
+
+    /// Outside of a flex item's main size and a grid track, `fl` resolves like `stretch`
+    mod stretch {
+        use super::*;
+
+        /// Lay out a container with one child whose style is produced by `child_style` from a size, with that
+        /// size being `stretch` and then `fl`. Returns the two layouts of the child.
+        fn stretch_and_fill_layouts(container: Style, child_style: impl Fn(Dimension) -> Style) -> [Layout; 2] {
+            [Dimension::stretch(), fill(3.0)].map(|size| {
+                let mut tree = new_test_tree();
+                let child = leaf(&mut tree, child_style(size));
+                let root = tree.new_with_children(container.clone(), &[child]).unwrap();
+                layout(&mut tree, root, Size::MAX_CONTENT);
+                *tree.layout(child).unwrap()
+            })
+        }
+
+        fn assert_fills(container: Style, child_style: impl Fn(Dimension) -> Style, expected: Size<f32>) {
+            let [stretch, fill] = stretch_and_fill_layouts(container, child_style);
+            assert_eq!(fill.size, expected);
+            assert_eq!(fill.size, stretch.size);
+            assert_eq!(fill.location, stretch.location);
+        }
+
+        fn sized(display: Display) -> Style {
+            Style { display, size: Size { width: length(400.0), height: length(100.0) }, ..Default::default() }
+        }
+
+        #[cfg(feature = "flexbox")]
+        #[test]
+        fn flexbox_cross_size() {
+            let container = Style { align_items: AlignItems::START, ..sized(Display::Flex) };
+            let child = |size| Style { size: Size { width: auto(), height: size }, ..Default::default() };
+            assert_fills(container, child, Size { width: 150.0, height: 100.0 });
+        }
+
+        #[cfg(feature = "block_layout")]
+        #[test]
+        fn block_width_and_height() {
+            let child = |size| Style {
+                size: Size { width: size, height: size },
+                margin: Rect { left: length(10.0), right: zero(), top: length(10.0), bottom: zero() },
+                ..Default::default()
+            };
+            assert_fills(sized(Display::Block), child, Size { width: 390.0, height: 90.0 });
+        }
+
+        #[cfg(feature = "grid")]
+        #[test]
+        fn grid_item_width_and_height() {
+            let container =
+                Style { justify_items: AlignItems::START, align_items: AlignItems::START, ..sized(Display::Grid) };
+            let child = |size| Style { size: Size { width: size, height: size }, ..Default::default() };
+            assert_fills(container, child, Size { width: 400.0, height: 100.0 });
+        }
+
+        #[cfg(feature = "block_layout")]
+        #[test]
+        fn absolutely_positioned_width_and_height() {
+            let container = Style { position: Position::Relative, ..sized(Display::Block) };
+            let child = |size| Style {
+                position: Position::Absolute,
+                size: Size { width: size, height: size },
+                inset: Rect { left: length(10.0), right: auto(), top: length(10.0), bottom: auto() },
+                ..Default::default()
+            };
+            assert_fills(container, child, Size { width: 390.0, height: 90.0 });
+        }
+    }
 }
