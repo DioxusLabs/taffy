@@ -99,7 +99,7 @@ pub(super) fn align_and_position_item(
     container_border: Rect<f32>,
     #[cfg(feature = "content_size")] container_is_scroll_container: bool,
     bubbled_candidates: &mut OofCandidates,
-) -> (Rect<f32>, f32, f32) {
+) -> (Rect<f32>, f32, f32, Option<f32>) {
     let grid_area_size = Size { width: grid_area.right - grid_area.left, height: grid_area.bottom - grid_area.top };
 
     let style = tree.get_grid_child_style(node);
@@ -446,7 +446,14 @@ pub(super) fn align_and_position_item(
     #[cfg(not(feature = "content_size"))]
     let contribution = Rect::ZERO;
 
-    (contribution, y, height)
+    let baseline = layout_output.baselines.first.map(|baseline| {
+        if overflow.y.is_scroll_container() {
+            baseline.min(height).max(0.0)
+        } else {
+            baseline
+        }
+    });
+    (contribution, y, height, baseline)
 }
 
 /// Align and size a grid item along a single axis
