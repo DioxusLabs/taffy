@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    A grid container's baseline taken from a baseline-aligned first item with a top margin counts the margin once
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="display: flex; align-items: baseline; width: 200px; height: 100px;">
+  <div style="display: grid; grid-template-columns: 50px 50px; align-items: baseline;">
+    <div style="display: grid; height: 30px; margin-top: 10px;">
+      <div style="width: 20px; height: 20px;"></div>
+    </div>
+    <div style="height: 40px;"></div>
+  </div>
+  <div style="width: 10px; height: 10px;"></div>
+</div>
+
+</body>
+</html>

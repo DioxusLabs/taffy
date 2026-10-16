@@ -36287,6 +36287,114 @@ mod gridflex {
 
     #[cfg(feature = "grid")]
     #[test]
+    fn gridflex_container_baseline_from_baseline_item_with_margin_top__border_box_ltr() {
+        crate::run_xml_test(
+            "gridflex",
+            "gridflex_container_baseline_from_baseline_item_with_margin_top__border_box_ltr",
+        );
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn gridflex_container_baseline_from_baseline_item_with_margin_top__content_box_ltr() {
+        crate::run_xml_test(
+            "gridflex",
+            "gridflex_container_baseline_from_baseline_item_with_margin_top__content_box_ltr",
+        );
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn gridflex_container_baseline_from_baseline_item_with_margin_top__border_box_rtl() {
+        crate::run_xml_test(
+            "gridflex",
+            "gridflex_container_baseline_from_baseline_item_with_margin_top__border_box_rtl",
+        );
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn gridflex_container_baseline_from_baseline_item_with_margin_top__content_box_rtl() {
+        crate::run_xml_test(
+            "gridflex",
+            "gridflex_container_baseline_from_baseline_item_with_margin_top__content_box_rtl",
+        );
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn gridflex_container_baseline_from_non_baseline_item_center__border_box_ltr() {
+        crate::run_xml_test("gridflex", "gridflex_container_baseline_from_non_baseline_item_center__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn gridflex_container_baseline_from_non_baseline_item_center__content_box_ltr() {
+        crate::run_xml_test("gridflex", "gridflex_container_baseline_from_non_baseline_item_center__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn gridflex_container_baseline_from_non_baseline_item_center__border_box_rtl() {
+        crate::run_xml_test("gridflex", "gridflex_container_baseline_from_non_baseline_item_center__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn gridflex_container_baseline_from_non_baseline_item_center__content_box_rtl() {
+        crate::run_xml_test("gridflex", "gridflex_container_baseline_from_non_baseline_item_center__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn gridflex_container_baseline_from_non_baseline_item_end__border_box_ltr() {
+        crate::run_xml_test("gridflex", "gridflex_container_baseline_from_non_baseline_item_end__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn gridflex_container_baseline_from_non_baseline_item_end__content_box_ltr() {
+        crate::run_xml_test("gridflex", "gridflex_container_baseline_from_non_baseline_item_end__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn gridflex_container_baseline_from_non_baseline_item_end__border_box_rtl() {
+        crate::run_xml_test("gridflex", "gridflex_container_baseline_from_non_baseline_item_end__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn gridflex_container_baseline_from_non_baseline_item_end__content_box_rtl() {
+        crate::run_xml_test("gridflex", "gridflex_container_baseline_from_non_baseline_item_end__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn gridflex_container_baseline_from_non_baseline_item_start__border_box_ltr() {
+        crate::run_xml_test("gridflex", "gridflex_container_baseline_from_non_baseline_item_start__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn gridflex_container_baseline_from_non_baseline_item_start__content_box_ltr() {
+        crate::run_xml_test("gridflex", "gridflex_container_baseline_from_non_baseline_item_start__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn gridflex_container_baseline_from_non_baseline_item_start__border_box_rtl() {
+        crate::run_xml_test("gridflex", "gridflex_container_baseline_from_non_baseline_item_start__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn gridflex_container_baseline_from_non_baseline_item_start__content_box_rtl() {
+        crate::run_xml_test("gridflex", "gridflex_container_baseline_from_non_baseline_item_start__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
     fn gridflex_kitchen_sink__border_box_ltr() {
         crate::run_xml_test("gridflex", "gridflex_kitchen_sink__border_box_ltr");
     }

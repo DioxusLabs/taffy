@@ -11,6 +11,7 @@
 - Block: apply `position: relative` insets to floated boxes. The offset does not affect the placement of other content.
 - Float: don't clamp the first float of a block formatting context to the top of the context. A float in a box pulled up by a negative top margin is placed at the top of its containing block, which may be above the top of the context.
 - Float: a float that starts beside earlier floats but extends below all of them now constrains the placement of later floats and boxes over its full height, rather than only down to the bottom of the earlier floats.
+- Grid: a grid container's baseline is taken from the final layout of the item that provides it. Previously, an item that was not baseline-aligned (or was the only baseline-aligned item in its row) provided its bottom edge instead of its baseline, and the top margin of a baseline-aligned item was counted twice.
 
 ## 0.15.0
 
