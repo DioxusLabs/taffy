@@ -41,15 +41,15 @@ mod stack {
         let items = [width(length(100.0)), width(auto()), width(fill(1.0)), width(fill(2.0))];
         let (_, items) = layout(container(Display::Stack), &items);
         // 400 - 100 - 150 leaves 150 for the `fl` items. Only the content-sized item is measured for its
-        // main size: every item is also measured for its cross size and for its final layout.
-        assert_eq!(items, [(0.0, 100.0, 2), (100.0, 150.0, 3), (250.0, 50.0, 2), (300.0, 100.0, 2)]);
+        // main size: the other measure of each item is its final layout.
+        assert_eq!(items, [(0.0, 100.0, 1), (100.0, 150.0, 2), (250.0, 50.0, 1), (300.0, 100.0, 1)]);
     }
 
     #[test]
     fn items_overflow_rather_than_shrink() {
         let items = [width(length(300.0)), width(auto()), width(fill(1.0))];
         let (_, items) = layout(container(Display::Stack), &items);
-        assert_eq!(items, [(0.0, 300.0, 2), (300.0, 150.0, 3), (450.0, 0.0, 2)]);
+        assert_eq!(items, [(0.0, 300.0, 1), (300.0, 150.0, 2), (450.0, 0.0, 1)]);
     }
 
     #[test]
@@ -57,7 +57,7 @@ mod stack {
         let flexed = |size| Style { flex_grow: 1.0, flex_shrink: 1.0, flex_basis: length(20.0), ..width(size) };
         let style = Style { flex_wrap: FlexWrap::Wrap, ..container(Display::Stack) };
         let (_, items) = layout(style, &[flexed(length(300.0)), flexed(auto())]);
-        assert_eq!(items, [(0.0, 300.0, 2), (300.0, 150.0, 3)]);
+        assert_eq!(items, [(0.0, 300.0, 1), (300.0, 150.0, 2)]);
     }
 
     #[test]

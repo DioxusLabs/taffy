@@ -156,9 +156,9 @@ mod fill {
 
             // The 150px content of the `1fl` item is neither its flex basis nor its minimum size
             assert_eq!(widths(&tree, &items), [100.0, 100.0, 200.0]);
-            // The `fl` items are measured for their cross size and for their final layout, but not (as the
-            // fixed-size item is, for its automatic minimum size) for their main size
-            assert_eq!(items.map(|item| measure_count(&tree, item)), [3, 2, 2]);
+            // The `fl` items are measured for their final layout only, and not (as the fixed-size item is, for
+            // its automatic minimum size) for their main size
+            assert_eq!(items.map(|item| measure_count(&tree, item)), [2, 1, 1]);
         }
 
         #[test]
