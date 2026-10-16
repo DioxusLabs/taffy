@@ -131,9 +131,6 @@ impl FlexItem {
         self.overflow.x.is_scroll_container() | self.overflow.y.is_scroll_container()
     }
 
-    /// Returns true if the item participates in baseline alignment: it has `align-self: baseline`
-    /// and neither of its cross-axis margins are `auto`.
-    /// See <https://www.w3.org/TR/css-flexbox-1/#baseline-participation>
     /// Whether the used cross size of the item is the cross size of its flex line: it has a cross size of
     /// `stretch`, or of `auto` with `align-self: stretch`, and neither of its cross-axis margins is `auto`.
     #[inline(always)]
@@ -144,6 +141,9 @@ impl FlexItem {
             && (cross_size.is_stretch_or_fill() || (self.align_self == AlignSelf::STRETCH && cross_size.is_auto()))
     }
 
+    /// Returns true if the item participates in baseline alignment: it has `align-self: baseline`
+    /// and neither of its cross-axis margins are `auto`.
+    /// See <https://www.w3.org/TR/css-flexbox-1/#baseline-participation>
     fn participates_in_baseline_alignment(&self, dir: FlexDirection) -> bool {
         self.align_self == AlignSelf::BASELINE
             && !self.margin_is_auto.cross_start(dir)
