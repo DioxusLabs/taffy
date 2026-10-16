@@ -41,15 +41,25 @@ enum Translation {
     /// `Expand` along the main axis of the parent is a size of `<weight>fl`, with no `flex-*` properties.
     /// Not available for Yoga or Taffy 0.3.
     FlexboxFill,
+    /// As [`Translation::FlexboxFill`], with `min-width: 0` / `min-height: 0` along the main axis of the parent
+    /// on every node that has no minimum size in that axis. Nodes that do not expand already have
+    /// `flex-shrink: 0`, so this leaves no node with an automatic minimum size to measure.
+    FlexboxFillZeroMinSize,
 }
 
 impl Translation {
     /// The suffix of the benchmark name for this translation (empty for the default translation)
+    /// Whether `Expand` along the main axis of the parent is translated to an `fl` size
+    fn uses_fill(self) -> bool {
+        matches!(self, Translation::FlexboxFill | Translation::FlexboxFillZeroMinSize)
+    }
+
     fn name_suffix(self) -> &'static str {
         match self {
             Translation::Flexbox => "",
             Translation::FlexboxZeroMinSize => " (min-size: 0)",
             Translation::FlexboxFill => " (fl)",
+            Translation::FlexboxFillZeroMinSize => " (fl, min-size: 0)",
         }
     }
 }
@@ -95,9 +105,7 @@ fn style(node: &LayoutNode, parent_is_row: bool, translation: Translation) -> Ta
     // (`flex: <weight> 0 auto`). A node which expands along the cross axis is stretched by `align-items`.
     let expands = is_mode(main_size, SizeMode::Expand);
     let (flex_grow, flex_shrink, flex_basis) = match (main_size, main_min_size) {
-        (Some(BenchmarkSize { mode: SizeMode::Expand, .. }), _) if translation == Translation::FlexboxFill => {
-            (0.0, 0.0, auto())
-        }
+        (Some(BenchmarkSize { mode: SizeMode::Expand, .. }), _) if translation.uses_fill() => (0.0, 0.0, auto()),
         (Some(BenchmarkSize { mode: SizeMode::Expand, value }), _) => (*value, 1.0, length(0.0)),
         (_, Some(BenchmarkSize { mode: SizeMode::Expand, value })) => (*value, 0.0, auto()),
         _ => (0.0, 0.0, auto()),
@@ -110,7 +118,12 @@ fn style(node: &LayoutNode, parent_is_row: bool, translation: Translation) -> Ta
     if !(!parent_is_row && is_mode(&node.min_height, SizeMode::Expand)) {
         min_size.height = min_max_size(&node.min_height, "MinHeight");
     }
-    if expands && translation == Translation::FlexboxZeroMinSize {
+    let zero_min_size = match translation {
+        Translation::Flexbox | Translation::FlexboxFill => false,
+        Translation::FlexboxZeroMinSize => expands,
+        Translation::FlexboxFillZeroMinSize => true,
+    };
+    if zero_min_size {
         if parent_is_row && node.min_width.is_none() {
             min_size.width = length(0.0);
         }
@@ -126,8 +139,7 @@ fn style(node: &LayoutNode, parent_is_row: bool, translation: Translation) -> Ta
     };
 
     let mut size = Size { width: dimension(&node.width), height: dimension(&node.height) };
-    if let (Translation::FlexboxFill, Some(BenchmarkSize { mode: SizeMode::Expand, value })) = (translation, main_size)
-    {
+    if let (true, Some(BenchmarkSize { mode: SizeMode::Expand, value })) = (translation.uses_fill(), main_size) {
         if parent_is_row {
             size.width = fill(*value);
         } else {
@@ -240,11 +252,11 @@ macro_rules! run_benchmark {
 macro_rules! benchmark_each_library {
     ($group: ident, $name: expr, $root: ident, $translation: expr) => {
         #[cfg(feature = "yoga")]
-        if $translation != Translation::FlexboxFill {
+        if !$translation.uses_fill() {
             run_benchmark!(YogaTreeBuilder<_, _>, "Yoga", $group, $name, $root, $translation);
         }
         #[cfg(feature = "taffy03")]
-        if $translation != Translation::FlexboxFill {
+        if !$translation.uses_fill() {
             run_benchmark!(Taffy03TreeBuilder<_, _>, "Taffy 0.3", $group, $name, $root, $translation);
         }
 
@@ -283,6 +295,9 @@ fn pangui_benchmarks(c: &mut Criterion) {
             let name = format!("{name}{}", translation.name_suffix());
             benchmark_each_library!(group, name.as_str(), root, translation);
         }
+        let translation = Translation::FlexboxFillZeroMinSize;
+        let name = format!("{name}{}", translation.name_suffix());
+        benchmark_each_library!(group, name.as_str(), root, translation);
     }
     group.finish();
 }
