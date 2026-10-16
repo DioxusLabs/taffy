@@ -735,6 +735,9 @@ fn generate_anonymous_flex_items(
         constants.node_inner_size.with_main(constants.dir, None)
     };
 
+    // Allocate once, for the child count, when the first item is generated (some children may not generate one)
+    let child_count = tree.child_count(node);
+    let mut flex_items = Vec::new();
     tree.child_ids(node)
         .enumerate()
         .map(|(index, child)| (index, child, tree.get_flexbox_child_style(child)))
@@ -816,7 +819,13 @@ fn generate_anonymous_flex_items(
                 oof_candidates: OofCandidates::NONE,
             }
         })
-        .collect()
+        .for_each(|item| {
+            if flex_items.capacity() == 0 {
+                flex_items = new_vec_with_capacity(child_count);
+            }
+            flex_items.push(item);
+        });
+    flex_items
 }
 
 /// Determine the available main and cross space for the flex items.
