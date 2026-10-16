@@ -313,7 +313,7 @@ impl BlockContext<'_> {
     }
 }
 
-use super::common::alignment::{apply_alignment_fallback, compute_alignment_offset};
+use super::common::alignment::{apply_alignment_fallback, child_first_baseline, compute_alignment_offset};
 #[cfg(feature = "content_size")]
 use super::common::scrollable_overflow::compute_scrollable_overflow_contribution;
 use super::common::sizing_keyword::{resolve_sizing_keyword, SizingKeywordResolution};
@@ -1725,26 +1725,11 @@ fn perform_final_layout_on_in_flow_children(
             }
 
             // A block container's first baseline is the first baseline of its first in-flow child
-            // that has one.
-            //
-            // Scroll containers' baselines are determined from their content as if scrolled to the
-            // initial position, but are additionally clamped to their border box. A scroll container
-            // with no baseline synthesizes one from its border-box bottom edge.
-            // See https://github.com/w3c/csswg-drafts/issues/7660
+            // that has one. The child's relative offset does not affect it.
             if first_baseline.is_none() {
-                let child_baseline = if item.overflow.y.is_scroll_container() {
-                    Some(
-                        item_layout
-                            .baselines
-                            .first
-                            .unwrap_or(item_layout.size.height)
-                            .min(item_layout.size.height)
-                            .max(0.0),
-                    )
-                } else {
-                    item_layout.baselines.first
-                };
-                first_baseline = child_baseline.map(|baseline| location.y + baseline);
+                let child_baseline =
+                    child_first_baseline(item_layout.baselines.first, item_layout.size.height, item.overflow.y);
+                first_baseline = child_baseline.map(|baseline| location.y - inset_offset.y + baseline);
             }
 
             // Used auto margins include float-avoidance offsets, unlike the alignment margins above.
