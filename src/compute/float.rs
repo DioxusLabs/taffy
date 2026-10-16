@@ -266,7 +266,7 @@ impl FloatContext {
     /// Whether the float context contains any floats that extend to or below min_y
     #[inline(always)]
     pub fn has_active_floats(&self, min_y: f32) -> bool {
-        self.has_floats && self.segments.last().map(|seg| seg.y.end).unwrap_or(0.0) > min_y
+        self.has_floats && self.segments.last().is_some_and(|seg| seg.y.end > min_y)
     }
 
     /// Set the width of the `FloatContext`
@@ -485,10 +485,13 @@ impl FloatContext {
 
         // Handle case where floated box is placed after all existing segments
         if start.is_none() {
-            // The first segment starts wherever the first float is placed. This may be above
-            // the top of the block formatting context (`y < 0`): the containing block of the
-            // float (CSS2 float rule 4) may be pulled up by a negative margin.
-            let last_y_end = self.segments.last().map(|seg| seg.y.end).unwrap_or(start_y);
+            // Before the first float, the context is float-free all the way up: the first float
+            // gets an empty segment above it like any other float placed below all segments, so
+            // that content positioned above it (e.g. by a negative margin) is not moved down to
+            // it. The first float itself may be above the top of the block formatting context
+            // (`y < 0`): its containing block (CSS2 float rule 4) may be pulled up by a negative
+            // margin.
+            let last_y_end = self.segments.last().map(|seg| seg.y.end).unwrap_or(f32::NEG_INFINITY);
             if start_y > last_y_end {
                 self.segments.push(Segment { y: last_y_end..start_y, insets: [0.0, 0.0], has_float: [false; 2] });
             }
