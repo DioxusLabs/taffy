@@ -533,10 +533,14 @@ impl FloatContext {
         }
 
         let end_idx = match end {
+            // The float extends below all existing segments: add a segment for the part of it
+            // below the last segment (its insets are set along with the other segments below)
             None => {
-                let last_y_end = self.segments.last().map(|seg| seg.y.end).unwrap_or(0.0);
-                if min_y > last_y_end {
-                    self.segments.push(Segment { y: last_y_end..min_y, insets: [0.0, 0.0], has_float: [false; 2] });
+                let last_y_end = self.segments[self.segments.len() - 1].y.end;
+                let end_y = start_y + floated_box.height;
+                if end_y > last_y_end {
+                    let insets = containing_block_insets;
+                    self.segments.push(Segment { y: last_y_end..end_y, insets, has_float: [false; 2] });
                 }
                 self.segments.len() - 1
             }
