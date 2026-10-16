@@ -7,7 +7,7 @@ use crate::style::{
     AlignContent, AlignContentKeyword, AlignItems, AlignItemsKeyword, AlignSelf, AvailableSpace, Contain,
     JustifyContent, LengthPercentageAuto, Overflow, Position,
 };
-use crate::style::{CoreStyle, FlexDirection, FlexboxContainerStyle, FlexboxItemStyle};
+use crate::style::{CoreStyle, FlexDirection, FlexWrap, FlexboxContainerStyle, FlexboxItemStyle};
 use crate::style_helpers::{TaffyMaxContent, TaffyMinContent};
 use crate::tree::{
     AxisStaticAlign, AxisStaticEdge, AxisStaticPosition, LayoutFlexboxContainer, LayoutPartialTreeExt, NodeId,
@@ -153,6 +153,9 @@ struct FlexLine<'a> {
 
 /// Values that can be cached during the flexbox algorithm
 struct AlgoConstants {
+    /// Whether the container is a stack container rather than a flex container: its items are not flexed
+    /// (their `flex-*` properties are not used) and have no automatic minimum size
+    is_stack: bool,
     /// The direction of the current segment being laid out
     dir: FlexDirection,
     /// The layout direction of the current segment being laid out
@@ -246,6 +249,25 @@ pub fn compute_flexbox_layout(
     node: NodeId,
     inputs: LayoutInput,
 ) -> LayoutOutput {
+    compute_flexbox_or_stack_layout(tree, node, inputs, false)
+}
+
+/// Computes the layout of a box according to the stack algorithm ([`Display::Stack`](crate::Display::Stack)).
+///
+/// This is the flexbox algorithm for a single-line container whose items are never flexed: `flex_grow`,
+/// `flex_shrink`, `flex_basis` and `flex_wrap` are not used, and items have no automatic minimum size, so
+/// an item's content is measured at most once to find its main size. Items take up free space with `fl`.
+pub fn compute_stack_layout(tree: &mut impl LayoutFlexboxContainer, node: NodeId, inputs: LayoutInput) -> LayoutOutput {
+    compute_flexbox_or_stack_layout(tree, node, inputs, true)
+}
+
+/// Computes the layout of a flexbox container, or of a stack container if `is_stack` is set
+fn compute_flexbox_or_stack_layout(
+    tree: &mut impl LayoutFlexboxContainer,
+    node: NodeId,
+    inputs: LayoutInput,
+    is_stack: bool,
+) -> LayoutOutput {
     let LayoutInput { known_dimensions, parent_size, run_mode, .. } = inputs;
     let style = tree.get_flexbox_container_style(node);
 
@@ -325,6 +347,7 @@ pub fn compute_flexbox_layout(
         tree,
         node,
         LayoutInput { known_dimensions: styled_based_known_dimensions, known_dimensions_are_definite, ..inputs },
+        is_stack,
     );
 
     // Layout containment suppresses the box's baseline for baseline-alignment purposes
@@ -336,7 +359,12 @@ pub fn compute_flexbox_layout(
 }
 
 /// Compute a preliminary size for an item
-fn compute_preliminary(tree: &mut impl LayoutFlexboxContainer, node: NodeId, inputs: LayoutInput) -> LayoutOutput {
+fn compute_preliminary(
+    tree: &mut impl LayoutFlexboxContainer,
+    node: NodeId,
+    inputs: LayoutInput,
+    is_stack: bool,
+) -> LayoutOutput {
     let LayoutInput { known_dimensions, parent_size, available_space, run_mode, .. } = inputs;
 
     // Define some general constants we will need for the remainder of the algorithm.
@@ -347,6 +375,7 @@ fn compute_preliminary(tree: &mut impl LayoutFlexboxContainer, node: NodeId, inp
         inputs.known_dimensions_are_definite,
         parent_size,
         available_space,
+        is_stack,
     );
 
     // 9. Flex Layout Algorithm
@@ -593,11 +622,13 @@ fn compute_constants(
     known_dimensions_are_definite: Size<bool>,
     parent_size: Size<Option<f32>>,
     available_space: Size<AvailableSpace>,
+    is_stack: bool,
 ) -> AlgoConstants {
     let dir = style.flex_direction();
     let is_row = dir.is_row();
     let is_column = dir.is_column();
-    let flex_wrap = style.flex_wrap();
+    // A stack container is always single-line
+    let flex_wrap = if is_stack { FlexWrap::NoWrap } else { style.flex_wrap() };
     let is_wrap = flex_wrap.is_multi_line();
     let is_wrap_reverse = flex_wrap.is_reverse();
     #[cfg(feature = "flexbox_balance")]
@@ -661,6 +692,7 @@ fn compute_constants(
     let inner_container_size = Size::zero();
 
     AlgoConstants {
+        is_stack,
         dir,
         layout_direction,
         is_row,
@@ -801,8 +833,8 @@ fn generate_anonymous_flex_items(
                 overflow: child_style.overflow(),
                 contain: child_style.contain(),
                 scrollbar_width: child_style.scrollbar_width(),
-                flex_grow: child_style.flex_grow(),
-                flex_shrink: child_style.flex_shrink(),
+                flex_grow: if constants.is_stack { 0.0 } else { child_style.flex_grow() },
+                flex_shrink: if constants.is_stack { 0.0 } else { child_style.flex_shrink() },
                 flex_basis_is_definite: false,
                 flex_basis: 0.0,
                 inner_flex_basis: 0.0,
@@ -974,7 +1006,7 @@ fn determine_flex_base_size(
         // content is treated as indefinite here.
         let percent_resolution_main_size =
             if constants.known_main_size_is_definite { constants.node_inner_size.main(dir) } else { None };
-        let flex_basis_style = child_style.flex_basis();
+        let flex_basis_style = if constants.is_stack { Dimension::auto() } else { child_style.flex_basis() };
         let flex_basis = flex_basis_style
             .maybe_resolve(percent_resolution_main_size, |val, basis| tree.calc(val, basis))
             .maybe_add(box_sizing_adjustment);
@@ -1139,12 +1171,13 @@ fn determine_flex_base_size(
         //
         // See https://drafts.csswg.org/css-sizing-3/#min-percentage-contribution
         //
-        // An item with an `fl` main size has an automatic minimum size of zero, so that it is not measured.
+        // An item with an `fl` main size, or of a stack container, has an automatic minimum size of zero, so
+        // that it is not measured.
         let style_min_main_size = child
             .min_size
             .or(child.overflow.map(Overflow::maybe_into_automatic_min_size).into())
             .main(dir)
-            .or(is_fill.then_some(0.0));
+            .or((is_fill || constants.is_stack).then_some(0.0));
 
         child.resolved_minimum_main_size = style_min_main_size.unwrap_or_else(|| {
             let min_content_main_size = {
