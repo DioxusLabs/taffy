@@ -113,9 +113,9 @@ impl GridTrack {
     }
 
     #[inline(always)]
-    /// Returns true if the track is flexible (has a Flex MaxTrackSizingFunction), else false.
+    /// Returns true if the track is flexible (has an `fr` or `fl` MaxTrackSizingFunction), else false.
     pub fn is_flexible(&self) -> bool {
-        self.max_track_sizing_function.is_fr()
+        self.max_track_sizing_function.is_flexible()
     }
 
     #[inline(always)]
@@ -160,7 +160,7 @@ impl GridTrack {
     #[inline]
     /// Returns the track's flex factor if it is a flex track, else 0.
     pub fn flex_factor(&self) -> f32 {
-        if self.max_track_sizing_function.is_fr() {
+        if self.max_track_sizing_function.is_flexible() {
             self.max_track_sizing_function.0.value()
         } else {
             0.0

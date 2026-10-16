@@ -1280,7 +1280,7 @@ fn expand_flexible_tracks<Tree: LayoutPartialTree>(
                 // the result of dividing the track’s base size by its flex factor; otherwise, the track’s base size.
                 axis_tracks
                     .iter()
-                    .filter(|track| track.max_track_sizing_function.is_fr())
+                    .filter(|track| track.is_flexible())
                     .map(|track| {
                         let flex_factor = track.flex_factor();
                         if flex_factor > 1.0 {
@@ -1293,9 +1293,15 @@ fn expand_flexible_tracks<Tree: LayoutPartialTree>(
                     .unwrap_or(0.0),
                 // For each grid item that crosses a flexible track, the result of finding the size of an fr using all the grid tracks
                 // that the item crosses and a space to fill of the item’s max-content contribution.
+                // An item whose only flexible tracks are `fl` tracks is excluded, so that it is not measured.
                 items
                     .iter_mut()
-                    .filter(|item| item.crosses_flexible_track(axis))
+                    .filter(|item| {
+                        item.crosses_flexible_track(axis)
+                            && axis_tracks[item.track_range_excluding_lines(axis)]
+                                .iter()
+                                .any(|track| track.max_track_sizing_function.is_fr())
+                    })
                     .map(|item| {
                         let max_content_contribution = item_sizer.max_content_contribution(item, axis_tracks);
                         let tracks = &axis_tracks[item.track_range_excluding_lines(axis)];
@@ -1312,7 +1318,7 @@ fn expand_flexible_tracks<Tree: LayoutPartialTree>(
             let hypothetical_grid_size: f32 = axis_tracks
                 .iter()
                 .map(|track| {
-                    if track.max_track_sizing_function.is_fr() {
+                    if track.is_flexible() {
                         let track_flex_factor = track.max_track_sizing_function.0.value();
                         f32_max(track.base_size, track_flex_factor * flex_fraction)
                     } else {
@@ -1334,7 +1340,7 @@ fn expand_flexible_tracks<Tree: LayoutPartialTree>(
 
     // For each flexible track, if the product of the used flex fraction and the track’s flex factor is greater
     // than the track’s base size, set its base size to that product.
-    for track in axis_tracks.iter_mut().filter(|track| track.max_track_sizing_function.is_fr()) {
+    for track in axis_tracks.iter_mut().filter(|track| track.is_flexible()) {
         let track_flex_factor = track.max_track_sizing_function.0.value();
         track.base_size = f32_max(track.base_size, track_flex_factor * flex_fraction);
     }
@@ -1370,7 +1376,7 @@ fn find_size_of_fr(tracks: &[GridTrack], space_to_fill: f32) -> f32 {
         let mut naive_flex_factor_sum = 0.0;
         for track in tracks.iter() {
             // Tracks for which flex_factor * hypothetical_fr_size < track.base_size are treated as inflexible
-            if track.max_track_sizing_function.is_fr()
+            if track.is_flexible()
                 && track.max_track_sizing_function.0.value() * hypothetical_fr_size >= track.base_size
             {
                 naive_flex_factor_sum += track.max_track_sizing_function.0.value();
@@ -1389,7 +1395,7 @@ fn find_size_of_fr(tracks: &[GridTrack], space_to_fill: f32) -> f32 {
         // restart this algorithm treating all such tracks as inflexible.
         // We keep track of the hypothetical_fr_size
         let hypothetical_fr_size_is_valid = tracks.iter().all(|track| {
-            if track.max_track_sizing_function.is_fr() {
+            if track.is_flexible() {
                 let flex_factor = track.max_track_sizing_function.0.value();
                 flex_factor * hypothetical_fr_size >= track.base_size
                     || flex_factor * previous_iter_hypothetical_fr_size < track.base_size
