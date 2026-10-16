@@ -62,3 +62,8 @@ harness = false
 name = "relayout"
 path = "benches/relayout.rs"
 harness = false
+
+[[bench]]
+name = "pangui"
+path = "benches/pangui.rs"
+harness = false
