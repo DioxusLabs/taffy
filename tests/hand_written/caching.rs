@@ -18,7 +18,7 @@ mod caching {
 
         taffy.compute_layout_with_measure(node, Size::MAX_CONTENT, test_measure_function).unwrap();
 
-        assert_eq!(taffy.get_node_context_mut(leaf).unwrap().count, 7);
+        assert_eq!(taffy.get_node_context_mut(leaf).unwrap().count, 6);
     }
 
     #[test]
@@ -35,7 +35,7 @@ mod caching {
         }
 
         taffy.compute_layout_with_measure(node, Size::MAX_CONTENT, test_measure_function).unwrap();
-        assert_eq!(taffy.get_node_context_mut(leaf).unwrap().count, 7);
+        assert_eq!(taffy.get_node_context_mut(leaf).unwrap().count, 6);
     }
 
     /// A grid container that is only asked for its width (e.g. because it is an item of another
@@ -139,7 +139,7 @@ mod caching {
     #[test]
     #[cfg(all(feature = "grid", feature = "flexbox"))]
     fn measure_count_flex_in_grid() {
-        for (flex_direction, expected_count) in [(FlexDirection::Row, 10), (FlexDirection::Column, 11)] {
+        for (flex_direction, expected_count) in [(FlexDirection::Row, 9), (FlexDirection::Column, 10)] {
             let mut taffy = new_test_tree();
 
             let text = TestNodeContext::ahem_text(
