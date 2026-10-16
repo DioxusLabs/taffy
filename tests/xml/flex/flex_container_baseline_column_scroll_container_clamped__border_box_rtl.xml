@@ -1,0 +1,23 @@
+<test name="flex_container_baseline_column_scroll_container_clamped__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="flex" direction="rtl" position="absolute" align-items="baseline" width="200px" height="100px">
+      <div display="flex" direction="rtl" position="relative" flex-direction="column" align-items="flex-start" width="100px" height="50px">
+        <div display="grid" direction="rtl" position="relative" overflow-x="hidden" overflow-y="hidden" scrollbar-width="15" width="30px" height="10px">
+          <div direction="rtl" position="relative" width="30px" height="30px"/>
+        </div>
+      </div>
+      <div direction="rtl" position="relative" width="10px" height="10px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="200" height="100">
+      <node x="100" y="0" width="100" height="50">
+        <node x="70" y="0" width="30" height="10" scroll_width="0" scroll_height="20" resolved-rows="30px" resolved-columns="30px">
+          <node x="0" y="0" width="30" height="30"/>
+        </node>
+      </node>
+      <node x="90" y="0" width="10" height="10"/>
+    </node>
+  </expectations>
+</test>
