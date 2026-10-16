@@ -147,7 +147,7 @@ fn into_yg_units(dim: impl Into<tf::Dimension>) -> yg::StyleUnit {
     match dim.into_raw().tag() {
         tf::CompactLength::AUTO_TAG => yg::StyleUnit::Auto,
         tf::CompactLength::LENGTH_TAG => yg::StyleUnit::Point(yg::OrderedFloat(val)),
-        tf::CompactLength::PERCENT_TAG => yg::StyleUnit::Percent(yg::OrderedFloat(val)),
+        tf::CompactLength::PERCENT_TAG => yg::StyleUnit::Percent(yg::OrderedFloat(val * 100.0)),
         _ => unreachable!(),
     }
 }
