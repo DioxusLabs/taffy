@@ -520,23 +520,27 @@ fn resolve_item_baselines(
                 baseline.unwrap_or(height)
             };
 
-            item.baseline = Some(
-                baseline + item.margin.top.resolve_or_zero(inner_node_size.width, |val, basis| tree.calc(val, basis)),
-            );
+            item.baseline = Some(baseline);
         }
+
+        // Items are aligned by the distance from the top of their margin box to their baseline
+        let margin_box_baseline = |item: &GridItem| {
+            item.baseline.unwrap_or(0.0)
+                + item.margin.top.resolve_or_zero(inner_node_size.width, |val, basis| tree.calc(val, basis))
+        };
 
         // Compute the max baseline of all items in the row participating in baseline alignment
         let row_max_baseline = row_items
             .iter()
             .filter(|item| item.participates_in_baseline_alignment())
-            .map(|item| item.baseline.unwrap_or(0.0))
+            .map(|item| margin_box_baseline(item))
             .max_by(|a, b| a.total_cmp(b))
             .unwrap();
 
         // Compute the baseline shim for each item in the row participating in baseline alignment
         for item in row_items.iter_mut() {
             if item.participates_in_baseline_alignment() {
-                item.baseline_shim = row_max_baseline - item.baseline.unwrap_or(0.0);
+                item.baseline_shim = row_max_baseline - margin_box_baseline(item);
                 item.known_dimensions_cache = None;
             }
         }
