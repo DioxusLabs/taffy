@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    A box establishing a new formatting context that is pulled up above a first float which is itself above the top of the block formatting context is not moved down to the float
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="display: block; width: 400px; padding-top: 1px;">
+  <div style="display: block; margin-top: -30px;">
+    <div style="float: left; width: 100px; height: 50px;"></div>
+  </div>
+  <div style="display: block; overflow: hidden; height: 10px; margin-top: -40px;"></div>
+</div>
+
+</body>
+</html>

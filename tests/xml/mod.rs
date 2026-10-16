@@ -20604,6 +20604,46 @@ mod float {
     }
 
     #[test]
+    fn float_bfc_negative_margin_above_first_float__border_box_ltr() {
+        crate::run_xml_test("float", "float_bfc_negative_margin_above_first_float__border_box_ltr");
+    }
+
+    #[test]
+    fn float_bfc_negative_margin_above_first_float__content_box_ltr() {
+        crate::run_xml_test("float", "float_bfc_negative_margin_above_first_float__content_box_ltr");
+    }
+
+    #[test]
+    fn float_bfc_negative_margin_above_first_float__border_box_rtl() {
+        crate::run_xml_test("float", "float_bfc_negative_margin_above_first_float__border_box_rtl");
+    }
+
+    #[test]
+    fn float_bfc_negative_margin_above_first_float__content_box_rtl() {
+        crate::run_xml_test("float", "float_bfc_negative_margin_above_first_float__content_box_rtl");
+    }
+
+    #[test]
+    fn float_bfc_negative_margin_above_first_float_above_context_top__border_box_ltr() {
+        crate::run_xml_test("float", "float_bfc_negative_margin_above_first_float_above_context_top__border_box_ltr");
+    }
+
+    #[test]
+    fn float_bfc_negative_margin_above_first_float_above_context_top__content_box_ltr() {
+        crate::run_xml_test("float", "float_bfc_negative_margin_above_first_float_above_context_top__content_box_ltr");
+    }
+
+    #[test]
+    fn float_bfc_negative_margin_above_first_float_above_context_top__border_box_rtl() {
+        crate::run_xml_test("float", "float_bfc_negative_margin_above_first_float_above_context_top__border_box_rtl");
+    }
+
+    #[test]
+    fn float_bfc_negative_margin_above_first_float_above_context_top__content_box_rtl() {
+        crate::run_xml_test("float", "float_bfc_negative_margin_above_first_float_above_context_top__content_box_rtl");
+    }
+
+    #[test]
     fn float_bfc_negative_margin_beside_float__border_box_ltr() {
         crate::run_xml_test("float", "float_bfc_negative_margin_beside_float__border_box_ltr");
     }
@@ -20824,6 +20864,46 @@ mod float {
     }
 
     #[test]
+    fn float_extends_below_last_segment__border_box_ltr() {
+        crate::run_xml_test("float", "float_extends_below_last_segment__border_box_ltr");
+    }
+
+    #[test]
+    fn float_extends_below_last_segment__content_box_ltr() {
+        crate::run_xml_test("float", "float_extends_below_last_segment__content_box_ltr");
+    }
+
+    #[test]
+    fn float_extends_below_last_segment__border_box_rtl() {
+        crate::run_xml_test("float", "float_extends_below_last_segment__border_box_rtl");
+    }
+
+    #[test]
+    fn float_extends_below_last_segment__content_box_rtl() {
+        crate::run_xml_test("float", "float_extends_below_last_segment__content_box_rtl");
+    }
+
+    #[test]
+    fn float_first_in_context_above_context_top__border_box_ltr() {
+        crate::run_xml_test("float", "float_first_in_context_above_context_top__border_box_ltr");
+    }
+
+    #[test]
+    fn float_first_in_context_above_context_top__content_box_ltr() {
+        crate::run_xml_test("float", "float_first_in_context_above_context_top__content_box_ltr");
+    }
+
+    #[test]
+    fn float_first_in_context_above_context_top__border_box_rtl() {
+        crate::run_xml_test("float", "float_first_in_context_above_context_top__border_box_rtl");
+    }
+
+    #[test]
+    fn float_first_in_context_above_context_top__content_box_rtl() {
+        crate::run_xml_test("float", "float_first_in_context_above_context_top__content_box_rtl");
+    }
+
+    #[test]
     fn float_forced_clearance_adjoining_float__border_box_ltr() {
         crate::run_xml_test("float", "float_forced_clearance_adjoining_float__border_box_ltr");
     }
@@ -20841,6 +20921,26 @@ mod float {
     #[test]
     fn float_forced_clearance_adjoining_float__content_box_rtl() {
         crate::run_xml_test("float", "float_forced_clearance_adjoining_float__content_box_rtl");
+    }
+
+    #[test]
+    fn float_in_pulled_up_block_above_context_top__border_box_ltr() {
+        crate::run_xml_test("float", "float_in_pulled_up_block_above_context_top__border_box_ltr");
+    }
+
+    #[test]
+    fn float_in_pulled_up_block_above_context_top__content_box_ltr() {
+        crate::run_xml_test("float", "float_in_pulled_up_block_above_context_top__content_box_ltr");
+    }
+
+    #[test]
+    fn float_in_pulled_up_block_above_context_top__border_box_rtl() {
+        crate::run_xml_test("float", "float_in_pulled_up_block_above_context_top__border_box_rtl");
+    }
+
+    #[test]
+    fn float_in_pulled_up_block_above_context_top__content_box_rtl() {
+        crate::run_xml_test("float", "float_in_pulled_up_block_above_context_top__content_box_rtl");
     }
 
     #[test]

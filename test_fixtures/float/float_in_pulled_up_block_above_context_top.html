@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    Floats in a block pulled up over a preceding block by a negative margin-top are placed at the top of their containing block, above the top of the block formatting context
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="display: block; width: 400px;">
+  <div style="display: block; height: 50px;"></div>
+  <div style="display: block; margin-top: -80px;">
+    <div style="float: left; width: 100px; height: 50px;"></div>
+    <div style="float: right; width: 100px; height: 50px;"></div>
+  </div>
+</div>
+
+</body>
+</html>

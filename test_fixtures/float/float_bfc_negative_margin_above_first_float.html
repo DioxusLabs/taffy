@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    A box establishing a new formatting context that is pulled up above the first float by a negative margin is not moved down to the float
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="display: block; width: 400px;">
+  <div style="display: block; height: 100px;"></div>
+  <div style="float: left; width: 100px; height: 50px;"></div>
+  <div style="display: block; overflow: hidden; height: 10px; margin-top: -80px;"></div>
+</div>
+
+</body>
+</html>

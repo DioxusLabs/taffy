@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    A float that starts beside an earlier float and extends below it still constrains later floats over its full height
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="display: block; width: 400px;">
+  <div style="float: left; width: 100px; height: 50px;"></div>
+  <div style="float: right; width: 100px; height: 100px;"></div>
+  <div style="float: left; width: 350px; height: 20px;"></div>
+</div>
+
+</body>
+</html>

@@ -266,7 +266,7 @@ impl FloatContext {
     /// Whether the float context contains any floats that extend to or below min_y
     #[inline(always)]
     pub fn has_active_floats(&self, min_y: f32) -> bool {
-        self.has_floats && self.segments.last().map(|seg| seg.y.end).unwrap_or(0.0) > min_y
+        self.has_floats && self.segments.last().is_some_and(|seg| seg.y.end > min_y)
     }
 
     /// Set the width of the `FloatContext`
@@ -479,7 +479,13 @@ impl FloatContext {
 
         // Handle case where floated box is placed after all existing segments
         if start.is_none() {
-            let last_y_end = self.segments.last().map(|seg| seg.y.end).unwrap_or(0.0);
+            // Before the first float, the context is float-free all the way up: the first float
+            // gets an empty segment above it like any other float placed below all segments, so
+            // that content positioned above it (e.g. by a negative margin) is not moved down to
+            // it. The first float itself may be above the top of the block formatting context
+            // (`y < 0`): its containing block (CSS2 float rule 4) may be pulled up by a negative
+            // margin.
+            let last_y_end = self.segments.last().map(|seg| seg.y.end).unwrap_or(f32::NEG_INFINITY);
             if start_y > last_y_end {
                 self.segments.push(Segment { y: last_y_end..start_y, insets: [0.0, 0.0], has_float: [false; 2] });
             }
@@ -520,10 +526,14 @@ impl FloatContext {
         }
 
         let end_idx = match end {
+            // The float extends below all existing segments: add a segment for the part of it
+            // below the last segment (its insets are set along with the other segments below)
             None => {
-                let last_y_end = self.segments.last().map(|seg| seg.y.end).unwrap_or(0.0);
-                if min_y > last_y_end {
-                    self.segments.push(Segment { y: last_y_end..min_y, insets: [0.0, 0.0], has_float: [false; 2] });
+                let last_y_end = self.segments[self.segments.len() - 1].y.end;
+                let end_y = start_y + floated_box.height;
+                if end_y > last_y_end {
+                    let insets = containing_block_insets;
+                    self.segments.push(Segment { y: last_y_end..end_y, insets, has_float: [false; 2] });
                 }
                 self.segments.len() - 1
             }
