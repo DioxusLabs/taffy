@@ -389,8 +389,14 @@ pub fn round_layout(tree: &mut impl RoundTree, node_id: NodeId) {
 
         layout.location.x = round(cumulative_x) - round(parent_x);
         layout.location.y = round(cumulative_y) - round(parent_y);
-        layout.size.width = round(cumulative_x + unrounded_layout.size.width) - round(cumulative_x);
-        layout.size.height = round(cumulative_y + unrounded_layout.size.height) - round(cumulative_y);
+        layout.size.width = snap_size(
+            unrounded_layout.size.width,
+            round(cumulative_x + unrounded_layout.size.width) - round(cumulative_x),
+        );
+        layout.size.height = snap_size(
+            unrounded_layout.size.height,
+            round(cumulative_y + unrounded_layout.size.height) - round(cumulative_y),
+        );
         layout.scrollbar_size.width = round(unrounded_layout.scrollbar_size.width);
         layout.scrollbar_size.height = round(unrounded_layout.scrollbar_size.height);
         layout.border.left = round(cumulative_x + unrounded_layout.border.left) - round(cumulative_x);
@@ -433,6 +439,20 @@ pub fn round_layout(tree: &mut impl RoundTree, node_id: NodeId) {
         for index in 0..hoisted_count {
             let child = tree.get_hoisted_child_id(node_id, index);
             round_layout_inner(tree, child, cumulative_x, cumulative_y);
+        }
+    }
+
+    /// A box's rounded size along one axis, given its unrounded size and the distance between its
+    /// rounded edges. As in browsers' pixel snapping (Chromium's `SnapSizeToPixel`), a box with a
+    /// real, non-zero size never rounds away to nothing: it keeps one pixel, so a sub-pixel rule
+    /// (a `0.5px` hairline, a `1px` line scaled below a pixel) still shows. Sizes within float noise
+    /// of zero (1/16 px or less, four of Chromium's layout units) still round to zero.
+    #[inline(always)]
+    fn snap_size(unrounded: f32, rounded: f32) -> f32 {
+        if rounded == 0.0 && unrounded > 1.0 / 16.0 {
+            1.0
+        } else {
+            rounded
         }
     }
 
