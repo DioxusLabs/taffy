@@ -123,6 +123,16 @@ impl FlexItem {
         self.overflow.x.is_scroll_container() | self.overflow.y.is_scroll_container()
     }
 
+    /// Whether the used cross size of the item is the cross size of its flex line: it has a cross size of
+    /// `stretch`, or of `auto` with `align-self: stretch`, and neither of its cross-axis margins is `auto`.
+    #[inline(always)]
+    fn is_stretched(&self, dir: FlexDirection) -> bool {
+        let cross_size = self.size_style.cross(dir);
+        !self.margin_is_auto.cross_start(dir)
+            && !self.margin_is_auto.cross_end(dir)
+            && (cross_size.is_stretch() || (self.align_self == AlignSelf::STRETCH && cross_size.is_auto()))
+    }
+
     /// Returns true if the item participates in baseline alignment: it has `align-self: baseline`
     /// and neither of its cross-axis margins are `auto`.
     /// See <https://www.w3.org/TR/css-flexbox-1/#baseline-participation>
@@ -436,7 +446,7 @@ fn compute_preliminary(tree: &mut impl LayoutFlexboxContainer, node: NodeId, inp
     // 7. Determine the hypothetical cross size of each item.
     debug_log!("determine_hypothetical_cross_size");
     for line in &mut flex_lines {
-        determine_hypothetical_cross_size(tree, line, &constants, available_space);
+        determine_hypothetical_cross_size(tree, line, &constants, known_dimensions, available_space);
     }
 
     // Calculate child baselines. This function is internally smart and only computes child baselines
@@ -1906,10 +1916,25 @@ fn determine_hypothetical_cross_size(
     tree: &mut impl LayoutFlexboxContainer,
     line: &mut FlexLine,
     constants: &AlgoConstants,
+    node_size: Size<Option<f32>>,
     available_space: Size<AvailableSpace>,
 ) {
+    // If the flex container is single-line and has a definite cross size then that is the cross size of the
+    // line, whatever the hypothetical cross sizes of the items are
+    let line_cross_size_is_known = !constants.is_wrap && node_size.cross(constants.dir).is_some();
+
     for child in line.items.iter_mut() {
         let padding_border_sum = (child.padding + child.border).cross_axis_sum(constants.dir);
+
+        // An item that will be stretched to a line whose cross size is already known is not measured: its
+        // hypothetical cross size would be used neither for the line nor for the item
+        // (see `calculate_cross_size` and `determine_used_cross_size`)
+        if line_cross_size_is_known
+            && child.is_stretched(constants.dir)
+            && !child.participates_in_baseline_alignment(constants.dir)
+        {
+            continue;
+        }
 
         // The available space passed to the child excludes the child's margins
         let child_available_main =
@@ -2182,15 +2207,9 @@ fn determine_used_cross_size(
             let child_style = tree.get_flexbox_child_style(child.node);
             // A cross size of `stretch` stretches to the flex line like align-self: stretch
             // (but regardless of the alignment style)
-            let cross_is_stretch = child.size_style.cross(constants.dir).is_stretch();
             child.target_size.set_cross(
                 constants.dir,
-                if !child.margin_is_auto.cross_start(constants.dir)
-                    && !child.margin_is_auto.cross_end(constants.dir)
-                    && (cross_is_stretch
-                        || (child.align_self == AlignSelf::STRETCH
-                            && child_style.size().cross(constants.dir).is_auto()))
-                {
+                if child.is_stretched(constants.dir) {
                     // For some reason this particular usage of max_width is an exception to the rule that max_width's transfer
                     // using the aspect_ratio (if set). Both Chrome and Firefox agree on this. And reading the spec, it seems like
                     // a reasonable interpretation. Although it seems to me that the spec *should* apply aspect_ratio here.
