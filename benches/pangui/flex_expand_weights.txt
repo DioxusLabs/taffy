@@ -1,0 +1,12 @@
+# Input
+Width(Pixels(10000)).Height(Pixels(100)).Horizontal()
+{
+    Repeat(5000)
+    {
+        Width(100).Height(100).Horizontal()
+        {
+            Width(Expand(1)).Height(Expand) {}
+            Width(Expand(2)).Height(Expand) {}
+        }
+    }
+}

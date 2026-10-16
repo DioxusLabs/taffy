@@ -1,0 +1,8 @@
+# Input
+Width(Pixels(100)).Height(Pixels(100)).Horizontal()
+{
+	Repeat(1000)
+	{
+		Width(Pixels(10)).Height(Pixels(10)) {}
+	}
+}

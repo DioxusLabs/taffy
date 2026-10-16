@@ -1,0 +1,19 @@
+# Input
+Width(Pixels(100)).Height(Fit).Wrap(Auto).Horizontal()
+{
+    Repeat(1000)
+    {
+		Width(Pixels(10)).Height(Pixels(10)) {}
+		Width(Pixels(1)).Height(Expand(1)) {}
+		Width(Pixels(20)).Height(Pixels(20)) {}
+		Width(Pixels(1)).Height(Expand(1)) {}
+		Width(Pixels(30)).Height(Pixels(30)) {}
+		Width(Pixels(1)).Height(Expand(1)) {}
+		Width(Pixels(40)).Height(Pixels(40)) {}
+		Width(Pixels(1)).Height(Expand(1)) {}
+		Width(Pixels(50)).Height(Pixels(50)) {}
+		Width(Pixels(1)).Height(Expand(1)) {}
+		Width(Pixels(60)).Height(Pixels(60)) {}
+		Width(Pixels(1)).Height(Expand(1)) {}
+	}
+}
