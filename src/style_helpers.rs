@@ -584,6 +584,25 @@ pub trait FromFr {
     fn from_fr<Input: Into<f64> + Copy>(flex: Input) -> Self;
 }
 
+/// Create an `fl` value: a share of the free space of the container, in proportion to `factor`.
+/// See [`Dimension::fill`](crate::style::Dimension::fill).
+#[inline(always)]
+pub fn fill<Input: Into<f64> + Copy, T: FromFill>(factor: Input) -> T {
+    T::from_fill(factor)
+}
+
+/// Trait to create `fl` values from plain numbers
+pub trait FromFill {
+    /// Converts into an `Into<f64>` into Self
+    fn from_fill<Input: Into<f64> + Copy>(factor: Input) -> Self;
+}
+impl<T: FromFill> FromFill for Size<T> {
+    #[inline(always)]
+    fn from_fill<Input: Into<f64> + Copy>(factor: Input) -> Self {
+        Size { width: T::from_fill(factor), height: T::from_fill(factor) }
+    }
+}
+
 #[cfg(feature = "grid")]
 #[cfg(test)]
 mod repeat_fn_tests {
