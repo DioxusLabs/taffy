@@ -57,6 +57,9 @@ struct FlexItem {
     flex_shrink: f32,
     /// The flex grow style of the item
     flex_grow: f32,
+    /// The factor of the item's main size if that size is an `fl` value. Such an item is sized by
+    /// `resolve_fill_lengths` rather than by its flex basis, `flex_grow` and `flex_shrink` (which are zero).
+    fill_factor: Option<f32>,
     /// Whether the item's used flex basis is definite (rather than derived from the item's content)
     flex_basis_is_definite: bool,
 
@@ -751,6 +754,8 @@ fn generate_anonymous_flex_items(
             let pb_sum = (padding + border).sum_axes();
             let box_sizing_adjustment =
                 if child_style.box_sizing() == BoxSizing::ContentBox { pb_sum } else { Size::ZERO };
+            let main_size_style = child_style.size().main(constants.dir);
+            let fill_factor = main_size_style.is_fill().then(|| main_size_style.value());
             FlexItem {
                 node: child,
                 order: index as u32,
@@ -793,8 +798,9 @@ fn generate_anonymous_flex_items(
                 overflow: child_style.overflow(),
                 contain: child_style.contain(),
                 scrollbar_width: child_style.scrollbar_width(),
-                flex_grow: child_style.flex_grow(),
-                flex_shrink: child_style.flex_shrink(),
+                flex_grow: if fill_factor.is_some() { 0.0 } else { child_style.flex_grow() },
+                flex_shrink: if fill_factor.is_some() { 0.0 } else { child_style.flex_shrink() },
+                fill_factor,
                 flex_basis_is_definite: false,
                 flex_basis: 0.0,
                 inner_flex_basis: 0.0,
@@ -974,6 +980,12 @@ fn determine_flex_base_size(
         drop(child_style);
 
         child.flex_basis = 'flex_basis: {
+            // An item with an `fl` main size has a flex base size of zero, whatever its flex basis
+            if child.fill_factor.is_some() {
+                child.flex_basis_is_definite = true;
+                break 'flex_basis 0.0;
+            }
+
             // A. If the item has a definite used flex basis, that’s the flex base size.
 
             // B. If the flex item has an intrinsic aspect ratio,
@@ -1120,8 +1132,13 @@ fn determine_flex_base_size(
         // be set to their usual values in the cross axis so that wrapping content can wrap correctly.
         //
         // See https://drafts.csswg.org/css-sizing-3/#min-percentage-contribution
-        let style_min_main_size =
-            child.min_size.or(child.overflow.map(Overflow::maybe_into_automatic_min_size).into()).main(dir);
+        //
+        // An item with an `fl` main size has an automatic minimum size of zero, so that it is not measured.
+        let style_min_main_size = child
+            .min_size
+            .or(child.overflow.map(Overflow::maybe_into_automatic_min_size).into())
+            .main(dir)
+            .or(child.fill_factor.map(|_| 0.0));
 
         child.resolved_minimum_main_size = style_min_main_size.unwrap_or_else(|| {
             let min_content_main_size = {
@@ -1499,6 +1516,9 @@ fn determine_container_main_size(
                             style_max.maybe_min(flex_basis_max).or(flex_basis_max).unwrap_or(f32::INFINITY);
 
                         let content_contribution = match (min_main_size, style_preferred, max_main_size) {
+                            // An item with an `fl` main size contributes its minimum size, and is not measured
+                            _ if item.fill_factor.is_some() => item.hypothetical_outer_size.main(constants.dir),
+
                             // If the clamping values are such that max <= min, then we can avoid the expensive step of computing the content size
                             // as we know that the clamping values will override it anyway
                             (min, Some(pref), max) if max <= min || max <= pref => {
@@ -1690,12 +1710,82 @@ fn determine_container_main_size(
     constants.node_inner_size.set_main(constants.dir, Some(inner_main_size));
 }
 
+/// Size the items within a flex line that have an `fl` main size, and freeze them.
+/// Sets the `main` component of the `target_size` and `outer_target_size` of each such item.
+///
+/// The items share the space that is left in the line once every other item is at its hypothetical main size,
+/// in proportion to their factors (the sum of which is floored at one), clamped by their min and max main sizes.
+/// This leaves no free space for the other items to grow into, unless the `fl` items are held to their max sizes.
+#[inline]
+fn resolve_fill_lengths(line: &mut FlexLine, constants: &AlgoConstants) {
+    let dir = constants.dir;
+
+    // The space available to the border boxes of the `fl` items
+    let mut has_fill_items = false;
+    let mut used_space = sum_axis_gaps(constants.gap.main(dir), line.items.len());
+    for item in line.items.iter() {
+        if item.fill_factor.is_some() {
+            has_fill_items = true;
+            used_space += item.margin.main_axis_sum(dir);
+        } else {
+            used_space += item.hypothetical_outer_size.main(dir);
+        }
+    }
+    if !has_fill_items {
+        return;
+    }
+    let mut free_space = constants.node_inner_size.main(dir).unwrap_or(0.0) - used_space;
+
+    // Each iteration freezes at least one item: all of them if none violates its min or max size, else those that
+    // violate in the direction of the total violation (as for flexible lengths).
+    loop {
+        let factor_sum: f32 = line.items.iter().filter(|item| !item.frozen).filter_map(|item| item.fill_factor).sum();
+        let fill_size = f32_max(free_space, 0.0) / f32_max(factor_sum, 1.0);
+
+        let mut total_violation = 0.0;
+        for item in line.items.iter_mut().filter(|item| !item.frozen) {
+            let Some(fill_factor) = item.fill_factor else { continue };
+            // The hypothetical main size of an `fl` item is its minimum size
+            let min_size = item.hypothetical_inner_size.main(dir);
+            let max_size = item.max_size.main(dir).unwrap_or(f32::INFINITY);
+            let unclamped_size = fill_factor * fill_size;
+            let size = f32_max(f32_min(unclamped_size, max_size), min_size);
+            item.violation = size - unclamped_size;
+            item.target_size.set_main(dir, size);
+            total_violation += item.violation;
+        }
+
+        let mut any_unfrozen = false;
+        for item in line.items.iter_mut().filter(|item| !item.frozen && item.fill_factor.is_some()) {
+            item.frozen = match total_violation {
+                v if v > 0.0 => item.violation > 0.0,
+                v if v < 0.0 => item.violation < 0.0,
+                _ => true,
+            };
+            if item.frozen {
+                let size = item.target_size.main(dir);
+                item.outer_target_size.set_main(dir, size + item.margin.main_axis_sum(dir));
+                free_space -= size;
+            } else {
+                any_unfrozen = true;
+            }
+        }
+        if !any_unfrozen {
+            break;
+        }
+    }
+}
+
 /// Resolve the flexible lengths of the items within a flex line.
 /// Sets the `main` component of each item's `target_size` and `outer_target_size`
 ///
 /// # [9.7. Resolving Flexible Lengths](https://www.w3.org/TR/css-flexbox-1/#resolve-flexible-lengths)
 #[inline]
 fn resolve_flexible_lengths(line: &mut FlexLine, constants: &AlgoConstants) {
+    // Items with an `fl` main size are sized and frozen first. They take the place of their hypothetical
+    // main sizes below.
+    resolve_fill_lengths(line, constants);
+
     let total_main_axis_gap = sum_axis_gaps(constants.gap.main(constants.dir), line.items.len());
 
     // 1. Determine the used flex factor. Sum the outer hypothetical main sizes of all
@@ -1703,8 +1793,12 @@ fn resolve_flexible_lengths(line: &mut FlexLine, constants: &AlgoConstants) {
     //    use the flex grow factor for the rest of this algorithm; otherwise, use the
     //    flex shrink factor.
 
-    let total_hypothetical_outer_main_size =
-        line.items.iter().map(|child| child.hypothetical_outer_size.main(constants.dir)).sum::<f32>();
+    let total_hypothetical_outer_main_size = line
+        .items
+        .iter()
+        .map(|child| if child.frozen { child.outer_target_size } else { child.hypothetical_outer_size })
+        .map(|size| size.main(constants.dir))
+        .sum::<f32>();
     let used_flex_factor: f32 = total_main_axis_gap + total_hypothetical_outer_main_size;
     let growing = used_flex_factor < constants.node_inner_size.main(constants.dir).unwrap_or(0.0);
     let shrinking = used_flex_factor > constants.node_inner_size.main(constants.dir).unwrap_or(0.0);
@@ -1717,7 +1811,7 @@ fn resolve_flexible_lengths(line: &mut FlexLine, constants: &AlgoConstants) {
     //    - If using the flex shrink factor: any item that has a flex base size
     //      smaller than its hypothetical main size
 
-    for child in line.items.iter_mut() {
+    for child in line.items.iter_mut().filter(|child| !child.frozen) {
         let inner_target_size = child.hypothetical_inner_size.main(constants.dir);
         child.target_size.set_main(constants.dir, inner_target_size);
 
