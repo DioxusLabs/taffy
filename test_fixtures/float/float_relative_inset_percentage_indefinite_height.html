@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    Percentage top/bottom on a relatively positioned float in a container with an indefinite height
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="display: block; width: 400px; padding: 20px; border: 5px solid red;">
+  <div style="float: left; position: relative; width: 50px; height: 20px; left: 10%; top: 50%;"></div>
+  <div style="float: right; position: relative; width: 50px; height: 20px; right: 10%; bottom: 50%;"></div>
+  <div style="height: 100px;"></div>
+</div>
+
+</body>
+</html>

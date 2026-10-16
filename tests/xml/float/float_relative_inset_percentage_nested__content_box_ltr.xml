@@ -1,0 +1,19 @@
+<test name="float_relative_inset_percentage_nested__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="block" box-sizing="content-box" direction="ltr" position="absolute" width="400px" padding-top="10px" padding-left="10px" padding-bottom="10px" padding-right="10px">
+      <div display="block" box-sizing="content-box" direction="ltr" position="relative" width="200px" height="100px" margin-left="30px" padding-top="20px" padding-left="20px" padding-bottom="20px" padding-right="20px" border-top="5px" border-left="5px" border-bottom="5px" border-right="5px">
+        <div box-sizing="content-box" direction="ltr" position="relative" float="left" width="50px" height="20px" top="10%" left="10%"/>
+        <div box-sizing="content-box" direction="ltr" position="relative" float="right" width="50px" height="20px" bottom="10%" right="10%"/>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="420" height="170">
+      <node x="40" y="10" width="250" height="150">
+        <node x="45" y="35" width="50" height="20"/>
+        <node x="155" y="15" width="50" height="20"/>
+      </node>
+    </node>
+  </expectations>
+</test>
