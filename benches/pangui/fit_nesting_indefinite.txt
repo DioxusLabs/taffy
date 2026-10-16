@@ -1,0 +1,29 @@
+# Input
+Width(Pixels(1000)).Height(Fit).Horizontal().Padding(5)
+{
+    Width(Fit).Height(Fit).Vertical()
+    {
+        Repeat(10)
+        {
+            Width(Expand).Height(Fit).Horizontal()
+            {
+                Repeat(10)
+                {
+                    Width(Expand).Height(Fit).Vertical()
+                    {
+                        Repeat(10)
+                        {
+                            Width(Expand).Height(Fit).Horizontal()
+                            {
+                                Repeat(100)
+                                {
+                                    Width(Expand).Height(Pixels(10)).MinWidth(Pixels(2)) {}
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
