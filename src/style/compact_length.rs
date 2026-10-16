@@ -457,6 +457,13 @@ impl CompactLength {
         self.tag() & (Self::NON_POINTER_BIT | Self::KEYWORD_BIT) == Self::NON_POINTER_BIT
     }
 
+    /// Returns true if the value is a length, a percentage or a plain `calc()` value (not a
+    /// `fit-content(calc())` value): anything that resolves to a length given a percentage basis
+    #[inline(always)]
+    pub fn is_length_percentage_or_calc(self) -> bool {
+        self.tag() & Self::KEYWORD_BIT == 0
+    }
+
     /// Returns true if the value is auto
     #[inline(always)]
     pub fn is_auto(self) -> bool {
