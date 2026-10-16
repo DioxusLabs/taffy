@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    A grid container's baseline is taken from the final layout of its first item, which is not baseline-aligned (align-items: start), rather than from the item's bottom edge
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="display: flex; align-items: baseline; width: 120px; height: 100px;">
+  <div style="display: grid; width: 100px; height: 50px; align-items: start;">
+    <div style="display: grid; width: 26px; height: 30px;">
+      <div style="width: 26px; height: 21px;"></div>
+    </div>
+  </div>
+  <div style="width: 10px; height: 10px;"></div>
+</div>
+
+</body>
+</html>

@@ -63,7 +63,8 @@ pub(in super::super) struct GridItem {
     pub align_self: AlignSelf,
     /// The item's justify_self property, or the parent's justify_items property if it is `None`
     pub justify_self: AlignSelf,
-    /// The items first baseline (horizontal)
+    /// The item's first baseline (horizontal), measured from the top of its border box. Set from the item's
+    /// intrinsic layout when resolving baseline alignment during track sizing, then from its final layout.
     pub baseline: Option<f32>,
     /// Shim for baseline alignment that acts like an extra top margin
     /// TODO: Support last baseline and vertical text baselines
