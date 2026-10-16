@@ -1,0 +1,17 @@
+<test name="gap_row_gap_percent_wrapping_with_flexible_content__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div direction="rtl" position="absolute" align-content="flex-start" flex-shrink="0" width="300px" height="300px" row-gap="10%" column-gap="10%">
+      <div direction="rtl" position="relative" flex-direction="column" align-content="flex-start" flex-grow="1" flex-basis="0%"/>
+      <div direction="rtl" position="relative" flex-direction="column" align-content="flex-start" flex-grow="1" flex-basis="0%"/>
+      <div direction="rtl" position="relative" flex-direction="column" align-content="flex-start" flex-grow="1" flex-basis="0%"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="300" height="300">
+      <node x="220" y="0" width="80" height="300"/>
+      <node x="110" y="0" width="80" height="300"/>
+      <node x="0" y="0" width="80" height="300"/>
+    </node>
+  </expectations>
+</test>

@@ -1,0 +1,23 @@
+<test name="rounding_total_fractional_nested__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div direction="rtl" position="absolute" flex-direction="column" align-content="flex-start" flex-shrink="0" width="87.4px" height="113.4px">
+      <div direction="rtl" position="relative" flex-direction="column" align-content="flex-start" flex-grow="0.7" flex-shrink="0" flex-basis="50.3px" height="20.3px">
+        <div direction="rtl" position="relative" flex-direction="column" align-content="flex-start" flex-grow="1" flex-shrink="0" flex-basis="0.3px" height="9.9px" bottom="13.3px"/>
+        <div direction="rtl" position="relative" flex-direction="column" align-content="flex-start" flex-grow="4" flex-shrink="0" flex-basis="0.3px" height="1.1px" top="13.3px"/>
+      </div>
+      <div direction="rtl" position="relative" flex-direction="column" align-content="flex-start" flex-grow="1.6" flex-shrink="0" height="10px"/>
+      <div direction="rtl" position="relative" flex-direction="column" align-content="flex-start" flex-grow="1.1" flex-shrink="0" height="10.7px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="87" height="113">
+      <node x="0" y="0" width="87" height="59">
+        <node x="0" y="-13" width="87" height="12"/>
+        <node x="0" y="25" width="87" height="47"/>
+      </node>
+      <node x="0" y="59" width="87" height="30"/>
+      <node x="0" y="89" width="87" height="24"/>
+    </node>
+  </expectations>
+</test>
