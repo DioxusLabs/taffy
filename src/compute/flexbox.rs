@@ -1,5 +1,7 @@
 //! Computes the [flexbox](https://css-tricks.com/snippets/css/a-guide-to-flexbox/) layout algorithm on [`TaffyTree`](crate::TaffyTree) according to the [spec](https://www.w3.org/TR/css-flexbox-1/)
-use crate::compute::common::alignment::{compute_alignment_offset, resolve_self_alignment_safety};
+use crate::compute::common::alignment::{
+    child_first_baseline, compute_alignment_offset, resolve_self_alignment_safety,
+};
 use crate::geometry::{Line, Point, Rect, Size};
 use crate::style::{
     AlignContent, AlignContentKeyword, AlignItems, AlignItemsKeyword, AlignSelf, AvailableSpace, Contain,
@@ -2042,17 +2044,9 @@ fn calculate_children_base_lines(
                 },
             );
 
-            let baseline = measured_size_and_baselines.baselines.first;
             let height = measured_size_and_baselines.size.height;
-
-            // Scroll containers' baselines are determined from their content as if scrolled to the
-            // initial position, but are additionally clamped to their border box.
-            // See https://github.com/w3c/csswg-drafts/issues/7660
-            let baseline = if child.overflow.y.is_scroll_container() {
-                baseline.unwrap_or(height).min(height).max(0.0)
-            } else {
-                baseline.unwrap_or(height)
-            };
+            let baseline = child_first_baseline(measured_size_and_baselines.baselines.first, height, child.overflow.y)
+                .unwrap_or(height);
 
             child.baseline = baseline + child.margin.top;
         }
@@ -2562,24 +2556,14 @@ fn calculate_flex_item(
         + item.margin.cross_start(direction)
         + cross_relative_inset;
 
+    let inner_baseline =
+        child_first_baseline(layout_output.baselines.first, size.height, item.overflow.y).unwrap_or(size.height);
     if direction.is_row() {
         let baseline_offset_cross =
             total_offset_cross + item.offset_cross + effective_line_offset_cross + item.margin.cross_start(direction);
-        // Scroll containers' baselines are determined from their content as if scrolled to the initial
-        // position, but are additionally clamped to their border box.
-        // See https://github.com/w3c/csswg-drafts/issues/7660
-        let inner_baseline = {
-            let baseline = layout_output.baselines.first.unwrap_or(size.height);
-            if item.overflow.y.is_scroll_container() {
-                baseline.min(size.height).max(0.0)
-            } else {
-                baseline
-            }
-        };
         item.baseline = baseline_offset_cross + inner_baseline;
     } else {
         let baseline_offset_main = *total_offset_main + item.offset_main + item.margin.main_start(direction);
-        let inner_baseline = layout_output.baselines.first.unwrap_or(size.height);
         item.baseline = baseline_offset_main + inner_baseline;
     }
 

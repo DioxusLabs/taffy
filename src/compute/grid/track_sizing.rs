@@ -1,6 +1,7 @@
 //! Implements the track sizing algorithm
 //! <https://www.w3.org/TR/css-grid-1/#layout-algorithm>
 use super::types::{GridItem, GridTrack, TrackCounts};
+use crate::compute::common::alignment::child_first_baseline;
 use crate::geometry::{AbstractAxis, Line, Size};
 use crate::style::{AlignContent, AlignContentKeyword, AvailableSpace};
 use crate::style_helpers::TaffyMinContent;
@@ -508,17 +509,9 @@ fn resolve_item_baselines(
                 Line::FALSE,
             );
 
-            let baseline = measured_size_and_baselines.baselines.first;
             let height = measured_size_and_baselines.size.height;
-
-            // Scroll containers' baselines are determined from their content as if scrolled to the
-            // initial position, but are additionally clamped to their border box.
-            // See https://github.com/w3c/csswg-drafts/issues/7660
-            let baseline = if item.overflow.y.is_scroll_container() {
-                baseline.unwrap_or(height).min(height).max(0.0)
-            } else {
-                baseline.unwrap_or(height)
-            };
+            let baseline = child_first_baseline(measured_size_and_baselines.baselines.first, height, item.overflow.y)
+                .unwrap_or(height);
 
             item.baseline = Some(baseline);
         }

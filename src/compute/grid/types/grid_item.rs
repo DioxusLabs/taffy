@@ -99,7 +99,8 @@ pub(in super::super) struct GridItem {
     /// Cache for the max-content size
     pub max_content_contribution_cache: Size<Option<f32>>,
 
-    /// Final y position. Used to compute baseline alignment for the container.
+    /// Final y position, excluding any relative offset (which does not affect the container's baseline).
+    /// Used to compute baseline alignment for the container.
     pub y_position: f32,
     /// Final height. Used to compute baseline alignment for the container.
     pub height: f32,
