@@ -1,0 +1,12 @@
+# Input
+Width(Pixels(100)).Height(Fit).Horizontal()
+{
+    Repeat(1000)
+    {
+		Width(Pixels(100)).Height(Fit).Horizontal()
+		{
+			Width(Expand(1)).Height(Pixels(10)) {}
+			Width(Expand(1)).Height(Pixels(10)).MaxWidth(Pixels(40)) {}
+		}
+    }
+}
