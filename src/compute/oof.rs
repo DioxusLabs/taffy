@@ -9,7 +9,7 @@ use crate::style::{
     AlignItemsKeyword, AlignSelf, AlignmentSafety, AvailableSpace, ContainingBlockClaims, CoreStyle, OofItemStyle,
     Overflow,
 };
-#[cfg(feature = "grid")]
+#[cfg(any(feature = "grid", feature = "yoga_flexbox"))]
 use crate::tree::DetailedLayoutInfo;
 use crate::tree::{
     AxisStaticPosition, Layout, LayoutContainingBlock, LayoutInput, LayoutOutput, LayoutPartialTreeExt, NodeId,
@@ -652,6 +652,8 @@ pub(crate) fn layout_oof_box<Tree: LayoutContainingBlock>(
     .maybe_clamp(min_size, max_size);
 
     let layout_input = LayoutInput {
+        #[cfg(feature = "yoga_flexbox")]
+        yoga_available_size: Size::NONE,
         known_dimensions: final_size.map(Some),
         known_dimensions_are_definite: Size { width: true, height: true },
         parent_size: area_size.map(Some),
@@ -767,8 +769,14 @@ pub(crate) fn perform_oof_layout(
         }
     }
 
-    #[cfg(not(feature = "grid"))]
+    #[cfg(not(any(feature = "grid", feature = "yoga_flexbox")))]
     let _ = node_id;
+    // A Yoga containing block lays its absolute children out with Yoga's rules
+    #[cfg(feature = "yoga_flexbox")]
+    let yoga_info = match tree.get_detailed_layout_info(node_id) {
+        DetailedLayoutInfo::YogaFlexbox(info) => Some(*info),
+        _ => None,
+    };
 
     let mut index = 0;
     while index < worklist.len() {
@@ -776,14 +784,30 @@ pub(crate) fn perform_oof_layout(
         index += 1;
         hoisted.push(candidate.node);
 
-        let OofBoxLayout {
-            layout,
-            surfaced,
-            #[cfg(feature = "content_size")]
-            overflow,
-            #[cfg(feature = "content_size")]
-            contain,
-        } = layout_oof_box(
+        #[cfg(feature = "yoga_flexbox")]
+        let box_layout = match yoga_info {
+            Some(info) => crate::compute::yoga_flexbox::layout_absolute_child(
+                tree,
+                candidate,
+                area_size,
+                area_offset,
+                direction,
+                &info,
+            ),
+            None => layout_oof_box(
+                tree,
+                candidate,
+                area_size,
+                area_offset,
+                direction,
+                container_overflow,
+                #[cfg(feature = "grid")]
+                Some(node_id),
+                |_, _| {},
+            ),
+        };
+        #[cfg(not(feature = "yoga_flexbox"))]
+        let box_layout = layout_oof_box(
             tree,
             candidate,
             area_size,
@@ -794,6 +818,14 @@ pub(crate) fn perform_oof_layout(
             Some(node_id),
             |_, _| {},
         );
+        let OofBoxLayout {
+            layout,
+            surfaced,
+            #[cfg(feature = "content_size")]
+            overflow,
+            #[cfg(feature = "content_size")]
+            contain,
+        } = box_layout;
         let location = layout.location;
         let final_size = layout.size;
 

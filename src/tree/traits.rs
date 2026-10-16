@@ -323,6 +323,41 @@ pub trait LayoutFlexboxContainer: LayoutPartialTree {
     fn get_flexbox_child_style(&self, child_node_id: NodeId) -> Self::FlexboxItemStyle<'_>;
 }
 
+#[cfg(feature = "yoga_flexbox")]
+/// Extends [`LayoutFlexboxContainer`] with the configuration and per-node state Yoga's flexbox
+/// algorithm needs beyond styles.
+pub trait LayoutYogaFlexboxContainer: LayoutFlexboxContainer {
+    /// The Yoga configuration (errata, experimental features, point scale factor, web defaults)
+    fn yoga_config(&self) -> &crate::compute::yoga_flexbox::YogaConfig;
+
+    /// Get the Yoga layout state the previous pass left on a node
+    fn yoga_node_state(&self, node_id: NodeId) -> crate::compute::yoga_flexbox::YogaFlexboxNodeState;
+
+    /// Store a node's Yoga layout state for later passes
+    fn set_yoga_node_state(&mut self, node_id: NodeId, state: crate::compute::yoga_flexbox::YogaFlexboxNodeState);
+
+    /// Whether the node is a leaf measured by a measure function (Yoga's `hasMeasureFunc`)
+    fn has_measure_func(&self, node_id: NodeId) -> bool;
+
+    /// Call the node's measure function directly, as Yoga's `node->measure` does in the min-content
+    /// probe: no sizing-mode translation, no min/max/padding bounding and no caching. Only called for
+    /// nodes where [`has_measure_func`](Self::has_measure_func) is true.
+    fn measure_yoga_leaf(&mut self, node_id: NodeId, inputs: LayoutInput) -> LayoutOutput;
+
+    /// The baseline of a measured leaf at its final `size`, from the border-box top (Yoga's
+    /// `baselineFunc`, called with the measured dimensions). `None` means no baseline function, and
+    /// the leaf's height is used. Only called for nodes where `has_measure_func` is true.
+    fn yoga_baseline(&mut self, node_id: NodeId, size: Size<f32>) -> Option<f32> {
+        let _ = (node_id, size);
+        None
+    }
+
+    /// Store the node's [`YogaDetailedInfo`](crate::compute::yoga_flexbox::YogaDetailedInfo), which the
+    /// out-of-flow layout of its absolute children reads back through
+    /// [`LayoutContainingBlock::get_detailed_layout_info`]
+    fn set_detailed_yoga_info(&mut self, node_id: NodeId, info: crate::compute::yoga_flexbox::YogaDetailedInfo);
+}
+
 #[cfg(feature = "grid")]
 /// Extends [`LayoutPartialTree`] with getters for the styles required for CSS Grid layout
 pub trait LayoutGridContainer: LayoutPartialTree {
@@ -407,6 +442,8 @@ pub(crate) trait LayoutPartialTreeExt: LayoutPartialTree {
         self.compute_child_layout(
             node_id,
             LayoutInput {
+                #[cfg(feature = "yoga_flexbox")]
+                yoga_available_size: Size::NONE,
                 known_dimensions,
                 known_dimensions_are_definite: Size { width: true, height: true },
                 parent_size,
@@ -436,6 +473,8 @@ pub(crate) trait LayoutPartialTreeExt: LayoutPartialTree {
         self.compute_child_layout(
             node_id,
             LayoutInput {
+                #[cfg(feature = "yoga_flexbox")]
+                yoga_available_size: Size::NONE,
                 known_dimensions,
                 known_dimensions_are_definite: Size { width: true, height: true },
                 parent_size,
@@ -463,6 +502,8 @@ pub(crate) trait LayoutPartialTreeExt: LayoutPartialTree {
         self.compute_child_layout(
             node_id,
             LayoutInput {
+                #[cfg(feature = "yoga_flexbox")]
+                yoga_available_size: Size::NONE,
                 known_dimensions,
                 known_dimensions_are_definite: Size { width: true, height: true },
                 parent_size,

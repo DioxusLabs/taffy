@@ -37,6 +37,9 @@ pub(crate) mod flexbox;
 #[cfg(feature = "grid")]
 pub(crate) mod grid;
 
+#[cfg(feature = "yoga_flexbox")]
+pub mod yoga_flexbox;
+
 pub use leaf::compute_leaf_layout;
 pub use oof::{compute_oof_layout, compute_oof_layout_for_area, resolve_static_offset, OofLayoutResult};
 
@@ -104,6 +107,8 @@ pub fn compute_root_layout(
             node: root,
             order: 0,
             position,
+            #[cfg(feature = "yoga_flexbox")]
+            yoga_parent_is_row: false,
             static_position: Point {
                 x: AxisStaticPosition {
                     area: Line { start, end },
@@ -256,6 +261,8 @@ fn compute_in_flow_root_layout(
     }
 
     let inputs = LayoutInput {
+        #[cfg(feature = "yoga_flexbox")]
+        yoga_available_size: Size::NONE,
         known_dimensions,
         known_dimensions_are_definite: Size { width: true, height: true },
         parent_size: available_space.into_options(),

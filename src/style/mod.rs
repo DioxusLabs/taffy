@@ -261,6 +261,9 @@ pub enum Display {
     /// The children will follow the CSS Grid layout algorithm
     #[cfg(feature = "grid")]
     Grid,
+    /// The children will follow Yoga's flexbox algorithm (bug-for-bug compatible with Yoga, not CSS)
+    #[cfg(feature = "yoga_flexbox")]
+    YogaFlexbox,
     /// The node is hidden, and it's children will also be hidden
     None,
 }
@@ -314,6 +317,8 @@ impl core::fmt::Display for Display {
             Display::Flex => write!(f, "FLEX"),
             #[cfg(feature = "grid")]
             Display::Grid => write!(f, "GRID"),
+            #[cfg(feature = "yoga_flexbox")]
+            Display::YogaFlexbox => write!(f, "YOGA-FLEXBOX"),
         }
     }
 }

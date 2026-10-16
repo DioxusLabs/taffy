@@ -1,5 +1,6 @@
 /target
 /scripts/gentest/target
+/scripts/yoga_diff/target
 /benches/target
 /examples/parley/target
 /yoga_test_fixtures

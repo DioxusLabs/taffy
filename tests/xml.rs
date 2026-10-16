@@ -322,6 +322,8 @@ fn get_resolved_track_lists(tree: &TaffyTree<TestNodeContext>, node_id: NodeId) 
         taffy::DetailedLayoutInfo::Grid(info) => {
             (Some(info.grid_template_rows(1.0)), Some(info.grid_template_columns(1.0)))
         }
+        #[cfg(feature = "yoga_flexbox")]
+        taffy::DetailedLayoutInfo::YogaFlexbox(_) => (None, None),
         taffy::DetailedLayoutInfo::None => (None, None),
     }
 }
