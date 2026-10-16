@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+### Added
+
+- The `fl` ("fill") unit: a share of the free space of the container, for which content is never measured. Available as `Dimension::fill(n)`, `MaxTrackSizingFunction::fill(n)`, the `fill(n)` style helper, and `<n>fl` when parsing.
+  - Flexbox: an item whose main size is `<n>fl` has no flex basis and no automatic minimum size, and its `flex-*` properties are not used. `fl` items share the space left once every other item is at its hypothetical main size, so other items in the line only grow into space left by `fl` items held to their max sizes.
+  - Grid: an `<n>fl` track sizes like `minmax(0, <n>fr)`, except that it is not grown to fit its items when the grid container is sized to its content.
+  - Everywhere else, `fl` resolves like `stretch`.
+  - In a container that is sized to its content, an `fl` item or track contributes its minimum size (zero by default).
+  - `ExpandedDimension` and `ExpandedMaxTrackSizingFunction` gain a `Fill` variant.
+
 ### Changes
 
 - `BlockContext::place_floated_box` (and `FloatContext::place_floated_box`) now take a caller-defined `id: u64` for the box, which is stored on `PlacedFloatedBox`. `BlockContext::float_mark` and `BlockContext::floats_placed_since` read back the id and position of the floats placed since a mark, so that custom formatting contexts which place floats do not need to keep their own list of placements.
