@@ -136,13 +136,13 @@ impl FlexItem {
     }
 
     /// Whether the used cross size of the item is the cross size of its flex line: it has a cross size of
-    /// `stretch`, or of `auto` with `align-self: stretch`, and neither of its cross-axis margins is `auto`.
+    /// `stretch` or `<n>fl`, or of `auto` with `align-self: stretch`, and neither of its cross-axis margins is `auto`.
     #[inline(always)]
     fn is_stretched(&self, dir: FlexDirection) -> bool {
         let cross_size = self.size_style.cross(dir);
         !self.margin_is_auto.cross_start(dir)
             && !self.margin_is_auto.cross_end(dir)
-            && (cross_size.is_stretch() || (self.align_self == AlignSelf::STRETCH && cross_size.is_auto()))
+            && (cross_size.is_stretch_or_fill() || (self.align_self == AlignSelf::STRETCH && cross_size.is_auto()))
     }
 
     /// Returns true if the item participates in baseline alignment: it has `align-self: baseline`
@@ -1391,7 +1391,7 @@ fn item_known_dimension_definiteness(constants: &AlgoConstants, item: &FlexItem)
     let has_cross_auto_margins = item.margin_is_auto.cross_start(dir) || item.margin_is_auto.cross_end(dir);
     let cross_size = item.size_style.cross(dir);
     let is_stretched = !has_cross_auto_margins
-        && (cross_size.is_stretch() || (item.align_self == AlignSelf::STRETCH && cross_size.is_auto()));
+        && (cross_size.is_stretch_or_fill() || (item.align_self == AlignSelf::STRETCH && cross_size.is_auto()));
     let cross_is_definite = is_stretched
         || item.size.cross(dir).is_some()
         || (!dir.is_row() && constants.cross_axis_available_space_is_definite);

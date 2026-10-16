@@ -1,5 +1,6 @@
 //! Shared resolution logic for sizing keywords (`min-content`, `max-content`, `fit-content`,
-//! `fit-content(...)`, and `stretch`) on the `width`/`height` style properties
+//! `fit-content(...)`, and `stretch`) on the `width`/`height` style properties, and for `fl` values
+//! (which resolve like `stretch` here)
 use crate::geometry::{AbsoluteAxis, Line, Rect, Size};
 use crate::style::AvailableSpace;
 use crate::tree::{LayoutPartialTree, LayoutPartialTreeExt, NodeId, SizingMode};
@@ -48,7 +49,7 @@ pub(crate) fn resolve_sizing_keyword(
         _ if style.is_fit_content_calc() => percent_resolution_basis.map(|basis| {
             SizingKeywordResolution::Measure(AvailableSpace::Definite(calc_resolver(style.calc_value(), basis)))
         }),
-        CompactLength::STRETCH_TAG => stretch_size.map(SizingKeywordResolution::Exact),
+        CompactLength::STRETCH_TAG | CompactLength::FILL_TAG => stretch_size.map(SizingKeywordResolution::Exact),
         _ => None,
     }
 }

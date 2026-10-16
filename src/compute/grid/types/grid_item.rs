@@ -738,7 +738,7 @@ impl GridItem {
                 // A preferred size that is a sizing keyword other than `stretch` does not behave as auto,
                 // so the minimum contribution is the min-content contribution.
                 let size = self.size.get(axis);
-                (size.is_sizing_keyword() && !size.is_stretch())
+                (size.is_sizing_keyword() && !size.is_stretch_or_fill())
                     .then(|| self.min_content_contribution_cached(axis, tree, grid_area_size, grid_area_size))
             })
             .or_else(|| {
