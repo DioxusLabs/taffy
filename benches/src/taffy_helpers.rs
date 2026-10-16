@@ -56,6 +56,12 @@ impl<R: Rng, G: GenStyle<TaffyStyle>> BuildTree<R, G> for TaffyTreeBuilder<R, G>
         node
     }
 
+    fn create_node_with_style(&mut self, style: TaffyStyle, children: &[Self::Node]) -> Self::Node {
+        let node = self.tree.new_with_children(style, children).unwrap();
+        self.nodes.push(node);
+        node
+    }
+
     fn total_node_count(&mut self) -> usize {
         self.tree.total_node_count()
     }

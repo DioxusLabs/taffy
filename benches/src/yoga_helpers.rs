@@ -72,6 +72,10 @@ impl<R: Rng, G: GenStyle<TaffyStyle>> BuildTree<R, G> for YogaTreeBuilder<R, G> 
         create_yg_node(&mut self.tree, &style, &children)
     }
 
+    fn create_node_with_style(&mut self, style: TaffyStyle, children: &[Self::Node]) -> Self::Node {
+        create_yg_node(&mut self.tree, &style, children)
+    }
+
     fn set_root_children(&mut self, children: &[Self::Node]) {
         set_node_children(&mut self.tree, self.root, &children);
     }

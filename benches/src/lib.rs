@@ -2,6 +2,7 @@
 // of false positives for this lint. So let's just disable it for this code.
 #![allow(dead_code)]
 
+pub mod pangui_template;
 pub mod taffy_helpers;
 pub use taffy_helpers::TaffyTreeBuilder;
 
@@ -134,6 +135,8 @@ pub trait BuildTree<R: Rng, G: GenStyle<TaffyStyle>> {
     fn random_usize(&mut self, range: impl SampleRange<usize>) -> usize;
     fn create_leaf_node(&mut self) -> Self::Node;
     fn create_container_node(&mut self, children: &[Self::Node]) -> Self::Node;
+    /// Create a node with the given style (rather than a style from the style generator)
+    fn create_node_with_style(&mut self, style: TaffyStyle, children: &[Self::Node]) -> Self::Node;
     fn set_root_children(&mut self, children: &[Self::Node]);
     fn total_node_count(&mut self) -> usize;
     fn into_tree_and_root(self) -> (Self::Tree, Self::Node);
