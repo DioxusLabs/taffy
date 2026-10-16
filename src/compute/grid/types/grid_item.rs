@@ -768,8 +768,7 @@ impl GridItem {
                 // if it spans more than one track in that axis, none of those tracks are flexible
                 let only_span_one_track = item_axis_tracks.len() == 1;
                 let use_content_based_minimum = spans_auto_min_track
-                    && (only_span_one_track
-                        || !item_axis_tracks.iter().any(|track| track.max_track_sizing_function.is_fr()));
+                    && (only_span_one_track || !item_axis_tracks.iter().any(|track| track.is_flexible()));
 
                 // Otherwise, the automatic minimum size is zero, as usual.
                 if use_content_based_minimum {

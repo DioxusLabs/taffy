@@ -995,6 +995,12 @@ impl MaxTrackSizingFunction {
         self.0.is_fill()
     }
 
+    /// Returns true if the value is an fr or fl value, else false.
+    #[inline(always)]
+    pub fn is_flexible(&self) -> bool {
+        matches!(self.0.tag(), CompactLength::FR_TAG | CompactLength::FILL_TAG)
+    }
+
     /// Returns true if the is `Auto`, else false.
     #[inline(always)]
     pub fn is_auto(&self) -> bool {
