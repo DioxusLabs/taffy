@@ -2106,6 +2106,26 @@ mod block {
     }
 
     #[test]
+    fn block_container_baseline_ignores_relative_offset__border_box_ltr() {
+        crate::run_xml_test("block", "block_container_baseline_ignores_relative_offset__border_box_ltr");
+    }
+
+    #[test]
+    fn block_container_baseline_ignores_relative_offset__content_box_ltr() {
+        crate::run_xml_test("block", "block_container_baseline_ignores_relative_offset__content_box_ltr");
+    }
+
+    #[test]
+    fn block_container_baseline_ignores_relative_offset__border_box_rtl() {
+        crate::run_xml_test("block", "block_container_baseline_ignores_relative_offset__border_box_rtl");
+    }
+
+    #[test]
+    fn block_container_baseline_ignores_relative_offset__content_box_rtl() {
+        crate::run_xml_test("block", "block_container_baseline_ignores_relative_offset__content_box_rtl");
+    }
+
+    #[test]
     fn block_direction_rtl__border_box_ltr() {
         crate::run_xml_test("block", "block_direction_rtl__border_box_ltr");
     }
@@ -13205,6 +13225,26 @@ mod flex {
     #[test]
     fn flex_container_baseline_column_reverse_wrap_reverse__content_box_rtl() {
         crate::run_xml_test("flex", "flex_container_baseline_column_reverse_wrap_reverse__content_box_rtl");
+    }
+
+    #[test]
+    fn flex_container_baseline_column_scroll_container_clamped__border_box_ltr() {
+        crate::run_xml_test("flex", "flex_container_baseline_column_scroll_container_clamped__border_box_ltr");
+    }
+
+    #[test]
+    fn flex_container_baseline_column_scroll_container_clamped__content_box_ltr() {
+        crate::run_xml_test("flex", "flex_container_baseline_column_scroll_container_clamped__content_box_ltr");
+    }
+
+    #[test]
+    fn flex_container_baseline_column_scroll_container_clamped__border_box_rtl() {
+        crate::run_xml_test("flex", "flex_container_baseline_column_scroll_container_clamped__border_box_rtl");
+    }
+
+    #[test]
+    fn flex_container_baseline_column_scroll_container_clamped__content_box_rtl() {
+        crate::run_xml_test("flex", "flex_container_baseline_column_scroll_container_clamped__content_box_rtl");
     }
 
     #[test]
@@ -24359,6 +24399,30 @@ mod grid {
     #[test]
     fn grid_columns_rtl__content_box_rtl() {
         crate::run_xml_test("grid", "grid_columns_rtl__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_container_baseline_ignores_relative_offset__border_box_ltr() {
+        crate::run_xml_test("grid", "grid_container_baseline_ignores_relative_offset__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_container_baseline_ignores_relative_offset__content_box_ltr() {
+        crate::run_xml_test("grid", "grid_container_baseline_ignores_relative_offset__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_container_baseline_ignores_relative_offset__border_box_rtl() {
+        crate::run_xml_test("grid", "grid_container_baseline_ignores_relative_offset__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_container_baseline_ignores_relative_offset__content_box_rtl() {
+        crate::run_xml_test("grid", "grid_container_baseline_ignores_relative_offset__content_box_rtl");
     }
 
     #[cfg(feature = "grid")]

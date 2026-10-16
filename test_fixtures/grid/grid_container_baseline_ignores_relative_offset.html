@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    A grid container's baseline is not affected by the relative offset of the item that provides it
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="display: flex; align-items: baseline; width: 200px; height: 100px;">
+  <div style="display: grid; align-items: start; justify-items: start; width: 100px; height: 50px;">
+    <div style="display: grid; width: 30px; height: 30px; position: relative; top: 7px;">
+      <div style="width: 30px; height: 20px;"></div>
+    </div>
+  </div>
+  <div style="width: 10px; height: 10px;"></div>
+</div>
+
+</body>
+</html>

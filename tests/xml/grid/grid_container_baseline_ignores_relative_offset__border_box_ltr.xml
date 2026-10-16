@@ -1,0 +1,23 @@
+<test name="grid_container_baseline_ignores_relative_offset__border_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="flex" direction="ltr" position="absolute" align-items="baseline" width="200px" height="100px">
+      <div display="grid" direction="ltr" position="relative" align-items="start" justify-items="start" width="100px" height="50px">
+        <div display="grid" direction="ltr" position="relative" width="30px" height="30px" top="7px">
+          <div direction="ltr" position="relative" width="30px" height="20px"/>
+        </div>
+      </div>
+      <div direction="ltr" position="relative" width="10px" height="10px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="200" height="100">
+      <node x="0" y="0" width="100" height="50" resolved-rows="50px" resolved-columns="100px">
+        <node x="0" y="7" width="30" height="30" resolved-rows="30px" resolved-columns="30px">
+          <node x="0" y="0" width="30" height="20"/>
+        </node>
+      </node>
+      <node x="100" y="10" width="10" height="10"/>
+    </node>
+  </expectations>
+</test>
