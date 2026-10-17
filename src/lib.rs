@@ -97,9 +97,6 @@ mod readme_doctest {
     #![doc = include_str!("../README.md")]
 }
 
-#[cfg(feature = "flexbox")]
-#[doc(inline)]
-pub use crate::compute::compute_flexbox_layout;
 #[cfg(feature = "grid")]
 #[doc(inline)]
 pub use crate::compute::compute_grid_layout;
@@ -112,6 +109,9 @@ pub use crate::compute::{
     compute_cached_layout, compute_hidden_layout, compute_leaf_layout, compute_oof_layout, compute_oof_layout_for_area,
     compute_root_layout, resolve_static_offset, round_layout, OofLayoutResult,
 };
+#[cfg(feature = "flexbox")]
+#[doc(inline)]
+pub use crate::compute::{compute_flexbox_layout, compute_stack_layout};
 #[doc(inline)]
 pub use crate::style::Style;
 #[doc(inline)]

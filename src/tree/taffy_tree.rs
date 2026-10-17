@@ -25,10 +25,13 @@ use crate::CacheTree;
 
 #[cfg(feature = "block_layout")]
 use crate::{compute::compute_block_layout, LayoutBlockContainer};
-#[cfg(feature = "flexbox")]
-use crate::{compute::compute_flexbox_layout, LayoutFlexboxContainer};
 #[cfg(feature = "grid")]
 use crate::{compute::compute_grid_layout, LayoutGridContainer};
+#[cfg(feature = "flexbox")]
+use crate::{
+    compute::{compute_flexbox_layout, compute_stack_layout},
+    LayoutFlexboxContainer,
+};
 
 #[cfg(feature = "grid")]
 use crate::compute::grid::DetailedGridInfo;
@@ -249,6 +252,14 @@ impl<NodeContext> PrintTree for TaffyTree<NodeContext> {
                     FlexDirection::Column | FlexDirection::ColumnReverse => "FLEX COL",
                 }
             }
+            #[cfg(feature = "flexbox")]
+            (_, Display::Stack) => {
+                use crate::FlexDirection;
+                match node.style.flex_direction {
+                    FlexDirection::Row | FlexDirection::RowReverse => "STACK ROW",
+                    FlexDirection::Column | FlexDirection::ColumnReverse => "STACK COL",
+                }
+            }
             #[cfg(feature = "grid")]
             (_, Display::Grid) => "GRID",
         }
@@ -318,6 +329,8 @@ where
                 (Display::FlowRoot, true) => compute_block_layout(tree, node_id, inputs, None),
                 #[cfg(feature = "flexbox")]
                 (Display::Flex, true) => compute_flexbox_layout(tree, node_id, inputs),
+                #[cfg(feature = "flexbox")]
+                (Display::Stack, true) => compute_stack_layout(tree, node_id, inputs),
                 #[cfg(feature = "grid")]
                 (Display::Grid, true) => compute_grid_layout(tree, node_id, inputs),
                 (_, false) => {
