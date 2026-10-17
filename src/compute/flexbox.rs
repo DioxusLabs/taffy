@@ -1128,8 +1128,7 @@ fn determine_flex_base_size(
         // The hypothetical main size is the item’s flex base size clamped according to its
         // used min and max main sizes (and flooring the content box size at zero).
 
-        child.inner_flex_basis =
-            child.flex_basis - child.padding.main_axis_sum(constants.dir) - child.border.main_axis_sum(constants.dir);
+        child.inner_flex_basis = child.flex_basis - padding_border_sum;
 
         let padding_border_axes_sums = (child.padding + child.border).sum_axes().map(Some);
 
@@ -1633,7 +1632,8 @@ fn determine_container_main_size(
                             }
                         };
                         item.content_flex_fraction = {
-                            let diff = content_contribution - item.flex_basis;
+                            let diff =
+                                content_contribution - item.margin.main_axis_sum(constants.dir) - item.flex_basis;
                             if diff > 0.0 {
                                 diff / f32_max(1.0, item.flex_grow)
                             } else if diff < 0.0 {
@@ -1663,6 +1663,9 @@ fn determine_container_main_size(
                     // then clamp that result by the max main size floored by the min main size.
                     //
                     // The flex container’s max-content size is the largest sum of the afore-calculated sizes of all items within a single line.
+                    // A wrapping row container is at least as large as its largest item (which matters when another item
+                    // has a negative margin). This matches Chrome. Firefox does not apply this floor.
+                    let mut largest_item_size = 0.0f32;
                     let item_main_size_sum = line
                         .items
                         .iter_mut()
@@ -1682,7 +1685,10 @@ fn determine_container_main_size(
                             } else {
                                 0.0
                             };
-                            let size = item.flex_basis + flex_contribution;
+                            let size = item.flex_basis + flex_contribution + item.margin.main_axis_sum(constants.dir);
+                            if constants.is_wrap && constants.is_row {
+                                largest_item_size = f32_max(largest_item_size, size);
+                            }
                             item.outer_target_size.set_main(constants.dir, size);
                             item.target_size.set_main(constants.dir, size);
                             size
@@ -1690,7 +1696,7 @@ fn determine_container_main_size(
                         .sum::<f32>();
 
                     let gap_sum = sum_axis_gaps(constants.gap.main(constants.dir), line.items.len());
-                    main_size = f32_max(main_size, item_main_size_sum + gap_sum)
+                    main_size = f32_max(main_size, f32_max(largest_item_size, item_main_size_sum + gap_sum))
                 }
 
                 main_size + main_content_box_inset
