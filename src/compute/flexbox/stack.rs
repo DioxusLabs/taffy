@@ -65,9 +65,9 @@ struct StackItem {
     /// The cross-axis offset of this item from its natural flow position
     offset_cross: f32,
 
-    /// Out-of-flow candidates bubbled out of this item's subtree
     /// Whether the max size must be resolved again once the width of the container is known
     max_size_is_stale: bool,
+    /// Out-of-flow candidates bubbled out of this item's subtree
     oof_candidates: OofCandidates,
 }
 
