@@ -8,8 +8,8 @@ pub use crate::{
         LengthPercentageAuto, Position, Style,
     },
     style_helpers::{
-        auto, fit_content, length, max_content, min_content, percent, zero, FromFr, FromLength, FromPercent, TaffyAuto,
-        TaffyFitContent, TaffyMaxContent, TaffyMinContent, TaffyZero,
+        auto, fill, fit_content, length, max_content, min_content, percent, zero, FromFill, FromFr, FromLength,
+        FromPercent, TaffyAuto, TaffyFitContent, TaffyMaxContent, TaffyMinContent, TaffyZero,
     },
     tree::{Layout, LayoutPartialTree, NodeId, PrintTree, RoundTree, TraversePartialTree, TraverseTree},
 };
