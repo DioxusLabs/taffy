@@ -101,21 +101,41 @@ impl<In, Out, T: MaybeResolve<In, Out>> MaybeResolve<Size<In>, Size<Out>> for Si
 impl ResolveOrZero<OptF32, f32> for LengthPercentage {
     /// Will return a default value of result is evaluated to `None`
     fn resolve_or_zero(self, context: OptF32, calc: impl Fn(*const (), f32) -> f32) -> f32 {
-        self.maybe_resolve(context, calc).unwrap_or(0.0)
+        match self.0.tag() {
+            CompactLength::LENGTH_TAG => self.0.value(),
+            CompactLength::PERCENT_TAG => context.map_or(0.0, |dim| dim * self.0.value()),
+            #[cfg(feature = "calc")]
+            _ if self.0.is_plain_calc() => context.map_or(0.0, |dim| calc(self.0.calc_value(), dim)),
+            _ => self.maybe_resolve(context, calc).unwrap_or(0.0),
+        }
     }
 }
 
 impl ResolveOrZero<OptF32, f32> for LengthPercentageAuto {
     /// Will return a default value of result is evaluated to `None`
     fn resolve_or_zero(self, context: OptF32, calc: impl Fn(*const (), f32) -> f32) -> f32 {
-        self.maybe_resolve(context, calc).unwrap_or(0.0)
+        match self.0.tag() {
+            CompactLength::AUTO_TAG => 0.0,
+            CompactLength::LENGTH_TAG => self.0.value(),
+            CompactLength::PERCENT_TAG => context.map_or(0.0, |dim| dim * self.0.value()),
+            #[cfg(feature = "calc")]
+            _ if self.0.is_plain_calc() => context.map_or(0.0, |dim| calc(self.0.calc_value(), dim)),
+            _ => self.maybe_resolve(context, calc).unwrap_or(0.0),
+        }
     }
 }
 
 impl ResolveOrZero<OptF32, f32> for Dimension {
     /// Will return a default value of result is evaluated to `None`
     fn resolve_or_zero(self, context: OptF32, calc: impl Fn(*const (), f32) -> f32) -> f32 {
-        self.maybe_resolve(context, calc).unwrap_or(0.0)
+        match self.0.tag() {
+            CompactLength::AUTO_TAG => 0.0,
+            CompactLength::LENGTH_TAG => self.0.value(),
+            CompactLength::PERCENT_TAG => context.map_or(0.0, |dim| dim * self.0.value()),
+            #[cfg(feature = "calc")]
+            _ if self.0.is_plain_calc() => context.map_or(0.0, |dim| calc(self.0.calc_value(), dim)),
+            _ => self.maybe_resolve(context, calc).unwrap_or(0.0),
+        }
     }
 }
 
