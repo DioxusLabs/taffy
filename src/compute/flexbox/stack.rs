@@ -65,10 +65,37 @@ struct StackItem {
     /// The cross-axis offset of this item from its natural flow position
     offset_cross: f32,
 
-    /// Whether the max size must be resolved again once the width of the container is known
-    max_size_is_stale: bool,
     /// Out-of-flow candidates bubbled out of this item's subtree
     oof_candidates: OofCandidates,
+    /// The layout of the item if it was laid out (rather than measured) to determine its main size
+    speculative_layout: Option<SpeculativeLayout>,
+}
+
+/// The parts of the output of an item's layout that the final layout pass uses. Its out-of-flow candidates
+/// are stored in `StackItem::oof_candidates`.
+#[derive(Copy, Clone)]
+struct SpeculativeLayout {
+    /// The size of the item
+    size: Size<f32>,
+    /// The scrollable overflow of the item
+    #[cfg(feature = "content_size")]
+    scrollable_overflow_rect: Rect<f32>,
+    /// The first baseline of the item
+    first_baseline: Option<f32>,
+}
+
+impl SpeculativeLayout {
+    /// Keep the output of a layout of `item`
+    #[inline(always)]
+    fn store(item: &mut StackItem, mut output: LayoutOutput) {
+        item.oof_candidates = output.oof_candidates.take();
+        item.speculative_layout = Some(SpeculativeLayout {
+            size: output.size,
+            #[cfg(feature = "content_size")]
+            scrollable_overflow_rect: output.scrollable_overflow_rect,
+            first_baseline: output.baselines.first,
+        });
+    }
 }
 
 impl StackItem {
@@ -79,11 +106,14 @@ impl StackItem {
         main_size.is_fill().then(|| main_size.value())
     }
 
-    /// Whether the used cross size of the item is the cross size of the container's line
+    /// Whether the used cross size of the item is the cross size of the container's line. Items are only
+    /// stretched to a definite cross size: a cross size derived from the items' content is never a stretch target.
     #[inline(always)]
-    fn is_stretched(&self, dir: FlexDirection) -> bool {
+    fn is_stretched(&self, constants: &AlgoConstants) -> bool {
+        let dir = constants.dir;
         let cross_size = self.size_style.cross(dir);
-        !self.margin_is_auto.cross_start(dir)
+        constants.has_definite_cross_size
+            && !self.margin_is_auto.cross_start(dir)
             && !self.margin_is_auto.cross_end(dir)
             && (cross_size.is_stretch_or_fill() || (self.align_self == AlignSelf::STRETCH && cross_size.is_auto()))
     }
@@ -100,10 +130,15 @@ impl StackItem {
     #[inline(always)]
     fn known_dimension_definiteness(&self, constants: &AlgoConstants) -> Size<bool> {
         let dir = constants.dir;
-        let main_is_definite = constants.has_definite_main_size || self.main_size_is_definite;
-        let cross_is_definite = self.is_stretched(dir)
-            || self.size.cross(dir).is_some()
-            || (!dir.is_row() && constants.cross_axis_available_space_is_definite);
+        // Only a content-based main size is not definite: an `fl` size never depends on the item's content
+        // A minimum size that is not less than the maximum size determines the size
+        let min_max_is_definite = self.min_size.zip_map(self.max_size, |min, max| match (min, max) {
+            (Some(min), Some(max)) => max <= min,
+            _ => false,
+        });
+        let main_is_definite = self.main_size_is_definite || min_max_is_definite.main(dir);
+        let cross_is_definite =
+            self.is_stretched(constants) || self.size.cross(dir).is_some() || min_max_is_definite.cross(dir);
         Size { width: true, height: true }.with_main(dir, main_is_definite).with_cross(dir, cross_is_definite)
     }
 }
@@ -134,29 +169,37 @@ pub(super) fn compute_preliminary(
     }
     let dir = constants.dir;
     let available_space = determine_available_space(known_dimensions, available_space, &constants);
+    let speculate = run_mode == RunMode::PerformLayout;
+
+    // Percentages resolve against the container's inner size only where that size is definite: a size that
+    // depends on the container's content is never a percentage basis
+    let mut percent_basis = constants.node_inner_size;
+    if !constants.known_main_size_is_definite {
+        percent_basis.set_main(dir, None);
+    }
+    if !constants.has_definite_cross_size {
+        percent_basis.set_cross(dir, None);
+    }
+
+    let style = tree.get_flexbox_container_style(node);
+    constants.gap = style.gap().resolve_or_zero(percent_basis.or(Size::zero()), |val, basis| tree.calc(val, basis));
+    drop(style);
 
     // Generate the items and determine the base and hypothetical main size of each one
-    let mut items = generate_items(tree, node, &constants, available_space);
+    let mut items = generate_items(tree, node, &constants, available_space, percent_basis, speculate);
 
     // Determine the main size of the container
     if let Some(inner_main_size) = constants.node_inner_size.main(dir) {
+        // The inner size is floored at zero, as it is when the main size is determined from the items
         let outer_main_size = inner_main_size + constants.content_box_inset.main_axis_sum(dir);
+        let inner_main_size = f32_max(inner_main_size, 0.0);
+        constants.node_inner_size.set_main(dir, Some(inner_main_size));
         constants.inner_container_size.set_main(dir, inner_main_size);
         constants.container_size.set_main(dir, outer_main_size);
     } else {
-        determine_container_main_size(available_space, &items, &mut constants);
+        determine_container_main_size(&items, &mut constants);
         constants.node_inner_size.set_main(dir, Some(constants.inner_container_size.main(dir)));
         constants.node_outer_size.set_main(dir, Some(constants.container_size.main(dir)));
-
-        // Re-resolve percentage gaps
-        let style = tree.get_flexbox_container_style(node);
-        let inner_container_size = constants.inner_container_size.main(dir);
-        let new_gap = style
-            .gap()
-            .main(dir)
-            .maybe_resolve(inner_container_size, |val, basis| tree.calc(val, basis))
-            .unwrap_or(0.0);
-        constants.gap.set_main(dir, new_gap);
     }
 
     // If only the container's main size has been requested then we are done, as nothing below changes it
@@ -176,29 +219,22 @@ pub(super) fn compute_preliminary(
     resolve_main_sizes(&mut items, &constants);
 
     // Determine the cross size of the line and the used cross size of each item
-    determine_hypothetical_cross_sizes(tree, &mut items, &constants, known_dimensions, available_space);
-    calculate_baselines(tree, known_dimensions, available_space, &mut items, &constants);
+    determine_hypothetical_cross_sizes(
+        tree,
+        &mut items,
+        &constants,
+        known_dimensions,
+        available_space,
+        percent_basis,
+        speculate,
+    );
+    calculate_baselines(tree, known_dimensions, available_space, &mut items, &constants, percent_basis);
     let line_cross_size = calculate_line_cross_size(&items, known_dimensions, &constants);
     for item in items.iter_mut() {
-        let cross_size = if item.is_stretched(dir) {
-            let max_cross_size = if item.max_size_is_stale {
-                // Percentage padding and border resolve against the width of the container, which was not
-                // known when the item was generated
-                let child_style = tree.get_flexbox_child_style(item.node);
-                let inner_width = constants.node_inner_size.width;
-                let padding = child_style.padding().resolve_or_zero(inner_width, |val, basis| tree.calc(val, basis));
-                let border = child_style.border().resolve_or_zero(inner_width, |val, basis| tree.calc(val, basis));
-                child_style
-                    .max_size()
-                    .maybe_resolve(constants.node_inner_size, |val, basis| tree.calc(val, basis))
-                    .maybe_add((padding + border).sum_axes())
-                    .cross(dir)
-            } else {
-                item.max_size.cross(dir)
-            };
+        let cross_size = if item.is_stretched(&constants) {
             (line_cross_size - item.margin.cross_axis_sum(dir))
                 .max(0.0)
-                .maybe_clamp(item.min_size.cross(dir), max_cross_size)
+                .maybe_clamp(item.min_size.cross(dir), item.max_size.cross(dir))
         } else {
             item.hypothetical_cross_size
         };
@@ -232,7 +268,8 @@ pub(super) fn compute_preliminary(
     };
 
     // Do a final layout pass and gather the resulting layouts
-    let inflow_overflow_rect = final_layout_pass(tree, &mut items, line_cross_size, line_offset_cross, &constants);
+    let inflow_overflow_rect =
+        final_layout_pass(tree, &mut items, line_cross_size, line_offset_cross, &constants, percent_basis);
 
     let mut candidates = OofCandidates::new();
     collect_oof_candidates(
@@ -300,12 +337,12 @@ fn generate_items(
     node: NodeId,
     constants: &AlgoConstants,
     available_space: Size<AvailableSpace>,
+    percent_basis: Size<Option<f32>>,
+    speculate: bool,
 ) -> Vec<StackItem> {
     let dir = constants.dir;
     let node_inner_size = constants.node_inner_size;
-    // Percentage sizes of items resolve against the container's inner size, but only if that size is definite
-    let percent_resolution_size =
-        if constants.known_main_size_is_definite { node_inner_size } else { node_inner_size.with_main(dir, None) };
+    let percent_resolution_size = percent_basis;
     let percent_resolution_main_size = percent_resolution_size.main(dir);
 
     let mut items: Vec<StackItem> = Vec::new();
@@ -317,8 +354,8 @@ fn generate_items(
         }
 
         let aspect_ratio = child_style.aspect_ratio();
-        let padding = child_style.padding().resolve_or_zero(node_inner_size.width, |val, basis| tree.calc(val, basis));
-        let border = child_style.border().resolve_or_zero(node_inner_size.width, |val, basis| tree.calc(val, basis));
+        let padding = child_style.padding().resolve_or_zero(percent_basis.width, |val, basis| tree.calc(val, basis));
+        let border = child_style.border().resolve_or_zero(percent_basis.width, |val, basis| tree.calc(val, basis));
         let pb_sum = (padding + border).sum_axes();
         let is_content_box = child_style.box_sizing() == BoxSizing::ContentBox;
         let box_sizing_adjustment = if is_content_box { pb_sum } else { Size::ZERO };
@@ -343,12 +380,12 @@ fn generate_items(
             relative_inset: if child_style.position() == Position::Relative {
                 let inset = child_style
                     .inset()
-                    .zip_size(node_inner_size, |p, s| p.maybe_resolve(s, |val, basis| tree.calc(val, basis)));
+                    .zip_size(percent_basis, |p, s| p.maybe_resolve(s, |val, basis| tree.calc(val, basis)));
                 resolve_relative_inset(inset, constants)
             } else {
                 Size::ZERO
             },
-            margin: child_style.margin().resolve_or_zero(node_inner_size.width, |val, basis| tree.calc(val, basis)),
+            margin: child_style.margin().resolve_or_zero(percent_basis.width, |val, basis| tree.calc(val, basis)),
             margin_is_auto: child_style.margin().map(LengthPercentageAuto::is_auto),
             padding,
             border,
@@ -367,8 +404,8 @@ fn generate_items(
             baseline: 0.0,
             offset_main: 0.0,
             offset_cross: 0.0,
-            max_size_is_stale: is_content_box && node_inner_size.width.is_none(),
             oof_candidates: OofCandidates::NONE,
+            speculative_layout: None,
         };
         drop(child_style);
 
@@ -421,15 +458,13 @@ fn generate_items(
             let mut child_cross_size_is_definite = item.size.cross(dir).is_some();
             let child_known_dimensions = {
                 let mut ckd = item.size.with_main(dir, None);
-                ckd.set_cross(dir, ckd.cross(dir).maybe_clamp(child_min_cross, child_max_cross));
-                if item.align_self == AlignSelf::STRETCH
-                    && !item.margin_is_auto.cross_start(dir)
-                    && !item.margin_is_auto.cross_end(dir)
-                    && ckd.cross(dir).is_none()
-                {
+                ckd.set_cross(
+                    dir,
+                    ckd.cross(dir).maybe_clamp(child_min_cross, child_max_cross).maybe_max(pb_sum.cross(dir)),
+                );
+                if item.is_stretched(constants) && ckd.cross(dir).is_none() {
                     ckd.set_cross(dir, cross_axis_available_space.into_option());
-                    child_cross_size_is_definite =
-                        constants.has_definite_cross_size && cross_axis_parent_size.is_some();
+                    child_cross_size_is_definite = true;
                 }
                 ckd
             };
@@ -454,15 +489,45 @@ fn generate_items(
                     ),
                 )
                 .with_cross(dir, cross_axis_available_space);
-            tree.measure_child_size(
-                child,
-                child_known_dimensions,
-                Size::from_cross(dir, cross_axis_parent_size),
-                child_available_space,
-                SizingMode::ContentSize,
-                dir.main_axis(),
-                Line::FALSE,
-            )
+            // Lay the item out rather than measuring it if its final size is expected to be the size it
+            // returns: that layout is then reused by the final layout pass
+            let can_speculate = speculate
+                && transferred_min_size.main(dir).is_none()
+                && transferred_max_size.main(dir).is_none()
+                && (child_known_dimensions.cross(dir).is_some()
+                    || (transferred_min_size.cross(dir).is_none()
+                        && transferred_max_size.cross(dir).is_none()
+                        && cross_axis_available_space
+                            == cross_measure_available_space(tree, &item, constants, available_space, percent_basis)))
+                && !item.participates_in_baseline_alignment(dir);
+            if can_speculate {
+                let output = tree.compute_child_layout(
+                    child,
+                    LayoutInput {
+                        run_mode: RunMode::PerformLayout,
+                        sizing_mode: SizingMode::ContentSize,
+                        axis: RequestedAxis::Both,
+                        known_dimensions: child_known_dimensions,
+                        known_dimensions_are_definite: item.known_dimension_definiteness(constants),
+                        parent_size: percent_basis,
+                        available_space: child_available_space,
+                        vertical_margins_are_collapsible: Line::FALSE,
+                    },
+                );
+                let main_size = output.size.main(dir);
+                SpeculativeLayout::store(&mut item, output);
+                main_size
+            } else {
+                tree.measure_child_size(
+                    child,
+                    child_known_dimensions,
+                    percent_basis,
+                    child_available_space,
+                    SizingMode::ContentSize,
+                    dir.main_axis(),
+                    Line::FALSE,
+                )
+            }
         };
 
         let padding_border_main = pb_sum.main(dir);
@@ -482,60 +547,16 @@ fn generate_items(
 /// Determine the main size of a container whose main size is not known: its items are not flexed, so it
 /// is the sum of their main sizes
 #[inline]
-fn determine_container_main_size(
-    available_space: Size<AvailableSpace>,
-    items: &[StackItem],
-    constants: &mut AlgoConstants,
-) {
+fn determine_container_main_size(items: &[StackItem], constants: &mut AlgoConstants) {
     let dir = constants.dir;
     let main_content_box_inset = constants.content_box_inset.main_axis_sum(dir);
     let gap_sum = sum_axis_gaps(constants.gap.main(dir), items.len());
 
-    let items_main_size: f32 = match available_space.main(dir) {
-        AvailableSpace::Definite(_) => items
-            .iter()
-            .map(|item| {
-                let padding_border_sum = (item.padding + item.border).main_axis_sum(dir);
-                (item.base_main_size.maybe_max(item.min_size.main(dir)) + item.margin.main_axis_sum(dir))
-                    .max(padding_border_sum)
-            })
-            .sum(),
-        AvailableSpace::MinContent | AvailableSpace::MaxContent => items
-            .iter()
-            .map(|item| {
-                let margin = item.margin.main_axis_sum(dir);
-                let content_contribution = if item.size_style.main(dir).is_fill() {
-                    item.hypothetical_main_size + margin
-                } else {
-                    let basis = if constants.is_row {
-                        item.base_main_size.maybe_max(item.size.main(dir))
-                    } else {
-                        item.base_main_size
-                    };
-                    basis.maybe_max(item.min_size.main(dir)).max(0.0) + margin
-                };
-                // This is computed as for a flex item that neither grows nor shrinks, so that the result
-                // is exactly the same
-                let diff = content_contribution - item.base_main_size;
-                if diff < 0.0 {
-                    let inner_base_main_size =
-                        item.base_main_size - item.padding.main_axis_sum(dir) - item.border.main_axis_sum(dir);
-                    if inner_base_main_size == 0.0 {
-                        item.base_main_size
-                    } else {
-                        item.base_main_size + inner_base_main_size * (diff / inner_base_main_size)
-                    }
-                } else {
-                    item.base_main_size + diff
-                }
-            })
-            .sum::<f32>(),
-    };
-    // The content size is floored at zero when sizing under a min-content or max-content constraint
-    let content_main_size = match available_space.main(dir) {
-        AvailableSpace::Definite(_) => items_main_size + gap_sum,
-        AvailableSpace::MinContent | AvailableSpace::MaxContent => f32_max(items_main_size + gap_sum, 0.0),
-    };
+    // Each item contributes its hypothetical main size and its margins, whatever the kind of space that
+    // the container is sized in
+    let items_main_size: f32 =
+        items.iter().map(|item| item.hypothetical_main_size + item.margin.main_axis_sum(dir)).sum();
+    let content_main_size = f32_max(items_main_size + gap_sum, 0.0);
 
     let outer_main_size = (content_main_size + main_content_box_inset)
         .maybe_clamp(constants.min_size.main(dir), constants.max_size.main(dir))
@@ -612,12 +633,25 @@ fn determine_hypothetical_cross_sizes(
     constants: &AlgoConstants,
     node_size: Size<Option<f32>>,
     available_space: Size<AvailableSpace>,
+    percent_basis: Size<Option<f32>>,
+    speculate: bool,
 ) {
     let dir = constants.dir;
     let line_cross_size_is_known = node_size.cross(dir).is_some();
 
     for child in items.iter_mut() {
-        if line_cross_size_is_known && child.is_stretched(dir) && !child.participates_in_baseline_alignment(dir) {
+        if line_cross_size_is_known && child.is_stretched(constants) && !child.participates_in_baseline_alignment(dir) {
+            continue;
+        }
+        if let Some(output) = &child.speculative_layout {
+            child.hypothetical_cross_size = output
+                .size
+                .cross(dir)
+                .maybe_clamp(
+                    child.min_size.maybe_apply_aspect_ratio(child.aspect_ratio).cross(dir),
+                    child.max_size.maybe_apply_aspect_ratio(child.aspect_ratio).cross(dir),
+                )
+                .max((child.padding + child.border).cross_axis_sum(dir));
             continue;
         }
 
@@ -633,43 +667,58 @@ fn determine_hypothetical_cross_sizes(
         child.hypothetical_cross_size = child_cross.unwrap_or_else(|| {
             let child_available_main: AvailableSpace =
                 (constants.container_size.main(dir) - child.margin.main_axis_sum(dir)).max(0.0).into();
-            let child_available_cross = available_space
-                .cross(dir)
-                .map_definite_value(|val| (val - child.margin.cross_axis_sum(dir)).max(0.0))
-                .maybe_clamp(transferred_min_cross, transferred_max_cross)
-                .maybe_max(padding_border_sum);
-            let cross_stretch_size =
-                constants.node_inner_size.cross(dir).maybe_sub(child.margin.cross_axis_sum(dir)).maybe_max(0.0);
-            let child_available_cross = match resolve_sizing_keyword(
-                child.size_style.cross(dir),
-                cross_stretch_size,
-                constants.node_inner_size.cross(dir),
-                |val, basis| tree.calc(val, basis),
-            ) {
-                Some(SizingKeywordResolution::Measure(available)) => available,
-                _ => child_available_cross,
-            };
+            let child_available_cross =
+                cross_measure_available_space(tree, child, constants, available_space, percent_basis);
 
-            tree.compute_child_layout(
-                child.node,
-                LayoutInput {
-                    run_mode: RunMode::ComputeSize,
-                    sizing_mode: SizingMode::ContentSize,
-                    axis: dir.cross_axis().into(),
-                    known_dimensions: Size::NONE.with_main(dir, Some(child.target_size.main(dir))),
-                    known_dimensions_are_definite: child.known_dimension_definiteness(constants),
-                    parent_size: constants.node_inner_size,
-                    available_space: Size::MAX_CONTENT
-                        .with_main(dir, child_available_main)
-                        .with_cross(dir, child_available_cross),
-                    vertical_margins_are_collapsible: Line::FALSE,
-                },
-            )
-            .size
-            .get_abs(dir.cross_axis())
-            .maybe_clamp(transferred_min_cross, transferred_max_cross)
-            .max(padding_border_sum)
+            let can_speculate = speculate && !child.participates_in_baseline_alignment(dir);
+            let inputs = LayoutInput {
+                run_mode: if can_speculate { RunMode::PerformLayout } else { RunMode::ComputeSize },
+                sizing_mode: SizingMode::ContentSize,
+                axis: if can_speculate { RequestedAxis::Both } else { dir.cross_axis().into() },
+                known_dimensions: Size::NONE.with_main(dir, Some(child.target_size.main(dir))),
+                known_dimensions_are_definite: child.known_dimension_definiteness(constants),
+                parent_size: percent_basis,
+                available_space: Size::MAX_CONTENT
+                    .with_main(dir, child_available_main)
+                    .with_cross(dir, child_available_cross),
+                vertical_margins_are_collapsible: Line::FALSE,
+            };
+            let output = tree.compute_child_layout(child.node, inputs);
+            let cross_size = output.size.get_abs(dir.cross_axis());
+            if can_speculate {
+                SpeculativeLayout::store(child, output);
+            }
+            cross_size.maybe_clamp(transferred_min_cross, transferred_max_cross).max(padding_border_sum)
         });
+    }
+}
+
+/// The cross-axis available space that an item whose cross size is not known is measured or laid out in
+#[inline]
+fn cross_measure_available_space(
+    tree: &impl LayoutFlexboxContainer,
+    child: &StackItem,
+    constants: &AlgoConstants,
+    available_space: Size<AvailableSpace>,
+    percent_basis: Size<Option<f32>>,
+) -> AvailableSpace {
+    let dir = constants.dir;
+    let cross_stretch_size = percent_basis.cross(dir).maybe_sub(child.margin.cross_axis_sum(dir)).maybe_max(0.0);
+    match resolve_sizing_keyword(
+        child.size_style.cross(dir),
+        cross_stretch_size,
+        percent_basis.cross(dir),
+        |val, basis| tree.calc(val, basis),
+    ) {
+        Some(SizingKeywordResolution::Measure(available)) => available,
+        _ => available_space
+            .cross(dir)
+            .map_definite_value(|val| (val - child.margin.cross_axis_sum(dir)).max(0.0))
+            .maybe_clamp(
+                child.min_size.maybe_apply_aspect_ratio(child.aspect_ratio).cross(dir),
+                child.max_size.maybe_apply_aspect_ratio(child.aspect_ratio).cross(dir),
+            )
+            .maybe_max((child.padding + child.border).cross_axis_sum(dir)),
     }
 }
 
@@ -681,6 +730,7 @@ fn calculate_baselines(
     available_space: Size<AvailableSpace>,
     items: &mut [StackItem],
     constants: &AlgoConstants,
+    percent_basis: Size<Option<f32>>,
 ) {
     let dir = constants.dir;
     if !constants.is_row {
@@ -706,7 +756,7 @@ fn calculate_baselines(
                     height: Some(child.hypothetical_cross_size),
                 },
                 known_dimensions_are_definite: child.known_dimension_definiteness(constants),
-                parent_size: constants.node_inner_size,
+                parent_size: percent_basis,
                 available_space: Size {
                     width: constants.container_size.width.into(),
                     height: available_space.height.maybe_set(node_size.height),
@@ -754,6 +804,7 @@ fn calculate_line_cross_size(items: &[StackItem], node_size: Size<Option<f32>>, 
                 cross_min_size.maybe_sub(cross_axis_padding_border),
                 cross_max_size.maybe_sub(cross_axis_padding_border),
             )
+            .max(0.0)
     };
 
     // `align-content: stretch` grows the line to the container's minimum cross size
@@ -884,6 +935,7 @@ fn final_layout_pass(
     line_cross_size: f32,
     line_offset_cross: f32,
     constants: &AlgoConstants,
+    percent_basis: Size<Option<f32>>,
 ) -> Rect<f32> {
     let dir = constants.dir;
     let container_size = constants.container_size;
@@ -907,25 +959,32 @@ fn final_layout_pass(
     let mut overflow_rect = Rect::ZERO;
 
     let mut layout_item = |item: &mut StackItem| {
-        let mut layout_output = tree.compute_child_layout(
-            item.node,
-            LayoutInput {
-                run_mode: RunMode::PerformLayout,
-                sizing_mode: SizingMode::ContentSize,
-                axis: RequestedAxis::Both,
-                known_dimensions: item.target_size.map(|s| s.into()),
-                known_dimensions_are_definite: item.known_dimension_definiteness(constants),
-                parent_size: constants.node_inner_size,
-                available_space: (container_size - item.margin.sum_axes()).map(|s| s.max(0.0).into()),
-                vertical_margins_are_collapsible: Line::FALSE,
-            },
-        );
-        let LayoutOutput {
+        let speculative_layout = item.speculative_layout.take().filter(|output| output.size == item.target_size);
+        let SpeculativeLayout {
             size,
             #[cfg(feature = "content_size")]
             scrollable_overflow_rect,
-            ..
-        } = layout_output;
+            first_baseline,
+        } = match speculative_layout {
+            Some(layout) => layout,
+            None => {
+                let output = tree.compute_child_layout(
+                    item.node,
+                    LayoutInput {
+                        run_mode: RunMode::PerformLayout,
+                        sizing_mode: SizingMode::ContentSize,
+                        axis: RequestedAxis::Both,
+                        known_dimensions: item.target_size.map(|s| s.into()),
+                        known_dimensions_are_definite: item.known_dimension_definiteness(constants),
+                        parent_size: percent_basis,
+                        available_space: (container_size - item.margin.sum_axes()).map(|s| s.max(0.0).into()),
+                        vertical_margins_are_collapsible: Line::FALSE,
+                    },
+                );
+                SpeculativeLayout::store(item, output);
+                item.speculative_layout.take().unwrap()
+            }
+        };
 
         let main_relative_inset = item.relative_inset.main(dir);
         let offset_main = if is_rtl_row {
@@ -939,8 +998,7 @@ fn final_layout_pass(
             + item.margin.cross_start(dir)
             + item.relative_inset.cross(dir);
 
-        let inner_baseline =
-            child_first_baseline(layout_output.baselines.first, size.height, item.overflow.y).unwrap_or(size.height);
+        let inner_baseline = child_first_baseline(first_baseline, size.height, item.overflow.y).unwrap_or(size.height);
         item.baseline = inner_baseline
             + if dir.is_row() {
                 total_offset_cross + item.offset_cross + effective_line_offset_cross + item.margin.cross_start(dir)
@@ -973,7 +1031,6 @@ fn final_layout_pass(
             },
         );
 
-        item.oof_candidates = layout_output.oof_candidates.take();
         if !item.oof_candidates.is_empty() {
             item.oof_candidates.translate(location);
         }
