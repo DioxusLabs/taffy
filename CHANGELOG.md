@@ -10,6 +10,7 @@
   - Everywhere else, `fl` resolves like `stretch`.
   - In a container that is sized to its content, an `fl` item or track contributes its minimum size (zero by default).
   - `ExpandedDimension` and `ExpandedMaxTrackSizingFunction` gain a `Fill` variant.
+- `Display::Stack` (and `compute_stack_layout`): a single row or column, in the direction set by `flex_direction`, whose items are never flexed. `flex_grow`, `flex_shrink`, `flex_basis` and `flex_wrap` are not used, and items have no automatic minimum size, so an item's content is measured at most once for its main size. Items take up free space by having a main size of `fl`, and overflow if there is none. `gap`, `align_items`, `align_self` and `justify_content` apply as in Flexbox. Requires the `flexbox` feature.
 
 ### Fixed
 
