@@ -347,6 +347,10 @@ impl OofAxis {
 /// claimed by the final root positioning pass in [`compute_root_layout`](crate::compute_root_layout).
 pub fn compute_oof_layout(tree: &mut impl LayoutContainingBlock, node_id: NodeId, output: &mut LayoutOutput) {
     let Some(area) = output.oof_positioning_area else { return };
+    if output.oof_candidates.is_empty() {
+        tree.clear_hoisted_children(node_id);
+        return;
+    }
 
     let style = tree.get_core_container_style(node_id);
     let direction = style.direction();
