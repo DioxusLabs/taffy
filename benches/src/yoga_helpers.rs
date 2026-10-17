@@ -203,6 +203,7 @@ fn apply_taffy_style(node: &mut yg::Node, style: &tf::Style) {
     node.set_display(match style.display {
         tf::Display::None => yg::Display::None,
         tf::Display::Flex => yg::Display::Flex,
+        tf::Display::Stack => panic!("Yoga does not support Stack layout"),
         tf::Display::Grid => panic!("Yoga does not support CSS Grid layout"),
         tf::Display::Block => panic!("Yoga does not support CSS Block layout"),
         tf::Display::FlowRoot => panic!("Yoga does not support CSS Block layout"),

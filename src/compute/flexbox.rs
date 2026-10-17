@@ -25,6 +25,8 @@ use super::common::alignment::apply_alignment_fallback;
 use super::common::scrollable_overflow::compute_scrollable_overflow_contribution;
 use super::common::sizing_keyword::{resolve_sizing_keyword, SizingKeywordResolution};
 
+mod stack;
+
 /// The intermediate results of a flexbox calculation for a single item
 struct FlexItem {
     /// The identifier for the associated node
@@ -264,6 +266,25 @@ pub fn compute_flexbox_layout(
     tree: &mut impl LayoutFlexboxContainer,
     node: NodeId,
     inputs: LayoutInput,
+) -> LayoutOutput {
+    compute_container_layout(tree, node, inputs, compute_preliminary)
+}
+
+/// Computes the layout of a box according to the stack algorithm ([`Display::Stack`](crate::Display::Stack)).
+///
+/// A stack lays its items out in a single line along `flex_direction` and aligns them like a flexbox container,
+/// but never flexes them: `flex_grow`, `flex_shrink`, `flex_basis` and `flex_wrap` are not used, and items have
+/// no automatic minimum size and overflow rather than shrink. Items take up free space with `fl`.
+pub fn compute_stack_layout(tree: &mut impl LayoutFlexboxContainer, node: NodeId, inputs: LayoutInput) -> LayoutOutput {
+    compute_container_layout(tree, node, inputs, stack::compute_preliminary)
+}
+
+/// Resolves the container's own size styles, then runs `compute_preliminary` (the flexbox or the stack algorithm)
+fn compute_container_layout<Tree: LayoutFlexboxContainer>(
+    tree: &mut Tree,
+    node: NodeId,
+    inputs: LayoutInput,
+    compute_preliminary: impl FnOnce(&mut Tree, NodeId, LayoutInput) -> LayoutOutput,
 ) -> LayoutOutput {
     let LayoutInput { known_dimensions, parent_size, run_mode, .. } = inputs;
     let style = tree.get_flexbox_container_style(node);
