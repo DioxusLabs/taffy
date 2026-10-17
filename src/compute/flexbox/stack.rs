@@ -124,6 +124,14 @@ pub(super) fn compute_preliminary(
         parent_size,
         available_space,
     );
+    // A stack is always a single line: `flex_wrap` is not used
+    constants.is_wrap = false;
+    constants.is_wrap_reverse = false;
+    #[cfg(feature = "flexbox_balance")]
+    {
+        constants.is_balance = false;
+        constants.line_count = None;
+    }
     let dir = constants.dir;
     let available_space = determine_available_space(known_dimensions, available_space, &constants);
 
