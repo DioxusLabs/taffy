@@ -1,0 +1,15 @@
+<test name="intrinsic_sizing_main_size_column_wrap_negative_margin_multiple_items__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="flex" box-sizing="content-box" direction="ltr" position="absolute" flex-direction="column" flex-wrap="wrap">
+      <div box-sizing="content-box" direction="ltr" position="relative" height="100px"/>
+      <div box-sizing="content-box" direction="ltr" position="relative" height="0px" margin-top="-10px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="0" height="90">
+      <node x="0" y="0" width="0" height="100"/>
+      <node x="0" y="90" width="0" height="0"/>
+    </node>
+  </expectations>
+</test>

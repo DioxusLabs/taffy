@@ -14,6 +14,7 @@
 - Grid: a grid container's baseline is taken from the final layout of the item that provides it. Previously, an item that was not baseline-aligned (or was the only baseline-aligned item in its row) provided its bottom edge instead of its baseline, and the top margin of a baseline-aligned item was counted twice.
 - Block, Grid: the relative offset of the child that provides a block or grid container's baseline no longer moves the container's baseline (matching Flexbox).
 - Flexbox: a column flex container's baseline taken from a scroll container item is now clamped to the item's border box (matching row flex containers, Block and Grid).
+- Flexbox: fix the intrinsic main size of a flex container that has an item with a negative main-axis margin and a flex basis equal to its padding and border. The margin was ignored, and for some padding and border values a floating-point rounding error made the container tens of millions of pixels large.
 
 ## 0.15.0
 

@@ -1,0 +1,13 @@
+<test name="intrinsic_sizing_main_size_column_negative_margin_padding_border__content_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="flex" box-sizing="content-box" direction="rtl" position="absolute" flex-direction="column">
+      <div box-sizing="content-box" direction="rtl" position="relative" margin-top="-2px" padding-top="5px" border-bottom="1px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="0" height="4">
+      <node x="0" y="-2" width="0" height="6"/>
+    </node>
+  </expectations>
+</test>
