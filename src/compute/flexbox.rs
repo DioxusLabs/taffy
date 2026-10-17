@@ -84,8 +84,6 @@ struct FlexItem {
     violation: f32,
     /// Is the size of this item locked
     frozen: bool,
-    /// Whether the item's size styles exclude padding and border (`box-sizing: content-box`)
-    is_content_box: bool,
 
     /// Either the max- or min- content flex fraction
     /// See https://www.w3.org/TR/css-flexbox-1/#intrinsic-main-sizes
@@ -121,8 +119,8 @@ struct FlexItem {
 
 impl FlexItem {
     /// The size that the item's size styles exclude: padding + border for `box-sizing: content-box`, otherwise zero
-    fn box_sizing_adjustment(&self) -> Size<f32> {
-        if self.is_content_box {
+    fn box_sizing_adjustment(&self, style: &impl CoreStyle) -> Size<f32> {
+        if style.box_sizing() == BoxSizing::ContentBox {
             (self.padding + self.border).sum_axes()
         } else {
             Size::ZERO
@@ -772,8 +770,11 @@ fn generate_anonymous_flex_items(
             let border = child_style
                 .border()
                 .resolve_or_zero(constants.node_inner_size.width, |val, basis| tree.calc(val, basis));
-            let is_content_box = child_style.box_sizing() == BoxSizing::ContentBox;
-            let box_sizing_adjustment = if is_content_box { (padding + border).sum_axes() } else { Size::ZERO };
+            let box_sizing_adjustment = if child_style.box_sizing() == BoxSizing::ContentBox {
+                (padding + border).sum_axes()
+            } else {
+                Size::ZERO
+            };
             FlexItem {
                 node: child,
                 order: index as u32,
@@ -819,7 +820,6 @@ fn generate_anonymous_flex_items(
                 inner_flex_basis: 0.0,
                 violation: 0.0,
                 frozen: false,
-                is_content_box,
 
                 resolved_minimum_main_size: 0.0,
                 hypothetical_inner_size: Size::zero(),
@@ -976,7 +976,7 @@ fn determine_flex_base_size(
             ckd
         };
 
-        let box_sizing_adjustment = child.box_sizing_adjustment().main(dir);
+        let box_sizing_adjustment = child.box_sizing_adjustment(&child_style).main(dir);
         // Percentage flex basis values resolve against the container's inner main size, but only
         // if that size is definite. A known main size which is derived from the container's own
         // content is treated as indefinite here.
@@ -2211,7 +2211,7 @@ fn determine_used_cross_size(
                     // a reasonable interpretation. Although it seems to me that the spec *should* apply aspect_ratio here.
                     // Percentage padding and border resolve against the container's inline size
                     // (its width) on all four sides, not against its height for the top/bottom sides
-                    let box_sizing_adjustment = child.box_sizing_adjustment();
+                    let box_sizing_adjustment = child.box_sizing_adjustment(&child_style);
 
                     let max_size_ignoring_aspect_ratio = child_style
                         .max_size()
