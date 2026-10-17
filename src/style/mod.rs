@@ -258,6 +258,12 @@ pub enum Display {
     /// The children will follow the flexbox layout algorithm
     #[cfg(feature = "flexbox")]
     Flex,
+    /// The children are laid out in a single row or column (set by `flex_direction`) and are never flexed:
+    /// `flex_grow`, `flex_shrink`, `flex_basis` and `flex_wrap` are not used, and items have no automatic
+    /// minimum size. An item takes up free space by having a main size of `fl`, and overflows if there is none.
+    /// Items are only stretched to, and their percentages only resolve against, a definite size of the container.
+    #[cfg(feature = "flexbox")]
+    Stack,
     /// The children will follow the CSS Grid layout algorithm
     #[cfg(feature = "grid")]
     Grid,
@@ -294,6 +300,8 @@ crate::util::parse::impl_parse_for_keyword_enum!(Display,
     "none" => None,
     #[cfg(feature = "flexbox")]
     "flex" => Flex,
+    #[cfg(feature = "flexbox")]
+    "stack" => Stack,
     #[cfg(feature = "grid")]
     "grid" => Grid,
     #[cfg(feature = "block_layout")]
@@ -312,6 +320,8 @@ impl core::fmt::Display for Display {
             Display::FlowRoot => write!(f, "FLOW-ROOT"),
             #[cfg(feature = "flexbox")]
             Display::Flex => write!(f, "FLEX"),
+            #[cfg(feature = "flexbox")]
+            Display::Stack => write!(f, "STACK"),
             #[cfg(feature = "grid")]
             Display::Grid => write!(f, "GRID"),
         }

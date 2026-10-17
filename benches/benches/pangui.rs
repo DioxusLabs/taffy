@@ -41,17 +41,16 @@ enum Translation {
     /// `Expand` along the main axis of the parent is a size of `<weight>fl`, with no `flex-*` properties.
     /// Not available for Yoga or Taffy 0.3.
     FlexboxFill,
-    /// As [`Translation::FlexboxFill`], with `min-width: 0` / `min-height: 0` along the main axis of the parent
-    /// on every node that has no minimum size in that axis. Nodes that do not expand already have
-    /// `flex-shrink: 0`, so this leaves no node with an automatic minimum size to measure.
-    FlexboxFillZeroMinSize,
+    /// Every node is a `Display::Stack` container, and `Expand` along the main axis of the parent is a size of
+    /// `<weight>fl`. Not available for Yoga or Taffy 0.3.
+    Stack,
 }
 
 impl Translation {
     /// The suffix of the benchmark name for this translation (empty for the default translation)
     /// Whether `Expand` along the main axis of the parent is translated to an `fl` size
     fn uses_fill(self) -> bool {
-        matches!(self, Translation::FlexboxFill | Translation::FlexboxFillZeroMinSize)
+        matches!(self, Translation::FlexboxFill | Translation::Stack)
     }
 
     fn name_suffix(self) -> &'static str {
@@ -59,7 +58,7 @@ impl Translation {
             Translation::Flexbox => "",
             Translation::FlexboxZeroMinSize => " (min-size: 0)",
             Translation::FlexboxFill => " (fl)",
-            Translation::FlexboxFillZeroMinSize => " (fl, min-size: 0)",
+            Translation::Stack => " (stack)",
         }
     }
 }
@@ -74,6 +73,15 @@ fn has_main_axis_expand(node: &LayoutNode, parent_is_row: bool) -> bool {
     let main_size = if parent_is_row { &node.width } else { &node.height };
     let is_row = node.flow_direction == Some(FlowDirection::Horizontal);
     is_mode(main_size, SizeMode::Expand) || node.children.iter().any(|child| has_main_axis_expand(child, is_row))
+}
+
+/// Whether a template can be laid out with stack containers: no node wraps its children, and no node has
+/// `Expand` as a minimum size (which is translated to `flex-grow`).
+fn is_stack_layout(node: &LayoutNode) -> bool {
+    node.wrap != Some(WrapMode::Auto)
+        && !is_mode(&node.min_width, SizeMode::Expand)
+        && !is_mode(&node.min_height, SizeMode::Expand)
+        && node.children.iter().all(is_stack_layout)
 }
 
 fn dimension(size: &Option<BenchmarkSize>) -> Dimension {
@@ -119,9 +127,8 @@ fn style(node: &LayoutNode, parent_is_row: bool, translation: Translation) -> Ta
         min_size.height = min_max_size(&node.min_height, "MinHeight");
     }
     let zero_min_size = match translation {
-        Translation::Flexbox | Translation::FlexboxFill => false,
+        Translation::Flexbox | Translation::FlexboxFill | Translation::Stack => false,
         Translation::FlexboxZeroMinSize => expands,
-        Translation::FlexboxFillZeroMinSize => true,
     };
     if zero_min_size {
         if parent_is_row && node.min_width.is_none() {
@@ -149,7 +156,7 @@ fn style(node: &LayoutNode, parent_is_row: bool, translation: Translation) -> Ta
 
     let gap = length(node.gap.unwrap_or(0.0));
     TaffyStyle {
-        display: Display::Flex,
+        display: if translation == Translation::Stack { Display::Stack } else { Display::Flex },
         flex_direction: match node.flow_direction {
             Some(FlowDirection::Horizontal) => FlexDirection::Row,
             Some(FlowDirection::Vertical) | None => FlexDirection::Column,
@@ -295,9 +302,11 @@ fn pangui_benchmarks(c: &mut Criterion) {
             let name = format!("{name}{}", translation.name_suffix());
             benchmark_each_library!(group, name.as_str(), root, translation);
         }
-        let translation = Translation::FlexboxFillZeroMinSize;
-        let name = format!("{name}{}", translation.name_suffix());
-        benchmark_each_library!(group, name.as_str(), root, translation);
+        if is_stack_layout(&root) {
+            let translation = Translation::Stack;
+            let name = format!("{name}{}", translation.name_suffix());
+            benchmark_each_library!(group, name.as_str(), root, translation);
+        }
     }
     group.finish();
 }
