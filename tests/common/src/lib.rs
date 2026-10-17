@@ -71,6 +71,7 @@ pub fn test_measure_function(
         style,
         |_, _| 0.0,
         |known_dimensions, available_space| {
+            let known_dimensions = known_dimensions.into_options();
             if let Size { width: Some(width), height: Some(height) } = known_dimensions {
                 return Size { width, height };
             }

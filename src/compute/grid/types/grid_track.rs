@@ -1,4 +1,5 @@
 //! Contains GridTrack used to represent a single grid track (row/column) during layout
+use crate::util::OptF32;
 use crate::{
     prelude::TaffyZero,
     style::{LengthPercentage, MaxTrackSizingFunction, MinTrackSizingFunction},
@@ -136,7 +137,7 @@ impl GridTrack {
     #[inline]
     pub fn resolve_fit_content_limit(
         &mut self,
-        axis_inner_node_size: Option<f32>,
+        axis_inner_node_size: OptF32,
         calc_resolver: impl Fn(*const (), f32) -> f32,
     ) {
         self.fit_content_limit = self
