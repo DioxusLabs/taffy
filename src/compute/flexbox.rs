@@ -1487,6 +1487,7 @@ fn determine_container_main_size(
                 for line in lines.iter_mut() {
                     for item in line.items.iter_mut() {
                         let style_min = item.min_size.main(constants.dir);
+                        let margin_sum = item.margin.main_axis_sum(constants.dir);
                         let style_preferred = item.size.main(constants.dir);
                         let style_max = item.max_size.main(constants.dir);
 
@@ -1519,16 +1520,12 @@ fn determine_container_main_size(
                         let content_contribution = match (min_main_size, style_preferred, max_main_size) {
                             // If the clamping values are such that max <= min, then we can avoid the expensive step of computing the content size
                             // as we know that the clamping values will override it anyway
-                            (min, Some(pref), max) if max <= min || max <= pref => {
-                                pref.min(max).max(min) + item.margin.main_axis_sum(constants.dir)
-                            }
-                            (min, _, max) if max <= min => min + item.margin.main_axis_sum(constants.dir),
+                            (min, Some(pref), max) if max <= min || max <= pref => pref.min(max).max(min) + margin_sum,
+                            (min, _, max) if max <= min => min + margin_sum,
 
                             // Else compute the min- or -max content size and apply the full formula for computing the
                             // min- or max- content contribution
-                            _ if item.is_scroll_container() => {
-                                item.flex_basis + item.margin.main_axis_sum(constants.dir)
-                            }
+                            _ if item.is_scroll_container() => item.flex_basis + margin_sum,
 
                             // If the item has a definite preferred main size then that is its content
                             // contribution (an inherent-size measure of the item would return it), floored
@@ -1539,10 +1536,9 @@ fn determine_container_main_size(
                                     + item.border.main_axis_sum(constants.dir);
                                 let inner_main_size = pref.max(item_pb_main);
                                 if constants.is_row {
-                                    (inner_main_size + item.margin.main_axis_sum(constants.dir))
-                                        .maybe_clamp(style_min, style_max)
+                                    (inner_main_size + margin_sum).maybe_clamp(style_min, style_max)
                                 } else {
-                                    (inner_main_size.max(item.flex_basis) + item.margin.main_axis_sum(constants.dir))
+                                    (inner_main_size.max(item.flex_basis) + margin_sum)
                                         .maybe_clamp(style_min, style_max)
                                 }
                             }
@@ -1623,17 +1619,15 @@ fn determine_container_main_size(
                                 // Ultimately, this was not found by reading the spec, but by trial and error fixing tests to align with Webkit/Firefox output.
                                 // (see the `flex_basis_unconstraint_row` and `flex_basis_uncontraint_column` generated tests which demonstrate this)
                                 if constants.is_row {
-                                    (inner_main_size + item.margin.main_axis_sum(constants.dir))
-                                        .maybe_clamp(style_min, style_max)
+                                    (inner_main_size + margin_sum).maybe_clamp(style_min, style_max)
                                 } else {
-                                    (inner_main_size.max(item.flex_basis) + item.margin.main_axis_sum(constants.dir))
+                                    (inner_main_size.max(item.flex_basis) + margin_sum)
                                         .maybe_clamp(style_min, style_max)
                                 }
                             }
                         };
                         item.content_flex_fraction = {
-                            let diff =
-                                content_contribution - item.margin.main_axis_sum(constants.dir) - item.flex_basis;
+                            let diff = content_contribution - margin_sum - item.flex_basis;
                             if diff > 0.0 {
                                 diff / f32_max(1.0, item.flex_grow)
                             } else if diff < 0.0 {
@@ -1665,6 +1659,7 @@ fn determine_container_main_size(
                     // The flex container’s max-content size is the largest sum of the afore-calculated sizes of all items within a single line.
                     // A wrapping row container is at least as large as its largest item (which matters when another item
                     // has a negative margin). This matches Chrome. Firefox does not apply this floor.
+                    let floor_by_largest_item = constants.is_wrap && constants.is_row;
                     let mut largest_item_size = 0.0f32;
                     let item_main_size_sum = line
                         .items
@@ -1686,11 +1681,9 @@ fn determine_container_main_size(
                                 0.0
                             };
                             let size = item.flex_basis + flex_contribution + item.margin.main_axis_sum(constants.dir);
-                            if constants.is_wrap && constants.is_row {
+                            if floor_by_largest_item {
                                 largest_item_size = f32_max(largest_item_size, size);
                             }
-                            item.outer_target_size.set_main(constants.dir, size);
-                            item.target_size.set_main(constants.dir, size);
                             size
                         })
                         .sum::<f32>();
