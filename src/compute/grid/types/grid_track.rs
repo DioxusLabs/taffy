@@ -124,6 +124,19 @@ impl GridTrack {
         self.min_track_sizing_function.uses_percentage() || self.max_track_sizing_function.uses_percentage()
     }
 
+    /// Returns true if the track is sized by "11.5 Resolve Intrinsic Track Sizes": false if its min track sizing
+    /// function is definite and its max track sizing function is definite or flexible
+    #[inline(always)]
+    pub fn is_intrinsic(
+        &self,
+        axis_inner_node_size: Option<f32>,
+        calc_resolver: impl Fn(*const (), f32) -> f32,
+    ) -> bool {
+        self.min_track_sizing_function.definite_value(axis_inner_node_size, &calc_resolver).is_none()
+            || !(self.is_flexible()
+                || self.max_track_sizing_function.definite_value(axis_inner_node_size, &calc_resolver).is_some())
+    }
+
     #[inline(always)]
     /// Returns true if the track has an intrinsic min and or max sizing function
     pub fn has_intrinsic_sizing_function(&self) -> bool {

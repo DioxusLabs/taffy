@@ -319,16 +319,28 @@ pub(super) fn track_sizing_algorithm<Tree: LayoutPartialTree>(
     }
 
     // 11.5 Resolve Intrinsic Track Sizes
-    resolve_intrinsic_track_sizes(
-        tree,
-        axis,
-        axis_tracks,
-        other_axis_tracks,
-        items,
-        available_grid_space.get(axis),
-        inner_node_size,
-        get_track_size_estimate,
-    );
+    // If no track is intrinsic (each has a definite min track sizing function, and a max track sizing function
+    // that is definite or flexible) then only the last step of 11.5 has any effect.
+    let no_track_is_intrinsic =
+        axis_tracks.iter().all(|track| !track.is_intrinsic(axis_inner_node_size, |val, basis| tree.calc(val, basis)));
+    if no_track_is_intrinsic {
+        for track in axis_tracks.iter_mut() {
+            if track.growth_limit == f32::INFINITY {
+                track.growth_limit = track.base_size;
+            }
+        }
+    } else {
+        resolve_intrinsic_track_sizes(
+            tree,
+            axis,
+            axis_tracks,
+            other_axis_tracks,
+            items,
+            available_grid_space.get(axis),
+            inner_node_size,
+            get_track_size_estimate,
+        );
+    }
 
     // 11.6. Maximise Tracks
     // Distributes free space (if any) to tracks with FINITE growth limits, up to their limits.
