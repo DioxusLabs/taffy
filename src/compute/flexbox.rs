@@ -118,6 +118,15 @@ struct FlexItem {
 }
 
 impl FlexItem {
+    /// The size that the item's size styles exclude: padding + border for `box-sizing: content-box`, otherwise zero
+    fn box_sizing_adjustment(&self, style: &impl CoreStyle) -> Size<f32> {
+        if style.box_sizing() == BoxSizing::ContentBox {
+            (self.padding + self.border).sum_axes()
+        } else {
+            Size::ZERO
+        }
+    }
+
     /// Returns true if the item is a <https://www.w3.org/TR/css-overflow-3/#scroll-container>
     fn is_scroll_container(&self) -> bool {
         self.overflow.x.is_scroll_container() | self.overflow.y.is_scroll_container()
@@ -761,9 +770,11 @@ fn generate_anonymous_flex_items(
             let border = child_style
                 .border()
                 .resolve_or_zero(constants.node_inner_size.width, |val, basis| tree.calc(val, basis));
-            let pb_sum = (padding + border).sum_axes();
-            let box_sizing_adjustment =
-                if child_style.box_sizing() == BoxSizing::ContentBox { pb_sum } else { Size::ZERO };
+            let box_sizing_adjustment = if child_style.box_sizing() == BoxSizing::ContentBox {
+                (padding + border).sum_axes()
+            } else {
+                Size::ZERO
+            };
             FlexItem {
                 node: child,
                 order: index as u32,
@@ -795,12 +806,8 @@ fn generate_anonymous_flex_items(
                     .margin()
                     .resolve_or_zero(constants.node_inner_size.width, |val, basis| tree.calc(val, basis)),
                 margin_is_auto: child_style.margin().map(LengthPercentageAuto::is_auto),
-                padding: child_style
-                    .padding()
-                    .resolve_or_zero(constants.node_inner_size.width, |val, basis| tree.calc(val, basis)),
-                border: child_style
-                    .border()
-                    .resolve_or_zero(constants.node_inner_size.width, |val, basis| tree.calc(val, basis)),
+                padding,
+                border,
                 align_self: resolve_normal_alignment(child_style.align_self().unwrap_or(constants.align_items))
                     .resolve_self_relative(child_style.direction(), constants.layout_direction, constants.is_column),
                 overflow: child_style.overflow(),
@@ -969,17 +976,7 @@ fn determine_flex_base_size(
             ckd
         };
 
-        // Percentage padding and border resolve against the container's inline size (its width),
-        // whichever axis is the main axis
-        let container_width = constants.node_inner_size.width;
-        let box_sizing_adjustment = if child_style.box_sizing() == BoxSizing::ContentBox {
-            let padding = child_style.padding().resolve_or_zero(container_width, |val, basis| tree.calc(val, basis));
-            let border = child_style.border().resolve_or_zero(container_width, |val, basis| tree.calc(val, basis));
-            (padding + border).sum_axes()
-        } else {
-            Size::ZERO
-        }
-        .main(dir);
+        let box_sizing_adjustment = child.box_sizing_adjustment(&child_style).main(dir);
         // Percentage flex basis values resolve against the container's inner main size, but only
         // if that size is definite. A known main size which is derived from the container's own
         // content is treated as indefinite here.
@@ -2214,15 +2211,7 @@ fn determine_used_cross_size(
                     // a reasonable interpretation. Although it seems to me that the spec *should* apply aspect_ratio here.
                     // Percentage padding and border resolve against the container's inline size
                     // (its width) on all four sides, not against its height for the top/bottom sides
-                    let padding = child_style
-                        .padding()
-                        .resolve_or_zero(constants.node_inner_size.width, |val, basis| tree.calc(val, basis));
-                    let border = child_style
-                        .border()
-                        .resolve_or_zero(constants.node_inner_size.width, |val, basis| tree.calc(val, basis));
-                    let pb_sum = (padding + border).sum_axes();
-                    let box_sizing_adjustment =
-                        if child_style.box_sizing() == BoxSizing::ContentBox { pb_sum } else { Size::ZERO };
+                    let box_sizing_adjustment = child.box_sizing_adjustment(&child_style);
 
                     let max_size_ignoring_aspect_ratio = child_style
                         .max_size()
