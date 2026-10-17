@@ -1,0 +1,17 @@
+<test name="intrinsic_sizing_main_size_row_negative_margin_multiple_items__border_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="flex" direction="ltr" position="absolute">
+      <div direction="ltr" position="relative" width="100px"/>
+      <div direction="ltr" position="relative" width="0px" margin-left="-10px"/>
+      <div direction="ltr" position="relative" margin-left="-10px" padding-left="5px" border-right="1px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="86" height="0">
+      <node x="0" y="0" width="100" height="0"/>
+      <node x="90" y="0" width="0" height="0"/>
+      <node x="80" y="0" width="6" height="0"/>
+    </node>
+  </expectations>
+</test>

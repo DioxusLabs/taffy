@@ -15426,6 +15426,38 @@ mod flex {
     }
 
     #[test]
+    fn intrinsic_sizing_main_size_column_wrap_negative_margin_multiple_items__border_box_ltr() {
+        crate::run_xml_test(
+            "flex",
+            "intrinsic_sizing_main_size_column_wrap_negative_margin_multiple_items__border_box_ltr",
+        );
+    }
+
+    #[test]
+    fn intrinsic_sizing_main_size_column_wrap_negative_margin_multiple_items__content_box_ltr() {
+        crate::run_xml_test(
+            "flex",
+            "intrinsic_sizing_main_size_column_wrap_negative_margin_multiple_items__content_box_ltr",
+        );
+    }
+
+    #[test]
+    fn intrinsic_sizing_main_size_column_wrap_negative_margin_multiple_items__border_box_rtl() {
+        crate::run_xml_test(
+            "flex",
+            "intrinsic_sizing_main_size_column_wrap_negative_margin_multiple_items__border_box_rtl",
+        );
+    }
+
+    #[test]
+    fn intrinsic_sizing_main_size_column_wrap_negative_margin_multiple_items__content_box_rtl() {
+        crate::run_xml_test(
+            "flex",
+            "intrinsic_sizing_main_size_column_wrap_negative_margin_multiple_items__content_box_rtl",
+        );
+    }
+
+    #[test]
     fn intrinsic_sizing_main_size_min_size__border_box_ltr() {
         crate::run_xml_test("flex", "intrinsic_sizing_main_size_min_size__border_box_ltr");
     }
@@ -15498,6 +15530,26 @@ mod flex {
     }
 
     #[test]
+    fn intrinsic_sizing_main_size_row_negative_margin_multiple_items__border_box_ltr() {
+        crate::run_xml_test("flex", "intrinsic_sizing_main_size_row_negative_margin_multiple_items__border_box_ltr");
+    }
+
+    #[test]
+    fn intrinsic_sizing_main_size_row_negative_margin_multiple_items__content_box_ltr() {
+        crate::run_xml_test("flex", "intrinsic_sizing_main_size_row_negative_margin_multiple_items__content_box_ltr");
+    }
+
+    #[test]
+    fn intrinsic_sizing_main_size_row_negative_margin_multiple_items__border_box_rtl() {
+        crate::run_xml_test("flex", "intrinsic_sizing_main_size_row_negative_margin_multiple_items__border_box_rtl");
+    }
+
+    #[test]
+    fn intrinsic_sizing_main_size_row_negative_margin_multiple_items__content_box_rtl() {
+        crate::run_xml_test("flex", "intrinsic_sizing_main_size_row_negative_margin_multiple_items__content_box_rtl");
+    }
+
+    #[test]
     fn intrinsic_sizing_main_size_row_negative_margin_padding_border__border_box_ltr() {
         crate::run_xml_test("flex", "intrinsic_sizing_main_size_row_negative_margin_padding_border__border_box_ltr");
     }
@@ -15555,6 +15607,38 @@ mod flex {
     #[test]
     fn intrinsic_sizing_main_size_row_wrap__content_box_rtl() {
         crate::run_xml_test("flex", "intrinsic_sizing_main_size_row_wrap__content_box_rtl");
+    }
+
+    #[test]
+    fn intrinsic_sizing_main_size_row_wrap_negative_margin_multiple_items__border_box_ltr() {
+        crate::run_xml_test(
+            "flex",
+            "intrinsic_sizing_main_size_row_wrap_negative_margin_multiple_items__border_box_ltr",
+        );
+    }
+
+    #[test]
+    fn intrinsic_sizing_main_size_row_wrap_negative_margin_multiple_items__content_box_ltr() {
+        crate::run_xml_test(
+            "flex",
+            "intrinsic_sizing_main_size_row_wrap_negative_margin_multiple_items__content_box_ltr",
+        );
+    }
+
+    #[test]
+    fn intrinsic_sizing_main_size_row_wrap_negative_margin_multiple_items__border_box_rtl() {
+        crate::run_xml_test(
+            "flex",
+            "intrinsic_sizing_main_size_row_wrap_negative_margin_multiple_items__border_box_rtl",
+        );
+    }
+
+    #[test]
+    fn intrinsic_sizing_main_size_row_wrap_negative_margin_multiple_items__content_box_rtl() {
+        crate::run_xml_test(
+            "flex",
+            "intrinsic_sizing_main_size_row_wrap_negative_margin_multiple_items__content_box_rtl",
+        );
     }
 
     #[test]
