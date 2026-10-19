@@ -14,6 +14,12 @@ pub mod yoga_helpers;
 #[cfg(feature = "yoga")]
 pub use yoga_helpers::YogaTreeBuilder;
 
+#[cfg(feature = "morphorm")]
+pub mod morphorm_helpers;
+
+#[cfg(feature = "torin")]
+pub mod torin_helpers;
+
 use criterion::measurement::WallTime;
 use criterion::{Bencher, BenchmarkGroup, Criterion, SamplingMode};
 use rand::distr::uniform::SampleRange;

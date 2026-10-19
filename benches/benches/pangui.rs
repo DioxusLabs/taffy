@@ -2,7 +2,8 @@
 //! (<https://www.pangui.io/blog/05-layout-rework-and-benchmarks/>).
 //!
 //! Each file in the `pangui` directory is one benchmark, written in PanGUI's benchmark template format.
-use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
+use criterion::measurement::WallTime;
+use criterion::{criterion_group, criterion_main, BenchmarkGroup, BenchmarkId, Criterion};
 use rand::Rng;
 use std::path::Path;
 use taffy::prelude::*;
@@ -13,8 +14,12 @@ use taffy_benchmarks::pangui_template::{
 };
 use taffy_benchmarks::{bench_layout, benchmark_group, BuildTree, BuildTreeExt, GenStyle, TaffyTreeBuilder};
 
+#[cfg(feature = "morphorm")]
+use taffy_benchmarks::morphorm_helpers::MorphormTree;
 #[cfg(feature = "taffy03")]
 use taffy_benchmarks::taffy_03_helpers::Taffy03TreeBuilder;
+#[cfg(feature = "torin")]
+use taffy_benchmarks::torin_helpers::TorinTree;
 #[cfg(feature = "yoga")]
 use taffy_benchmarks::yoga_helpers::YogaTreeBuilder;
 
@@ -191,6 +196,28 @@ macro_rules! benchmark_each_library {
     };
 }
 
+/// Benchmark the layout libraries which have their own translation of the templates, rather than from a Taffy style.
+#[allow(unused_variables)]
+fn benchmark_native_libraries(group: &mut BenchmarkGroup<WallTime>, name: &str, root: &LayoutNode) {
+    let (width, height) = (root_size(&root.width), root_size(&root.height));
+
+    #[cfg(feature = "morphorm")]
+    if let Some(tree) = MorphormTree::new(root, width, height) {
+        let mut tree = Some(tree);
+        group.bench_function(BenchmarkId::new(name, "Morphorm"), |b| {
+            bench_layout(b, &mut tree, || unreachable!(), |_| {}, |tree| tree.compute_layout())
+        });
+    }
+
+    #[cfg(feature = "torin")]
+    if let Some(tree) = TorinTree::new(root, width, height) {
+        let mut tree = Some(tree);
+        group.bench_function(BenchmarkId::new(name, "Torin"), |b| {
+            bench_layout(b, &mut tree, || unreachable!(), |tree| tree.mark_all_dirty(), |tree| tree.compute_layout())
+        });
+    }
+}
+
 /// Read and parse every template in the `pangui` directory, in order of name
 fn templates() -> Vec<(String, LayoutNode)> {
     let directory = Path::new(env!("CARGO_MANIFEST_DIR")).join("pangui");
@@ -210,6 +237,7 @@ fn templates() -> Vec<(String, LayoutNode)> {
 fn pangui_benchmarks(c: &mut Criterion) {
     let mut group = benchmark_group(c, "PanGUI");
     for (name, root) in templates() {
+        benchmark_native_libraries(&mut group, name.as_str(), &root);
         benchmark_each_library!(group, name.as_str(), root);
     }
     group.finish();
