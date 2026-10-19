@@ -216,6 +216,8 @@ fn compute_container_constants<Tree: LayoutGridContainer>(
 ///   - Placing items (which also resolves the implicit grid)
 ///   - Track (row/column) sizing
 ///   - Alignment & Final item placement
+// Not inlined: keeps this algorithm's stack frame out of the caller's, which is on the stack at every level of recursion
+#[inline(never)]
 pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     tree: &mut Tree,
     node: NodeId,

@@ -403,6 +403,8 @@ struct BlockItem {
 }
 
 /// Computes the layout of [`LayoutPartialTree`] according to the block layout algorithm
+// Not inlined: keeps this algorithm's stack frame out of the caller's, which is on the stack at every level of recursion
+#[inline(never)]
 pub fn compute_block_layout(
     tree: &mut impl LayoutBlockContainer,
     node_id: NodeId,
