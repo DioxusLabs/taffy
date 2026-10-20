@@ -6,25 +6,23 @@ use crate::geometry::Size;
 use crate::style::AvailableSpace;
 use crate::tree::{CollapsibleMarginSet, LayoutInput, LayoutOutput, RunMode, SizingMode};
 use crate::RequestedAxis;
+use app_units::Au;
 
 /// The number of cache entries for each node in the tree
 const CACHE_SIZE: usize = 9;
 
-// Manually written-out results of float to u32 bit casts because
-// `f32::to_bits` is not yet const at our MSRV.
+/// `i32::MAX` as a u32: the key for an unbounded (max-content / unknown) value
+const INFINITY_BITS: u32 = i32::MAX as u32;
+/// `i32::MIN` as a u32: the key for min-content
+const NEG_INFINITY_BITS: u32 = i32::MIN as u32;
 
-/// `f32::INFINITY` as a u32
-const INFINITY_BITS: u32 = 0b_0_11111111_00000000000000000000000_u32;
-/// `f32::NEG_INFINITY` as a u32
-const NEG_INFINITY_BITS: u32 = 0b_1_11111111_00000000000000000000000_u32;
+// The `CacheKey` encodes two Au values as a u64. Au values are never negative for parent sizes
+// in practice, so we pack two extra bits encoding the `RequestedAxis` into the
+// sign bits of the Au values. These constants help to encode and decode those bits.
 
-// The `CacheKey` encodes two f32s as a u64. We know that the f32s will always be
-// non-negative, so we pack two extra bits encoding the `RequestedAxis` into the
-// sign bits of the f32s. These constants help to encode and decode those bits.
-
-/// The sign bit of the first f32
+/// The sign bit of the first Au
 const SIGN_BIT_1: u64 = 1u64 << 63;
-/// The sign bit of the second f32
+/// The sign bit of the second Au
 const SIGN_BIT_2: u64 = 1u64 << 31;
 /// Mask of both sign bits (used to compute NON_SIGN_BITS_MASK)
 const BOTH_SIGN_BITS_MASK: u64 = SIGN_BIT_1 | SIGN_BIT_2;
@@ -35,18 +33,18 @@ const NON_SIGN_BITS_MASK: u64 = !BOTH_SIGN_BITS_MASK;
 /// y-axis value when comparing a cache key.
 const X_AXIS_VALUE_MASK: u64 = (u32::MAX as u64) << 32;
 
-/// Pack `Option<f32>` into `u32`
+/// Pack `Option<Au>` into `u32`
 #[inline(always)]
-fn option_cache_key(input: Option<f32>) -> u32 {
+fn option_cache_key(input: Option<Au>) -> u32 {
     match input {
-        Some(value) => value.to_bits(),
+        Some(value) => value.0 as u32,
         None => INFINITY_BITS,
     }
 }
 
-/// Pack `Size<Option<f32>>` into `u64`
+/// Pack `Size<Option<Au>>` into `u64`
 #[inline(always)]
-fn size_option_cache_key(input: Size<Option<f32>>) -> u64 {
+fn size_option_cache_key(input: Size<Option<Au>>) -> u64 {
     (option_cache_key(input.width) as u64) << 32 | option_cache_key(input.height) as u64
 }
 
@@ -54,7 +52,7 @@ fn size_option_cache_key(input: Size<Option<f32>>) -> u64 {
 #[inline(always)]
 fn available_space_cache_key(input: AvailableSpace) -> u32 {
     match input {
-        AvailableSpace::Definite(value) => (-value).to_bits(),
+        AvailableSpace::Definite(value) => value.0.wrapping_neg() as u32,
         AvailableSpace::MinContent => NEG_INFINITY_BITS,
         AvailableSpace::MaxContent => INFINITY_BITS,
     }
@@ -67,17 +65,17 @@ fn size_available_space_cache_key(input: Size<AvailableSpace>) -> u64 {
     (available_space_cache_key(input.width) as u64) << 32 | available_space_cache_key(input.height) as u64
 }
 
-/// Encodes combination of a `known_dimension` (Option<f32>) and `AvailableSpace` in
+/// Encodes combination of a `known_dimension` (Option<Au>) and `AvailableSpace` in
 /// a single dimension into a cache key in a single dimension.
 #[inline(always)]
-fn mixed_cache_key(kd: Option<f32>, avs: AvailableSpace) -> u32 {
-    kd.map(|kd| kd.to_bits()).unwrap_or_else(|| available_space_cache_key(avs))
+fn mixed_cache_key(kd: Option<Au>, avs: AvailableSpace) -> u32 {
+    kd.map(|kd| kd.0 as u32).unwrap_or_else(|| available_space_cache_key(avs))
 }
 
-/// Encodes combination of a `known_dimension` (Option<f32>) and `AvailableSpace` in
+/// Encodes combination of a `known_dimension` (Option<Au>) and `AvailableSpace` in
 /// two dimensions into a cache key in a single dimension.
 #[inline(always)]
-fn size_mixed_cache_key(kd: Size<Option<f32>>, avs: Size<AvailableSpace>) -> u64 {
+fn size_mixed_cache_key(kd: Size<Option<Au>>, avs: Size<AvailableSpace>) -> u64 {
     (mixed_cache_key(kd.width, avs.width) as u64) << 32 | mixed_cache_key(kd.height, avs.height) as u64
 }
 
@@ -215,7 +213,7 @@ pub struct Cache {
     /// The cache entry for the node's final layout
     final_layout_entry: Option<CacheEntry<LayoutOutput>>,
     /// The cache entries for the node's preliminary size measurements
-    measure_entries: [Option<CacheEntry<Size<f32>>>; CACHE_SIZE],
+    measure_entries: [Option<CacheEntry<Size<Au>>>; CACHE_SIZE],
     /// Tracks which measure entries have been used since the eviction cursor last passed them
     recently_used_entries: u16,
     /// The next measure entry to consider replacing
@@ -238,7 +236,7 @@ impl Cache {
     /// Create a new empty cache
     pub const fn new() -> Self {
         /// Workaround for `Option<CacheEntry<_>>` not being `Copy` (required for array repeat expressions)
-        const NONE_MEASURE_ENTRY: Option<CacheEntry<Size<f32>>> = None;
+        const NONE_MEASURE_ENTRY: Option<CacheEntry<Size<Au>>> = None;
         Self {
             final_layout_entry: None,
             measure_entries: [NONE_MEASURE_ENTRY; CACHE_SIZE],
@@ -345,7 +343,7 @@ impl Cache {
         self.is_empty = true;
         self.final_layout_entry = None;
         /// Workaround for `Option<CacheEntry<_>>` not being `Copy` (required for array repeat expressions)
-        const NONE_MEASURE_ENTRY: Option<CacheEntry<Size<f32>>> = None;
+        const NONE_MEASURE_ENTRY: Option<CacheEntry<Size<Au>>> = None;
         self.measure_entries = [NONE_MEASURE_ENTRY; CACHE_SIZE];
         self.recently_used_entries = 0;
         self.next_measure_entry = 0;
@@ -372,7 +370,7 @@ mod tests {
     use crate::geometry::Line;
     use crate::tree::SizingMode;
 
-    fn input(width: f32) -> LayoutInput {
+    fn input(width: Au) -> LayoutInput {
         LayoutInput {
             run_mode: RunMode::ComputeSize,
             sizing_mode: SizingMode::InherentSize,
@@ -385,7 +383,7 @@ mod tests {
         }
     }
 
-    fn output(width: f32) -> LayoutOutput {
+    fn output(width: Au) -> LayoutOutput {
         LayoutOutput::from_outer_size(Size { width, height: width })
     }
 
@@ -393,57 +391,57 @@ mod tests {
     fn recently_used_measure_entries_get_a_second_chance() {
         let mut cache = Cache::new();
         for width in 0..CACHE_SIZE {
-            cache.store(&input(width as f32), output(width as f32));
+            cache.store(&input(Au(width as i32)), output(Au(width as i32)));
         }
-        cache.store(&input(CACHE_SIZE as f32), output(CACHE_SIZE as f32));
+        cache.store(&input(Au(CACHE_SIZE as i32)), output(Au(CACHE_SIZE as i32)));
 
-        assert_eq!(cache.get(&input(1.0)), Some(output(1.0)));
-        cache.store(&input((CACHE_SIZE + 1) as f32), output((CACHE_SIZE + 1) as f32));
+        assert_eq!(cache.get(&input(Au(60))), Some(output(Au(60))));
+        cache.store(&input(Au((CACHE_SIZE + 1) as i32)), output(Au((CACHE_SIZE + 1) as i32)));
 
-        assert_eq!(cache.get(&input(1.0)), Some(output(1.0)));
-        assert_eq!(cache.get(&input(2.0)), None);
+        assert_eq!(cache.get(&input(Au(60))), Some(output(Au(60))));
+        assert_eq!(cache.get(&input(Au(120))), None);
     }
 
     #[test]
     fn storing_an_existing_measurement_updates_it_in_place() {
         let mut cache = Cache::new();
-        cache.store(&input(1.0), output(1.0));
-        cache.store(&input(2.0), output(2.0));
-        cache.store(&input(1.0), output(3.0));
+        cache.store(&input(Au(60)), output(Au(60)));
+        cache.store(&input(Au(120)), output(Au(120)));
+        cache.store(&input(Au(60)), output(Au(180)));
 
         assert_eq!(cache.measure_entries.iter().flatten().count(), 2);
-        assert_eq!(cache.get(&input(1.0)), Some(output(3.0)));
+        assert_eq!(cache.get(&input(Au(60))), Some(output(Au(180))));
     }
 
     #[test]
     fn measurements_with_margin_collapse_metadata_are_not_cached() {
         let mut cache = Cache::new();
 
-        let mut collapse_through = output(1.0);
+        let mut collapse_through = output(Au(60));
         collapse_through.margins_can_collapse_through = true;
-        cache.store(&input(1.0), collapse_through);
-        assert_eq!(cache.get(&input(1.0)), None);
+        cache.store(&input(Au(60)), collapse_through);
+        assert_eq!(cache.get(&input(Au(60))), None);
 
-        let mut carried_margin = output(2.0);
-        carried_margin.top_margin = CollapsibleMarginSet::from_margin(10.0);
-        cache.store(&input(2.0), carried_margin);
-        assert_eq!(cache.get(&input(2.0)), None);
+        let mut carried_margin = output(Au(120));
+        carried_margin.top_margin = CollapsibleMarginSet::from_margin(Au(600));
+        cache.store(&input(Au(120)), carried_margin);
+        assert_eq!(cache.get(&input(Au(120))), None);
     }
 
     #[test]
     fn retrieving_a_measurement_only_marks_its_slot_as_used() {
         let mut cache = Cache::new();
-        cache.store(&input(1.0), output(1.0));
-        cache.store(&input(2.0), output(2.0));
+        cache.store(&input(Au(60)), output(Au(60)));
+        cache.store(&input(Au(120)), output(Au(120)));
         cache.recently_used_entries = 0;
         let entries = cache.measure_entries.clone();
 
-        assert_eq!(cache.get(&input(1.0)), Some(output(1.0)));
+        assert_eq!(cache.get(&input(Au(60))), Some(output(Au(60))));
         assert_eq!(cache.measure_entries, entries);
         assert_ne!(cache.recently_used_entries, 0);
     }
 
-    fn perform_layout_input(width: f32, height: f32) -> LayoutInput {
+    fn perform_layout_input(width: Au, height: Au) -> LayoutInput {
         LayoutInput {
             run_mode: RunMode::PerformLayout,
             known_dimensions: Size { width: Some(width), height: Some(height) },
@@ -469,7 +467,7 @@ mod tests {
             *mode = CacheMode::from(&LayoutInput {
                 sizing_mode: if index & 1 == 0 { SizingMode::ContentSize } else { SizingMode::InherentSize },
                 vertical_margins_are_collapsible: Line { start: index & 2 != 0, end: index & 4 != 0 },
-                ..input(1.0)
+                ..input(Au(60))
             });
         }
         for (index, mode) in modes.iter().enumerate() {
@@ -480,76 +478,76 @@ mod tests {
     #[test]
     fn retrieving_with_a_different_mode_misses_and_keeps_the_entries() {
         let mut cache = Cache::new();
-        cache.store(&perform_layout_input(100.0, 50.0), output(1.0));
-        cache.store(&input(1.0), output(2.0));
+        cache.store(&perform_layout_input(Au(6000), Au(3000)), output(Au(60)));
+        cache.store(&input(Au(60)), output(Au(120)));
 
-        for other in other_modes(perform_layout_input(100.0, 50.0)) {
+        for other in other_modes(perform_layout_input(Au(6000), Au(3000))) {
             assert_eq!(cache.get(&other), None);
         }
-        for other in other_modes(input(1.0)) {
+        for other in other_modes(input(Au(60))) {
             assert_eq!(cache.get(&other), None);
         }
 
-        assert_eq!(cache.get(&perform_layout_input(100.0, 50.0)), Some(output(1.0)));
-        assert_eq!(cache.get(&input(1.0)), Some(output(2.0)));
+        assert_eq!(cache.get(&perform_layout_input(Au(6000), Au(3000))), Some(output(Au(60))));
+        assert_eq!(cache.get(&input(Au(60))), Some(output(Au(120))));
     }
 
     #[test]
     fn storing_with_a_different_mode_drops_the_existing_entries() {
-        for other in other_modes(input(3.0)) {
+        for other in other_modes(input(Au(180))) {
             let mut cache = Cache::new();
-            cache.store(&perform_layout_input(100.0, 50.0), output(1.0));
-            cache.store(&input(1.0), output(2.0));
+            cache.store(&perform_layout_input(Au(6000), Au(3000)), output(Au(60)));
+            cache.store(&input(Au(60)), output(Au(120)));
 
-            cache.store(&other, output(3.0));
-            assert_eq!(cache.get(&other), Some(output(3.0)));
+            cache.store(&other, output(Au(180)));
+            assert_eq!(cache.get(&other), Some(output(Au(180))));
             assert!(cache.final_layout_entry.is_none());
             assert_eq!(cache.measure_entries.iter().flatten().count(), 1);
 
             // The old entries are gone, even for inputs that have the mode that the cache had before
-            cache.store(&input(4.0), output(4.0));
-            assert_eq!(cache.get(&perform_layout_input(100.0, 50.0)), None);
-            assert_eq!(cache.get(&input(1.0)), None);
+            cache.store(&input(Au(240)), output(Au(240)));
+            assert_eq!(cache.get(&perform_layout_input(Au(6000), Au(3000))), None);
+            assert_eq!(cache.get(&input(Au(60))), None);
             assert_eq!(cache.get(&other), None);
-            assert_eq!(cache.get(&input(4.0)), Some(output(4.0)));
+            assert_eq!(cache.get(&input(Au(240))), Some(output(Au(240))));
         }
 
-        for other in other_modes(perform_layout_input(100.0, 50.0)) {
+        for other in other_modes(perform_layout_input(Au(6000), Au(3000))) {
             let mut cache = Cache::new();
-            cache.store(&perform_layout_input(100.0, 50.0), output(1.0));
-            cache.store(&input(1.0), output(2.0));
+            cache.store(&perform_layout_input(Au(6000), Au(3000)), output(Au(60)));
+            cache.store(&input(Au(60)), output(Au(120)));
 
-            cache.store(&other, output(3.0));
-            assert_eq!(cache.get(&other), Some(output(3.0)));
+            cache.store(&other, output(Au(180)));
+            assert_eq!(cache.get(&other), Some(output(Au(180))));
             assert!(cache.measure_entries.iter().all(|entry| entry.is_none()));
-            assert_eq!(cache.get(&perform_layout_input(100.0, 50.0)), None);
+            assert_eq!(cache.get(&perform_layout_input(Au(6000), Au(3000))), None);
         }
     }
 
     #[test]
     fn hidden_layouts_do_not_affect_the_cache() {
         let mut cache = Cache::new();
-        cache.store(&input(1.0), output(1.0));
-        cache.store(&LayoutInput::HIDDEN, output(2.0));
-        assert_eq!(cache.get(&input(1.0)), Some(output(1.0)));
+        cache.store(&input(Au(60)), output(Au(60)));
+        cache.store(&LayoutInput::HIDDEN, output(Au(120)));
+        assert_eq!(cache.get(&input(Au(60))), Some(output(Au(60))));
     }
 
     #[test]
     #[cfg(all(debug_assertions, feature = "std"))]
     fn mode_change_evictions_are_counted_for_non_empty_caches_only() {
-        let content_size = LayoutInput { sizing_mode: SizingMode::ContentSize, ..input(1.0) };
+        let content_size = LayoutInput { sizing_mode: SizingMode::ContentSize, ..input(Au(60)) };
         let evictions = cache_mode_change_evictions();
 
         let mut cache = Cache::new();
-        cache.store(&content_size, output(1.0));
-        cache.store(&LayoutInput { sizing_mode: SizingMode::ContentSize, ..input(2.0) }, output(2.0));
+        cache.store(&content_size, output(Au(60)));
+        cache.store(&LayoutInput { sizing_mode: SizingMode::ContentSize, ..input(Au(120)) }, output(Au(120)));
         assert_eq!(cache_mode_change_evictions(), evictions);
 
-        cache.store(&input(1.0), output(1.0));
+        cache.store(&input(Au(60)), output(Au(60)));
         assert_eq!(cache_mode_change_evictions(), evictions + 1);
 
         cache.clear();
-        cache.store(&content_size, output(1.0));
+        cache.store(&content_size, output(Au(60)));
         assert_eq!(cache_mode_change_evictions(), evictions + 1);
     }
 }

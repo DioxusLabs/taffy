@@ -6,11 +6,12 @@ use crate::geometry::Size;
 use crate::style::{AvailableSpace, Overflow};
 use crate::tree::{Baselines, CollapsibleMarginSet, RunMode};
 use crate::tree::{LayoutInput, LayoutOutput, SizingMode};
+use crate::util::au::px_to_au;
 use crate::util::debug::debug_log;
-use crate::util::sys::f32_max;
 use crate::util::MaybeMath;
 use crate::util::{MaybeResolve, ResolveOrZero};
 use crate::{BoxSizing, CoreStyle};
+use app_units::Au;
 use core::unreachable;
 
 /// Compute the size of a leaf node (node with no children)
@@ -24,7 +25,7 @@ pub fn compute_leaf_layout<MeasureFunction>(
     measure_function: MeasureFunction,
 ) -> LayoutOutput
 where
-    MeasureFunction: FnOnce(Size<Option<f32>>, Size<AvailableSpace>) -> Size<f32>,
+    MeasureFunction: FnOnce(Size<Option<Au>>, Size<AvailableSpace>) -> Size<Au>,
 {
     let LayoutInput { known_dimensions, parent_size, available_space, sizing_mode, run_mode, .. } = inputs;
 
@@ -69,8 +70,8 @@ where
     // However, the axis are switched (transposed) because a node that scrolls vertically needs
     // *horizontal* space to be reserved for a scrollbar
     let scrollbar_gutter = style.overflow().transpose().map(|overflow| match overflow {
-        Overflow::Scroll => style.scrollbar_width(),
-        _ => 0.0,
+        Overflow::Scroll => px_to_au(style.scrollbar_width()),
+        _ => Au(0),
     });
     // TODO: make side configurable based on the `direction` property
     let mut content_box_inset = padding_border;
@@ -82,12 +83,12 @@ where
         || style.overflow().y.is_scroll_container()
         || style.position().is_out_of_flow()
         || style.contain().establishes_independent_formatting_context()
-        || padding.top > 0.0
-        || padding.bottom > 0.0
-        || border.top > 0.0
-        || border.bottom > 0.0
-        || matches!(node_size.height, Some(h) if h > 0.0)
-        || matches!(node_min_size.height, Some(h) if h > 0.0);
+        || padding.top > Au(0)
+        || padding.bottom > Au(0)
+        || border.top > Au(0)
+        || border.bottom > Au(0)
+        || matches!(node_size.height, Some(h) if h > Au(0))
+        || matches!(node_min_size.height, Some(h) if h > Au(0));
 
     debug_log!("LEAF");
     debug_log!("node_size", dbg:node_size);
@@ -151,7 +152,9 @@ where
         .maybe_clamp(node_min_size, node_max_size);
     let size = Size {
         width: clamped_size.width,
-        height: f32_max(clamped_size.height, aspect_ratio.map(|ratio| clamped_size.width / ratio).unwrap_or(0.0)),
+        height: clamped_size
+            .height
+            .max(aspect_ratio.map(|ratio| px_to_au(clamped_size.width.to_f32_px() / ratio)).unwrap_or(Au(0))),
     };
     let size = size.maybe_max(padding_border.sum_axes().map(Some));
 
@@ -165,10 +168,10 @@ where
         let start_padding = if is_rtl { padding.right } else { padding.left };
         let end_padding = if is_rtl { padding.left } else { padding.right };
         Rect {
-            left: 0.0,
-            right: start_padding + measured_size.width + if is_scroll_container { end_padding } else { 0.0 },
-            top: 0.0,
-            bottom: padding.top + measured_size.height + if is_scroll_container { padding.bottom } else { 0.0 },
+            left: Au(0),
+            right: start_padding + measured_size.width + if is_scroll_container { end_padding } else { Au(0) },
+            top: Au(0),
+            bottom: padding.top + measured_size.height + if is_scroll_container { padding.bottom } else { Au(0) },
         }
     };
 
@@ -180,8 +183,8 @@ where
         top_margin: CollapsibleMarginSet::ZERO,
         bottom_margin: CollapsibleMarginSet::ZERO,
         margins_can_collapse_through: !has_styles_preventing_being_collapsed_through
-            && size.height == 0.0
-            && measured_size.height == 0.0,
+            && size.height == Au(0)
+            && measured_size.height == Au(0),
         oof_candidates: crate::tree::OofCandidates::NONE,
         oof_positioning_area: None,
     }

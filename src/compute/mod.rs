@@ -60,10 +60,12 @@ use crate::tree::{
     AxisStaticAlign, AxisStaticEdge, AxisStaticPosition, Layout, LayoutInput, LayoutOutput, LayoutPartialTree,
     LayoutPartialTreeExt, NodeId, OofCandidate, OofCandidates, RequestedAxis, RoundTree, RunMode, SizingMode,
 };
+use crate::util::au::{px_to_au, round_au};
 use crate::util::debug::{debug_log, debug_log_node, debug_pop_node, debug_push_node};
-use crate::util::sys::{round, Vec};
+use crate::util::sys::Vec;
 use crate::util::ResolveOrZero;
 use crate::{CacheTree, MaybeMath, MaybeResolve};
+use app_units::Au;
 
 /// Compute layout for the root node in the tree
 ///
@@ -99,7 +101,7 @@ pub fn compute_root_layout(
 
     let (layout, candidates) = if let Some(area_size) = oof_root_area {
         // The static position of the root places its margin box at the origin of the ICB
-        let (start, end) = if direction.is_rtl() { (area_size.width, area_size.width) } else { (0.0, 0.0) };
+        let (start, end) = if direction.is_rtl() { (area_size.width, area_size.width) } else { (Au(0), Au(0)) };
         let candidate = OofCandidate {
             node: root,
             order: 0,
@@ -113,7 +115,7 @@ pub fn compute_root_layout(
                         AxisStaticEdge::Start
                     }),
                 },
-                y: AxisStaticPosition::from_edge(0.0, AxisStaticEdge::Start),
+                y: AxisStaticPosition::from_edge(Au(0), AxisStaticEdge::Start),
             },
         };
         let oof::OofBoxLayout { layout, surfaced, .. } = oof::layout_oof_box(
@@ -144,19 +146,19 @@ pub fn compute_root_layout(
         // to the root's padding box.
         let area_inset = layout.border
             + crate::geometry::Rect {
-                left: 0.0,
+                left: Au(0),
                 right: layout.scrollbar_size.width,
-                top: 0.0,
+                top: Au(0),
                 bottom: layout.scrollbar_size.height,
             };
         let root_padding_box_size =
             layout.size - Size { width: area_inset.horizontal_axis_sum(), height: area_inset.vertical_axis_sum() };
         let (area_width, area_x) = match icb_size.width {
-            Some(width) => ((width - layout.scrollbar_size.width).max(0.0), -layout.location.x),
+            Some(width) => ((width - layout.scrollbar_size.width).max(Au(0)), -layout.location.x),
             None => (root_padding_box_size.width, area_inset.left),
         };
         let (area_height, area_y) = match icb_size.height {
-            Some(height) => ((height - layout.scrollbar_size.height).max(0.0), -layout.location.y),
+            Some(height) => ((height - layout.scrollbar_size.height).max(Au(0)), -layout.location.y),
             None => (root_padding_box_size.height, area_inset.top),
         };
         let area_size = Size { width: area_width, height: area_height };
@@ -277,8 +279,8 @@ fn compute_in_flow_root_layout(
     let margin =
         style.margin().resolve_or_zero(available_space.width.into_option(), |val, basis| tree.calc(val, basis));
     let scrollbar_size = Size {
-        width: if style.overflow().y == Overflow::Scroll { style.scrollbar_width() } else { 0.0 },
-        height: if style.overflow().x == Overflow::Scroll { style.scrollbar_width() } else { 0.0 },
+        width: if style.overflow().y == Overflow::Scroll { px_to_au(style.scrollbar_width()) } else { Au(0) },
+        height: if style.overflow().x == Overflow::Scroll { px_to_au(style.scrollbar_width()) } else { Au(0) },
     };
     let is_rtl = style.direction().is_rtl();
 
@@ -300,11 +302,11 @@ fn compute_in_flow_root_layout(
         let top = inset.top.maybe_resolve(icb_size.height, |val, basis| tree.calc(val, basis));
         let bottom = inset.bottom.maybe_resolve(icb_size.height, |val, basis| tree.calc(val, basis));
         location.x += if is_rtl {
-            right.map(|right| -right).or(left).unwrap_or(0.0)
+            right.map(|right| -right).or(left).unwrap_or(Au(0))
         } else {
-            left.or(right.map(|right| -right)).unwrap_or(0.0)
+            left.or(right.map(|right| -right)).unwrap_or(Au(0))
         };
-        location.y += top.or(bottom.map(|bottom| -bottom)).unwrap_or(0.0);
+        location.y += top.or(bottom.map(|bottom| -bottom)).unwrap_or(Au(0));
     }
     drop(style);
 
@@ -375,10 +377,10 @@ where
 /// In order to prevent innacuracies caused by rounding already-rounded values, we read from `unrounded_layout`
 /// and write to `final_layout`.
 pub fn round_layout(tree: &mut impl RoundTree, node_id: NodeId) {
-    return round_layout_inner(tree, node_id, 0.0, 0.0);
+    return round_layout_inner(tree, node_id, Au(0), Au(0));
 
     /// Recursive function to apply rounding to all descendents
-    fn round_layout_inner(tree: &mut impl RoundTree, node_id: NodeId, cumulative_x: f32, cumulative_y: f32) {
+    fn round_layout_inner(tree: &mut impl RoundTree, node_id: NodeId, cumulative_x: Au, cumulative_y: Au) {
         let unrounded_layout = tree.get_unrounded_layout(node_id);
         let mut layout = unrounded_layout;
 
@@ -387,24 +389,24 @@ pub fn round_layout(tree: &mut impl RoundTree, node_id: NodeId) {
         let cumulative_x = cumulative_x + unrounded_layout.location.x;
         let cumulative_y = cumulative_y + unrounded_layout.location.y;
 
-        layout.location.x = round(cumulative_x) - round(parent_x);
-        layout.location.y = round(cumulative_y) - round(parent_y);
-        layout.size.width = round(cumulative_x + unrounded_layout.size.width) - round(cumulative_x);
-        layout.size.height = round(cumulative_y + unrounded_layout.size.height) - round(cumulative_y);
-        layout.scrollbar_size.width = round(unrounded_layout.scrollbar_size.width);
-        layout.scrollbar_size.height = round(unrounded_layout.scrollbar_size.height);
-        layout.border.left = round(cumulative_x + unrounded_layout.border.left) - round(cumulative_x);
-        layout.border.right = round(cumulative_x + unrounded_layout.size.width)
-            - round(cumulative_x + unrounded_layout.size.width - unrounded_layout.border.right);
-        layout.border.top = round(cumulative_y + unrounded_layout.border.top) - round(cumulative_y);
-        layout.border.bottom = round(cumulative_y + unrounded_layout.size.height)
-            - round(cumulative_y + unrounded_layout.size.height - unrounded_layout.border.bottom);
-        layout.padding.left = round(cumulative_x + unrounded_layout.padding.left) - round(cumulative_x);
-        layout.padding.right = round(cumulative_x + unrounded_layout.size.width)
-            - round(cumulative_x + unrounded_layout.size.width - unrounded_layout.padding.right);
-        layout.padding.top = round(cumulative_y + unrounded_layout.padding.top) - round(cumulative_y);
-        layout.padding.bottom = round(cumulative_y + unrounded_layout.size.height)
-            - round(cumulative_y + unrounded_layout.size.height - unrounded_layout.padding.bottom);
+        layout.location.x = round_au(cumulative_x) - round_au(parent_x);
+        layout.location.y = round_au(cumulative_y) - round_au(parent_y);
+        layout.size.width = round_au(cumulative_x + unrounded_layout.size.width) - round_au(cumulative_x);
+        layout.size.height = round_au(cumulative_y + unrounded_layout.size.height) - round_au(cumulative_y);
+        layout.scrollbar_size.width = round_au(unrounded_layout.scrollbar_size.width);
+        layout.scrollbar_size.height = round_au(unrounded_layout.scrollbar_size.height);
+        layout.border.left = round_au(cumulative_x + unrounded_layout.border.left) - round_au(cumulative_x);
+        layout.border.right = round_au(cumulative_x + unrounded_layout.size.width)
+            - round_au(cumulative_x + unrounded_layout.size.width - unrounded_layout.border.right);
+        layout.border.top = round_au(cumulative_y + unrounded_layout.border.top) - round_au(cumulative_y);
+        layout.border.bottom = round_au(cumulative_y + unrounded_layout.size.height)
+            - round_au(cumulative_y + unrounded_layout.size.height - unrounded_layout.border.bottom);
+        layout.padding.left = round_au(cumulative_x + unrounded_layout.padding.left) - round_au(cumulative_x);
+        layout.padding.right = round_au(cumulative_x + unrounded_layout.size.width)
+            - round_au(cumulative_x + unrounded_layout.size.width - unrounded_layout.padding.right);
+        layout.padding.top = round_au(cumulative_y + unrounded_layout.padding.top) - round_au(cumulative_y);
+        layout.padding.bottom = round_au(cumulative_y + unrounded_layout.size.height)
+            - round_au(cumulative_y + unrounded_layout.size.height - unrounded_layout.padding.bottom);
 
         #[cfg(feature = "content_size")]
         round_scrollable_overflow_rect(
@@ -442,14 +444,15 @@ pub fn round_layout(tree: &mut impl RoundTree, node_id: NodeId) {
     /// This is split into a separate function to make it easier to feature flag.
     fn round_scrollable_overflow_rect(
         layout: &mut Layout,
-        unrounded_rect: crate::geometry::Rect<f32>,
-        cumulative_x: f32,
-        cumulative_y: f32,
+        unrounded_rect: crate::geometry::Rect<Au>,
+        cumulative_x: Au,
+        cumulative_y: Au,
     ) {
-        layout.scrollable_overflow_rect.left = round(cumulative_x + unrounded_rect.left) - round(cumulative_x);
-        layout.scrollable_overflow_rect.right = round(cumulative_x + unrounded_rect.right) - round(cumulative_x);
-        layout.scrollable_overflow_rect.top = round(cumulative_y + unrounded_rect.top) - round(cumulative_y);
-        layout.scrollable_overflow_rect.bottom = round(cumulative_y + unrounded_rect.bottom) - round(cumulative_y);
+        layout.scrollable_overflow_rect.left = round_au(cumulative_x + unrounded_rect.left) - round_au(cumulative_x);
+        layout.scrollable_overflow_rect.right = round_au(cumulative_x + unrounded_rect.right) - round_au(cumulative_x);
+        layout.scrollable_overflow_rect.top = round_au(cumulative_y + unrounded_rect.top) - round_au(cumulative_y);
+        layout.scrollable_overflow_rect.bottom =
+            round_au(cumulative_y + unrounded_rect.bottom) - round_au(cumulative_y);
     }
 }
 

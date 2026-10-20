@@ -3,7 +3,9 @@
 use crate::geometry::{Rect, Size};
 use crate::style::{Dimension, LengthPercentage, LengthPercentageAuto};
 use crate::style_helpers::TaffyZero;
+use crate::util::au::{px_to_au, scale_au};
 use crate::CompactLength;
+use app_units::Au;
 
 /// Trait to encapsulate behaviour where we need to resolve from a
 /// potentially context-dependent size or dimension into
@@ -25,48 +27,48 @@ pub trait ResolveOrZero<TContext, TOutput: TaffyZero> {
     fn resolve_or_zero(self, context: TContext, calc: impl Fn(*const (), f32) -> f32) -> TOutput;
 }
 
-impl MaybeResolve<Option<f32>, Option<f32>> for LengthPercentage {
+impl MaybeResolve<Option<Au>, Option<Au>> for LengthPercentage {
     /// Converts the given [`LengthPercentage`] into an absolute length
     /// Can return `None`
-    fn maybe_resolve(self, context: Option<f32>, calc: impl Fn(*const (), f32) -> f32) -> Option<f32> {
+    fn maybe_resolve(self, context: Option<Au>, calc: impl Fn(*const (), f32) -> f32) -> Option<Au> {
         match self.0.tag() {
-            CompactLength::LENGTH_TAG => Some(self.0.value()),
-            CompactLength::PERCENT_TAG => context.map(|dim| dim * self.0.value()),
+            CompactLength::LENGTH_TAG => Some(px_to_au(self.0.value())),
+            CompactLength::PERCENT_TAG => context.map(|dim| scale_au(dim, self.0.value())),
             #[cfg(feature = "calc")]
-            _ if self.0.is_plain_calc() => context.map(|dim| calc(self.0.calc_value(), dim)),
+            _ if self.0.is_plain_calc() => context.map(|dim| px_to_au(calc(self.0.calc_value(), dim.to_f32_px()))),
             _ => unreachable!(),
         }
     }
 }
 
-impl MaybeResolve<Option<f32>, Option<f32>> for LengthPercentageAuto {
+impl MaybeResolve<Option<Au>, Option<Au>> for LengthPercentageAuto {
     /// Converts the given [`LengthPercentageAuto`] into an absolute length
     /// Can return `None`
-    fn maybe_resolve(self, context: Option<f32>, calc: impl Fn(*const (), f32) -> f32) -> Option<f32> {
+    fn maybe_resolve(self, context: Option<Au>, calc: impl Fn(*const (), f32) -> f32) -> Option<Au> {
         match self.0.tag() {
             CompactLength::AUTO_TAG => None,
-            CompactLength::LENGTH_TAG => Some(self.0.value()),
-            CompactLength::PERCENT_TAG => context.map(|dim| dim * self.0.value()),
+            CompactLength::LENGTH_TAG => Some(px_to_au(self.0.value())),
+            CompactLength::PERCENT_TAG => context.map(|dim| scale_au(dim, self.0.value())),
             #[cfg(feature = "calc")]
-            _ if self.0.is_plain_calc() => context.map(|dim| calc(self.0.calc_value(), dim)),
+            _ if self.0.is_plain_calc() => context.map(|dim| px_to_au(calc(self.0.calc_value(), dim.to_f32_px()))),
             _ => unreachable!(),
         }
     }
 }
 
-impl MaybeResolve<Option<f32>, Option<f32>> for Dimension {
+impl MaybeResolve<Option<Au>, Option<Au>> for Dimension {
     /// Converts the given [`Dimension`] into an absolute length
     ///
     /// Can return `None`
-    fn maybe_resolve(self, context: Option<f32>, calc: impl Fn(*const (), f32) -> f32) -> Option<f32> {
+    fn maybe_resolve(self, context: Option<Au>, calc: impl Fn(*const (), f32) -> f32) -> Option<Au> {
         match self.0.tag() {
             CompactLength::AUTO_TAG => None,
             // The content keyword is only valid for flex-basis. In any other context it behaves as auto.
             CompactLength::CONTENT_TAG => None,
-            CompactLength::LENGTH_TAG => Some(self.0.value()),
-            CompactLength::PERCENT_TAG => context.map(|dim| dim * self.0.value()),
+            CompactLength::LENGTH_TAG => Some(px_to_au(self.0.value())),
+            CompactLength::PERCENT_TAG => context.map(|dim| scale_au(dim, self.0.value())),
             #[cfg(feature = "calc")]
-            _ if self.0.is_plain_calc() => context.map(|dim| calc(self.0.calc_value(), dim)),
+            _ if self.0.is_plain_calc() => context.map(|dim| px_to_au(calc(self.0.calc_value(), dim.to_f32_px()))),
             // Intrinsic sizing keywords cannot be resolved to a definite size out of context.
             // Layout algorithms that support them must handle them explicitly.
             _ if self.0.is_sizing_keyword() => None,
@@ -75,12 +77,12 @@ impl MaybeResolve<Option<f32>, Option<f32>> for Dimension {
     }
 }
 
-// Generic implementation of MaybeResolve for f32 context where MaybeResolve is implemented
-// for Option<f32> context
-impl<T: MaybeResolve<Option<f32>, Option<f32>>> MaybeResolve<f32, Option<f32>> for T {
+// Generic implementation of MaybeResolve for Au context where MaybeResolve is implemented
+// for Option<Au> context
+impl<T: MaybeResolve<Option<Au>, Option<Au>>> MaybeResolve<Au, Option<Au>> for T {
     /// Converts the given MaybeResolve value into an absolute length
     /// Can return `None`
-    fn maybe_resolve(self, context: f32, calc: impl Fn(*const (), f32) -> f32) -> Option<f32> {
+    fn maybe_resolve(self, context: Au, calc: impl Fn(*const (), f32) -> f32) -> Option<Au> {
         self.maybe_resolve(Some(context), calc)
     }
 }
@@ -97,24 +99,24 @@ impl<In, Out, T: MaybeResolve<In, Out>> MaybeResolve<Size<In>, Size<Out>> for Si
     }
 }
 
-impl ResolveOrZero<Option<f32>, f32> for LengthPercentage {
+impl ResolveOrZero<Option<Au>, Au> for LengthPercentage {
     /// Will return a default value of result is evaluated to `None`
-    fn resolve_or_zero(self, context: Option<f32>, calc: impl Fn(*const (), f32) -> f32) -> f32 {
-        self.maybe_resolve(context, calc).unwrap_or(0.0)
+    fn resolve_or_zero(self, context: Option<Au>, calc: impl Fn(*const (), f32) -> f32) -> Au {
+        self.maybe_resolve(context, calc).unwrap_or(Au(0))
     }
 }
 
-impl ResolveOrZero<Option<f32>, f32> for LengthPercentageAuto {
+impl ResolveOrZero<Option<Au>, Au> for LengthPercentageAuto {
     /// Will return a default value of result is evaluated to `None`
-    fn resolve_or_zero(self, context: Option<f32>, calc: impl Fn(*const (), f32) -> f32) -> f32 {
-        self.maybe_resolve(context, calc).unwrap_or(0.0)
+    fn resolve_or_zero(self, context: Option<Au>, calc: impl Fn(*const (), f32) -> f32) -> Au {
+        self.maybe_resolve(context, calc).unwrap_or(Au(0))
     }
 }
 
-impl ResolveOrZero<Option<f32>, f32> for Dimension {
+impl ResolveOrZero<Option<Au>, Au> for Dimension {
     /// Will return a default value of result is evaluated to `None`
-    fn resolve_or_zero(self, context: Option<f32>, calc: impl Fn(*const (), f32) -> f32) -> f32 {
-        self.maybe_resolve(context, calc).unwrap_or(0.0)
+    fn resolve_or_zero(self, context: Option<Au>, calc: impl Fn(*const (), f32) -> f32) -> Au {
+        self.maybe_resolve(context, calc).unwrap_or(Au(0))
     }
 }
 
@@ -143,10 +145,10 @@ impl<In: Copy, Out: TaffyZero, T: ResolveOrZero<In, Out>> ResolveOrZero<Size<In>
 }
 
 // Generic ResolveOrZero for resolving Rect against Option
-impl<Out: TaffyZero, T: ResolveOrZero<Option<f32>, Out>> ResolveOrZero<Option<f32>, Rect<Out>> for Rect<T> {
+impl<Out: TaffyZero, T: ResolveOrZero<Option<Au>, Out>> ResolveOrZero<Option<Au>, Rect<Out>> for Rect<T> {
     /// Converts any `parent`-relative values for Rect into an absolute Rect
     #[inline(always)]
-    fn resolve_or_zero(self, context: Option<f32>, calc: impl Fn(*const (), f32) -> f32) -> Rect<Out> {
+    fn resolve_or_zero(self, context: Option<Au>, calc: impl Fn(*const (), f32) -> f32) -> Rect<Out> {
         Rect {
             left: self.left.resolve_or_zero(context, &calc),
             right: self.right.resolve_or_zero(context, &calc),
@@ -156,10 +158,10 @@ impl<Out: TaffyZero, T: ResolveOrZero<Option<f32>, Out>> ResolveOrZero<Option<f3
     }
 }
 
-// Generic ResolveOrZero for resolving Rect against f32
-impl<Out: TaffyZero, T: ResolveOrZero<f32, Out>> ResolveOrZero<f32, Rect<Out>> for Rect<T> {
+// Generic ResolveOrZero for resolving Rect against Au
+impl<Out: TaffyZero, T: ResolveOrZero<Au, Out>> ResolveOrZero<Au, Rect<Out>> for Rect<T> {
     /// Converts any `parent`-relative values for Rect into an absolute Rect
-    fn resolve_or_zero(self, context: f32, calc: impl Fn(*const (), f32) -> f32) -> Rect<Out> {
+    fn resolve_or_zero(self, context: Au, calc: impl Fn(*const (), f32) -> f32) -> Rect<Out> {
         Rect {
             left: self.left.resolve_or_zero(context, &calc),
             right: self.right.resolve_or_zero(context, &calc),
@@ -173,6 +175,7 @@ impl<Out: TaffyZero, T: ResolveOrZero<f32, Out>> ResolveOrZero<f32, Rect<Out>> f
 mod tests {
     use super::{MaybeResolve, ResolveOrZero};
     use crate::style_helpers::TaffyZero;
+    use app_units::Au;
     use core::fmt::Debug;
 
     // MaybeResolve test runner
@@ -194,7 +197,7 @@ mod tests {
     }
 
     mod maybe_resolve_dimension {
-        use super::mr_case;
+        use super::{mr_case, Au};
         use crate::style::Dimension;
         use crate::style_helpers::*;
 
@@ -204,39 +207,39 @@ mod tests {
         #[test]
         fn resolve_auto() {
             mr_case(Dimension::AUTO, None, None);
-            mr_case(Dimension::AUTO, Some(5.0), None);
-            mr_case(Dimension::AUTO, Some(-5.0), None);
-            mr_case(Dimension::AUTO, Some(0.), None);
+            mr_case(Dimension::AUTO, Some(Au(300)), None);
+            mr_case(Dimension::AUTO, Some(Au(-300)), None);
+            mr_case(Dimension::AUTO, Some(Au(0)), None);
         }
 
-        /// `Dimension::Length` should always return `Some(f32)`
-        /// where the f32 value is the inner absolute length.
+        /// `Dimension::Length` should always return `Some(Au)`
+        /// where the Au value is the inner absolute length.
         ///
         /// The parent / context should not affect the outcome.
         #[test]
         fn resolve_length() {
-            mr_case(Dimension::from_length(1.0), None, Some(1.0));
-            mr_case(Dimension::from_length(1.0), Some(5.0), Some(1.0));
-            mr_case(Dimension::from_length(1.0), Some(-5.0), Some(1.0));
-            mr_case(Dimension::from_length(1.0), Some(0.), Some(1.0));
+            mr_case(Dimension::from_length(1.0), None, Some(Au(60)));
+            mr_case(Dimension::from_length(1.0), Some(Au(300)), Some(Au(60)));
+            mr_case(Dimension::from_length(1.0), Some(Au(-300)), Some(Au(60)));
+            mr_case(Dimension::from_length(1.0), Some(Au(0)), Some(Au(60)));
         }
 
         /// `Dimension::Percent` should return `None` if context is  `None`.
-        /// Otherwise it should return `Some(f32)`
-        /// where the f32 value is the inner value of the percent * context value.
+        /// Otherwise it should return `Some(Au)`
+        /// where the Au value is the inner value of the percent * context value.
         ///
         /// The parent / context __should__ affect the outcome.
         #[test]
         fn resolve_percent() {
             mr_case(Dimension::from_percent(1.0), None, None);
-            mr_case(Dimension::from_percent(1.0), Some(5.0), Some(5.0));
-            mr_case(Dimension::from_percent(1.0), Some(-5.0), Some(-5.0));
-            mr_case(Dimension::from_percent(1.0), Some(50.0), Some(50.0));
+            mr_case(Dimension::from_percent(1.0), Some(Au(300)), Some(Au(300)));
+            mr_case(Dimension::from_percent(1.0), Some(Au(-300)), Some(Au(-300)));
+            mr_case(Dimension::from_percent(1.0), Some(Au(3000)), Some(Au(3000)));
         }
     }
 
     mod maybe_resolve_size_dimension {
-        use super::mr_case;
+        use super::{mr_case, Au};
         use crate::geometry::Size;
         use crate::style::Dimension;
 
@@ -246,126 +249,158 @@ mod tests {
         #[test]
         fn maybe_resolve_auto() {
             mr_case(Size::<Dimension>::auto(), Size::NONE, Size::NONE);
-            mr_case(Size::<Dimension>::auto(), Size::new(5.0, 5.0), Size::NONE);
-            mr_case(Size::<Dimension>::auto(), Size::new(-5.0, -5.0), Size::NONE);
-            mr_case(Size::<Dimension>::auto(), Size::new(0.0, 0.0), Size::NONE);
+            mr_case(Size::<Dimension>::auto(), Size::new(Au(300), Au(300)), Size::NONE);
+            mr_case(Size::<Dimension>::auto(), Size::new(Au(-300), Au(-300)), Size::NONE);
+            mr_case(Size::<Dimension>::auto(), Size::new(Au(0), Au(0)), Size::NONE);
         }
 
-        /// Size<Dimension::Length> should always return a Size<Some(f32)>
-        /// where the f32 values are the absolute length.
+        /// Size<Dimension::Length> should always return a Size<Some(Au)>
+        /// where the Au values are the absolute length.
         ///
         /// The parent / context should not affect the outcome.
         #[test]
         fn maybe_resolve_length() {
-            mr_case(Size::from_lengths(5.0, 5.0), Size::NONE, Size::new(5.0, 5.0));
-            mr_case(Size::from_lengths(5.0, 5.0), Size::new(5.0, 5.0), Size::new(5.0, 5.0));
-            mr_case(Size::from_lengths(5.0, 5.0), Size::new(-5.0, -5.0), Size::new(5.0, 5.0));
-            mr_case(Size::from_lengths(5.0, 5.0), Size::new(0.0, 0.0), Size::new(5.0, 5.0));
+            mr_case(Size::from_lengths(5.0, 5.0), Size::NONE, Size::new(Au(300), Au(300)));
+            mr_case(Size::from_lengths(5.0, 5.0), Size::new(Au(300), Au(300)), Size::new(Au(300), Au(300)));
+            mr_case(Size::from_lengths(5.0, 5.0), Size::new(Au(-300), Au(-300)), Size::new(Au(300), Au(300)));
+            mr_case(Size::from_lengths(5.0, 5.0), Size::new(Au(0), Au(0)), Size::new(Au(300), Au(300)));
         }
 
         /// `Size<Dimension::Percent>` should return `Size<None>` if context is `Size<None>`.
-        /// Otherwise it should return `Size<Some(f32)>`
-        /// where the f32 value is the inner value of the percent * context value.
+        /// Otherwise it should return `Size<Some(Au)>`
+        /// where the Au value is the inner value of the percent * context value.
         ///
         /// The context __should__ affect the outcome.
         #[test]
         fn maybe_resolve_percent() {
             mr_case(Size::from_percent(5.0, 5.0), Size::NONE, Size::NONE);
-            mr_case(Size::from_percent(5.0, 5.0), Size::new(5.0, 5.0), Size::new(25.0, 25.0));
-            mr_case(Size::from_percent(5.0, 5.0), Size::new(-5.0, -5.0), Size::new(-25.0, -25.0));
-            mr_case(Size::from_percent(5.0, 5.0), Size::new(0.0, 0.0), Size::new(0.0, 0.0));
+            mr_case(Size::from_percent(5.0, 5.0), Size::new(Au(300), Au(300)), Size::new(Au(1500), Au(1500)));
+            mr_case(Size::from_percent(5.0, 5.0), Size::new(Au(-300), Au(-300)), Size::new(Au(-1500), Au(-1500)));
+            mr_case(Size::from_percent(5.0, 5.0), Size::new(Au(0), Au(0)), Size::new(Au(0), Au(0)));
         }
     }
 
-    mod resolve_or_zero_dimension_to_option_f32 {
-        use super::roz_case;
+    mod resolve_or_zero_dimension_to_option_au {
+        use super::{roz_case, Au};
         use crate::style::Dimension;
         use crate::style_helpers::*;
 
         #[test]
         fn resolve_or_zero_auto() {
-            roz_case(Dimension::AUTO, None, 0.0);
-            roz_case(Dimension::AUTO, Some(5.0), 0.0);
-            roz_case(Dimension::AUTO, Some(-5.0), 0.0);
-            roz_case(Dimension::AUTO, Some(0.0), 0.0);
+            roz_case(Dimension::AUTO, None, Au(0));
+            roz_case(Dimension::AUTO, Some(Au(300)), Au(0));
+            roz_case(Dimension::AUTO, Some(Au(-300)), Au(0));
+            roz_case(Dimension::AUTO, Some(Au(0)), Au(0));
         }
         #[test]
         fn resolve_or_zero_length() {
-            roz_case(Dimension::from_length(5.0), None, 5.0);
-            roz_case(Dimension::from_length(5.0), Some(5.0), 5.0);
-            roz_case(Dimension::from_length(5.0), Some(-5.0), 5.0);
-            roz_case(Dimension::from_length(5.0), Some(0.0), 5.0);
+            roz_case(Dimension::from_length(5.0), None, Au(300));
+            roz_case(Dimension::from_length(5.0), Some(Au(300)), Au(300));
+            roz_case(Dimension::from_length(5.0), Some(Au(-300)), Au(300));
+            roz_case(Dimension::from_length(5.0), Some(Au(0)), Au(300));
         }
         #[test]
         fn resolve_or_zero_percent() {
-            roz_case(Dimension::from_percent(5.0), None, 0.0);
-            roz_case(Dimension::from_percent(5.0), Some(5.0), 25.0);
-            roz_case(Dimension::from_percent(5.0), Some(-5.0), -25.0);
-            roz_case(Dimension::from_percent(5.0), Some(0.0), 0.0);
+            roz_case(Dimension::from_percent(5.0), None, Au(0));
+            roz_case(Dimension::from_percent(5.0), Some(Au(300)), Au(1500));
+            roz_case(Dimension::from_percent(5.0), Some(Au(-300)), Au(-1500));
+            roz_case(Dimension::from_percent(5.0), Some(Au(0)), Au(0));
         }
     }
 
     mod resolve_or_zero_rect_dimension_to_rect {
-        use super::roz_case;
+        use super::{roz_case, Au};
         use crate::geometry::{Rect, Size};
         use crate::style::Dimension;
 
         #[test]
         fn resolve_or_zero_auto() {
             roz_case(Rect::<Dimension>::auto(), Size::NONE, Rect::zero());
-            roz_case(Rect::<Dimension>::auto(), Size::new(5.0, 5.0), Rect::zero());
-            roz_case(Rect::<Dimension>::auto(), Size::new(-5.0, -5.0), Rect::zero());
-            roz_case(Rect::<Dimension>::auto(), Size::new(0.0, 0.0), Rect::zero());
+            roz_case(Rect::<Dimension>::auto(), Size::new(Au(300), Au(300)), Rect::zero());
+            roz_case(Rect::<Dimension>::auto(), Size::new(Au(-300), Au(-300)), Rect::zero());
+            roz_case(Rect::<Dimension>::auto(), Size::new(Au(0), Au(0)), Rect::zero());
         }
 
         #[test]
         fn resolve_or_zero_length() {
-            roz_case(Rect::from_length(5.0, 5.0, 5.0, 5.0), Size::NONE, Rect::new(5.0, 5.0, 5.0, 5.0));
-            roz_case(Rect::from_length(5.0, 5.0, 5.0, 5.0), Size::new(5.0, 5.0), Rect::new(5.0, 5.0, 5.0, 5.0));
-            roz_case(Rect::from_length(5.0, 5.0, 5.0, 5.0), Size::new(-5.0, -5.0), Rect::new(5.0, 5.0, 5.0, 5.0));
-            roz_case(Rect::from_length(5.0, 5.0, 5.0, 5.0), Size::new(0.0, 0.0), Rect::new(5.0, 5.0, 5.0, 5.0));
+            roz_case(Rect::from_length(5.0, 5.0, 5.0, 5.0), Size::NONE, Rect::new(Au(300), Au(300), Au(300), Au(300)));
+            roz_case(
+                Rect::from_length(5.0, 5.0, 5.0, 5.0),
+                Size::new(Au(300), Au(300)),
+                Rect::new(Au(300), Au(300), Au(300), Au(300)),
+            );
+            roz_case(
+                Rect::from_length(5.0, 5.0, 5.0, 5.0),
+                Size::new(Au(-300), Au(-300)),
+                Rect::new(Au(300), Au(300), Au(300), Au(300)),
+            );
+            roz_case(
+                Rect::from_length(5.0, 5.0, 5.0, 5.0),
+                Size::new(Au(0), Au(0)),
+                Rect::new(Au(300), Au(300), Au(300), Au(300)),
+            );
         }
 
         #[test]
         fn resolve_or_zero_percent() {
             roz_case(Rect::from_percent(5.0, 5.0, 5.0, 5.0), Size::NONE, Rect::zero());
-            roz_case(Rect::from_percent(5.0, 5.0, 5.0, 5.0), Size::new(5.0, 5.0), Rect::new(25.0, 25.0, 25.0, 25.0));
             roz_case(
                 Rect::from_percent(5.0, 5.0, 5.0, 5.0),
-                Size::new(-5.0, -5.0),
-                Rect::new(-25.0, -25.0, -25.0, -25.0),
+                Size::new(Au(300), Au(300)),
+                Rect::new(Au(1500), Au(1500), Au(1500), Au(1500)),
             );
-            roz_case(Rect::from_percent(5.0, 5.0, 5.0, 5.0), Size::new(0.0, 0.0), Rect::zero());
+            roz_case(
+                Rect::from_percent(5.0, 5.0, 5.0, 5.0),
+                Size::new(Au(-300), Au(-300)),
+                Rect::new(Au(-1500), Au(-1500), Au(-1500), Au(-1500)),
+            );
+            roz_case(Rect::from_percent(5.0, 5.0, 5.0, 5.0), Size::new(Au(0), Au(0)), Rect::zero());
         }
     }
 
-    mod resolve_or_zero_rect_dimension_to_rect_f32_via_option {
-        use super::roz_case;
+    mod resolve_or_zero_rect_dimension_to_rect_au_via_option {
+        use super::{roz_case, Au};
         use crate::geometry::Rect;
         use crate::style::Dimension;
 
         #[test]
         fn resolve_or_zero_auto() {
             roz_case(Rect::<Dimension>::auto(), None, Rect::zero());
-            roz_case(Rect::<Dimension>::auto(), Some(5.0), Rect::zero());
-            roz_case(Rect::<Dimension>::auto(), Some(-5.0), Rect::zero());
-            roz_case(Rect::<Dimension>::auto(), Some(0.0), Rect::zero());
+            roz_case(Rect::<Dimension>::auto(), Some(Au(300)), Rect::zero());
+            roz_case(Rect::<Dimension>::auto(), Some(Au(-300)), Rect::zero());
+            roz_case(Rect::<Dimension>::auto(), Some(Au(0)), Rect::zero());
         }
 
         #[test]
         fn resolve_or_zero_length() {
-            roz_case(Rect::from_length(5.0, 5.0, 5.0, 5.0), None, Rect::new(5.0, 5.0, 5.0, 5.0));
-            roz_case(Rect::from_length(5.0, 5.0, 5.0, 5.0), Some(5.0), Rect::new(5.0, 5.0, 5.0, 5.0));
-            roz_case(Rect::from_length(5.0, 5.0, 5.0, 5.0), Some(-5.0), Rect::new(5.0, 5.0, 5.0, 5.0));
-            roz_case(Rect::from_length(5.0, 5.0, 5.0, 5.0), Some(0.0), Rect::new(5.0, 5.0, 5.0, 5.0));
+            roz_case(Rect::from_length(5.0, 5.0, 5.0, 5.0), None, Rect::new(Au(300), Au(300), Au(300), Au(300)));
+            roz_case(
+                Rect::from_length(5.0, 5.0, 5.0, 5.0),
+                Some(Au(300)),
+                Rect::new(Au(300), Au(300), Au(300), Au(300)),
+            );
+            roz_case(
+                Rect::from_length(5.0, 5.0, 5.0, 5.0),
+                Some(Au(-300)),
+                Rect::new(Au(300), Au(300), Au(300), Au(300)),
+            );
+            roz_case(Rect::from_length(5.0, 5.0, 5.0, 5.0), Some(Au(0)), Rect::new(Au(300), Au(300), Au(300), Au(300)));
         }
 
         #[test]
         fn resolve_or_zero_percent() {
             roz_case(Rect::from_percent(5.0, 5.0, 5.0, 5.0), None, Rect::zero());
-            roz_case(Rect::from_percent(5.0, 5.0, 5.0, 5.0), Some(5.0), Rect::new(25.0, 25.0, 25.0, 25.0));
-            roz_case(Rect::from_percent(5.0, 5.0, 5.0, 5.0), Some(-5.0), Rect::new(-25.0, -25.0, -25.0, -25.0));
-            roz_case(Rect::from_percent(5.0, 5.0, 5.0, 5.0), Some(0.0), Rect::zero());
+            roz_case(
+                Rect::from_percent(5.0, 5.0, 5.0, 5.0),
+                Some(Au(300)),
+                Rect::new(Au(1500), Au(1500), Au(1500), Au(1500)),
+            );
+            roz_case(
+                Rect::from_percent(5.0, 5.0, 5.0, 5.0),
+                Some(Au(-300)),
+                Rect::new(Au(-1500), Au(-1500), Au(-1500), Au(-1500)),
+            );
+            roz_case(Rect::from_percent(5.0, 5.0, 5.0, 5.0), Some(Au(0)), Rect::zero());
         }
     }
 }

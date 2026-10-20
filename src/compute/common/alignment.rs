@@ -1,5 +1,6 @@
 //! Generic CSS alignment code that is shared between both the Flexbox and CSS Grid algorithms.
 use crate::style::{AlignContent, AlignContentKeyword, AlignItems, AlignItemsKeyword, AlignmentSafety, Overflow};
+use app_units::Au;
 
 /// The first baseline of a child box (measured from the top of its border box, like [`crate::Baselines`]) as used
 /// for baseline alignment and for determining its container's baseline, given the baseline it reported, its
@@ -9,9 +10,9 @@ use crate::style::{AlignContent, AlignContentKeyword, AlignItems, AlignItemsKeyw
 /// additionally clamped to their border box. A scroll container with no baseline synthesizes one from its border-box
 /// bottom edge. See <https://github.com/w3c/csswg-drafts/issues/7660>
 #[inline]
-pub(crate) fn child_first_baseline(first_baseline: Option<f32>, height: f32, overflow_y: Overflow) -> Option<f32> {
+pub(crate) fn child_first_baseline(first_baseline: Option<Au>, height: Au, overflow_y: Overflow) -> Option<Au> {
     if overflow_y.is_scroll_container() {
-        Some(first_baseline.unwrap_or(height).min(height).max(0.0))
+        Some(first_baseline.unwrap_or(height).min(height).max(Au(0)))
     } else {
         first_baseline
     }
@@ -42,7 +43,7 @@ pub(crate) fn resolve_self_alignment_safety(alignment: AlignItems, overflows: bo
 /// [`AlignContentKeyword::Normal`] to the keyword it behaves as before calling this function
 /// (if it is not resolved then it is treated as `stretch`).
 pub(crate) fn apply_alignment_fallback(
-    free_space: f32,
+    free_space: Au,
     num_items: usize,
     alignment_mode: AlignContent,
 ) -> AlignContentKeyword {
@@ -60,7 +61,7 @@ pub(crate) fn apply_alignment_fallback(
     //    distributed alignment keywords (`stretch`, `space-*`) fall back to a positional keyword
     //    and gain implicit `safe` semantics so step 2 can flip them to `Start` on overflow.
     //    https://www.w3.org/TR/css-align-3/#distribution-values
-    if num_items <= 1 || free_space <= 0.0 {
+    if num_items <= 1 || free_space <= Au(0) {
         (keyword, is_safe) = match keyword {
             AlignContentKeyword::Stretch | AlignContentKeyword::SpaceBetween => (AlignContentKeyword::FlexStart, true),
             AlignContentKeyword::SpaceAround | AlignContentKeyword::SpaceEvenly => (AlignContentKeyword::Center, true),
@@ -70,7 +71,7 @@ pub(crate) fn apply_alignment_fallback(
 
     // 2. Safe alignment falls back to `Start` whenever the alignment subject would overflow the
     //    alignment container.
-    if free_space <= 0.0 && is_safe {
+    if free_space <= Au(0) && is_safe {
         keyword = AlignContentKeyword::Start;
     }
 
@@ -84,51 +85,51 @@ pub(crate) fn apply_alignment_fallback(
 /// CSS Grid does not apply gaps as part of alignment, so the gap parameter should
 /// always be set to zero for CSS Grid.
 pub(crate) fn compute_alignment_offset(
-    free_space: f32,
+    free_space: Au,
     num_items: usize,
-    gap: f32,
+    gap: Au,
     alignment_mode: AlignContentKeyword,
     layout_is_flex_reversed: bool,
     is_first: bool,
-) -> f32 {
+) -> Au {
     if is_first {
         match alignment_mode {
-            AlignContentKeyword::Start => 0.0,
+            AlignContentKeyword::Start => Au(0),
             AlignContentKeyword::FlexStart => {
                 if layout_is_flex_reversed {
                     free_space
                 } else {
-                    0.0
+                    Au(0)
                 }
             }
             AlignContentKeyword::End => free_space,
             AlignContentKeyword::FlexEnd => {
                 if layout_is_flex_reversed {
-                    0.0
+                    Au(0)
                 } else {
                     free_space
                 }
             }
-            AlignContentKeyword::Center => free_space / 2.0,
-            AlignContentKeyword::Normal | AlignContentKeyword::Stretch => 0.0,
-            AlignContentKeyword::SpaceBetween => 0.0,
+            AlignContentKeyword::Center => free_space / 2,
+            AlignContentKeyword::Normal | AlignContentKeyword::Stretch => Au(0),
+            AlignContentKeyword::SpaceBetween => Au(0),
             AlignContentKeyword::SpaceAround => {
-                if free_space >= 0.0 {
-                    (free_space / num_items as f32) / 2.0
+                if free_space >= Au(0) {
+                    (free_space / num_items as i32) / 2
                 } else {
-                    free_space / 2.0
+                    free_space / 2
                 }
             }
             AlignContentKeyword::SpaceEvenly => {
-                if free_space >= 0.0 {
-                    free_space / (num_items + 1) as f32
+                if free_space >= Au(0) {
+                    free_space / (num_items + 1) as i32
                 } else {
-                    free_space / 2.0
+                    free_space / 2
                 }
             }
         }
     } else {
-        let free_space = free_space.max(0.0);
+        let free_space = free_space.max(Au(0));
         gap + match alignment_mode {
             AlignContentKeyword::Start
             | AlignContentKeyword::FlexStart
@@ -136,10 +137,10 @@ pub(crate) fn compute_alignment_offset(
             | AlignContentKeyword::FlexEnd
             | AlignContentKeyword::Center
             | AlignContentKeyword::Normal
-            | AlignContentKeyword::Stretch => 0.0,
-            AlignContentKeyword::SpaceBetween => free_space / (num_items - 1) as f32,
-            AlignContentKeyword::SpaceAround => free_space / num_items as f32,
-            AlignContentKeyword::SpaceEvenly => free_space / (num_items + 1) as f32,
+            | AlignContentKeyword::Stretch => Au(0),
+            AlignContentKeyword::SpaceBetween => free_space / (num_items - 1) as i32,
+            AlignContentKeyword::SpaceAround => free_space / num_items as i32,
+            AlignContentKeyword::SpaceEvenly => free_space / (num_items + 1) as i32,
         }
     }
 }

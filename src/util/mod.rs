@@ -1,4 +1,5 @@
 //! Helpful misc. utilities such as a function to debug print a tree
+pub(crate) mod au;
 mod math;
 mod resolve;
 pub(crate) mod sys;
