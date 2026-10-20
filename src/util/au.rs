@@ -23,8 +23,14 @@ pub(crate) fn round_au(value: Au) -> Au {
     Au((value.0 + AU_PER_PX / 2).div_euclid(AU_PER_PX) * AU_PER_PX)
 }
 
+/// Rounds a raw `Au` count computed in `f32` to the nearest `Au`
+#[inline(always)]
+pub(crate) fn raw_to_au(raw: f32) -> Au {
+    Au::new(round_to_i32(raw))
+}
+
 /// Scales an `Au` value by a unitless factor (e.g. a percentage), rounding to the nearest `Au`
 #[inline(always)]
 pub(crate) fn scale_au(basis: Au, factor: f32) -> Au {
-    Au::new(round_to_i32(basis.0 as f32 * factor))
+    raw_to_au(basis.0 as f32 * factor)
 }
