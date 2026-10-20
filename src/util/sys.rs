@@ -39,13 +39,6 @@ mod std {
         Vec::new()
     }
 
-    /// Rounds to the nearest whole number
-    #[must_use]
-    #[inline(always)]
-    pub(crate) fn round(value: f32) -> f32 {
-        (value + 0.5).floor()
-    }
-
     /// Rounds up to the nearest whole number
     #[must_use]
     #[inline(always)]
@@ -58,13 +51,6 @@ mod std {
     #[inline(always)]
     pub(crate) fn floor(value: f32) -> f32 {
         value.floor()
-    }
-
-    /// Computes the absolute value
-    #[must_use]
-    #[inline(always)]
-    pub(crate) fn abs(value: f32) -> f32 {
-        value.abs()
     }
 
     /// Returns the largest of two f32 values
@@ -114,17 +100,11 @@ mod alloc {
         Vec::new()
     }
 
-    /// Rounds to the nearest whole number
-    pub(crate) use super::polyfill::round;
-
     /// Rounds up to the nearest whole number
     pub(crate) use super::polyfill::ceil;
 
     /// Rounds down to the nearest whole number
     pub(crate) use super::polyfill::floor;
-
-    /// Computes the absolute value
-    pub(crate) use super::polyfill::abs;
 
     /// Returns the largest of two f32 values
     #[inline(always)]
@@ -155,25 +135,6 @@ mod polyfill {
 
     #[must_use]
     #[inline(always)]
-    pub(crate) fn round(value: f32) -> f32 {
-        let f = fract(value);
-        if f.is_nan() || f == 0.0 {
-            value
-        } else if value > 0.0 {
-            if f < 0.5 {
-                value - f
-            } else {
-                value - f + 1.0
-            }
-        } else if -f < 0.5 {
-            value - f
-        } else {
-            value - f - 1.0
-        }
-    }
-
-    #[must_use]
-    #[inline(always)]
     pub(crate) fn floor(value: f32) -> f32 {
         let f = fract(value);
         if f.is_nan() || f == 0.0 {
@@ -195,19 +156,6 @@ mod polyfill {
             value - f + 1.0
         } else {
             value - f
-        }
-    }
-
-    /// Computes the absolute value
-    #[must_use]
-    #[inline(always)]
-    pub(crate) fn abs(value: f32) -> f32 {
-        if value.is_sign_positive() {
-            return value;
-        } else if value.is_sign_negative() {
-            return -value;
-        } else {
-            f32::NAN
         }
     }
 }

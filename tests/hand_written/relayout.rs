@@ -36,7 +36,10 @@ fn relayout() {
     taffy
         .compute_layout(
             node,
-            taffy::geometry::Size { width: AvailableSpace::Definite(100f32), height: AvailableSpace::Definite(100f32) },
+            taffy::geometry::Size {
+                width: AvailableSpace::Definite(taffy_test_helpers::px(100f32)),
+                height: AvailableSpace::Definite(taffy_test_helpers::px(100f32)),
+            },
         )
         .unwrap();
     let initial = taffy.layout(node).unwrap().location;
@@ -47,8 +50,8 @@ fn relayout() {
             .compute_layout(
                 node,
                 taffy::geometry::Size {
-                    width: AvailableSpace::Definite(100f32),
-                    height: AvailableSpace::Definite(100f32),
+                    width: AvailableSpace::Definite(taffy_test_helpers::px(100f32)),
+                    height: AvailableSpace::Definite(taffy_test_helpers::px(100f32)),
                 },
             )
             .unwrap();
@@ -79,28 +82,28 @@ fn toggle_root_display_none() {
     // Layout 1 (None)
     taffy.compute_layout(node, Size::MAX_CONTENT).unwrap();
     let layout = taffy.layout(node).unwrap();
-    assert_eq!(layout.location.x, 0.0);
-    assert_eq!(layout.location.y, 0.0);
-    assert_eq!(layout.size.width, 0.0);
-    assert_eq!(layout.size.height, 0.0);
+    assert_eq!(layout.location.x.to_f32_px(), 0.0);
+    assert_eq!(layout.location.y.to_f32_px(), 0.0);
+    assert_eq!(layout.size.width.to_f32_px(), 0.0);
+    assert_eq!(layout.size.height.to_f32_px(), 0.0);
 
     // Layout 2 (Flex)
     taffy.set_style(node, flex_style).unwrap();
     taffy.compute_layout(node, Size::MAX_CONTENT).unwrap();
     let layout = taffy.layout(node).unwrap();
-    assert_eq!(layout.location.x, 0.0);
-    assert_eq!(layout.location.y, 0.0);
-    assert_eq!(layout.size.width, 100.0);
-    assert_eq!(layout.size.height, 100.0);
+    assert_eq!(layout.location.x.to_f32_px(), 0.0);
+    assert_eq!(layout.location.y.to_f32_px(), 0.0);
+    assert_eq!(layout.size.width.to_f32_px(), 100.0);
+    assert_eq!(layout.size.height.to_f32_px(), 100.0);
 
     // Layout 3 (None)
     taffy.set_style(node, hidden_style).unwrap();
     taffy.compute_layout(node, Size::MAX_CONTENT).unwrap();
     let layout = taffy.layout(node).unwrap();
-    assert_eq!(layout.location.x, 0.0);
-    assert_eq!(layout.location.y, 0.0);
-    assert_eq!(layout.size.width, 0.0);
-    assert_eq!(layout.size.height, 0.0);
+    assert_eq!(layout.location.x.to_f32_px(), 0.0);
+    assert_eq!(layout.location.y.to_f32_px(), 0.0);
+    assert_eq!(layout.size.width.to_f32_px(), 0.0);
+    assert_eq!(layout.size.height.to_f32_px(), 0.0);
 }
 
 #[test]
@@ -122,20 +125,20 @@ fn toggle_root_display_none_with_children() {
 
     let root = taffy.new_with_children(Style::default(), &[parent]).unwrap();
     taffy.compute_layout(root, Size::MAX_CONTENT).unwrap();
-    assert_eq!(taffy.layout(child).unwrap().size.width, 800.0);
-    assert_eq!(taffy.layout(child).unwrap().size.height, 100.0);
+    assert_eq!(taffy.layout(child).unwrap().size.width.to_f32_px(), 800.0);
+    assert_eq!(taffy.layout(child).unwrap().size.height.to_f32_px(), 100.0);
 
     taffy.set_style(root, Style { display: Display::None, ..Default::default() }).unwrap();
     taffy.compute_layout(root, Size::MAX_CONTENT).unwrap();
-    assert_eq!(taffy.layout(child).unwrap().size.width, 0.0);
-    assert_eq!(taffy.layout(child).unwrap().size.height, 0.0);
+    assert_eq!(taffy.layout(child).unwrap().size.width.to_f32_px(), 0.0);
+    assert_eq!(taffy.layout(child).unwrap().size.height.to_f32_px(), 0.0);
 
     taffy.set_style(root, Style::default()).unwrap();
     taffy.compute_layout(root, Size::MAX_CONTENT).unwrap();
-    assert_eq!(taffy.layout(parent).unwrap().size.width, 800.0);
-    assert_eq!(taffy.layout(parent).unwrap().size.height, 100.0);
-    assert_eq!(taffy.layout(child).unwrap().size.width, 800.0);
-    assert_eq!(taffy.layout(child).unwrap().size.height, 100.0);
+    assert_eq!(taffy.layout(parent).unwrap().size.width.to_f32_px(), 800.0);
+    assert_eq!(taffy.layout(parent).unwrap().size.height.to_f32_px(), 100.0);
+    assert_eq!(taffy.layout(child).unwrap().size.width.to_f32_px(), 800.0);
+    assert_eq!(taffy.layout(child).unwrap().size.height.to_f32_px(), 100.0);
 }
 
 #[test]
@@ -160,28 +163,28 @@ fn toggle_flex_child_display_none() {
     // Layout 1 (None)
     taffy.compute_layout(root, Size::MAX_CONTENT).unwrap();
     let layout = taffy.layout(node).unwrap();
-    assert_eq!(layout.location.x, 0.0);
-    assert_eq!(layout.location.y, 0.0);
-    assert_eq!(layout.size.width, 0.0);
-    assert_eq!(layout.size.height, 0.0);
+    assert_eq!(layout.location.x.to_f32_px(), 0.0);
+    assert_eq!(layout.location.y.to_f32_px(), 0.0);
+    assert_eq!(layout.size.width.to_f32_px(), 0.0);
+    assert_eq!(layout.size.height.to_f32_px(), 0.0);
 
     // Layout 2 (Flex)
     taffy.set_style(node, flex_style).unwrap();
     taffy.compute_layout(root, Size::MAX_CONTENT).unwrap();
     let layout = taffy.layout(node).unwrap();
-    assert_eq!(layout.location.x, 0.0);
-    assert_eq!(layout.location.y, 0.0);
-    assert_eq!(layout.size.width, 100.0);
-    assert_eq!(layout.size.height, 100.0);
+    assert_eq!(layout.location.x.to_f32_px(), 0.0);
+    assert_eq!(layout.location.y.to_f32_px(), 0.0);
+    assert_eq!(layout.size.width.to_f32_px(), 100.0);
+    assert_eq!(layout.size.height.to_f32_px(), 100.0);
 
     // Layout 3 (None)
     taffy.set_style(node, hidden_style).unwrap();
     taffy.compute_layout(root, Size::MAX_CONTENT).unwrap();
     let layout = taffy.layout(node).unwrap();
-    assert_eq!(layout.location.x, 0.0);
-    assert_eq!(layout.location.y, 0.0);
-    assert_eq!(layout.size.width, 0.0);
-    assert_eq!(layout.size.height, 0.0);
+    assert_eq!(layout.location.x.to_f32_px(), 0.0);
+    assert_eq!(layout.location.y.to_f32_px(), 0.0);
+    assert_eq!(layout.size.width.to_f32_px(), 0.0);
+    assert_eq!(layout.size.height.to_f32_px(), 0.0);
 }
 
 #[test]
@@ -206,28 +209,28 @@ fn toggle_flex_container_display_none() {
     // Layout 1 (None)
     taffy.compute_layout(root, Size::MAX_CONTENT).unwrap();
     let layout = taffy.layout(root).unwrap();
-    assert_eq!(layout.location.x, 0.0);
-    assert_eq!(layout.location.y, 0.0);
-    assert_eq!(layout.size.width, 0.0);
-    assert_eq!(layout.size.height, 0.0);
+    assert_eq!(layout.location.x.to_f32_px(), 0.0);
+    assert_eq!(layout.location.y.to_f32_px(), 0.0);
+    assert_eq!(layout.size.width.to_f32_px(), 0.0);
+    assert_eq!(layout.size.height.to_f32_px(), 0.0);
 
     // Layout 2 (Flex)
     taffy.set_style(root, flex_style).unwrap();
     taffy.compute_layout(root, Size::MAX_CONTENT).unwrap();
     let layout = taffy.layout(root).unwrap();
-    assert_eq!(layout.location.x, 0.0);
-    assert_eq!(layout.location.y, 0.0);
-    assert_eq!(layout.size.width, 100.0);
-    assert_eq!(layout.size.height, 100.0);
+    assert_eq!(layout.location.x.to_f32_px(), 0.0);
+    assert_eq!(layout.location.y.to_f32_px(), 0.0);
+    assert_eq!(layout.size.width.to_f32_px(), 100.0);
+    assert_eq!(layout.size.height.to_f32_px(), 100.0);
 
     // Layout 3 (None)
     taffy.set_style(root, hidden_style).unwrap();
     taffy.compute_layout(root, Size::MAX_CONTENT).unwrap();
     let layout = taffy.layout(root).unwrap();
-    assert_eq!(layout.location.x, 0.0);
-    assert_eq!(layout.location.y, 0.0);
-    assert_eq!(layout.size.width, 0.0);
-    assert_eq!(layout.size.height, 0.0);
+    assert_eq!(layout.location.x.to_f32_px(), 0.0);
+    assert_eq!(layout.location.y.to_f32_px(), 0.0);
+    assert_eq!(layout.size.width.to_f32_px(), 0.0);
+    assert_eq!(layout.size.height.to_f32_px(), 0.0);
 }
 
 #[test]
@@ -252,28 +255,28 @@ fn toggle_grid_child_display_none() {
     // Layout 1 (None)
     taffy.compute_layout(root, Size::MAX_CONTENT).unwrap();
     let layout = taffy.layout(node).unwrap();
-    assert_eq!(layout.location.x, 0.0);
-    assert_eq!(layout.location.y, 0.0);
-    assert_eq!(layout.size.width, 0.0);
-    assert_eq!(layout.size.height, 0.0);
+    assert_eq!(layout.location.x.to_f32_px(), 0.0);
+    assert_eq!(layout.location.y.to_f32_px(), 0.0);
+    assert_eq!(layout.size.width.to_f32_px(), 0.0);
+    assert_eq!(layout.size.height.to_f32_px(), 0.0);
 
     // Layout 2 (Flex)
     taffy.set_style(node, grid_style).unwrap();
     taffy.compute_layout(root, Size::MAX_CONTENT).unwrap();
     let layout = taffy.layout(node).unwrap();
-    assert_eq!(layout.location.x, 0.0);
-    assert_eq!(layout.location.y, 0.0);
-    assert_eq!(layout.size.width, 100.0);
-    assert_eq!(layout.size.height, 100.0);
+    assert_eq!(layout.location.x.to_f32_px(), 0.0);
+    assert_eq!(layout.location.y.to_f32_px(), 0.0);
+    assert_eq!(layout.size.width.to_f32_px(), 100.0);
+    assert_eq!(layout.size.height.to_f32_px(), 100.0);
 
     // Layout 3 (None)
     taffy.set_style(node, hidden_style).unwrap();
     taffy.compute_layout(root, Size::MAX_CONTENT).unwrap();
     let layout = taffy.layout(node).unwrap();
-    assert_eq!(layout.location.x, 0.0);
-    assert_eq!(layout.location.y, 0.0);
-    assert_eq!(layout.size.width, 0.0);
-    assert_eq!(layout.size.height, 0.0);
+    assert_eq!(layout.location.x.to_f32_px(), 0.0);
+    assert_eq!(layout.location.y.to_f32_px(), 0.0);
+    assert_eq!(layout.size.width.to_f32_px(), 0.0);
+    assert_eq!(layout.size.height.to_f32_px(), 0.0);
 }
 
 #[test]
@@ -298,28 +301,28 @@ fn toggle_grid_container_display_none() {
     // Layout 1 (None)
     taffy.compute_layout(root, Size::MAX_CONTENT).unwrap();
     let layout = taffy.layout(root).unwrap();
-    assert_eq!(layout.location.x, 0.0);
-    assert_eq!(layout.location.y, 0.0);
-    assert_eq!(layout.size.width, 0.0);
-    assert_eq!(layout.size.height, 0.0);
+    assert_eq!(layout.location.x.to_f32_px(), 0.0);
+    assert_eq!(layout.location.y.to_f32_px(), 0.0);
+    assert_eq!(layout.size.width.to_f32_px(), 0.0);
+    assert_eq!(layout.size.height.to_f32_px(), 0.0);
 
     // Layout 2 (Flex)
     taffy.set_style(root, grid_style).unwrap();
     taffy.compute_layout(root, Size::MAX_CONTENT).unwrap();
     let layout = taffy.layout(root).unwrap();
-    assert_eq!(layout.location.x, 0.0);
-    assert_eq!(layout.location.y, 0.0);
-    assert_eq!(layout.size.width, 100.0);
-    assert_eq!(layout.size.height, 100.0);
+    assert_eq!(layout.location.x.to_f32_px(), 0.0);
+    assert_eq!(layout.location.y.to_f32_px(), 0.0);
+    assert_eq!(layout.size.width.to_f32_px(), 100.0);
+    assert_eq!(layout.size.height.to_f32_px(), 100.0);
 
     // Layout 3 (None)
     taffy.set_style(root, hidden_style).unwrap();
     taffy.compute_layout(root, Size::MAX_CONTENT).unwrap();
     let layout = taffy.layout(root).unwrap();
-    assert_eq!(layout.location.x, 0.0);
-    assert_eq!(layout.location.y, 0.0);
-    assert_eq!(layout.size.width, 0.0);
-    assert_eq!(layout.size.height, 0.0);
+    assert_eq!(layout.location.x.to_f32_px(), 0.0);
+    assert_eq!(layout.location.y.to_f32_px(), 0.0);
+    assert_eq!(layout.size.width.to_f32_px(), 0.0);
+    assert_eq!(layout.size.height.to_f32_px(), 0.0);
 }
 
 #[test]
@@ -371,28 +374,28 @@ fn relayout_is_stable_with_rounding() {
     taffy.print_tree(root);
 
     let initial_root_layout = taffy.layout(root).unwrap().clone();
-    assert_eq!(initial_root_layout.location.x, 0.0);
-    assert_eq!(initial_root_layout.location.y, 0.0);
-    assert_eq!(initial_root_layout.size.width, 1920.0);
-    assert_eq!(initial_root_layout.size.height, 1080.0);
+    assert_eq!(initial_root_layout.location.x.to_f32_px(), 0.0);
+    assert_eq!(initial_root_layout.location.y.to_f32_px(), 0.0);
+    assert_eq!(initial_root_layout.size.width.to_f32_px(), 1920.0);
+    assert_eq!(initial_root_layout.size.height.to_f32_px(), 1080.0);
 
     let initial_outer_layout = taffy.layout(outer).unwrap().clone();
-    assert_eq!(initial_outer_layout.location.x, 2.0);
-    assert_eq!(initial_outer_layout.location.y, 0.0);
-    assert_eq!(initial_outer_layout.size.width, 1920.0);
-    assert_eq!(initial_outer_layout.size.height, 1080.0);
+    assert_eq!(initial_outer_layout.location.x.to_f32_px(), 2.0);
+    assert_eq!(initial_outer_layout.location.y.to_f32_px(), 0.0);
+    assert_eq!(initial_outer_layout.size.width.to_f32_px(), 1920.0);
+    assert_eq!(initial_outer_layout.size.height.to_f32_px(), 1080.0);
 
     let initial_wrapper_layout = taffy.layout(wrapper).unwrap().clone();
-    assert_eq!(initial_wrapper_layout.location.x, 0.0);
-    assert_eq!(initial_wrapper_layout.location.y, 0.0);
-    assert_eq!(initial_wrapper_layout.size.width, 150.0);
-    assert_eq!(initial_wrapper_layout.size.height, 1080.0);
+    assert_eq!(initial_wrapper_layout.location.x.to_f32_px(), 0.0);
+    assert_eq!(initial_wrapper_layout.location.y.to_f32_px(), 0.0);
+    assert_eq!(initial_wrapper_layout.size.width.to_f32_px(), 150.0);
+    assert_eq!(initial_wrapper_layout.size.height.to_f32_px(), 1080.0);
 
     let initial_inner_layout = taffy.layout(inner).unwrap().clone();
-    assert_eq!(initial_inner_layout.location.x, -150.0);
-    assert_eq!(initial_inner_layout.location.y, 0.0);
-    assert_eq!(initial_inner_layout.size.width, 300.0);
-    assert_eq!(initial_inner_layout.size.height, 1080.0);
+    assert_eq!(initial_inner_layout.location.x.to_f32_px(), -150.0);
+    assert_eq!(initial_inner_layout.location.y.to_f32_px(), 0.0);
+    assert_eq!(initial_inner_layout.size.width.to_f32_px(), 300.0);
+    assert_eq!(initial_inner_layout.size.height.to_f32_px(), 1080.0);
 
     // Recompute and assert that new layout marks initial layout each time
     for _ in 0..5 {
@@ -401,25 +404,25 @@ fn relayout_is_stable_with_rounding() {
         taffy.print_tree(root);
 
         let root_layout = taffy.layout(root).unwrap();
-        assert_eq!(initial_root_layout.location.x, root_layout.location.x);
-        assert_eq!(initial_root_layout.location.y, root_layout.location.y);
-        assert_eq!(initial_root_layout.size.width, root_layout.size.width);
-        assert_eq!(initial_root_layout.size.height, root_layout.size.height);
+        assert_eq!(initial_root_layout.location.x.to_f32_px(), root_layout.location.x.to_f32_px());
+        assert_eq!(initial_root_layout.location.y.to_f32_px(), root_layout.location.y.to_f32_px());
+        assert_eq!(initial_root_layout.size.width.to_f32_px(), root_layout.size.width.to_f32_px());
+        assert_eq!(initial_root_layout.size.height.to_f32_px(), root_layout.size.height.to_f32_px());
         let outer_layout = taffy.layout(outer).unwrap();
-        assert_eq!(initial_outer_layout.location.x, outer_layout.location.x);
-        assert_eq!(initial_outer_layout.location.y, outer_layout.location.y);
-        assert_eq!(initial_outer_layout.size.width, outer_layout.size.width);
-        assert_eq!(initial_outer_layout.size.height, outer_layout.size.height);
+        assert_eq!(initial_outer_layout.location.x.to_f32_px(), outer_layout.location.x.to_f32_px());
+        assert_eq!(initial_outer_layout.location.y.to_f32_px(), outer_layout.location.y.to_f32_px());
+        assert_eq!(initial_outer_layout.size.width.to_f32_px(), outer_layout.size.width.to_f32_px());
+        assert_eq!(initial_outer_layout.size.height.to_f32_px(), outer_layout.size.height.to_f32_px());
         let wrapper_layout = taffy.layout(wrapper).unwrap();
-        assert_eq!(initial_wrapper_layout.location.x, wrapper_layout.location.x);
-        assert_eq!(initial_wrapper_layout.location.x, wrapper_layout.location.y);
-        assert_eq!(initial_wrapper_layout.size.width, wrapper_layout.size.width);
-        assert_eq!(initial_wrapper_layout.size.height, wrapper_layout.size.height);
+        assert_eq!(initial_wrapper_layout.location.x.to_f32_px(), wrapper_layout.location.x.to_f32_px());
+        assert_eq!(initial_wrapper_layout.location.x.to_f32_px(), wrapper_layout.location.y.to_f32_px());
+        assert_eq!(initial_wrapper_layout.size.width.to_f32_px(), wrapper_layout.size.width.to_f32_px());
+        assert_eq!(initial_wrapper_layout.size.height.to_f32_px(), wrapper_layout.size.height.to_f32_px());
         let inner_layout = taffy.layout(inner).unwrap();
-        assert_eq!(initial_inner_layout.location.x, inner_layout.location.x);
-        assert_eq!(initial_inner_layout.location.y, inner_layout.location.y);
-        assert_eq!(initial_inner_layout.size.width, inner_layout.size.width);
-        assert_eq!(initial_inner_layout.size.height, inner_layout.size.height);
+        assert_eq!(initial_inner_layout.location.x.to_f32_px(), inner_layout.location.x.to_f32_px());
+        assert_eq!(initial_inner_layout.location.y.to_f32_px(), inner_layout.location.y.to_f32_px());
+        assert_eq!(initial_inner_layout.size.width.to_f32_px(), inner_layout.size.width.to_f32_px());
+        assert_eq!(initial_inner_layout.size.height.to_f32_px(), inner_layout.size.height.to_f32_px());
     }
 }
 
@@ -490,8 +493,8 @@ fn relayout_block_parent_as(container: Style) {
         vec![root, middle, inner, root]
     });
 
-    assert_eq!(fresh[1].location.y, 0.0, "the item is at the top of its container");
-    assert_eq!(fresh[2].location.y, 20.0, "the item contains its child's margin");
+    assert_eq!(fresh[1].location.y.to_f32_px(), 0.0, "the item is at the top of its container");
+    assert_eq!(fresh[2].location.y.to_f32_px(), 20.0, "the item contains its child's margin");
     assert_eq!(relaid, fresh);
 }
 
@@ -554,8 +557,8 @@ fn flex_base_size_is_not_answered_by_an_inherent_size_measurement() {
         vec![root, first, second, root]
     });
 
-    assert_eq!(fresh[1].size.width, 50.0);
-    assert_eq!(fresh[2].size.width, 50.0);
+    assert_eq!(fresh[1].size.width.to_f32_px(), 50.0);
+    assert_eq!(fresh[2].size.width.to_f32_px(), 50.0);
     assert_eq!(relaid, fresh);
 }
 
@@ -606,6 +609,6 @@ fn a_percentage_height_is_not_reused_after_its_containing_block_loses_its_height
                 .unwrap();
             vec![middle, item, leaf, root]
         });
-    assert_eq!(fresh[1].size.height, 19.0);
+    assert_eq!(fresh[1].size.height.to_f32_px(), 19.0);
     assert_eq!(incremental, fresh);
 }

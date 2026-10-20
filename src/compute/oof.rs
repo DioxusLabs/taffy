@@ -469,10 +469,10 @@ pub(crate) fn layout_oof_box<Tree: LayoutContainingBlock>(
     let (area_size, area_offset) = match grid_owner.map(|owner| tree.get_detailed_layout_info(owner)) {
         Some(DetailedLayoutInfo::Grid(grid_info)) => {
             let area_rect = Rect {
-                left: area_offset.x.to_f32_px(),
-                right: (area_offset.x + area_size.width).to_f32_px(),
-                top: area_offset.y.to_f32_px(),
-                bottom: (area_offset.y + area_size.height).to_f32_px(),
+                left: area_offset.x,
+                right: area_offset.x + area_size.width,
+                top: area_offset.y,
+                bottom: area_offset.y + area_size.height,
             };
             let grid_area = grid_info.resolve_absolute_grid_area(
                 child_style.grid_row(),
@@ -481,11 +481,8 @@ pub(crate) fn layout_oof_box<Tree: LayoutContainingBlock>(
                 area_rect,
             );
             (
-                Size {
-                    width: px_to_au(grid_area.right - grid_area.left),
-                    height: px_to_au(grid_area.bottom - grid_area.top),
-                },
-                Point { x: px_to_au(grid_area.left), y: px_to_au(grid_area.top) },
+                Size { width: grid_area.right - grid_area.left, height: grid_area.bottom - grid_area.top },
+                Point { x: grid_area.left, y: grid_area.top },
             )
         }
         _ => (area_size, area_offset),

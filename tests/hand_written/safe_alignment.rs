@@ -37,7 +37,7 @@ fn grid_safe_align_self_falls_back_to_start_on_overflow() {
     taffy.compute_layout(root, Size::MAX_CONTENT).unwrap();
 
     // Child overflows the 100-tall grid area, so safe end falls back to start (y == 0).
-    assert_eq!(taffy.layout(child).unwrap().location.y, 0.0);
+    assert_eq!(taffy.layout(child).unwrap().location.y.to_f32_px(), 0.0);
 }
 
 #[cfg(feature = "grid")]
@@ -67,7 +67,7 @@ fn grid_safe_align_self_behaves_as_end_when_no_overflow() {
     taffy.compute_layout(root, Size::MAX_CONTENT).unwrap();
 
     // No overflow, so safe end behaves as end: y == 100 - 40 == 60
-    assert_eq!(taffy.layout(child).unwrap().location.y, 60.0);
+    assert_eq!(taffy.layout(child).unwrap().location.y.to_f32_px(), 60.0);
 }
 
 #[cfg(feature = "grid")]
@@ -97,7 +97,7 @@ fn grid_unsafe_align_self_keeps_overflowing_position() {
     taffy.compute_layout(root, Size::MAX_CONTENT).unwrap();
 
     // Plain End with overflow keeps end alignment: y == 100 - 150 == -50
-    assert_eq!(taffy.layout(child).unwrap().location.y, -50.0);
+    assert_eq!(taffy.layout(child).unwrap().location.y.to_f32_px(), -50.0);
 }
 
 #[cfg(feature = "grid")]
@@ -126,7 +126,7 @@ fn grid_safe_justify_self_falls_back_to_start_on_overflow() {
 
     taffy.compute_layout(root, Size::MAX_CONTENT).unwrap();
 
-    assert_eq!(taffy.layout(child).unwrap().location.x, 0.0);
+    assert_eq!(taffy.layout(child).unwrap().location.x.to_f32_px(), 0.0);
 }
 
 #[cfg(feature = "grid")]
@@ -158,7 +158,7 @@ fn grid_safe_justify_self_rtl_falls_back_to_rtl_start_edge() {
 
     // In RTL the inline-start edge is the right side. The 150-wide child in the
     // 100-wide container, anchored at the RTL Start edge, sits at x == -50.
-    assert_eq!(taffy.layout(child).unwrap().location.x, -50.0);
+    assert_eq!(taffy.layout(child).unwrap().location.x.to_f32_px(), -50.0);
 }
 
 #[cfg(feature = "grid")]
@@ -189,7 +189,7 @@ fn grid_safe_align_content_overflow_falls_back_to_start() {
 
     // Tracks total 160 in a 100-tall container — overflow. Safe end falls back to
     // start: first track at y == 0.
-    assert_eq!(taffy.layout(child_a).unwrap().location.y, 0.0);
+    assert_eq!(taffy.layout(child_a).unwrap().location.y.to_f32_px(), 0.0);
 }
 
 #[cfg(feature = "flexbox")]
@@ -217,7 +217,7 @@ fn flex_safe_align_self_falls_back_to_start_on_overflow() {
     taffy.compute_layout(root, Size::MAX_CONTENT).unwrap();
 
     // Cross-axis overflow: safe end falls back to start (y == 0).
-    assert_eq!(taffy.layout(child).unwrap().location.y, 0.0);
+    assert_eq!(taffy.layout(child).unwrap().location.y.to_f32_px(), 0.0);
 }
 
 #[cfg(feature = "flexbox")]
@@ -245,7 +245,7 @@ fn flex_unsafe_align_self_keeps_overflowing_position() {
     taffy.compute_layout(root, Size::MAX_CONTENT).unwrap();
 
     // Plain End with cross-axis overflow keeps end alignment: y == 100 - 150 == -50
-    assert_eq!(taffy.layout(child).unwrap().location.y, -50.0);
+    assert_eq!(taffy.layout(child).unwrap().location.y.to_f32_px(), -50.0);
 }
 
 #[cfg(feature = "flexbox")]
@@ -274,7 +274,7 @@ fn flex_safe_justify_content_falls_back_to_start_on_overflow() {
 
     // Items total 160 in a 100-wide container — overflow. Safe end falls back to
     // start: first item anchored at x == 0.
-    assert_eq!(taffy.layout(child_a).unwrap().location.x, 0.0);
+    assert_eq!(taffy.layout(child_a).unwrap().location.x.to_f32_px(), 0.0);
 }
 
 #[cfg(feature = "flexbox")]
@@ -304,5 +304,5 @@ fn flex_safe_align_content_falls_back_to_start_on_multiline_overflow() {
 
     // Two 80-tall lines wrap and overflow the 100-tall container. Safe end falls back
     // to start: first line at y == 0.
-    assert_eq!(taffy.layout(child_a).unwrap().location.y, 0.0);
+    assert_eq!(taffy.layout(child_a).unwrap().location.y.to_f32_px(), 0.0);
 }

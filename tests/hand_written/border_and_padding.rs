@@ -25,12 +25,15 @@ fn border_on_a_single_axis_doesnt_increase_size() {
         taffy
             .compute_layout(
                 node,
-                Size { width: AvailableSpace::Definite(100.0), height: AvailableSpace::Definite(100.0) },
+                Size {
+                    width: AvailableSpace::Definite(taffy_test_helpers::px(100.0)),
+                    height: AvailableSpace::Definite(taffy_test_helpers::px(100.0)),
+                },
             )
             .unwrap();
 
         let layout = taffy.layout(node).unwrap();
-        assert_eq!(layout.size.width * layout.size.height, 0.);
+        assert_eq!(layout.size.width.to_f32_px() * layout.size.height.to_f32_px(), 0.);
     }
 }
 
@@ -53,12 +56,15 @@ fn padding_on_a_single_axis_doesnt_increase_size() {
         taffy
             .compute_layout(
                 node,
-                Size { width: AvailableSpace::Definite(100.0), height: AvailableSpace::Definite(100.0) },
+                Size {
+                    width: AvailableSpace::Definite(taffy_test_helpers::px(100.0)),
+                    height: AvailableSpace::Definite(taffy_test_helpers::px(100.0)),
+                },
             )
             .unwrap();
 
         let layout = taffy.layout(node).unwrap();
-        assert_eq!(layout.size.width * layout.size.height, 0.);
+        assert_eq!(layout.size.width.to_f32_px() * layout.size.height.to_f32_px(), 0.);
     }
 }
 
@@ -77,11 +83,14 @@ fn border_and_padding_on_a_single_axis_doesnt_increase_size() {
         taffy
             .compute_layout(
                 node,
-                Size { width: AvailableSpace::Definite(100.0), height: AvailableSpace::Definite(100.0) },
+                Size {
+                    width: AvailableSpace::Definite(taffy_test_helpers::px(100.0)),
+                    height: AvailableSpace::Definite(taffy_test_helpers::px(100.0)),
+                },
             )
             .unwrap();
         let layout = taffy.layout(node).unwrap();
-        assert_eq!(layout.size.width * layout.size.height, 0.);
+        assert_eq!(layout.size.width.to_f32_px() * layout.size.height.to_f32_px(), 0.);
     }
 }
 
@@ -102,10 +111,16 @@ fn vertical_border_and_padding_percentage_values_use_available_space_correctly()
         .unwrap();
 
     taffy
-        .compute_layout(node, Size { width: AvailableSpace::Definite(200.0), height: AvailableSpace::Definite(100.0) })
+        .compute_layout(
+            node,
+            Size {
+                width: AvailableSpace::Definite(taffy_test_helpers::px(200.0)),
+                height: AvailableSpace::Definite(taffy_test_helpers::px(100.0)),
+            },
+        )
         .unwrap();
 
     let layout = taffy.layout(node).unwrap();
-    assert_eq!(layout.size.width, 200.0);
-    assert_eq!(layout.size.height, 200.0);
+    assert_eq!(layout.size.width.to_f32_px(), 200.0);
+    assert_eq!(layout.size.height.to_f32_px(), 200.0);
 }

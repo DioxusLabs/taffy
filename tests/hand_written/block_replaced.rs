@@ -33,8 +33,8 @@ mod block_replaced {
         layout(&mut taffy, root);
 
         let child_layout = taffy.layout(child).unwrap();
-        assert_eq!(child_layout.size.width, 142.0);
-        assert_eq!(child_layout.size.height, 20.0);
+        assert_eq!(child_layout.size.width.to_f32_px(), 142.0);
+        assert_eq!(child_layout.size.height.to_f32_px(), 20.0);
     }
 
     #[test]
@@ -45,7 +45,7 @@ mod block_replaced {
         let root = taffy.new_with_children(block_container(600.0), &[child]).unwrap();
         layout(&mut taffy, root);
 
-        assert_eq!(taffy.layout(child).unwrap().size.width, 600.0);
+        assert_eq!(taffy.layout(child).unwrap().size.width.to_f32_px(), 600.0);
     }
 
     #[test]
@@ -66,8 +66,8 @@ mod block_replaced {
         layout(&mut taffy, root);
 
         let child_layout = taffy.layout(child).unwrap();
-        assert_eq!(child_layout.size.width, 300.0);
-        assert_eq!(child_layout.size.height, 50.0);
+        assert_eq!(child_layout.size.width.to_f32_px(), 300.0);
+        assert_eq!(child_layout.size.height.to_f32_px(), 50.0);
     }
 
     #[test]
@@ -88,7 +88,7 @@ mod block_replaced {
         layout(&mut taffy, root);
 
         let child_layout = taffy.layout(child).unwrap();
-        assert_eq!(child_layout.size.width, 100.0);
+        assert_eq!(child_layout.size.width.to_f32_px(), 100.0);
     }
 
     #[test]
@@ -109,7 +109,7 @@ mod block_replaced {
         layout(&mut taffy, root);
 
         let child_layout = taffy.layout(child).unwrap();
-        assert_eq!(child_layout.size.width, 142.0);
-        assert_eq!(child_layout.location.x, (600.0 - 142.0) / 2.0);
+        assert_eq!(child_layout.size.width.to_f32_px(), 142.0);
+        assert_eq!(child_layout.location.x.to_f32_px(), (600.0 - 142.0) / 2.0);
     }
 }

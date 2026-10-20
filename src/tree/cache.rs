@@ -395,11 +395,11 @@ mod tests {
         }
         cache.store(&input(Au(CACHE_SIZE as i32)), output(Au(CACHE_SIZE as i32)));
 
-        assert_eq!(cache.get(&input(Au(60))), Some(output(Au(60))));
+        assert_eq!(cache.get(&input(Au(1))), Some(output(Au(1))));
         cache.store(&input(Au((CACHE_SIZE + 1) as i32)), output(Au((CACHE_SIZE + 1) as i32)));
 
-        assert_eq!(cache.get(&input(Au(60))), Some(output(Au(60))));
-        assert_eq!(cache.get(&input(Au(120))), None);
+        assert_eq!(cache.get(&input(Au(1))), Some(output(Au(1))));
+        assert_eq!(cache.get(&input(Au(2))), None);
     }
 
     #[test]

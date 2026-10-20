@@ -382,8 +382,8 @@ fn compute_preliminary(tree: &mut impl LayoutFlexboxContainer, node: NodeId, inp
 
     #[cfg(feature = "debug")]
     for item in flex_items.iter() {
-        debug_log!("item.flex_basis", item.flex_basis);
-        debug_log!("item.inner_flex_basis", item.inner_flex_basis);
+        debug_log!("item.flex_basis", item.flex_basis.to_f32_px());
+        debug_log!("item.inner_flex_basis", item.inner_flex_basis.to_f32_px());
         debug_log!("item.hypothetical_outer_size", dbg:item.hypothetical_outer_size);
         debug_log!("item.hypothetical_inner_size", dbg:item.hypothetical_inner_size);
         debug_log!("item.resolved_minimum_main_size", dbg:item.resolved_minimum_main_size);
@@ -2191,7 +2191,7 @@ fn handle_align_content_stretch(flex_lines: &mut [FlexLine], node_size: Size<Opt
         let total_cross_axis_gap = sum_axis_gaps(constants.gap.cross(constants.dir), flex_lines.len());
         let lines_total_cross: Au = flex_lines.iter().map(|line| line.cross_size).sum::<Au>() + total_cross_axis_gap;
 
-        if lines_total_cross < container_min_inner_cross {
+        if lines_total_cross < container_min_inner_cross && !flex_lines.is_empty() {
             let remaining = container_min_inner_cross - lines_total_cross;
             let addition = remaining / flex_lines.len() as i32;
             flex_lines.iter_mut().for_each(|line| line.cross_size += addition);
@@ -3486,9 +3486,12 @@ mod balance {
                     min_line_count,
                 );
                 assert_eq!(
-                    actual, expected,
-                    "case {case}: item_sizes={item_sizes:?} line_limit={line_limit} \
-                     gap_between_items={gap_between_items} min_line_count={min_line_count}"
+                    actual,
+                    expected,
+                    "case {case}: item_sizes={item_sizes:?} line_limit={} \
+                     gap_between_items={} min_line_count={min_line_count}",
+                    line_limit.to_f32_px(),
+                    gap_between_items.to_f32_px()
                 );
             }
         }

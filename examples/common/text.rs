@@ -17,13 +17,16 @@ pub struct TextContext {
 }
 
 pub fn text_measure_function(
-    known_dimensions: taffy::geometry::Size<Option<f32>>,
+    known_dimensions: taffy::geometry::Size<Option<app_units::Au>>,
     available_space: taffy::geometry::Size<taffy::style::AvailableSpace>,
     text_context: &TextContext,
     font_metrics: &FontMetrics,
-) -> taffy::geometry::Size<f32> {
+) -> taffy::geometry::Size<app_units::Au> {
+    use app_units::Au;
     use taffy::geometry::AbsoluteAxis;
     use taffy::prelude::*;
+
+    let px = |value: f32| Au(((value * 60.0) + 0.5f32.copysign(value)) as i32);
 
     let inline_axis = match text_context.writing_mode {
         WritingMode::Horizontal => AbsoluteAxis::Horizontal,
@@ -40,14 +43,16 @@ pub fn text_measure_function(
     let max_line_length: usize = words.iter().map(|line| line.len()).sum();
     let inline_size =
         known_dimensions.get_abs(inline_axis).unwrap_or_else(|| match available_space.get_abs(inline_axis) {
-            AvailableSpace::MinContent => min_line_length as f32 * font_metrics.char_width,
-            AvailableSpace::MaxContent => max_line_length as f32 * font_metrics.char_width,
-            AvailableSpace::Definite(inline_size) => inline_size
-                .min(max_line_length as f32 * font_metrics.char_width)
-                .max(min_line_length as f32 * font_metrics.char_width),
+            AvailableSpace::MinContent => px(min_line_length as f32 * font_metrics.char_width),
+            AvailableSpace::MaxContent => px(max_line_length as f32 * font_metrics.char_width),
+            AvailableSpace::Definite(inline_size) => {
+                let max_size = px(max_line_length as f32 * font_metrics.char_width);
+                let min_size = px(min_line_length as f32 * font_metrics.char_width);
+                inline_size.max(min_size).min(max_size)
+            }
         });
     let block_size = known_dimensions.get_abs(block_axis).unwrap_or_else(|| {
-        let inline_line_length = (inline_size / font_metrics.char_width).floor() as usize;
+        let inline_line_length = (inline_size.to_f32_px() / font_metrics.char_width).floor() as usize;
         let mut line_count = 1;
         let mut current_line_length = 0;
         for word in &words {
@@ -65,7 +70,7 @@ pub fn text_measure_function(
                 current_line_length += word.len() + 1;
             };
         }
-        (line_count as f32) * font_metrics.char_height
+        px(line_count as f32 * font_metrics.char_height)
     });
 
     match text_context.writing_mode {

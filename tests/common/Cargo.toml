@@ -10,3 +10,4 @@ publish = false
 
 [dependencies]
 taffy = { path = "../.." }
+app_units = { version = "0.7.8", default-features = false, features = ["num_traits"] }

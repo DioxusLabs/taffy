@@ -25,7 +25,7 @@ mod flex_line_count {
         let child = taffy.new_leaf_with_context(Style::default(), text).unwrap();
         let container = taffy.new_with_children(container_style(flex_wrap), &[child]).unwrap();
         taffy.compute_layout_with_measure(container, Size::MAX_CONTENT, test_measure_function).unwrap();
-        taffy.layout(child).unwrap().size
+        taffy.layout(child).unwrap().size.map(|v| v.to_f32_px())
     }
 
     // A multi-line container with `flex-line-count: 2` measures content against the cross-axis
@@ -55,7 +55,7 @@ mod flex_line_count {
         let child = taffy.new_leaf_with_context(child_style, text).unwrap();
         let container = taffy.new_with_children(container_style(flex_wrap), &[child]).unwrap();
         taffy.compute_layout_with_measure(container, Size::MAX_CONTENT, test_measure_function).unwrap();
-        taffy.layout(child).unwrap().size
+        taffy.layout(child).unwrap().size.map(|v| v.to_f32_px())
     }
 
     // A bare `fit-content` cross size is also measured against the divided cross-axis

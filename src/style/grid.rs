@@ -1,4 +1,6 @@
 //! Style types for CSS Grid layout
+use app_units::Au;
+
 use super::{
     AlignContent, AlignContentKeyword, AlignItems, AlignSelf, CheapCloneStr, CompactLength, CoreStyle, Dimension,
     JustifyContent, LengthPercentage, LengthPercentageAuto, Style,
@@ -7,6 +9,7 @@ use crate::compute::grid::{GridCoordinate, GridLine, OriginZeroLine, MAX_GRID_TR
 use crate::geometry::{AbsoluteAxis, AbstractAxis, Line, MinMax, Size};
 use crate::style_helpers::*;
 use crate::sys::{DefaultCheapStr, Vec};
+use crate::util::au::{px_to_au, scale_au};
 use core::cmp::{max, min};
 use core::fmt::Debug;
 
@@ -1004,7 +1007,7 @@ impl MaxTrackSizingFunction {
 
     /// Returns whether the value can be resolved using `Self::definite_value`
     #[inline(always)]
-    pub fn has_definite_value(self, parent_size: Option<f32>) -> bool {
+    pub fn has_definite_value(self, parent_size: Option<Au>) -> bool {
         match self.0.tag() {
             CompactLength::LENGTH_TAG => true,
             CompactLength::PERCENT_TAG => parent_size.is_some(),
@@ -1018,16 +1021,14 @@ impl MaxTrackSizingFunction {
     /// the passed available_space and returns if this results in a concrete value (which it
     /// will if the available_space is `Some`). Otherwise returns None.
     #[inline(always)]
-    pub fn definite_value(
-        self,
-        parent_size: Option<f32>,
-        calc_resolver: impl Fn(*const (), f32) -> f32,
-    ) -> Option<f32> {
+    pub fn definite_value(self, parent_size: Option<Au>, calc_resolver: impl Fn(*const (), f32) -> f32) -> Option<Au> {
         match self.0.tag() {
-            CompactLength::LENGTH_TAG => Some(self.0.value()),
-            CompactLength::PERCENT_TAG => parent_size.map(|size| self.0.value() * size),
+            CompactLength::LENGTH_TAG => Some(px_to_au(self.0.value())),
+            CompactLength::PERCENT_TAG => parent_size.map(|size| scale_au(size, self.0.value())),
             #[cfg(feature = "calc")]
-            _ if self.0.is_plain_calc() => parent_size.map(|size| calc_resolver(self.0.calc_value(), size)),
+            _ if self.0.is_plain_calc() => {
+                parent_size.map(|size| px_to_au(calc_resolver(self.0.calc_value(), size.to_f32_px())))
+            }
             _ => None,
         }
     }
@@ -1038,16 +1039,18 @@ impl MaxTrackSizingFunction {
     #[inline(always)]
     pub fn fit_content_limit(
         self,
-        parent_size: Option<f32>,
+        parent_size: Option<Au>,
         calc_resolver: impl Fn(*const (), f32) -> f32,
-    ) -> Option<f32> {
+    ) -> Option<Au> {
         #[cfg(not(feature = "calc"))]
         let _ = &calc_resolver;
         match self.0.tag() {
-            CompactLength::FIT_CONTENT_PX_TAG => Some(self.0.value()),
-            CompactLength::FIT_CONTENT_PERCENT_TAG => parent_size.map(|size| self.0.value() * size),
+            CompactLength::FIT_CONTENT_PX_TAG => Some(px_to_au(self.0.value())),
+            CompactLength::FIT_CONTENT_PERCENT_TAG => parent_size.map(|size| scale_au(size, self.0.value())),
             #[cfg(feature = "calc")]
-            _ if self.0.is_fit_content_calc() => parent_size.map(|size| calc_resolver(self.0.calc_value(), size)),
+            _ if self.0.is_fit_content_calc() => {
+                parent_size.map(|size| px_to_au(calc_resolver(self.0.calc_value(), size.to_f32_px())))
+            }
             _ => None,
         }
     }
@@ -1059,16 +1062,14 @@ impl MaxTrackSizingFunction {
     ///     - A fit-content sizing function with percentage argument (with definite available space)
     /// All other kinds of track sizing function return None.
     #[inline(always)]
-    pub fn definite_limit(
-        self,
-        parent_size: Option<f32>,
-        calc_resolver: impl Fn(*const (), f32) -> f32,
-    ) -> Option<f32> {
+    pub fn definite_limit(self, parent_size: Option<Au>, calc_resolver: impl Fn(*const (), f32) -> f32) -> Option<Au> {
         match self.0.tag() {
-            CompactLength::FIT_CONTENT_PX_TAG => Some(self.0.value()),
-            CompactLength::FIT_CONTENT_PERCENT_TAG => parent_size.map(|size| self.0.value() * size),
+            CompactLength::FIT_CONTENT_PX_TAG => Some(px_to_au(self.0.value())),
+            CompactLength::FIT_CONTENT_PERCENT_TAG => parent_size.map(|size| scale_au(size, self.0.value())),
             #[cfg(feature = "calc")]
-            _ if self.0.is_fit_content_calc() => parent_size.map(|size| calc_resolver(self.0.calc_value(), size)),
+            _ if self.0.is_fit_content_calc() => {
+                parent_size.map(|size| px_to_au(calc_resolver(self.0.calc_value(), size.to_f32_px())))
+            }
             _ => self.definite_value(parent_size, calc_resolver),
         }
     }
@@ -1078,10 +1079,10 @@ impl MaxTrackSizingFunction {
     #[inline(always)]
     pub fn resolved_percentage_size(
         self,
-        parent_size: f32,
+        parent_size: Au,
         calc_resolver: impl Fn(*const (), f32) -> f32,
-    ) -> Option<f32> {
-        self.0.resolved_percentage_size(parent_size, calc_resolver)
+    ) -> Option<Au> {
+        self.0.resolved_percentage_size(parent_size.to_f32_px(), calc_resolver).map(px_to_au)
     }
 
     /// Whether the track sizing functions depends on the size of the parent node
@@ -1368,7 +1369,7 @@ impl MinTrackSizingFunction {
 
     /// Returns true if the value is `Auto`, or is a percentage and `parent_size` is `None`
     #[inline(always)]
-    pub fn behaves_as_auto(&self, parent_size: Option<f32>) -> bool {
+    pub fn behaves_as_auto(&self, parent_size: Option<Au>) -> bool {
         self.0.is_auto() || (parent_size.is_none() && self.0.uses_percentage())
     }
 
@@ -1388,16 +1389,14 @@ impl MinTrackSizingFunction {
     /// the passed available_space and returns if this results in a concrete value (which it
     /// will if the available_space is `Some`). Otherwise returns `None`.
     #[inline(always)]
-    pub fn definite_value(
-        self,
-        parent_size: Option<f32>,
-        calc_resolver: impl Fn(*const (), f32) -> f32,
-    ) -> Option<f32> {
+    pub fn definite_value(self, parent_size: Option<Au>, calc_resolver: impl Fn(*const (), f32) -> f32) -> Option<Au> {
         match self.0.tag() {
-            CompactLength::LENGTH_TAG => Some(self.0.value()),
-            CompactLength::PERCENT_TAG => parent_size.map(|size| self.0.value() * size),
+            CompactLength::LENGTH_TAG => Some(px_to_au(self.0.value())),
+            CompactLength::PERCENT_TAG => parent_size.map(|size| scale_au(size, self.0.value())),
             #[cfg(feature = "calc")]
-            _ if self.0.is_plain_calc() => parent_size.map(|size| calc_resolver(self.0.calc_value(), size)),
+            _ if self.0.is_plain_calc() => {
+                parent_size.map(|size| px_to_au(calc_resolver(self.0.calc_value(), size.to_f32_px())))
+            }
             _ => None,
         }
     }
@@ -1407,10 +1406,10 @@ impl MinTrackSizingFunction {
     #[inline(always)]
     pub fn resolved_percentage_size(
         self,
-        parent_size: f32,
+        parent_size: Au,
         calc_resolver: impl Fn(*const (), f32) -> f32,
-    ) -> Option<f32> {
-        self.0.resolved_percentage_size(parent_size, calc_resolver)
+    ) -> Option<Au> {
+        self.0.resolved_percentage_size(parent_size.to_f32_px(), calc_resolver).map(px_to_au)
     }
 
     /// Whether the track sizing functions depends on the size of the parent node

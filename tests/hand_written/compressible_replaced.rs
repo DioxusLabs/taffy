@@ -46,7 +46,7 @@ mod compressible_replaced {
             block_container(),
             Style { display: Display::Block, item_is_compressible_replaced: true, ..Default::default() },
         );
-        assert_eq!(layout.size, Size { width: 150.0, height: 20.0 });
+        assert_eq!(layout.size.map(|v| v.to_f32_px()), Size { width: 150.0, height: 20.0 });
     }
 
     #[test]
@@ -60,7 +60,7 @@ mod compressible_replaced {
                 ..Default::default()
             },
         );
-        assert_eq!(layout.size.width, 400.0);
+        assert_eq!(layout.size.width.to_f32_px(), 400.0);
     }
 
     #[test]
@@ -74,8 +74,8 @@ mod compressible_replaced {
                 ..Default::default()
             },
         );
-        assert_eq!(layout.size, Size { width: 380.0, height: 280.0 });
-        assert_eq!(layout.location, Point { x: 10.0, y: 10.0 });
+        assert_eq!(layout.size.map(|v| v.to_f32_px()), Size { width: 380.0, height: 280.0 });
+        assert_eq!(layout.location.map(|v| v.to_f32_px()), Point { x: 10.0, y: 10.0 });
     }
 
     #[test]

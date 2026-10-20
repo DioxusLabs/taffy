@@ -1,7 +1,10 @@
 //! Style types for representing lengths / sizes
+use app_units::Au;
+
 use super::CompactLength;
 use crate::geometry::Rect;
 use crate::style_helpers::{FromLength, FromPercent, TaffyAuto, TaffyZero};
+use crate::util::au::{px_to_au, scale_au};
 #[cfg(feature = "parse")]
 use crate::util::parse::{from_str_from_css, CssParseResult, FromCss, Parser, Token};
 
@@ -235,13 +238,13 @@ impl LengthPercentageAuto {
     ///   - Some(resolved) using the provided context for Percent variants
     ///   - None for Auto variants
     #[inline(always)]
-    pub fn resolve_to_option(self, context: f32, calc_resolver: impl Fn(*const (), f32) -> f32) -> Option<f32> {
+    pub fn resolve_to_option(self, context: Au, calc_resolver: impl Fn(*const (), f32) -> f32) -> Option<Au> {
         match self.0.tag() {
-            CompactLength::LENGTH_TAG => Some(self.0.value()),
-            CompactLength::PERCENT_TAG => Some(context * self.0.value()),
+            CompactLength::LENGTH_TAG => Some(px_to_au(self.0.value())),
+            CompactLength::PERCENT_TAG => Some(scale_au(context, self.0.value())),
             CompactLength::AUTO_TAG => None,
             #[cfg(feature = "calc")]
-            _ if self.0.is_plain_calc() => Some(calc_resolver(self.0.calc_value(), context)),
+            _ if self.0.is_plain_calc() => Some(px_to_au(calc_resolver(self.0.calc_value(), context.to_f32_px()))),
             _ => unreachable!("LengthPercentageAuto values cannot be constructed with other tags"),
         }
     }

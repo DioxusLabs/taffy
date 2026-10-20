@@ -45,11 +45,11 @@ fn float_no_higher_than_earlier_floats() {
     let layout_c = taffy.layout(float_c).unwrap();
 
     // A is placed below the spacer
-    assert_eq!(layout_a.location, Point { x: 0.0, y: 43.0 });
+    assert_eq!(layout_a.location.map(|v| v.to_f32_px()), Point { x: 0.0, y: 43.0 });
     // B does not fit next to A, so is placed below it
-    assert_eq!(layout_b.location, Point { x: 0.0, y: 85.0 });
+    assert_eq!(layout_b.location.map(|v| v.to_f32_px()), Point { x: 0.0, y: 85.0 });
     // C must not be placed higher than B (it fits next to B on the right)
-    assert_eq!(layout_c.location, Point { x: 302.0, y: 85.0 });
+    assert_eq!(layout_c.location.map(|v| v.to_f32_px()), Point { x: 302.0, y: 85.0 });
 }
 
 /// Regression test for <https://wpt.live/css/CSS2/floats-clear/margin-collapse-033.xht>
@@ -96,7 +96,7 @@ fn clear_past_zero_width_float() {
     // The cleared (self-collapsing) block is placed below the float (y=1). Its clearance
     // prevents the sibling's 99px margin from collapsing with preceding margins, so the
     // container's height is 1 + 99 = 100.
-    assert_eq!(taffy.layout(container).unwrap().size.height, 100.0);
+    assert_eq!(taffy.layout(container).unwrap().size.height.to_f32_px(), 100.0);
 }
 
 fn float_block(width: f32, height: f32, float: Float) -> Style {
@@ -125,7 +125,7 @@ fn oversized_float_overflows_containing_block() {
 
     taffy.compute_layout(root, Size::MAX_CONTENT).unwrap();
 
-    assert_eq!(taffy.layout(float_a).unwrap().location, Point { x: 0.0, y: 0.0 });
+    assert_eq!(taffy.layout(float_a).unwrap().location.map(|v| v.to_f32_px()), Point { x: 0.0, y: 0.0 });
 }
 
 /// CSS2 float rules 3 & 7: a float with another float beside it must not overlap that float
@@ -145,9 +145,9 @@ fn float_beside_existing_float_moves_down_instead_of_overflowing() {
 
     taffy.compute_layout(root, Size::MAX_CONTENT).unwrap();
 
-    assert_eq!(taffy.layout(left).unwrap().location, Point { x: 0.0, y: 0.0 });
-    assert_eq!(taffy.layout(right).unwrap().location, Point { x: 40.0, y: 50.0 });
-    assert_eq!(taffy.layout(left2).unwrap().location, Point { x: 0.0, y: 100.0 });
+    assert_eq!(taffy.layout(left).unwrap().location.map(|v| v.to_f32_px()), Point { x: 0.0, y: 0.0 });
+    assert_eq!(taffy.layout(right).unwrap().location.map(|v| v.to_f32_px()), Point { x: 40.0, y: 50.0 });
+    assert_eq!(taffy.layout(left2).unwrap().location.map(|v| v.to_f32_px()), Point { x: 0.0, y: 100.0 });
 }
 
 /// Regression test for auto-margins-used-values-with-floats.tentative.html.
@@ -200,14 +200,20 @@ fn auto_margins_include_float_avoidance_offsets() {
                 let alignment_margin = free_space / (u8::from(left_auto) + u8::from(right_auto)) as f32;
                 let left_gap = if left_auto { alignment_margin } else { 0.0 };
                 assert_eq!(
-                    layout.location,
+                    layout.location.map(|v| v.to_f32_px()),
                     Point { x: 5.0 + left_float_width + left_gap, y: 5.0 + index as f32 * 10.0 }
                 );
-                assert_eq!(layout.size, Size { width: 40.0, height: 10.0 });
-                assert_eq!(layout.margin.left, if left_auto { left_float_width + alignment_margin } else { 0.0 });
-                assert_eq!(layout.margin.right, if right_auto { right_float_width + alignment_margin } else { 0.0 });
-                assert_eq!(layout.margin.top, 0.0);
-                assert_eq!(layout.margin.bottom, 0.0);
+                assert_eq!(layout.size.map(|v| v.to_f32_px()), Size { width: 40.0, height: 10.0 });
+                assert_eq!(
+                    layout.margin.left.to_f32_px(),
+                    if left_auto { left_float_width + alignment_margin } else { 0.0 }
+                );
+                assert_eq!(
+                    layout.margin.right.to_f32_px(),
+                    if right_auto { right_float_width + alignment_margin } else { 0.0 }
+                );
+                assert_eq!(layout.margin.top.to_f32_px(), 0.0);
+                assert_eq!(layout.margin.bottom.to_f32_px(), 0.0);
             }
         }
     }
@@ -263,16 +269,16 @@ fn float_avoiding_auto_margins_in_nested_block_ignore_relative_insets_and_cleara
         taffy.compute_layout(root, Size::MAX_CONTENT).unwrap();
 
         let relative_layout = taffy.layout(relative_box).unwrap();
-        assert_eq!(relative_layout.location, Point { x: 47.0, y: 0.0 });
-        assert_eq!(relative_layout.margin.left, 32.0);
-        assert_eq!(relative_layout.margin.right, 38.0);
+        assert_eq!(relative_layout.location.map(|v| v.to_f32_px()), Point { x: 47.0, y: 0.0 });
+        assert_eq!(relative_layout.margin.left.to_f32_px(), 32.0);
+        assert_eq!(relative_layout.margin.right.to_f32_px(), 38.0);
         let cleared_layout = taffy.layout(cleared_box).unwrap();
-        assert_eq!(cleared_layout.location, Point { x: 43.0, y: 40.0 });
-        assert_eq!(cleared_layout.margin.left, 35.0);
-        assert_eq!(cleared_layout.margin.right, 35.0);
+        assert_eq!(cleared_layout.location.map(|v| v.to_f32_px()), Point { x: 43.0, y: 40.0 });
+        assert_eq!(cleared_layout.margin.left.to_f32_px(), 35.0);
+        assert_eq!(cleared_layout.margin.right.to_f32_px(), 35.0);
         let nested_layout = taffy.layout(nested).unwrap();
-        assert_eq!(nested_layout.location, Point { x: 30.0, y: 10.0 });
-        assert_eq!(nested_layout.margin.left, 20.0);
-        assert_eq!(nested_layout.margin.right, 30.0);
+        assert_eq!(nested_layout.location.map(|v| v.to_f32_px()), Point { x: 30.0, y: 10.0 });
+        assert_eq!(nested_layout.margin.left.to_f32_px(), 20.0);
+        assert_eq!(nested_layout.margin.right.to_f32_px(), 30.0);
     }
 }

@@ -1,3 +1,4 @@
+use app_units::Au;
 use taffy::prelude::*;
 
 fn main() -> Result<(), taffy::TaffyError> {
@@ -43,7 +44,7 @@ fn main() -> Result<(), taffy::TaffyError> {
 
     taffy.compute_layout(
         container,
-        Size { height: AvailableSpace::Definite(100.0), width: AvailableSpace::Definite(100.0) },
+        Size { height: AvailableSpace::Definite(Au::from_px(100)), width: AvailableSpace::Definite(Au::from_px(100)) },
     )?;
 
     println!("node: {:#?}", taffy.layout(container)?);

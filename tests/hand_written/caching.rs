@@ -61,7 +61,7 @@ mod caching {
             .unwrap();
 
         taffy.compute_layout_with_measure(outer, Size::MAX_CONTENT, test_measure_function).unwrap();
-        assert_eq!(taffy.layout(leaf).unwrap().size, Size { width: 50.0, height: 20.0 });
+        assert_eq!(taffy.layout(leaf).unwrap().size.map(|v| v.to_f32_px()), Size { width: 50.0, height: 20.0 });
         assert_eq!(taffy.get_node_context_mut(leaf).unwrap().count, 6);
     }
 
@@ -86,8 +86,8 @@ mod caching {
         let grid = taffy.new_with_children(Style { display: Display::Grid, ..Default::default() }, &[leaf]).unwrap();
 
         taffy.compute_layout_with_measure(grid, Size::MAX_CONTENT, test_measure_function).unwrap();
-        assert_eq!(taffy.layout(grid).unwrap().size, Size { width: 40.0, height: 20.0 });
-        assert_eq!(taffy.layout(leaf).unwrap().size, Size { width: 40.0, height: 20.0 });
+        assert_eq!(taffy.layout(grid).unwrap().size.map(|v| v.to_f32_px()), Size { width: 40.0, height: 20.0 });
+        assert_eq!(taffy.layout(leaf).unwrap().size.map(|v| v.to_f32_px()), Size { width: 40.0, height: 20.0 });
         assert_eq!(taffy.get_node_context_mut(leaf).unwrap().count, 3);
     }
 
@@ -128,8 +128,8 @@ mod caching {
             .unwrap();
 
         taffy.compute_layout_with_measure(grid, Size::MAX_CONTENT, test_measure_function).unwrap();
-        assert_eq!(taffy.layout(grid).unwrap().size, Size { width: 150.0, height: 50.0 });
-        assert_eq!(taffy.layout(leaf).unwrap().size, Size { width: 80.0, height: 50.0 });
+        assert_eq!(taffy.layout(grid).unwrap().size.map(|v| v.to_f32_px()), Size { width: 150.0, height: 50.0 });
+        assert_eq!(taffy.layout(leaf).unwrap().size.map(|v| v.to_f32_px()), Size { width: 80.0, height: 50.0 });
         assert_eq!(taffy.get_node_context_mut(leaf).unwrap().count, 3);
     }
 
@@ -163,7 +163,7 @@ mod caching {
 
             taffy.compute_layout_with_measure(grid, Size::MAX_CONTENT, test_measure_function).unwrap();
             let count = taffy.get_node_context_mut(leaf).unwrap().count;
-            assert_eq!(taffy.layout(leaf).unwrap().size, Size { width: 50.0, height: 20.0 });
+            assert_eq!(taffy.layout(leaf).unwrap().size.map(|v| v.to_f32_px()), Size { width: 50.0, height: 20.0 });
             assert_eq!(count, expected_count);
         }
     }
@@ -210,15 +210,18 @@ mod caching {
         taffy
             .compute_layout_with_measure(
                 container,
-                Size { width: AvailableSpace::Definite(1000.0), height: AvailableSpace::Definite(1000.0) },
+                Size {
+                    width: AvailableSpace::Definite(taffy_test_helpers::px(1000.0)),
+                    height: AvailableSpace::Definite(taffy_test_helpers::px(1000.0)),
+                },
                 test_measure_function,
             )
             .unwrap();
 
         for (index, node) in [a, b, c].into_iter().enumerate() {
             let layout = taffy.layout(node).unwrap();
-            assert_eq!(layout.size.height, 19.0);
-            assert_eq!(layout.location.y, 19.0 * index as f32);
+            assert_eq!(layout.size.height.to_f32_px(), 19.0);
+            assert_eq!(layout.location.y.to_f32_px(), 19.0 * index as f32);
         }
     }
     /// An item whose spanned tracks cannot receive its min-/max-content contribution in any
@@ -248,7 +251,7 @@ mod caching {
         taffy.compute_layout_with_measure(grid, Size::MAX_CONTENT, test_measure_function).unwrap();
 
         // Only the final layout pass measures the leaf; track sizing does not.
-        assert_eq!(taffy.layout(leaf).unwrap().size.width, 300.0);
+        assert_eq!(taffy.layout(leaf).unwrap().size.width.to_f32_px(), 300.0);
         assert_eq!(taffy.get_node_context_mut(leaf).unwrap().count, 1);
     }
 }

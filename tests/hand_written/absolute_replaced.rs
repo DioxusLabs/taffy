@@ -42,8 +42,8 @@ mod absolute_replaced {
             inset: all_insets(10.0),
             ..Default::default()
         });
-        assert_eq!(layout.size, Size { width: 100.0, height: 50.0 });
-        assert_eq!(layout.location, Point { x: 10.0, y: 10.0 });
+        assert_eq!(layout.size.map(|v| v.to_f32_px()), Size { width: 100.0, height: 50.0 });
+        assert_eq!(layout.location.map(|v| v.to_f32_px()), Point { x: 10.0, y: 10.0 });
     }
 
     #[test]
@@ -55,13 +55,13 @@ mod absolute_replaced {
             size: Size { width: length(200.0), height: auto() },
             ..Default::default()
         });
-        assert_eq!(layout.size, Size { width: 200.0, height: 100.0 });
+        assert_eq!(layout.size.map(|v| v.to_f32_px()), Size { width: 200.0, height: 100.0 });
     }
 
     #[test]
     fn non_replaced_auto_size_is_stretched_between_insets() {
         let layout =
             layout_child(Style { position: Position::Absolute, inset: all_insets(10.0), ..Default::default() });
-        assert_eq!(layout.size, Size { width: 380.0, height: 280.0 });
+        assert_eq!(layout.size.map(|v| v.to_f32_px()), Size { width: 380.0, height: 280.0 });
     }
 }

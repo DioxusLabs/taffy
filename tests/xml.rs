@@ -1,3 +1,4 @@
+use app_units::{Au, AU_PER_PX};
 use roxmltree::Document;
 use std::{fmt::Debug, io::Write, path::PathBuf, str::FromStr};
 use taffy::{
@@ -293,14 +294,15 @@ fn maybe_parse<T: FromStr>(input: Option<&str>) -> Option<T> {
 fn get_computed_expectations(tree: &TaffyTree<TestNodeContext>, node_id: NodeId) -> OutputNode {
     let layout = tree.get_final_layout(node_id);
     #[cfg(feature = "content_size")]
-    let scroll_size = Some(Size { width: layout.scroll_width(), height: layout.scroll_height() });
+    let scroll_size =
+        Some(Size { width: layout.scroll_width().to_f32_px(), height: layout.scroll_height().to_f32_px() });
     #[cfg(not(feature = "content_size"))]
     let scroll_size = None;
     let (resolved_rows, resolved_columns) = get_resolved_track_lists(tree, node_id);
     let mut output = OutputNode {
         node_id,
-        location: layout.location,
-        size: layout.size,
+        location: layout.location.map(|v| v.to_f32_px()),
+        size: layout.size.map(|v| v.to_f32_px()),
         scroll_size,
         resolved_rows,
         resolved_columns,
@@ -320,7 +322,7 @@ fn get_computed_expectations(tree: &TaffyTree<TestNodeContext>, node_id: NodeId)
 fn get_resolved_track_lists(tree: &TaffyTree<TestNodeContext>, node_id: NodeId) -> (Option<String>, Option<String>) {
     match tree.detailed_layout_info(node_id) {
         taffy::DetailedLayoutInfo::Grid(info) => {
-            (Some(info.grid_template_rows(1.0)), Some(info.grid_template_columns(1.0)))
+            (Some(info.grid_template_rows(Au(AU_PER_PX))), Some(info.grid_template_columns(Au(AU_PER_PX))))
         }
         taffy::DetailedLayoutInfo::None => (None, None),
     }

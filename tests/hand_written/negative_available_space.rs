@@ -1,5 +1,6 @@
 #[cfg(test)]
 mod negative_available_space {
+    use app_units::Au;
     use taffy::prelude::*;
     use taffy::{AvailableSpace, LayoutInput, LayoutOutput, NodeId};
     use taffy_test_helpers::{new_test_tree, test_measure_function, TestNodeContext};
@@ -46,9 +47,9 @@ mod negative_available_space {
                 |inputs: LayoutInput, node_id: NodeId, context: Option<&mut TestNodeContext>, style: &Style| {
                     let known = inputs.known_dimensions;
                     let avail = inputs.available_space;
-                    let is_negative = |value: Option<f32>| value.is_some_and(|v| v < 0.0);
+                    let is_negative = |value: Option<Au>| value.is_some_and(|v| v.0 < 0);
                     let is_negative_avail =
-                        |value: AvailableSpace| matches!(value, AvailableSpace::Definite(v) if v < 0.0);
+                        |value: AvailableSpace| matches!(value, AvailableSpace::Definite(v) if v.0 < 0);
                     if is_negative(known.width)
                         || is_negative(known.height)
                         || is_negative_avail(avail.width)
@@ -62,7 +63,7 @@ mod negative_available_space {
             )
             .unwrap();
 
-        (taffy.layout(leaf).unwrap().size.width, negative_inputs)
+        (taffy.layout(leaf).unwrap().size.width.to_f32_px(), negative_inputs)
     }
 
     fn assert_floored_at_zero(display: Display, flex_direction: FlexDirection) {

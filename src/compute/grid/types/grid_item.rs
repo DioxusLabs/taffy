@@ -1,4 +1,6 @@
 //! Contains GridItem used to represent a single grid item during layout
+use app_units::Au;
+
 use super::GridTrack;
 use crate::compute::common::sizing_keyword::{resolve_sizing_keyword, SizingKeywordResolution};
 use crate::compute::grid::OriginZeroLine;
@@ -6,7 +8,10 @@ use crate::geometry::AbstractAxis;
 use crate::geometry::{Line, Point, Rect, Size};
 use crate::style::{AlignItems, AlignSelf, AvailableSpace, Dimension, LengthPercentageAuto, Overflow};
 use crate::tree::{LayoutPartialTree, LayoutPartialTreeExt, NodeId, OofCandidates, SizingMode};
-use crate::util::sys::f32_max;
+#[inline(always)]
+fn au_max(a: Au, b: Au) -> Au {
+    a.max(b)
+}
 use crate::util::{MaybeMath, MaybeResolve, ResolveOrZero};
 use crate::{AlignItemsKeyword, BoxSizing, GridItemStyle, LengthPercentage};
 use core::ops::Range;
@@ -15,9 +20,9 @@ use core::ops::Range;
 #[derive(Debug, Clone, Copy)]
 pub(in super::super) struct KnownDimensionsCacheEntry {
     /// The grid area size that `known_dimensions` was computed for
-    grid_area_size: Size<Option<f32>>,
+    grid_area_size: Size<Option<Au>>,
     /// The cached known_dimensions
-    known_dimensions: Size<Option<f32>>,
+    known_dimensions: Size<Option<Au>>,
 }
 
 /// Represents a single grid item
@@ -65,10 +70,10 @@ pub(in super::super) struct GridItem {
     pub justify_self: AlignSelf,
     /// The item's first baseline (horizontal), measured from the top of its border box. Set from the item's
     /// intrinsic layout when resolving baseline alignment during track sizing, then from its final layout.
-    pub baseline: Option<f32>,
+    pub baseline: Option<Au>,
     /// Shim for baseline alignment that acts like an extra top margin
     /// TODO: Support last baseline and vertical text baselines
-    pub baseline_shim: f32,
+    pub baseline_shim: Au,
 
     /// The item's definite row-start and row-end (same as `row` field, except in a different coordinate system)
     /// (as indexes into the Vec<GridTrack> stored in a grid's AbstractAxisTracks)
@@ -88,22 +93,22 @@ pub(in super::super) struct GridItem {
 
     // Caches for intrinsic size computation. These caches are only valid for a single run of the track-sizing algorithm.
     /// Cache for the known_dimensions input to intrinsic sizing computation
-    pub grid_area_size_cache: Option<Size<Option<f32>>>,
+    pub grid_area_size_cache: Option<Size<Option<Au>>>,
     /// Cache for the known_dimensions passed to the child when computing its intrinsic contributions, stored along with
     /// the grid area size it was computed for. Must be cleared whenever `baseline_shim` changes.
     pub known_dimensions_cache: Option<KnownDimensionsCacheEntry>,
     /// Cache for the min-content size
-    pub min_content_contribution_cache: Size<Option<f32>>,
+    pub min_content_contribution_cache: Size<Option<Au>>,
     /// Cache for the minimum contribution
-    pub minimum_contribution_cache: Size<Option<f32>>,
+    pub minimum_contribution_cache: Size<Option<Au>>,
     /// Cache for the max-content size
-    pub max_content_contribution_cache: Size<Option<f32>>,
+    pub max_content_contribution_cache: Size<Option<Au>>,
 
     /// Final y position, excluding any relative offset (which does not affect the container's baseline).
     /// Used to compute baseline alignment for the container.
-    pub y_position: f32,
+    pub y_position: Au,
     /// Final height. Used to compute baseline alignment for the container.
-    pub height: f32,
+    pub height: Au,
 
     /// Out-of-flow candidates bubbled out of this item's subtree (anchors relative to the
     /// container's border box)
@@ -139,7 +144,7 @@ impl GridItem {
             align_self: style.align_self().unwrap_or(parent_align_items),
             justify_self: style.justify_self().unwrap_or(parent_justify_items),
             baseline: None,
-            baseline_shim: 0.0,
+            baseline_shim: Au(0),
             row_indexes: Line { start: 0, end: 0 }, // Properly initialised later
             column_indexes: Line { start: 0, end: 0 }, // Properly initialised later
             crosses_flexible_row: false,            // Properly initialised later
@@ -151,8 +156,8 @@ impl GridItem {
             max_content_contribution_cache: Size::NONE,
             known_dimensions_cache: None,
             minimum_contribution_cache: Size::NONE,
-            y_position: 0.0,
-            height: 0.0,
+            y_position: Au(0),
+            height: Au(0),
             oof_candidates: OofCandidates::NONE,
         }
     }
@@ -248,15 +253,15 @@ impl GridItem {
         &mut self,
         axis: AbstractAxis,
         axis_tracks: &[GridTrack],
-        axis_parent_size: Option<f32>,
+        axis_parent_size: Option<Au>,
         resolve_calc_value: &dyn Fn(*const (), f32) -> f32,
-    ) -> Option<f32> {
+    ) -> Option<Au> {
         let spanned_tracks = &axis_tracks[self.track_range_excluding_lines(axis)];
         let tracks_all_fixed = spanned_tracks.iter().all(|track| {
             track.max_track_sizing_function.definite_limit(axis_parent_size, resolve_calc_value).is_some()
         });
         if tracks_all_fixed {
-            let limit: f32 = spanned_tracks
+            let limit: Au = spanned_tracks
                 .iter()
                 .map(|track| {
                     track.max_track_sizing_function.definite_limit(axis_parent_size, resolve_calc_value).unwrap()
@@ -274,15 +279,15 @@ impl GridItem {
         &mut self,
         axis: AbstractAxis,
         axis_tracks: &[GridTrack],
-        axis_parent_size: Option<f32>,
+        axis_parent_size: Option<Au>,
         resolve_calc_value: &dyn Fn(*const (), f32) -> f32,
-    ) -> Option<f32> {
+    ) -> Option<Au> {
         let spanned_tracks = &axis_tracks[self.track_range_excluding_lines(axis)];
         let tracks_all_fixed = spanned_tracks.iter().all(|track| {
             track.max_track_sizing_function.definite_value(axis_parent_size, resolve_calc_value).is_some()
         });
         if tracks_all_fixed {
-            let limit: f32 = spanned_tracks
+            let limit: Au = spanned_tracks
                 .iter()
                 .map(|track| {
                     track.max_track_sizing_function.definite_value(axis_parent_size, resolve_calc_value).unwrap()
@@ -300,8 +305,8 @@ impl GridItem {
     fn known_dimensions_cached(
         &mut self,
         tree: &mut impl LayoutPartialTree,
-        grid_area_size: Size<Option<f32>>,
-    ) -> Size<Option<f32>> {
+        grid_area_size: Size<Option<Au>>,
+    ) -> Size<Option<Au>> {
         if let Some(entry) = self.known_dimensions_cache {
             if entry.grid_area_size == grid_area_size {
                 return entry.known_dimensions;
@@ -328,8 +333,8 @@ impl GridItem {
     fn known_dimensions(
         &self,
         tree: &mut impl LayoutPartialTree,
-        grid_area_size: Size<Option<f32>>,
-    ) -> Size<Option<f32>> {
+        grid_area_size: Size<Option<Au>>,
+    ) -> Size<Option<Au>> {
         let margins = self.margins_axis_sums_with_baseline_shims(grid_area_size.width, tree);
 
         let aspect_ratio = self.aspect_ratio;
@@ -453,10 +458,10 @@ impl GridItem {
         axis: AbstractAxis,
         axis_tracks: &[GridTrack],
         other_axis_tracks: &[GridTrack],
-        available_space: Size<Option<f32>>,
-        get_track_size_estimate: impl Fn(&GridTrack, Option<f32>) -> Option<f32>,
+        available_space: Size<Option<Au>>,
+        get_track_size_estimate: impl Fn(&GridTrack, Option<Au>) -> Option<Au>,
         resolve_calc_value: &impl Fn(*const (), f32) -> f32,
-    ) -> Size<Option<f32>> {
+    ) -> Size<Option<Au>> {
         let mut size = Size::NONE;
         size.set(
             axis,
@@ -476,7 +481,7 @@ impl GridItem {
                         None
                     }
                 })
-                .sum::<Option<f32>>(),
+                .sum::<Option<Au>>(),
         );
 
         size.set(
@@ -487,7 +492,7 @@ impl GridItem {
                     get_track_size_estimate(track, available_space.get(axis.other()))
                         .map(|size| size + track.content_alignment_adjustment)
                 })
-                .sum::<Option<f32>>(),
+                .sum::<Option<Au>>(),
         );
 
         size
@@ -499,10 +504,10 @@ impl GridItem {
         axis: AbstractAxis,
         axis_tracks: &[GridTrack],
         other_axis_tracks: &[GridTrack],
-        available_space: Size<Option<f32>>,
-        get_track_size_estimate: impl Fn(&GridTrack, Option<f32>) -> Option<f32>,
+        available_space: Size<Option<Au>>,
+        get_track_size_estimate: impl Fn(&GridTrack, Option<Au>) -> Option<Au>,
         resolve_calc_value: &impl Fn(*const (), f32) -> f32,
-    ) -> Size<Option<f32>> {
+    ) -> Size<Option<Au>> {
         self.grid_area_size_cache.unwrap_or_else(|| {
             let grid_area_size = self.grid_area_size(
                 axis,
@@ -522,12 +527,12 @@ impl GridItem {
     #[inline(always)]
     pub fn margins_axis_sums_with_baseline_shims(
         &self,
-        inner_node_width: Option<f32>,
+        inner_node_width: Option<Au>,
         tree: &impl LayoutPartialTree,
-    ) -> Size<f32> {
+    ) -> Size<Au> {
         Rect {
-            left: self.margin.left.resolve_or_zero(Some(0.0), |val, basis| tree.calc(val, basis)),
-            right: self.margin.right.resolve_or_zero(Some(0.0), |val, basis| tree.calc(val, basis)),
+            left: self.margin.left.resolve_or_zero(Some(Au(0)), |val, basis| tree.calc(val, basis)),
+            right: self.margin.right.resolve_or_zero(Some(Au(0)), |val, basis| tree.calc(val, basis)),
             top: self.margin.top.resolve_or_zero(inner_node_width, |val, basis| tree.calc(val, basis))
                 + self.baseline_shim,
             bottom: self.margin.bottom.resolve_or_zero(inner_node_width, |val, basis| tree.calc(val, basis)),
@@ -540,9 +545,9 @@ impl GridItem {
         &mut self,
         axis: AbstractAxis,
         tree: &mut impl LayoutPartialTree,
-        grid_area_size: Size<Option<f32>>,
-        available_space: Size<Option<f32>>,
-    ) -> f32 {
+        grid_area_size: Size<Option<Au>>,
+        available_space: Size<Option<Au>>,
+    ) -> Au {
         let known_dimensions = self.known_dimensions_cached(tree, grid_area_size);
         // If the item's size in the axis being measured is already known then that size is its contribution,
         // and we can avoid calling into the child entirely.
@@ -578,9 +583,9 @@ impl GridItem {
         &mut self,
         axis: AbstractAxis,
         tree: &mut impl LayoutPartialTree,
-        grid_area_size: Size<Option<f32>>,
-        available_space: Size<Option<f32>>,
-    ) -> f32 {
+        grid_area_size: Size<Option<Au>>,
+        available_space: Size<Option<Au>>,
+    ) -> Au {
         self.min_content_contribution_cache.get(axis).unwrap_or_else(|| {
             let size = self.min_content_contribution(axis, tree, grid_area_size, available_space);
             self.min_content_contribution_cache.set(axis, Some(size));
@@ -593,9 +598,9 @@ impl GridItem {
         &mut self,
         axis: AbstractAxis,
         tree: &mut impl LayoutPartialTree,
-        grid_area_size: Size<Option<f32>>,
-        available_space: Size<Option<f32>>,
-    ) -> f32 {
+        grid_area_size: Size<Option<Au>>,
+        available_space: Size<Option<Au>>,
+    ) -> Au {
         let known_dimensions = self.known_dimensions_cached(tree, grid_area_size);
         // If the item's size in the axis being measured is already known then that size is its contribution,
         // and we can avoid calling into the child entirely.
@@ -630,19 +635,19 @@ impl GridItem {
     #[inline(always)]
     fn available_space_minus_margins(
         &self,
-        grid_area_size: Size<Option<f32>>,
-        available_space: Size<Option<f32>>,
+        grid_area_size: Size<Option<Au>>,
+        available_space: Size<Option<Au>>,
         tree: &impl LayoutPartialTree,
-    ) -> Size<Option<f32>> {
+    ) -> Size<Option<Au>> {
         if available_space.width.is_none() && available_space.height.is_none() {
             return available_space;
         }
         let margin = self.margin.resolve_or_zero(grid_area_size.width, |val, basis| tree.calc(val, basis));
         Size {
-            width: available_space.width.map(|width| f32_max(width - margin.horizontal_axis_sum(), 0.0)),
+            width: available_space.width.map(|width| au_max(width - margin.horizontal_axis_sum(), Au(0))),
             height: available_space
                 .height
-                .map(|height| f32_max(height - margin.vertical_axis_sum() - self.baseline_shim, 0.0)),
+                .map(|height| au_max(height - margin.vertical_axis_sum() - self.baseline_shim, Au(0))),
         }
     }
 
@@ -651,7 +656,7 @@ impl GridItem {
     /// (min-content, max-content, fit-content, fit-content(...))
     fn keyword_adjusted_available_space(
         &self,
-        grid_area_size: Size<Option<f32>>,
+        grid_area_size: Size<Option<Au>>,
         available_space: Size<AvailableSpace>,
         tree: &impl LayoutPartialTree,
     ) -> Size<AvailableSpace> {
@@ -665,7 +670,7 @@ impl GridItem {
             if !size_style.is_sizing_keyword() {
                 continue;
             }
-            let stretch_size = grid_area_size.get(axis).maybe_sub(margins.get(axis)).maybe_max(0.0);
+            let stretch_size = grid_area_size.get(axis).maybe_sub(margins.get(axis)).maybe_max(Au(0));
             if let Some(SizingKeywordResolution::Measure(available)) =
                 resolve_sizing_keyword(size_style, stretch_size, grid_area_size.get(axis), |val, basis| {
                     tree.calc(val, basis)
@@ -683,9 +688,9 @@ impl GridItem {
         &mut self,
         axis: AbstractAxis,
         tree: &mut impl LayoutPartialTree,
-        grid_area_size: Size<Option<f32>>,
-        available_space: Size<Option<f32>>,
-    ) -> f32 {
+        grid_area_size: Size<Option<Au>>,
+        available_space: Size<Option<Au>>,
+    ) -> Au {
         self.max_content_contribution_cache.get(axis).unwrap_or_else(|| {
             let size = self.max_content_contribution(axis, tree, grid_area_size, available_space);
             self.max_content_contribution_cache.set(axis, Some(size));
@@ -706,9 +711,9 @@ impl GridItem {
         tree: &mut impl LayoutPartialTree,
         axis: AbstractAxis,
         axis_tracks: &[GridTrack],
-        grid_area_size: Size<Option<f32>>,
-        inner_node_size: Size<Option<f32>>,
-    ) -> f32 {
+        grid_area_size: Size<Option<Au>>,
+        inner_node_size: Size<Option<Au>>,
+    ) -> Au {
         let padding = self.padding.resolve_or_zero(grid_area_size.width, |val, basis| tree.calc(val, basis));
         let border = self.border.resolve_or_zero(grid_area_size.width, |val, basis| tree.calc(val, basis));
         let padding_border_size = (padding + border).sum_axes();
@@ -728,7 +733,7 @@ impl GridItem {
                     return size;
                 }
                 let basis = grid_area_size.get(axis);
-                let max_size_basis = if self.is_compressible_replaced { basis.or(Some(0.0)) } else { basis };
+                let max_size_basis = if self.is_compressible_replaced { basis.or(Some(Au(0))) } else { basis };
                 let adjustment = box_sizing_adjustment.get(axis);
                 let min_size = min_size.maybe_resolve(basis, |val, basis| tree.calc(val, basis));
                 let max_size = max_size.maybe_resolve(max_size_basis, |val, basis| tree.calc(val, basis));
@@ -743,12 +748,12 @@ impl GridItem {
             })
             .or_else(|| {
                 self.min_size
-                    .maybe_resolve(grid_area_size.map(|size| size.unwrap_or(0.0)), |val, basis| tree.calc(val, basis))
+                    .maybe_resolve(grid_area_size.map(|size| size.unwrap_or(Au(0))), |val, basis| tree.calc(val, basis))
                     .maybe_apply_aspect_ratio(self.aspect_ratio)
                     .maybe_add(box_sizing_adjustment)
                     .get(axis)
             })
-            .or_else(|| self.overflow.get(axis).maybe_into_automatic_min_size())
+            .or_else(|| self.overflow.get(axis).maybe_into_automatic_min_size().map(|_| Au(0)))
             .unwrap_or_else(|| {
                 // Automatic minimum size. See https://www.w3.org/TR/css-grid-1/#min-size-auto
 
@@ -778,9 +783,9 @@ impl GridItem {
                     // relevant axis, the size suggestion is capped by those sizes; for this purpose, any indefinite percentages
                     // in these sizes are resolved against zero (and considered definite).
                     if self.is_compressible_replaced {
-                        let size = self.size.get(axis).maybe_resolve(Some(0.0), |val, basis| tree.calc(val, basis));
+                        let size = self.size.get(axis).maybe_resolve(Some(Au(0)), |val, basis| tree.calc(val, basis));
                         let max_size =
-                            self.max_size.get(axis).maybe_resolve(Some(0.0), |val, basis| tree.calc(val, basis));
+                            self.max_size.get(axis).maybe_resolve(Some(Au(0)), |val, basis| tree.calc(val, basis));
                         minimum_contribution = minimum_contribution.maybe_min(size).maybe_min(max_size);
                     }
 
@@ -793,9 +798,9 @@ impl GridItem {
                         self.spanned_fixed_track_limit(axis, axis_tracks, inner_node_size.get(axis), &|val, basis| {
                             tree.resolve_calc_value(val, basis)
                         });
-                    minimum_contribution.maybe_min(limit.map(|limit| f32_max(limit, padding_border_size.get(axis))))
+                    minimum_contribution.maybe_min(limit.map(|limit| au_max(limit, padding_border_size.get(axis))))
                 } else {
-                    0.0
+                    Au(0)
                 }
             })
     }
@@ -807,9 +812,9 @@ impl GridItem {
         tree: &mut impl LayoutPartialTree,
         axis: AbstractAxis,
         axis_tracks: &[GridTrack],
-        grid_area_size: Size<Option<f32>>,
-        inner_node_size: Size<Option<f32>>,
-    ) -> f32 {
+        grid_area_size: Size<Option<Au>>,
+        inner_node_size: Size<Option<Au>>,
+    ) -> Au {
         self.minimum_contribution_cache.get(axis).unwrap_or_else(|| {
             let size = self.minimum_contribution(tree, axis, axis_tracks, grid_area_size, inner_node_size);
             self.minimum_contribution_cache.set(axis, Some(size));
