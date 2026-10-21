@@ -87,7 +87,7 @@ fn convert_style(style: taffy::style::Style) -> taffy_03::style::Style {
         size: convert_size(style.size, convert_dimension),
         min_size: convert_size(style.min_size, convert_dimension),
         max_size: convert_size(style.max_size, convert_dimension),
-        aspect_ratio: style.aspect_ratio,
+        aspect_ratio: style.aspect_ratio.ratio(),
         gap: convert_size(style.gap, convert_length_percentage),
         // Alignment
         align_items: None,

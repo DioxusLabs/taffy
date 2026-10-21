@@ -138,6 +138,12 @@ function parseNumber(input) {
 function parseRatio(input) {
   if (!input) return undefined;
 
+  // `auto && <ratio>` is serialized as "auto <ratio>"
+  if (input.startsWith("auto")) {
+    const ratio = parseRatio(input.slice(4).trim());
+    return ratio === undefined ? undefined : `auto ${ratio}`;
+  }
+
   if (input.includes('/')) {
     let [width, height] = input.split("/").map(part => parseFloat(part.trim()));
     if (!width || width < 0 || !height || height <= 0) return undefined;

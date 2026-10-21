@@ -4,6 +4,7 @@
 //! child's containing block). Instead they emit [`OofCandidate`] records which bubble up the tree
 //! via [`LayoutOutput::oof_candidates`](crate::LayoutOutput) until they reach the box's containing
 //! block, which lays the box out using the routine in this module.
+use crate::compute::common::aspect_ratio::{ApplyAspectRatio, ResolvedAspectRatio};
 use crate::geometry::{Line, Point, Rect, Size};
 use crate::style::{
     AlignItemsKeyword, AlignSelf, AlignmentSafety, AvailableSpace, ContainingBlockClaims, CoreStyle, OofItemStyle,
@@ -486,7 +487,6 @@ pub(crate) fn layout_oof_box<Tree: LayoutContainingBlock>(
     let area_width = area_size.width;
     let area_height = area_size.height;
 
-    let aspect_ratio = child_style.aspect_ratio();
     let margin =
         child_style.margin().map(|margin| margin.resolve_to_option(area_width, |val, basis| tree.calc(val, basis)));
     let padding = child_style.padding().resolve_or_zero(Some(area_width), |val, basis| tree.calc(val, basis));
@@ -494,6 +494,8 @@ pub(crate) fn layout_oof_box<Tree: LayoutContainingBlock>(
     let padding_border_sum = (padding + border).sum_axes();
     let box_sizing_adjustment =
         if child_style.box_sizing() == BoxSizing::ContentBox { padding_border_sum } else { Size::ZERO };
+    let aspect_ratio =
+        ResolvedAspectRatio::new(child_style.aspect_ratio(), child_style.box_sizing(), padding_border_sum);
 
     // Resolve inset
     let left = child_style.inset().left.maybe_resolve(area_width, |val, basis| tree.calc(val, basis));
@@ -505,19 +507,19 @@ pub(crate) fn layout_oof_box<Tree: LayoutContainingBlock>(
     let size_style = child_style.size();
     let style_size = size_style
         .maybe_resolve(area_size, |val, basis| tree.calc(val, basis))
-        .maybe_apply_aspect_ratio(aspect_ratio)
+        .apply_aspect_ratio(aspect_ratio)
         .maybe_add(box_sizing_adjustment);
     let mut min_size = child_style
         .min_size()
         .maybe_resolve(area_size, |val, basis| tree.calc(val, basis))
-        .maybe_apply_aspect_ratio(aspect_ratio)
+        .apply_aspect_ratio(aspect_ratio)
         .maybe_add(box_sizing_adjustment)
         .or(padding_border_sum.map(Some))
         .maybe_max(padding_border_sum);
     let max_size = child_style
         .max_size()
         .maybe_resolve(area_size, |val, basis| tree.calc(val, basis))
-        .maybe_apply_aspect_ratio(aspect_ratio)
+        .apply_aspect_ratio(aspect_ratio)
         .maybe_add(box_sizing_adjustment);
     let mut known_dimensions = style_size.maybe_clamp(min_size, max_size);
 
@@ -601,7 +603,7 @@ pub(crate) fn layout_oof_box<Tree: LayoutContainingBlock>(
             margin,
             SizingMode::ContentSize,
         );
-        known_dimensions = known_dimensions.maybe_apply_aspect_ratio(aspect_ratio).maybe_clamp(min_size, max_size);
+        known_dimensions = known_dimensions.apply_aspect_ratio(aspect_ratio).maybe_clamp(min_size, max_size);
     }
 
     // Resolve automatic sizes <https://www.w3.org/TR/css-position-3/#abspos-auto-size>
@@ -626,7 +628,7 @@ pub(crate) fn layout_oof_box<Tree: LayoutContainingBlock>(
         } else {
             known_dimensions.width = Some(stretch_fit_size.width);
             known_dimensions =
-                known_dimensions.maybe_apply_aspect_ratio(stretch_aspect_ratio).maybe_clamp(min_size, max_size);
+                known_dimensions.apply_aspect_ratio(stretch_aspect_ratio).maybe_clamp(min_size, max_size);
         }
     }
     if known_dimensions.height.is_none() && stretch_height {
@@ -635,7 +637,7 @@ pub(crate) fn layout_oof_box<Tree: LayoutContainingBlock>(
         } else {
             known_dimensions.height = Some(stretch_fit_size.height);
             known_dimensions =
-                known_dimensions.maybe_apply_aspect_ratio(stretch_aspect_ratio).maybe_clamp(min_size, max_size);
+                known_dimensions.apply_aspect_ratio(stretch_aspect_ratio).maybe_clamp(min_size, max_size);
         }
     }
 

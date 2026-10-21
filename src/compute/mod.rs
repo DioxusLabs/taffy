@@ -205,6 +205,7 @@ fn compute_in_flow_root_layout(
 
     #[cfg(feature = "block_layout")]
     {
+        use crate::compute::common::aspect_ratio::{ApplyAspectRatio, ResolvedAspectRatio};
         use crate::BoxSizing;
 
         let parent_size = available_space.into_options();
@@ -212,27 +213,27 @@ fn compute_in_flow_root_layout(
 
         if style.is_block() {
             // Pull these out earlier to avoid borrowing issues
-            let aspect_ratio = style.aspect_ratio();
             let padding = style.padding().resolve_or_zero(parent_size.width, |val, basis| tree.calc(val, basis));
             let border = style.border().resolve_or_zero(parent_size.width, |val, basis| tree.calc(val, basis));
             let padding_border_size = (padding + border).sum_axes();
             let box_sizing_adjustment =
                 if style.box_sizing() == BoxSizing::ContentBox { padding_border_size } else { Size::ZERO };
+            let aspect_ratio = ResolvedAspectRatio::new(style.aspect_ratio(), style.box_sizing(), padding_border_size);
 
             let min_size = style
                 .min_size()
                 .maybe_resolve(parent_size, |val, basis| tree.calc(val, basis))
-                .maybe_apply_aspect_ratio(aspect_ratio)
+                .apply_aspect_ratio(aspect_ratio)
                 .maybe_add(box_sizing_adjustment);
             let max_size = style
                 .max_size()
                 .maybe_resolve(parent_size, |val, basis| tree.calc(val, basis))
-                .maybe_apply_aspect_ratio(aspect_ratio)
+                .apply_aspect_ratio(aspect_ratio)
                 .maybe_add(box_sizing_adjustment);
             let clamped_style_size = style
                 .size()
                 .maybe_resolve(parent_size, |val, basis| tree.calc(val, basis))
-                .maybe_apply_aspect_ratio(aspect_ratio)
+                .apply_aspect_ratio(aspect_ratio)
                 .maybe_add(box_sizing_adjustment)
                 .maybe_clamp(min_size, max_size);
 

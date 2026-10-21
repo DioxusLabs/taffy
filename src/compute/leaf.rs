@@ -1,5 +1,6 @@
 //! Computes size using styles and measure functions
 
+use crate::compute::common::aspect_ratio::{ApplyAspectRatio, ResolvedAspectRatio};
 #[cfg(feature = "content_size")]
 use crate::geometry::Rect;
 use crate::geometry::Size;
@@ -46,16 +47,16 @@ where
             (node_size, node_min_size, node_max_size, None)
         }
         SizingMode::InherentSize => {
-            let aspect_ratio = style.aspect_ratio();
+            let aspect_ratio = ResolvedAspectRatio::new(style.aspect_ratio(), style.box_sizing(), pb_sum);
             let style_size = style
                 .size()
                 .maybe_resolve(parent_size, &resolve_calc_value)
-                .maybe_apply_aspect_ratio(aspect_ratio)
+                .apply_aspect_ratio(aspect_ratio)
                 .maybe_add(box_sizing_adjustment);
             let style_min_size = style
                 .min_size()
                 .maybe_resolve(parent_size, &resolve_calc_value)
-                .maybe_apply_aspect_ratio(aspect_ratio)
+                .apply_aspect_ratio(aspect_ratio)
                 .maybe_add(box_sizing_adjustment);
             let style_max_size =
                 style.max_size().maybe_resolve(parent_size, &resolve_calc_value).maybe_add(box_sizing_adjustment);
@@ -151,7 +152,10 @@ where
         .maybe_clamp(node_min_size, node_max_size);
     let size = Size {
         width: clamped_size.width,
-        height: f32_max(clamped_size.height, aspect_ratio.map(|ratio| clamped_size.width / ratio).unwrap_or(0.0)),
+        height: f32_max(
+            clamped_size.height,
+            aspect_ratio.map(|ratio| ratio.height_from_width(clamped_size.width)).unwrap_or(0.0),
+        ),
     };
     let size = size.maybe_max(padding_border.sum_axes().map(Some));
 

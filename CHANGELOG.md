@@ -6,8 +6,11 @@
 
 - `BlockContext::place_floated_box` (and `FloatContext::place_floated_box`) now take a caller-defined `id: u64` for the box, which is stored on `PlacedFloatedBox`. `BlockContext::float_mark` and `BlockContext::floats_placed_since` read back the id and position of the floats placed since a mark, so that custom formatting contexts which place floats do not need to keep their own list of placements.
 
+- `Style::aspect_ratio` and `CoreStyle::aspect_ratio()` are now an `AspectRatio` rather than an `Option<f32>`, so that they can represent `aspect-ratio: auto && <ratio>` (`AspectRatio::auto_and`). `AspectRatio` implements `From<f32>` and `From<Option<f32>>`, and a degenerate ratio (not finite and positive) converts to `AspectRatio::NONE`. With the `parse` feature, `AspectRatio` implements `FromStr` (`auto || <ratio>`).
+
 ### Fixed
 
+- Block, Flexbox, Grid, absolute positioning: `aspect-ratio: auto && <ratio>` applies the ratio to the content box, regardless of `box-sizing` (<https://drafts.csswg.org/css-sizing-4/#aspect-ratio>).
 - Block: apply `position: relative` insets to floated boxes. The offset does not affect the placement of other content.
 - Float: don't clamp the first float of a block formatting context to the top of the context. A float in a box pulled up by a negative top margin is placed at the top of its containing block, which may be above the top of the context.
 - Float: a float that starts beside earlier floats but extends below all of them now constrains the placement of later floats and boxes over its full height, rather than only down to the bottom of the earlier floats.
