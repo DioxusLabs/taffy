@@ -8,9 +8,11 @@ use regex::Regex;
 use taffy::Style;
 use walkdir::WalkDir;
 
-/// Properties that Chrome resolves when generating fixtures but that Taffy does not model
-const UNMODELLED_PROPERTIES: [&str; 8] =
-    ["background", "background-color", "color", "border-style", "border-color", "outline", "writing-mode", "z-index"];
+/// Paint-only properties that Chrome resolves when generating fixtures but Taffy does not model
+const PAINT_ONLY_PROPERTIES: [&str; 3] = ["color", "background", "outline"];
+
+/// Other properties that Chrome resolves but Taffy does not model
+const UNMODELLED_PROPERTIES: [&str; 2] = ["writing-mode", "z-index"];
 
 fn main() -> ExitCode {
     let fixtures_root = std::env::var("FIXTURE_DIR").map(PathBuf::from).unwrap_or_else(|_| {
@@ -62,8 +64,17 @@ fn check_declaration(declaration: &str) -> Result<(), String> {
     declaration.parse::<Style<String>>().map(|_| ()).map_err(|err| err.to_string())
 }
 
-/// Paint-only properties and logical (`*-inline-*` / `*-block-*`) properties are resolved by Chrome
-/// but not expressible in Taffy, so they are skipped rather than reported
+/// Paint-only properties are resolved by Chrome but not expressible in Taffy, so they are skipped.
+fn is_paint_only(name: &str) -> bool {
+    PAINT_ONLY_PROPERTIES.contains(&name)
+        || name.starts_with("background-")
+        || name.starts_with("outline-")
+        || (name.starts_with("border") && (name.ends_with("-style") || name.ends_with("-color")))
+}
+
+/// Other unmodelled properties, including logical properties, are skipped rather than reported.
 fn is_unmodelled(name: &str) -> bool {
-    UNMODELLED_PROPERTIES.contains(&name) || name.split('-').any(|word| word == "inline" || word == "block")
+    is_paint_only(name)
+        || UNMODELLED_PROPERTIES.contains(&name)
+        || name.split('-').any(|word| word == "inline" || word == "block")
 }
