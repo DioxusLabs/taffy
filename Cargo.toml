@@ -117,6 +117,7 @@ members = [
     "scripts/getchrome",
     "scripts/format-fixtures",
     "scripts/import-yoga-tests",
+    "scripts/lint-fixtures",
     "tests/common",
 ]
 # The Parley example and benches are excluded from the workspace as their dependencies require a newer

@@ -797,6 +797,7 @@ impl FromCss for MaxTrackSizingFunction {
         match token {
             Token::Percentage { unit_value, .. } => Ok(Self::percent(unit_value)),
             Token::Dimension { unit, value, .. } if unit == "px" => Ok(Self::length(value)),
+            Token::Number { value: 0.0, .. } => Ok(Self::length(0.0)),
             Token::Dimension { unit, value, .. } if unit == "fr" && value.is_sign_positive() => Ok(Self::fr(value)),
             Token::Ident(ref ident) => match ident.as_ref() {
                 "auto" => Ok(Self::auto()),
@@ -1243,6 +1244,7 @@ impl FromCss for MinTrackSizingFunction {
         match token {
             Token::Percentage { unit_value, .. } => Ok(Self::percent(unit_value)),
             Token::Dimension { unit, value, .. } if unit == "px" => Ok(Self::length(value)),
+            Token::Number { value: 0.0, .. } => Ok(Self::length(0.0)),
             Token::Ident(ref ident) => match ident.as_ref() {
                 "auto" => Ok(Self::auto()),
                 "min-content" => Ok(Self::min_content()),
