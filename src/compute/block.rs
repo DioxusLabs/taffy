@@ -1,5 +1,5 @@
 //! Computes the CSS block layout algorithm in the case that the block container being laid out contains only block-level boxes
-use crate::compute::common::aspect_ratio::{transfer_aspect_ratio, ApplyAspectRatio, ResolvedAspectRatio};
+use crate::compute::common::aspect_ratio::{transfer_aspect_ratio, transfer_aspect_ratio_limits, ResolvedAspectRatio};
 use crate::geometry::{Line, Point, Rect, Size};
 use crate::style::{
     AlignContent, AlignContentKeyword, AlignItems, AlignItemsKeyword, AlignSelf, AlignmentSafety, AvailableSpace,
@@ -436,16 +436,16 @@ pub fn compute_block_layout(
         if style.box_sizing() == BoxSizing::ContentBox { padding_border_size } else { Size::ZERO };
     let aspect_ratio = ResolvedAspectRatio::new(style.aspect_ratio(), style.box_sizing(), padding_border_size);
 
-    let min_size = style
-        .min_size()
-        .maybe_resolve(parent_size, |val, basis| tree.calc(val, basis))
-        .apply_aspect_ratio(aspect_ratio)
-        .maybe_add(box_sizing_adjustment);
-    let max_size = style
-        .max_size()
-        .maybe_resolve(parent_size, |val, basis| tree.calc(val, basis))
-        .apply_aspect_ratio(aspect_ratio)
-        .maybe_add(box_sizing_adjustment);
+    let (min_size, max_size) = transfer_aspect_ratio_limits(
+        known_dimensions
+            .maybe_sub(box_sizing_adjustment)
+            .or(style.size().maybe_resolve(parent_size, |val, basis| tree.calc(val, basis))),
+        style.min_size().maybe_resolve(parent_size, |val, basis| tree.calc(val, basis)),
+        style.max_size().maybe_resolve(parent_size, |val, basis| tree.calc(val, basis)),
+        aspect_ratio,
+    );
+    let min_size = min_size.maybe_add(box_sizing_adjustment);
+    let max_size = max_size.maybe_add(box_sizing_adjustment);
     let clamped_style_size = if inputs.sizing_mode == SizingMode::InherentSize {
         let style_size = style.size().maybe_resolve(parent_size, |val, basis| tree.calc(val, basis));
         transfer_aspect_ratio(&style, style_size, aspect_ratio)
@@ -561,16 +561,16 @@ fn compute_inner(
     )
     .size
     .maybe_add(box_sizing_adjustment);
-    let min_size = style
-        .min_size()
-        .maybe_resolve(parent_size, |val, basis| tree.calc(val, basis))
-        .apply_aspect_ratio(aspect_ratio)
-        .maybe_add(box_sizing_adjustment);
-    let max_size = style
-        .max_size()
-        .maybe_resolve(parent_size, |val, basis| tree.calc(val, basis))
-        .apply_aspect_ratio(aspect_ratio)
-        .maybe_add(box_sizing_adjustment);
+    let (min_size, max_size) = transfer_aspect_ratio_limits(
+        known_dimensions
+            .maybe_sub(box_sizing_adjustment)
+            .or(style.size().maybe_resolve(parent_size, |val, basis| tree.calc(val, basis))),
+        style.min_size().maybe_resolve(parent_size, |val, basis| tree.calc(val, basis)),
+        style.max_size().maybe_resolve(parent_size, |val, basis| tree.calc(val, basis)),
+        aspect_ratio,
+    );
+    let min_size = min_size.maybe_add(box_sizing_adjustment);
+    let max_size = max_size.maybe_add(box_sizing_adjustment);
 
     // css-sizing-4: a definite size in one axis transfers through `aspect-ratio`
     // to make the other definite. Deriving it from `known_dimensions` self-gates
@@ -958,9 +958,12 @@ fn generate_item_list(
 
             let position = child_style.position();
             let overflow = child_style.overflow();
-            let size_transfer = transfer_aspect_ratio(
-                &child_style,
-                child_style.size().maybe_resolve(node_inner_size, |val, basis| tree.calc(val, basis)),
+            let child_size = child_style.size().maybe_resolve(node_inner_size, |val, basis| tree.calc(val, basis));
+            let size_transfer = transfer_aspect_ratio(&child_style, child_size, aspect_ratio);
+            let (item_min_size, item_max_size) = transfer_aspect_ratio_limits(
+                child_size,
+                child_style.min_size().maybe_resolve(node_inner_size, |val, basis| tree.calc(val, basis)),
+                child_style.max_size().maybe_resolve(node_inner_size, |val, basis| tree.calc(val, basis)),
                 aspect_ratio,
             );
 
@@ -999,16 +1002,8 @@ fn generate_item_list(
                 size_style: child_style.size(),
                 size: size_transfer.size.maybe_add(box_sizing_adjustment),
                 width_floored_by_min_content: size_transfer.automatic_minimum.width.is_some(),
-                min_size: child_style
-                    .min_size()
-                    .maybe_resolve(node_inner_size, |val, basis| tree.calc(val, basis))
-                    .apply_aspect_ratio(aspect_ratio)
-                    .maybe_add(box_sizing_adjustment),
-                max_size: child_style
-                    .max_size()
-                    .maybe_resolve(node_inner_size, |val, basis| tree.calc(val, basis))
-                    .apply_aspect_ratio(aspect_ratio)
-                    .maybe_add(box_sizing_adjustment),
+                min_size: item_min_size.maybe_add(box_sizing_adjustment),
+                max_size: item_max_size.maybe_add(box_sizing_adjustment),
                 overflow,
                 contain,
                 scrollbar_width: child_style.scrollbar_width(),

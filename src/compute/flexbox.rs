@@ -2,7 +2,9 @@
 use crate::compute::common::alignment::{
     child_first_baseline, compute_alignment_offset, resolve_self_alignment_safety,
 };
-use crate::compute::common::aspect_ratio::{transfer_aspect_ratio, ApplyAspectRatio, ResolvedAspectRatio};
+use crate::compute::common::aspect_ratio::{
+    transfer_aspect_ratio, transfer_aspect_ratio_limits, ApplyAspectRatio, ResolvedAspectRatio,
+};
 use crate::geometry::{Line, Point, Rect, Size};
 use crate::style::{
     AlignContent, AlignContentKeyword, AlignItems, AlignItemsKeyword, AlignSelf, AvailableSpace, Contain,
@@ -280,16 +282,16 @@ pub fn compute_flexbox_layout(
         if style.box_sizing() == BoxSizing::ContentBox { padding_border_sum } else { Size::ZERO };
     let aspect_ratio = ResolvedAspectRatio::new(style.aspect_ratio(), style.box_sizing(), padding_border_sum);
 
-    let min_size = style
-        .min_size()
-        .maybe_resolve(parent_size, |val, basis| tree.calc(val, basis))
-        .apply_aspect_ratio(aspect_ratio)
-        .maybe_add(box_sizing_adjustment);
-    let max_size = style
-        .max_size()
-        .maybe_resolve(parent_size, |val, basis| tree.calc(val, basis))
-        .apply_aspect_ratio(aspect_ratio)
-        .maybe_add(box_sizing_adjustment);
+    let (min_size, max_size) = transfer_aspect_ratio_limits(
+        known_dimensions
+            .maybe_sub(box_sizing_adjustment)
+            .or(style.size().maybe_resolve(parent_size, |val, basis| tree.calc(val, basis))),
+        style.min_size().maybe_resolve(parent_size, |val, basis| tree.calc(val, basis)),
+        style.max_size().maybe_resolve(parent_size, |val, basis| tree.calc(val, basis)),
+        aspect_ratio,
+    );
+    let min_size = min_size.maybe_add(box_sizing_adjustment);
+    let max_size = max_size.maybe_add(box_sizing_adjustment);
     let clamped_style_size = if inputs.sizing_mode == SizingMode::InherentSize {
         let style_size = style.size().maybe_resolve(parent_size, |val, basis| tree.calc(val, basis));
         transfer_aspect_ratio(&style, style_size, aspect_ratio)
@@ -751,16 +753,16 @@ fn compute_constants(
         bottom: content_box_inset.bottom - border.bottom - scrollbar_gutter.y,
     };
 
-    let container_max_size = style
-        .max_size()
-        .maybe_resolve(parent_size, |val, basis| tree.calc(val, basis))
-        .apply_aspect_ratio(aspect_ratio)
-        .maybe_add(box_sizing_adjustment);
-    let container_min_size = style
-        .min_size()
-        .maybe_resolve(parent_size, |val, basis| tree.calc(val, basis))
-        .apply_aspect_ratio(aspect_ratio)
-        .maybe_add(box_sizing_adjustment);
+    let (container_min_size, container_max_size) = transfer_aspect_ratio_limits(
+        known_dimensions
+            .maybe_sub(box_sizing_adjustment)
+            .or(style.size().maybe_resolve(parent_size, |val, basis| tree.calc(val, basis))),
+        style.min_size().maybe_resolve(parent_size, |val, basis| tree.calc(val, basis)),
+        style.max_size().maybe_resolve(parent_size, |val, basis| tree.calc(val, basis)),
+        aspect_ratio,
+    );
+    let container_min_size = container_min_size.maybe_add(box_sizing_adjustment);
+    let container_max_size = container_max_size.maybe_add(box_sizing_adjustment);
     // An axis with an automatic minimum is sized by its content, floored by the transferred size
     let aspect_ratio_minimum =
         transfer_aspect_ratio(&style, known_dimensions.maybe_sub(box_sizing_adjustment), aspect_ratio)
