@@ -89,6 +89,116 @@ struct GridContainerConstants {
     inner_node_size: Size<Option<f32>>,
 }
 
+/// Lay out a grid container that has no children. Only its explicit tracks size it: they are initialised and
+/// sized with no items (so `fr` and intrinsic tracks size against the container alone) and the implicit grid,
+/// item placement, item layout and track alignment are skipped as there is nothing to place or align.
+#[allow(clippy::too_many_arguments)]
+fn compute_empty_container_layout<Tree: LayoutGridContainer>(
+    tree: &mut Tree,
+    node: NodeId,
+    inputs: LayoutInput,
+    constants: &GridContainerConstants,
+    col_counts: TrackCounts,
+    row_counts: TrackCounts,
+    col_auto_repetition_count: u16,
+    row_auto_repetition_count: u16,
+) -> LayoutOutput {
+    let LayoutInput { known_dimensions, run_mode, .. } = inputs;
+    let GridContainerConstants {
+        padding_border_size,
+        min_size,
+        max_size,
+        preferred_size,
+        content_box_inset,
+        align_content,
+        justify_content,
+        available_grid_space,
+        inner_min_size,
+        inner_max_size,
+        mut inner_node_size,
+        ..
+    } = *constants;
+
+    let style = tree.get_grid_container_style(node);
+    let mut columns = GridTrackVec::new();
+    let mut rows = GridTrackVec::new();
+    initialize_grid_tracks(
+        &mut columns,
+        col_counts,
+        &style,
+        AbsoluteAxis::Horizontal,
+        col_auto_repetition_count,
+        |_| false,
+    );
+    initialize_grid_tracks(&mut rows, row_counts, &style, AbsoluteAxis::Vertical, row_auto_repetition_count, |_| false);
+    drop(style);
+
+    let track_size_estimate = |track: &GridTrack, parent_size: Option<f32>, tree: &Tree| {
+        track.max_track_sizing_function.definite_value(parent_size, |val, basis| tree.calc(val, basis))
+    };
+
+    track_sizing_algorithm(
+        tree,
+        AbstractAxis::Inline,
+        inner_min_size.get(AbstractAxis::Inline),
+        inner_max_size.get(AbstractAxis::Inline),
+        justify_content,
+        align_content,
+        available_grid_space,
+        inner_node_size,
+        &mut columns,
+        &mut rows,
+        &mut [],
+        track_size_estimate,
+        false,
+    );
+    let column_sum = columns.iter().map(|track| track.base_size).sum::<f32>();
+    inner_node_size.width = inner_node_size.width.or_else(|| column_sum.into());
+
+    let width = known_dimensions
+        .width
+        .or(preferred_size.width)
+        .unwrap_or_else(|| column_sum + content_box_inset.horizontal_axis_sum())
+        .maybe_clamp(min_size.width, max_size.width)
+        .max(padding_border_size.width);
+
+    // Sizing the rows is only skipped when just the width has been requested (as in the full algorithm)
+    if run_mode == RunMode::ComputeSize && inputs.axis == RequestedAxis::Horizontal {
+        return LayoutOutput::from_outer_size(Size { width, height: 0.0 });
+    }
+
+    track_sizing_algorithm(
+        tree,
+        AbstractAxis::Block,
+        inner_min_size.get(AbstractAxis::Block),
+        inner_max_size.get(AbstractAxis::Block),
+        align_content,
+        justify_content,
+        available_grid_space,
+        inner_node_size,
+        &mut rows,
+        &mut columns,
+        &mut [],
+        track_size_estimate,
+        false,
+    );
+    let row_sum = rows.iter().map(|track| track.base_size).sum::<f32>();
+
+    let height = known_dimensions
+        .height
+        .or(preferred_size.height)
+        .unwrap_or_else(|| row_sum + content_box_inset.vertical_axis_sum())
+        .maybe_clamp(min_size.height, max_size.height)
+        .max(padding_border_size.height);
+
+    // With no children there are no out-of-flow candidates, so the positioning area's value is never read. It
+    // still has to be `Some`: that is what makes `compute_oof_layout` clear a stale hoisted-children list from a
+    // run in which the container still had descendants.
+    let mut output = LayoutOutput::from_outer_size(Size { width, height });
+    output.oof_positioning_area = Some(crate::tree::OofPositioningArea { size: Size::ZERO, offset: Point::ZERO });
+    output
+}
+
 /// Resolve the grid container's style against the layout inputs (step 1 of `compute_grid_layout`)
 fn compute_container_constants<Tree: LayoutGridContainer>(
     tree: &Tree,
@@ -325,6 +435,26 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
 
     name_resolver.set_explicit_column_count(explicit_col_count);
     name_resolver.set_explicit_row_count(explicit_row_count);
+
+    // A container with no children has no items to place or size: only its explicit tracks size it
+    if tree.child_count(node) == 0 {
+        drop(grid_template_rows);
+        drop(grid_template_columns);
+        drop(grid_auto_rows);
+        drop(grid_auto_columns);
+        drop(name_resolver);
+        drop(style);
+        return compute_empty_container_layout(
+            tree,
+            node,
+            inputs,
+            &constants,
+            TrackCounts::from_raw(0, explicit_col_count, 0),
+            TrackCounts::from_raw(0, explicit_row_count, 0),
+            col_auto_repetition_count,
+            row_auto_repetition_count,
+        );
+    }
 
     // Build the per-line names of the explicit grid from the name resolver's collected pairs
     let mut detailed_column_line_names = name_resolver.detailed_line_names(AbsoluteAxis::Horizontal);
