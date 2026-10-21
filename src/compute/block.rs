@@ -1,5 +1,5 @@
 //! Computes the CSS block layout algorithm in the case that the block container being laid out contains only block-level boxes
-use crate::compute::common::aspect_ratio::{ApplyAspectRatio, ResolvedAspectRatio};
+use crate::compute::common::aspect_ratio::{transfer_aspect_ratio, ApplyAspectRatio, ResolvedAspectRatio};
 use crate::geometry::{Line, Point, Rect, Size};
 use crate::style::{
     AlignContent, AlignContentKeyword, AlignItems, AlignItemsKeyword, AlignSelf, AlignmentSafety, AvailableSpace,
@@ -354,6 +354,9 @@ struct BlockItem {
 
     /// The base size of this item
     size: Size<Option<f32>>,
+    /// Whether the item's width is transferred from its height through its aspect ratio, floored by
+    /// its min-content width (its automatic minimum). Such a width is left unset in `size`.
+    width_floored_by_min_content: bool,
     /// The minimum allowable size of this item
     min_size: Size<Option<f32>>,
     /// The maximum allowable size of this item
@@ -442,10 +445,9 @@ pub fn compute_block_layout(
         .apply_aspect_ratio(aspect_ratio)
         .maybe_add(box_sizing_adjustment);
     let clamped_style_size = if inputs.sizing_mode == SizingMode::InherentSize {
-        style
-            .size()
-            .maybe_resolve(parent_size, |val, basis| tree.calc(val, basis))
-            .apply_aspect_ratio(aspect_ratio)
+        let style_size = style.size().maybe_resolve(parent_size, |val, basis| tree.calc(val, basis));
+        transfer_aspect_ratio(&style, style_size, aspect_ratio)
+            .size
             .maybe_add(box_sizing_adjustment)
             .maybe_clamp(min_size, max_size)
     } else {
@@ -550,11 +552,13 @@ fn compute_inner(
     let box_sizing_adjustment =
         if style.box_sizing() == BoxSizing::ContentBox { padding_border_size } else { Size::ZERO };
     let aspect_ratio = ResolvedAspectRatio::new(style.aspect_ratio(), style.box_sizing(), padding_border_size);
-    let size = style
-        .size()
-        .maybe_resolve(parent_size, |val, basis| tree.calc(val, basis))
-        .apply_aspect_ratio(aspect_ratio)
-        .maybe_add(box_sizing_adjustment);
+    let size = transfer_aspect_ratio(
+        &style,
+        style.size().maybe_resolve(parent_size, |val, basis| tree.calc(val, basis)),
+        aspect_ratio,
+    )
+    .size
+    .maybe_add(box_sizing_adjustment);
     let min_size = style
         .min_size()
         .maybe_resolve(parent_size, |val, basis| tree.calc(val, basis))
@@ -573,13 +577,21 @@ fn compute_inner(
     // while probing intrinsic sizes, so measure passes stay content-based. Only a
     // newly-filled axis is adopted (and clamped); an incoming known size is left
     // as the parent resolved it (re-clamping would undo padding/border overrides).
+    let transfer = transfer_aspect_ratio(&style, known_dimensions.maybe_sub(box_sizing_adjustment), aspect_ratio);
     let known_dimensions = {
-        let derived = known_dimensions.apply_aspect_ratio(aspect_ratio).maybe_clamp(min_size, max_size);
+        let derived = transfer.size.maybe_add(box_sizing_adjustment).maybe_clamp(min_size, max_size);
         Size { width: known_dimensions.width.or(derived.width), height: known_dimensions.height.or(derived.height) }
     };
+    // An axis with an automatic minimum is sized by its content, floored by the transferred size
+    let aspect_ratio_minimum =
+        transfer.automatic_minimum.maybe_add(box_sizing_adjustment).maybe_clamp(min_size, max_size);
+    let min_size = min_size.zip_map(aspect_ratio_minimum, |min, ratio_min| ratio_min.or(min));
     let percentage_basis_dimensions = Size {
         width: known_dimensions.width,
-        height: known_dimensions.height.filter(|_| inputs.known_dimensions_are_definite.height),
+        height: known_dimensions
+            .height
+            .filter(|_| inputs.known_dimensions_are_definite.height)
+            .or(aspect_ratio_minimum.height),
     };
     let container_content_box_size = percentage_basis_dimensions.maybe_sub(content_box_inset.sum_axes());
 
@@ -628,7 +640,12 @@ fn compute_inner(
 
     // 2. Compute container width
     let container_outer_width = known_dimensions.width.unwrap_or_else(|| {
-        let available_width = available_space.width.maybe_sub(content_box_inset.horizontal_axis_sum());
+        // The automatic minimum of an inline size transferred through the aspect ratio is its min-content size
+        let available_width = if aspect_ratio_minimum.width.is_some() {
+            AvailableSpace::MinContent
+        } else {
+            available_space.width.maybe_sub(content_box_inset.horizontal_axis_sum())
+        };
         let intrinsic_width = determine_content_based_container_width(tree, &items, available_width)
             + content_box_inset.horizontal_axis_sum();
         intrinsic_width.maybe_clamp(min_size.width, max_size.width).maybe_max(Some(padding_border_size.width))
@@ -927,6 +944,11 @@ fn generate_item_list(
 
             let position = child_style.position();
             let overflow = child_style.overflow();
+            let size_transfer = transfer_aspect_ratio(
+                &child_style,
+                child_style.size().maybe_resolve(node_inner_size, |val, basis| tree.calc(val, basis)),
+                aspect_ratio,
+            );
 
             #[cfg(feature = "float_layout")]
             let float = child_style.float();
@@ -961,11 +983,8 @@ fn generate_item_list(
                 #[cfg(feature = "float_layout")]
                 clear: child_style.clear(),
                 size_style: child_style.size(),
-                size: child_style
-                    .size()
-                    .maybe_resolve(node_inner_size, |val, basis| tree.calc(val, basis))
-                    .apply_aspect_ratio(aspect_ratio)
-                    .maybe_add(box_sizing_adjustment),
+                size: size_transfer.size.maybe_add(box_sizing_adjustment),
+                width_floored_by_min_content: size_transfer.automatic_minimum.width.is_some(),
                 min_size: child_style
                     .min_size()
                     .maybe_resolve(node_inner_size, |val, basis| tree.calc(val, basis))
@@ -1455,11 +1474,24 @@ fn perform_final_layout_on_in_flow_children(
                     children_margins_adjoin_own_edges,
                 );
 
+                let aspect_ratio_width = item.width_floored_by_min_content.then(|| {
+                    tree.measure_child_size(
+                        item.node_id,
+                        Size { width: None, height: item.size.height },
+                        parent_size,
+                        Size { width: AvailableSpace::Definite(stretch_width), height: AvailableSpace::MaxContent },
+                        SizingMode::InherentSize,
+                        crate::AbsoluteAxis::Horizontal,
+                        if item.is_in_same_bfc { Line::TRUE } else { Line::FALSE },
+                    )
+                });
+
                 item.size
                     .map_width(|width| {
                         Some(
                             width
                                 .or(keyword_width)
+                                .or(aspect_ratio_width)
                                 .unwrap_or(stretch_width)
                                 .maybe_clamp(item.min_size.width, item.max_size.width),
                         )

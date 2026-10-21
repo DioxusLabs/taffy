@@ -2,7 +2,7 @@
 use crate::compute::common::alignment::{
     child_first_baseline, compute_alignment_offset, resolve_self_alignment_safety,
 };
-use crate::compute::common::aspect_ratio::{ApplyAspectRatio, ResolvedAspectRatio};
+use crate::compute::common::aspect_ratio::{transfer_aspect_ratio, ApplyAspectRatio, ResolvedAspectRatio};
 use crate::geometry::{Line, Point, Rect, Size};
 use crate::style::{
     AlignContent, AlignContentKeyword, AlignItems, AlignItemsKeyword, AlignSelf, AvailableSpace, Contain,
@@ -189,6 +189,9 @@ struct AlgoConstants {
     min_size: Size<Option<f32>>,
     /// The item's max_size style
     max_size: Size<Option<f32>>,
+    /// The size transferred through the aspect ratio into an axis that has an automatic minimum.
+    /// That axis is sized by its content, floored by this size, and lines wrap against it.
+    aspect_ratio_minimum: Size<Option<f32>>,
     /// The border of this section
     border: Rect<f32>,
     /// The space between the content box and the border box.
@@ -281,10 +284,9 @@ pub fn compute_flexbox_layout(
         .apply_aspect_ratio(aspect_ratio)
         .maybe_add(box_sizing_adjustment);
     let clamped_style_size = if inputs.sizing_mode == SizingMode::InherentSize {
-        style
-            .size()
-            .maybe_resolve(parent_size, |val, basis| tree.calc(val, basis))
-            .apply_aspect_ratio(aspect_ratio)
+        let style_size = style.size().maybe_resolve(parent_size, |val, basis| tree.calc(val, basis));
+        transfer_aspect_ratio(&style, style_size, aspect_ratio)
+            .size
             .maybe_add(box_sizing_adjustment)
             .maybe_clamp(min_size, max_size)
     } else {
@@ -694,11 +696,33 @@ fn compute_constants(
         Direction::Rtl => content_box_inset.left += scrollbar_gutter.x,
     };
 
-    let node_outer_size = known_dimensions;
+    let container_max_size = style
+        .max_size()
+        .maybe_resolve(parent_size, |val, basis| tree.calc(val, basis))
+        .apply_aspect_ratio(aspect_ratio)
+        .maybe_add(box_sizing_adjustment);
+    let container_min_size = style
+        .min_size()
+        .maybe_resolve(parent_size, |val, basis| tree.calc(val, basis))
+        .apply_aspect_ratio(aspect_ratio)
+        .maybe_add(box_sizing_adjustment);
+    // An axis with an automatic minimum is sized by its content, floored by the transferred size
+    let aspect_ratio_minimum =
+        transfer_aspect_ratio(&style, known_dimensions.maybe_sub(box_sizing_adjustment), aspect_ratio)
+            .automatic_minimum
+            .maybe_add(box_sizing_adjustment)
+            .maybe_clamp(container_min_size, container_max_size);
+    let container_min_size = container_min_size.zip_map(aspect_ratio_minimum, |min, ratio_min| ratio_min.or(min));
+
+    // A cross size transferred through the aspect ratio is definite when sizing the items, even
+    // though the container then grows to fit its lines
+    let node_outer_size =
+        known_dimensions.with_cross(dir, known_dimensions.cross(dir).or(aspect_ratio_minimum.cross(dir)));
     let node_inner_size = node_outer_size.maybe_sub(content_box_inset.sum_axes());
     let known_main_size_is_definite = known_dimensions_are_definite.main(dir);
     let has_definite_main_size = known_main_size_is_definite && known_dimensions.main(dir).is_some();
-    let has_definite_cross_size = known_dimensions_are_definite.cross(dir) && known_dimensions.cross(dir).is_some();
+    let has_definite_cross_size = (known_dimensions_are_definite.cross(dir) && known_dimensions.cross(dir).is_some())
+        || aspect_ratio_minimum.cross(dir).is_some();
     let cross_axis_available_space_is_definite =
         has_definite_cross_size || matches!(available_space.cross(dir), AvailableSpace::Definite(_));
     let gap = style.gap().resolve_or_zero(node_inner_size.or(Size::zero()), |val, basis| tree.calc(val, basis));
@@ -717,16 +741,9 @@ fn compute_constants(
         is_balance,
         #[cfg(feature = "flexbox_balance")]
         line_count,
-        min_size: style
-            .min_size()
-            .maybe_resolve(parent_size, |val, basis| tree.calc(val, basis))
-            .apply_aspect_ratio(aspect_ratio)
-            .maybe_add(box_sizing_adjustment),
-        max_size: style
-            .max_size()
-            .maybe_resolve(parent_size, |val, basis| tree.calc(val, basis))
-            .apply_aspect_ratio(aspect_ratio)
-            .maybe_add(box_sizing_adjustment),
+        min_size: container_min_size,
+        max_size: container_max_size,
+        aspect_ratio_minimum,
         border,
         gap,
         content_box_inset,
@@ -973,7 +990,11 @@ fn determine_flex_base_size(
         let child_max_cross = transferred_max_size.cross(dir);
 
         // Clamp available space by min- and max- size
-        let cross_axis_available_space: AvailableSpace = match available_space.cross(dir) {
+        let container_cross_space = match cross_axis_parent_size {
+            Some(size) if constants.has_definite_cross_size => AvailableSpace::Definite(size),
+            _ => available_space.cross(dir),
+        };
+        let cross_axis_available_space: AvailableSpace = match container_cross_space {
             AvailableSpace::Definite(val) => AvailableSpace::Definite(
                 (constants.divided_cross_space(cross_axis_parent_size.unwrap_or(val))
                     - child.margin.cross_axis_sum(dir))
@@ -1251,25 +1272,30 @@ fn collect_flex_lines<'a>(
         lines.push(FlexLine { items: flex_items.as_mut_slice(), cross_size: 0.0, offset_cross: 0.0 });
         lines
     } else {
-        let main_axis_available_space = match constants.max_size.main(constants.dir) {
-            Some(max_size) => AvailableSpace::Definite({
-                let available = available_space.main(constants.dir).into_option().unwrap_or(max_size);
-                // If the container's main size is not definite then it is at most the max main size,
-                // so the max size (and not the available space) is the limit that items wrap against.
-                let available = if constants.has_definite_main_size { available } else { available.min(max_size) };
-                available.maybe_max(constants.min_size.main(constants.dir))
-            }),
-            // A column container's automatic main size is content-based, so definite available space
-            // handed down by an ancestor does not constrain where its lines wrap. Automatic widths
-            // resolve against available space, so rows do wrap against it.
-            None if !constants.dir.is_row()
-                && !constants.has_definite_main_size
-                && available_space.main(constants.dir).is_definite() =>
-            {
-                AvailableSpace::MaxContent
-            }
-            None => available_space.main(constants.dir),
-        };
+        let main_axis_available_space =
+            match (constants.aspect_ratio_minimum.main(constants.dir), constants.max_size.main(constants.dir)) {
+                (Some(aspect_ratio_size), _) if !constants.has_definite_main_size => {
+                    AvailableSpace::Definite(aspect_ratio_size)
+                }
+                (_, Some(max_size)) => AvailableSpace::Definite({
+                    let available = available_space.main(constants.dir).into_option().unwrap_or(max_size);
+                    // If the container's main size is not definite then it is at most the max main size,
+                    // so the max size (and not the available space) is the limit that items wrap against.
+                    let available = if constants.has_definite_main_size { available } else { available.min(max_size) };
+                    available.maybe_max(constants.min_size.main(constants.dir))
+                }),
+                // A column container's automatic main size is content-based, so definite available space
+                // handed down by an ancestor does not constrain where its lines wrap. Automatic widths
+                // resolve against available space, so rows do wrap against it.
+                (_, None)
+                    if !constants.dir.is_row()
+                        && !constants.has_definite_main_size
+                        && available_space.main(constants.dir).is_definite() =>
+                {
+                    AvailableSpace::MaxContent
+                }
+                (_, None) => available_space.main(constants.dir),
+            };
 
         match main_axis_available_space {
             // If we're sizing under a max-content constraint then the flex items will never wrap
@@ -1341,8 +1367,11 @@ fn collect_balanced_flex_lines<'a>(
     // then items are balanced without a size limit, matching how the container was sized under a
     // min/max-content constraint.
     let main_axis_available_space = if constants.known_main_size_is_definite {
-        match constants.max_size.main(constants.dir) {
-            Some(max_size) => AvailableSpace::Definite({
+        match (constants.aspect_ratio_minimum.main(constants.dir), constants.max_size.main(constants.dir)) {
+            (Some(aspect_ratio_size), _) if !constants.has_definite_main_size => {
+                AvailableSpace::Definite(aspect_ratio_size)
+            }
+            (_, Some(max_size)) => AvailableSpace::Definite({
                 let available = available_space.main(constants.dir).into_option().unwrap_or(max_size);
                 // If the container's main size is not definite then it is at most the max main size,
                 // so the max size (and not the available space) is the limit that items wrap against.
@@ -1352,13 +1381,14 @@ fn collect_balanced_flex_lines<'a>(
             // A column container's automatic main size is content-based, so definite available space
             // handed down by an ancestor does not constrain where its lines wrap. Automatic widths
             // resolve against available space, so rows do wrap against it.
-            None if !constants.dir.is_row()
-                && !constants.has_definite_main_size
-                && available_space.main(constants.dir).is_definite() =>
+            (_, None)
+                if !constants.dir.is_row()
+                    && !constants.has_definite_main_size
+                    && available_space.main(constants.dir).is_definite() =>
             {
                 AvailableSpace::MaxContent
             }
-            None => available_space.main(constants.dir),
+            (_, None) => available_space.main(constants.dir),
         }
     } else {
         AvailableSpace::MaxContent
@@ -2188,6 +2218,16 @@ fn calculate_cross_size(flex_lines: &mut [FlexLine], node_size: Size<Option<f32>
                 cross_min_size.maybe_sub(cross_axis_padding_border),
                 cross_max_size.maybe_sub(cross_axis_padding_border),
             );
+        }
+    }
+
+    // A single line fills a cross size transferred through the aspect ratio, which then only
+    // grows to fit the line's content
+    if !constants.is_wrap && node_size.cross(constants.dir).is_none() {
+        if let Some(aspect_ratio_cross_size) = constants.aspect_ratio_minimum.cross(constants.dir) {
+            let inner_cross_size =
+                f32_max(aspect_ratio_cross_size - constants.content_box_inset.cross_axis_sum(constants.dir), 0.0);
+            flex_lines[0].cross_size = f32_max(flex_lines[0].cross_size, inner_cross_size);
         }
     }
 }
