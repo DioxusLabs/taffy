@@ -5,7 +5,7 @@ use rand_chacha::ChaCha8Rng;
 use std::iter;
 use taffy::prelude::*;
 use taffy::style::Style;
-use taffy_benchmarks::{bench_layout, benchmark_group, TaffyLayoutTree};
+use taffy_benchmarks::{bench_layout, benchmark_group, px, TaffyLayoutTree};
 
 pub const LOREM_IPSUM : &str = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.";
 
@@ -25,33 +25,33 @@ impl ParleyTextContext {
 
     fn measure(
         &mut self,
-        known_dimensions: taffy::Size<Option<f32>>,
+        known_dimensions: taffy::Size<Option<app_units::Au>>,
         available_space: taffy::Size<taffy::AvailableSpace>,
-    ) -> taffy::Size<f32> {
+    ) -> taffy::Size<app_units::Au> {
         // Compute width
-        let width: f32 = known_dimensions.width.unwrap_or_else(|| {
+        let width = known_dimensions.width.unwrap_or_else(|| {
             let widths = self.layout.calculate_content_widths();
-            match available_space.width {
+            let width = match available_space.width {
                 AvailableSpace::MinContent => widths.min,
                 AvailableSpace::MaxContent => widths.max,
-                AvailableSpace::Definite(limit) => limit.min(widths.max).max(widths.min),
-            }
-            .ceil()
+                AvailableSpace::Definite(limit) => limit.to_f32_px().min(widths.max).max(widths.min),
+            };
+            px(width.ceil())
         });
 
         // Compute height
-        self.layout.break_all_lines(Some(width));
-        let height = self.layout.height();
+        self.layout.break_all_lines(Some(width.to_f32_px()));
+        let height = px(self.layout.height());
 
         taffy::Size { width, height }
     }
 }
 
 fn measure_function(
-    known_dimensions: taffy::Size<Option<f32>>,
+    known_dimensions: taffy::Size<Option<app_units::Au>>,
     available_space: taffy::Size<taffy::AvailableSpace>,
     node_context: Option<&mut ParleyTextContext>,
-) -> Size<f32> {
+) -> Size<app_units::Au> {
     if let Size { width: Some(width), height: Some(height) } = known_dimensions {
         return Size { width, height };
     }

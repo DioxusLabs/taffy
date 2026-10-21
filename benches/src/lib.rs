@@ -20,6 +20,7 @@ pub mod morphorm_helpers;
 #[cfg(feature = "torin")]
 pub mod torin_helpers;
 
+use app_units::Au;
 use criterion::measurement::WallTime;
 use criterion::{Bencher, BenchmarkGroup, Criterion, SamplingMode};
 use rand::distr::uniform::SampleRange;
@@ -30,6 +31,11 @@ use taffy::style::Style as TaffyStyle;
 use taffy::{NodeId, TaffyTree};
 
 pub const STANDARD_RNG_SEED: u64 = 12345;
+
+#[inline]
+pub fn px(value: f32) -> Au {
+    Au((value * 60.0 + 0.5f32.copysign(value)) as i32)
+}
 
 /// The Criterion configuration shared by all of the benchmarks.
 ///

@@ -13,6 +13,7 @@ categories = ["gui", "benchmarks"]
 license = "MIT"
 
 [dependencies]
+app_units = "0.7.8"
 criterion = "0.7"
 rand = { version = "0.9" }
 rand_chacha = "0.9"
