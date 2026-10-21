@@ -11,6 +11,7 @@ use crate::style::{
     Position,
 };
 use crate::tree::{Layout, LayoutPartialTreeExt, NodeId, OofCandidates, SizingMode};
+/// Larger of two `Au` values
 #[inline(always)]
 fn au_max(a: Au, b: Au) -> Au {
     a.max(b)

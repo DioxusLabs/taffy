@@ -197,7 +197,7 @@ impl AhemTextMeasureData {
                     current_line_length += line.len();
                 };
             }
-            H_HEIGHT * line_count as i32
+            H_HEIGHT * line_count
         });
 
         match self.writing_mode {

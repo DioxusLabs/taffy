@@ -62,6 +62,7 @@ pub(in super::super) struct GridTrack {
     pub fit_content_limit: Au,
 }
 
+/// Smaller of two `Au` values
 #[inline(always)]
 fn au_min(a: Au, b: Au) -> Au {
     a.min(b)

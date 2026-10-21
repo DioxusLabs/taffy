@@ -11,10 +11,12 @@ use crate::tree::{LayoutPartialTree, LayoutPartialTreeExt, SizingMode};
 use crate::util::au::{raw_to_au, scale_au};
 use crate::util::sys::{f32_max, f32_min, Vec};
 
+/// Larger of two `Au` values
 #[inline(always)]
 fn au_max(a: Au, b: Au) -> Au {
     a.max(b)
 }
+/// Smaller of two `Au` values
 #[inline(always)]
 fn au_min(a: Au, b: Au) -> Au {
     a.min(b)
@@ -230,7 +232,7 @@ pub(super) fn compute_alignment_gutter_adjustment(
         let weighted_track_count =
             (((tracks.len() - 3) / 2) * inner_gutter_weight as usize) + (2 * outer_gutter_weight as usize);
 
-        return (free_space / weighted_track_count as i32) * inner_gutter_weight as i32;
+        return (free_space / weighted_track_count as i32) * inner_gutter_weight;
     }
 
     Au(0)

@@ -8,6 +8,7 @@ use crate::geometry::AbstractAxis;
 use crate::geometry::{Line, Point, Rect, Size};
 use crate::style::{AlignItems, AlignSelf, AvailableSpace, Dimension, LengthPercentageAuto, Overflow};
 use crate::tree::{LayoutPartialTree, LayoutPartialTreeExt, NodeId, OofCandidates, SizingMode};
+/// Larger of two `Au` values
 #[inline(always)]
 fn au_max(a: Au, b: Au) -> Au {
     a.max(b)

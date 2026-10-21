@@ -12,10 +12,12 @@ use crate::tree::{
 use crate::util::debug::debug_log;
 use crate::util::sys::{GridTrackVec, Vec};
 
+/// Larger of two `Au` values
 #[inline(always)]
 fn au_max(a: Au, b: Au) -> Au {
     a.max(b)
 }
+/// Smaller of two `Au` values
 #[inline(always)]
 fn au_min(a: Au, b: Au) -> Au {
     a.min(b)
