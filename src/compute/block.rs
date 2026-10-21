@@ -435,9 +435,11 @@ pub fn compute_block_layout(
     let aspect_ratio = ResolvedAspectRatio::new(style.aspect_ratio(), style.box_sizing(), padding_border_size);
 
     let (min_size, max_size) = transfer_aspect_ratio_limits(
-        known_dimensions
-            .maybe_sub(box_sizing_adjustment)
-            .or(style.size().maybe_resolve(parent_size, |val, basis| tree.calc(val, basis))),
+        || {
+            known_dimensions
+                .maybe_sub(box_sizing_adjustment)
+                .or(style.size().maybe_resolve(parent_size, |val, basis| tree.calc(val, basis)))
+        },
         style.min_size().maybe_resolve(parent_size, |val, basis| tree.calc(val, basis)),
         style.max_size().maybe_resolve(parent_size, |val, basis| tree.calc(val, basis)),
         aspect_ratio,
@@ -560,9 +562,11 @@ fn compute_inner(
     .size
     .maybe_add(box_sizing_adjustment);
     let (min_size, max_size) = transfer_aspect_ratio_limits(
-        known_dimensions
-            .maybe_sub(box_sizing_adjustment)
-            .or(style.size().maybe_resolve(parent_size, |val, basis| tree.calc(val, basis))),
+        || {
+            known_dimensions
+                .maybe_sub(box_sizing_adjustment)
+                .or(style.size().maybe_resolve(parent_size, |val, basis| tree.calc(val, basis)))
+        },
         style.min_size().maybe_resolve(parent_size, |val, basis| tree.calc(val, basis)),
         style.max_size().maybe_resolve(parent_size, |val, basis| tree.calc(val, basis)),
         aspect_ratio,
@@ -947,7 +951,7 @@ fn generate_item_list(
             let child_size = child_style.size().maybe_resolve(node_inner_size, |val, basis| tree.calc(val, basis));
             let size_transfer = transfer_aspect_ratio(&child_style, child_size, aspect_ratio);
             let (item_min_size, item_max_size) = transfer_aspect_ratio_limits(
-                child_size,
+                || child_size,
                 child_style.min_size().maybe_resolve(node_inner_size, |val, basis| tree.calc(val, basis)),
                 child_style.max_size().maybe_resolve(node_inner_size, |val, basis| tree.calc(val, basis)),
                 aspect_ratio,

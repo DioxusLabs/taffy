@@ -514,7 +514,7 @@ pub(crate) fn layout_oof_box<Tree: LayoutContainingBlock>(
     );
     let style_size = size_transfer.size.maybe_add(box_sizing_adjustment);
     let (min_size, max_size) = transfer_aspect_ratio_limits(
-        size_style.maybe_resolve(area_size, |val, basis| tree.calc(val, basis)),
+        || size_style.maybe_resolve(area_size, |val, basis| tree.calc(val, basis)),
         child_style.min_size().maybe_resolve(area_size, |val, basis| tree.calc(val, basis)),
         child_style.max_size().maybe_resolve(area_size, |val, basis| tree.calc(val, basis)),
         aspect_ratio,
