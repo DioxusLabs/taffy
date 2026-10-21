@@ -4,6 +4,7 @@ use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
 use std::hint::black_box;
 use taffy::prelude::*;
 use taffy::{Cache, LayoutInput, LayoutOutput, Line, RequestedAxis, RunMode, SizingMode};
+use taffy_benchmarks::compute_layout;
 
 /// The layout modes that the containers of a benchmark tree cycle through, by depth
 #[derive(Clone, Copy)]
@@ -57,7 +58,7 @@ fn build_tree(containers: Containers, fanout: usize, max_depth: usize) -> (Taffy
     taffy.disable_rounding();
     let mut first_leaf = None;
     let root = build_subtree(&mut taffy, containers, fanout, 0, max_depth, &mut first_leaf);
-    taffy.compute_layout(root, Size { width: length(2000.0), height: max_content() }).unwrap();
+    compute_layout(&mut taffy, root, Size { width: length(2000.0), height: max_content() });
     (taffy, root, first_leaf.unwrap())
 }
 
@@ -74,7 +75,7 @@ fn relayout_benchmarks(c: &mut Criterion) {
                 b.iter(|| {
                     tall = !tall;
                     taffy.set_style(leaf, leaf_style(if tall { 20.0 } else { 10.0 })).unwrap();
-                    taffy.compute_layout(root, Size { width: length(2000.0), height: max_content() }).unwrap();
+                    compute_layout(&mut taffy, root, Size { width: length(2000.0), height: max_content() });
                 })
             });
         }
@@ -92,7 +93,7 @@ fn relayout_benchmarks(c: &mut Criterion) {
             b.iter(|| {
                 wide = !wide;
                 let width = if wide { 2500.0 } else { 2000.0 };
-                taffy.compute_layout(root, Size { width: length(width), height: max_content() }).unwrap();
+                compute_layout(&mut taffy, root, Size { width: length(width), height: max_content() });
             })
         });
     }
