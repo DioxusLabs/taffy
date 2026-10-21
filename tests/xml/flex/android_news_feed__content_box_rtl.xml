@@ -5,7 +5,7 @@
       <div box-sizing="content-box" direction="rtl" position="relative" flex-direction="column" flex-shrink="0">
         <div box-sizing="content-box" direction="rtl" position="relative" flex-direction="column" align-content="stretch">
           <div box-sizing="content-box" direction="rtl" position="relative" flex-direction="column" align-content="stretch">
-            <div box-sizing="content-box" direction="rtl" position="relative" align-items="flex-start" align-content="stretch" margin-top="24px" margin-left="36px">
+            <div box-sizing="content-box" direction="rtl" position="relative" align-items="flex-start" align-content="stretch" margin-top="24px" margin-right="36px">
               <div box-sizing="content-box" direction="rtl" position="relative" align-content="stretch" flex-shrink="0">
                 <div box-sizing="content-box" direction="rtl" position="relative" align-content="stretch" flex-shrink="0" width="120px" height="120px"/>
               </div>
@@ -16,7 +16,7 @@
             </div>
           </div>
           <div box-sizing="content-box" direction="rtl" position="relative" flex-direction="column" align-content="stretch">
-            <div box-sizing="content-box" direction="rtl" position="relative" align-items="flex-start" align-content="stretch" margin-top="24px" margin-left="174px">
+            <div box-sizing="content-box" direction="rtl" position="relative" align-items="flex-start" align-content="stretch" margin-top="24px" margin-right="174px">
               <div box-sizing="content-box" direction="rtl" position="relative" align-content="stretch" flex-shrink="0">
                 <div box-sizing="content-box" direction="rtl" position="relative" align-content="stretch" flex-shrink="0" width="72px" height="72px"/>
               </div>
@@ -35,7 +35,7 @@
       <node x="0" y="0" width="1080" height="240">
         <node x="0" y="0" width="1080" height="240">
           <node x="0" y="0" width="1080" height="144">
-            <node x="36" y="24" width="1044" height="120">
+            <node x="0" y="24" width="1044" height="120">
               <node x="924" y="0" width="120" height="120">
                 <node x="0" y="0" width="120" height="120"/>
               </node>
@@ -46,7 +46,7 @@
             </node>
           </node>
           <node x="0" y="144" width="1080" height="96">
-            <node x="174" y="24" width="906" height="72">
+            <node x="0" y="24" width="906" height="72">
               <node x="834" y="0" width="72" height="72">
                 <node x="0" y="0" width="72" height="72"/>
               </node>

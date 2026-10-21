@@ -1,0 +1,15 @@
+<test name="align_content_stretch_with_min_cross_axis__content_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div box-sizing="content-box" direction="rtl" position="absolute" flex-wrap="wrap" align-content="stretch" flex-shrink="0" width="500px" min-height="500px">
+      <div box-sizing="content-box" direction="rtl" position="relative" flex-direction="column" align-content="flex-start" flex-shrink="0" width="400px" height="200px"/>
+      <div box-sizing="content-box" direction="rtl" position="relative" flex-direction="column" align-content="flex-start" flex-shrink="0" width="400px" height="200px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="500" height="500">
+      <node x="100" y="0" width="400" height="200"/>
+      <node x="100" y="250" width="400" height="200"/>
+    </node>
+  </expectations>
+</test>

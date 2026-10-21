@@ -1,0 +1,15 @@
+<test name="align_content_space_between_nowrap__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div direction="rtl" position="absolute" align-content="space-between" flex-shrink="0" width="140px" height="120px">
+      <div direction="rtl" position="relative" flex-direction="column" align-content="flex-start" flex-shrink="0" width="50px" height="10px"/>
+      <div direction="rtl" position="relative" flex-direction="column" align-content="flex-start" flex-shrink="0" width="50px" height="10px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="140" height="120">
+      <node x="90" y="0" width="50" height="10"/>
+      <node x="40" y="0" width="50" height="10"/>
+    </node>
+  </expectations>
+</test>
