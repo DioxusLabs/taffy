@@ -9,9 +9,9 @@
 //! Vendored from the `app_units` crate (v0.7.8, MPL-2.0, Copyright The Servo Project Developers).
 //! Only the API used by Taffy is kept. Unlike upstream, arithmetic operators wrap instead of saturating.
 
-use std::fmt;
-use std::iter::Sum;
-use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Rem, Sub, SubAssign};
+use core::fmt;
+use core::iter::Sum;
+use core::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Rem, Sub, SubAssign};
 
 /// The number of app units in a pixel.
 pub const AU_PER_PX: i32 = 60;
@@ -235,6 +235,6 @@ mod tests {
     fn sum() {
         assert_eq!([Au(1), Au(2), Au(3)].iter().sum::<Au>(), Au(6));
         assert_eq!([Au(1), Au(2)].into_iter().sum::<Au>(), Au(3));
-        assert_eq!(std::iter::empty::<Au>().sum::<Au>(), Au(0));
+        assert_eq!(core::iter::empty::<Au>().sum::<Au>(), Au(0));
     }
 }
