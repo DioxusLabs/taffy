@@ -804,11 +804,16 @@ fn generate_anonymous_flex_items(
             let border = child_style
                 .border()
                 .resolve_or_zero(constants.node_inner_size.width, |val, basis| tree.calc(val, basis));
-            let padding_border_sum = (padding + border).sum_axes();
-            let box_sizing_adjustment =
-                if child_style.box_sizing() == BoxSizing::ContentBox { padding_border_sum } else { Size::ZERO };
-            let aspect_ratio =
-                ResolvedAspectRatio::new(child_style.aspect_ratio(), child_style.box_sizing(), padding_border_sum);
+            let box_sizing_adjustment = if child_style.box_sizing() == BoxSizing::ContentBox {
+                (padding + border).sum_axes()
+            } else {
+                Size::ZERO
+            };
+            let aspect_ratio = ResolvedAspectRatio::new(
+                child_style.aspect_ratio(),
+                child_style.box_sizing(),
+                (padding + border).sum_axes(),
+            );
             FlexItem {
                 node: child,
                 order: index as u32,
