@@ -5,6 +5,7 @@
 ### Fixed
 
 - Block, Flexbox, Grid, absolute positioning: `aspect-ratio: auto && <ratio>` applies the ratio to the content box, regardless of `box-sizing` (<https://drafts.csswg.org/css-sizing-4/#aspect-ratio>).
+- Block, Flexbox, Grid, absolute positioning: when a box's size in one axis is transferred from the other axis through `aspect-ratio`, that axis now has an automatic minimum of its content size (its min-content size in the inline axis), capped by its maximum size, as long as its `min-*` is `auto` and the box is neither replaced nor a scroll container in that axis (<https://drafts.csswg.org/css-sizing-4/#aspect-ratio-minimum>). Previously the box kept the transferred size and its content overflowed.
 - Flexbox: `align-content: stretch` (and `normal`) and `justify-content: stretch` fall back to `flex-start` rather than `start` when the lines/items overflow the container, so overflowing lines in a `wrap-reverse` container (and items in a `row-reverse`/`column-reverse` container) are packed to the flex-start edge like in Chrome.
 - Grid: the clamp of an item's content-based minimum size to the fixed max track sizing functions it spans now leaves room for its margins and baseline shim (#1362).
 

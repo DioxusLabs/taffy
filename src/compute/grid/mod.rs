@@ -2,7 +2,7 @@
 //! <https://www.w3.org/TR/css-grid-1>
 #[cfg(feature = "content_size")]
 use super::common::scrollable_overflow::{finalize_scrollable_overflow, ScrollableOverflowContainer};
-use crate::compute::common::aspect_ratio::{ApplyAspectRatio, ResolvedAspectRatio};
+use crate::compute::common::aspect_ratio::{transfer_aspect_ratio, ApplyAspectRatio, ResolvedAspectRatio};
 use crate::geometry::{AbsoluteAxis, AbstractAxis, InBothAbsAxis};
 use crate::geometry::{Line, Point, Rect, Size};
 use crate::style::{AlignContent, AlignItems, AvailableSpace, Contain, ContainingBlockClaims, Overflow};
@@ -124,15 +124,19 @@ fn compute_container_constants<Tree: LayoutGridContainer>(
         .maybe_resolve(parent_size, |val, basis| tree.calc(val, basis))
         .apply_aspect_ratio(aspect_ratio)
         .maybe_add(box_sizing_adjustment);
-    let preferred_size = if inputs.sizing_mode == SizingMode::InherentSize {
-        style
-            .size()
-            .maybe_resolve(parent_size, |val, basis| tree.calc(val, basis))
-            .apply_aspect_ratio(aspect_ratio)
-            .maybe_add(box_sizing_adjustment)
+    let style_size = if inputs.sizing_mode == SizingMode::InherentSize {
+        style.size().maybe_resolve(parent_size, |val, basis| tree.calc(val, basis))
     } else {
         Size::NONE
     };
+    let preferred_size = transfer_aspect_ratio(style, style_size, aspect_ratio).size.maybe_add(box_sizing_adjustment);
+    // An axis with an automatic minimum is sized by its content, floored by the transferred size
+    let aspect_ratio_minimum =
+        transfer_aspect_ratio(style, known_dimensions.maybe_sub(box_sizing_adjustment).or(style_size), aspect_ratio)
+            .automatic_minimum
+            .maybe_add(box_sizing_adjustment)
+            .maybe_clamp(min_size, max_size);
+    let min_size = min_size.zip_map(aspect_ratio_minimum, |min, ratio_min| ratio_min.or(min));
 
     // Scrollbar gutters are reserved when the `overflow` property is set to `Overflow::Scroll`.
     // However, the axis are switched (transposed) because a node that scrolls vertically needs
