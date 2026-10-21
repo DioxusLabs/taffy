@@ -1,5 +1,6 @@
 //! A typed representation of [CSS style properties](https://css-tricks.com/snippets/css/a-guide-to-flexbox/) in Rust. Used as input to layout computation.
 mod alignment;
+mod aspect_ratio;
 mod available_space;
 mod compact_length;
 mod dimension;
@@ -17,6 +18,7 @@ pub use self::alignment::{
     AlignContent, AlignContentKeyword, AlignItems, AlignItemsKeyword, AlignSelf, AlignmentSafety, JustifyContent,
     JustifyItems, JustifySelf,
 };
+pub use self::aspect_ratio::AspectRatio;
 pub use self::available_space::AvailableSpace;
 pub use self::compact_length::CompactLength;
 pub use self::dimension::{
@@ -178,7 +180,7 @@ pub trait CoreStyle {
     /// Sets the preferred aspect ratio for the item
     /// The ratio is calculated as width divided by height.
     #[inline(always)]
-    fn aspect_ratio(&self) -> Option<f32> {
+    fn aspect_ratio(&self) -> AspectRatio {
         Style::<Self::CustomIdent>::DEFAULT.aspect_ratio
     }
 
@@ -761,7 +763,7 @@ pub struct Style<S: CheapCloneStr = DefaultCheapStr> {
     /// Sets the preferred aspect ratio for the item
     ///
     /// The ratio is calculated as width divided by height.
-    pub aspect_ratio: Option<f32>,
+    pub aspect_ratio: AspectRatio,
 
     // Spacing Properties
     /// How large should the margin be on each side?
@@ -896,7 +898,7 @@ impl<S: CheapCloneStr> Style<S> {
         size: Size::auto(),
         min_size: Size::auto(),
         max_size: Size::auto(),
-        aspect_ratio: None,
+        aspect_ratio: AspectRatio::NONE,
         #[cfg(any(feature = "flexbox", feature = "grid"))]
         gap: Size::zero(),
         // Alignment
@@ -1016,7 +1018,7 @@ impl<S: CheapCloneStr> CoreStyle for Style<S> {
         self.max_size
     }
     #[inline(always)]
-    fn aspect_ratio(&self) -> Option<f32> {
+    fn aspect_ratio(&self) -> AspectRatio {
         self.aspect_ratio
     }
     #[inline(always)]
@@ -1124,7 +1126,7 @@ impl<T: CoreStyle> CoreStyle for &'_ T {
         (*self).max_size()
     }
     #[inline(always)]
-    fn aspect_ratio(&self) -> Option<f32> {
+    fn aspect_ratio(&self) -> AspectRatio {
         (*self).aspect_ratio()
     }
     #[inline(always)]
@@ -1805,12 +1807,12 @@ mod tests {
         assert_type_size::<GridTemplateComponent<String>>(56);
         assert_type_size::<GridPlacement<String>>(32);
         assert_type_size::<Line<GridPlacement<String>>>(64);
-        assert_type_size::<Style<String>>(560);
+        assert_type_size::<Style<String>>(552);
 
         // String-type dependent (Arc<str>)
         assert_type_size::<GridTemplateComponent<Arc<str>>>(56);
         assert_type_size::<GridPlacement<Arc<str>>>(24);
         assert_type_size::<Line<GridPlacement<Arc<str>>>>(48);
-        assert_type_size::<Style<Arc<str>>>(528);
+        assert_type_size::<Style<Arc<str>>>(520);
     }
 }

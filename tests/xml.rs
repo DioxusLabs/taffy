@@ -1,9 +1,9 @@
 use roxmltree::Document;
 use std::{fmt::Debug, io::Write, path::PathBuf, str::FromStr};
 use taffy::{
-    prelude::TaffyZero as _, AlignContent, AlignItems, AlignSelf, AvailableSpace, CheapCloneStr, Dimension,
-    GridAutoTracks, GridTemplateComponent, GridTemplateTracks, JustifyContent, JustifyItems, LengthPercentage,
-    LengthPercentageAuto, Line, NodeId, Point, PrintTree, Rect, Size, TaffyTree,
+    prelude::TaffyZero as _, style::AspectRatio, AlignContent, AlignItems, AlignSelf, AvailableSpace, CheapCloneStr,
+    Dimension, GridAutoTracks, GridTemplateComponent, GridTemplateTracks, JustifyContent, JustifyItems,
+    LengthPercentage, LengthPercentageAuto, Line, NodeId, Point, PrintTree, Rect, Size, TaffyTree,
 };
 use taffy_test_helpers::{test_measure_function, TestNodeContext};
 
@@ -286,6 +286,14 @@ fn parse_self_alignment(input: Option<&str>) -> Option<AlignSelf> {
     input.filter(|input| !input.trim().eq_ignore_ascii_case("auto")).map(|input| input.parse().unwrap())
 }
 
+fn parse_aspect_ratio(input: Option<&str>) -> AspectRatio {
+    match input.map(|input| input.strip_prefix("auto ").map_or((false, input), |ratio| (true, ratio))) {
+        Some((true, ratio)) => ratio.parse().map_or(AspectRatio::NONE, AspectRatio::auto_and),
+        Some((false, ratio)) => ratio.parse().map_or(AspectRatio::NONE, AspectRatio::new),
+        None => AspectRatio::NONE,
+    }
+}
+
 fn maybe_parse<T: FromStr>(input: Option<&str>) -> Option<T> {
     input.and_then(|input| input.parse().ok())
 }
@@ -419,7 +427,7 @@ fn build_style<S: CheapCloneStr>(xnode: roxmltree::Node) -> taffy::Style<S> {
             height: parse_or(xnode.attribute("row-gap"), LengthPercentage::ZERO),
         },
 
-        aspect_ratio: maybe_parse(xnode.attribute("aspect-ratio")),
+        aspect_ratio: parse_aspect_ratio(xnode.attribute("aspect-ratio")),
         align_items: parse_or(xnode.attribute("align-items"), AlignItems::NORMAL),
         align_self: parse_self_alignment(xnode.attribute("align-self")),
         justify_items: parse_or(xnode.attribute("justify-items"), JustifyItems::NORMAL),
