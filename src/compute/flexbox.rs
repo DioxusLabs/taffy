@@ -379,7 +379,7 @@ fn compute_preliminary(tree: &mut impl LayoutFlexboxContainer, node: NodeId, inp
     // A container with no children has no flex items or lines, so its size follows directly
     // from its own style and the available space.
     if tree.child_count(node) == 0 {
-        return compute_empty_container_layout(tree, inputs, constants);
+        return compute_empty_container_layout(tree, node, inputs, constants);
     }
 
     // 9. Flex Layout Algorithm
@@ -626,6 +626,7 @@ fn compute_preliminary(tree: &mut impl LayoutFlexboxContainer, node: NodeId, inp
 /// [`compute_preliminary`] with zero flex items, without generating items or lines.
 fn compute_empty_container_layout(
     tree: &mut impl LayoutFlexboxContainer,
+    node: NodeId,
     inputs: LayoutInput,
     mut constants: AlgoConstants,
 ) -> LayoutOutput {
@@ -639,7 +640,7 @@ fn compute_empty_container_layout(
         constants.inner_container_size.set_main(dir, inner_main_size);
         constants.container_size.set_main(dir, outer_main_size);
     } else {
-        determine_container_main_size(tree, available_space, &mut [], &mut constants);
+        determine_container_main_size(tree, node, available_space, &mut [], &mut constants, &mut Vec::new());
     }
 
     if run_mode == RunMode::ComputeSize {
