@@ -92,6 +92,7 @@ pub(crate) fn transfer_aspect_ratio(
 }
 
 /// [`transfer_aspect_ratio`] for a box that has a preferred aspect ratio
+#[cold]
 fn transfer_through_aspect_ratio(
     style: &impl CoreStyle,
     size: Size<Option<f32>>,
@@ -138,6 +139,7 @@ pub(crate) fn transfer_aspect_ratio_limits(
 }
 
 /// [`transfer_aspect_ratio_limits`] for a box that has a preferred aspect ratio
+#[cold]
 fn transfer_limits_through_aspect_ratio(
     size: Size<Option<f32>>,
     min_size: Size<Option<f32>>,
