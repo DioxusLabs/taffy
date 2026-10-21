@@ -360,6 +360,12 @@ fn compute_preliminary(tree: &mut impl LayoutFlexboxContainer, node: NodeId, inp
         available_space,
     );
 
+    // A container with no children has no flex items or lines, so its size follows directly
+    // from its own style and the available space.
+    if tree.child_count(node) == 0 {
+        return compute_empty_container_layout(tree, inputs, constants);
+    }
+
     // 9. Flex Layout Algorithm
 
     // 9.1. Initial Setup
@@ -432,16 +438,9 @@ fn compute_preliminary(tree: &mut impl LayoutFlexboxContainer, node: NodeId, inp
 
     // If only the container's main size has been requested then we are done, as nothing below changes it. This
     // avoids measuring the cross size of every item.
-    if run_mode == RunMode::ComputeSize {
-        let main_axis_is_requested_axis = match inputs.axis {
-            RequestedAxis::Horizontal => constants.dir.is_row(),
-            RequestedAxis::Vertical => constants.dir.is_column(),
-            RequestedAxis::Both => false,
-        };
-        if main_axis_is_requested_axis {
-            let size = Size::ZERO.with_main(constants.dir, constants.container_size.main(constants.dir));
-            return LayoutOutput::from_outer_size(size);
-        }
+    if run_mode == RunMode::ComputeSize && constants.dir.main_axis_is_requested_axis(inputs.axis) {
+        let size = Size::ZERO.with_main(constants.dir, constants.container_size.main(constants.dir));
+        return LayoutOutput::from_outer_size(size);
     }
 
     // 6. Resolve the flexible lengths of all the flex items to find their used main size.
@@ -582,6 +581,41 @@ fn compute_preliminary(tree: &mut impl LayoutFlexboxContainer, node: NodeId, inp
     output.oof_candidates = candidates;
     output.oof_positioning_area =
         Some(OofPositioningArea { size: absolute_position_area, offset: absolute_position_offset });
+    output
+}
+
+/// Compute the layout of a flex container with no children. Equivalent to running the remainder of
+/// [`compute_preliminary`] with zero flex items, without generating items or lines.
+fn compute_empty_container_layout(
+    tree: &mut impl LayoutFlexboxContainer,
+    inputs: LayoutInput,
+    mut constants: AlgoConstants,
+) -> LayoutOutput {
+    let LayoutInput { known_dimensions, available_space, run_mode, .. } = inputs;
+    let dir = constants.dir;
+
+    let available_space = determine_available_space(known_dimensions, available_space, &constants);
+
+    if let Some(inner_main_size) = constants.node_inner_size.main(dir) {
+        let outer_main_size = inner_main_size + constants.content_box_inset.main_axis_sum(dir);
+        constants.inner_container_size.set_main(dir, inner_main_size);
+        constants.container_size.set_main(dir, outer_main_size);
+    } else {
+        determine_container_main_size(tree, available_space, &mut [], &mut constants);
+    }
+
+    if run_mode == RunMode::ComputeSize && dir.main_axis_is_requested_axis(inputs.axis) {
+        let size = Size::ZERO.with_main(dir, constants.container_size.main(dir));
+        return LayoutOutput::from_outer_size(size);
+    }
+
+    let _ = determine_container_cross_size(&[], known_dimensions, &mut constants);
+
+    // With no children there are no out-of-flow candidates, so the positioning area's value is
+    // never read. It still has to be `Some`: that is what makes `compute_oof_layout` clear a
+    // stale hoisted-children list from a run in which the container still had descendants.
+    let mut output = LayoutOutput::from_outer_size(constants.container_size);
+    output.oof_positioning_area = Some(OofPositioningArea { size: Size::ZERO, offset: Point::ZERO });
     output
 }
 

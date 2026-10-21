@@ -76,6 +76,7 @@ pub trait FlexboxItemStyle: CoreStyle {
 }
 
 use crate::geometry::AbsoluteAxis;
+use crate::tree::RequestedAxis;
 
 /// Controls whether flex items are forced onto one line or can wrap onto multiple lines.
 ///
@@ -240,6 +241,16 @@ impl FlexDirection {
     /// Is the direction [`FlexDirection::RowReverse`] or [`FlexDirection::ColumnReverse`]?
     pub(crate) const fn is_reverse(self) -> bool {
         matches!(self, Self::RowReverse | Self::ColumnReverse)
+    }
+
+    #[inline(always)]
+    /// Is the main axis the (single) axis that a size was requested for?
+    pub(crate) const fn main_axis_is_requested_axis(self, axis: RequestedAxis) -> bool {
+        match axis {
+            RequestedAxis::Horizontal => self.is_row(),
+            RequestedAxis::Vertical => self.is_column(),
+            RequestedAxis::Both => false,
+        }
     }
 
     #[inline]
