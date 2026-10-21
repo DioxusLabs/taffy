@@ -16,11 +16,21 @@ pub(crate) struct ResolvedAspectRatio {
 
 impl ResolvedAspectRatio {
     /// Resolves a box's `aspect-ratio` against its `box-sizing` and its padding and border
+    #[inline(always)]
     pub(crate) fn new(aspect_ratio: AspectRatio, box_sizing: BoxSizing, padding_border: Size<f32>) -> Option<Self> {
-        let ratio = aspect_ratio.ratio()?;
+        if aspect_ratio == AspectRatio::NONE {
+            return None;
+        }
+        Some(Self::new_unchecked(aspect_ratio, box_sizing, padding_border))
+    }
+
+    /// [`ResolvedAspectRatio::new`] for an `aspect_ratio` that is not [`AspectRatio::NONE`]
+    #[inline(never)]
+    fn new_unchecked(aspect_ratio: AspectRatio, box_sizing: BoxSizing, padding_border: Size<f32>) -> Self {
+        let ratio = aspect_ratio.ratio().unwrap_or(1.0);
         let inset =
             if aspect_ratio.is_auto() && box_sizing == BoxSizing::BorderBox { padding_border } else { Size::ZERO };
-        Some(Self { ratio, inset })
+        Self { ratio, inset }
     }
 
     /// The width that corresponds to `height`
@@ -45,13 +55,10 @@ pub(crate) trait ApplyAspectRatio {
 impl ApplyAspectRatio for Size<Option<f32>> {
     #[inline(always)]
     fn apply_aspect_ratio(self, aspect_ratio: Option<ResolvedAspectRatio>) -> Self {
-        match (aspect_ratio, self.width, self.height) {
-            (Some(ratio), Some(width), None) => {
-                Size { width: Some(width), height: Some(ratio.height_from_width(width)) }
-            }
-            (Some(ratio), None, Some(height)) => {
-                Size { width: Some(ratio.width_from_height(height)), height: Some(height) }
-            }
+        let Some(ratio) = aspect_ratio else { return self };
+        match (self.width, self.height) {
+            (Some(width), None) => Size { width: Some(width), height: Some(ratio.height_from_width(width)) },
+            (None, Some(height)) => Size { width: Some(ratio.width_from_height(height)), height: Some(height) },
             _ => self,
         }
     }
