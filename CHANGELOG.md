@@ -6,7 +6,7 @@
 
 - `BlockContext::place_floated_box` (and `FloatContext::place_floated_box`) now take a caller-defined `id: u64` for the box, which is stored on `PlacedFloatedBox`. `BlockContext::float_mark` and `BlockContext::floats_placed_since` read back the id and position of the floats placed since a mark, so that custom formatting contexts which place floats do not need to keep their own list of placements.
 
-- `Style::aspect_ratio` and `CoreStyle::aspect_ratio()` are now an `AspectRatio` rather than an `Option<f32>`, so that they can represent `aspect-ratio: auto && <ratio>` (`AspectRatio::auto_and`). `AspectRatio` implements `From<f32>` and `From<Option<f32>>`, and a degenerate ratio (not finite and positive) converts to `AspectRatio::NONE`.
+- `Style::aspect_ratio` and `CoreStyle::aspect_ratio()` are now an `AspectRatio` rather than an `Option<f32>`, so that they can represent `aspect-ratio: auto && <ratio>` (`AspectRatio::auto_and`). `AspectRatio` implements `From<f32>` and `From<Option<f32>>`, and a degenerate ratio (not finite and positive) converts to `AspectRatio::NONE`. With the `parse` feature, `AspectRatio` implements `FromStr` (`auto || <ratio>`).
 
 ### Fixed
 

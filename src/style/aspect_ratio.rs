@@ -108,6 +108,54 @@ impl From<AspectRatioRepr> for AspectRatio {
     }
 }
 
+#[cfg(feature = "parse")]
+impl crate::util::parse::FromCss for AspectRatio {
+    /// Parses `auto || <ratio>`, where `<ratio>` is `<number [0,∞]> [ / <number [0,∞]> ]?`
+    fn from_css<'i>(parser: &mut crate::util::parse::Parser<'i, '_>) -> crate::util::parse::CssParseResult<'i, Self> {
+        fn parse_non_negative<'i>(
+            parser: &mut crate::util::parse::Parser<'i, '_>,
+        ) -> crate::util::parse::CssParseResult<'i, f32> {
+            let location = parser.current_source_location();
+            match parser.expect_number()? {
+                number if number >= 0.0 => Ok(number),
+                number => Err(location.new_unexpected_token_error(crate::util::parse::Token::Number {
+                    has_sign: true,
+                    value: number,
+                    int_value: None,
+                })),
+            }
+        }
+        fn parse_ratio<'i>(
+            parser: &mut crate::util::parse::Parser<'i, '_>,
+        ) -> crate::util::parse::CssParseResult<'i, f32> {
+            let numerator = parse_non_negative(parser)?;
+            let denominator = if parser.try_parse(|parser| parser.expect_delim('/')).is_ok() {
+                parse_non_negative(parser)?
+            } else {
+                1.0
+            };
+            Ok(numerator / denominator)
+        }
+
+        let mut auto = parser.try_parse(|parser| parser.expect_ident_matching("auto")).is_ok();
+        let ratio = parser.try_parse(parse_ratio).ok();
+        if !auto && ratio.is_some() {
+            auto = parser.try_parse(|parser| parser.expect_ident_matching("auto")).is_ok();
+        }
+        match (auto, ratio) {
+            (true, Some(ratio)) => Ok(Self::auto_and(ratio)),
+            (false, Some(ratio)) => Ok(Self::new(ratio)),
+            (true, None) => Ok(Self::NONE),
+            (false, None) => {
+                let token = parser.next()?.clone();
+                Err(parser.new_unexpected_token_error(token))
+            }
+        }
+    }
+}
+#[cfg(feature = "parse")]
+crate::util::parse::from_str_from_css!(AspectRatio);
+
 #[cfg(test)]
 mod tests {
     use super::AspectRatio;
@@ -135,5 +183,25 @@ mod tests {
         assert_eq!(AspectRatio::NONE, AspectRatio::NONE);
         assert_eq!(AspectRatio::new(2.0), AspectRatio::new(2.0));
         assert_ne!(AspectRatio::new(2.0), AspectRatio::auto_and(2.0));
+    }
+
+    #[cfg(feature = "parse")]
+    #[test]
+    fn parse() {
+        let parse = |input: &str| input.parse::<AspectRatio>().ok();
+        assert_eq!(parse("auto"), Some(AspectRatio::NONE));
+        assert_eq!(parse("2"), Some(AspectRatio::new(2.0)));
+        assert_eq!(parse("1 / 2"), Some(AspectRatio::new(0.5)));
+        assert_eq!(parse("auto 3/2"), Some(AspectRatio::auto_and(1.5)));
+        assert_eq!(parse("3/2 auto"), Some(AspectRatio::auto_and(1.5)));
+        assert_eq!(parse("0 / 1"), Some(AspectRatio::NONE));
+        assert_eq!(parse("1 / 0"), Some(AspectRatio::NONE));
+        assert_eq!(parse("auto 0"), Some(AspectRatio::NONE));
+        assert_eq!(parse(""), None);
+        assert_eq!(parse("-1"), None);
+        assert_eq!(parse("1 / -2"), None);
+        assert_eq!(parse("auto auto"), None);
+        assert_eq!(parse("1 / 2 / 3"), None);
+        assert_eq!(parse("1px"), None);
     }
 }
