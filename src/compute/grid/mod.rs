@@ -1,6 +1,6 @@
 //! This module is a partial implementation of the CSS Grid Level 1 specification
 //! <https://www.w3.org/TR/css-grid-1>
-use crate::compute::common::aspect_ratio::{transfer_aspect_ratio, ApplyAspectRatio, ResolvedAspectRatio};
+use crate::compute::common::aspect_ratio::{transfer_aspect_ratio, transfer_aspect_ratio_limits, ResolvedAspectRatio};
 use crate::geometry::{AbsoluteAxis, AbstractAxis, InBothAbsAxis};
 use crate::geometry::{Line, Point, Rect, Size};
 use crate::style::{AlignContent, AlignItems, AvailableSpace, Contain, ContainingBlockClaims, Overflow};
@@ -112,16 +112,16 @@ fn compute_container_constants<Tree: LayoutGridContainer>(
         if style.box_sizing() == BoxSizing::ContentBox { padding_border_size } else { Size::ZERO };
     let aspect_ratio = ResolvedAspectRatio::new(style.aspect_ratio(), style.box_sizing(), padding_border_size);
 
-    let min_size = style
-        .min_size()
-        .maybe_resolve(parent_size, |val, basis| tree.calc(val, basis))
-        .apply_aspect_ratio(aspect_ratio)
-        .maybe_add(box_sizing_adjustment);
-    let max_size = style
-        .max_size()
-        .maybe_resolve(parent_size, |val, basis| tree.calc(val, basis))
-        .apply_aspect_ratio(aspect_ratio)
-        .maybe_add(box_sizing_adjustment);
+    let (min_size, max_size) = transfer_aspect_ratio_limits(
+        known_dimensions
+            .maybe_sub(box_sizing_adjustment)
+            .or(style.size().maybe_resolve(parent_size, |val, basis| tree.calc(val, basis))),
+        style.min_size().maybe_resolve(parent_size, |val, basis| tree.calc(val, basis)),
+        style.max_size().maybe_resolve(parent_size, |val, basis| tree.calc(val, basis)),
+        aspect_ratio,
+    );
+    let min_size = min_size.maybe_add(box_sizing_adjustment);
+    let max_size = max_size.maybe_add(box_sizing_adjustment);
     let style_size = if inputs.sizing_mode == SizingMode::InherentSize {
         style.size().maybe_resolve(parent_size, |val, basis| tree.calc(val, basis))
     } else {

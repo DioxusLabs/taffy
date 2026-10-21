@@ -1,7 +1,8 @@
 //! Transferring sizes through a box's preferred aspect ratio
 use crate::geometry::Size;
 use crate::style::{AspectRatio, BoxSizing, CoreStyle};
-use crate::util::sys::f32_max;
+use crate::util::sys::{f32_max, f32_min};
+use crate::util::MaybeMath;
 
 /// A box's preferred aspect ratio, and the padding and border that the box it applies to excludes. `auto && <ratio>`
 /// applies to the content box (<https://drafts.csswg.org/css-sizing-4/#aspect-ratio>), so on a `border-box` box
@@ -102,5 +103,42 @@ pub(crate) fn transfer_aspect_ratio(
             width: transferred.width.filter(|_| has_automatic_minimum.width),
             height: transferred.height.filter(|_| has_automatic_minimum.height),
         },
+    }
+}
+
+/// Transfers the min and max sizes of the other axis through `aspect_ratio` into the box's ratio-dependent
+/// axis, the axis whose size is unset while the other's is set. The axis's own min and max sizes win over
+/// the transferred ones (<https://drafts.csswg.org/css-sizing-4/#aspect-ratio-size-transfers>). If neither size
+/// is set, each axis's min and max sizes are transferred into the other. Returns the box's `(min_size, max_size)`.
+pub(crate) fn transfer_aspect_ratio_limits(
+    size: Size<Option<f32>>,
+    min_size: Size<Option<f32>>,
+    max_size: Size<Option<f32>>,
+    aspect_ratio: Option<ResolvedAspectRatio>,
+) -> (Size<Option<f32>>, Size<Option<f32>>) {
+    let Some(ratio) = aspect_ratio else { return (min_size, max_size) };
+    let combine = |own: Option<f32>, transferred: Option<f32>, pick: fn(f32, f32) -> f32| match (own, transferred) {
+        (Some(own), Some(transferred)) => Some(pick(own, transferred)),
+        (own, transferred) => own.or(transferred),
+    };
+    match (size.width, size.height) {
+        (Some(_), Some(_)) => (min_size, max_size),
+        (None, Some(_)) => {
+            let min = min_size.height.map(|height| ratio.width_from_height(height)).maybe_min(max_size.width);
+            let max = max_size.height.map(|height| ratio.width_from_height(height)).maybe_max(min_size.width);
+            (
+                Size { width: combine(min_size.width, min, f32_max), ..min_size },
+                Size { width: combine(max_size.width, max, f32_min), ..max_size },
+            )
+        }
+        (None, None) => (min_size.apply_aspect_ratio(aspect_ratio), max_size.apply_aspect_ratio(aspect_ratio)),
+        (Some(_), None) => {
+            let min = min_size.width.map(|width| ratio.height_from_width(width)).maybe_min(max_size.height);
+            let max = max_size.width.map(|width| ratio.height_from_width(width)).maybe_max(min_size.height);
+            (
+                Size { height: combine(min_size.height, min, f32_max), ..min_size },
+                Size { height: combine(max_size.height, max, f32_min), ..max_size },
+            )
+        }
     }
 }
