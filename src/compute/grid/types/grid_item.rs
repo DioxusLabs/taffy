@@ -720,15 +720,15 @@ impl GridItem {
             .maybe_add(box_sizing_adjustment)
             .get(axis)
             .map(|size| {
-                // A definite preferred size is clamped by the minimum and maximum sizes. For a compressible replaced
-                // element, an indefinite percentage maximum size is resolved against zero.
+                // A definite preferred size is clamped by the minimum and maximum sizes. For a replaced element (but
+                // not a form control), an indefinite percentage maximum size is resolved against zero.
                 let min_size = self.min_size.get(axis);
                 let max_size = self.max_size.get(axis);
                 if min_size.is_auto() && max_size.is_auto() {
                     return size;
                 }
                 let basis = grid_area_size.get(axis);
-                let max_size_basis = if self.is_compressible_replaced { basis.or(Some(0.0)) } else { basis };
+                let max_size_basis = if self.is_replaced { basis.or(Some(0.0)) } else { basis };
                 let adjustment = box_sizing_adjustment.get(axis);
                 let min_size = min_size.maybe_resolve(basis, |val, basis| tree.calc(val, basis));
                 let max_size = max_size.maybe_resolve(max_size_basis, |val, basis| tree.calc(val, basis));
