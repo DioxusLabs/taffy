@@ -26,6 +26,7 @@ impl ResolvedAspectRatio {
 
     /// [`ResolvedAspectRatio::new`] for an `aspect_ratio` that is not [`AspectRatio::NONE`]
     #[inline(never)]
+    #[cold]
     fn new_unchecked(aspect_ratio: AspectRatio, box_sizing: BoxSizing, padding_border: Size<f32>) -> Self {
         let ratio = aspect_ratio.ratio().unwrap_or(1.0);
         let inset =
