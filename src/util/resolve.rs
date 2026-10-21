@@ -30,6 +30,7 @@ pub trait ResolveOrZero<TContext, TOutput: TaffyZero> {
 impl MaybeResolve<Option<Au>, Option<Au>> for LengthPercentage {
     /// Converts the given [`LengthPercentage`] into an absolute length
     /// Can return `None`
+    #[inline]
     fn maybe_resolve(self, context: Option<Au>, calc: impl Fn(*const (), f32) -> f32) -> Option<Au> {
         match self.0.tag() {
             CompactLength::LENGTH_TAG => Some(px_to_au(self.0.value())),
@@ -44,6 +45,7 @@ impl MaybeResolve<Option<Au>, Option<Au>> for LengthPercentage {
 impl MaybeResolve<Option<Au>, Option<Au>> for LengthPercentageAuto {
     /// Converts the given [`LengthPercentageAuto`] into an absolute length
     /// Can return `None`
+    #[inline]
     fn maybe_resolve(self, context: Option<Au>, calc: impl Fn(*const (), f32) -> f32) -> Option<Au> {
         match self.0.tag() {
             CompactLength::AUTO_TAG => None,
@@ -60,6 +62,7 @@ impl MaybeResolve<Option<Au>, Option<Au>> for Dimension {
     /// Converts the given [`Dimension`] into an absolute length
     ///
     /// Can return `None`
+    #[inline]
     fn maybe_resolve(self, context: Option<Au>, calc: impl Fn(*const (), f32) -> f32) -> Option<Au> {
         match self.0.tag() {
             CompactLength::AUTO_TAG => None,
@@ -82,6 +85,7 @@ impl MaybeResolve<Option<Au>, Option<Au>> for Dimension {
 impl<T: MaybeResolve<Option<Au>, Option<Au>>> MaybeResolve<Au, Option<Au>> for T {
     /// Converts the given MaybeResolve value into an absolute length
     /// Can return `None`
+    #[inline]
     fn maybe_resolve(self, context: Au, calc: impl Fn(*const (), f32) -> f32) -> Option<Au> {
         self.maybe_resolve(Some(context), calc)
     }
@@ -101,6 +105,7 @@ impl<In, Out, T: MaybeResolve<In, Out>> MaybeResolve<Size<In>, Size<Out>> for Si
 
 impl ResolveOrZero<Option<Au>, Au> for LengthPercentage {
     /// Will return a default value of result is evaluated to `None`
+    #[inline]
     fn resolve_or_zero(self, context: Option<Au>, calc: impl Fn(*const (), f32) -> f32) -> Au {
         self.maybe_resolve(context, calc).unwrap_or(Au(0))
     }
@@ -108,6 +113,7 @@ impl ResolveOrZero<Option<Au>, Au> for LengthPercentage {
 
 impl ResolveOrZero<Option<Au>, Au> for LengthPercentageAuto {
     /// Will return a default value of result is evaluated to `None`
+    #[inline]
     fn resolve_or_zero(self, context: Option<Au>, calc: impl Fn(*const (), f32) -> f32) -> Au {
         self.maybe_resolve(context, calc).unwrap_or(Au(0))
     }
@@ -115,6 +121,7 @@ impl ResolveOrZero<Option<Au>, Au> for LengthPercentageAuto {
 
 impl ResolveOrZero<Option<Au>, Au> for Dimension {
     /// Will return a default value of result is evaluated to `None`
+    #[inline]
     fn resolve_or_zero(self, context: Option<Au>, calc: impl Fn(*const (), f32) -> f32) -> Au {
         self.maybe_resolve(context, calc).unwrap_or(Au(0))
     }
@@ -123,6 +130,7 @@ impl ResolveOrZero<Option<Au>, Au> for Dimension {
 // Generic ResolveOrZero for Size
 impl<In, Out: TaffyZero, T: ResolveOrZero<In, Out>> ResolveOrZero<Size<In>, Size<Out>> for Size<T> {
     /// Converts any `parent`-relative values for size into an absolute size
+    #[inline]
     fn resolve_or_zero(self, context: Size<In>, calc: impl Fn(*const (), f32) -> f32) -> Size<Out> {
         Size {
             width: self.width.resolve_or_zero(context.width, &calc),
@@ -134,6 +142,7 @@ impl<In, Out: TaffyZero, T: ResolveOrZero<In, Out>> ResolveOrZero<Size<In>, Size
 // Generic ResolveOrZero for resolving Rect against Size
 impl<In: Copy, Out: TaffyZero, T: ResolveOrZero<In, Out>> ResolveOrZero<Size<In>, Rect<Out>> for Rect<T> {
     /// Converts any `parent`-relative values for Rect into an absolute Rect
+    #[inline]
     fn resolve_or_zero(self, context: Size<In>, calc: impl Fn(*const (), f32) -> f32) -> Rect<Out> {
         Rect {
             left: self.left.resolve_or_zero(context.width, &calc),
@@ -161,6 +170,7 @@ impl<Out: TaffyZero, T: ResolveOrZero<Option<Au>, Out>> ResolveOrZero<Option<Au>
 // Generic ResolveOrZero for resolving Rect against Au
 impl<Out: TaffyZero, T: ResolveOrZero<Au, Out>> ResolveOrZero<Au, Rect<Out>> for Rect<T> {
     /// Converts any `parent`-relative values for Rect into an absolute Rect
+    #[inline]
     fn resolve_or_zero(self, context: Au, calc: impl Fn(*const (), f32) -> f32) -> Rect<Out> {
         Rect {
             left: self.left.resolve_or_zero(context, &calc),

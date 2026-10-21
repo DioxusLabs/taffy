@@ -17,10 +17,15 @@ pub(crate) fn px_to_au(px: f32) -> Au {
     Au::new(round_to_i32(px * AU_PER_PX as f32))
 }
 
+/// Multiple of `AU_PER_PX` that keeps `value + AU_PER_PX / 2 + ROUND_OFFSET` within `u32` for every `Au` in
+/// `MIN_AU..=MAX_AU`, so the division in `round_au` can be unsigned
+const ROUND_OFFSET: u32 = AU_PER_PX as u32 * 17_895_698;
+
 /// Rounds an `Au` value to the nearest whole pixel, with halves rounding up
 #[inline(always)]
 pub(crate) fn round_au(value: Au) -> Au {
-    Au((value.0 + AU_PER_PX / 2).div_euclid(AU_PER_PX) * AU_PER_PX)
+    let shifted = ((value.0 + AU_PER_PX / 2) as u32).wrapping_add(ROUND_OFFSET);
+    Au(((shifted / AU_PER_PX as u32) * AU_PER_PX as u32).wrapping_sub(ROUND_OFFSET) as i32)
 }
 
 /// Rounds a raw `Au` count computed in `f32` to the nearest `Au`

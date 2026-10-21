@@ -621,6 +621,7 @@ impl Size<Option<Au>> {
     ///   - If height is `Some` but width is `None`, then width is computed from height and aspect_ratio
     ///
     /// If aspect_ratio is `None` then this function simply returns self.
+    #[inline]
     pub fn maybe_apply_aspect_ratio(self, aspect_ratio: Option<f32>) -> Size<Option<Au>> {
         match aspect_ratio {
             Some(ratio) => match (self.width, self.height) {
