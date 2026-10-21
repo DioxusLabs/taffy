@@ -16,7 +16,9 @@ use crate::{
     LayoutGridContainer, RequestedAxis,
 };
 use alignment::{align_and_position_item, align_tracks};
-use explicit_grid::{compute_explicit_grid_size_in_axis, initialize_grid_tracks, AutoRepeatStrategy};
+use explicit_grid::{
+    compute_explicit_grid_size_in_axis, explicit_track_total_size, initialize_grid_tracks, AutoRepeatStrategy,
+};
 use implicit_grid::compute_grid_size_estimate;
 use placement::{place_grid_items, ItemPlacement};
 use track_sizing::{
@@ -119,6 +121,62 @@ fn compute_empty_container_layout<Tree: LayoutGridContainer>(
         ..
     } = *constants;
 
+    let resolved_style_size = known_dimensions.or(preferred_size);
+
+    // An axis with a definite size needs no track sizing at all, and in an indefinite axis the explicit tracks of
+    // an empty grid can be summed in one pass. Fall back to sizing real tracks for the cases the sum does not cover.
+    {
+        let style = tree.get_grid_container_style(node);
+        let column_total = match resolved_style_size.width {
+            Some(_) => Some(0.0),
+            None => explicit_track_total_size(
+                tree,
+                &style,
+                AbsoluteAxis::Horizontal,
+                col_counts.explicit,
+                col_auto_repetition_count,
+                inner_node_size.width,
+                inner_min_size.width,
+                inner_max_size.width,
+                available_grid_space.width,
+                justify_content,
+            ),
+        };
+        if let Some(column_total) = column_total {
+            let width = resolved_style_size
+                .width
+                .unwrap_or_else(|| column_total + content_box_inset.horizontal_axis_sum())
+                .maybe_clamp(min_size.width, max_size.width)
+                .max(padding_border_size.width);
+            if run_mode == RunMode::ComputeSize && inputs.axis == RequestedAxis::Horizontal {
+                return LayoutOutput::from_outer_size(Size { width, height: 0.0 });
+            }
+            let row_total = match resolved_style_size.height {
+                Some(_) => Some(0.0),
+                None => explicit_track_total_size(
+                    tree,
+                    &style,
+                    AbsoluteAxis::Vertical,
+                    row_counts.explicit,
+                    row_auto_repetition_count,
+                    inner_node_size.height,
+                    inner_min_size.height,
+                    inner_max_size.height,
+                    available_grid_space.height,
+                    align_content,
+                ),
+            };
+            if let Some(row_total) = row_total {
+                let height = resolved_style_size
+                    .height
+                    .unwrap_or_else(|| row_total + content_box_inset.vertical_axis_sum())
+                    .maybe_clamp(min_size.height, max_size.height)
+                    .max(padding_border_size.height);
+                return empty_container_output(Size { width, height });
+            }
+        }
+    }
+
     let style = tree.get_grid_container_style(node);
     let mut columns = GridTrackVec::new();
     let mut rows = GridTrackVec::new();
@@ -155,9 +213,8 @@ fn compute_empty_container_layout<Tree: LayoutGridContainer>(
     let column_sum = columns.iter().map(|track| track.base_size).sum::<f32>();
     inner_node_size.width = inner_node_size.width.or_else(|| column_sum.into());
 
-    let width = known_dimensions
+    let width = resolved_style_size
         .width
-        .or(preferred_size.width)
         .unwrap_or_else(|| column_sum + content_box_inset.horizontal_axis_sum())
         .maybe_clamp(min_size.width, max_size.width)
         .max(padding_border_size.width);
@@ -184,17 +241,21 @@ fn compute_empty_container_layout<Tree: LayoutGridContainer>(
     );
     let row_sum = rows.iter().map(|track| track.base_size).sum::<f32>();
 
-    let height = known_dimensions
+    let height = resolved_style_size
         .height
-        .or(preferred_size.height)
         .unwrap_or_else(|| row_sum + content_box_inset.vertical_axis_sum())
         .maybe_clamp(min_size.height, max_size.height)
         .max(padding_border_size.height);
 
+    empty_container_output(Size { width, height })
+}
+
+/// The layout output of a grid container with no children
+fn empty_container_output(size: Size<f32>) -> LayoutOutput {
     // With no children there are no out-of-flow candidates, so the positioning area's value is never read. It
     // still has to be `Some`: that is what makes `compute_oof_layout` clear a stale hoisted-children list from a
     // run in which the container still had descendants.
-    let mut output = LayoutOutput::from_outer_size(Size { width, height });
+    let mut output = LayoutOutput::from_outer_size(size);
     output.oof_positioning_area = Some(crate::tree::OofPositioningArea { size: Size::ZERO, offset: Point::ZERO });
     output
 }

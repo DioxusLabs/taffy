@@ -2,9 +2,13 @@
 //! This mainly consists of evaluating GridAutoTracks
 use super::types::{GridTrack, GridTrackKind, TrackCounts};
 use crate::geometry::AbsoluteAxis;
-use crate::style::{LengthPercentage, RepetitionCount, TrackSizingFunction};
+use crate::style::{
+    AlignContent, AvailableSpace, LengthPercentage, MinTrackSizingFunction, RepetitionCount, TrackSizingFunction,
+};
 use crate::style_helpers::TaffyAuto;
+use crate::tree::{LayoutPartialTree, LayoutPartialTreeExt};
 use crate::util::sys::{ceil, floor, Vec};
+use crate::util::sys::{f32_max, f32_min};
 use crate::util::MaybeMath;
 use crate::util::ResolveOrZero;
 use core::cmp::min;
@@ -879,4 +883,149 @@ mod test {
             assert_eq!(actual.max_track_sizing_function, max, "Track {idx} (0-based index)");
         }
     }
+}
+
+/// Running totals over the explicit tracks of an empty grid, see [`explicit_track_total_size`]
+#[derive(Default)]
+struct TrackTotals {
+    /// Number of (non-collapsed) tracks
+    count: u16,
+    /// Sum of the tracks' base sizes
+    base: f32,
+    /// Sum of the tracks' growth limits, where an infinite limit counts as the base size
+    growth_limit: f32,
+    /// Sum of how far each track can grow towards its (fit-content capped) growth limit
+    room: f32,
+    /// Number of flexible (`fr`) tracks
+    fr_count: u16,
+    /// Whether any flexible track has a non-zero base size
+    fr_with_base: bool,
+    /// Whether any track has an `auto` max track sizing function
+    has_auto: bool,
+}
+
+impl TrackTotals {
+    fn add(
+        &mut self,
+        track: TrackSizingFunction,
+        percentage_basis: Option<f32>,
+        inner_node_size: Option<f32>,
+        calc: impl Fn(*const (), f32) -> f32 + Copy,
+    ) {
+        let min = track.min_sizing_function();
+        let max = track.max_sizing_function();
+        let base = min.definite_value(percentage_basis, calc).unwrap_or(0.0);
+        // An intrinsic or flexible max sizing function gives an infinite growth limit, which the track sizing
+        // algorithm resets to the base size when no item spans the track
+        let growth_limit = max.definite_value(percentage_basis, calc).map(|limit| f32_max(limit, base)).unwrap_or(base);
+        let fit_content_limit = max.fit_content_limit(inner_node_size, calc).unwrap_or(f32::INFINITY);
+        self.count += 1;
+        self.base += base;
+        self.growth_limit += growth_limit;
+        self.room += f32_max(0.0, f32_min(growth_limit, fit_content_limit) - base);
+        if max.is_fr() {
+            self.fr_count += 1;
+            self.fr_with_base |= base > 0.0;
+        }
+        self.has_auto |= max.is_auto();
+    }
+}
+
+/// The total size (tracks plus gutters) of the explicit grid in one axis of a grid container with no children,
+/// equal to what `initialize_grid_tracks` followed by `track_sizing_algorithm` with no items produce, but computed in
+/// a single pass over the track template without creating the tracks. `auto-fit` repetitions collapse to zero as no
+/// track has items. Returns `None` for the cases that still need the track sizing algorithm: flexible tracks sized
+/// against a min/max size, or several flexible tracks with non-zero base sizes.
+#[allow(clippy::too_many_arguments)]
+pub(super) fn explicit_track_total_size(
+    tree: &impl LayoutPartialTree,
+    style: &impl GridContainerStyle,
+    axis: AbsoluteAxis,
+    explicit_track_count: u16,
+    auto_repetition_count: u16,
+    inner_node_size: Option<f32>,
+    min_size: Option<f32>,
+    max_size: Option<f32>,
+    available_space: AvailableSpace,
+    alignment: AlignContent,
+) -> Option<f32> {
+    let (track_template, auto_tracks, gap) = match axis {
+        AbsoluteAxis::Horizontal => (style.grid_template_columns(), style.grid_auto_columns(), style.gap().width),
+        AbsoluteAxis::Vertical => (style.grid_template_rows(), style.grid_auto_rows(), style.gap().height),
+    };
+    let calc = |val, basis| tree.calc(val, basis);
+    let percentage_basis = inner_node_size.or(min_size);
+
+    let mut totals = TrackTotals::default();
+    let track_limit = explicit_track_count as usize;
+    let mut created_track_count = 0;
+    if explicit_track_count > 0 {
+        if let Some(track_template) = track_template {
+            track_template.for_each(|component| match component {
+                GenericGridTemplateComponent::Single(track) => {
+                    if created_track_count < track_limit {
+                        totals.add(track, percentage_basis, inner_node_size, calc);
+                        created_track_count += 1;
+                    }
+                }
+                GenericGridTemplateComponent::Repeat(repeat) => {
+                    let repetitions = match repeat.count() {
+                        RepetitionCount::Count(count) => count,
+                        RepetitionCount::AutoFill | RepetitionCount::AutoFit => auto_repetition_count,
+                    };
+                    let repeated_track_count =
+                        (repeat.track_count() as usize * repetitions as usize).min(track_limit - created_track_count);
+                    // Auto-fit tracks without items are collapsed (along with their gutters)
+                    if repeat.count() != RepetitionCount::AutoFit {
+                        for track in repeat.tracks().cycle().take(repeated_track_count) {
+                            totals.add(track, percentage_basis, inner_node_size, calc);
+                        }
+                    }
+                    created_track_count += repeated_track_count;
+                }
+            });
+        }
+    }
+
+    // Explicit tracks implied by grid-template-areas are sized by the auto tracks
+    let grid_area_track_count = track_limit - created_track_count;
+    if auto_tracks.len() == 0 {
+        for _ in 0..grid_area_track_count {
+            totals.add(TrackSizingFunction::AUTO, percentage_basis, inner_node_size, calc);
+        }
+    } else {
+        for track in auto_tracks.cycle().take(grid_area_track_count) {
+            totals.add(track, percentage_basis, inner_node_size, calc);
+        }
+    }
+
+    // Flexible tracks only keep their base size when the flex fraction resolves to zero: the fraction is the
+    // largest base size (per flex factor) of the flexible tracks, and a min/max size can trigger a re-run of
+    // "find the size of an fr". Both need the real tracks.
+    if totals.fr_count > 0 && (min_size.is_some() || max_size.is_some() || (totals.fr_with_base && totals.fr_count > 1))
+    {
+        return None;
+    }
+
+    // 11.6 Maximise tracks: with infinite free space every track grows to its growth limit, otherwise the positive
+    // free space is distributed up to the (fit-content capped) limits, and only the total distributed matters here
+    let mut total = match available_space {
+        AvailableSpace::MaxContent => totals.growth_limit,
+        AvailableSpace::MinContent => totals.base,
+        AvailableSpace::Definite(available_space) => {
+            totals.base + f32_min(f32_max(available_space - totals.base, 0.0), totals.room)
+        }
+    };
+
+    // 11.8 Stretch auto tracks: the free space is indefinite, so a definite min size is used in its place
+    if alignment == AlignContent::STRETCH && totals.has_auto {
+        if let Some(min_size) = min_size {
+            total = f32_max(total, min_size);
+        }
+    }
+
+    // Gutters between (non-collapsed) tracks; the first and last gutters are always collapsed
+    let gutter = MinTrackSizingFunction::from(gap).definite_value(percentage_basis, calc).unwrap_or(0.0);
+    let gutter_count = totals.count.saturating_sub(1);
+    Some(total + gutter * gutter_count as f32)
 }
