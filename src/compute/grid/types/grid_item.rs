@@ -721,7 +721,9 @@ impl GridItem {
             .get(axis)
             .map(|size| {
                 // A definite preferred size is clamped by the minimum and maximum sizes. For a replaced element (but
-                // not a form control), an indefinite percentage maximum size is resolved against zero.
+                // not a form control), an indefinite percentage maximum size is resolved against zero. The spec also
+                // applies this to form controls (https://drafts.csswg.org/css-sizing-3/#min-content-zero) but no
+                // browser does (https://github.com/w3c/csswg-drafts/issues/6348).
                 let min_size = self.min_size.get(axis);
                 let max_size = self.max_size.get(axis);
                 if min_size.is_auto() && max_size.is_auto() {
