@@ -1502,10 +1502,14 @@ fn perform_final_layout_on_in_flow_children(
                 let inset_right = container_outer_width - width - inset_left;
                 let insets = [inset_left, inset_right];
 
-                // Compute child layout. The child's position is estimated from its top margin collapsed with
-                // the preceding margins (the child's own collapsed-through margins are not yet known).
-                let estimated_y = committed_y_offset
-                    + active_collapsible_margin_set.collapse_with_margin(item_non_auto_margin.top).resolve();
+                // Margins that collapse with the container's top are applied outside it, as for
+                // preceding floats adjoining the same unresolved margin strut (CSS2.2 8.3.1).
+                let estimated_y = if is_collapsing_with_first_margin_set && own_margins_collapse_with_children.start {
+                    committed_y_offset
+                } else {
+                    committed_y_offset
+                        + active_collapsible_margin_set.collapse_with_margin(item_non_auto_margin.top).resolve()
+                };
                 let mut child_block_ctx = block_ctx.sub_context(estimated_y.max(clear_pos), insets);
                 let output = tree.compute_block_child_layout(item.node_id, inputs, Some(&mut child_block_ctx));
 

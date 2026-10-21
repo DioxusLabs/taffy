@@ -8,6 +8,7 @@
 
 ### Fixed
 
+- Block: position a same-formatting-context child at its container's top when its top margin collapses with the container's, so its descendants avoid preceding floats in the correct coordinates.
 - Block: apply `position: relative` insets to floated boxes. The offset does not affect the placement of other content.
 - Float: don't clamp the first float of a block formatting context to the top of the context. A float in a box pulled up by a negative top margin is placed at the top of its containing block, which may be above the top of the context.
 - Float: a float that starts beside earlier floats but extends below all of them now constrains the placement of later floats and boxes over its full height, rather than only down to the bottom of the earlier floats.
