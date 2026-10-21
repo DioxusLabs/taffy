@@ -17,15 +17,16 @@ pub(crate) fn px_to_au(px: f32) -> Au {
     Au::new(round_to_i32(px * AU_PER_PX as f32))
 }
 
-/// Multiple of `AU_PER_PX` that keeps `value + AU_PER_PX / 2 + ROUND_OFFSET` within `u32` for every `Au` in
-/// `MIN_AU..=MAX_AU`, so the division in `round_au` can be unsigned
-const ROUND_OFFSET: u32 = AU_PER_PX as u32 * 17_895_698;
+/// Multiple of `AU_PER_PX` that keeps `value + AU_PER_PX / 2 + ROUND_OFFSET` non-negative for every `i32`, so
+/// the division in `round_au` can be unsigned
+const ROUND_OFFSET: i64 = AU_PER_PX as i64 * 35_791_394;
 
 /// Rounds an `Au` value to the nearest whole pixel, with halves rounding up
 #[inline(always)]
 pub(crate) fn round_au(value: Au) -> Au {
-    let shifted = ((value.0 + AU_PER_PX / 2) as u32).wrapping_add(ROUND_OFFSET);
-    Au(((shifted / AU_PER_PX as u32) * AU_PER_PX as u32).wrapping_sub(ROUND_OFFSET) as i32)
+    let shifted = (value.0 as i64 + (AU_PER_PX / 2) as i64 + ROUND_OFFSET) as u64;
+    let rounded = (shifted / AU_PER_PX as u64) * AU_PER_PX as u64;
+    Au((rounded as i64 - ROUND_OFFSET) as i32)
 }
 
 /// Rounds a raw `Au` count computed in `f32` to the nearest `Au`
@@ -38,4 +39,24 @@ pub(crate) fn raw_to_au(raw: f32) -> Au {
 #[inline(always)]
 pub(crate) fn scale_au(basis: Au, factor: f32) -> Au {
     raw_to_au(basis.0 as f32 * factor)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{round_au, Au};
+
+    #[test]
+    fn round_au_rounds_halves_up_to_whole_px() {
+        assert_eq!(round_au(Au(0)), Au(0));
+        assert_eq!(round_au(Au(29)), Au(0));
+        assert_eq!(round_au(Au(30)), Au(60));
+        assert_eq!(round_au(Au(-30)), Au(0));
+        assert_eq!(round_au(Au(-31)), Au(-60));
+    }
+
+    #[test]
+    fn round_au_covers_full_i32_range() {
+        assert_eq!(round_au(Au(i32::MAX)), Au(2_147_483_640));
+        assert_eq!(round_au(Au(i32::MIN)), Au(-2_147_483_640));
+    }
 }

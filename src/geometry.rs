@@ -657,7 +657,7 @@ impl<T> Size<Option<T>> {
 impl Size<Dimension> {
     /// Generates a [`Size<Dimension>`] using length values
     #[must_use]
-    pub const fn from_lengths(width: f32, height: f32) -> Self {
+    pub fn from_lengths(width: f32, height: f32) -> Self {
         Size { width: Dimension(CompactLength::length(width)), height: Dimension(CompactLength::length(height)) }
     }
 

@@ -33,7 +33,7 @@ impl MaybeResolve<Option<Au>, Option<Au>> for LengthPercentage {
     #[inline]
     fn maybe_resolve(self, context: Option<Au>, calc: impl Fn(*const (), f32) -> f32) -> Option<Au> {
         match self.0.tag() {
-            CompactLength::LENGTH_TAG => Some(px_to_au(self.0.value())),
+            CompactLength::LENGTH_TAG => Some(self.0.length_au()),
             CompactLength::PERCENT_TAG => context.map(|dim| scale_au(dim, self.0.value())),
             #[cfg(feature = "calc")]
             _ if self.0.is_plain_calc() => context.map(|dim| px_to_au(calc(self.0.calc_value(), dim.to_f32_px()))),
@@ -49,7 +49,7 @@ impl MaybeResolve<Option<Au>, Option<Au>> for LengthPercentageAuto {
     fn maybe_resolve(self, context: Option<Au>, calc: impl Fn(*const (), f32) -> f32) -> Option<Au> {
         match self.0.tag() {
             CompactLength::AUTO_TAG => None,
-            CompactLength::LENGTH_TAG => Some(px_to_au(self.0.value())),
+            CompactLength::LENGTH_TAG => Some(self.0.length_au()),
             CompactLength::PERCENT_TAG => context.map(|dim| scale_au(dim, self.0.value())),
             #[cfg(feature = "calc")]
             _ if self.0.is_plain_calc() => context.map(|dim| px_to_au(calc(self.0.calc_value(), dim.to_f32_px()))),
@@ -68,7 +68,7 @@ impl MaybeResolve<Option<Au>, Option<Au>> for Dimension {
             CompactLength::AUTO_TAG => None,
             // The content keyword is only valid for flex-basis. In any other context it behaves as auto.
             CompactLength::CONTENT_TAG => None,
-            CompactLength::LENGTH_TAG => Some(px_to_au(self.0.value())),
+            CompactLength::LENGTH_TAG => Some(self.0.length_au()),
             CompactLength::PERCENT_TAG => context.map(|dim| scale_au(dim, self.0.value())),
             #[cfg(feature = "calc")]
             _ if self.0.is_plain_calc() => context.map(|dim| px_to_au(calc(self.0.calc_value(), dim.to_f32_px()))),

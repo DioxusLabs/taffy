@@ -45,7 +45,7 @@ impl LengthPercentage {
     /// An absolute length in some abstract units. Users of Taffy may define what they correspond
     /// to in their application (pixels, logical pixels, mm, etc) as they see fit.
     #[inline(always)]
-    pub const fn length(val: f32) -> Self {
+    pub fn length(val: f32) -> Self {
         Self(CompactLength::length(val))
     }
 
@@ -191,7 +191,7 @@ impl LengthPercentageAuto {
     /// An absolute length in some abstract units. Users of Taffy may define what they correspond
     /// to in their application (pixels, logical pixels, mm, etc) as they see fit.
     #[inline(always)]
-    pub const fn length(val: f32) -> Self {
+    pub fn length(val: f32) -> Self {
         Self(CompactLength::length(val))
     }
 
@@ -240,7 +240,7 @@ impl LengthPercentageAuto {
     #[inline(always)]
     pub fn resolve_to_option(self, context: Au, calc_resolver: impl Fn(*const (), f32) -> f32) -> Option<Au> {
         match self.0.tag() {
-            CompactLength::LENGTH_TAG => Some(px_to_au(self.0.value())),
+            CompactLength::LENGTH_TAG => Some(self.0.length_au()),
             CompactLength::PERCENT_TAG => Some(scale_au(context, self.0.value())),
             CompactLength::AUTO_TAG => None,
             #[cfg(feature = "calc")]
@@ -392,7 +392,7 @@ impl Dimension {
     /// An absolute length in some abstract units. Users of Taffy may define what they correspond
     /// to in their application (pixels, logical pixels, mm, etc) as they see fit.
     #[inline(always)]
-    pub const fn length(val: f32) -> Self {
+    pub fn length(val: f32) -> Self {
         Self(CompactLength::length(val))
     }
 
@@ -673,7 +673,7 @@ impl<'de> serde::Deserialize<'de> for Dimension {
 impl Rect<Dimension> {
     /// Create a new Rect with length values
     #[must_use]
-    pub const fn from_length(start: f32, end: f32, top: f32, bottom: f32) -> Self {
+    pub fn from_length(start: f32, end: f32, top: f32, bottom: f32) -> Self {
         Rect {
             left: Dimension(CompactLength::length(start)),
             right: Dimension(CompactLength::length(end)),

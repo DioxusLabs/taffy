@@ -853,7 +853,7 @@ impl MaxTrackSizingFunction {
     /// An absolute length in some abstract units. Users of Taffy may define what they correspond
     /// to in their application (pixels, logical pixels, mm, etc) as they see fit.
     #[inline(always)]
-    pub const fn length(val: f32) -> Self {
+    pub fn length(val: f32) -> Self {
         Self(CompactLength::length(val))
     }
 
@@ -1023,7 +1023,7 @@ impl MaxTrackSizingFunction {
     #[inline(always)]
     pub fn definite_value(self, parent_size: Option<Au>, calc_resolver: impl Fn(*const (), f32) -> f32) -> Option<Au> {
         match self.0.tag() {
-            CompactLength::LENGTH_TAG => Some(px_to_au(self.0.value())),
+            CompactLength::LENGTH_TAG => Some(self.0.length_au()),
             CompactLength::PERCENT_TAG => parent_size.map(|size| scale_au(size, self.0.value())),
             #[cfg(feature = "calc")]
             _ if self.0.is_plain_calc() => {
@@ -1287,7 +1287,7 @@ impl MinTrackSizingFunction {
     /// An absolute length in some abstract units. Users of Taffy may define what they correspond
     /// to in their application (pixels, logical pixels, mm, etc) as they see fit.
     #[inline(always)]
-    pub const fn length(val: f32) -> Self {
+    pub fn length(val: f32) -> Self {
         Self(CompactLength::length(val))
     }
 
@@ -1391,7 +1391,7 @@ impl MinTrackSizingFunction {
     #[inline(always)]
     pub fn definite_value(self, parent_size: Option<Au>, calc_resolver: impl Fn(*const (), f32) -> f32) -> Option<Au> {
         match self.0.tag() {
-            CompactLength::LENGTH_TAG => Some(px_to_au(self.0.value())),
+            CompactLength::LENGTH_TAG => Some(self.0.length_au()),
             CompactLength::PERCENT_TAG => parent_size.map(|size| scale_au(size, self.0.value())),
             #[cfg(feature = "calc")]
             _ if self.0.is_plain_calc() => {
