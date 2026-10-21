@@ -1,11 +1,11 @@
 //! Helper trait to calculate dimensions during layout resolution
 
+use crate::app_unit::Au;
 use crate::geometry::{Rect, Size};
 use crate::style::{Dimension, LengthPercentage, LengthPercentageAuto};
 use crate::style_helpers::TaffyZero;
 use crate::util::au::{px_to_au, scale_au};
 use crate::CompactLength;
-use app_units::Au;
 
 /// Trait to encapsulate behaviour where we need to resolve from a
 /// potentially context-dependent size or dimension into
@@ -184,8 +184,8 @@ impl<Out: TaffyZero, T: ResolveOrZero<Au, Out>> ResolveOrZero<Au, Rect<Out>> for
 #[cfg(test)]
 mod tests {
     use super::{MaybeResolve, ResolveOrZero};
+    use crate::app_unit::Au;
     use crate::style_helpers::TaffyZero;
-    use app_units::Au;
     use core::fmt::Debug;
 
     // MaybeResolve test runner

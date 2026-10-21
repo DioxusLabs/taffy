@@ -127,6 +127,7 @@
 //! ```
 //!
 use super::{DetailedLayoutInfo, Layout, LayoutInput, LayoutOutput, NodeId, RequestedAxis, RunMode, SizingMode};
+use crate::app_unit::Au;
 use crate::debug::debug_log;
 use crate::geometry::{AbsoluteAxis, Line, Size};
 use crate::style::{AvailableSpace, CoreStyle, OofItemStyle};
@@ -137,7 +138,6 @@ use crate::style::{GridContainerStyle, GridItemStyle};
 use crate::CheapCloneStr;
 #[cfg(feature = "block_layout")]
 use crate::{BlockContainerStyle, BlockContext, BlockItemStyle};
-use app_units::Au;
 
 #[cfg(feature = "grid")]
 use crate::compute::grid::DetailedGridInfo;

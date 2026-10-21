@@ -1,9 +1,9 @@
 //! Geometric primitives useful for layout
 
+use crate::app_unit::Au;
 use crate::style::Dimension;
 use crate::util::au::px_to_au;
 use crate::CompactLength;
-use app_units::Au;
 use core::ops::{Add, Sub};
 
 #[cfg(feature = "flexbox")]

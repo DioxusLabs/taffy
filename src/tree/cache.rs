@@ -2,11 +2,11 @@
 
 #![allow(clippy::unusual_byte_groupings)]
 
+use crate::app_unit::Au;
 use crate::geometry::Size;
 use crate::style::AvailableSpace;
 use crate::tree::{CollapsibleMarginSet, LayoutInput, LayoutOutput, RunMode, SizingMode};
 use crate::RequestedAxis;
-use app_units::Au;
 
 /// The number of cache entries for each node in the tree
 const CACHE_SIZE: usize = 9;

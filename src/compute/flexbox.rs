@@ -1,4 +1,5 @@
 //! Computes the [flexbox](https://css-tricks.com/snippets/css/a-guide-to-flexbox/) layout algorithm on [`TaffyTree`](crate::TaffyTree) according to the [spec](https://www.w3.org/TR/css-flexbox-1/)
+use crate::app_unit::{Au, MAX_AU};
 use crate::compute::common::alignment::{
     child_first_baseline, compute_alignment_offset, resolve_self_alignment_safety,
 };
@@ -20,7 +21,6 @@ use crate::util::sys::{f32_max, new_vec_with_capacity, Vec};
 use crate::util::MaybeMath;
 use crate::util::{MaybeResolve, ResolveOrZero};
 use crate::{BoxGenerationMode, BoxSizing, Dimension, Direction, RequestedAxis};
-use app_units::{Au, MAX_AU};
 
 use super::common::alignment::apply_alignment_fallback;
 #[cfg(feature = "content_size")]
@@ -2990,7 +2990,7 @@ fn sum_axis_gaps(gap: Au, num_items: usize) -> Au {
 /// a test oracle.
 #[cfg(feature = "flexbox_balance")]
 mod balance {
-    use app_units::Au;
+    use crate::app_unit::Au;
 
     use crate::util::sys::{new_vec_with_capacity, Vec};
 
@@ -3293,7 +3293,7 @@ mod balance {
 
     #[cfg(test)]
     mod tests {
-        use app_units::MAX_AU;
+        use crate::app_unit::MAX_AU;
 
         use super::*;
 

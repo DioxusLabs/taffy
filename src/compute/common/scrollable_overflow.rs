@@ -1,7 +1,7 @@
 //! Generic CSS scrollable overflow code that is shared between all CSS algorithms.
+use crate::app_unit::Au;
 use crate::geometry::{Point, Rect, Size};
 use crate::style::{Contain, Overflow};
-use app_units::Au;
 
 #[inline(always)]
 /// Determine the rectangle that a given node contributes to its parent's scrollable overflow

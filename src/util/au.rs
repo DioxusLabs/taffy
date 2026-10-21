@@ -3,7 +3,7 @@
 //! These deliberately avoid libm calls (`round`, `ceil`, `floor`) and `Au`'s float helpers, so that rounding
 //! is a plain add-and-truncate on the sign-corrected value.
 
-use app_units::{Au, AU_PER_PX};
+use crate::app_unit::{Au, AU_PER_PX};
 
 /// Rounds half away from zero. `as` saturates on overflow and maps NaN to zero.
 #[inline(always)]

@@ -84,6 +84,7 @@ extern crate alloc;
 #[cfg(feature = "serde")]
 extern crate serde;
 
+mod app_unit;
 pub mod compute;
 pub mod geometry;
 pub mod prelude;
@@ -96,6 +97,8 @@ pub mod util;
 mod readme_doctest {
     #![doc = include_str!("../README.md")]
 }
+
+pub use crate::app_unit::{Au, AU_PER_PX, MAX_AU, MIN_AU};
 
 #[cfg(feature = "flexbox")]
 #[doc(inline)]

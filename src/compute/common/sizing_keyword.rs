@@ -1,11 +1,11 @@
 //! Shared resolution logic for sizing keywords (`min-content`, `max-content`, `fit-content`,
 //! `fit-content(...)`, and `stretch`) on the `width`/`height` style properties
+use crate::app_unit::Au;
 use crate::geometry::{AbsoluteAxis, Line, Rect, Size};
 use crate::style::AvailableSpace;
 use crate::tree::{LayoutPartialTree, LayoutPartialTreeExt, NodeId, SizingMode};
 use crate::util::au::{px_to_au, scale_au};
 use crate::{CompactLength, Dimension};
-use app_units::Au;
 
 /// How a sizing keyword resolves to a used size
 pub(crate) enum SizingKeywordResolution {

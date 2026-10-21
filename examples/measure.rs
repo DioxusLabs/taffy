@@ -12,11 +12,11 @@ enum NodeContext {
 }
 
 fn measure_function(
-    known_dimensions: taffy::geometry::Size<Option<app_units::Au>>,
+    known_dimensions: taffy::geometry::Size<Option<taffy::Au>>,
     available_space: taffy::geometry::Size<taffy::style::AvailableSpace>,
     node_context: Option<&mut NodeContext>,
     font_metrics: &FontMetrics,
-) -> Size<app_units::Au> {
+) -> Size<taffy::Au> {
     if let Size { width: Some(width), height: Some(height) } = known_dimensions {
         return Size { width, height };
     }

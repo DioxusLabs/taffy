@@ -28,8 +28,8 @@
 
 use core::ops::Range;
 
+use crate::app_unit::{Au, MAX_AU, MIN_AU};
 use crate::{debug::debug_log, sys::Vec, AvailableSpace, Clear, Direction, FloatDirection, Point, Size};
-use app_units::{Au, MAX_AU, MIN_AU};
 
 /// An empty "slot" that avoids floats that is suitable for non-floated content
 /// to be laid out into

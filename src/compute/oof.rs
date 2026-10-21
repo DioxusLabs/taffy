@@ -4,6 +4,7 @@
 //! child's containing block). Instead they emit [`OofCandidate`] records which bubble up the tree
 //! via [`LayoutOutput::oof_candidates`](crate::LayoutOutput) until they reach the box's containing
 //! block, which lays the box out using the routine in this module.
+use crate::app_unit::{Au, MAX_AU, MIN_AU};
 use crate::geometry::{Line, Point, Rect, Size};
 use crate::style::{
     AlignItemsKeyword, AlignSelf, AlignmentSafety, AvailableSpace, ContainingBlockClaims, CoreStyle, OofItemStyle,
@@ -19,7 +20,6 @@ use crate::util::au::px_to_au;
 use crate::util::sys::Vec;
 use crate::util::{MaybeMath, MaybeResolve, ResolveOrZero};
 use crate::{AxisStaticEdge, BoxSizing, Direction};
-use app_units::{Au, MAX_AU, MIN_AU};
 
 #[cfg(feature = "content_size")]
 use super::common::scrollable_overflow::compute_scrollable_overflow_contribution;
@@ -847,10 +847,10 @@ pub(crate) fn perform_oof_layout(
 #[cfg(test)]
 mod tests {
     use super::resolve_static_offset;
+    use crate::app_unit::Au;
     use crate::geometry::{Line, Point, Rect, Size};
     use crate::style::AlignmentSafety;
     use crate::tree::{AxisStaticAlign, AxisStaticEdge, AxisStaticPosition};
-    use app_units::Au;
 
     fn sp(
         area: Line<Au>,

@@ -1,10 +1,10 @@
 //! Style type for representing available space as a sizing constraint
+use crate::app_unit::{Au, MAX_AU};
 use crate::{
     prelude::{FromLength, TaffyMaxContent, TaffyMinContent, TaffyZero},
     util::au::px_to_au,
     Size,
 };
-use app_units::{Au, MAX_AU};
 
 #[cfg(feature = "parse")]
 use crate::util::parse::{from_str_from_css, CssParseResult, FromCss, Parser, Token};

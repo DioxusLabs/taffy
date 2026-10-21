@@ -5,6 +5,8 @@ use slotmap::SecondaryMap;
 use slotmap::SparseSecondaryMap as SecondaryMap;
 use slotmap::{DefaultKey, SlotMap};
 
+#[cfg(test)]
+use crate::app_unit::Au;
 #[cfg(feature = "block_layout")]
 use crate::block::BlockContext;
 use crate::geometry::Size;
@@ -16,8 +18,6 @@ use crate::tree::{
 };
 use crate::util::debug::{debug_log, debug_log_node};
 use crate::util::sys::{new_const_children_vec, new_vec_with_capacity, Box, ChildrenVec, Vec};
-#[cfg(test)]
-use app_units::Au;
 
 use crate::compute::{
     compute_cached_layout, compute_hidden_layout, compute_leaf_layout, compute_oof_layout, compute_root_layout,

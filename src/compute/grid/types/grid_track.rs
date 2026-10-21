@@ -1,9 +1,9 @@
 //! Contains GridTrack used to represent a single grid track (row/column) during layout
+use crate::app_unit::{Au, MAX_AU};
 use crate::{
     prelude::TaffyZero,
     style::{LengthPercentage, MaxTrackSizingFunction, MinTrackSizingFunction},
 };
-use app_units::{Au, MAX_AU};
 
 /// Whether a GridTrack represents an actual track or a gutter.
 #[derive(Copy, Clone, Debug, PartialEq)]

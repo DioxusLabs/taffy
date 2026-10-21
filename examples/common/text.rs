@@ -17,14 +17,14 @@ pub struct TextContext {
 }
 
 pub fn text_measure_function(
-    known_dimensions: taffy::geometry::Size<Option<app_units::Au>>,
+    known_dimensions: taffy::geometry::Size<Option<taffy::Au>>,
     available_space: taffy::geometry::Size<taffy::style::AvailableSpace>,
     text_context: &TextContext,
     font_metrics: &FontMetrics,
-) -> taffy::geometry::Size<app_units::Au> {
-    use app_units::Au;
+) -> taffy::geometry::Size<taffy::Au> {
     use taffy::geometry::AbsoluteAxis;
     use taffy::prelude::*;
+    use taffy::Au;
 
     let px = |value: f32| Au(((value * 60.0) + 0.5f32.copysign(value)) as i32);
 

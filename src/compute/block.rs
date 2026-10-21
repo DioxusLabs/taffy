@@ -1,4 +1,5 @@
 //! Computes the CSS block layout algorithm in the case that the block container being laid out contains only block-level boxes
+use crate::app_unit::{Au, MIN_AU};
 use crate::geometry::{Line, Point, Rect, Size};
 use crate::style::{
     AlignContent, AlignContentKeyword, AlignItems, AlignItemsKeyword, AlignSelf, AlignmentSafety, AvailableSpace,
@@ -19,7 +20,6 @@ use crate::{
     BlockContainerStyle, BlockItemStyle, BoxGenerationMode, BoxSizing, Contain, Dimension, Direction,
     LayoutBlockContainer, RequestedAxis, TextAlign,
 };
-use app_units::{Au, MIN_AU};
 
 #[cfg(feature = "float_layout")]
 use super::float::{BfcSlot, ContentSlot, FloatContext, FloatIntrinsicWidthCalculator};

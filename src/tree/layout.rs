@@ -1,10 +1,10 @@
 //! Final data structures that represent the high-level UI layout
+use crate::app_unit::Au;
 use crate::geometry::{AbsoluteAxis, Line, Point, Rect, Size};
 use crate::style::{AlignItemsKeyword, AlignSelf, AlignmentSafety, AvailableSpace, CheapCloneStr, Position};
 use crate::style_helpers::TaffyMaxContent;
 use crate::sys::DefaultCheapStr;
 use crate::tree::NodeId;
-use app_units::Au;
 
 /// Whether we are performing a full layout, or we merely need to size the node
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]

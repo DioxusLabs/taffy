@@ -1,6 +1,6 @@
 //! Helper functions for initialising GridTrack's from styles
 //! This mainly consists of evaluating GridAutoTracks
-use app_units::Au;
+use crate::app_unit::Au;
 
 use super::types::{GridTrack, GridTrackKind, TrackCounts};
 use crate::geometry::AbsoluteAxis;

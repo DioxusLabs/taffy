@@ -25,9 +25,9 @@ impl ParleyTextContext {
 
     fn measure(
         &mut self,
-        known_dimensions: taffy::Size<Option<app_units::Au>>,
+        known_dimensions: taffy::Size<Option<taffy::Au>>,
         available_space: taffy::Size<taffy::AvailableSpace>,
-    ) -> taffy::Size<app_units::Au> {
+    ) -> taffy::Size<taffy::Au> {
         // Compute width
         let width = known_dimensions.width.unwrap_or_else(|| {
             let widths = self.layout.calculate_content_widths();
@@ -48,10 +48,10 @@ impl ParleyTextContext {
 }
 
 fn measure_function(
-    known_dimensions: taffy::Size<Option<app_units::Au>>,
+    known_dimensions: taffy::Size<Option<taffy::Au>>,
     available_space: taffy::Size<taffy::AvailableSpace>,
     node_context: Option<&mut ParleyTextContext>,
-) -> Size<app_units::Au> {
+) -> Size<taffy::Au> {
     if let Size { width: Some(width), height: Some(height) } = known_dimensions {
         return Size { width, height };
     }

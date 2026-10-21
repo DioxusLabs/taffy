@@ -1,5 +1,6 @@
 //! Computes size using styles and measure functions
 
+use crate::app_unit::Au;
 #[cfg(feature = "content_size")]
 use crate::geometry::Rect;
 use crate::geometry::Size;
@@ -11,7 +12,6 @@ use crate::util::debug::debug_log;
 use crate::util::MaybeMath;
 use crate::util::{MaybeResolve, ResolveOrZero};
 use crate::{BoxSizing, CoreStyle};
-use app_units::Au;
 use core::unreachable;
 
 /// Compute the size of a leaf node (node with no children)

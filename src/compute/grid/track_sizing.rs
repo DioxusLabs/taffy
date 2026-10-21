@@ -1,6 +1,6 @@
 //! Implements the track sizing algorithm
 //! <https://www.w3.org/TR/css-grid-1/#layout-algorithm>
-use app_units::{Au, MAX_AU};
+use crate::app_unit::{Au, MAX_AU};
 
 use super::types::{GridItem, GridTrack, TrackCounts};
 use crate::compute::common::alignment::child_first_baseline;

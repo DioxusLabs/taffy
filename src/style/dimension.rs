@@ -1,5 +1,5 @@
 //! Style types for representing lengths / sizes
-use app_units::Au;
+use crate::app_unit::Au;
 
 use super::CompactLength;
 use crate::geometry::Rect;

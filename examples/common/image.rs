@@ -6,10 +6,10 @@ pub struct ImageContext {
 }
 
 pub fn image_measure_function(
-    known_dimensions: taffy::geometry::Size<Option<app_units::Au>>,
+    known_dimensions: taffy::geometry::Size<Option<taffy::Au>>,
     image_context: &ImageContext,
-) -> taffy::geometry::Size<app_units::Au> {
-    let px = |value: f32| app_units::Au(((value * 60.0) + 0.5f32.copysign(value)) as i32);
+) -> taffy::geometry::Size<taffy::Au> {
+    let px = |value: f32| taffy::Au(((value * 60.0) + 0.5f32.copysign(value)) as i32);
     match (known_dimensions.width, known_dimensions.height) {
         (Some(width), Some(height)) => Size { width, height },
         (Some(width), None) => {

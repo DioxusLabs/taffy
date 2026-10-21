@@ -54,6 +54,7 @@ pub use self::block::FloatMark;
 #[cfg(feature = "float_layout")]
 pub use self::float::{BfcSlot, ContentSlot, FloatContext, FloatIntrinsicWidthCalculator};
 
+use crate::app_unit::Au;
 use crate::geometry::{Line, Point, Size};
 use crate::style::{AvailableSpace, ContainingBlockClaims, CoreStyle, Overflow, Position};
 use crate::tree::{
@@ -65,7 +66,6 @@ use crate::util::debug::{debug_log, debug_log_node, debug_pop_node, debug_push_n
 use crate::util::sys::Vec;
 use crate::util::ResolveOrZero;
 use crate::{CacheTree, MaybeMath, MaybeResolve};
-use app_units::Au;
 
 /// Compute layout for the root node in the tree
 ///

@@ -1,5 +1,5 @@
 //! Contains GridItem used to represent a single grid item during layout
-use app_units::Au;
+use crate::app_unit::Au;
 
 use super::GridTrack;
 use crate::compute::common::sizing_keyword::{resolve_sizing_keyword, SizingKeywordResolution};

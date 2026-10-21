@@ -1,9 +1,9 @@
 //! Contains numerical helper traits and functions
 #![allow(clippy::manual_clamp)]
 
+use crate::app_unit::Au;
 use crate::geometry::Size;
 use crate::style::AvailableSpace;
-use app_units::Au;
 
 /// A trait to conveniently calculate minimums and maximums when some data may not be defined
 ///
@@ -282,8 +282,8 @@ impl<In, Out, T: MaybeMath<In, Out>> MaybeMath<Size<In>, Size<Out>> for Size<T> 
 #[cfg(test)]
 mod tests {
     mod lhs_option_au_rhs_option_au {
+        use crate::app_unit::Au;
         use crate::util::MaybeMath;
-        use app_units::Au;
 
         #[test]
         fn test_maybe_min() {
@@ -323,8 +323,8 @@ mod tests {
     }
 
     mod lhs_option_au_rhs_au {
+        use crate::app_unit::Au;
         use crate::util::MaybeMath;
-        use app_units::Au;
 
         #[test]
         fn test_maybe_min() {
@@ -356,8 +356,8 @@ mod tests {
     }
 
     mod lhs_au_rhs_option_au {
+        use crate::app_unit::Au;
         use crate::util::MaybeMath;
-        use app_units::Au;
 
         #[test]
         fn test_maybe_min() {

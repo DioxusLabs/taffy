@@ -1,6 +1,6 @@
 //! Generic CSS alignment code that is shared between both the Flexbox and CSS Grid algorithms.
+use crate::app_unit::Au;
 use crate::style::{AlignContent, AlignContentKeyword, AlignItems, AlignItemsKeyword, AlignmentSafety, Overflow};
-use app_units::Au;
 
 /// The first baseline of a child box (measured from the top of its border box, like [`crate::Baselines`]) as used
 /// for baseline alignment and for determining its container's baseline, given the baseline it reported, its
