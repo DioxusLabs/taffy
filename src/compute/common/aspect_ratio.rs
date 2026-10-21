@@ -79,12 +79,25 @@ pub(crate) struct AspectRatioTransfer {
 ///
 /// An axis whose `min-*` is `auto` has an automatic minimum of its min-content size, unless the box
 /// is replaced or a scroll container in that axis (<https://drafts.csswg.org/css-sizing-4/#aspect-ratio-minimum>).
+#[inline(always)]
 pub(crate) fn transfer_aspect_ratio(
     style: &impl CoreStyle,
     size: Size<Option<f32>>,
     aspect_ratio: Option<ResolvedAspectRatio>,
 ) -> AspectRatioTransfer {
-    let transferred = size.apply_aspect_ratio(aspect_ratio);
+    match aspect_ratio {
+        None => AspectRatioTransfer { size, automatic_minimum: Size::NONE },
+        Some(ratio) => transfer_through_aspect_ratio(style, size, ratio),
+    }
+}
+
+/// [`transfer_aspect_ratio`] for a box that has a preferred aspect ratio
+fn transfer_through_aspect_ratio(
+    style: &impl CoreStyle,
+    size: Size<Option<f32>>,
+    aspect_ratio: ResolvedAspectRatio,
+) -> AspectRatioTransfer {
+    let transferred = size.apply_aspect_ratio(Some(aspect_ratio));
     if transferred == size || style.is_replaced() {
         return AspectRatioTransfer { size: transferred, automatic_minimum: Size::NONE };
     }
@@ -110,13 +123,27 @@ pub(crate) fn transfer_aspect_ratio(
 /// axis, the axis whose size is unset while the other's is set. The axis's own min and max sizes win over
 /// the transferred ones (<https://drafts.csswg.org/css-sizing-4/#aspect-ratio-size-transfers>). If neither size
 /// is set, each axis's min and max sizes are transferred into the other. Returns the box's `(min_size, max_size)`.
+/// `size` is only evaluated if the box has a preferred aspect ratio.
+#[inline(always)]
 pub(crate) fn transfer_aspect_ratio_limits(
-    size: Size<Option<f32>>,
+    size: impl FnOnce() -> Size<Option<f32>>,
     min_size: Size<Option<f32>>,
     max_size: Size<Option<f32>>,
     aspect_ratio: Option<ResolvedAspectRatio>,
 ) -> (Size<Option<f32>>, Size<Option<f32>>) {
-    let Some(ratio) = aspect_ratio else { return (min_size, max_size) };
+    match aspect_ratio {
+        None => (min_size, max_size),
+        Some(ratio) => transfer_limits_through_aspect_ratio(size(), min_size, max_size, ratio),
+    }
+}
+
+/// [`transfer_aspect_ratio_limits`] for a box that has a preferred aspect ratio
+fn transfer_limits_through_aspect_ratio(
+    size: Size<Option<f32>>,
+    min_size: Size<Option<f32>>,
+    max_size: Size<Option<f32>>,
+    ratio: ResolvedAspectRatio,
+) -> (Size<Option<f32>>, Size<Option<f32>>) {
     let combine = |own: Option<f32>, transferred: Option<f32>, pick: fn(f32, f32) -> f32| match (own, transferred) {
         (Some(own), Some(transferred)) => Some(pick(own, transferred)),
         (own, transferred) => own.or(transferred),
@@ -131,7 +158,7 @@ pub(crate) fn transfer_aspect_ratio_limits(
                 Size { width: combine(max_size.width, max, f32_min), ..max_size },
             )
         }
-        (None, None) => (min_size.apply_aspect_ratio(aspect_ratio), max_size.apply_aspect_ratio(aspect_ratio)),
+        (None, None) => (min_size.apply_aspect_ratio(Some(ratio)), max_size.apply_aspect_ratio(Some(ratio))),
         (Some(_), None) => {
             let min = min_size.width.map(|width| ratio.height_from_width(width)).maybe_min(max_size.height);
             let max = max_size.width.map(|width| ratio.height_from_width(width)).maybe_max(min_size.height);
