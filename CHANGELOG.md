@@ -4,6 +4,7 @@
 
 ### Fixed
 
+- Block, Flexbox, Grid, absolute positioning: `aspect-ratio: auto && <ratio>` applies the ratio to the content box, regardless of `box-sizing` (<https://drafts.csswg.org/css-sizing-4/#aspect-ratio>).
 - Flexbox: `align-content: stretch` (and `normal`) and `justify-content: stretch` fall back to `flex-start` rather than `start` when the lines/items overflow the container, so overflowing lines in a `wrap-reverse` container (and items in a `row-reverse`/`column-reverse` container) are packed to the flex-start edge like in Chrome.
 - Grid: the clamp of an item's content-based minimum size to the fixed max track sizing functions it spans now leaves room for its margins and baseline shim (#1362).
 
@@ -11,6 +12,8 @@
 
 - Replace raw scrollable overflow rectangles in `Layout` and `LayoutOutput` with `ScrollableOverflow`, including physical reversed-scroll-origin flags and sign-restored `left()`, `right()`, `top()`, and `bottom()` accessors. Flex reverse directions and wrap-reverse now retain reachable negative overflow, while scroll containers clip unreachable overflow.
 - `BlockContext::place_floated_box` (and `FloatContext::place_floated_box`) now take a caller-defined `id: u64` for the box, which is stored on `PlacedFloatedBox`. `BlockContext::float_mark` and `BlockContext::floats_placed_since` read back the id and position of the floats placed since a mark, so that custom formatting contexts which place floats do not need to keep their own list of placements.
+
+- `Style::aspect_ratio` and `CoreStyle::aspect_ratio()` are now an `AspectRatio` rather than an `Option<f32>`, so that they can represent `aspect-ratio: auto && <ratio>` (`AspectRatio::auto_and`). `AspectRatio` implements `From<f32>` and `From<Option<f32>>`, and a degenerate ratio (not finite and positive) converts to `AspectRatio::NONE`.
 
 ## 0.15.1
 
