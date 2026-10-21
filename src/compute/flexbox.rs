@@ -438,16 +438,9 @@ fn compute_preliminary(tree: &mut impl LayoutFlexboxContainer, node: NodeId, inp
 
     // If only the container's main size has been requested then we are done, as nothing below changes it. This
     // avoids measuring the cross size of every item.
-    if run_mode == RunMode::ComputeSize {
-        let main_axis_is_requested_axis = match inputs.axis {
-            RequestedAxis::Horizontal => constants.dir.is_row(),
-            RequestedAxis::Vertical => constants.dir.is_column(),
-            RequestedAxis::Both => false,
-        };
-        if main_axis_is_requested_axis {
-            let size = Size::ZERO.with_main(constants.dir, constants.container_size.main(constants.dir));
-            return LayoutOutput::from_outer_size(size);
-        }
+    if run_mode == RunMode::ComputeSize && constants.dir.main_axis_is_requested_axis(inputs.axis) {
+        let size = Size::ZERO.with_main(constants.dir, constants.container_size.main(constants.dir));
+        return LayoutOutput::from_outer_size(size);
     }
 
     // 6. Resolve the flexible lengths of all the flex items to find their used main size.
@@ -611,16 +604,9 @@ fn compute_empty_container_layout(
         determine_container_main_size(tree, available_space, &mut [], &mut constants);
     }
 
-    if run_mode == RunMode::ComputeSize {
-        let main_axis_is_requested_axis = match inputs.axis {
-            RequestedAxis::Horizontal => dir.is_row(),
-            RequestedAxis::Vertical => dir.is_column(),
-            RequestedAxis::Both => false,
-        };
-        if main_axis_is_requested_axis {
-            let size = Size::ZERO.with_main(dir, constants.container_size.main(dir));
-            return LayoutOutput::from_outer_size(size);
-        }
+    if run_mode == RunMode::ComputeSize && dir.main_axis_is_requested_axis(inputs.axis) {
+        let size = Size::ZERO.with_main(dir, constants.container_size.main(dir));
+        return LayoutOutput::from_outer_size(size);
     }
 
     let _ = determine_container_cross_size(&[], known_dimensions, &mut constants);
