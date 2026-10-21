@@ -625,22 +625,11 @@ fn compute_empty_container_layout(
 
     let _ = determine_container_cross_size(&[], known_dimensions, &mut constants);
 
-    // There are no out-of-flow candidates to position, but the positioning area still has to be
-    // reported: `compute_oof_layout` only clears a stale hoisted-children list (from a run in
-    // which the container still had out-of-flow descendants) when it is `Some`.
-    let absolute_position_inset = constants.border
-        + Rect {
-            left: if constants.layout_direction.is_rtl() { constants.scrollbar_gutter.x } else { 0.0 },
-            right: if constants.layout_direction.is_rtl() { 0.0 } else { constants.scrollbar_gutter.x },
-            top: 0.0,
-            bottom: constants.scrollbar_gutter.y,
-        };
-    let absolute_position_area = constants.container_size - absolute_position_inset.sum_axes();
-    let absolute_position_offset = Point { x: absolute_position_inset.left, y: absolute_position_inset.top };
-
+    // With no children there are no out-of-flow candidates, so the positioning area's value is
+    // never read. It still has to be `Some`: that is what makes `compute_oof_layout` clear a
+    // stale hoisted-children list from a run in which the container still had descendants.
     let mut output = LayoutOutput::from_outer_size(constants.container_size);
-    output.oof_positioning_area =
-        Some(OofPositioningArea { size: absolute_position_area, offset: absolute_position_offset });
+    output.oof_positioning_area = Some(OofPositioningArea { size: Size::ZERO, offset: Point::ZERO });
     output
 }
 
