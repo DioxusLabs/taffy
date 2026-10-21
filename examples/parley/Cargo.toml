@@ -5,4 +5,5 @@ edition = "2021"
 
 [dependencies]
 taffy = { path = "../.." }
+app_units = "0.7.8"
 parley = "0.11.1"

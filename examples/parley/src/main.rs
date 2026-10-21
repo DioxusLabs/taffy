@@ -1,5 +1,6 @@
 mod image;
-use image::{image_measure_function, ImageContext};
+use app_units::Au;
+use image::{image_measure_function, px, ImageContext};
 use parley::{style::StyleProperty, FontContext, Layout, LayoutContext, LineHeight};
 use taffy::prelude::*;
 
@@ -26,21 +27,21 @@ impl ParleyTextContext {
 
     fn measure(
         &mut self,
-        known_dimensions: taffy::Size<Option<f32>>,
+        known_dimensions: taffy::Size<Option<Au>>,
         available_space: taffy::Size<taffy::AvailableSpace>,
-    ) -> taffy::Size<f32> {
+    ) -> taffy::Size<Au> {
         let width = known_dimensions.width.unwrap_or_else(|| {
             let widths = self.layout.calculate_content_widths();
-            match available_space.width {
+            px(match available_space.width {
                 AvailableSpace::MinContent => widths.min,
                 AvailableSpace::MaxContent => widths.max,
-                AvailableSpace::Definite(limit) => limit.min(widths.max).max(widths.min),
+                AvailableSpace::Definite(limit) => limit.to_f32_px().min(widths.max).max(widths.min),
             }
-            .ceil()
+            .ceil())
         });
 
-        self.layout.break_all_lines(Some(width));
-        let height = known_dimensions.height.unwrap_or_else(|| self.layout.height());
+        self.layout.break_all_lines(Some(width.to_f32_px()));
+        let height = known_dimensions.height.unwrap_or_else(|| px(self.layout.height()));
 
         taffy::Size { width, height }
     }
@@ -71,10 +72,10 @@ impl NodeContext {
 }
 
 fn measure_function(
-    known_dimensions: taffy::Size<Option<f32>>,
+    known_dimensions: taffy::Size<Option<Au>>,
     available_space: taffy::Size<taffy::AvailableSpace>,
     node_context: Option<&mut NodeContext>,
-) -> Size<f32> {
+) -> Size<Au> {
     if let Size { width: Some(width), height: Some(height) } = known_dimensions {
         return Size { width, height };
     }

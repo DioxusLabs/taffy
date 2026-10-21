@@ -60,10 +60,10 @@ pub fn write_tree(mut writer: impl io::Write, tree: &impl PrintTree, root: NodeI
             lines = lines_string,
             fork = fork_string,
             display = display,
-            x = layout.location.x,
-            y = layout.location.y,
-            width = layout.size.width,
-            height = layout.size.height,
+            x = layout.location.x.to_f32_px(),
+            y = layout.location.y.to_f32_px(),
+            width = layout.size.width.to_f32_px(),
+            height = layout.size.height.to_f32_px(),
             key = node_id,
         );
         let bar = if has_sibling { "│   " } else { "    " };
