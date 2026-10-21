@@ -625,10 +625,9 @@ fn compute_empty_container_layout(
 
     let _ = determine_container_cross_size(&[], known_dimensions, &mut constants);
 
-    if run_mode == RunMode::ComputeSize {
-        return LayoutOutput::from_outer_size(constants.container_size);
-    }
-
+    // There are no out-of-flow candidates to position, but the positioning area still has to be
+    // reported: `compute_oof_layout` only clears a stale hoisted-children list (from a run in
+    // which the container still had out-of-flow descendants) when it is `Some`.
     let absolute_position_inset = constants.border
         + Rect {
             left: if constants.layout_direction.is_rtl() { constants.scrollbar_gutter.x } else { 0.0 },
