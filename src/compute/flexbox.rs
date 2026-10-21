@@ -686,6 +686,7 @@ struct ContainerSizeLimits {
 
 /// The container's min and max sizes, with limits transferred through its aspect ratio, and the
 /// transferred size of each axis that has an automatic minimum (which also floors that axis's min size)
+#[cold]
 #[inline(never)]
 fn container_limits_through_aspect_ratio(
     tree: &impl LayoutFlexboxContainer,
@@ -798,38 +799,47 @@ fn compute_constants(
         bottom: content_box_inset.bottom - border.bottom - scrollbar_gutter.y,
     };
 
-    let ContainerSizeLimits { min_size: container_min_size, max_size: container_max_size, aspect_ratio_minimum } =
+    let known_cross_size_is_definite =
+        known_dimensions_are_definite.cross(dir) && known_dimensions.cross(dir).is_some();
+    let (container_min_size, container_max_size, aspect_ratio_minimum, node_outer_size, has_definite_cross_size) =
         match aspect_ratio {
-            None => ContainerSizeLimits {
-                min_size: style
+            None => (
+                style
                     .min_size()
                     .maybe_resolve(parent_size, |val, basis| tree.calc(val, basis))
                     .maybe_add(box_sizing_adjustment),
-                max_size: style
+                style
                     .max_size()
                     .maybe_resolve(parent_size, |val, basis| tree.calc(val, basis))
                     .maybe_add(box_sizing_adjustment),
-                aspect_ratio_minimum: Size::NONE,
-            },
-            Some(ratio) => container_limits_through_aspect_ratio(
-                tree,
-                &style,
+                Size::NONE,
                 known_dimensions,
-                parent_size,
-                box_sizing_adjustment,
-                ratio,
+                known_cross_size_is_definite,
             ),
+            Some(ratio) => {
+                let limits = container_limits_through_aspect_ratio(
+                    tree,
+                    &style,
+                    known_dimensions,
+                    parent_size,
+                    box_sizing_adjustment,
+                    ratio,
+                );
+                // A cross size transferred through the aspect ratio is definite when sizing the items, even
+                // though the container then grows to fit its lines
+                let ratio_cross = limits.aspect_ratio_minimum.cross(dir);
+                (
+                    limits.min_size,
+                    limits.max_size,
+                    limits.aspect_ratio_minimum,
+                    known_dimensions.with_cross(dir, known_dimensions.cross(dir).or(ratio_cross)),
+                    known_cross_size_is_definite || ratio_cross.is_some(),
+                )
+            }
         };
-
-    // A cross size transferred through the aspect ratio is definite when sizing the items, even
-    // though the container then grows to fit its lines
-    let node_outer_size =
-        known_dimensions.with_cross(dir, known_dimensions.cross(dir).or(aspect_ratio_minimum.cross(dir)));
     let node_inner_size = node_outer_size.maybe_sub(content_box_inset.sum_axes());
     let known_main_size_is_definite = known_dimensions_are_definite.main(dir);
     let has_definite_main_size = known_main_size_is_definite && known_dimensions.main(dir).is_some();
-    let has_definite_cross_size = (known_dimensions_are_definite.cross(dir) && known_dimensions.cross(dir).is_some())
-        || aspect_ratio_minimum.cross(dir).is_some();
     let cross_axis_available_space_is_definite =
         has_definite_cross_size || matches!(available_space.cross(dir), AvailableSpace::Definite(_));
     let gap = style.gap().resolve_or_zero(node_inner_size.or(Size::zero()), |val, basis| tree.calc(val, basis));
