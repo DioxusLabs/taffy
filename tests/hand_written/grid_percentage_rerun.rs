@@ -33,7 +33,7 @@ mod grid_percentage_rerun {
             test_measure_function,
         )
         .unwrap();
-        (tree.layout(root).unwrap().size.width, tree.layout(item).unwrap().size.width)
+        (tree.layout(root).unwrap().size.width.to_f32_px(), tree.layout(item).unwrap().size.width.to_f32_px())
     }
 
     #[test]
@@ -43,7 +43,10 @@ mod grid_percentage_rerun {
 
     #[test]
     fn fit_content_percentage_indefinite_container_definite_available_space() {
-        assert_eq!(layout_fit_content_percent_column(AvailableSpace::Definite(200.0)), (60.0, 30.0));
+        assert_eq!(
+            layout_fit_content_percent_column(AvailableSpace::Definite(taffy_test_helpers::px(200.0))),
+            (60.0, 30.0)
+        );
     }
 
     /// Returns (container height, row 1 height, row 2 height, row 3 height) for a grid with
@@ -69,9 +72,13 @@ mod grid_percentage_rerun {
                 &[a, b, c],
             )
             .unwrap();
-        tree.compute_layout(root, Size { width: AvailableSpace::Definite(200.0), height: available_height }).unwrap();
-        let total = tree.layout(root).unwrap().size.height;
-        let y = |node| tree.layout(node).unwrap().location.y;
+        tree.compute_layout(
+            root,
+            Size { width: AvailableSpace::Definite(taffy_test_helpers::px(200.0)), height: available_height },
+        )
+        .unwrap();
+        let total = tree.layout(root).unwrap().size.height.to_f32_px();
+        let y = |node| tree.layout(node).unwrap().location.y.to_f32_px();
         (total, y(b), y(c) - y(b), total - y(c))
     }
 
@@ -84,6 +91,9 @@ mod grid_percentage_rerun {
 
     #[test]
     fn percentage_rows_indefinite_container_definite_available_space() {
-        assert_eq!(layout_percent_row_shrinkwrap(AvailableSpace::Definite(500.0)), (100.0, 40.0, 20.0, 40.0));
+        assert_eq!(
+            layout_percent_row_shrinkwrap(AvailableSpace::Definite(taffy_test_helpers::px(500.0))),
+            (100.0, 40.0, 20.0, 40.0)
+        );
     }
 }

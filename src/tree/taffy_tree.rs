@@ -5,6 +5,8 @@ use slotmap::SecondaryMap;
 use slotmap::SparseSecondaryMap as SecondaryMap;
 use slotmap::{DefaultKey, SlotMap};
 
+#[cfg(test)]
+use crate::app_unit::Au;
 #[cfg(feature = "block_layout")]
 use crate::block::BlockContext;
 use crate::geometry::Size;
@@ -1011,12 +1013,13 @@ mod tests {
     use super::*;
     use crate::style::{Dimension, Display, FlexDirection};
     use crate::style_helpers::*;
+    use crate::util::au::px_to_au;
     use crate::util::sys;
 
     fn size_measure_function(
         inputs: LayoutInput,
         _node_id: NodeId,
-        node_context: Option<&mut Size<f32>>,
+        node_context: Option<&mut Size<Au>>,
         style: &Style,
     ) -> LayoutOutput {
         compute_leaf_layout(
@@ -1063,7 +1066,7 @@ mod tests {
 
     #[test]
     fn new_leaf_with_context() {
-        let mut taffy: TaffyTree<Size<f32>> = TaffyTree::new();
+        let mut taffy: TaffyTree<Size<Au>> = TaffyTree::new();
 
         let res = taffy.new_leaf_with_context(Style::default(), Size::ZERO);
         assert!(res.is_ok());
@@ -1143,38 +1146,40 @@ mod tests {
         let root = taffy.new_with_children(Style::default(), &[child]).unwrap();
 
         taffy.compute_layout(root, Size::MIN_CONTENT).unwrap();
-        assert_eq!(taffy.layout(root).unwrap().size.height, 1f32);
+        assert_eq!(taffy.layout(root).unwrap().size.height, px_to_au(1.0));
 
         taffy.remove(child).unwrap();
         assert_eq!(taffy.dirty(root), Ok(true));
 
         // The root no longer has any children, so its height should shrink back to zero
         taffy.compute_layout(root, Size::MIN_CONTENT).unwrap();
-        assert_eq!(taffy.layout(root).unwrap().size.height, 0f32);
+        assert_eq!(taffy.layout(root).unwrap().size.height, Au(0));
     }
 
     #[test]
     fn set_measure() {
-        let mut taffy: TaffyTree<Size<f32>> = TaffyTree::new();
-        let node = taffy.new_leaf_with_context(Style::default(), Size { width: 200.0, height: 200.0 }).unwrap();
+        let mut taffy: TaffyTree<Size<Au>> = TaffyTree::new();
+        let node = taffy
+            .new_leaf_with_context(Style::default(), Size { width: px_to_au(200.0), height: px_to_au(200.0) })
+            .unwrap();
         taffy.compute_layout_with_measure(node, Size::MAX_CONTENT, size_measure_function).unwrap();
-        assert_eq!(taffy.layout(node).unwrap().size.width, 200.0);
+        assert_eq!(taffy.layout(node).unwrap().size.width, px_to_au(200.0));
 
-        taffy.set_node_context(node, Some(Size { width: 100.0, height: 100.0 })).unwrap();
+        taffy.set_node_context(node, Some(Size { width: px_to_au(100.0), height: px_to_au(100.0) })).unwrap();
         taffy.compute_layout_with_measure(node, Size::MAX_CONTENT, size_measure_function).unwrap();
-        assert_eq!(taffy.layout(node).unwrap().size.width, 100.0);
+        assert_eq!(taffy.layout(node).unwrap().size.width, px_to_au(100.0));
     }
 
     #[test]
     fn set_measure_of_previously_unmeasured_node() {
-        let mut taffy: TaffyTree<Size<f32>> = TaffyTree::new();
+        let mut taffy: TaffyTree<Size<Au>> = TaffyTree::new();
         let node = taffy.new_leaf(Style::default()).unwrap();
         taffy.compute_layout_with_measure(node, Size::MAX_CONTENT, size_measure_function).unwrap();
-        assert_eq!(taffy.layout(node).unwrap().size.width, 0.0);
+        assert_eq!(taffy.layout(node).unwrap().size.width, px_to_au(0.0));
 
-        taffy.set_node_context(node, Some(Size { width: 100.0, height: 100.0 })).unwrap();
+        taffy.set_node_context(node, Some(Size { width: px_to_au(100.0), height: px_to_au(100.0) })).unwrap();
         taffy.compute_layout_with_measure(node, Size::MAX_CONTENT, size_measure_function).unwrap();
-        assert_eq!(taffy.layout(node).unwrap().size.width, 100.0);
+        assert_eq!(taffy.layout(node).unwrap().size.width, px_to_au(100.0));
     }
 
     /// Test that adding `add_child()` works
@@ -1438,7 +1443,7 @@ mod tests {
         let node = node_result.unwrap();
         let layout_result = taffy.compute_layout(
             node,
-            Size { width: AvailableSpace::Definite(100.), height: AvailableSpace::Definite(100.) },
+            Size { width: AvailableSpace::Definite(px_to_au(100.)), height: AvailableSpace::Definite(px_to_au(100.)) },
         );
         assert!(layout_result.is_ok());
     }
@@ -1483,8 +1488,8 @@ mod tests {
         // - top-right:    {x: 20, y: 30}
         // - bottom-right: {x: 20, y: 40}
         let layout = taffy.layout(node).unwrap();
-        assert_eq!(layout.location.x, 10f32);
-        assert_eq!(layout.location.y, 30f32);
+        assert_eq!(layout.location.x, Au(600));
+        assert_eq!(layout.location.y, Au(1800));
     }
 
     #[test]

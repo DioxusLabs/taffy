@@ -25,11 +25,14 @@ mod min_max_overrides {
         taffy
             .compute_layout(
                 child,
-                Size { width: AvailableSpace::Definite(100.0), height: AvailableSpace::Definite(100.0) },
+                Size {
+                    width: AvailableSpace::Definite(taffy_test_helpers::px(100.0)),
+                    height: AvailableSpace::Definite(taffy_test_helpers::px(100.0)),
+                },
             )
             .unwrap();
 
-        assert_eq!(taffy.layout(child).unwrap().size, Size { width: 100.0, height: 100.0 });
+        assert_eq!(taffy.layout(child).unwrap().size.map(|v| v.to_f32_px()), Size { width: 100.0, height: 100.0 });
     }
 
     #[test]
@@ -50,11 +53,14 @@ mod min_max_overrides {
         taffy
             .compute_layout(
                 child,
-                Size { width: AvailableSpace::Definite(100.0), height: AvailableSpace::Definite(100.0) },
+                Size {
+                    width: AvailableSpace::Definite(taffy_test_helpers::px(100.0)),
+                    height: AvailableSpace::Definite(taffy_test_helpers::px(100.0)),
+                },
             )
             .unwrap();
 
-        assert_eq!(taffy.layout(child).unwrap().size, Size { width: 10.0, height: 10.0 });
+        assert_eq!(taffy.layout(child).unwrap().size.map(|v| v.to_f32_px()), Size { width: 10.0, height: 10.0 });
     }
 
     #[test]
@@ -75,10 +81,13 @@ mod min_max_overrides {
         taffy
             .compute_layout(
                 child,
-                Size { width: AvailableSpace::Definite(100.0), height: AvailableSpace::Definite(100.0) },
+                Size {
+                    width: AvailableSpace::Definite(taffy_test_helpers::px(100.0)),
+                    height: AvailableSpace::Definite(taffy_test_helpers::px(100.0)),
+                },
             )
             .unwrap();
 
-        assert_eq!(taffy.layout(child).unwrap().size, Size { width: 100.0, height: 100.0 });
+        assert_eq!(taffy.layout(child).unwrap().size.map(|v| v.to_f32_px()), Size { width: 100.0, height: 100.0 });
     }
 }

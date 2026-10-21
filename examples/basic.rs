@@ -1,4 +1,5 @@
 use taffy::prelude::*;
+use taffy::Au;
 
 fn main() -> Result<(), taffy::TaffyError> {
     let mut taffy: TaffyTree<()> = TaffyTree::new();
@@ -20,7 +21,7 @@ fn main() -> Result<(), taffy::TaffyError> {
     println!("Compute layout with 100x100 viewport:");
     taffy.compute_layout(
         node,
-        Size { height: AvailableSpace::Definite(100.0), width: AvailableSpace::Definite(100.0) },
+        Size { height: AvailableSpace::Definite(Au::from_px(100)), width: AvailableSpace::Definite(Au::from_px(100)) },
     )?;
     println!("node: {:#?}", taffy.layout(node)?);
     println!("child: {:#?}", taffy.layout(child)?);

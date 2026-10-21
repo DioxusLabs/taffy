@@ -33,18 +33,18 @@ fn layout_margin_excludes_collapsed_margins() {
 
     // The inner box's margins collapse through the outer box's edges
     let outer_layout = taffy.layout(outer).unwrap();
-    assert_eq!(outer_layout.location.y, 13.0);
-    assert_eq!(outer_layout.size.height, 10.0);
-    assert_eq!(outer_layout.margin.top, 8.0);
-    assert_eq!(outer_layout.margin.bottom, 5.0);
+    assert_eq!(outer_layout.location.y.to_f32_px(), 13.0);
+    assert_eq!(outer_layout.size.height.to_f32_px(), 10.0);
+    assert_eq!(outer_layout.margin.top.to_f32_px(), 8.0);
+    assert_eq!(outer_layout.margin.bottom.to_f32_px(), 5.0);
 
     let inner_layout = taffy.layout(inner).unwrap();
-    assert_eq!(inner_layout.location.y, 0.0);
-    assert_eq!(inner_layout.margin.top, 13.0);
-    assert_eq!(inner_layout.margin.bottom, 20.0);
+    assert_eq!(inner_layout.location.y.to_f32_px(), 0.0);
+    assert_eq!(inner_layout.margin.top.to_f32_px(), 13.0);
+    assert_eq!(inner_layout.margin.bottom.to_f32_px(), 20.0);
 
     // The sibling is placed after the largest of the adjoining margins (5, 20, 30)
     let sibling_layout = taffy.layout(sibling).unwrap();
-    assert_eq!(sibling_layout.location.y, 53.0);
-    assert_eq!(sibling_layout.margin.top, 30.0);
+    assert_eq!(sibling_layout.location.y.to_f32_px(), 53.0);
+    assert_eq!(sibling_layout.margin.top.to_f32_px(), 30.0);
 }

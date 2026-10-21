@@ -1,4 +1,13 @@
+use taffy::Au;
 use taffy::{compute_leaf_layout, LayoutInput, LayoutOutput, NodeId, Size, Style, TaffyTree};
+
+pub const fn px(px: f32) -> Au {
+    Au((px.mul_add(60.0, 0.5f32.copysign(px))) as i32)
+}
+
+pub fn rect_px(left: f32, right: f32, top: f32, bottom: f32) -> taffy::Rect<Au> {
+    taffy::Rect { left: px(left), right: px(right), top: px(top), bottom: px(bottom) }
+}
 
 /// Creates a `TaffyTree` that uses `TestNodeContext`. The purpose of this function is
 /// to allow `TaffyTree` to be monomophised once in this crate rather than separately for
@@ -75,14 +84,14 @@ pub fn test_measure_function(
                 return Size { width, height };
             }
 
-            let Some(context) = context else { return known_dimensions.map(|d| d.unwrap_or(0.0)) };
+            let Some(context) = context else { return known_dimensions.map(|d| d.unwrap_or(Au(0))) };
 
             // Increment count
             context.count += 1;
 
             let compute_size = match &context.measure_data {
                 TestMeasureData::Zero => Size::ZERO,
-                TestMeasureData::Fixed(size) => *size,
+                TestMeasureData::Fixed(size) => size.map(px),
                 TestMeasureData::AspectRatio(data) => data.measure(known_dimensions),
                 TestMeasureData::AhemText(data) => data.measure(known_dimensions, available_space),
             };
@@ -102,9 +111,9 @@ pub struct AspectRatioMeasureData {
     height_ratio: f32,
 }
 impl AspectRatioMeasureData {
-    fn measure(&self, known_dimensions: Size<Option<f32>>) -> Size<f32> {
-        let width = known_dimensions.width.unwrap_or(self.width);
-        let height = known_dimensions.height.unwrap_or(width * self.height_ratio);
+    fn measure(&self, known_dimensions: Size<Option<Au>>) -> Size<Au> {
+        let width = known_dimensions.width.unwrap_or_else(|| px(self.width));
+        let height = known_dimensions.height.unwrap_or_else(|| px(width.to_f32_px() * self.height_ratio));
         Size { width, height }
     }
 }
@@ -143,15 +152,15 @@ pub struct AhemTextMeasureData {
 impl AhemTextMeasureData {
     fn measure(
         &self,
-        known_dimensions: taffy::Size<Option<f32>>,
+        known_dimensions: taffy::Size<Option<Au>>,
         available_space: taffy::Size<taffy::AvailableSpace>,
-    ) -> taffy::Size<f32> {
+    ) -> taffy::Size<Au> {
         use taffy::prelude::*;
         use taffy::AbsoluteAxis;
 
         const ZWS: char = '\u{200B}';
-        const H_WIDTH: f32 = 10.0;
-        const H_HEIGHT: f32 = 10.0;
+        const H_WIDTH: Au = Au(600);
+        const H_HEIGHT: Au = Au(600);
 
         let inline_axis = match self.writing_mode {
             WritingMode::Horizontal => AbsoluteAxis::Horizontal,
@@ -169,13 +178,13 @@ impl AhemTextMeasureData {
         let inline_size = known_dimensions
             .get_abs(inline_axis)
             .unwrap_or_else(|| match available_space.get_abs(inline_axis) {
-                AvailableSpace::MinContent => min_line_length as f32 * H_WIDTH,
-                AvailableSpace::MaxContent => max_line_length as f32 * H_WIDTH,
-                AvailableSpace::Definite(inline_size) => inline_size.min(max_line_length as f32 * H_WIDTH),
+                AvailableSpace::MinContent => H_WIDTH * min_line_length as i32,
+                AvailableSpace::MaxContent => H_WIDTH * max_line_length as i32,
+                AvailableSpace::Definite(inline_size) => inline_size.min(H_WIDTH * max_line_length as i32),
             })
-            .max(min_line_length as f32 * H_WIDTH);
+            .max(H_WIDTH * min_line_length as i32);
         let block_size = known_dimensions.get_abs(block_axis).unwrap_or_else(|| {
-            let inline_line_length = (inline_size / H_WIDTH).floor() as usize;
+            let inline_line_length = (inline_size / H_WIDTH) as usize;
             let mut line_count = 1;
             let mut current_line_length = 0;
             for line in &lines {
@@ -188,7 +197,7 @@ impl AhemTextMeasureData {
                     current_line_length += line.len();
                 };
             }
-            (line_count as f32) * H_HEIGHT
+            H_HEIGHT * line_count
         });
 
         match self.writing_mode {

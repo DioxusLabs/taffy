@@ -1,8 +1,8 @@
 //! Contains GridTrack used to represent a single grid track (row/column) during layout
+use crate::app_unit::{Au, MAX_AU};
 use crate::{
     prelude::TaffyZero,
     style::{LengthPercentage, MaxTrackSizingFunction, MinTrackSizingFunction},
-    util::sys::f32_min,
 };
 
 /// Whether a GridTrack represents an actual track or a gutter.
@@ -34,32 +34,38 @@ pub(in super::super) struct GridTrack {
     pub max_track_sizing_function: MaxTrackSizingFunction,
 
     /// The distance of the start of the track from the start of the grid container
-    pub offset: f32,
+    pub offset: Au,
 
     /// The size (width/height as applicable) of the track
-    pub base_size: f32,
+    pub base_size: Au,
 
     /// A temporary scratch value when sizing tracks
     /// Note: can be infinity
-    pub growth_limit: f32,
+    pub growth_limit: Au,
 
     /// A temporary scratch value when sizing tracks. Is used as an additional amount to add to the
     /// estimate for the available space in the opposite axis when content sizing items
-    pub content_alignment_adjustment: f32,
+    pub content_alignment_adjustment: Au,
 
     /// A temporary scratch value when "distributing space" to avoid clobbering planned increase variable
-    pub item_incurred_increase: f32,
+    pub item_incurred_increase: Au,
     /// A temporary scratch value when "distributing space" to avoid clobbering the main variable
-    pub base_size_planned_increase: f32,
+    pub base_size_planned_increase: Au,
     /// A temporary scratch value when "distributing space" to avoid clobbering the main variable
-    pub growth_limit_planned_increase: f32,
+    pub growth_limit_planned_increase: Au,
     /// A temporary scratch value when "distributing space"
     /// See: https://www.w3.org/TR/css3-grid-layout/#infinitely-growable
     pub infinitely_growable: bool,
 
     /// The resolved `fit-content()` limit of the max track sizing function (infinity if it is not `fit-content()`
     /// or the limit cannot be resolved). Resolved once per track sizing pass by `resolve_fit_content_limit`.
-    pub fit_content_limit: f32,
+    pub fit_content_limit: Au,
+}
+
+/// Smaller of two `Au` values
+#[inline(always)]
+fn au_min(a: Au, b: Au) -> Au {
+    a.min(b)
 }
 
 impl GridTrack {
@@ -74,15 +80,15 @@ impl GridTrack {
             is_collapsed: false,
             min_track_sizing_function,
             max_track_sizing_function,
-            offset: 0.0,
-            base_size: 0.0,
-            growth_limit: 0.0,
-            content_alignment_adjustment: 0.0,
-            item_incurred_increase: 0.0,
-            base_size_planned_increase: 0.0,
-            growth_limit_planned_increase: 0.0,
+            offset: Au(0),
+            base_size: Au(0),
+            growth_limit: Au(0),
+            content_alignment_adjustment: Au(0),
+            item_incurred_increase: Au(0),
+            base_size_planned_increase: Au(0),
+            growth_limit_planned_increase: Au(0),
             infinitely_growable: false,
-            fit_content_limit: f32::INFINITY,
+            fit_content_limit: MAX_AU,
         }
     }
 
@@ -109,7 +115,7 @@ impl GridTrack {
         self.is_collapsed = true;
         self.min_track_sizing_function = MinTrackSizingFunction::ZERO;
         self.max_track_sizing_function = MaxTrackSizingFunction::ZERO;
-        self.fit_content_limit = f32::INFINITY;
+        self.fit_content_limit = MAX_AU;
     }
 
     #[inline(always)]
@@ -136,25 +142,23 @@ impl GridTrack {
     #[inline]
     pub fn resolve_fit_content_limit(
         &mut self,
-        axis_inner_node_size: Option<f32>,
+        axis_inner_node_size: Option<Au>,
         calc_resolver: impl Fn(*const (), f32) -> f32,
     ) {
-        self.fit_content_limit = self
-            .max_track_sizing_function
-            .fit_content_limit(axis_inner_node_size, calc_resolver)
-            .unwrap_or(f32::INFINITY);
+        self.fit_content_limit =
+            self.max_track_sizing_function.fit_content_limit(axis_inner_node_size, calc_resolver).unwrap_or(MAX_AU);
     }
 
     #[inline(always)]
     /// Returns the resolved `fit-content()` limit of the track (infinity if the track is not `fit-content()`)
-    pub fn fit_content_limit(&self) -> f32 {
+    pub fn fit_content_limit(&self) -> Au {
         self.fit_content_limit
     }
 
     #[inline]
     /// Returns the track's growth limit, capped by its `fit-content()` limit (if any)
-    pub fn fit_content_limited_growth_limit(&self) -> f32 {
-        f32_min(self.growth_limit, self.fit_content_limit)
+    pub fn fit_content_limited_growth_limit(&self) -> Au {
+        au_min(self.growth_limit, self.fit_content_limit)
     }
 
     #[inline]

@@ -9,7 +9,10 @@ mod detailed_grid_info {
     use taffy_test_helpers::new_test_tree;
 
     fn definite(width: f32, height: f32) -> Size<AvailableSpace> {
-        Size { width: AvailableSpace::Definite(width), height: AvailableSpace::Definite(height) }
+        Size {
+            width: AvailableSpace::Definite(taffy_test_helpers::px(width)),
+            height: AvailableSpace::Definite(taffy_test_helpers::px(height)),
+        }
     }
 
     fn get_detailed_grid_info(
@@ -44,8 +47,8 @@ mod detailed_grid_info {
         assert!(info.columns.line_names.is_empty());
         assert!(info.rows.line_names.is_empty());
         assert_eq!(info.columns.iter_line_names().count(), 0);
-        assert_eq!(info.grid_template_columns(1.0), "40px 60px");
-        assert_eq!(info.grid_template_rows(1.0), "50px");
+        assert_eq!(info.grid_template_columns(taffy_test_helpers::px(1.0)), "40px 60px");
+        assert_eq!(info.grid_template_rows(taffy_test_helpers::px(1.0)), "50px");
     }
 
     #[test]
@@ -66,8 +69,8 @@ mod detailed_grid_info {
         tree.compute_layout(root, definite(200.0, 100.0)).unwrap();
 
         let info = get_detailed_grid_info(&tree, root);
-        assert_eq!(info.grid_template_columns(2.0), "40px 60px");
-        assert_eq!(info.grid_template_rows(2.0), "50px");
+        assert_eq!(info.grid_template_columns(taffy_test_helpers::px(2.0)), "40px 60px");
+        assert_eq!(info.grid_template_rows(taffy_test_helpers::px(2.0)), "50px");
     }
 
     #[test]
@@ -115,8 +118,11 @@ mod detailed_grid_info {
         // Implicit `<area>-start`/`<area>-end` names are not part of the resolved track list
         assert_eq!(info.rows.iter_line_names().count(), 0);
 
-        assert_eq!(info.grid_template_columns(1.0), "[full-start] 40px [main-start] 60px [main-end full-end]");
-        assert_eq!(info.grid_template_rows(1.0), "50px");
+        assert_eq!(
+            info.grid_template_columns(taffy_test_helpers::px(1.0)),
+            "[full-start] 40px [main-start] 60px [main-end full-end]"
+        );
+        assert_eq!(info.grid_template_rows(taffy_test_helpers::px(1.0)), "50px");
 
         // ...but they still resolve for placement
         assert_eq!(
@@ -127,9 +133,9 @@ mod detailed_grid_info {
                     end: GridPlacement::NamedLine("hero-end".into(), 1),
                 },
                 Direction::Ltr,
-                Rect { left: 0.0, right: 100.0, top: 0.0, bottom: 50.0 },
+                taffy_test_helpers::rect_px(0.0, 100.0, 0.0, 50.0),
             ),
-            Rect { left: 0.0, right: 100.0, top: 0.0, bottom: 50.0 }
+            taffy_test_helpers::rect_px(0.0, 100.0, 0.0, 50.0)
         );
     }
 
@@ -166,7 +172,7 @@ mod detailed_grid_info {
         assert_eq!(column_lines[2], ["col-end".to_string(), "outer-end".to_string()]);
 
         assert_eq!(
-            info.grid_template_columns(1.0),
+            info.grid_template_columns(taffy_test_helpers::px(1.0)),
             "[outer-start col-start] 50px [col-end col-start] 50px [col-end outer-end]"
         );
     }
@@ -203,8 +209,9 @@ mod detailed_grid_info {
         assert!(column_lines[0].is_empty());
         assert_eq!(column_lines[1], ["a".to_string()]);
         assert_eq!(column_lines[2], ["b".to_string()]);
-        let expected = format!("{}px [a] 50px [b]", info.columns.positions[0].end - info.columns.positions[0].start);
-        assert_eq!(info.grid_template_columns(1.0), expected);
+        let expected =
+            format!("{}px [a] 50px [b]", (info.columns.positions[0].end - info.columns.positions[0].start).to_f32_px());
+        assert_eq!(info.grid_template_columns(taffy_test_helpers::px(1.0)), expected);
     }
 
     #[test]
@@ -236,9 +243,15 @@ mod detailed_grid_info {
         let info = get_detailed_grid_info(&tree, container);
 
         // child_a is auto-placed into row 1 / column 1
-        assert_eq!(info.item_grid_area(0), Some((Point { x: 5.0, y: 5.0 }, Size { width: 40.0, height: 50.0 })));
+        assert_eq!(
+            info.item_grid_area(0).map(|(p, s)| (p.map(|v| v.to_f32_px()), s.map(|v| v.to_f32_px()))),
+            Some((Point { x: 5.0, y: 5.0 }, Size { width: 40.0, height: 50.0 }))
+        );
         // child_b spans both columns in row 2
-        assert_eq!(info.item_grid_area(1), Some((Point { x: 5.0, y: 65.0 }, Size { width: 110.0, height: 30.0 })));
+        assert_eq!(
+            info.item_grid_area(1).map(|(p, s)| (p.map(|v| v.to_f32_px()), s.map(|v| v.to_f32_px()))),
+            Some((Point { x: 5.0, y: 65.0 }, Size { width: 110.0, height: 30.0 }))
+        );
         // out of bounds index
         assert_eq!(info.item_grid_area(2), None);
 
@@ -247,48 +260,48 @@ mod detailed_grid_info {
                 Line { start: line(1), end: line(3) },
                 Line { start: line(1), end: line(3) },
                 taffy::style::Direction::Ltr,
-                Rect { left: 0.0, right: 120.0, top: 0.0, bottom: 100.0 },
+                taffy_test_helpers::rect_px(0.0, 120.0, 0.0, 100.0),
             ),
-            Rect { left: 5.0, right: 115.0, top: 5.0, bottom: 95.0 }
+            taffy_test_helpers::rect_px(5.0, 115.0, 5.0, 95.0)
         );
         assert_eq!(
             info.resolve_absolute_grid_area(
                 Line::AUTO,
                 Line { start: GridPlacement::Auto, end: line(2) },
                 taffy::style::Direction::Ltr,
-                Rect { left: 0.0, right: 120.0, top: 0.0, bottom: 100.0 },
+                taffy_test_helpers::rect_px(0.0, 120.0, 0.0, 100.0),
             ),
-            Rect { left: 0.0, right: 45.0, top: 0.0, bottom: 100.0 }
+            taffy_test_helpers::rect_px(0.0, 45.0, 0.0, 100.0)
         );
         assert_eq!(
             info.resolve_absolute_grid_area(
                 Line::AUTO,
                 Line { start: line(-1), end: GridPlacement::Auto },
                 taffy::style::Direction::Ltr,
-                Rect { left: 0.0, right: 120.0, top: 0.0, bottom: 100.0 },
+                taffy_test_helpers::rect_px(0.0, 120.0, 0.0, 100.0),
             ),
-            Rect { left: 115.0, right: 120.0, top: 0.0, bottom: 100.0 }
+            taffy_test_helpers::rect_px(115.0, 120.0, 0.0, 100.0)
         );
         assert_eq!(
             info.resolve_absolute_grid_area(
                 Line::AUTO,
                 Line { start: GridPlacement::NamedLine("missing".into(), 1), end: line(2) },
                 taffy::style::Direction::Ltr,
-                Rect { left: 0.0, right: 120.0, top: 0.0, bottom: 100.0 },
+                taffy_test_helpers::rect_px(0.0, 120.0, 0.0, 100.0),
             ),
             // An unknown named line resolves to the first implicit line past the explicit grid,
             // which (being outside the grid) falls back to the padding edge. The resulting
             // start/end pair is swapped, so this is equivalent to `2 / <padding-end>`.
-            Rect { left: 55.0, right: 120.0, top: 0.0, bottom: 100.0 }
+            taffy_test_helpers::rect_px(55.0, 120.0, 0.0, 100.0)
         );
         assert_eq!(
             info.resolve_absolute_grid_area(
                 Line::AUTO,
                 Line { start: GridPlacement::Span(2), end: GridPlacement::Span(3) },
                 taffy::style::Direction::Ltr,
-                Rect { left: 0.0, right: 120.0, top: 0.0, bottom: 100.0 },
+                taffy_test_helpers::rect_px(0.0, 120.0, 0.0, 100.0),
             ),
-            Rect { left: 0.0, right: 120.0, top: 0.0, bottom: 100.0 }
+            taffy_test_helpers::rect_px(0.0, 120.0, 0.0, 100.0)
         );
     }
 
@@ -322,18 +335,18 @@ mod detailed_grid_info {
                 Line::AUTO,
                 Line { start: GridPlacement::NamedLine("a".into(), 1), end: GridPlacement::NamedSpan("b".into(), 2) },
                 taffy::style::Direction::Ltr,
-                Rect { left: 0.0, right: 90.0, top: 0.0, bottom: 50.0 },
+                taffy_test_helpers::rect_px(0.0, 90.0, 0.0, 50.0),
             ),
-            Rect { left: 0.0, right: 60.0, top: 0.0, bottom: 50.0 }
+            taffy_test_helpers::rect_px(0.0, 60.0, 0.0, 50.0)
         );
         assert_eq!(
             info.resolve_absolute_grid_area(
                 Line::AUTO,
                 Line { start: GridPlacement::NamedLine("b".into(), 2), end: GridPlacement::NamedLine("c".into(), 1) },
                 taffy::style::Direction::Ltr,
-                Rect { left: 0.0, right: 90.0, top: 0.0, bottom: 50.0 },
+                taffy_test_helpers::rect_px(0.0, 90.0, 0.0, 50.0),
             ),
-            Rect { left: 60.0, right: 90.0, top: 0.0, bottom: 50.0 }
+            taffy_test_helpers::rect_px(60.0, 90.0, 0.0, 50.0)
         );
     }
 
@@ -363,39 +376,51 @@ mod detailed_grid_info {
         assert_eq!(column_lines[0], ["a".to_string()]);
         assert_eq!(column_lines[1], ["b".to_string()]);
         assert_eq!(column_lines[2], ["c".to_string()]);
-        assert_eq!(info.grid_template_columns(1.0), "[a] 40px [b] 60px [c]");
+        assert_eq!(info.grid_template_columns(taffy_test_helpers::px(1.0)), "[a] 40px [b] 60px [c]");
 
         // Positions hold physical coordinates: logical track 1 is physically rightmost in RTL
-        assert_eq!(info.columns.positions[0], Line { start: 60.0, end: 100.0 });
-        assert_eq!(info.columns.positions[1], Line { start: 0.0, end: 60.0 });
+        assert_eq!(
+            info.columns.positions[0],
+            Line { start: taffy_test_helpers::px(60.0), end: taffy_test_helpers::px(100.0) }
+        );
+        assert_eq!(
+            info.columns.positions[1],
+            Line { start: taffy_test_helpers::px(0.0), end: taffy_test_helpers::px(60.0) }
+        );
         // item_grid_area resolves the physical rectangle of the (auto-placed) item's grid area
-        assert_eq!(info.item_grid_area(0), Some((Point { x: 60.0, y: 0.0 }, Size { width: 40.0, height: 50.0 })));
+        assert_eq!(
+            info.item_grid_area(0),
+            Some((
+                Point { x: taffy_test_helpers::px(60.0), y: taffy_test_helpers::px(0.0) },
+                Size { width: taffy_test_helpers::px(40.0), height: taffy_test_helpers::px(50.0) }
+            ))
+        );
         assert_eq!(
             info.resolve_absolute_grid_area(
                 Line::AUTO,
                 Line { start: line(1), end: line(2) },
                 taffy::style::Direction::Rtl,
-                Rect { left: 0.0, right: 100.0, top: 0.0, bottom: 50.0 },
+                taffy_test_helpers::rect_px(0.0, 100.0, 0.0, 50.0),
             ),
-            Rect { left: 60.0, right: 100.0, top: 0.0, bottom: 50.0 }
+            taffy_test_helpers::rect_px(60.0, 100.0, 0.0, 50.0)
         );
         assert_eq!(
             info.resolve_absolute_grid_area(
                 Line::AUTO,
                 Line { start: GridPlacement::NamedLine("a".into(), 1), end: GridPlacement::NamedLine("b".into(), 1) },
                 taffy::style::Direction::Rtl,
-                Rect { left: 0.0, right: 100.0, top: 0.0, bottom: 50.0 },
+                taffy_test_helpers::rect_px(0.0, 100.0, 0.0, 50.0),
             ),
-            Rect { left: 60.0, right: 100.0, top: 0.0, bottom: 50.0 }
+            taffy_test_helpers::rect_px(60.0, 100.0, 0.0, 50.0)
         );
         assert_eq!(
             info.resolve_absolute_grid_area(
                 Line::AUTO,
                 Line { start: line(1), end: GridPlacement::Auto },
                 taffy::style::Direction::Rtl,
-                Rect { left: 0.0, right: 100.0, top: 0.0, bottom: 50.0 },
+                taffy_test_helpers::rect_px(0.0, 100.0, 0.0, 50.0),
             ),
-            Rect { left: 0.0, right: 100.0, top: 0.0, bottom: 50.0 }
+            taffy_test_helpers::rect_px(0.0, 100.0, 0.0, 50.0)
         );
     }
 }

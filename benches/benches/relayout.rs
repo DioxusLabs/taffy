@@ -4,6 +4,7 @@ use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
 use std::hint::black_box;
 use taffy::prelude::*;
 use taffy::{Cache, LayoutInput, LayoutOutput, Line, RequestedAxis, RunMode, SizingMode};
+use taffy_benchmarks::px;
 
 /// The layout modes that the containers of a benchmark tree cycle through, by depth
 #[derive(Clone, Copy)]
@@ -104,9 +105,9 @@ fn measure_input(width: f32) -> LayoutInput {
         run_mode: RunMode::ComputeSize,
         sizing_mode: SizingMode::InherentSize,
         axis: RequestedAxis::Both,
-        known_dimensions: Size { width: Some(width), height: None },
+        known_dimensions: Size { width: Some(px(width)), height: None },
         known_dimensions_are_definite: Size { width: true, height: true },
-        parent_size: Size { width: Some(1000.0), height: None },
+        parent_size: Size { width: Some(px(1000.0)), height: None },
         available_space: Size { width: AvailableSpace::MaxContent, height: AvailableSpace::MaxContent },
         vertical_margins_are_collapsible: Line::FALSE,
     }
@@ -117,7 +118,7 @@ fn layout_input(width: f32) -> LayoutInput {
 }
 
 fn output(width: f32) -> LayoutOutput {
-    LayoutOutput::from_outer_size(Size { width, height: width })
+    LayoutOutput::from_outer_size(Size { width: px(width), height: px(width) })
 }
 
 /// Micro-benchmarks of the layout cache itself

@@ -12,7 +12,10 @@ mod adversarial_styles {
     use taffy_test_helpers::new_test_tree;
 
     fn definite(size: f32) -> Size<AvailableSpace> {
-        Size { width: AvailableSpace::Definite(size), height: AvailableSpace::Definite(size) }
+        Size {
+            width: AvailableSpace::Definite(taffy_test_helpers::px(size)),
+            height: AvailableSpace::Definite(taffy_test_helpers::px(size)),
+        }
     }
 
     /// A `NaN` flex factor makes every comparison in the "find the size of an fr" algorithm false,
@@ -97,7 +100,7 @@ mod adversarial_styles {
         tree.compute_layout(root, definite(100.0)).unwrap();
 
         // "c" is the 4th line of the grid: the line after the three 10px columns
-        assert_eq!(tree.layout(child).unwrap().location.x, 30.0);
+        assert_eq!(tree.layout(child).unwrap().location.x.to_f32_px(), 30.0);
     }
 
     /// A zero span (an invalid value which gets normalized to 1) combined with an unresolvable

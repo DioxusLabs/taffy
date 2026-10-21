@@ -56,11 +56,11 @@ fn scroll_height_does_not_depend_on_which_edge_the_border_is_on() {
         let bottom = scroller(display, edge(0.0, BORDER));
 
         assert_eq!(
-            top.scroll_height(),
-            bottom.scroll_height(),
+            top.scroll_height().to_f32_px(),
+            bottom.scroll_height().to_f32_px(),
             "{display:?}: border-top gave {} and border-bottom gave {}",
-            top.scroll_height(),
-            bottom.scroll_height(),
+            top.scroll_height().to_f32_px(),
+            bottom.scroll_height().to_f32_px(),
         );
     }
 }
@@ -72,7 +72,11 @@ fn scroll_height_is_the_content_beyond_the_padding_box() {
             let layout = scroller(display, edge(top, bottom));
             let padding_box = CONTAINER - top - bottom;
 
-            assert_eq!(layout.scroll_height(), CONTENT - padding_box, "{display:?} with border {top}/{bottom}",);
+            assert_eq!(
+                layout.scroll_height().to_f32_px(),
+                CONTENT - padding_box,
+                "{display:?} with border {top}/{bottom}",
+            );
         }
     }
 }
@@ -83,7 +87,11 @@ fn scrollable_overflow_excludes_the_containers_own_border() {
         for (top, bottom) in [(BORDER, 0.0), (0.0, BORDER), (BORDER, BORDER), (0.0, 0.0)] {
             let layout = scroller(display, edge(top, bottom));
 
-            assert_eq!(layout.scrollable_overflow_rect.bottom, CONTENT, "{display:?} with border {top}/{bottom}");
+            assert_eq!(
+                layout.scrollable_overflow_rect.bottom.to_f32_px(),
+                CONTENT,
+                "{display:?} with border {top}/{bottom}"
+            );
         }
     }
 }
@@ -95,7 +103,7 @@ fn scrollable_overflow_includes_the_containers_own_padding() {
             let layout = scroller_with_padding(display, edge(0.0, 0.0), edge(top, bottom));
 
             assert_eq!(
-                layout.scrollable_overflow_rect.bottom,
+                layout.scrollable_overflow_rect.bottom.to_f32_px(),
                 CONTENT + top + bottom,
                 "{display:?} with padding {top}/{bottom}"
             );
@@ -130,7 +138,7 @@ fn scrollable_overflow_excludes_the_own_padding_of_a_non_scroll_container() {
             // A box that is not a scroll container does not extend its scrollable overflow
             // region by its own padding: only the content contributes.
             assert_eq!(
-                layout.scrollable_overflow_rect.bottom,
+                layout.scrollable_overflow_rect.bottom.to_f32_px(),
                 top + CONTENT,
                 "{display:?} with padding {top}/{bottom}"
             );
@@ -162,7 +170,11 @@ fn leaf_content_size_includes_the_containers_own_padding() {
     for (top, bottom) in [(PADDING, 0.0), (0.0, PADDING), (PADDING, PADDING), (0.0, 0.0)] {
         let layout = measured_leaf(Overflow::Scroll, edge(top, bottom));
 
-        assert_eq!(layout.scrollable_overflow_rect.bottom, top + CONTENT + bottom, "Leaf with padding {top}/{bottom}");
+        assert_eq!(
+            layout.scrollable_overflow_rect.bottom.to_f32_px(),
+            top + CONTENT + bottom,
+            "Leaf with padding {top}/{bottom}"
+        );
     }
 }
 
@@ -173,7 +185,11 @@ fn leaf_content_size_excludes_the_own_padding_of_a_non_scroll_container() {
 
         // A box that is not a scroll container does not extend its scrollable overflow
         // region by its own padding: only the content contributes.
-        assert_eq!(layout.scrollable_overflow_rect.bottom, top + CONTENT, "Leaf with padding {top}/{bottom}");
+        assert_eq!(
+            layout.scrollable_overflow_rect.bottom.to_f32_px(),
+            top + CONTENT,
+            "Leaf with padding {top}/{bottom}"
+        );
     }
 }
 
@@ -186,7 +202,7 @@ fn scroll_height_accounts_for_the_containers_own_padding() {
             // The scrollable overflow region runs from the padding-box origin to the end of
             // the content plus the container's end-side padding.
             let expected = (top + CONTENT + bottom) - CONTAINER;
-            assert_eq!(layout.scroll_height(), expected, "{display:?} with padding {top}/{bottom}");
+            assert_eq!(layout.scroll_height().to_f32_px(), expected, "{display:?} with padding {top}/{bottom}");
         }
     }
 }
@@ -214,8 +230,8 @@ fn grid_scrollable_overflow_includes_item_positions_in_overflowing_tracks() {
     tree.compute_layout(node, Size::MAX_CONTENT).unwrap();
     let layout = tree.layout(node).unwrap();
 
-    assert_eq!(layout.scrollable_overflow_rect.bottom, 1000.0);
-    assert_eq!(layout.scroll_height(), 1000.0 - CONTAINER);
+    assert_eq!(layout.scrollable_overflow_rect.bottom.to_f32_px(), 1000.0);
+    assert_eq!(layout.scroll_height().to_f32_px(), 1000.0 - CONTAINER);
 }
 
 #[test]
@@ -225,6 +241,6 @@ fn scroll_height_agrees_with_borders_and_padding_combined() {
 
         let padding_box = CONTAINER - BORDER - BORDER;
         let expected = (PADDING + CONTENT + PADDING) - padding_box;
-        assert_eq!(layout.scroll_height(), expected, "{display:?}");
+        assert_eq!(layout.scroll_height().to_f32_px(), expected, "{display:?}");
     }
 }
