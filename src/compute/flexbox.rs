@@ -674,6 +674,49 @@ fn resolve_normal_alignment(alignment: AlignItems) -> AlignItems {
     }
 }
 
+/// A flex container's min and max sizes
+struct ContainerSizeLimits {
+    /// The min size, floored by `aspect_ratio_minimum`
+    min_size: Size<Option<f32>>,
+    /// The max size
+    max_size: Size<Option<f32>>,
+    /// The size transferred through the aspect ratio into each axis that has an automatic minimum
+    aspect_ratio_minimum: Size<Option<f32>>,
+}
+
+/// The container's min and max sizes, with limits transferred through its aspect ratio, and the
+/// transferred size of each axis that has an automatic minimum (which also floors that axis's min size)
+#[inline(never)]
+fn container_limits_through_aspect_ratio(
+    tree: &impl LayoutFlexboxContainer,
+    style: &impl FlexboxContainerStyle,
+    known_dimensions: Size<Option<f32>>,
+    parent_size: Size<Option<f32>>,
+    box_sizing_adjustment: Size<f32>,
+    aspect_ratio: ResolvedAspectRatio,
+) -> ContainerSizeLimits {
+    let (min_size, max_size) = transfer_aspect_ratio_limits(
+        || {
+            known_dimensions
+                .maybe_sub(box_sizing_adjustment)
+                .or(style.size().maybe_resolve(parent_size, |val, basis| tree.calc(val, basis)))
+        },
+        style.min_size().maybe_resolve(parent_size, |val, basis| tree.calc(val, basis)),
+        style.max_size().maybe_resolve(parent_size, |val, basis| tree.calc(val, basis)),
+        Some(aspect_ratio),
+    );
+    let min_size = min_size.maybe_add(box_sizing_adjustment);
+    let max_size = max_size.maybe_add(box_sizing_adjustment);
+    // An axis with an automatic minimum is sized by its content, floored by the transferred size
+    let aspect_ratio_minimum =
+        transfer_aspect_ratio(style, known_dimensions.maybe_sub(box_sizing_adjustment), Some(aspect_ratio))
+            .automatic_minimum
+            .maybe_add(box_sizing_adjustment)
+            .maybe_clamp(min_size, max_size);
+    let min_size = min_size.zip_map(aspect_ratio_minimum, |min, ratio_min| ratio_min.or(min));
+    ContainerSizeLimits { min_size, max_size, aspect_ratio_minimum }
+}
+
 /// Compute constants that can be reused during the flexbox algorithm.
 #[inline]
 fn compute_constants(
@@ -755,25 +798,28 @@ fn compute_constants(
         bottom: content_box_inset.bottom - border.bottom - scrollbar_gutter.y,
     };
 
-    let (container_min_size, container_max_size) = transfer_aspect_ratio_limits(
-        || {
-            known_dimensions
-                .maybe_sub(box_sizing_adjustment)
-                .or(style.size().maybe_resolve(parent_size, |val, basis| tree.calc(val, basis)))
-        },
-        style.min_size().maybe_resolve(parent_size, |val, basis| tree.calc(val, basis)),
-        style.max_size().maybe_resolve(parent_size, |val, basis| tree.calc(val, basis)),
-        aspect_ratio,
-    );
-    let container_min_size = container_min_size.maybe_add(box_sizing_adjustment);
-    let container_max_size = container_max_size.maybe_add(box_sizing_adjustment);
-    // An axis with an automatic minimum is sized by its content, floored by the transferred size
-    let aspect_ratio_minimum =
-        transfer_aspect_ratio(&style, known_dimensions.maybe_sub(box_sizing_adjustment), aspect_ratio)
-            .automatic_minimum
-            .maybe_add(box_sizing_adjustment)
-            .maybe_clamp(container_min_size, container_max_size);
-    let container_min_size = container_min_size.zip_map(aspect_ratio_minimum, |min, ratio_min| ratio_min.or(min));
+    let ContainerSizeLimits { min_size: container_min_size, max_size: container_max_size, aspect_ratio_minimum } =
+        match aspect_ratio {
+            None => ContainerSizeLimits {
+                min_size: style
+                    .min_size()
+                    .maybe_resolve(parent_size, |val, basis| tree.calc(val, basis))
+                    .maybe_add(box_sizing_adjustment),
+                max_size: style
+                    .max_size()
+                    .maybe_resolve(parent_size, |val, basis| tree.calc(val, basis))
+                    .maybe_add(box_sizing_adjustment),
+                aspect_ratio_minimum: Size::NONE,
+            },
+            Some(ratio) => container_limits_through_aspect_ratio(
+                tree,
+                &style,
+                known_dimensions,
+                parent_size,
+                box_sizing_adjustment,
+                ratio,
+            ),
+        };
 
     // A cross size transferred through the aspect ratio is definite when sizing the items, even
     // though the container then grows to fit its lines
