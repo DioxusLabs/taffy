@@ -44,7 +44,7 @@ pub use oof::{compute_oof_layout, compute_oof_layout_for_area, resolve_static_of
 pub use self::block::{compute_block_align_content_offset, compute_block_layout, BlockContext, BlockFormattingContext};
 
 #[cfg(feature = "flexbox")]
-pub use self::flexbox::compute_flexbox_layout;
+pub use self::flexbox::{compute_flexbox_layout, compute_stack_layout};
 
 #[cfg(feature = "grid")]
 pub use self::grid::compute_grid_layout;

@@ -25,6 +25,8 @@ use super::common::alignment::apply_alignment_fallback;
 use super::common::scrollable_overflow::compute_scrollable_overflow_contribution;
 use super::common::sizing_keyword::{resolve_sizing_keyword, SizingKeywordResolution};
 
+mod stack;
+
 /// The intermediate results of a flexbox calculation for a single item
 struct FlexItem {
     /// The identifier for the associated node
@@ -264,6 +266,25 @@ pub fn compute_flexbox_layout(
     tree: &mut impl LayoutFlexboxContainer,
     node: NodeId,
     inputs: LayoutInput,
+) -> LayoutOutput {
+    compute_container_layout(tree, node, inputs, compute_preliminary)
+}
+
+/// Computes the layout of a box according to the stack algorithm ([`Display::Stack`](crate::Display::Stack)).
+///
+/// A stack lays its items out in a single line along `flex_direction` and aligns them like a flexbox container,
+/// but never flexes them: `flex_grow`, `flex_shrink`, `flex_basis` and `flex_wrap` are not used, and items have
+/// no automatic minimum size and overflow rather than shrink. Items take up free space with `fl`.
+pub fn compute_stack_layout(tree: &mut impl LayoutFlexboxContainer, node: NodeId, inputs: LayoutInput) -> LayoutOutput {
+    compute_container_layout(tree, node, inputs, stack::compute_preliminary)
+}
+
+/// Resolves the container's own size styles, then runs `compute_preliminary` (the flexbox or the stack algorithm)
+fn compute_container_layout<Tree: LayoutFlexboxContainer>(
+    tree: &mut Tree,
+    node: NodeId,
+    inputs: LayoutInput,
+    compute_preliminary: impl FnOnce(&mut Tree, NodeId, LayoutInput) -> LayoutOutput,
 ) -> LayoutOutput {
     let LayoutInput { known_dimensions, parent_size, run_mode, .. } = inputs;
     let style = tree.get_flexbox_container_style(node);
@@ -531,7 +552,13 @@ fn compute_preliminary(tree: &mut impl LayoutFlexboxContainer, node: NodeId, inp
     // with candidates bubbled from in-flow children's subtrees). These are laid out by the
     // out-of-flow positioning pass (`compute_oof_layout`), which runs after this algorithm.
     let mut candidates = OofCandidates::new();
-    collect_oof_candidates(tree, node, &constants, &mut flex_lines, &mut candidates);
+    collect_oof_candidates(
+        tree,
+        node,
+        &constants,
+        flex_lines.iter_mut().flat_map(|line| line.items.iter_mut()).map(|item| (item.order, &mut item.oof_candidates)),
+        &mut candidates,
+    );
 
     let absolute_position_inset = constants.border
         + Rect {
@@ -2903,20 +2930,15 @@ fn final_layout_pass(
 /// of each in-flow item's subtree. Final sizing and positioning happens in the shared
 /// out-of-flow positioning pass at the containing block.
 #[inline]
-fn collect_oof_candidates(
+fn collect_oof_candidates<'a>(
     tree: &mut impl LayoutFlexboxContainer,
     node: NodeId,
     constants: &AlgoConstants,
-    flex_lines: &mut [FlexLine],
+    items: impl Iterator<Item = (u32, &'a mut OofCandidates)>,
     candidates: &mut OofCandidates,
 ) {
-    // Lines are contiguous slices of the items in document order (reversal is applied to
-    // positions, not storage), so walking the lines yields items sorted by `order`
-    let mut items = flex_lines
-        .iter_mut()
-        .flat_map(|line| line.items.iter_mut())
-        .filter(|item| !item.oof_candidates.is_empty())
-        .peekable();
+    // The items must be sorted by `order`
+    let mut items = items.filter(|(_, oof_candidates)| !oof_candidates.is_empty()).peekable();
 
     let dir = constants.dir;
     let container_size = constants.container_size;
@@ -2950,8 +2972,8 @@ fn collect_oof_candidates(
         // In-flow item: merge the candidates bubbled out of its subtree
         if !position.is_out_of_flow() {
             drop(child_style);
-            if let Some(item) = items.next_if(|item| item.order == order as u32) {
-                candidates.append(&mut item.oof_candidates);
+            if let Some((_, oof_candidates)) = items.next_if(|(item_order, _)| *item_order == order as u32) {
+                candidates.append(oof_candidates);
             }
             continue;
         }
