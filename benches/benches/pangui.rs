@@ -2,6 +2,8 @@
 //! (<https://www.pangui.io/blog/05-layout-rework-and-benchmarks/>).
 //!
 //! Each file in the `pangui` directory is one benchmark, written in PanGUI's benchmark template format.
+//! `fit_nesting_indefinite` is not one of PanGUI's: it is `fit_nesting` inside a node that is sized to fit
+//! its content, so that the nodes which expand do so along an axis in which their parent has no definite size.
 use criterion::measurement::WallTime;
 use criterion::{criterion_group, criterion_main, BenchmarkGroup, BenchmarkId, Criterion};
 use rand::Rng;
@@ -26,8 +28,46 @@ use taffy_benchmarks::yoga_helpers::YogaTreeBuilder;
 /// The size that the root node is laid out into along an axis in which it does not have a size in pixels
 const DEFAULT_ROOT_SIZE: f32 = 1000.0;
 
+/// How the nodes of a template are translated to Taffy styles
+#[derive(Clone, Copy, PartialEq)]
+enum Translation {
+    /// `Expand` along the main axis of the parent is `flex: <weight> 1 0` with a minimum size of 0
+    Flexbox,
+    /// `Expand` along the main axis of the parent is a size of `<weight>fl`, with no `flex-*` properties.
+    /// Not available for Yoga or Taffy 0.3.
+    FlexboxFill,
+    /// As [`Translation::FlexboxFill`], with `min-width: 0` / `min-height: 0` along the main axis of the parent
+    /// on every node that has no minimum size in that axis. Nodes that do not expand already have
+    /// `flex-shrink: 0`, so this leaves no node with an automatic minimum size to measure.
+    FlexboxFillZeroMinSize,
+}
+
+impl Translation {
+    /// The suffix of the benchmark name for this translation (empty for the default translation)
+    /// Whether `Expand` along the main axis of the parent is translated to an `fl` size
+    fn uses_fill(self) -> bool {
+        matches!(self, Translation::FlexboxFill | Translation::FlexboxFillZeroMinSize)
+    }
+
+    fn name_suffix(self) -> &'static str {
+        match self {
+            Translation::Flexbox => "",
+            Translation::FlexboxFill => " (fl)",
+            Translation::FlexboxFillZeroMinSize => " (fl, min-size: 0)",
+        }
+    }
+}
+
 fn is_mode(size: &Option<BenchmarkSize>, mode: SizeMode) -> bool {
     size.is_some_and(|size| size.mode == mode)
+}
+
+/// Whether any node of a template expands along the main axis of its parent. `parent_is_row` is whether the
+/// parent of the node lays out its children horizontally.
+fn has_main_axis_expand(node: &LayoutNode, parent_is_row: bool) -> bool {
+    let main_size = if parent_is_row { &node.width } else { &node.height };
+    let is_row = node.flow_direction == Some(FlowDirection::Horizontal);
+    is_mode(main_size, SizeMode::Expand) || node.children.iter().any(|child| has_main_axis_expand(child, is_row))
 }
 
 fn dimension(size: &Option<BenchmarkSize>) -> Dimension {
@@ -50,7 +90,7 @@ fn min_max_size(size: &Option<BenchmarkSize>, property: &str) -> LengthPercentag
 
 /// Translate a node of a PanGUI template into a flexbox style. `parent_is_row` is whether the parent of the
 /// node lays out its children horizontally.
-fn style(node: &LayoutNode, parent_is_row: bool) -> TaffyStyle {
+fn style(node: &LayoutNode, parent_is_row: bool, translation: Translation) -> TaffyStyle {
     let (main_size, main_min_size) =
         if parent_is_row { (&node.width, &node.min_width) } else { (&node.height, &node.min_height) };
 
@@ -60,6 +100,7 @@ fn style(node: &LayoutNode, parent_is_row: bool) -> TaffyStyle {
     // along the cross axis is stretched by `align-items`.
     let expands = is_mode(main_size, SizeMode::Expand);
     let (flex_grow, flex_shrink, flex_basis) = match (main_size, main_min_size) {
+        (Some(BenchmarkSize { mode: SizeMode::Expand, .. }), _) if translation.uses_fill() => (0.0, 0.0, auto()),
         (Some(BenchmarkSize { mode: SizeMode::Expand, value }), _) => (*value, 1.0, length(0.0)),
         (_, Some(BenchmarkSize { mode: SizeMode::Expand, value })) => (*value, 0.0, auto()),
         _ => (0.0, 0.0, auto()),
@@ -72,7 +113,12 @@ fn style(node: &LayoutNode, parent_is_row: bool) -> TaffyStyle {
     if !(!parent_is_row && is_mode(&node.min_height, SizeMode::Expand)) {
         min_size.height = min_max_size(&node.min_height, "MinHeight");
     }
-    if expands {
+    let zero_min_size = match translation {
+        Translation::Flexbox => expands,
+        Translation::FlexboxFill => false,
+        Translation::FlexboxFillZeroMinSize => true,
+    };
+    if zero_min_size {
         if parent_is_row && node.min_width.is_none() {
             min_size.width = length(0.0);
         }
@@ -87,6 +133,15 @@ fn style(node: &LayoutNode, parent_is_row: bool) -> TaffyStyle {
         _ => None,
     };
 
+    let mut size = Size { width: dimension(&node.width), height: dimension(&node.height) };
+    if let (true, Some(BenchmarkSize { mode: SizeMode::Expand, value })) = (translation.uses_fill(), main_size) {
+        if parent_is_row {
+            size.width = fill(*value);
+        } else {
+            size.height = fill(*value);
+        }
+    }
+
     let gap = length(node.gap.unwrap_or(0.0));
     TaffyStyle {
         display: Display::Flex,
@@ -98,7 +153,7 @@ fn style(node: &LayoutNode, parent_is_row: bool) -> TaffyStyle {
             Some(WrapMode::Auto) => FlexWrap::Wrap,
             Some(WrapMode::NoWrap) | None => FlexWrap::NoWrap,
         },
-        size: Size { width: dimension(&node.width), height: dimension(&node.height) },
+        size,
         min_size,
         max_size: Size {
             width: min_max_size(&node.max_width, "MaxWidth"),
@@ -144,14 +199,18 @@ impl GenStyle<TaffyStyle> for RootStyle {
     }
 }
 
-fn build_children<R: Rng, B: BuildTree<R, RootStyle>>(builder: &mut B, parent: &LayoutNode) -> Vec<B::Node> {
+fn build_children<R: Rng, B: BuildTree<R, RootStyle>>(
+    builder: &mut B,
+    parent: &LayoutNode,
+    translation: Translation,
+) -> Vec<B::Node> {
     let parent_is_row = parent.flow_direction == Some(FlowDirection::Horizontal);
     parent
         .children
         .iter()
         .map(|child| {
-            let children = build_children(builder, child);
-            builder.create_node_with_style(style(child, parent_is_row), &children)
+            let children = build_children(builder, child, translation);
+            builder.create_node_with_style(style(child, parent_is_row, translation), &children)
         })
         .collect()
 }
@@ -165,7 +224,7 @@ fn root_size(size: &Option<BenchmarkSize>) -> f32 {
 }
 
 macro_rules! run_benchmark {
-    ($TreeBuilder: ty, $tree_builder_name: literal, $group: ident, $name: expr, $root: ident) => {
+    ($TreeBuilder: ty, $tree_builder_name: literal, $group: ident, $name: expr, $root: ident, $translation: expr) => {
         let mut tree = None;
         $group.bench_function(BenchmarkId::new($name, $tree_builder_name), |b| {
             bench_layout(
@@ -173,8 +232,8 @@ macro_rules! run_benchmark {
                 &mut tree,
                 || -> $TreeBuilder {
                     // The root node has no parent. PanGUI's own translation treats it as the child of a column.
-                    let mut builder = <$TreeBuilder>::new(RootStyle(style(&$root, false)));
-                    let children = build_children(&mut builder, &$root);
+                    let mut builder = <$TreeBuilder>::new(RootStyle(style(&$root, false, $translation)));
+                    let children = build_children(&mut builder, &$root, $translation);
                     builder.set_root_children(&children);
                     builder
                 },
@@ -186,13 +245,17 @@ macro_rules! run_benchmark {
 }
 
 macro_rules! benchmark_each_library {
-    ($group: ident, $name: expr, $root: ident) => {
+    ($group: ident, $name: expr, $root: ident, $translation: expr) => {
         #[cfg(feature = "yoga")]
-        run_benchmark!(YogaTreeBuilder<_, _>, "Yoga", $group, $name, $root);
+        if !$translation.uses_fill() {
+            run_benchmark!(YogaTreeBuilder<_, _>, "Yoga", $group, $name, $root, $translation);
+        }
         #[cfg(feature = "taffy03")]
-        run_benchmark!(Taffy03TreeBuilder<_, _>, "Taffy 0.3", $group, $name, $root);
+        if !$translation.uses_fill() {
+            run_benchmark!(Taffy03TreeBuilder<_, _>, "Taffy 0.3", $group, $name, $root, $translation);
+        }
 
-        run_benchmark!(TaffyTreeBuilder<_, _>, "Taffy main", $group, $name, $root);
+        run_benchmark!(TaffyTreeBuilder<_, _>, "Taffy main", $group, $name, $root, $translation);
     };
 }
 
@@ -238,7 +301,16 @@ fn pangui_benchmarks(c: &mut Criterion) {
     let mut group = benchmark_group(c, "PanGUI");
     for (name, root) in templates() {
         benchmark_native_libraries(&mut group, name.as_str(), &root);
-        benchmark_each_library!(group, name.as_str(), root);
+        let translation = Translation::Flexbox;
+        benchmark_each_library!(group, name.as_str(), root, translation);
+        if has_main_axis_expand(&root, false) {
+            let translation = Translation::FlexboxFill;
+            let name = format!("{name}{}", translation.name_suffix());
+            benchmark_each_library!(group, name.as_str(), root, translation);
+        }
+        let translation = Translation::FlexboxFillZeroMinSize;
+        let name = format!("{name}{}", translation.name_suffix());
+        benchmark_each_library!(group, name.as_str(), root, translation);
     }
     group.finish();
 }
