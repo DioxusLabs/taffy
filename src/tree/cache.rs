@@ -2,9 +2,9 @@
 
 #![allow(clippy::unusual_byte_groupings)]
 
-use crate::geometry::Size;
+use crate::geometry::{Rect, Size};
 use crate::style::AvailableSpace;
-use crate::tree::{CollapsibleMarginSet, LayoutInput, LayoutOutput, RunMode, SizingMode};
+use crate::tree::{Baselines, CollapsibleMarginSet, LayoutInput, LayoutOutput, RunMode, SizingMode};
 use crate::RequestedAxis;
 
 /// The number of cache entries for each node in the tree
@@ -82,8 +82,12 @@ fn size_mixed_cache_key(kd: Size<Option<f32>>, avs: Size<AvailableSpace>) -> u64
 }
 
 /// Space-optimised cache key that packs bits into as small a size as possible
+///
+/// Packed to 4-byte alignment so that the key is 20 bytes rather than 24, which lets a measure entry
+/// (the key and a [`MeasuredSize`]) fit in 32 bytes.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(Serialize))]
+#[repr(packed(4))]
 struct CacheKey {
     /// The initial cached size of the node itself
     kd_available_space: u64,
@@ -138,6 +142,47 @@ impl From<&LayoutInput> for CacheKey {
                 .known_dimensions_are_definite
                 .zip_map(input.known_dimensions, |is_definite, kd| is_definite || kd.is_none()),
         }
+    }
+}
+
+/// The result of a `RunMode::ComputeSize` run, as stored in a measure entry: the node's size and
+/// its first baseline.
+///
+/// The first baseline is stored as `NAN` when there is none, so that this fits in 12 bytes rather
+/// than 16. A last baseline is not stored, as Taffy's layout algorithms do not compute one yet.
+#[derive(Debug, Clone, Copy)]
+#[cfg_attr(feature = "serde", derive(Serialize))]
+struct MeasuredSize {
+    /// The size of the node
+    size: Size<f32>,
+    /// The first baseline of the node, or `NAN` if it has none
+    first_baseline: f32,
+}
+
+impl MeasuredSize {
+    /// Keep the size and first baseline of a `LayoutOutput`
+    #[inline(always)]
+    fn from_output(output: &LayoutOutput) -> Self {
+        Self { size: output.size, first_baseline: output.baselines.first.unwrap_or(f32::NAN) }
+    }
+
+    /// The first baseline of the node, if any
+    #[inline(always)]
+    fn first_baseline(&self) -> Option<f32> {
+        (!self.first_baseline.is_nan()).then_some(self.first_baseline)
+    }
+
+    /// Reconstruct a `LayoutOutput` from the size and first baseline
+    #[inline(always)]
+    fn to_output(self) -> LayoutOutput {
+        LayoutOutput::from_sizes_and_baselines(self.size, Rect::ZERO, Baselines::from_first(self.first_baseline()))
+    }
+}
+
+/// Compares the first baselines as `Option`s, so that two entries without one are equal
+impl PartialEq for MeasuredSize {
+    fn eq(&self, other: &Self) -> bool {
+        self.size == other.size && self.first_baseline() == other.first_baseline()
     }
 }
 
@@ -215,7 +260,7 @@ pub struct Cache {
     /// The cache entry for the node's final layout
     final_layout_entry: Option<CacheEntry<LayoutOutput>>,
     /// The cache entries for the node's preliminary size measurements
-    measure_entries: [Option<CacheEntry<Size<f32>>>; CACHE_SIZE],
+    measure_entries: [Option<CacheEntry<MeasuredSize>>; CACHE_SIZE],
     /// Tracks which measure entries have been used since the eviction cursor last passed them
     recently_used_entries: u16,
     /// The next measure entry to consider replacing
@@ -238,7 +283,7 @@ impl Cache {
     /// Create a new empty cache
     pub const fn new() -> Self {
         /// Workaround for `Option<CacheEntry<_>>` not being `Copy` (required for array repeat expressions)
-        const NONE_MEASURE_ENTRY: Option<CacheEntry<Size<f32>>> = None;
+        const NONE_MEASURE_ENTRY: Option<CacheEntry<MeasuredSize>> = None;
         Self {
             final_layout_entry: None,
             measure_entries: [NONE_MEASURE_ENTRY; CACHE_SIZE],
@@ -269,7 +314,7 @@ impl Cache {
                         && entry.key.size_is_valid_for(&key)
                     {
                         self.recently_used_entries |= 1 << index;
-                        return Some(LayoutOutput::from_outer_size(entry.content));
+                        return Some(entry.content.to_output());
                     }
                 }
 
@@ -300,10 +345,10 @@ impl Cache {
                 self.final_layout_entry = Some(CacheEntry { key, content: layout_output })
             }
             RunMode::ComputeSize => {
-                // Measure entries only store the size, and cache hits are reconstructed with
-                // `LayoutOutput::from_outer_size`, which resets the margin-collapse metadata
+                // Measure entries only store the size and first baseline, and cache hits are
+                // reconstructed with `MeasuredSize::to_output`, which resets the margin-collapse metadata
                 // (`top_margin`, `bottom_margin`, `margins_can_collapse_through`). Results that
-                // carry such metadata cannot be reconstructed from their size, so don't cache them.
+                // carry such metadata cannot be reconstructed from a `MeasuredSize`, so don't cache them.
                 if layout_output.margins_can_collapse_through
                     || layout_output.top_margin != CollapsibleMarginSet::ZERO
                     || layout_output.bottom_margin != CollapsibleMarginSet::ZERO
@@ -314,7 +359,7 @@ impl Cache {
                 if let Some(index) =
                     self.measure_entries.iter().position(|entry| entry.as_ref().is_some_and(|entry| entry.key == key))
                 {
-                    self.measure_entries[index].as_mut().unwrap().content = layout_output.size;
+                    self.measure_entries[index].as_mut().unwrap().content = MeasuredSize::from_output(&layout_output);
                     self.recently_used_entries |= 1 << index;
                     return;
                 }
@@ -326,7 +371,8 @@ impl Cache {
                     }
                 }
                 let entry_index = self.next_measure_entry as usize;
-                self.measure_entries[entry_index] = Some(CacheEntry { key, content: layout_output.size });
+                self.measure_entries[entry_index] =
+                    Some(CacheEntry { key, content: MeasuredSize::from_output(&layout_output) });
                 self.recently_used_entries |= 1 << entry_index;
                 self.next_measure_entry += 1;
                 if self.next_measure_entry == CACHE_SIZE as u8 {
@@ -345,7 +391,7 @@ impl Cache {
         self.is_empty = true;
         self.final_layout_entry = None;
         /// Workaround for `Option<CacheEntry<_>>` not being `Copy` (required for array repeat expressions)
-        const NONE_MEASURE_ENTRY: Option<CacheEntry<Size<f32>>> = None;
+        const NONE_MEASURE_ENTRY: Option<CacheEntry<MeasuredSize>> = None;
         self.measure_entries = [NONE_MEASURE_ENTRY; CACHE_SIZE];
         self.recently_used_entries = 0;
         self.next_measure_entry = 0;
@@ -524,6 +570,34 @@ mod tests {
             assert!(cache.measure_entries.iter().all(|entry| entry.is_none()));
             assert_eq!(cache.get(&perform_layout_input(100.0, 50.0)), None);
         }
+    }
+
+    fn output_with_baseline(width: f32, baseline: Option<f32>) -> LayoutOutput {
+        LayoutOutput::from_sizes_and_baselines(
+            Size { width, height: width },
+            Rect::ZERO,
+            Baselines::from_first(baseline),
+        )
+    }
+
+    #[test]
+    fn measurements_keep_their_first_baseline() {
+        let mut cache = Cache::new();
+        cache.store(&input(1.0), output_with_baseline(1.0, Some(0.5)));
+        cache.store(&input(2.0), output_with_baseline(2.0, None));
+        cache.store(&input(3.0), output_with_baseline(3.0, Some(0.0)));
+
+        assert_eq!(cache.get(&input(1.0)), Some(output_with_baseline(1.0, Some(0.5))));
+        assert_eq!(cache.get(&input(2.0)), Some(output_with_baseline(2.0, None)));
+        assert_eq!(cache.get(&input(3.0)), Some(output_with_baseline(3.0, Some(0.0))));
+
+        cache.store(&input(1.0), output_with_baseline(1.0, None));
+        assert_eq!(cache.get(&input(1.0)), Some(output_with_baseline(1.0, None)));
+    }
+
+    #[test]
+    fn measure_entries_stay_32_bytes() {
+        assert_eq!(core::mem::size_of::<Option<CacheEntry<MeasuredSize>>>(), 32);
     }
 
     #[test]
