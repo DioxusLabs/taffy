@@ -1,0 +1,19 @@
+<test name="measure_child_with_percent_width_clamped_by_max_width__border_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div direction="ltr" flex-direction="column" width="300px">
+      <div direction="ltr" flex-direction="column" width="100%" max-width="200px">
+        <text direction="ltr">
+          HHHH​HHHH​HHHH​HHHH​HHHH​HHHH​HHHH​HHHH​HHHH​HHHH​HHHH​HHHH
+        </text>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="300" height="30">
+      <node x="0" y="0" width="200" height="30">
+        <node x="0" y="0" width="200" height="30"/>
+      </node>
+    </node>
+  </expectations>
+</test>
