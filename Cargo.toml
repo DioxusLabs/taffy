@@ -20,7 +20,7 @@ document-features = { version = "0.2.7", optional = true }
 serde = { version = "1.0", default-features = false, optional = true, features = ["serde_derive"] }
 slotmap = { version = "1.0.6", default-features = false, optional = true }
 smallvec = { version = "1.13", default-features = false, optional = true }
-cssparser = { version = "0.37.0", default-features = false, optional = true }
+cssparser = { version = "0.38.0", default-features = false, optional = true }
 
 [package.metadata.docs.rs]
 # To test all the documentation related features, run:
