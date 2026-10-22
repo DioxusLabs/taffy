@@ -89,6 +89,174 @@ struct GridContainerConstants {
     inner_node_size: Size<Option<f32>>,
 }
 
+/// Lay out a grid container that has no children. Only its explicit tracks size it: they are initialised and
+/// sized with no items (so `fr` and intrinsic tracks size against the container alone) and the implicit grid,
+/// item placement and item layout are skipped as there is nothing to place. When performing layout the tracks
+/// are still aligned and reported through `set_detailed_grid_info`, as their resolved sizes and positions are
+/// observable (e.g. as the resolved value of `grid-template-columns`).
+#[allow(clippy::too_many_arguments)]
+fn compute_empty_container_layout<Tree: LayoutGridContainer>(
+    tree: &mut Tree,
+    node: NodeId,
+    inputs: LayoutInput,
+    constants: &GridContainerConstants,
+    col_counts: TrackCounts,
+    row_counts: TrackCounts,
+    col_auto_repetition_count: u16,
+    row_auto_repetition_count: u16,
+    name_resolver: NamedLineResolver<Tree::CustomIdent>,
+    mut detailed_column_line_names: GridLineNames<Tree::CustomIdent>,
+    mut detailed_row_line_names: GridLineNames<Tree::CustomIdent>,
+) -> LayoutOutput {
+    let LayoutInput { known_dimensions, run_mode, .. } = inputs;
+    let GridContainerConstants {
+        direction,
+        padding,
+        border,
+        padding_border_size,
+        scrollbar_gutter,
+        min_size,
+        max_size,
+        preferred_size,
+        content_box_inset,
+        align_content,
+        justify_content,
+        available_grid_space,
+        inner_min_size,
+        inner_max_size,
+        mut inner_node_size,
+        ..
+    } = *constants;
+
+    let style = tree.get_grid_container_style(node);
+    let mut columns = GridTrackVec::new();
+    let mut rows = GridTrackVec::new();
+    initialize_grid_tracks(
+        &mut columns,
+        col_counts,
+        &style,
+        AbsoluteAxis::Horizontal,
+        col_auto_repetition_count,
+        |_| false,
+    );
+    initialize_grid_tracks(&mut rows, row_counts, &style, AbsoluteAxis::Vertical, row_auto_repetition_count, |_| false);
+    drop(style);
+
+    let track_size_estimate = |track: &GridTrack, parent_size: Option<f32>, tree: &Tree| {
+        track.max_track_sizing_function.definite_value(parent_size, |val, basis| tree.calc(val, basis))
+    };
+
+    track_sizing_algorithm(
+        tree,
+        AbstractAxis::Inline,
+        inner_min_size.get(AbstractAxis::Inline),
+        inner_max_size.get(AbstractAxis::Inline),
+        justify_content,
+        align_content,
+        available_grid_space,
+        inner_node_size,
+        &mut columns,
+        &mut rows,
+        &mut [],
+        track_size_estimate,
+        false,
+    );
+    let column_sum = columns.iter().map(|track| track.base_size).sum::<f32>();
+    inner_node_size.width = inner_node_size.width.or_else(|| column_sum.into());
+
+    let width = known_dimensions
+        .width
+        .or(preferred_size.width)
+        .unwrap_or_else(|| column_sum + content_box_inset.horizontal_axis_sum())
+        .maybe_clamp(min_size.width, max_size.width)
+        .max(padding_border_size.width);
+
+    // Sizing the rows is only skipped when just the width has been requested (as in the full algorithm)
+    if run_mode == RunMode::ComputeSize && inputs.axis == RequestedAxis::Horizontal {
+        return LayoutOutput::from_outer_size(Size { width, height: 0.0 });
+    }
+
+    track_sizing_algorithm(
+        tree,
+        AbstractAxis::Block,
+        inner_min_size.get(AbstractAxis::Block),
+        inner_max_size.get(AbstractAxis::Block),
+        align_content,
+        justify_content,
+        available_grid_space,
+        inner_node_size,
+        &mut rows,
+        &mut columns,
+        &mut [],
+        track_size_estimate,
+        false,
+    );
+    let row_sum = rows.iter().map(|track| track.base_size).sum::<f32>();
+
+    let height = known_dimensions
+        .height
+        .or(preferred_size.height)
+        .unwrap_or_else(|| row_sum + content_box_inset.vertical_axis_sum())
+        .maybe_clamp(min_size.height, max_size.height)
+        .max(padding_border_size.height);
+
+    if run_mode == RunMode::PerformLayout {
+        // 8. Track Alignment (positions are reported in the detailed grid info)
+        let container_content_box = Size {
+            width: f32_max(0.0, width - content_box_inset.horizontal_axis_sum()),
+            height: f32_max(0.0, height - content_box_inset.vertical_axis_sum()),
+        };
+        let inline_size_without_scrollbar = f32_max(width - padding_border_size.width, 0.0);
+        let inline_scrollbar_gutter_for_alignment = f32_min(scrollbar_gutter.x, inline_size_without_scrollbar);
+        align_tracks(
+            container_content_box.width,
+            Line {
+                start: padding.left + if direction.is_rtl() { inline_scrollbar_gutter_for_alignment } else { 0.0 },
+                end: padding.right + if direction.is_rtl() { 0.0 } else { inline_scrollbar_gutter_for_alignment },
+            },
+            Line { start: border.left, end: border.right },
+            &mut columns,
+            justify_content,
+            direction.is_rtl(),
+        );
+        align_tracks(
+            container_content_box.height,
+            Line { start: padding.top, end: padding.bottom },
+            Line { start: border.top, end: border.bottom },
+            &mut rows,
+            align_content,
+            false,
+        );
+
+        let areas = name_resolver
+            .populate_detailed_line_resolvers(&mut detailed_row_line_names, &mut detailed_column_line_names);
+        tree.set_detailed_grid_info(
+            node,
+            DetailedGridInfo {
+                rows: DetailedGridTracksInfo::from_grid_tracks_and_track_count(
+                    row_counts,
+                    rows,
+                    detailed_row_line_names,
+                ),
+                columns: DetailedGridTracksInfo::from_grid_tracks_and_track_count(
+                    col_counts,
+                    columns,
+                    detailed_column_line_names,
+                ),
+                items: Vec::new(),
+                areas,
+            },
+        );
+    }
+
+    // With no children there are no out-of-flow candidates, so the positioning area's value is never read. It
+    // still has to be `Some`: that is what makes `compute_oof_layout` clear a stale hoisted-children list from a
+    // run in which the container still had descendants.
+    let mut output = LayoutOutput::from_outer_size(Size { width, height });
+    output.oof_positioning_area = Some(crate::tree::OofPositioningArea { size: Size::ZERO, offset: Point::ZERO });
+    output
+}
+
 /// Resolve the grid container's style against the layout inputs (step 1 of `compute_grid_layout`)
 fn compute_container_constants<Tree: LayoutGridContainer>(
     tree: &Tree,
@@ -329,6 +497,28 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     // Build the per-line names of the explicit grid from the name resolver's collected pairs
     let mut detailed_column_line_names = name_resolver.detailed_line_names(AbsoluteAxis::Horizontal);
     let mut detailed_row_line_names = name_resolver.detailed_line_names(AbsoluteAxis::Vertical);
+
+    // A container with no children has no items to place or size: only its explicit tracks size it
+    if tree.child_count(node) == 0 {
+        drop(grid_template_rows);
+        drop(grid_template_columns);
+        drop(grid_auto_rows);
+        drop(grid_auto_columns);
+        drop(style);
+        return compute_empty_container_layout(
+            tree,
+            node,
+            inputs,
+            &constants,
+            TrackCounts::from_raw(0, explicit_col_count, 0),
+            TrackCounts::from_raw(0, explicit_row_count, 0),
+            col_auto_repetition_count,
+            row_auto_repetition_count,
+            name_resolver,
+            detailed_column_line_names,
+            detailed_row_line_names,
+        );
+    }
 
     // 3. Create the grid items (in document order) and resolve the named lines in their `grid-row`/`grid-column` styles
     // Absolutely positioned children do not take part in grid placement and do not create implicit tracks,
