@@ -95,7 +95,14 @@ fn compute_container_constants<Tree: LayoutGridContainer>(
     style: &Tree::GridContainerStyle<'_>,
     inputs: LayoutInput,
 ) -> GridContainerConstants {
-    let LayoutInput { known_dimensions, parent_size, available_space, .. } = inputs;
+    let LayoutInput {
+        #[cfg(feature = "yoga_flexbox")]
+            yoga_available_size: _,
+        known_dimensions,
+        parent_size,
+        available_space,
+        ..
+    } = inputs;
 
     let direction = style.direction();
     let contain = style.contain();
@@ -221,7 +228,13 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     node: NodeId,
     inputs: LayoutInput,
 ) -> LayoutOutput {
-    let LayoutInput { known_dimensions, run_mode, .. } = inputs;
+    let LayoutInput {
+        #[cfg(feature = "yoga_flexbox")]
+            yoga_available_size: _,
+        known_dimensions,
+        run_mode,
+        ..
+    } = inputs;
 
     let style = tree.get_grid_container_style(node);
     let constants = compute_container_constants(tree, &style, inputs);
@@ -828,6 +841,8 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
                 node: child,
                 order,
                 position,
+                #[cfg(feature = "yoga_flexbox")]
+                yoga_parent_is_row: false,
                 static_position: Point {
                     x: AxisStaticPosition::from_alignment(
                         justify_self,

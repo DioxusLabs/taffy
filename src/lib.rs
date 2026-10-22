@@ -104,6 +104,9 @@ pub use crate::compute::compute_flexbox_layout;
 #[doc(inline)]
 pub use crate::compute::compute_grid_layout;
 pub use crate::compute::detailed_info::*;
+#[cfg(feature = "yoga_flexbox")]
+#[doc(inline)]
+pub use crate::compute::yoga_flexbox;
 #[cfg(feature = "block_layout")]
 #[doc(inline)]
 pub use crate::compute::{compute_block_align_content_offset, compute_block_layout};

@@ -26,7 +26,16 @@ pub fn compute_leaf_layout<MeasureFunction>(
 where
     MeasureFunction: FnOnce(Size<Option<f32>>, Size<AvailableSpace>) -> Size<f32>,
 {
-    let LayoutInput { known_dimensions, parent_size, available_space, sizing_mode, run_mode, .. } = inputs;
+    let LayoutInput {
+        #[cfg(feature = "yoga_flexbox")]
+            yoga_available_size: _,
+        known_dimensions,
+        parent_size,
+        available_space,
+        sizing_mode,
+        run_mode,
+        ..
+    } = inputs;
 
     // Note: both horizontal and vertical percentage padding/borders are resolved against the container's inline size (i.e. width).
     // This is not a bug, but is how CSS is specified (see: https://developer.mozilla.org/en-US/docs/Web/CSS/padding#values)
