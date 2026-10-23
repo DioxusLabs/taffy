@@ -5,7 +5,7 @@ use rand_chacha::ChaCha8Rng;
 use std::iter;
 use taffy::prelude::*;
 use taffy::style::Style;
-use taffy_benchmarks::{bench_layout, benchmark_group, TaffyLayoutTree};
+use taffy_benchmarks::{bench_layout, benchmark_group, compute_layout, TaffyLayoutTree};
 
 /// Build a random leaf node
 fn build_random_leaf(taffy: &mut TaffyTree, _rng: &mut ChaCha8Rng) -> NodeId {
@@ -170,7 +170,7 @@ fn taffy_benchmarks(c: &mut Criterion) {
                     &mut tree,
                     || TaffyLayoutTree::new(build_grid_flat_hierarchy(track_count, track_count)),
                     |tree| tree.mark_all_dirty(),
-                    |tree| tree.tree.compute_layout(tree.root, length(12000.0)).unwrap(),
+                    |tree| compute_layout(&mut tree.tree, tree.root, length(12000.0)),
                 )
             },
         );
@@ -190,7 +190,7 @@ fn taffy_benchmarks(c: &mut Criterion) {
                     &mut tree,
                     || TaffyLayoutTree::new(build_taffy_deep_grid_hierarchy(levels, tracks)),
                     |tree| tree.mark_all_dirty(),
-                    |tree| tree.tree.compute_layout(tree.root, length(12000.0)).unwrap(),
+                    |tree| compute_layout(&mut tree.tree, tree.root, length(12000.0)),
                 )
             },
         );
@@ -206,7 +206,7 @@ fn taffy_benchmarks(c: &mut Criterion) {
                 &mut tree,
                 || TaffyLayoutTree::new(build_taffy_deep_grid_hierarchy(levels, 1)),
                 |tree| tree.mark_all_dirty(),
-                |tree| tree.tree.compute_layout(tree.root, max_content()).unwrap(),
+                |tree| compute_layout(&mut tree.tree, tree.root, max_content()),
             )
         });
     }
