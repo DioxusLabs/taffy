@@ -57,12 +57,14 @@ pub(crate) fn apply_alignment_fallback(
     let mut is_safe = matches!(alignment_mode.safety, AlignmentSafety::Safe);
 
     // 1. If there is only a single item being aligned or the items overflow the container, the
-    //    distributed alignment keywords (`stretch`, `space-*`) fall back to a positional keyword
-    //    and gain implicit `safe` semantics so step 2 can flip them to `Start` on overflow.
+    //    distributed alignment keywords (`stretch`, `space-*`) fall back to a positional keyword.
+    //    The `space-*` fallbacks gain implicit `safe` semantics so step 2 can flip them to `Start`
+    //    on overflow, whereas `stretch` falls back to plain `flex-start`.
     //    https://www.w3.org/TR/css-align-3/#distribution-values
     if num_items <= 1 || free_space <= 0.0 {
         (keyword, is_safe) = match keyword {
-            AlignContentKeyword::Stretch | AlignContentKeyword::SpaceBetween => (AlignContentKeyword::FlexStart, true),
+            AlignContentKeyword::Stretch => (AlignContentKeyword::FlexStart, is_safe),
+            AlignContentKeyword::SpaceBetween => (AlignContentKeyword::FlexStart, true),
             AlignContentKeyword::SpaceAround | AlignContentKeyword::SpaceEvenly => (AlignContentKeyword::Center, true),
             other => (other, is_safe),
         };
