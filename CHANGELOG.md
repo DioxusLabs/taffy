@@ -9,6 +9,14 @@
 
 ### Changes
 
+- `Baselines` now stores each baseline as a private `f32` (NaN for none) and exposes them through `Baselines::first()`/`Baselines::last()`; construct it with `Baselines::new`/`Baselines::from_first`/`Baselines::NONE`. `LayoutOutput` shrinks from 88 to 80 bytes.
+- `LayoutInput` gained a `requested_baselines: RequestedBaselines` field (`NONE`, `FIRST`, `LAST`, `BOTH`). A `ComputeSize` request must set the flags for the baselines it will read; `PerformLayout` always produces both. Block, Flexbox and Grid now compute first *and* last baselines, following the current spec rules (baseline-sharing group, then the first/last item with a baseline, then synthesised from the startmost/endmost item).
+- The measurement cache stores the computed baselines alongside the size and records which baselines each entry holds, so a size lookup that requests baselines only hits an entry that has them. `Cache` grows from 408 to 472 bytes.
+
+### Performance
+
+- Flexbox and Grid measure baseline-aligned items with `ComputeSize` (requesting the first baseline) instead of `PerformLayout`, so they no longer evict the item's final layout cache entry.
+
 - `BlockContext::place_floated_box` (and `FloatContext::place_floated_box`) now take a caller-defined `id: u64` for the box, which is stored on `PlacedFloatedBox`. `BlockContext::float_mark` and `BlockContext::floats_placed_since` read back the id and position of the floats placed since a mark, so that custom formatting contexts which place floats do not need to keep their own list of placements.
 
 ## 0.15.1
