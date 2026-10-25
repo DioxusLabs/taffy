@@ -136,6 +136,11 @@ impl RequestedBaselines {
     /// Both baselines are requested
     pub const BOTH: Self = Self(0b11);
 
+    /// Request the first and/or last baseline
+    pub const fn new(first: bool, last: bool) -> Self {
+        Self((first as u8) | ((last as u8) << 1))
+    }
+
     /// Whether no baselines are requested
     #[inline]
     pub const fn is_empty(self) -> bool {
@@ -313,6 +318,12 @@ impl Baselines {
             first: if self.first.is_nan() { other.first } else { self.first },
             last: if self.last.is_nan() { other.last } else { self.last },
         }
+    }
+
+    /// Move both baselines by `offset`
+    #[inline]
+    pub fn offset(self, offset: f32) -> Self {
+        Self { first: self.first + offset, last: self.last + offset }
     }
 
     /// Drop the baselines that are not in `requested`

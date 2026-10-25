@@ -315,7 +315,9 @@ impl BlockContext<'_> {
     }
 }
 
-use super::common::alignment::{apply_alignment_fallback, child_first_baseline, compute_alignment_offset};
+use super::common::alignment::{
+    apply_alignment_fallback, child_first_baseline, child_last_baseline, compute_alignment_offset,
+};
 #[cfg(feature = "content_size")]
 use super::common::scrollable_overflow::compute_scrollable_overflow_contribution;
 use super::common::sizing_keyword::{resolve_sizing_keyword, SizingKeywordResolution};
@@ -518,6 +520,9 @@ fn compute_inner(
     let LayoutInput {
         known_dimensions, parent_size, available_space, run_mode, vertical_margins_are_collapsible, ..
     } = inputs;
+    // A full layout always computes both baselines
+    let requested_baselines =
+        if run_mode == RunMode::PerformLayout { RequestedBaselines::BOTH } else { inputs.requested_baselines };
 
     let style = tree.get_block_container_style(node_id);
     let raw_padding = style.padding();
@@ -635,9 +640,15 @@ fn compute_inner(
         intrinsic_width.maybe_clamp(min_size.width, max_size.width).maybe_max(Some(padding_border_size.width))
     });
 
-    // Short-circuit if computing size and both dimensions known
+    // Short-circuit if computing size and both dimensions known (unless baselines were requested,
+    // which requires laying out the children)
     if let (RunMode::ComputeSize, Some(container_outer_height)) = (run_mode, known_dimensions.height) {
-        return LayoutOutput::from_outer_size(Size { width: container_outer_width, height: container_outer_height });
+        if requested_baselines.is_empty() {
+            return LayoutOutput::from_outer_size(Size {
+                width: container_outer_width,
+                height: container_outer_height,
+            });
+        }
     }
 
     // We can also short-circuit if the width is known and only the width has been requested.
@@ -671,10 +682,11 @@ fn compute_inner(
         mut intrinsic_outer_height,
         first_child_top_margin_set,
         last_child_bottom_margin_set,
-        mut first_baseline,
+        mut baselines,
     ) = perform_final_layout_on_in_flow_children(
         tree,
         run_mode,
+        requested_baselines,
         &mut items,
         container_outer_width,
         container_percentage_resolution_height,
@@ -725,7 +737,7 @@ fn compute_inner(
         let inflow_content_height = intrinsic_outer_height - resolved_content_box_inset.vertical_axis_sum();
         let free_space = container_inner_height - inflow_content_height;
         let group_offset = compute_block_align_content_offset(align_content, free_space);
-        first_baseline = first_baseline.map(|baseline| baseline + group_offset);
+        baselines = baselines.offset(group_offset);
         for item in items.iter_mut() {
             if let Some(layout) = item.final_layout.as_mut() {
                 layout.location.y += group_offset;
@@ -789,7 +801,7 @@ fn compute_inner(
         size: final_outer_size,
         #[cfg(feature = "content_size")]
         scrollable_overflow_rect: Rect::ZERO,
-        baselines: Baselines::from_first(first_baseline),
+        baselines,
         top_margin: if own_margins_collapse_with_children.start {
             first_child_top_margin_set
         } else {
@@ -1119,6 +1131,7 @@ fn determine_content_based_container_width(
 fn perform_final_layout_on_in_flow_children(
     tree: &mut impl LayoutBlockContainer,
     run_mode: RunMode,
+    requested_baselines: RequestedBaselines,
     items: &mut [BlockItem],
     container_outer_width: f32,
     container_percentage_resolution_height: Option<f32>,
@@ -1132,7 +1145,7 @@ fn perform_final_layout_on_in_flow_children(
     children_margins_adjoin_own_edges: Line<bool>,
     #[cfg(feature = "content_size")] is_scroll_container: bool,
     block_ctx: &mut BlockContext<'_>,
-) -> (Rect<f32>, f32, CollapsibleMarginSet, CollapsibleMarginSet, Option<f32>) {
+) -> (Rect<f32>, f32, CollapsibleMarginSet, CollapsibleMarginSet, Baselines) {
     // Resolve container_inner_width for sizing child nodes using initial content_box_inset
     let container_inner_width = (container_outer_width - resolved_content_box_inset.horizontal_axis_sum()).max(0.0);
     let container_percentage_resolution_height =
@@ -1171,6 +1184,16 @@ fn perform_final_layout_on_in_flow_children(
     let mut active_collapsible_margin_set = CollapsibleMarginSet::ZERO;
     let mut is_collapsing_with_first_margin_set = true;
     let mut first_baseline: Option<f32> = None;
+    let mut last_baseline: Option<f32> = None;
+    #[cfg(feature = "float_layout")]
+    let is_in_flow = |item: &BlockItem| !item.position.is_out_of_flow() && item.float.float_direction().is_none();
+    #[cfg(not(feature = "float_layout"))]
+    let is_in_flow = |item: &BlockItem| !item.position.is_out_of_flow();
+    let last_in_flow_index = items.iter().rposition(is_in_flow);
+    // The last baseline is that of the last in-flow child that has one. When computing the size
+    // only the last in-flow child is asked for it; if it has none, earlier children are re-measured
+    // (in reverse) with the request until one is found. These are their inputs and top edges.
+    let mut last_baseline_candidates: Vec<(NodeId, LayoutInput, f32)> = Vec::new();
     // Whether the active margin set contains the margins of a self-collapsing element with
     // clearance. Such margins collapse with the margins of following siblings but the resulting
     // margin does not collapse with the bottom margin of the parent block.
@@ -1181,7 +1204,7 @@ fn perform_final_layout_on_in_flow_children(
     #[cfg(not(feature = "float_layout"))]
     let has_active_floats = false;
 
-    for item in items.iter_mut() {
+    for (index, item) in items.iter_mut().enumerate() {
         if item.position.is_out_of_flow() {
             let x = match direction {
                 Direction::Ltr => resolved_content_box_inset.left,
@@ -1469,7 +1492,12 @@ fn perform_final_layout_on_in_flow_children(
                     .maybe_clamp(item.min_size, item.max_size)
             };
 
-            //
+            // A block container's first baseline is that of its first in-flow child that has one,
+            // so children are asked for it until one is found
+            let child_requested_baselines = RequestedBaselines::new(
+                requested_baselines.first() && first_baseline.is_none(),
+                requested_baselines.last() && Some(index) == last_in_flow_index,
+            );
 
             let inputs = LayoutInput {
                 run_mode,
@@ -1480,7 +1508,7 @@ fn perform_final_layout_on_in_flow_children(
                 parent_size,
                 available_space: available_space.map_width(|_| AvailableSpace::Definite(stretch_width)),
                 vertical_margins_are_collapsible: if item.is_in_same_bfc { Line::TRUE } else { Line::FALSE },
-                requested_baselines: RequestedBaselines::NONE,
+                requested_baselines: child_requested_baselines,
             };
 
             #[cfg(feature = "float_layout")]
@@ -1734,6 +1762,13 @@ fn perform_final_layout_on_in_flow_children(
                     child_first_baseline(item_layout.baselines.first(), item_layout.size.height, item.overflow.y);
                 first_baseline = child_baseline.map(|baseline| location.y - inset_offset.y + baseline);
             }
+            let child_last_baseline =
+                child_last_baseline(item_layout.baselines.last(), item_layout.size.height, item.overflow.y);
+            if let Some(baseline) = child_last_baseline {
+                last_baseline = Some(location.y - inset_offset.y + baseline);
+            } else if run_mode == RunMode::ComputeSize && requested_baselines.last() {
+                last_baseline_candidates.push((item.node_id, inputs, location.y - inset_offset.y));
+            }
 
             // Used auto margins include float-avoidance offsets, unlike the alignment margins above.
             #[cfg(feature = "float_layout")]
@@ -1855,5 +1890,22 @@ fn perform_final_layout_on_in_flow_children(
 
     committed_y_offset += resolved_content_box_inset.bottom + bottom_y_margin_offset;
     let content_height = f32_max(0.0, committed_y_offset);
-    (inflow_overflow_rect, content_height, first_child_top_margin_set, last_child_bottom_margin_set, first_baseline)
+
+    if last_baseline.is_none() {
+        for (node_id, inputs, top) in last_baseline_candidates.into_iter().rev() {
+            let inputs = LayoutInput { requested_baselines: RequestedBaselines::LAST, ..inputs };
+            if let Some(baseline) = tree.compute_child_layout(node_id, inputs).baselines.last() {
+                last_baseline = Some(top + baseline);
+                break;
+            }
+        }
+    }
+
+    (
+        inflow_overflow_rect,
+        content_height,
+        first_child_top_margin_set,
+        last_child_bottom_margin_set,
+        Baselines::new(first_baseline, last_baseline),
+    )
 }
