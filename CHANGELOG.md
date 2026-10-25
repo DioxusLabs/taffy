@@ -13,6 +13,14 @@
 
 ### Changes
 
+- `Baselines` now stores each baseline as a private `f32` (NaN for none) and exposes them through `Baselines::first()`/`Baselines::last()`; construct it with `Baselines::new`/`Baselines::from_first`/`Baselines::NONE`. `LayoutOutput` shrinks from 88 to 80 bytes.
+- `LayoutInput` gained a `requested_baselines: RequestedBaselines` field (`NONE`, `FIRST`, `LAST`, `BOTH`). A request (in either `RunMode`) must set the flags for the baselines it will read from the output; baselines that were not requested are not computed, so trees without baseline alignment or inline-level boxes do no baseline work. Block, Flexbox and Grid now compute first *and* last baselines, following the current spec rules (baseline-sharing group, then the first/last item with a baseline, then synthesised from the startmost/endmost item).
+- The cache records which baselines each entry (measurement or final layout) holds, and measurement entries store the baselines alongside the size, so a lookup that requests baselines only hits an entry that has them. `Cache` grows from 408 to 472 bytes.
+
+### Performance
+
+- Grid measures baseline-aligned items for its baseline shims with `ComputeSize` (requesting the first baseline) instead of `PerformLayout`.
+
 - Replace raw scrollable overflow rectangles in `Layout` and `LayoutOutput` with `ScrollableOverflow`, including physical reversed-scroll-origin flags and sign-restored `left()`, `right()`, `top()`, and `bottom()` accessors. Flex reverse directions and wrap-reverse now retain reachable negative overflow, while scroll containers clip unreachable overflow.
 - `BlockContext::place_floated_box` (and `FloatContext::place_floated_box`) now take a caller-defined `id: u64` for the box, which is stored on `PlacedFloatedBox`. `BlockContext::float_mark` and `BlockContext::floats_placed_since` read back the id and position of the floats placed since a mark, so that custom formatting contexts which place floats do not need to keep their own list of placements.
 - `BlockContext::find_content_slot` (and `FloatContext::find_content_slot`) now take the `height` of the content to be placed, and avoid the floats beside any part of that height rather than only those at its top edge. The returned `ContentSlot::height` is now how far down the slot's width stays valid (previously always infinite).
