@@ -4,7 +4,9 @@
 
 use crate::geometry::Size;
 use crate::style::AvailableSpace;
-use crate::tree::{CollapsibleMarginSet, LayoutInput, LayoutOutput, RunMode, SizingMode};
+use crate::tree::{
+    Baselines, CollapsibleMarginSet, LayoutInput, LayoutOutput, RequestedBaselines, RunMode, SizingMode,
+};
 use crate::RequestedAxis;
 
 /// The number of cache entries for each node in the tree
@@ -92,6 +94,8 @@ struct CacheKey {
     /// Whether each known dimension is definite. Normalized such that an axis
     /// without a known dimension is always `true`.
     known_dimensions_are_definite: Size<bool>,
+    /// The baselines a measure entry holds (the baselines requested when it was computed)
+    requested_baselines: RequestedBaselines,
 }
 
 impl CacheKey {
@@ -100,6 +104,13 @@ impl CacheKey {
     /// Return the parent size with the extra bits that encode the requested axis masked out
     fn parent_size(&self) -> u64 {
         self.parent_size & NON_SIGN_BITS_MASK
+    }
+
+    /// Whether the layout inputs encoded in `self` and `other` are the same (ignoring the baselines they hold)
+    fn inputs_match(&self, other: &CacheKey) -> bool {
+        self.kd_available_space == other.kd_available_space
+            && self.parent_size == other.parent_size
+            && self.known_dimensions_are_definite == other.known_dimensions_are_definite
     }
 
     /// Return the parent size with the extra bits that encode the requested axis masked out
@@ -137,6 +148,7 @@ impl From<&LayoutInput> for CacheKey {
             known_dimensions_are_definite: input
                 .known_dimensions_are_definite
                 .zip_map(input.known_dimensions, |is_definite, kd| is_definite || kd.is_none()),
+            requested_baselines: input.requested_baselines,
         }
     }
 }
@@ -198,6 +210,16 @@ pub fn cache_mode_change_evictions() -> usize {
     MODE_CHANGE_EVICTIONS.with(|count| count.get())
 }
 
+/// The result of a size measurement (`RunMode::ComputeSize`)
+#[derive(Debug, Clone, Copy, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize))]
+struct MeasureResult {
+    /// The measured size of the node
+    size: Size<f32>,
+    /// The requested baselines of the node
+    baselines: Baselines,
+}
+
 /// Cached intermediate layout results
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize))]
@@ -215,7 +237,7 @@ pub struct Cache {
     /// The cache entry for the node's final layout
     final_layout_entry: Option<CacheEntry<LayoutOutput>>,
     /// The cache entries for the node's preliminary size measurements
-    measure_entries: [Option<CacheEntry<Size<f32>>>; CACHE_SIZE],
+    measure_entries: [Option<CacheEntry<MeasureResult>>; CACHE_SIZE],
     /// Tracks which measure entries have been used since the eviction cursor last passed them
     recently_used_entries: u16,
     /// The next measure entry to consider replacing
@@ -238,7 +260,7 @@ impl Cache {
     /// Create a new empty cache
     pub const fn new() -> Self {
         /// Workaround for `Option<CacheEntry<_>>` not being `Copy` (required for array repeat expressions)
-        const NONE_MEASURE_ENTRY: Option<CacheEntry<Size<f32>>> = None;
+        const NONE_MEASURE_ENTRY: Option<CacheEntry<MeasureResult>> = None;
         Self {
             final_layout_entry: None,
             measure_entries: [NONE_MEASURE_ENTRY; CACHE_SIZE],
@@ -258,7 +280,8 @@ impl Cache {
         let key = CacheKey::from(input);
         match input.run_mode {
             RunMode::PerformLayout => {
-                self.final_layout_entry.as_ref().filter(|entry| entry.key == key).map(|e| e.content.clone())
+                // A full layout always carries both baselines, so the requested ones are irrelevant
+                self.final_layout_entry.as_ref().filter(|entry| entry.key.inputs_match(&key)).map(|e| e.content.clone())
             }
             RunMode::ComputeSize => {
                 for (index, entry) in self.measure_entries.iter().enumerate() {
@@ -267,9 +290,12 @@ impl Cache {
                         && entry.key.known_dimensions_are_definite == key.known_dimensions_are_definite
                         && (entry.key.x_axis_parent_size() == key.x_axis_parent_size())
                         && entry.key.size_is_valid_for(&key)
+                        && entry.key.requested_baselines.contains(key.requested_baselines)
                     {
                         self.recently_used_entries |= 1 << index;
-                        return Some(LayoutOutput::from_outer_size(entry.content));
+                        let mut output = LayoutOutput::from_outer_size(entry.content.size);
+                        output.baselines = entry.content.baselines.retain(key.requested_baselines);
+                        return Some(output);
                     }
                 }
 
@@ -300,8 +326,8 @@ impl Cache {
                 self.final_layout_entry = Some(CacheEntry { key, content: layout_output })
             }
             RunMode::ComputeSize => {
-                // Measure entries only store the size, and cache hits are reconstructed with
-                // `LayoutOutput::from_outer_size`, which resets the margin-collapse metadata
+                // Measure entries only store the size and baselines, and cache hits are reconstructed
+                // with `LayoutOutput::from_outer_size`, which resets the margin-collapse metadata
                 // (`top_margin`, `bottom_margin`, `margins_can_collapse_through`). Results that
                 // carry such metadata cannot be reconstructed from their size, so don't cache them.
                 if layout_output.margins_can_collapse_through
@@ -311,10 +337,18 @@ impl Cache {
                     return;
                 }
                 self.is_empty = false;
-                if let Some(index) =
-                    self.measure_entries.iter().position(|entry| entry.as_ref().is_some_and(|entry| entry.key == key))
+                let result = MeasureResult { size: layout_output.size, baselines: layout_output.baselines };
+                if let Some(index) = self
+                    .measure_entries
+                    .iter()
+                    .position(|entry| entry.as_ref().is_some_and(|entry| entry.key.inputs_match(&key)))
                 {
-                    self.measure_entries[index].as_mut().unwrap().content = layout_output.size;
+                    // Same inputs give the same baselines, so keep the ones the existing entry holds
+                    // and the new result lacks
+                    let entry = self.measure_entries[index].as_mut().unwrap();
+                    let kept = entry.content.baselines.retain(key.requested_baselines.complement());
+                    entry.key.requested_baselines = entry.key.requested_baselines.union(key.requested_baselines);
+                    entry.content = MeasureResult { size: result.size, baselines: result.baselines.union(kept) };
                     self.recently_used_entries |= 1 << index;
                     return;
                 }
@@ -326,7 +360,7 @@ impl Cache {
                     }
                 }
                 let entry_index = self.next_measure_entry as usize;
-                self.measure_entries[entry_index] = Some(CacheEntry { key, content: layout_output.size });
+                self.measure_entries[entry_index] = Some(CacheEntry { key, content: result });
                 self.recently_used_entries |= 1 << entry_index;
                 self.next_measure_entry += 1;
                 if self.next_measure_entry == CACHE_SIZE as u8 {
@@ -345,7 +379,7 @@ impl Cache {
         self.is_empty = true;
         self.final_layout_entry = None;
         /// Workaround for `Option<CacheEntry<_>>` not being `Copy` (required for array repeat expressions)
-        const NONE_MEASURE_ENTRY: Option<CacheEntry<Size<f32>>> = None;
+        const NONE_MEASURE_ENTRY: Option<CacheEntry<MeasureResult>> = None;
         self.measure_entries = [NONE_MEASURE_ENTRY; CACHE_SIZE];
         self.recently_used_entries = 0;
         self.next_measure_entry = 0;
@@ -382,6 +416,7 @@ mod tests {
             parent_size: Size::NONE,
             available_space: Size { width: AvailableSpace::MaxContent, height: AvailableSpace::MaxContent },
             vertical_margins_are_collapsible: Line::FALSE,
+            requested_baselines: RequestedBaselines::NONE,
         }
     }
 
@@ -551,5 +586,56 @@ mod tests {
         cache.clear();
         cache.store(&content_size, output(1.0));
         assert_eq!(cache_mode_change_evictions(), evictions + 1);
+    }
+
+    fn output_with_baselines(width: f32, first: Option<f32>, last: Option<f32>) -> LayoutOutput {
+        let mut output = output(width);
+        output.baselines = Baselines::new(first, last);
+        output
+    }
+
+    #[test]
+    fn measurements_only_satisfy_requests_for_baselines_they_hold() {
+        let mut cache = Cache::new();
+        let first = LayoutInput { requested_baselines: RequestedBaselines::FIRST, ..input(1.0) };
+        let last = LayoutInput { requested_baselines: RequestedBaselines::LAST, ..input(1.0) };
+        let both = LayoutInput { requested_baselines: RequestedBaselines::BOTH, ..input(1.0) };
+
+        cache.store(&input(1.0), output(1.0));
+        assert_eq!(cache.get(&input(1.0)), Some(output(1.0)));
+        assert_eq!(cache.get(&first), None);
+
+        cache.store(&first, output_with_baselines(1.0, Some(10.0), None));
+        assert_eq!(cache.measure_entries.iter().flatten().count(), 1);
+        assert_eq!(cache.get(&first), Some(output_with_baselines(1.0, Some(10.0), None)));
+        assert_eq!(cache.get(&input(1.0)), Some(output(1.0)));
+        assert_eq!(cache.get(&last), None);
+        assert_eq!(cache.get(&both), None);
+
+        // Storing the last baseline for the same inputs keeps the first baseline the entry already holds
+        cache.store(&last, output_with_baselines(1.0, None, Some(20.0)));
+        assert_eq!(cache.measure_entries.iter().flatten().count(), 1);
+        assert_eq!(cache.get(&both), Some(output_with_baselines(1.0, Some(10.0), Some(20.0))));
+        assert_eq!(cache.get(&first), Some(output_with_baselines(1.0, Some(10.0), None)));
+        assert_eq!(cache.get(&last), Some(output_with_baselines(1.0, None, Some(20.0))));
+    }
+
+    #[test]
+    fn full_layouts_are_retrieved_whatever_baselines_are_requested() {
+        let mut cache = Cache::new();
+        let layout = output_with_baselines(1.0, Some(10.0), Some(20.0));
+        cache.store(&perform_layout_input(100.0, 50.0), layout.clone());
+        for requested in [RequestedBaselines::NONE, RequestedBaselines::FIRST, RequestedBaselines::BOTH] {
+            let input = LayoutInput { requested_baselines: requested, ..perform_layout_input(100.0, 50.0) };
+            assert_eq!(cache.get(&input), Some(layout.clone()));
+        }
+    }
+
+    #[test]
+    #[cfg(target_pointer_width = "64")]
+    fn cache_size() {
+        assert_eq!(core::mem::size_of::<CacheKey>(), 24);
+        assert_eq!(core::mem::size_of::<Option<CacheEntry<MeasureResult>>>(), 40);
+        assert_eq!(core::mem::size_of::<Cache>(), 472);
     }
 }
