@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    When the flex lines overflow the container, align-content: stretch falls back to flex-start, which is the bottom edge in a wrap-reverse container.
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="width: 40px; height: 40px; flex-wrap: wrap-reverse; align-content: stretch;">
+  <div style="width: 40px; height: 30px; flex-shrink: 0;"></div>
+  <div style="width: 40px; height: 30px; flex-shrink: 0;"></div>
+</div>
+
+</body>
+</html>

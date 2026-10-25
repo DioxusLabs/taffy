@@ -1,0 +1,15 @@
+<test name="align_baseline_wrap_reverse_overflow_margin_bottom__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div box-sizing="content-box" direction="ltr" position="absolute" flex-wrap="wrap-reverse" align-items="baseline" width="40px" height="40px">
+      <text box-sizing="content-box" direction="ltr" position="relative" flex-grow="1" height="22px" margin-bottom="25px">
+        H
+      </text>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="40" height="40">
+      <node x="0" y="-7" width="40" height="22"/>
+    </node>
+  </expectations>
+</test>

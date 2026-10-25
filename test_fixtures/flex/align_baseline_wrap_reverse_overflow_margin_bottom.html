@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    An overflowing single line in a wrap-reverse container is packed to the cross-start (bottom) edge, so a baseline-aligned item's bottom margin overflows the container's top edge.
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="width: 40px; height: 40px; flex-wrap: wrap-reverse; align-items: baseline;">
+  <div style="height: 22px; flex-grow: 1; margin-bottom: 25px;">H</div>
+</div>
+
+</body>
+</html>
