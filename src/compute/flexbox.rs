@@ -2111,7 +2111,7 @@ fn calculate_children_base_lines(
             );
 
             let height = measured_size_and_baselines.size.height;
-            let baseline = child_first_baseline(measured_size_and_baselines.baselines.first, height, child.overflow.y)
+            let baseline = child_first_baseline(measured_size_and_baselines.baselines.first(), height, child.overflow.y)
                 .unwrap_or(height);
 
             child.baseline = baseline + child.margin.top;
@@ -2609,7 +2609,7 @@ fn calculate_flex_item(
         + cross_relative_inset;
 
     let inner_baseline =
-        child_first_baseline(layout_output.baselines.first, size.height, item.overflow.y).unwrap_or(size.height);
+        child_first_baseline(layout_output.baselines.first(), size.height, item.overflow.y).unwrap_or(size.height);
     if direction.is_row() {
         let baseline_offset_cross =
             total_offset_cross + item.offset_cross + effective_line_offset_cross + item.margin.cross_start(direction);

@@ -450,7 +450,7 @@ pub(super) fn align_and_position_item(
     #[cfg(not(feature = "content_size"))]
     let contribution = Rect::ZERO;
 
-    let baseline = child_first_baseline(layout_output.baselines.first, height, overflow.y);
+    let baseline = child_first_baseline(layout_output.baselines.first(), height, overflow.y);
     (contribution, y_without_relative_offset, height, baseline)
 }
 

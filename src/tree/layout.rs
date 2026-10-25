@@ -203,22 +203,66 @@ impl LayoutInput {
 ///
 /// A baseline is the line on which text sits. See <https://www.w3.org/TR/css-writing-modes-3/#intro-baselines>
 /// for details.
-#[derive(Debug, Copy, Clone, PartialEq)]
+///
+/// Each baseline is stored as an `f32`, with `NaN` encoding the absence of a baseline.
+#[derive(Debug, Copy, Clone)]
 #[cfg_attr(feature = "serde", derive(Serialize))]
 pub struct Baselines {
-    /// The first baseline of the node, if any
-    pub first: Option<f32>,
-    /// The last baseline of the node, if any
-    pub last: Option<f32>,
+    /// The first baseline of the node (`NaN` if none)
+    first: f32,
+    /// The last baseline of the node (`NaN` if none)
+    last: f32,
 }
 
 impl Baselines {
     /// A `Baselines` with neither a first nor a last baseline
-    pub const NONE: Self = Self { first: None, last: None };
+    pub const NONE: Self = Self { first: f32::NAN, last: f32::NAN };
+
+    /// Create a `Baselines` from a first and a last baseline
+    pub const fn new(first: Option<f32>, last: Option<f32>) -> Self {
+        Self { first: Self::encode(first), last: Self::encode(last) }
+    }
 
     /// Create a `Baselines` from just a first baseline
     pub const fn from_first(first: Option<f32>) -> Self {
-        Self { first, last: None }
+        Self::new(first, None)
+    }
+
+    /// The first baseline of the node, if any
+    #[inline]
+    pub fn first(self) -> Option<f32> {
+        Self::decode(self.first)
+    }
+
+    /// The last baseline of the node, if any
+    #[inline]
+    pub fn last(self) -> Option<f32> {
+        Self::decode(self.last)
+    }
+
+    /// Encode an optional baseline, with `NaN` representing `None`
+    const fn encode(baseline: Option<f32>) -> f32 {
+        match baseline {
+            Some(baseline) => baseline,
+            None => f32::NAN,
+        }
+    }
+
+    /// Decode a baseline encoded by [`Self::encode`]
+    #[inline]
+    fn decode(baseline: f32) -> Option<f32> {
+        if baseline.is_nan() {
+            None
+        } else {
+            Some(baseline)
+        }
+    }
+}
+
+impl PartialEq for Baselines {
+    fn eq(&self, other: &Self) -> bool {
+        // Bitwise comparison so that two absent (`NaN`) baselines compare equal
+        self.first.to_bits() == other.first.to_bits() && self.last.to_bits() == other.last.to_bits()
     }
 }
 

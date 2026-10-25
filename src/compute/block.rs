@@ -1728,7 +1728,7 @@ fn perform_final_layout_on_in_flow_children(
             // that has one. The child's relative offset does not affect it.
             if first_baseline.is_none() {
                 let child_baseline =
-                    child_first_baseline(item_layout.baselines.first, item_layout.size.height, item.overflow.y);
+                    child_first_baseline(item_layout.baselines.first(), item_layout.size.height, item.overflow.y);
                 first_baseline = child_baseline.map(|baseline| location.y - inset_offset.y + baseline);
             }
 

@@ -510,7 +510,7 @@ fn resolve_item_baselines(
             );
 
             let height = measured_size_and_baselines.size.height;
-            let baseline = child_first_baseline(measured_size_and_baselines.baselines.first, height, item.overflow.y)
+            let baseline = child_first_baseline(measured_size_and_baselines.baselines.first(), height, item.overflow.y)
                 .unwrap_or(height);
 
             item.baseline = Some(baseline);
