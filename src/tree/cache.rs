@@ -94,7 +94,7 @@ struct CacheKey {
     /// Whether each known dimension is definite. Normalized such that an axis
     /// without a known dimension is always `true`.
     known_dimensions_are_definite: Size<bool>,
-    /// The baselines a measure entry holds (the baselines requested when it was computed)
+    /// The baselines the entry holds (the baselines requested when it was computed)
     requested_baselines: RequestedBaselines,
 }
 
@@ -279,10 +279,17 @@ impl Cache {
         }
         let key = CacheKey::from(input);
         match input.run_mode {
-            RunMode::PerformLayout => {
-                // A full layout always carries both baselines, so the requested ones are irrelevant
-                self.final_layout_entry.as_ref().filter(|entry| entry.key.inputs_match(&key)).map(|e| e.content.clone())
-            }
+            RunMode::PerformLayout => self
+                .final_layout_entry
+                .as_ref()
+                .filter(|entry| {
+                    entry.key.inputs_match(&key) && entry.key.requested_baselines.contains(key.requested_baselines)
+                })
+                .map(|entry| {
+                    let mut output = entry.content.clone();
+                    output.baselines = output.baselines.retain(key.requested_baselines);
+                    output
+                }),
             RunMode::ComputeSize => {
                 for (index, entry) in self.measure_entries.iter().enumerate() {
                     let Some(entry) = entry else { continue };
@@ -621,14 +628,20 @@ mod tests {
     }
 
     #[test]
-    fn full_layouts_are_retrieved_whatever_baselines_are_requested() {
+    fn full_layouts_only_satisfy_requests_for_baselines_they_hold() {
         let mut cache = Cache::new();
+        let input = |requested| LayoutInput { requested_baselines: requested, ..perform_layout_input(100.0, 50.0) };
+
+        cache.store(&input(RequestedBaselines::FIRST), output_with_baselines(1.0, Some(10.0), None));
+        assert_eq!(cache.get(&input(RequestedBaselines::NONE)), Some(output(1.0)));
+        assert_eq!(cache.get(&input(RequestedBaselines::FIRST)), Some(output_with_baselines(1.0, Some(10.0), None)));
+        assert_eq!(cache.get(&input(RequestedBaselines::LAST)), None);
+        assert_eq!(cache.get(&input(RequestedBaselines::BOTH)), None);
+
         let layout = output_with_baselines(1.0, Some(10.0), Some(20.0));
-        cache.store(&perform_layout_input(100.0, 50.0), layout.clone());
-        for requested in [RequestedBaselines::NONE, RequestedBaselines::FIRST, RequestedBaselines::BOTH] {
-            let input = LayoutInput { requested_baselines: requested, ..perform_layout_input(100.0, 50.0) };
-            assert_eq!(cache.get(&input), Some(layout.clone()));
-        }
+        cache.store(&input(RequestedBaselines::BOTH), layout.clone());
+        assert_eq!(cache.get(&input(RequestedBaselines::LAST)), Some(output_with_baselines(1.0, None, Some(20.0))));
+        assert_eq!(cache.get(&input(RequestedBaselines::BOTH)), Some(layout));
     }
 
     #[test]
