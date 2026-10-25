@@ -13,7 +13,7 @@ use crate::style::{
 use crate::tree::DetailedLayoutInfo;
 use crate::tree::{
     AxisStaticPosition, Layout, LayoutContainingBlock, LayoutInput, LayoutOutput, LayoutPartialTreeExt, NodeId,
-    OofCandidate, OofCandidates, OofPositioningArea, RequestedAxis, RunMode, SizingMode,
+    OofCandidate, OofCandidates, OofPositioningArea, RequestedAxis, RequestedBaselines, RunMode, SizingMode,
 };
 use crate::util::sys::{f32_max, Vec};
 use crate::util::{MaybeMath, MaybeResolve, ResolveOrZero};
@@ -664,6 +664,7 @@ pub(crate) fn layout_oof_box<Tree: LayoutContainingBlock>(
         axis: RequestedAxis::Both,
         run_mode: RunMode::PerformLayout,
         vertical_margins_are_collapsible: Line::FALSE,
+        requested_baselines: RequestedBaselines::NONE,
     };
     before_layout(tree, &layout_input);
     let mut layout_output = tree.compute_child_layout(candidate.node, layout_input);

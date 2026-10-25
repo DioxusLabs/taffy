@@ -119,6 +119,67 @@ impl TryFrom<RequestedAxis> for AbsoluteAxis {
     }
 }
 
+/// Which of a node's baselines a caller of [`RunMode::ComputeSize`] layout will read from the
+/// [`LayoutOutput`]. Layout algorithms may skip computing unrequested baselines, and a `ComputeSize`
+/// output (including a cached one) only carries the requested ones.
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(Serialize))]
+pub struct RequestedBaselines(u8);
+
+impl RequestedBaselines {
+    /// No baselines are requested
+    pub const NONE: Self = Self(0);
+    /// The first baseline is requested
+    pub const FIRST: Self = Self(0b01);
+    /// The last baseline is requested
+    pub const LAST: Self = Self(0b10);
+    /// Both baselines are requested
+    pub const BOTH: Self = Self(0b11);
+
+    /// Whether no baselines are requested
+    #[inline]
+    pub const fn is_empty(self) -> bool {
+        self.0 == 0
+    }
+
+    /// Whether the first baseline is requested
+    #[inline]
+    pub const fn first(self) -> bool {
+        self.0 & Self::FIRST.0 != 0
+    }
+
+    /// Whether the last baseline is requested
+    #[inline]
+    pub const fn last(self) -> bool {
+        self.0 & Self::LAST.0 != 0
+    }
+
+    /// Whether every baseline in `other` is also requested by `self`
+    #[inline]
+    pub const fn contains(self, other: Self) -> bool {
+        self.0 & other.0 == other.0
+    }
+
+    /// The baselines that are not requested by `self`
+    #[inline]
+    pub const fn complement(self) -> Self {
+        Self(!self.0 & Self::BOTH.0)
+    }
+
+    /// The baselines requested by either `self` or `other`
+    #[inline]
+    pub const fn union(self, other: Self) -> Self {
+        Self(self.0 | other.0)
+    }
+}
+
+impl core::ops::BitOr for RequestedBaselines {
+    type Output = Self;
+    fn bitor(self, rhs: Self) -> Self {
+        self.union(rhs)
+    }
+}
+
 /// A struct containing the inputs constraints/hints for laying out a node, which are passed in by the parent
 #[derive(Debug, Copy, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize))]
@@ -161,6 +222,9 @@ pub struct LayoutInput {
     pub available_space: Size<AvailableSpace>,
     /// Specific to CSS Block layout. Used for correctly computing margin collapsing. You probably want to set this to `Line::FALSE`.
     pub vertical_margins_are_collapsible: Line<bool>,
+    /// Which of the node's baselines will be read from the output of a [`RunMode::ComputeSize`] layout.
+    /// Ignored by [`RunMode::PerformLayout`], whose output always carries both baselines.
+    pub requested_baselines: RequestedBaselines,
 }
 
 impl LayoutInput {
@@ -176,6 +240,7 @@ impl LayoutInput {
         sizing_mode: SizingMode::InherentSize,
         axis: RequestedAxis::Both,
         vertical_margins_are_collapsible: Line::FALSE,
+        requested_baselines: RequestedBaselines::NONE,
     };
 
     /// Swap the horizontal and vertical axes of every per-axis input.
@@ -194,6 +259,7 @@ impl LayoutInput {
             parent_size: self.parent_size.transpose(),
             available_space: self.available_space.transpose(),
             vertical_margins_are_collapsible: Line::FALSE,
+            requested_baselines: RequestedBaselines::NONE,
         }
     }
 }
@@ -238,6 +304,24 @@ impl Baselines {
     #[inline]
     pub fn last(self) -> Option<f32> {
         Self::decode(self.last)
+    }
+
+    /// The baselines of `self`, with those it lacks taken from `other`
+    #[inline]
+    pub fn union(self, other: Self) -> Self {
+        Self {
+            first: if self.first.is_nan() { other.first } else { self.first },
+            last: if self.last.is_nan() { other.last } else { self.last },
+        }
+    }
+
+    /// Drop the baselines that are not in `requested`
+    #[inline]
+    pub fn retain(self, requested: RequestedBaselines) -> Self {
+        Self {
+            first: if requested.first() { self.first } else { f32::NAN },
+            last: if requested.last() { self.last } else { f32::NAN },
+        }
     }
 
     /// Encode an optional baseline, with `NaN` representing `None`
@@ -520,7 +604,8 @@ pub struct LayoutOutput {
     /// The scrollable overflow rectangle of the node's content
     /// (see [`Layout::scrollable_overflow_rect`] for the coordinate conventions)
     pub scrollable_overflow_rect: Rect<f32>,
-    /// The first and last baselines of the node in the horizontal axis, if any
+    /// The first and last baselines of the node in the horizontal axis, if any. The output of a
+    /// [`RunMode::ComputeSize`] layout only carries the baselines in [`LayoutInput::requested_baselines`].
     pub baselines: Baselines,
     /// Top margin that can be collapsed with. This is used for CSS block layout and can be set to
     /// `CollapsibleMarginSet::ZERO` for other layout modes that don't support margin collapsing

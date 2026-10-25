@@ -58,7 +58,8 @@ use crate::geometry::{Line, Point, Size};
 use crate::style::{AvailableSpace, ContainingBlockClaims, CoreStyle, Overflow, Position};
 use crate::tree::{
     AxisStaticAlign, AxisStaticEdge, AxisStaticPosition, Layout, LayoutInput, LayoutOutput, LayoutPartialTree,
-    LayoutPartialTreeExt, NodeId, OofCandidate, OofCandidates, RequestedAxis, RoundTree, RunMode, SizingMode,
+    LayoutPartialTreeExt, NodeId, OofCandidate, OofCandidates, RequestedAxis, RequestedBaselines, RoundTree, RunMode,
+    SizingMode,
 };
 use crate::util::debug::{debug_log, debug_log_node, debug_pop_node, debug_push_node};
 use crate::util::sys::{round, Vec};
@@ -264,6 +265,7 @@ fn compute_in_flow_root_layout(
         axis: RequestedAxis::Both,
         run_mode: RunMode::PerformLayout,
         vertical_margins_are_collapsible: Line::FALSE,
+        requested_baselines: RequestedBaselines::NONE,
     };
     *root_is_cached = tree.cache_get(root, &inputs).is_some();
 
@@ -351,7 +353,13 @@ where
 
     debug_log_node!(inputs);
 
-    let computed_size_and_baselines = compute_uncached(tree, node, inputs);
+    let mut computed_size_and_baselines = compute_uncached(tree, node, inputs);
+    if inputs.run_mode == RunMode::ComputeSize {
+        // Algorithms may compute more baselines than were requested; drop them so that a cache
+        // hit (which only holds the requested baselines) and a cache miss return the same output
+        computed_size_and_baselines.baselines =
+            computed_size_and_baselines.baselines.retain(inputs.requested_baselines);
+    }
 
     // Cache result
     tree.cache_store(node, &inputs, computed_size_and_baselines.clone());

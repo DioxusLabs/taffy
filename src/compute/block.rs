@@ -9,7 +9,9 @@ use crate::tree::{
     AxisStaticPosition, LayoutPartialTree, LayoutPartialTreeExt, NodeId, OofCandidate, OofCandidates,
     OofPositioningArea,
 };
-use crate::tree::{Baselines, CollapsibleMarginSet, Layout, LayoutInput, LayoutOutput, RunMode, SizingMode};
+use crate::tree::{
+    Baselines, CollapsibleMarginSet, Layout, LayoutInput, LayoutOutput, RequestedBaselines, RunMode, SizingMode,
+};
 use crate::util::debug::debug_log;
 use crate::util::sys::f32_max;
 use crate::util::sys::Vec;
@@ -1478,6 +1480,7 @@ fn perform_final_layout_on_in_flow_children(
                 parent_size,
                 available_space: available_space.map_width(|_| AvailableSpace::Definite(stretch_width)),
                 vertical_margins_are_collapsible: if item.is_in_same_bfc { Line::TRUE } else { Line::FALSE },
+                requested_baselines: RequestedBaselines::NONE,
             };
 
             #[cfg(feature = "float_layout")]

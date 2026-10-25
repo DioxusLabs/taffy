@@ -13,7 +13,9 @@ use crate::tree::{
     AxisStaticAlign, AxisStaticEdge, AxisStaticPosition, LayoutFlexboxContainer, LayoutPartialTreeExt, NodeId,
     OofPositioningArea,
 };
-use crate::tree::{Baselines, Layout, LayoutInput, LayoutOutput, OofCandidate, OofCandidates, RunMode, SizingMode};
+use crate::tree::{
+    Baselines, Layout, LayoutInput, LayoutOutput, OofCandidate, OofCandidates, RequestedBaselines, RunMode, SizingMode,
+};
 use crate::util::debug::debug_log;
 use crate::util::sys::{f32_max, f32_min, new_vec_with_capacity, Vec};
 use crate::util::MaybeMath;
@@ -2027,6 +2029,7 @@ fn determine_hypothetical_cross_size(
                         height: if constants.is_row { child_available_cross } else { child_available_main },
                     },
                     vertical_margins_are_collapsible: Line::FALSE,
+                    requested_baselines: RequestedBaselines::NONE,
                 },
             )
             .size
@@ -2107,12 +2110,14 @@ fn calculate_children_base_lines(
                     .maybe_sub(child.margin.sum_axes())
                     .maybe_max(Size::ZERO),
                     vertical_margins_are_collapsible: Line::FALSE,
+                    requested_baselines: RequestedBaselines::NONE,
                 },
             );
 
             let height = measured_size_and_baselines.size.height;
-            let baseline = child_first_baseline(measured_size_and_baselines.baselines.first(), height, child.overflow.y)
-                .unwrap_or(height);
+            let baseline =
+                child_first_baseline(measured_size_and_baselines.baselines.first(), height, child.overflow.y)
+                    .unwrap_or(height);
 
             child.baseline = baseline + child.margin.top;
         }
@@ -2581,6 +2586,7 @@ fn calculate_flex_item(
             // The available space passed to the child excludes the child's margins
             available_space: (container_size - item.margin.sum_axes()).map(|s| s.max(0.0).into()),
             vertical_margins_are_collapsible: Line::FALSE,
+            requested_baselines: RequestedBaselines::NONE,
         },
     );
     let LayoutOutput {
