@@ -16,6 +16,7 @@
 - Flexbox: a column flex container's baseline taken from a scroll container item is now clamped to the item's border box (matching row flex containers, Block and Grid).
 - Flexbox: fix the intrinsic main size of a flex container that has an item with a negative main-axis margin and a flex basis equal to its padding and border. The margin was ignored, and for some padding and border values a floating-point rounding error made the container tens of millions of pixels large.
 - Grid: a percentage `max-width`/`max-height` no longer shrinks the minimum contribution of a compressible replaced item that is not a replaced element (e.g. `<input>` with `width: 100px; max-width: 100%`). Only replaced elements resolve it against zero, matching browsers.
+- `TaffyTree`: hiding an ancestor of an `absolute` or `fixed` box with `display: none` now resets the box's rounded layout. Previously, `TaffyTree::layout` kept returning the box's layout from the last pass in which it was visible.
 
 ## 0.15.0
 
