@@ -506,6 +506,31 @@ pub struct LayoutOutput {
     pub oof_positioning_area: Option<OofPositioningArea>,
 }
 
+/// A single child layout computation for [`LayoutPartialTree::compute_child_layouts`](crate::LayoutPartialTree::compute_child_layouts):
+/// the child `node` to compute, the `input` to compute it with, and a slot for the resulting `output`.
+#[derive(Debug, Clone, PartialEq)]
+pub struct ChildLayoutJob {
+    /// The child node to size or lay out
+    pub node: NodeId,
+    /// The constraints to size or lay out the child with
+    pub input: LayoutInput,
+    /// The result of the computation. This is written by `compute_child_layouts`. Until then it is `LayoutOutput::HIDDEN`.
+    pub output: LayoutOutput,
+    /// Whether the child is a block that belongs to the same Block Formatting Context as its parent.
+    ///
+    /// This is only ever `true` for jobs passed to
+    /// [`LayoutBlockContainer::compute_block_child_layouts`](crate::LayoutBlockContainer::compute_block_child_layouts).
+    pub is_in_parent_bfc: bool,
+}
+
+impl ChildLayoutJob {
+    /// Create a job whose output has not yet been computed
+    #[inline(always)]
+    pub fn new(node: NodeId, input: LayoutInput) -> Self {
+        Self { node, input, output: LayoutOutput::HIDDEN, is_in_parent_bfc: false }
+    }
+}
+
 impl LayoutOutput {
     /// An all-zero `LayoutOutput` for hidden nodes
     pub const HIDDEN: Self = Self {
