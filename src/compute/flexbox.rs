@@ -526,7 +526,7 @@ fn compute_preliminary(tree: &mut impl LayoutFlexboxContainer, node: NodeId, inp
 
     // Do a final layout pass and gather the resulting layouts
     debug_log!("final_layout_pass");
-    let inflow_overflow_rect = final_layout_pass(tree, &mut flex_lines, &constants);
+    let inflow_overflow_rect = final_layout_pass(tree, &mut flex_lines, &constants, inputs.requested_baselines);
 
     // Collect out-of-flow candidates in document order (direct out-of-flow children interleaved
     // with candidates bubbled from in-flow children's subtrees). These are laid out by the
@@ -562,7 +562,7 @@ fn compute_preliminary(tree: &mut impl LayoutFlexboxContainer, node: NodeId, inp
     }
 
     // 8.5. Flex Container Baselines
-    let baselines = determine_container_baselines(tree, &flex_lines, &constants, run_mode, RequestedBaselines::BOTH);
+    let baselines = determine_container_baselines(tree, &flex_lines, &constants, run_mode, inputs.requested_baselines);
 
     let mut output = LayoutOutput::from_sizes_and_baselines(constants.container_size, inflow_overflow_rect, baselines);
     output.oof_candidates = candidates;
@@ -2549,6 +2549,7 @@ fn align_flex_lines_per_align_content(flex_lines: &mut [FlexLine], constants: &A
 fn calculate_flex_item(
     tree: &mut impl LayoutFlexboxContainer,
     item: &mut FlexItem,
+    requested_baselines: RequestedBaselines,
     total_offset_main: &mut f32,
     total_offset_cross: f32,
     line_offset_cross: f32,
@@ -2573,7 +2574,7 @@ fn calculate_flex_item(
             // The available space passed to the child excludes the child's margins
             available_space: (container_size - item.margin.sum_axes()).map(|s| s.max(0.0).into()),
             vertical_margins_are_collapsible: Line::FALSE,
-            requested_baselines: RequestedBaselines::NONE,
+            requested_baselines,
         },
     );
     let LayoutOutput {
@@ -2807,6 +2808,7 @@ fn item_baselines(
 fn calculate_layout_line(
     tree: &mut impl LayoutFlexboxContainer,
     line: &mut FlexLine,
+    requested_baselines: RequestedBaselines,
     total_offset_cross: &mut f32,
     #[cfg(feature = "content_size")] overflow_rect: &mut Rect<f32>,
     #[cfg(feature = "content_size")] border: Rect<f32>,
@@ -2828,11 +2830,26 @@ fn calculate_layout_line(
         *total_offset_cross -= line_offset_cross + line.cross_size;
     }
 
+    // In a row any item may provide the line's baselines (the first item that has one does); in a
+    // column only the visually startmost (or endmost) item does. Items participating in baseline
+    // alignment provide their first baseline for the line's last baseline too.
+    let item_count = line.items.len();
+    let (startmost, endmost) =
+        if direction.is_reverse() { (item_count.wrapping_sub(1), 0) } else { (0, item_count.wrapping_sub(1)) };
+    let item_requested_baselines = |index: usize, item: &FlexItem| {
+        RequestedBaselines::new(
+            (requested_baselines.first() && (direction.is_row() || index == startmost))
+                || (requested_baselines.last() && item.participates_in_baseline_alignment(direction)),
+            requested_baselines.last() && (direction.is_row() || index == endmost),
+        )
+    };
+
     if direction.is_reverse() {
-        for item in line.items.iter_mut().rev() {
+        for (index, item) in line.items.iter_mut().enumerate().rev() {
             calculate_flex_item(
                 tree,
                 item,
+                item_requested_baselines(index, item),
                 &mut total_offset_main,
                 *total_offset_cross,
                 line_offset_cross,
@@ -2844,10 +2861,11 @@ fn calculate_layout_line(
             );
         }
     } else {
-        for item in line.items.iter_mut() {
+        for (index, item) in line.items.iter_mut().enumerate() {
             calculate_flex_item(
                 tree,
                 item,
+                item_requested_baselines(index, item),
                 &mut total_offset_main,
                 *total_offset_cross,
                 line_offset_cross,
@@ -2871,6 +2889,7 @@ fn final_layout_pass(
     tree: &mut impl LayoutFlexboxContainer,
     flex_lines: &mut [FlexLine],
     constants: &AlgoConstants,
+    requested_baselines: RequestedBaselines,
 ) -> Rect<f32> {
     let mut total_offset_cross = if constants.is_column && constants.layout_direction.is_rtl() {
         constants.container_size.width - constants.content_box_inset.cross_end(constants.dir)
@@ -2881,11 +2900,24 @@ fn final_layout_pass(
     #[cfg_attr(not(feature = "content_size"), allow(unused_mut))]
     let mut overflow_rect = Rect::ZERO;
 
+    // Only the visually startmost line can provide the container's first baseline and only the
+    // endmost line its last baseline, so only their items are asked for baselines
+    let line_count = flex_lines.len();
+    let (startmost, endmost) =
+        if constants.is_wrap_reverse { (line_count.wrapping_sub(1), 0) } else { (0, line_count.wrapping_sub(1)) };
+    let line_requested_baselines = |index: usize| {
+        RequestedBaselines::new(
+            requested_baselines.first() && index == startmost,
+            requested_baselines.last() && index == endmost,
+        )
+    };
+
     if constants.is_wrap_reverse {
-        for line in flex_lines.iter_mut().rev() {
+        for (index, line) in flex_lines.iter_mut().enumerate().rev() {
             calculate_layout_line(
                 tree,
                 line,
+                line_requested_baselines(index),
                 &mut total_offset_cross,
                 #[cfg(feature = "content_size")]
                 &mut overflow_rect,
@@ -2895,10 +2927,11 @@ fn final_layout_pass(
             );
         }
     } else {
-        for line in flex_lines.iter_mut() {
+        for (index, line) in flex_lines.iter_mut().enumerate() {
             calculate_layout_line(
                 tree,
                 line,
+                line_requested_baselines(index),
                 &mut total_offset_cross,
                 #[cfg(feature = "content_size")]
                 &mut overflow_rect,

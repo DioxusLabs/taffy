@@ -227,8 +227,8 @@ pub struct LayoutInput {
     pub available_space: Size<AvailableSpace>,
     /// Specific to CSS Block layout. Used for correctly computing margin collapsing. You probably want to set this to `Line::FALSE`.
     pub vertical_margins_are_collapsible: Line<bool>,
-    /// Which of the node's baselines will be read from the output of a [`RunMode::ComputeSize`] layout.
-    /// Ignored by [`RunMode::PerformLayout`], whose output always carries both baselines.
+    /// Which of the node's baselines will be read from its [`LayoutOutput`]. Baselines that were not
+    /// requested are not computed and never present in the output, whatever the [`RunMode`].
     pub requested_baselines: RequestedBaselines,
 }
 

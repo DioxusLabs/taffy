@@ -522,9 +522,7 @@ fn compute_inner(
     let LayoutInput {
         known_dimensions, parent_size, available_space, run_mode, vertical_margins_are_collapsible, ..
     } = inputs;
-    // A full layout always computes both baselines
-    let requested_baselines =
-        if run_mode == RunMode::PerformLayout { RequestedBaselines::BOTH } else { inputs.requested_baselines };
+    let requested_baselines = inputs.requested_baselines;
 
     let style = tree.get_block_container_style(node_id);
     let raw_padding = style.padding();
@@ -1192,9 +1190,9 @@ fn perform_final_layout_on_in_flow_children(
     #[cfg(not(feature = "float_layout"))]
     let is_in_flow = |item: &BlockItem| !item.position.is_out_of_flow();
     let last_in_flow_index = items.iter().rposition(is_in_flow);
-    // The last baseline is that of the last in-flow child that has one. When computing the size
-    // only the last in-flow child is asked for it; if it has none, earlier children are re-measured
-    // (in reverse) with the request until one is found. These are their inputs and top edges.
+    // The last baseline is that of the last in-flow child that has one. Only the last in-flow child
+    // is asked for it; if it has none, earlier children are re-measured (in reverse) with the
+    // request until one is found. These are their inputs and top edges.
     let mut last_baseline_candidates: Vec<(NodeId, LayoutInput, f32)> = Vec::new();
     // Whether the active margin set contains the margins of a self-collapsing element with
     // clearance. Such margins collapse with the margins of following siblings but the resulting
@@ -1768,7 +1766,7 @@ fn perform_final_layout_on_in_flow_children(
                 child_last_baseline(item_layout.baselines.last(), item_layout.size.height, item.overflow.y);
             if let Some(baseline) = child_last_baseline {
                 last_baseline = Some(location.y - inset_offset.y + baseline);
-            } else if run_mode == RunMode::ComputeSize && requested_baselines.last() {
+            } else if requested_baselines.last() {
                 last_baseline_candidates.push((item.node_id, inputs, location.y - inset_offset.y));
             }
 
@@ -1895,7 +1893,10 @@ fn perform_final_layout_on_in_flow_children(
 
     if last_baseline.is_none() {
         for (node_id, inputs, top) in last_baseline_candidates.into_iter().rev() {
-            let inputs = LayoutInput { requested_baselines: RequestedBaselines::LAST, ..inputs };
+            // A measurement suffices for the baseline and, unlike a second full layout, does not
+            // evict the child's final layout cache entry
+            let inputs =
+                LayoutInput { run_mode: RunMode::ComputeSize, requested_baselines: RequestedBaselines::LAST, ..inputs };
             if let Some(baseline) = tree.compute_child_layout(node_id, inputs).baselines.last() {
                 last_baseline = Some(top + baseline);
                 break;

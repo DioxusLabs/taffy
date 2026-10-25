@@ -729,8 +729,27 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     // by the out-of-flow positioning pass (`compute_oof_layout`), which runs after this algorithm.
     let mut oof_candidates = OofCandidates::new();
 
+    // Only items in the first row can provide the container's first baseline and only items in the
+    // last row its last baseline (for which items participating in baseline alignment provide their
+    // first baseline), so only those items are asked for baselines
+    let requested_baselines = inputs.requested_baselines;
+    let (first_row, last_row) = if requested_baselines.is_empty() {
+        (0, 0)
+    } else {
+        (
+            items.iter().map(|item| item.row_indexes.start).min().unwrap_or(0),
+            items.iter().map(|item| item.row_indexes.end).max().unwrap_or(0),
+        )
+    };
+
     // Position in-flow children (stored in items vector)
     for (index, item) in items.iter_mut().enumerate() {
+        let in_last_row = requested_baselines.last() && item.row_indexes.end == last_row;
+        let item_requested_baselines = RequestedBaselines::new(
+            (requested_baselines.first() && item.row_indexes.start == first_row)
+                || (in_last_row && item.row_indexes.start + 1 == last_row && item.participates_in_baseline_alignment()),
+            in_last_row,
+        );
         let grid_area = item_grid_area(item, &rows, &columns, direction);
         #[cfg_attr(not(feature = "content_size"), allow(unused_variables))]
         let (overflow_contribution, y_position, height, baselines) = align_and_position_item(
@@ -748,7 +767,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
             is_scroll_container,
             &mut item.oof_candidates,
             RunMode::PerformLayout,
-            RequestedBaselines::NONE,
+            item_requested_baselines,
         );
         item.y_position = y_position;
         item.height = height;
@@ -885,7 +904,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
             #[cfg(feature = "content_size")]
             is_scroll_container,
             run_mode,
-            RequestedBaselines::BOTH,
+            inputs.requested_baselines,
         )
     };
 

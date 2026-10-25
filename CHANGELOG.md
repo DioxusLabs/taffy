@@ -10,8 +10,8 @@
 ### Changes
 
 - `Baselines` now stores each baseline as a private `f32` (NaN for none) and exposes them through `Baselines::first()`/`Baselines::last()`; construct it with `Baselines::new`/`Baselines::from_first`/`Baselines::NONE`. `LayoutOutput` shrinks from 88 to 80 bytes.
-- `LayoutInput` gained a `requested_baselines: RequestedBaselines` field (`NONE`, `FIRST`, `LAST`, `BOTH`). A `ComputeSize` request must set the flags for the baselines it will read; `PerformLayout` always produces both. Block, Flexbox and Grid now compute first *and* last baselines, following the current spec rules (baseline-sharing group, then the first/last item with a baseline, then synthesised from the startmost/endmost item).
-- The measurement cache stores the computed baselines alongside the size and records which baselines each entry holds, so a size lookup that requests baselines only hits an entry that has them. `Cache` grows from 408 to 472 bytes.
+- `LayoutInput` gained a `requested_baselines: RequestedBaselines` field (`NONE`, `FIRST`, `LAST`, `BOTH`). A request (in either `RunMode`) must set the flags for the baselines it will read from the output; baselines that were not requested are not computed, so trees without baseline alignment or inline-level boxes do no baseline work. Block, Flexbox and Grid now compute first *and* last baselines, following the current spec rules (baseline-sharing group, then the first/last item with a baseline, then synthesised from the startmost/endmost item).
+- The cache records which baselines each entry (measurement or final layout) holds, and measurement entries store the baselines alongside the size, so a lookup that requests baselines only hits an entry that has them. `Cache` grows from 408 to 472 bytes.
 
 ### Performance
 

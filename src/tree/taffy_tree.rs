@@ -1604,9 +1604,11 @@ mod tests {
         assert_eq!(none, Baselines::NONE);
         let first = compute_baselines(&mut tree, container, RunMode::ComputeSize, RequestedBaselines::FIRST);
         let last = compute_baselines(&mut tree, container, RunMode::ComputeSize, RequestedBaselines::LAST);
-        let layout = compute_baselines(&mut tree, container, RunMode::PerformLayout, RequestedBaselines::NONE);
+        let unrequested = compute_baselines(&mut tree, container, RunMode::PerformLayout, RequestedBaselines::NONE);
+        assert_eq!(unrequested, Baselines::NONE, "PerformLayout computes no baselines unless asked");
+        let layout = compute_baselines(&mut tree, container, RunMode::PerformLayout, RequestedBaselines::BOTH);
 
-        assert!(layout.first().is_some() && layout.last().is_some(), "PerformLayout returns both baselines");
+        assert!(layout.first().is_some() && layout.last().is_some(), "PerformLayout returns the requested baselines");
         assert_eq!(first, Baselines::new(layout.first(), None));
         assert_eq!(last, Baselines::new(None, layout.last()));
 
@@ -1676,7 +1678,7 @@ mod tests {
 
         let first = compute_baselines(&mut tree, block, RunMode::ComputeSize, RequestedBaselines::FIRST);
         let last = compute_baselines(&mut tree, block, RunMode::ComputeSize, RequestedBaselines::LAST);
-        let layout = compute_baselines(&mut tree, block, RunMode::PerformLayout, RequestedBaselines::NONE);
+        let layout = compute_baselines(&mut tree, block, RunMode::PerformLayout, RequestedBaselines::BOTH);
         assert_eq!(first, Baselines::new(Some(30.0), None));
         assert_eq!(last, Baselines::new(None, Some(36.0)));
         assert_eq!(layout, Baselines::new(Some(30.0), Some(36.0)));
