@@ -69,12 +69,12 @@ let root_node = tree
 tree.compute_layout(root_node, Size::MAX_CONTENT).unwrap();
 
 // Inspect the computed layout using `TaffyTree.layout`
-assert_eq!(tree.layout(root_node).unwrap().size.width, 800.0);
-assert_eq!(tree.layout(root_node).unwrap().size.height, 600.0);
-assert_eq!(tree.layout(header_node).unwrap().size.width, 800.0);
-assert_eq!(tree.layout(header_node).unwrap().size.height, 100.0);
-assert_eq!(tree.layout(body_node).unwrap().size.width, 800.0);
-assert_eq!(tree.layout(body_node).unwrap().size.height, 500.0); // This value was not set explicitly, but was computed by Taffy
+assert_eq!(tree.layout(root_node).unwrap().size.width.to_f32_px(), 800.0);
+assert_eq!(tree.layout(root_node).unwrap().size.height.to_f32_px(), 600.0);
+assert_eq!(tree.layout(header_node).unwrap().size.width.to_f32_px(), 800.0);
+assert_eq!(tree.layout(header_node).unwrap().size.height.to_f32_px(), 100.0);
+assert_eq!(tree.layout(body_node).unwrap().size.width.to_f32_px(), 800.0);
+assert_eq!(tree.layout(body_node).unwrap().size.height.to_f32_px(), 500.0); // This value was not set explicitly, but was computed by Taffy
 
 ```
 

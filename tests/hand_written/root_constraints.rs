@@ -22,15 +22,15 @@ mod root_constraints {
             .compute_layout(
                 node,
                 taffy::geometry::Size {
-                    width: AvailableSpace::Definite(100.0),
-                    height: AvailableSpace::Definite(200.0),
+                    width: AvailableSpace::Definite(taffy_test_helpers::px(100.0)),
+                    height: AvailableSpace::Definite(taffy_test_helpers::px(200.0)),
                 },
             )
             .unwrap();
         let layout = taffy.layout(node).unwrap();
 
-        assert_eq!(layout.size.width, 100.0);
-        assert_eq!(layout.size.height, 200.0);
+        assert_eq!(layout.size.width.to_f32_px(), 100.0);
+        assert_eq!(layout.size.height.to_f32_px(), 200.0);
     }
 
     #[test]
@@ -42,15 +42,15 @@ mod root_constraints {
             .compute_layout(
                 node,
                 taffy::geometry::Size {
-                    width: AvailableSpace::Definite(100.0),
-                    height: AvailableSpace::Definite(100.0),
+                    width: AvailableSpace::Definite(taffy_test_helpers::px(100.0)),
+                    height: AvailableSpace::Definite(taffy_test_helpers::px(100.0)),
                 },
             )
             .unwrap();
         let layout = taffy.layout(node).unwrap();
 
-        assert_eq!(layout.size.width, 0.0);
-        assert_eq!(layout.size.height, 0.0);
+        assert_eq!(layout.size.width.to_f32_px(), 0.0);
+        assert_eq!(layout.size.height.to_f32_px(), 0.0);
     }
 
     #[test]
@@ -70,15 +70,15 @@ mod root_constraints {
             .compute_layout(
                 node,
                 taffy::geometry::Size {
-                    width: AvailableSpace::Definite(100.0),
-                    height: AvailableSpace::Definite(100.0),
+                    width: AvailableSpace::Definite(taffy_test_helpers::px(100.0)),
+                    height: AvailableSpace::Definite(taffy_test_helpers::px(100.0)),
                 },
             )
             .unwrap();
         let layout = taffy.layout(node).unwrap();
 
-        assert_eq!(layout.size.width, 200.0);
-        assert_eq!(layout.size.height, 200.0);
+        assert_eq!(layout.size.width.to_f32_px(), 200.0);
+        assert_eq!(layout.size.height.to_f32_px(), 200.0);
     }
 
     #[test]
@@ -104,7 +104,7 @@ mod root_constraints {
 
         let layout = tree.layout(root).unwrap();
 
-        assert_eq!(layout.size.width, 40.0);
-        assert_eq!(layout.size.height, 40.0);
+        assert_eq!(layout.size.width.to_f32_px(), 40.0);
+        assert_eq!(layout.size.height.to_f32_px(), 40.0);
     }
 }

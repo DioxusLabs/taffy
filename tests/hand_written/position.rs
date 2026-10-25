@@ -29,10 +29,18 @@ mod position_variants {
             for position in [Position::Static, Position::Sticky] {
                 let (taffy, child) = leaf_with_inset(position, display);
                 let layout = taffy.layout(child).unwrap();
-                assert_eq!(layout.location, Point { x: 0.0, y: 0.0 }, "{position:?} in {display:?}");
+                assert_eq!(
+                    layout.location.map(|v| v.to_f32_px()),
+                    Point { x: 0.0, y: 0.0 },
+                    "{position:?} in {display:?}"
+                );
             }
             let (taffy, child) = leaf_with_inset(Position::Relative, display);
-            assert_eq!(taffy.layout(child).unwrap().location, Point { x: 5.0, y: 7.0 }, "Relative in {display:?}");
+            assert_eq!(
+                taffy.layout(child).unwrap().location.map(|v| v.to_f32_px()),
+                Point { x: 5.0, y: 7.0 },
+                "Relative in {display:?}"
+            );
         }
     }
 

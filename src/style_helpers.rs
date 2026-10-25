@@ -104,6 +104,9 @@ pub trait TaffyZero {
 impl TaffyZero for f32 {
     const ZERO: f32 = 0.0;
 }
+impl TaffyZero for crate::app_unit::Au {
+    const ZERO: crate::app_unit::Au = crate::app_unit::Au(0);
+}
 impl<T: TaffyZero> TaffyZero for Option<T> {
     const ZERO: Option<T> = Some(T::ZERO);
 }

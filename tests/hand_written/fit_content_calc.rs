@@ -130,12 +130,17 @@ mod fit_content_calc {
                     Kind::Grid => compute_grid_layout(node, node_id, inputs),
                     Kind::Leaf { min_width, max_width, height } => {
                         compute_leaf_layout(inputs, &node.style, resolve_calc, |known_dimensions, available_space| {
-                            let width = known_dimensions.width.unwrap_or(match available_space.width {
-                                AvailableSpace::Definite(width) => width.clamp(min_width, max_width),
-                                AvailableSpace::MinContent => min_width,
-                                AvailableSpace::MaxContent => max_width,
+                            let width = known_dimensions.width.unwrap_or_else(|| match available_space.width {
+                                AvailableSpace::Definite(width) => {
+                                    taffy_test_helpers::px(width.to_f32_px().clamp(min_width, max_width))
+                                }
+                                AvailableSpace::MinContent => taffy_test_helpers::px(min_width),
+                                AvailableSpace::MaxContent => taffy_test_helpers::px(max_width),
                             });
-                            Size { width, height: known_dimensions.height.unwrap_or(height) }
+                            Size {
+                                width,
+                                height: known_dimensions.height.unwrap_or_else(|| taffy_test_helpers::px(height)),
+                            }
                         })
                     }
                 }
@@ -226,7 +231,7 @@ mod fit_content_calc {
             )],
         );
         root.compute_layout(Size::MAX_CONTENT);
-        assert_eq!(root.children[0].layout.size.height, 35.0);
+        assert_eq!(root.children[0].layout.size.height.to_f32_px(), 35.0);
     }
 
     /// `width: fit-content(calc(10% + 70px))` on a block-level box in a 300px wide container is
@@ -249,7 +254,7 @@ mod fit_content_calc {
             )],
         );
         root.compute_layout(Size::MAX_CONTENT);
-        assert_eq!(root.children[0].layout.size.width, 100.0);
+        assert_eq!(root.children[0].layout.size.width.to_f32_px(), 100.0);
     }
 
     /// Returns (container width, item width) for a single-column grid with the given column sizing
@@ -269,7 +274,7 @@ mod fit_content_calc {
             vec![Node::leaf(50.0, 150.0, 10.0, Style::default())],
         );
         root.compute_layout(Size { width: available_width, height: AvailableSpace::MaxContent });
-        (root.layout.size.width, root.children[0].layout.size.width)
+        (root.layout.size.width.to_f32_px(), root.children[0].layout.size.width.to_f32_px())
     }
 
     /// A calc() limit resolves to the same value as the equivalent length or percentage limit, including
@@ -284,8 +289,11 @@ mod fit_content_calc {
         assert_eq!(calc_result.1, 50.0);
 
         // Indefinite (shrink-to-fit) container: calc(50% + 0px) == 50%
-        for available_width in [AvailableSpace::Definite(200.0), AvailableSpace::MaxContent, AvailableSpace::MinContent]
-        {
+        for available_width in [
+            AvailableSpace::Definite(taffy_test_helpers::px(200.0)),
+            AvailableSpace::MaxContent,
+            AvailableSpace::MinContent,
+        ] {
             let calc_result = layout_single_column_grid(fit_content(calc(0.0, 0.5)), auto(), available_width);
             let pct_result = layout_single_column_grid(fit_content(percent(0.5)), auto(), available_width);
             assert_eq!(calc_result, pct_result, "available width: {available_width:?}");

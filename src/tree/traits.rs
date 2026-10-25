@@ -127,6 +127,7 @@
 //! ```
 //!
 use super::{DetailedLayoutInfo, Layout, LayoutInput, LayoutOutput, NodeId, RequestedAxis, RunMode, SizingMode};
+use crate::app_unit::Au;
 use crate::debug::debug_log;
 use crate::geometry::{AbsoluteAxis, Line, Size};
 use crate::style::{AvailableSpace, CoreStyle, OofItemStyle};
@@ -397,13 +398,13 @@ pub(crate) trait LayoutPartialTreeExt: LayoutPartialTree {
     fn measure_child_size(
         &mut self,
         node_id: NodeId,
-        known_dimensions: Size<Option<f32>>,
-        parent_size: Size<Option<f32>>,
+        known_dimensions: Size<Option<Au>>,
+        parent_size: Size<Option<Au>>,
         available_space: Size<AvailableSpace>,
         sizing_mode: SizingMode,
         axis: AbsoluteAxis,
         vertical_margins_are_collapsible: Line<bool>,
-    ) -> f32 {
+    ) -> Au {
         self.compute_child_layout(
             node_id,
             LayoutInput {
@@ -427,12 +428,12 @@ pub(crate) trait LayoutPartialTreeExt: LayoutPartialTree {
     fn measure_child_size_both(
         &mut self,
         node_id: NodeId,
-        known_dimensions: Size<Option<f32>>,
-        parent_size: Size<Option<f32>>,
+        known_dimensions: Size<Option<Au>>,
+        parent_size: Size<Option<Au>>,
         available_space: Size<AvailableSpace>,
         sizing_mode: SizingMode,
         vertical_margins_are_collapsible: Line<bool>,
-    ) -> Size<f32> {
+    ) -> Size<Au> {
         self.compute_child_layout(
             node_id,
             LayoutInput {
@@ -454,8 +455,8 @@ pub(crate) trait LayoutPartialTreeExt: LayoutPartialTree {
     fn perform_child_layout(
         &mut self,
         node_id: NodeId,
-        known_dimensions: Size<Option<f32>>,
-        parent_size: Size<Option<f32>>,
+        known_dimensions: Size<Option<Au>>,
+        parent_size: Size<Option<Au>>,
         available_space: Size<AvailableSpace>,
         sizing_mode: SizingMode,
         vertical_margins_are_collapsible: Line<bool>,

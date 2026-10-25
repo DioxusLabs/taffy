@@ -1,6 +1,7 @@
 //! A tagged-pointer abstraction that allows size styles in Taffy to be represented
 //! in just 64 bits. Wrapped by types in the `super::dimension` and `super::grid` modules.
 use super::LengthPercentage;
+use crate::app_unit::{Au, AU_PER_PX};
 use crate::style_helpers::{
     FromFr, FromLength, FromPercent, TaffyAuto, TaffyFitContent, TaffyMaxContent, TaffyMinContent, TaffyZero,
 };
@@ -284,8 +285,11 @@ impl CompactLength {
     /// An absolute length in some abstract units. Users of Taffy may define what they correspond
     /// to in their application (pixels, logical pixels, mm, etc) as they see fit.
     #[inline(always)]
-    pub const fn length(val: f32) -> Self {
-        Self(CompactLengthInner::from_val(val, Self::LENGTH_TAG))
+    pub fn length(val: f32) -> Self {
+        let scaled = val * AU_PER_PX as f32;
+        let au = (if scaled >= 0.0 { scaled + 0.5 } else { scaled - 0.5 }) as i32;
+        // LENGTH payload holds Au bits; see length_au
+        Self(CompactLengthInner::from_val(compat::f32_from_bits(au as u32), Self::LENGTH_TAG))
     }
 
     /// A percentage length relative to the size of the containing block.
@@ -415,7 +419,17 @@ impl CompactLength {
     /// (e.g. the pixel value for a LENGTH variant)
     #[inline(always)]
     pub fn value(self) -> f32 {
-        self.0.value()
+        if self.tag() == Self::LENGTH_TAG {
+            self.length_au().to_f32_px()
+        } else {
+            self.0.value()
+        }
+    }
+
+    /// The payload of a LENGTH value as `Au`. Only valid when the tag is `LENGTH_TAG`.
+    #[inline(always)]
+    pub(crate) fn length_au(self) -> Au {
+        Au(compat::f32_to_bits(self.0.value()) as i32)
     }
 
     /// Get the calc pointer of the `CompactLength`
@@ -572,7 +586,7 @@ impl CompactLength {
 }
 
 impl TaffyZero for CompactLength {
-    const ZERO: Self = Self::length(0.0);
+    const ZERO: Self = Self(CompactLengthInner::from_val(0.0, Self::LENGTH_TAG));
 }
 impl TaffyAuto for CompactLength {
     const AUTO: Self = Self::auto();
@@ -665,6 +679,7 @@ impl<'de> serde::Deserialize<'de> for CompactLength {
 #[cfg(test)]
 mod tests {
     use super::{CompactLength, CompactLengthInner};
+    use crate::app_unit::Au;
 
     impl CompactLength {
         fn from_raw_tag(tag: usize) -> Self {
@@ -796,5 +811,22 @@ mod tests {
         assert!(!value.is_auto());
         assert!(!value.is_intrinsic());
         assert_eq!(value.calc_value(), ptr);
+    }
+
+    #[test]
+    fn length_value_is_px_and_payload_is_au() {
+        assert_eq!(CompactLength::length(10.0).value(), 10.0);
+        assert_eq!(CompactLength::length(-2.5).value(), -2.5);
+        assert_eq!(CompactLength::length(1.0).length_au(), Au(60));
+        assert_eq!(CompactLength::length(0.01).length_au(), Au(1));
+        assert_eq!(CompactLength::length(-0.5).length_au(), Au(-30));
+        assert_eq!(CompactLength::length(0.0).length_au(), Au(0));
+    }
+
+    #[test]
+    fn length_saturates_to_au_range() {
+        assert_eq!(CompactLength::length(f32::INFINITY).length_au(), Au(i32::MAX));
+        assert_eq!(CompactLength::length(f32::NEG_INFINITY).length_au(), Au(i32::MIN));
+        assert_eq!(CompactLength::length(f32::NAN).length_au(), Au(0));
     }
 }

@@ -18,7 +18,11 @@ mod baseline {
         _style: &Style,
     ) -> LayoutOutput {
         let Some(context) = context else { return LayoutOutput::DEFAULT };
-        LayoutOutput::from_sizes_and_baselines(context.size, Rect::ZERO, Baselines::from_first(context.baseline_y))
+        LayoutOutput::from_sizes_and_baselines(
+            context.size.map(taffy_test_helpers::px),
+            Rect::ZERO,
+            Baselines::from_first(context.baseline_y.map(taffy_test_helpers::px)),
+        )
     }
 
     /// Two flex items with different intrinsic baselines are aligned along their baselines
@@ -63,12 +67,12 @@ mod baseline {
         let layout_b = taffy.layout(child_b).unwrap();
 
         // Child A sets the max baseline (40 px from its top), so it sits at the top of the line.
-        assert_eq!(layout_a.location.y, 0.0);
+        assert_eq!(layout_a.location.y.to_f32_px(), 0.0);
         // Child B is shifted down by (40 - 20) = 20 px so its baseline aligns with child A's.
-        assert_eq!(layout_b.location.y, 20.0);
+        assert_eq!(layout_b.location.y.to_f32_px(), 20.0);
 
         // Sanity-check: both children's baselines now sit at y = 40 in the container.
-        assert_eq!(layout_a.location.y + 40.0, layout_b.location.y + 20.0);
+        assert_eq!(layout_a.location.y.to_f32_px() + 40.0, layout_b.location.y.to_f32_px() + 20.0);
     }
 
     /// A block container child that is a scroll container and has no baseline of its own
@@ -132,8 +136,8 @@ mod baseline {
         // Item A's baseline is synthesized at the scroll container's bottom border edge (30),
         // not at item A's own bottom edge (50). Item A sets the max baseline, so it sits at
         // the top and item B is shifted down by (30 - 10) = 20px.
-        assert_eq!(taffy.layout(item_a).unwrap().location.y, 0.0);
-        assert_eq!(taffy.layout(item_b).unwrap().location.y, 20.0);
+        assert_eq!(taffy.layout(item_a).unwrap().location.y.to_f32_px(), 0.0);
+        assert_eq!(taffy.layout(item_b).unwrap().location.y.to_f32_px(), 20.0);
     }
 
     /// A block container child that is NOT a scroll container and has no baseline
@@ -191,8 +195,8 @@ mod baseline {
 
         // Item A has no baseline, so the flexbox algorithm synthesizes one at its border-box
         // bottom edge (50). Item B is shifted down by (50 - 10) = 40px.
-        assert_eq!(taffy.layout(item_a).unwrap().location.y, 0.0);
-        assert_eq!(taffy.layout(item_b).unwrap().location.y, 40.0);
+        assert_eq!(taffy.layout(item_a).unwrap().location.y.to_f32_px(), 0.0);
+        assert_eq!(taffy.layout(item_b).unwrap().location.y.to_f32_px(), 40.0);
     }
 
     /// A block container child that is a scroll container contributes its content baseline
@@ -260,8 +264,8 @@ mod baseline {
 
         // The content baseline (48) is clamped to the scroll container's border-box height (30).
         // Item A's baseline is 30, so item B is shifted down by (30 - 10) = 20px.
-        assert_eq!(taffy.layout(item_a).unwrap().location.y, 0.0);
-        assert_eq!(taffy.layout(item_b).unwrap().location.y, 20.0);
+        assert_eq!(taffy.layout(item_a).unwrap().location.y.to_f32_px(), 0.0);
+        assert_eq!(taffy.layout(item_b).unwrap().location.y.to_f32_px(), 20.0);
     }
 
     /// Sanity-check: without `align-items: baseline`, items align at the cross-start edge
@@ -298,7 +302,7 @@ mod baseline {
 
         taffy.compute_layout_with_measure(root, Size::MAX_CONTENT, baseline_measure_function).unwrap();
 
-        assert_eq!(taffy.layout(child_a).unwrap().location.y, 0.0);
-        assert_eq!(taffy.layout(child_b).unwrap().location.y, 0.0);
+        assert_eq!(taffy.layout(child_a).unwrap().location.y.to_f32_px(), 0.0);
+        assert_eq!(taffy.layout(child_b).unwrap().location.y.to_f32_px(), 0.0);
     }
 }

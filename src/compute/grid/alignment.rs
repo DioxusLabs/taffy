@@ -1,4 +1,6 @@
 //! Alignment of tracks and final positioning of items
+use crate::app_unit::Au;
+
 use super::types::GridTrack;
 use crate::compute::common::alignment::{
     apply_alignment_fallback, child_first_baseline, compute_alignment_offset, resolve_self_alignment_safety,
@@ -9,7 +11,12 @@ use crate::style::{
     Position,
 };
 use crate::tree::{Layout, LayoutPartialTreeExt, NodeId, OofCandidates, SizingMode};
-use crate::util::sys::f32_max;
+/// Larger of two `Au` values
+#[inline(always)]
+fn au_max(a: Au, b: Au) -> Au {
+    a.max(b)
+}
+use crate::util::au::px_to_au;
 use crate::util::{MaybeMath, MaybeResolve, ResolveOrZero};
 
 #[cfg(feature = "content_size")]
@@ -21,14 +28,14 @@ use crate::{AbsoluteAxis, BoxSizing, Direction, LayoutGridContainer};
 /// justify-content (columns) property. This only does anything if the size of the
 /// grid is not equal to the size of the grid container in the axis being aligned.
 pub(super) fn align_tracks(
-    grid_container_content_box_size: f32,
-    padding: Line<f32>,
-    border: Line<f32>,
+    grid_container_content_box_size: Au,
+    padding: Line<Au>,
+    border: Line<Au>,
     tracks: &mut [GridTrack],
     track_alignment_style: AlignContent,
     axis_is_reversed: bool,
 ) {
-    let used_size: f32 = tracks.iter().map(|track| track.base_size).sum();
+    let used_size: Au = tracks.iter().map(|track| track.base_size).sum();
     let free_space = grid_container_content_box_size - used_size;
     let origin = padding.start + border.start;
 
@@ -37,7 +44,7 @@ pub(super) fn align_tracks(
 
     // Grid layout treats gaps as full tracks rather than applying them at alignment so we
     // simply pass zero here. Grid layout is never reversed.
-    let gap = 0.0;
+    let gap = Au(0);
     let layout_is_reversed = false;
     let track_alignment = apply_alignment_fallback(free_space, num_tracks, track_alignment_style);
     let track_alignment = if axis_is_reversed { track_alignment.reversed() } else { track_alignment };
@@ -48,7 +55,7 @@ pub(super) fn align_tracks(
     let empty_grid_offset = if num_tracks == 0 {
         compute_alignment_offset(free_space, num_tracks, gap, track_alignment, layout_is_reversed, true)
     } else {
-        0.0
+        Au(0)
     };
 
     // Compute offsets. Tracks are stored in logical order; when the axis is reversed (RTL)
@@ -66,7 +73,7 @@ pub(super) fn align_tracks(
         let offset = if is_non_collapsed_track {
             compute_alignment_offset(free_space, num_tracks, gap, track_alignment, layout_is_reversed, is_first)
         } else {
-            0.0
+            Au(0)
         };
 
         track.offset = total_offset + offset;
@@ -88,18 +95,18 @@ pub(super) fn align_and_position_item(
     tree: &mut impl LayoutGridContainer,
     node: NodeId,
     order: u32,
-    grid_area: Rect<f32>,
+    grid_area: Rect<Au>,
     // Percentage basis for the item's styles. Grid passes the grid area size; grid lanes (css-grid-3) items
     // have the container's content box as their containing block in the stacking axis.
-    containing_block_size: Size<f32>,
+    containing_block_size: Size<Au>,
     container_alignment_styles: InBothAbsAxis<AlignItems>,
-    baseline_shim: f32,
+    baseline_shim: Au,
     direction: Direction,
-    container_border_box_width: f32,
-    container_border: Rect<f32>,
+    container_border_box_width: Au,
+    container_border: Rect<Au>,
     #[cfg(feature = "content_size")] container_is_scroll_container: bool,
     bubbled_candidates: &mut OofCandidates,
-) -> (Rect<f32>, f32, f32, Option<f32>) {
+) -> (Rect<Au>, Au, Au, Option<Au>) {
     let grid_area_size = Size { width: grid_area.right - grid_area.left, height: grid_area.bottom - grid_area.top };
 
     let style = tree.get_grid_child_style(node);
@@ -107,7 +114,7 @@ pub(super) fn align_and_position_item(
     let overflow = style.overflow();
     #[cfg(feature = "content_size")]
     let contain = style.contain();
-    let scrollbar_width = style.scrollbar_width();
+    let scrollbar_width = px_to_au(style.scrollbar_width());
     let aspect_ratio = style.aspect_ratio();
     let is_replaced = style.is_replaced();
     // Fall back to the container's justify-items/align-items if unset (`None`), and then resolve
@@ -205,8 +212,8 @@ pub(super) fn align_and_position_item(
     drop(style);
 
     let grid_area_minus_item_margins_size = Size {
-        width: grid_area_size.width.maybe_sub(margin.left).maybe_sub(margin.right).max(0.0),
-        height: (grid_area_size.height.maybe_sub(margin.top).maybe_sub(margin.bottom) - baseline_shim).max(0.0),
+        width: grid_area_size.width.maybe_sub(margin.left).maybe_sub(margin.right).max(Au(0)),
+        height: (grid_area_size.height.maybe_sub(margin.top).maybe_sub(margin.bottom) - baseline_shim).max(Au(0)),
     };
 
     // A size that is a sizing keyword (min-content, max-content, fit-content,
@@ -230,7 +237,7 @@ pub(super) fn align_and_position_item(
     });
 
     // If both axes need to be measured then resolve them with a single measure call
-    let keyword_measured_size: Size<Option<f32>> = match (&keyword_width, &keyword_height) {
+    let keyword_measured_size: Size<Option<Au>> = match (&keyword_width, &keyword_height) {
         (
             Some(Some(SizingKeywordResolution::Measure(available_width))),
             Some(Some(SizingKeywordResolution::Measure(available_height))),
@@ -254,7 +261,7 @@ pub(super) fn align_and_position_item(
         // positioned element being set
         if position.is_out_of_flow() {
             if let (Some(left), Some(right)) = (inset_horizontal.start, inset_horizontal.end) {
-                return Some(f32_max(grid_area_minus_item_margins_size.width - left - right, 0.0));
+                return Some(au_max(grid_area_minus_item_margins_size.width - left - right, Au(0)));
             }
         }
 
@@ -299,7 +306,7 @@ pub(super) fn align_and_position_item(
     let height = height.or_else(|| {
         if position.is_out_of_flow() {
             if let (Some(top), Some(bottom)) = (inset_vertical.start, inset_vertical.end) {
-                return Some(f32_max(grid_area_minus_item_margins_size.height - top - bottom, 0.0));
+                return Some(au_max(grid_area_minus_item_margins_size.height - top - bottom, Au(0)));
             }
         }
 
@@ -381,7 +388,7 @@ pub(super) fn align_and_position_item(
         position,
         inset_horizontal,
         margin.horizontal_components(),
-        0.0,
+        Au(0),
         direction,
     );
     let (y_without_relative_offset, y_margin) = align_item_within_area(
@@ -400,8 +407,8 @@ pub(super) fn align_and_position_item(
     let y = y_without_relative_offset + relative_offset(position, inset_vertical, Direction::Ltr);
 
     let scrollbar_size = Size {
-        width: if overflow.y == Overflow::Scroll { scrollbar_width } else { 0.0 },
-        height: if overflow.x == Overflow::Scroll { scrollbar_width } else { 0.0 },
+        width: if overflow.y == Overflow::Scroll { scrollbar_width } else { Au(0) },
+        height: if overflow.x == Overflow::Scroll { scrollbar_width } else { Au(0) },
     };
 
     let resolved_margin = Rect { left: x_margin.start, right: x_margin.end, top: y_margin.start, bottom: y_margin.end };
@@ -457,23 +464,24 @@ pub(super) fn align_and_position_item(
 /// Align and size a grid item along a single axis
 #[allow(clippy::too_many_arguments)]
 pub(super) fn align_item_within_area(
-    grid_area: Line<f32>,
+    grid_area: Line<Au>,
     alignment_style: AlignSelf,
-    resolved_size: f32,
+    resolved_size: Au,
     position: Position,
-    inset: Line<Option<f32>>,
-    margin: Line<Option<f32>>,
-    baseline_shim: f32,
+    inset: Line<Option<Au>>,
+    margin: Line<Option<Au>>,
+    baseline_shim: Au,
     direction: Direction,
-) -> (f32, Line<f32>) {
+) -> (Au, Line<Au>) {
     // Calculate grid area dimension in the axis
-    let non_auto_margin = Line { start: margin.start.unwrap_or(0.0) + baseline_shim, end: margin.end.unwrap_or(0.0) };
-    let grid_area_size = f32_max(grid_area.end - grid_area.start, 0.0);
-    let free_space = f32_max(grid_area_size - resolved_size - non_auto_margin.sum(), 0.0);
+    let non_auto_margin =
+        Line { start: margin.start.unwrap_or(Au(0)) + baseline_shim, end: margin.end.unwrap_or(Au(0)) };
+    let grid_area_size = au_max(grid_area.end - grid_area.start, Au(0));
+    let free_space = au_max(grid_area_size - resolved_size - non_auto_margin.sum(), Au(0));
 
     // Expand auto margins to fill available space
     let auto_margin_count = margin.start.is_none() as u8 + margin.end.is_none() as u8;
-    let auto_margin_size = if auto_margin_count > 0 { free_space / auto_margin_count as f32 } else { 0.0 };
+    let auto_margin_size = if auto_margin_count > 0 { free_space / auto_margin_count as i32 } else { Au(0) };
     let resolved_margin = Line {
         start: margin.start.unwrap_or(auto_margin_size) + baseline_shim,
         end: margin.end.unwrap_or(auto_margin_size),
@@ -502,9 +510,7 @@ pub(super) fn align_item_within_area(
                 grid_area_size - resolved_size - resolved_margin.end
             }
         }
-        AlignItemsKeyword::Center => {
-            (grid_area_size - resolved_size + resolved_margin.start - resolved_margin.end) / 2.0
-        }
+        AlignItemsKeyword::Center => (grid_area_size - resolved_size + resolved_margin.start - resolved_margin.end) / 2,
         // Normal is resolved, and SelfStart/SelfEnd are resolved to Start/End against
         // the item's own direction, in `align_and_position_item`.
         AlignItemsKeyword::Normal | AlignItemsKeyword::SelfStart | AlignItemsKeyword::SelfEnd => unreachable!(),
@@ -531,14 +537,14 @@ pub(super) fn align_item_within_area(
 }
 
 /// The offset applied to an item in a single axis by its `inset` if it is `position: relative`
-fn relative_offset(position: Position, inset: Line<Option<f32>>, direction: Direction) -> f32 {
+fn relative_offset(position: Position, inset: Line<Option<Au>>, direction: Direction) -> Au {
     if position != Position::Relative {
-        return 0.0;
+        return Au(0);
     }
     let relative_inset = if direction.is_rtl() {
         inset.end.map(|pos| -pos).or(inset.start)
     } else {
         inset.start.or(inset.end.map(|pos| -pos))
     };
-    relative_inset.unwrap_or(0.0)
+    relative_inset.unwrap_or(Au(0))
 }

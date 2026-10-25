@@ -5,7 +5,7 @@ use taffy::style::Style as TaffyStyle;
 use taffy::tree::NodeId as TaffyNodeId;
 use taffy::TaffyTree;
 
-use super::{BuildTree, BuildTreeExt, GenStyle};
+use super::{px, BuildTree, BuildTreeExt, GenStyle};
 
 pub struct TaffyTreeBuilder<R: Rng, G: GenStyle<TaffyStyle>> {
     rng: R,
@@ -28,7 +28,8 @@ impl<R: Rng, G: GenStyle<TaffyStyle>> BuildTree<R, G> for TaffyTreeBuilder<R, G>
     }
 
     fn compute_layout_inner(&mut self, available_width: Option<f32>, available_height: Option<f32>) {
-        let available_space = taffy::geometry::Size { width: available_width.into(), height: available_height.into() };
+        let available_space =
+            taffy::geometry::Size { width: available_width.map(px).into(), height: available_height.map(px).into() };
         self.tree.compute_layout(self.root, available_space).unwrap();
     }
 

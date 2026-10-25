@@ -52,8 +52,8 @@ mod oof_hoisting {
 
             // Location is relative to the containing block, not the static parent
             let layout = tree.layout(abs).unwrap();
-            assert_eq!(layout.location, Point { x: 10.0, y: 20.0 }, "{display:?}");
-            assert_eq!(layout.size, Size { width: 30.0, height: 30.0 }, "{display:?}");
+            assert_eq!(layout.location.map(|v| v.to_f32_px()), Point { x: 10.0, y: 20.0 }, "{display:?}");
+            assert_eq!(layout.size.map(|v| v.to_f32_px()), Size { width: 30.0, height: 30.0 }, "{display:?}");
         }
     }
 
@@ -155,7 +155,7 @@ mod oof_hoisting {
                 Display::Grid => Point { x: 40.0, y: 40.0 },
                 _ => unreachable!(),
             };
-            assert_eq!(layout.location, expected, "{display:?}");
+            assert_eq!(layout.location.map(|v| v.to_f32_px()), expected, "{display:?}");
         }
     }
 
@@ -192,7 +192,7 @@ mod oof_hoisting {
         tree.compute_layout(root, Size::MAX_CONTENT).unwrap();
 
         // Location is relative to the root, ignoring the positioned (but not fixed-CB) parent
-        assert_eq!(tree.layout(fixed).unwrap().location, Point { x: 5.0, y: 5.0 });
+        assert_eq!(tree.layout(fixed).unwrap().location.map(|v| v.to_f32_px()), Point { x: 5.0, y: 5.0 });
     }
 
     /// An absolute descendant of an absolute box resolves against the absolute box
@@ -228,9 +228,9 @@ mod oof_hoisting {
 
         tree.compute_layout(root, Size::MAX_CONTENT).unwrap();
 
-        assert_eq!(tree.layout(outer).unwrap().location, Point { x: 20.0, y: 20.0 });
+        assert_eq!(tree.layout(outer).unwrap().location.map(|v| v.to_f32_px()), Point { x: 20.0, y: 20.0 });
         // Relative to `outer`, its containing block
-        assert_eq!(tree.layout(inner).unwrap().location, Point { x: 40.0, y: 40.0 });
+        assert_eq!(tree.layout(inner).unwrap().location.map(|v| v.to_f32_px()), Point { x: 40.0, y: 40.0 });
     }
 
     /// A fixed descendant surfaced while laying out an absolute box (at the abspos box's
@@ -277,9 +277,9 @@ mod oof_hoisting {
 
         tree.compute_layout(root, Size::MAX_CONTENT).unwrap();
 
-        assert_eq!(tree.layout(abs).unwrap().location, Point { x: 20.0, y: 20.0 });
+        assert_eq!(tree.layout(abs).unwrap().location.map(|v| v.to_f32_px()), Point { x: 20.0, y: 20.0 });
         // Root-relative, unaffected by `cb` or `abs` offsets
-        assert_eq!(tree.layout(fixed).unwrap().location, Point { x: 1.0, y: 2.0 });
+        assert_eq!(tree.layout(fixed).unwrap().location.map(|v| v.to_f32_px()), Point { x: 1.0, y: 2.0 });
     }
 
     /// Hoisting still works when the intermediate (static) ancestors hit the layout cache:
@@ -312,23 +312,23 @@ mod oof_hoisting {
             .unwrap();
 
         tree.compute_layout(cb, Size::MAX_CONTENT).unwrap();
-        assert_eq!(tree.layout(abs).unwrap().location, Point { x: 10.0, y: 20.0 });
+        assert_eq!(tree.layout(abs).unwrap().location.map(|v| v.to_f32_px()), Point { x: 10.0, y: 20.0 });
 
         // Recompute without dirtying anything: everything hits the cache
         tree.compute_layout(cb, Size::MAX_CONTENT).unwrap();
-        assert_eq!(tree.layout(abs).unwrap().location, Point { x: 10.0, y: 20.0 });
+        assert_eq!(tree.layout(abs).unwrap().location.map(|v| v.to_f32_px()), Point { x: 10.0, y: 20.0 });
 
         // Relayout with the same constraints: intermediate nodes hit the cache
         tree.mark_dirty(cb).unwrap();
         tree.compute_layout(cb, Size::MAX_CONTENT).unwrap();
-        assert_eq!(tree.layout(abs).unwrap().location, Point { x: 10.0, y: 20.0 });
+        assert_eq!(tree.layout(abs).unwrap().location.map(|v| v.to_f32_px()), Point { x: 10.0, y: 20.0 });
 
         // Changing the abspos box's styles relays it out through its containing block
         let mut new_style = tree.style(abs).unwrap().clone();
         new_style.inset.left = length(15.0);
         tree.set_style(abs, new_style).unwrap();
         tree.compute_layout(cb, Size::MAX_CONTENT).unwrap();
-        assert_eq!(tree.layout(abs).unwrap().location, Point { x: 15.0, y: 20.0 });
+        assert_eq!(tree.layout(abs).unwrap().location.map(|v| v.to_f32_px()), Point { x: 15.0, y: 20.0 });
     }
 
     /// When the root's layout is served from the cache, the root positioning pass must not
@@ -393,8 +393,8 @@ mod oof_hoisting {
         tree.compute_layout(root, Size::MAX_CONTENT).unwrap();
 
         // cb rounds to x=20; abs at cumulative 20.3+10.6=30.9 rounds to 31, i.e. 11 relative to cb
-        assert_eq!(tree.layout(cb).unwrap().location, Point { x: 20.0, y: 20.0 });
-        assert_eq!(tree.layout(abs).unwrap().location, Point { x: 11.0, y: 11.0 });
+        assert_eq!(tree.layout(cb).unwrap().location.map(|v| v.to_f32_px()), Point { x: 20.0, y: 20.0 });
+        assert_eq!(tree.layout(abs).unwrap().location.map(|v| v.to_f32_px()), Point { x: 11.0, y: 11.0 });
     }
 
     /// When an intermediate ancestor becomes positioned (with a hot cache), it claims
@@ -429,7 +429,7 @@ mod oof_hoisting {
             .unwrap();
 
         tree.compute_layout(cb, Size::MAX_CONTENT).unwrap();
-        assert_eq!(tree.layout(abs).unwrap().location, Point { x: 10.0, y: 20.0 });
+        assert_eq!(tree.layout(abs).unwrap().location.map(|v| v.to_f32_px()), Point { x: 10.0, y: 20.0 });
 
         // Make the middle node positioned: it now claims the abspos box, whose
         // location becomes relative to the middle node.
@@ -437,15 +437,15 @@ mod oof_hoisting {
         positioned_middle.position = Position::Relative;
         tree.set_style(middle, positioned_middle).unwrap();
         tree.compute_layout(cb, Size::MAX_CONTENT).unwrap();
-        assert_eq!(tree.layout(abs).unwrap().location, Point { x: 10.0, y: 20.0 });
+        assert_eq!(tree.layout(abs).unwrap().location.map(|v| v.to_f32_px()), Point { x: 10.0, y: 20.0 });
         // Page position moved by the middle node's offset
-        assert_eq!(tree.layout(middle).unwrap().location, Point { x: 40.0, y: 40.0 });
+        assert_eq!(tree.layout(middle).unwrap().location.map(|v| v.to_f32_px()), Point { x: 40.0, y: 40.0 });
 
         // Back to static: the outer containing block claims it again.
         tree.set_style(middle, middle_style).unwrap();
         tree.compute_layout(cb, Size::MAX_CONTENT).unwrap();
-        assert_eq!(tree.layout(abs).unwrap().location, Point { x: 10.0, y: 20.0 });
-        assert_eq!(tree.layout(middle).unwrap().location, Point { x: 40.0, y: 40.0 });
+        assert_eq!(tree.layout(abs).unwrap().location.map(|v| v.to_f32_px()), Point { x: 10.0, y: 20.0 });
+        assert_eq!(tree.layout(middle).unwrap().location.map(|v| v.to_f32_px()), Point { x: 40.0, y: 40.0 });
     }
 
     /// A fixed box hoisted to the root moves to an intermediate ancestor when that
@@ -477,15 +477,15 @@ mod oof_hoisting {
 
         tree.compute_layout(root, Size::MAX_CONTENT).unwrap();
         // Fixed box is claimed by the root, not the abspos ancestor
-        assert_eq!(tree.layout(fixed).unwrap().location, Point { x: 5.0, y: 5.0 });
-        assert_eq!(tree.layout(abs).unwrap().location, Point { x: 50.0, y: 50.0 });
+        assert_eq!(tree.layout(fixed).unwrap().location.map(|v| v.to_f32_px()), Point { x: 5.0, y: 5.0 });
+        assert_eq!(tree.layout(abs).unwrap().location.map(|v| v.to_f32_px()), Point { x: 50.0, y: 50.0 });
 
         // Dirty only the fixed box: it must still be re-laid out via the root
         let mut new_fixed_style = tree.style(fixed).unwrap().clone();
         new_fixed_style.inset.left = length(7.0);
         tree.set_style(fixed, new_fixed_style).unwrap();
         tree.compute_layout(root, Size::MAX_CONTENT).unwrap();
-        assert_eq!(tree.layout(fixed).unwrap().location, Point { x: 7.0, y: 5.0 });
+        assert_eq!(tree.layout(fixed).unwrap().location.map(|v| v.to_f32_px()), Point { x: 7.0, y: 5.0 });
     }
 
     /// Content changes inside a hoisted subtree relayout correctly through the
@@ -517,12 +517,12 @@ mod oof_hoisting {
             .unwrap();
 
         tree.compute_layout(cb, Size::MAX_CONTENT).unwrap();
-        assert_eq!(tree.layout(abs).unwrap().size, Size { width: 10.0, height: 10.0 });
+        assert_eq!(tree.layout(abs).unwrap().size.map(|v| v.to_f32_px()), Size { width: 10.0, height: 10.0 });
 
         // Grow the inner leaf: the hoisted abspos box must resize
         tree.set_style(inner, leaf_style(20.0, 30.0)).unwrap();
         tree.compute_layout(cb, Size::MAX_CONTENT).unwrap();
-        assert_eq!(tree.layout(abs).unwrap().size, Size { width: 20.0, height: 30.0 });
+        assert_eq!(tree.layout(abs).unwrap().size.map(|v| v.to_f32_px()), Size { width: 20.0, height: 30.0 });
     }
 
     /// Hiding an ancestor of an out-of-flow box zeroes the box's rounded layout, whether or not

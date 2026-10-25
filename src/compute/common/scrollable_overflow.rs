@@ -1,7 +1,7 @@
 //! Generic CSS scrollable overflow code that is shared between all CSS algorithms.
+use crate::app_unit::Au;
 use crate::geometry::{Point, Rect, Size};
 use crate::style::{Contain, Overflow};
-use crate::util::sys::{f32_max, f32_min};
 
 #[inline(always)]
 /// Determine the rectangle that a given node contributes to its parent's scrollable overflow
@@ -23,13 +23,13 @@ use crate::util::sys::{f32_max, f32_min};
 /// A box whose containment contains its scrollable overflow (layout or paint containment)
 /// contributes only its border box, regardless of its overflow style.
 pub(crate) fn compute_scrollable_overflow_contribution(
-    location: Point<f32>,
-    size: Size<f32>,
-    scrollable_overflow_rect: Rect<f32>,
+    location: Point<Au>,
+    size: Size<Au>,
+    scrollable_overflow_rect: Rect<Au>,
     overflow: Point<Overflow>,
     contain: Contain,
     parent_is_scroll_container: bool,
-) -> Rect<f32> {
+) -> Rect<Au> {
     let is_scroll_container = overflow.x.is_scroll_container() || overflow.y.is_scroll_container();
     let overflow_is_contained = contain.contains_scrollable_overflow();
     let propagates = Point {
@@ -37,15 +37,15 @@ pub(crate) fn compute_scrollable_overflow_contribution(
         y: !is_scroll_container && !overflow_is_contained && overflow.y == Overflow::Visible,
     };
     let end_extent = Size {
-        width: if propagates.x { f32_max(size.width, scrollable_overflow_rect.right) } else { size.width },
-        height: if propagates.y { f32_max(size.height, scrollable_overflow_rect.bottom) } else { size.height },
+        width: if propagates.x { size.width.max(scrollable_overflow_rect.right) } else { size.width },
+        height: if propagates.y { size.height.max(scrollable_overflow_rect.bottom) } else { size.height },
     };
-    if end_extent.width <= 0.0 || end_extent.height <= 0.0 {
+    if end_extent.width <= Au(0) || end_extent.height <= Au(0) {
         return Rect::ZERO;
     }
     let start_extent = Point {
-        x: if propagates.x { f32_min(0.0, scrollable_overflow_rect.left) } else { 0.0 },
-        y: if propagates.y { f32_min(0.0, scrollable_overflow_rect.top) } else { 0.0 },
+        x: if propagates.x { Au(0).min(scrollable_overflow_rect.left) } else { Au(0) },
+        y: if propagates.y { Au(0).min(scrollable_overflow_rect.top) } else { Au(0) },
     };
     let contribution = Rect {
         left: location.x + start_extent.x,
@@ -53,7 +53,7 @@ pub(crate) fn compute_scrollable_overflow_contribution(
         top: location.y + start_extent.y,
         bottom: location.y + end_extent.height,
     };
-    let is_wholly_unreachable = contribution.right <= 0.0 || contribution.bottom <= 0.0;
+    let is_wholly_unreachable = contribution.right <= Au(0) || contribution.bottom <= Au(0);
     if parent_is_scroll_container && is_wholly_unreachable {
         Rect::ZERO
     } else {

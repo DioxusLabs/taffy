@@ -5,8 +5,10 @@ mod initial_containing_block {
     use taffy::prelude::*;
     use taffy::Point;
 
-    const VIEWPORT: Size<AvailableSpace> =
-        Size { width: AvailableSpace::Definite(800.0), height: AvailableSpace::Definite(600.0) };
+    const VIEWPORT: Size<AvailableSpace> = Size {
+        width: AvailableSpace::Definite(taffy_test_helpers::px(800.0)),
+        height: AvailableSpace::Definite(taffy_test_helpers::px(600.0)),
+    };
 
     fn root_style() -> Style {
         Style {
@@ -28,8 +30,8 @@ mod initial_containing_block {
         tree.compute_layout(root, VIEWPORT).unwrap();
 
         let layout = tree.layout(root).unwrap();
-        assert_eq!(layout.location, Point { x: 10.0, y: 20.0 });
-        assert_eq!(layout.size.width, 780.0);
+        assert_eq!(layout.location.map(|v| v.to_f32_px()), Point { x: 10.0, y: 20.0 });
+        assert_eq!(layout.size.width.to_f32_px(), 780.0);
     }
 
     #[test]
@@ -42,8 +44,8 @@ mod initial_containing_block {
 
             // Location is relative to the root's border box, which sits at (10, 20) in the viewport
             let layout = tree.layout(oof).unwrap();
-            assert_eq!(layout.location, Point { x: -10.0, y: -20.0 }, "{position:?}");
-            assert_eq!(layout.size, Size { width: 800.0, height: 600.0 }, "{position:?}");
+            assert_eq!(layout.location.map(|v| v.to_f32_px()), Point { x: -10.0, y: -20.0 }, "{position:?}");
+            assert_eq!(layout.size.map(|v| v.to_f32_px()), Size { width: 800.0, height: 600.0 }, "{position:?}");
         }
     }
 
@@ -63,7 +65,11 @@ mod initial_containing_block {
             tree.compute_layout(root, VIEWPORT).unwrap();
 
             let layout = tree.layout(oof).unwrap();
-            assert_eq!(layout.location, Point { x: 800.0 - 50.0 - 10.0, y: 600.0 - 50.0 - 20.0 }, "{position:?}");
+            assert_eq!(
+                layout.location.map(|v| v.to_f32_px()),
+                Point { x: 800.0 - 50.0 - 10.0, y: 600.0 - 50.0 - 20.0 },
+                "{position:?}"
+            );
         }
     }
 
@@ -76,7 +82,7 @@ mod initial_containing_block {
         let root = tree.new_with_children(root_style(), &[oof]).unwrap();
         tree.compute_layout(root, VIEWPORT).unwrap();
 
-        assert_eq!(tree.layout(oof).unwrap().location, Point { x: 5.0, y: 5.0 });
+        assert_eq!(tree.layout(oof).unwrap().location.map(|v| v.to_f32_px()), Point { x: 5.0, y: 5.0 });
     }
 
     #[test]
@@ -97,7 +103,7 @@ mod initial_containing_block {
         tree.compute_layout(root, VIEWPORT).unwrap();
 
         let layout = tree.layout(root).unwrap();
-        assert_eq!(layout.location, Point { x: 800.0 - 100.0 - 10.0, y: 60.0 });
-        assert_eq!(layout.size, Size { width: 100.0, height: 50.0 });
+        assert_eq!(layout.location.map(|v| v.to_f32_px()), Point { x: 800.0 - 100.0 - 10.0, y: 60.0 });
+        assert_eq!(layout.size.map(|v| v.to_f32_px()), Size { width: 100.0, height: 50.0 });
     }
 }

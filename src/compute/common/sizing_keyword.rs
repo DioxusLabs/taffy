@@ -1,9 +1,10 @@
 //! Shared resolution logic for sizing keywords (`min-content`, `max-content`, `fit-content`,
 //! `fit-content(...)`, and `stretch`) on the `width`/`height` style properties
+use crate::app_unit::Au;
 use crate::geometry::{AbsoluteAxis, Line, Rect, Size};
 use crate::style::AvailableSpace;
 use crate::tree::{LayoutPartialTree, LayoutPartialTreeExt, NodeId, SizingMode};
-use crate::util::sys::f32_max;
+use crate::util::au::{px_to_au, scale_au};
 use crate::{CompactLength, Dimension};
 
 /// How a sizing keyword resolves to a used size
@@ -11,7 +12,7 @@ pub(crate) enum SizingKeywordResolution {
     /// The size is the result of measuring the item under the given available space constraint
     Measure(AvailableSpace),
     /// The size resolves to an exact value without measuring the item
-    Exact(f32),
+    Exact(Au),
 }
 
 /// Resolve an item's size style in one axis if it is a sizing keyword (`min-content`,
@@ -27,8 +28,8 @@ pub(crate) enum SizingKeywordResolution {
 #[inline]
 pub(crate) fn resolve_sizing_keyword(
     style: Dimension,
-    stretch_size: Option<f32>,
-    percent_resolution_basis: Option<f32>,
+    stretch_size: Option<Au>,
+    percent_resolution_basis: Option<Au>,
     calc_resolver: impl Fn(*const (), f32) -> f32,
 ) -> Option<SizingKeywordResolution> {
     #[cfg(not(feature = "calc"))]
@@ -37,16 +38,19 @@ pub(crate) fn resolve_sizing_keyword(
         CompactLength::MIN_CONTENT_TAG => Some(SizingKeywordResolution::Measure(AvailableSpace::MinContent)),
         CompactLength::MAX_CONTENT_TAG => Some(SizingKeywordResolution::Measure(AvailableSpace::MaxContent)),
         CompactLength::FIT_CONTENT_PX_TAG => {
-            Some(SizingKeywordResolution::Measure(AvailableSpace::Definite(style.value())))
+            Some(SizingKeywordResolution::Measure(AvailableSpace::Definite(px_to_au(style.value()))))
         }
         CompactLength::FIT_CONTENT_PERCENT_TAG => percent_resolution_basis
-            .map(|basis| SizingKeywordResolution::Measure(AvailableSpace::Definite(basis * style.value()))),
+            .map(|basis| SizingKeywordResolution::Measure(AvailableSpace::Definite(scale_au(basis, style.value())))),
         CompactLength::FIT_CONTENT_KEYWORD_TAG => {
             stretch_size.map(|size| SizingKeywordResolution::Measure(AvailableSpace::Definite(size)))
         }
         #[cfg(feature = "calc")]
         _ if style.is_fit_content_calc() => percent_resolution_basis.map(|basis| {
-            SizingKeywordResolution::Measure(AvailableSpace::Definite(calc_resolver(style.calc_value(), basis)))
+            SizingKeywordResolution::Measure(AvailableSpace::Definite(px_to_au(calc_resolver(
+                style.calc_value(),
+                basis.to_f32_px(),
+            ))))
         }),
         CompactLength::STRETCH_TAG => stretch_size.map(SizingKeywordResolution::Exact),
         _ => None,
@@ -65,30 +69,26 @@ pub(crate) fn resolve_sizing_keyword(
 pub(crate) fn resolve_absolute_sizing_keywords(
     tree: &mut impl LayoutPartialTree,
     node: NodeId,
-    known_dimensions: &mut Size<Option<f32>>,
+    known_dimensions: &mut Size<Option<Au>>,
     size_style: Size<Dimension>,
-    area_size: Size<f32>,
-    inset: Rect<Option<f32>>,
-    margin: Rect<Option<f32>>,
+    area_size: Size<Au>,
+    inset: Rect<Option<Au>>,
+    margin: Rect<Option<Au>>,
     sizing_mode: SizingMode,
 ) {
     let stretch_size = Size {
-        width: f32_max(
-            area_size.width
-                - inset.left.unwrap_or(0.0)
-                - inset.right.unwrap_or(0.0)
-                - margin.left.unwrap_or(0.0)
-                - margin.right.unwrap_or(0.0),
-            0.0,
-        ),
-        height: f32_max(
-            area_size.height
-                - inset.top.unwrap_or(0.0)
-                - inset.bottom.unwrap_or(0.0)
-                - margin.top.unwrap_or(0.0)
-                - margin.bottom.unwrap_or(0.0),
-            0.0,
-        ),
+        width: (area_size.width
+            - inset.left.unwrap_or(Au(0))
+            - inset.right.unwrap_or(Au(0))
+            - margin.left.unwrap_or(Au(0))
+            - margin.right.unwrap_or(Au(0)))
+        .max(Au(0)),
+        height: (area_size.height
+            - inset.top.unwrap_or(Au(0))
+            - inset.bottom.unwrap_or(Au(0))
+            - margin.top.unwrap_or(Au(0))
+            - margin.bottom.unwrap_or(Au(0)))
+        .max(Au(0)),
     };
 
     let keyword_width = if known_dimensions.width.is_none() {

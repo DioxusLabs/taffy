@@ -57,7 +57,7 @@ fn wholly_unreachable_boxes_are_excluded_for_scroll_containers() {
         let layout = container_with_absolute_child(display, Overflow::Scroll, Direction::Ltr, Some(-100.0), None);
 
         assert_eq!(layout.scrollable_overflow_rect, Rect::ZERO, "{display:?}");
-        assert_eq!(layout.scroll_width(), 0.0, "{display:?}");
+        assert_eq!(layout.scroll_width().to_f32_px(), 0.0, "{display:?}");
     }
 }
 
@@ -68,7 +68,7 @@ fn wholly_unreachable_boxes_contribute_to_non_scroll_containers() {
         // start-side overflow is captured in its scrollable overflow rect.
         let layout = container_with_absolute_child(display, Overflow::Visible, Direction::Ltr, Some(-100.0), None);
 
-        assert_eq!(layout.scrollable_overflow_rect.left, -100.0, "{display:?}");
+        assert_eq!(layout.scrollable_overflow_rect.left.to_f32_px(), -100.0, "{display:?}");
     }
 }
 
@@ -79,10 +79,10 @@ fn partially_unreachable_boxes_contribute_their_whole_border_box() {
         // part of the scrollable overflow area, even though the negative part is unreachable.
         let layout = container_with_absolute_child(display, Overflow::Scroll, Direction::Ltr, Some(-25.0), None);
 
-        assert_eq!(layout.scrollable_overflow_rect.left, -25.0, "{display:?}");
-        assert_eq!(layout.scrollable_overflow_rect.right, 25.0, "{display:?}");
+        assert_eq!(layout.scrollable_overflow_rect.left.to_f32_px(), -25.0, "{display:?}");
+        assert_eq!(layout.scrollable_overflow_rect.right.to_f32_px(), 25.0, "{display:?}");
         // Only the reachable extent counts towards the scroll width
-        assert_eq!(layout.scroll_width(), 0.0, "{display:?}");
+        assert_eq!(layout.scroll_width().to_f32_px(), 0.0, "{display:?}");
     }
 }
 
@@ -92,8 +92,8 @@ fn end_side_overflow_is_captured_and_scrollable() {
         // Child extending past the end edge (x from 200 to 250)
         let layout = container_with_absolute_child(display, Overflow::Scroll, Direction::Ltr, Some(CONTAINER), None);
 
-        assert_eq!(layout.scrollable_overflow_rect.right, CONTAINER + CHILD, "{display:?}");
-        assert_eq!(layout.scroll_width(), CHILD, "{display:?}");
+        assert_eq!(layout.scrollable_overflow_rect.right.to_f32_px(), CONTAINER + CHILD, "{display:?}");
+        assert_eq!(layout.scroll_width().to_f32_px(), CHILD, "{display:?}");
     }
 }
 
@@ -126,8 +126,8 @@ fn absolute_only_containers_include_scroll_container_end_padding() {
         tree.compute_layout(node, Size::MAX_CONTENT).unwrap();
         let layout = tree.layout(node).unwrap();
 
-        assert_eq!(layout.scrollable_overflow_rect.right, 20.0, "{display:?}");
-        assert_eq!(layout.scrollable_overflow_rect.bottom, 30.0, "{display:?}");
+        assert_eq!(layout.scrollable_overflow_rect.right.to_f32_px(), 20.0, "{display:?}");
+        assert_eq!(layout.scrollable_overflow_rect.bottom.to_f32_px(), 30.0, "{display:?}");
     }
 }
 
@@ -172,7 +172,7 @@ fn scroll_container_in_one_axis_clips_both_axes() {
         // overflow in both axes: the grandchild's y overflow must not propagate.
         let layout = nested_overflow_layout(display, Point { x: Overflow::Hidden, y: Overflow::Visible });
 
-        assert_eq!(layout.scrollable_overflow_rect.bottom, CONTAINER, "{display:?}");
+        assert_eq!(layout.scrollable_overflow_rect.bottom.to_f32_px(), CONTAINER, "{display:?}");
     }
 }
 
@@ -183,7 +183,7 @@ fn clip_in_one_axis_does_not_clip_the_other() {
         // still propagates.
         let layout = nested_overflow_layout(display, Point { x: Overflow::Clip, y: Overflow::Visible });
 
-        assert_eq!(layout.scrollable_overflow_rect.bottom, CONTAINER + CHILD, "{display:?}");
+        assert_eq!(layout.scrollable_overflow_rect.bottom.to_f32_px(), CONTAINER + CHILD, "{display:?}");
     }
 }
 
@@ -195,7 +195,7 @@ fn wholly_unreachable_boxes_are_excluded_for_rtl_scroll_containers() {
         let layout = container_with_absolute_child(display, Overflow::Scroll, Direction::Rtl, None, Some(-100.0));
 
         assert_eq!(layout.scrollable_overflow_rect, Rect::ZERO, "{display:?}");
-        assert_eq!(layout.scroll_width(), 0.0, "{display:?}");
+        assert_eq!(layout.scroll_width().to_f32_px(), 0.0, "{display:?}");
     }
 }
 
@@ -205,7 +205,7 @@ fn end_side_overflow_is_captured_for_rtl_scroll_containers() {
         // In RTL, overflow past the *left* edge is reachable end-side overflow.
         let layout = container_with_absolute_child(display, Overflow::Scroll, Direction::Rtl, Some(-CHILD), None);
 
-        assert_eq!(layout.scrollable_overflow_rect.right, CONTAINER + CHILD, "{display:?}");
-        assert_eq!(layout.scroll_width(), CHILD, "{display:?}");
+        assert_eq!(layout.scrollable_overflow_rect.right.to_f32_px(), CONTAINER + CHILD, "{display:?}");
+        assert_eq!(layout.scroll_width().to_f32_px(), CHILD, "{display:?}");
     }
 }

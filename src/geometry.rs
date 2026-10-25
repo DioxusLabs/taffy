@@ -1,8 +1,9 @@
 //! Geometric primitives useful for layout
 
-use crate::util::sys::f32_max;
+use crate::app_unit::Au;
+use crate::style::Dimension;
+use crate::util::au::px_to_au;
 use crate::CompactLength;
-use crate::{style::Dimension, util::sys::f32_min};
 use core::ops::{Add, Sub};
 
 #[cfg(feature = "flexbox")]
@@ -301,18 +302,18 @@ where
     }
 }
 
-impl Rect<Option<f32>> {
+impl Rect<Option<Au>> {
     /// A [`Rect`] with `None` as all parameters
-    pub const NONE: Rect<Option<f32>> = Self { left: None, right: None, top: None, bottom: None };
+    pub const NONE: Rect<Option<Au>> = Self { left: None, right: None, top: None, bottom: None };
 }
 
-impl Rect<f32> {
-    /// Creates a new Rect with `0.0` as all parameters
-    pub const ZERO: Rect<f32> = Self { left: 0.0, right: 0.0, top: 0.0, bottom: 0.0 };
+impl Rect<Au> {
+    /// Creates a new Rect with `0` as all parameters
+    pub const ZERO: Rect<Au> = Self { left: Au(0), right: Au(0), top: Au(0), bottom: Au(0) };
 
     /// Creates a new Rect
     #[must_use]
-    pub const fn new(start: f32, end: f32, top: f32, bottom: f32) -> Self {
+    pub const fn new(start: Au, end: Au, top: Au, bottom: Au) -> Self {
         Self { left: start, right: end, top, bottom }
     }
 
@@ -570,42 +571,42 @@ impl<T> Size<T> {
     }
 }
 
-impl Size<f32> {
+impl Size<Au> {
     /// A [`Size`] with zero width and height
-    pub const ZERO: Size<f32> = Self { width: 0.0, height: 0.0 };
+    pub const ZERO: Size<Au> = Self { width: Au(0), height: Au(0) };
 
-    /// Applies f32_max to each component separately
+    /// Applies max to each component separately
     #[inline(always)]
-    pub fn f32_max(self, rhs: Size<f32>) -> Size<f32> {
-        Size { width: f32_max(self.width, rhs.width), height: f32_max(self.height, rhs.height) }
+    pub fn f32_max(self, rhs: Size<Au>) -> Size<Au> {
+        Size { width: self.width.max(rhs.width), height: self.height.max(rhs.height) }
     }
 
-    /// Applies f32_min to each component separately
+    /// Applies min to each component separately
     #[inline(always)]
-    pub fn f32_min(self, rhs: Size<f32>) -> Size<f32> {
-        Size { width: f32_min(self.width, rhs.width), height: f32_min(self.height, rhs.height) }
+    pub fn f32_min(self, rhs: Size<Au>) -> Size<Au> {
+        Size { width: self.width.min(rhs.width), height: self.height.min(rhs.height) }
     }
 
     /// Return true if both width and height are greater than 0 else false
     #[inline(always)]
     pub fn has_non_zero_area(self) -> bool {
-        self.width > 0.0 && self.height > 0.0
+        self.width > Au(0) && self.height > Au(0)
     }
 }
 
-impl Size<Option<f32>> {
+impl Size<Option<Au>> {
     /// A [`Size`] with `None` width and height
-    pub const NONE: Size<Option<f32>> = Self { width: None, height: None };
+    pub const NONE: Size<Option<Au>> = Self { width: None, height: None };
 
-    /// A [`Size<Option<f32>>`] with `Some(width)` and `Some(height)` as parameters
+    /// A [`Size<Option<Au>>`] with `Some(width)` and `Some(height)` as parameters
     #[must_use]
-    pub const fn new(width: f32, height: f32) -> Self {
+    pub const fn new(width: Au, height: Au) -> Self {
         Size { width: Some(width), height: Some(height) }
     }
 
-    /// Creates a new [`Size<Option<f32>>`] with either the width or height set based on the provided `direction`
+    /// Creates a new [`Size<Option<Au>>`] with either the width or height set based on the provided `direction`
     #[cfg(feature = "flexbox")]
-    pub const fn from_cross(direction: FlexDirection, value: Option<f32>) -> Self {
+    pub const fn from_cross(direction: FlexDirection, value: Option<Au>) -> Self {
         let mut new = Self::NONE;
         if direction.is_row() {
             new.height = value
@@ -620,11 +621,14 @@ impl Size<Option<f32>> {
     ///   - If height is `Some` but width is `None`, then width is computed from height and aspect_ratio
     ///
     /// If aspect_ratio is `None` then this function simply returns self.
-    pub fn maybe_apply_aspect_ratio(self, aspect_ratio: Option<f32>) -> Size<Option<f32>> {
+    #[inline]
+    pub fn maybe_apply_aspect_ratio(self, aspect_ratio: Option<f32>) -> Size<Option<Au>> {
         match aspect_ratio {
             Some(ratio) => match (self.width, self.height) {
-                (Some(width), None) => Size { width: Some(width), height: Some(width / ratio) },
-                (None, Some(height)) => Size { width: Some(height * ratio), height: Some(height) },
+                (Some(width), None) => Size { width: Some(width), height: Some(px_to_au(width.to_f32_px() / ratio)) },
+                (None, Some(height)) => {
+                    Size { width: Some(px_to_au(height.to_f32_px() * ratio)), height: Some(height) }
+                }
                 _ => self,
             },
             None => self,
@@ -653,7 +657,7 @@ impl<T> Size<Option<T>> {
 impl Size<Dimension> {
     /// Generates a [`Size<Dimension>`] using length values
     #[must_use]
-    pub const fn from_lengths(width: f32, height: f32) -> Self {
+    pub fn from_lengths(width: f32, height: f32) -> Self {
         Size { width: Dimension(CompactLength::length(width)), height: Dimension(CompactLength::length(height)) }
     }
 
@@ -676,12 +680,12 @@ pub struct Point<T> {
     pub y: T,
 }
 
-impl Point<f32> {
+impl Point<Au> {
     /// A [`Point`] with values (0,0), representing the origin
-    pub const ZERO: Self = Self { x: 0.0, y: 0.0 };
+    pub const ZERO: Self = Self { x: Au(0), y: Au(0) };
 }
 
-impl Point<Option<f32>> {
+impl Point<Option<Au>> {
     /// A [`Point`] with values (None, None)
     pub const NONE: Self = Self { x: None, y: None };
 }
