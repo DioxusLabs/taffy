@@ -103,7 +103,7 @@ pub fn test_measure_function(
         let border = style.border.resolve_or_zero(inputs.parent_size.width, |_, _| 0.0);
         let first = padding.top + border.top + 8.0;
         let last = output.size.height - padding.bottom - border.bottom - 2.0;
-        output.baselines = taffy::Baselines { first: Some(first), last: Some(last.max(first)) };
+        output.baselines = taffy::Baselines::new(Some(first), Some(last.max(first)));
     }
     output
 }
