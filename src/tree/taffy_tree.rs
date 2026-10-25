@@ -1013,8 +1013,10 @@ impl<NodeContext> TaffyTree<NodeContext> {
 mod tests {
 
     use super::*;
-    use crate::style::{Dimension, Display, FlexDirection};
+    use crate::geometry::Line;
+    use crate::style::{AlignItems, Dimension, Display, FlexDirection, FlexWrap};
     use crate::style_helpers::*;
+    use crate::tree::{Baselines, RequestedAxis, RequestedBaselines, SizingMode};
     use crate::util::sys;
 
     fn size_measure_function(
@@ -1543,5 +1545,140 @@ mod tests {
             8,
             "clear() drops all nodes, so it must drop their contexts too"
         );
+    }
+
+    /// A measure function that reports the first and last baselines of its content
+    fn baseline_measure_function(
+        inputs: LayoutInput,
+        _node_id: NodeId,
+        node_context: Option<&mut Size<f32>>,
+        _style: &Style,
+    ) -> LayoutOutput {
+        let size = inputs.known_dimensions.unwrap_or(node_context.cloned().unwrap_or(Size::ZERO));
+        let mut output = LayoutOutput::from_outer_size(size);
+        output.baselines = Baselines::new(Some(size.height * 0.75), Some(size.height * 0.9));
+        output
+    }
+
+    fn compute_baselines(
+        tree: &mut TaffyTree<Size<f32>>,
+        node: NodeId,
+        run_mode: RunMode,
+        requested_baselines: RequestedBaselines,
+    ) -> Baselines {
+        let mut view = TaffyView { taffy: tree, measure_function: baseline_measure_function };
+        let output = view.compute_child_layout(
+            node,
+            LayoutInput {
+                run_mode,
+                sizing_mode: SizingMode::InherentSize,
+                axis: RequestedAxis::Both,
+                known_dimensions: Size::NONE,
+                known_dimensions_are_definite: Size { width: true, height: true },
+                parent_size: Size::NONE,
+                available_space: Size { width: AvailableSpace::Definite(400.0), height: AvailableSpace::MaxContent },
+                vertical_margins_are_collapsible: Line::FALSE,
+                requested_baselines,
+            },
+            None,
+        );
+        output.baselines
+    }
+
+    fn baseline_tree(container_style: Style) -> (TaffyTree<Size<f32>>, NodeId) {
+        let mut tree: TaffyTree<Size<f32>> = TaffyTree::new();
+        let children: Vec<NodeId> = [20.0, 40.0, 30.0]
+            .into_iter()
+            .map(|height| tree.new_leaf_with_context(Style::default(), Size { width: 50.0, height }).unwrap())
+            .collect();
+        let container = tree.new_with_children(container_style, &children).unwrap();
+        (tree, container)
+    }
+
+    /// `ComputeSize` must report exactly the requested baselines, and they must match the ones
+    /// that `PerformLayout` reports, before and after the measurements have been cached.
+    fn assert_requested_baselines_match_layout(container_style: Style) {
+        let (mut tree, container) = baseline_tree(container_style);
+
+        let none = compute_baselines(&mut tree, container, RunMode::ComputeSize, RequestedBaselines::NONE);
+        assert_eq!(none, Baselines::NONE);
+        let first = compute_baselines(&mut tree, container, RunMode::ComputeSize, RequestedBaselines::FIRST);
+        let last = compute_baselines(&mut tree, container, RunMode::ComputeSize, RequestedBaselines::LAST);
+        let layout = compute_baselines(&mut tree, container, RunMode::PerformLayout, RequestedBaselines::NONE);
+
+        assert!(layout.first().is_some() && layout.last().is_some(), "PerformLayout returns both baselines");
+        assert_eq!(first, Baselines::new(layout.first(), None));
+        assert_eq!(last, Baselines::new(None, layout.last()));
+
+        let both = compute_baselines(&mut tree, container, RunMode::ComputeSize, RequestedBaselines::BOTH);
+        assert_eq!(both, layout);
+        let first_again = compute_baselines(&mut tree, container, RunMode::ComputeSize, RequestedBaselines::FIRST);
+        assert_eq!(first_again, first);
+    }
+
+    #[test]
+    fn requested_baselines_block() {
+        assert_requested_baselines_match_layout(Style { display: Display::Block, ..Default::default() });
+    }
+
+    #[test]
+    fn requested_baselines_flex_row() {
+        assert_requested_baselines_match_layout(Style { display: Display::Flex, ..Default::default() });
+        assert_requested_baselines_match_layout(Style {
+            display: Display::Flex,
+            align_items: AlignItems::BASELINE,
+            ..Default::default()
+        });
+        assert_requested_baselines_match_layout(Style {
+            display: Display::Flex,
+            flex_wrap: FlexWrap::Wrap,
+            size: Size { width: length(120.0), height: auto() },
+            ..Default::default()
+        });
+    }
+
+    #[test]
+    fn requested_baselines_flex_column() {
+        assert_requested_baselines_match_layout(Style {
+            display: Display::Flex,
+            flex_direction: FlexDirection::Column,
+            ..Default::default()
+        });
+        assert_requested_baselines_match_layout(Style {
+            display: Display::Flex,
+            flex_direction: FlexDirection::ColumnReverse,
+            ..Default::default()
+        });
+    }
+
+    #[test]
+    fn requested_baselines_grid() {
+        assert_requested_baselines_match_layout(Style {
+            display: Display::Grid,
+            grid_template_columns: vec![fr(1.0), fr(1.0)],
+            ..Default::default()
+        });
+        assert_requested_baselines_match_layout(Style {
+            display: Display::Grid,
+            grid_template_columns: vec![fr(1.0), fr(1.0)],
+            align_items: AlignItems::BASELINE,
+            ..Default::default()
+        });
+    }
+
+    #[test]
+    fn requested_baselines_are_forwarded_through_nested_containers() {
+        let mut tree: TaffyTree<Size<f32>> = TaffyTree::new();
+        let leaf = tree.new_leaf_with_context(Style::default(), Size { width: 50.0, height: 40.0 }).unwrap();
+        let grid = tree.new_with_children(Style { display: Display::Grid, ..Default::default() }, &[leaf]).unwrap();
+        let flex = tree.new_with_children(Style { display: Display::Flex, ..Default::default() }, &[grid]).unwrap();
+        let block = tree.new_with_children(Style { display: Display::Block, ..Default::default() }, &[flex]).unwrap();
+
+        let first = compute_baselines(&mut tree, block, RunMode::ComputeSize, RequestedBaselines::FIRST);
+        let last = compute_baselines(&mut tree, block, RunMode::ComputeSize, RequestedBaselines::LAST);
+        let layout = compute_baselines(&mut tree, block, RunMode::PerformLayout, RequestedBaselines::NONE);
+        assert_eq!(first, Baselines::new(Some(30.0), None));
+        assert_eq!(last, Baselines::new(None, Some(36.0)));
+        assert_eq!(layout, Baselines::new(Some(30.0), Some(36.0)));
     }
 }
