@@ -2061,10 +2061,12 @@ fn calculate_children_base_lines(
                 continue;
             }
 
+            // A full layout at the item's hypothetical cross size, which (as baseline-aligned items do
+            // not stretch) is also its final size, so the final layout pass hits this cache entry
             let measured_size_and_baselines = tree.compute_child_layout(
                 child.node,
                 LayoutInput {
-                    run_mode: RunMode::ComputeSize,
+                    run_mode: RunMode::PerformLayout,
                     sizing_mode: SizingMode::ContentSize,
                     axis: RequestedAxis::Both,
                     known_dimensions: Size {
