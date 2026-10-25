@@ -94,8 +94,12 @@ where
     debug_log!("min_size ", dbg:node_min_size);
     debug_log!("max_size ", dbg:node_max_size);
 
-    // Return early if both width and height are known
-    if run_mode == RunMode::ComputeSize && has_styles_preventing_being_collapsed_through {
+    // Return early if both width and height are known (unless baselines were requested, which only
+    // the measure function can provide)
+    if run_mode == RunMode::ComputeSize
+        && has_styles_preventing_being_collapsed_through
+        && inputs.requested_baselines.is_empty()
+    {
         if let Size { width: Some(width), height: Some(height) } = node_size {
             let size = Size { width, height }
                 .maybe_clamp(node_min_size, node_max_size)

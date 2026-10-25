@@ -470,7 +470,9 @@ pub fn compute_block_layout(
     // is ComputeSize (and thus the container's size is all that we're interested in)
     if run_mode == RunMode::ComputeSize {
         if let Size { width: Some(width), height: Some(height) } = styled_based_known_dimensions {
-            return LayoutOutput::from_outer_size(Size { width, height });
+            if inputs.requested_baselines.is_empty() {
+                return LayoutOutput::from_outer_size(Size { width, height });
+            }
         }
 
         // We can also short-circuit if the width is known and only the width has been requested.
