@@ -281,7 +281,9 @@ impl<NodeContext, MeasureFunction> TaffyView<'_, NodeContext, MeasureFunction>
 where
     MeasureFunction: FnMut(LayoutInput, NodeId, Option<&mut NodeContext>, &Style) -> LayoutOutput,
 {
-    #[inline(always)]
+    // Not `inline(always)`: this is on the recursion of every nested layout, and inlining it
+    // reserves its frame on every level (about doubling the stack per level in release builds).
+    #[inline(never)]
     /// Unified implementation that both `LayoutPartialTree::compute_child_layout`
     /// and `LayoutBlockContainer::compute_block_child_layout` delegate to.
     fn compute_child_layout(
