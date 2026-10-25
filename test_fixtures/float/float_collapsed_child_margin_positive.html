@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>A positive top margin collapsing outside the container does not shift its child away from preceding floats</title>
+</head>
+<body>
+
+<div id="test-root" style="display: block; width: 100px;">
+  <div style="display: block;">
+    <div style="display: block; float: left; width: 60px; height: 40px;"></div>
+    <div style="display: block; margin-top: 20px;">
+      <div style="display: flow-root; width: 80px; height: 10px;"></div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
