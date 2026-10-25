@@ -524,4 +524,27 @@ mod oof_hoisting {
         tree.compute_layout(cb, Size::MAX_CONTENT).unwrap();
         assert_eq!(tree.layout(abs).unwrap().size, Size { width: 20.0, height: 30.0 });
     }
+
+    /// Hiding an ancestor of an out-of-flow box zeroes the box's rounded layout, whether or not
+    /// the hidden ancestor is the box's containing block.
+    #[test]
+    fn hiding_an_ancestor_zeroes_out_of_flow_layout() {
+        for position in [Position::Absolute, Position::Fixed] {
+            for parent_position in [Position::Static, Position::Relative] {
+                let mut tree: TaffyTree<()> = TaffyTree::new();
+                let oof = tree.new_leaf(Style { position, ..leaf_style(30.0, 30.0) }).unwrap();
+                let parent_style = Style { position: parent_position, ..leaf_style(50.0, 50.0) };
+                let parent = tree.new_with_children(parent_style.clone(), &[oof]).unwrap();
+                let root = tree.new_with_children(leaf_style(200.0, 200.0), &[parent]).unwrap();
+
+                tree.compute_layout(root, Size::MAX_CONTENT).unwrap();
+                assert_eq!(tree.layout(oof).unwrap().size, Size { width: 30.0, height: 30.0 });
+
+                tree.set_style(parent, Style { display: Display::None, ..parent_style }).unwrap();
+                tree.compute_layout(root, Size::MAX_CONTENT).unwrap();
+                assert_eq!(tree.unrounded_layout(oof).size, Size::ZERO, "{position:?} in {parent_position:?}");
+                assert_eq!(tree.layout(oof).unwrap().size, Size::ZERO, "{position:?} in {parent_position:?}");
+            }
+        }
+    }
 }
