@@ -134,9 +134,9 @@ use crate::style::{AvailableSpace, CoreStyle, OofItemStyle};
 use crate::style::{FlexboxContainerStyle, FlexboxItemStyle};
 #[cfg(feature = "grid")]
 use crate::style::{GridContainerStyle, GridItemStyle};
-#[cfg(feature = "block_layout")]
 use crate::tree::RequestedBaselines;
 use crate::CheapCloneStr;
+#[cfg(feature = "block_layout")]
 use crate::{BlockContainerStyle, BlockContext, BlockItemStyle};
 
 #[cfg(feature = "grid")]

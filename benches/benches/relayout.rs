@@ -101,6 +101,7 @@ fn relayout_benchmarks(c: &mut Criterion) {
 
 fn measure_input(width: f32) -> LayoutInput {
     LayoutInput {
+        requested_baselines: taffy::tree::RequestedBaselines::NONE,
         run_mode: RunMode::ComputeSize,
         sizing_mode: SizingMode::InherentSize,
         axis: RequestedAxis::Both,
