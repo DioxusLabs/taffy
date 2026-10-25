@@ -975,6 +975,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
 /// The grid area of an item. Tracks are stored in logical order. In RTL the physical offsets are assigned
 /// right-to-left, so an item's physical left edge is derived from its logical end line and its physical
 /// right edge from its logical start line.
+#[inline(always)]
 fn item_grid_area(item: &GridItem, rows: &[GridTrack], columns: &[GridTrack], direction: Direction) -> Rect<f32> {
     Rect {
         top: rows[item.row_indexes.start as usize + 1].offset,

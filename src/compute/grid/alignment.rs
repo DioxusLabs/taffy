@@ -464,10 +464,15 @@ pub(super) fn align_and_position_item(
     #[cfg(not(feature = "content_size"))]
     let contribution = Rect::ZERO;
 
-    let baselines = Baselines::new(
-        child_first_baseline(layout_output.baselines.first(), height, overflow.y),
-        child_last_baseline(layout_output.baselines.last(), height, overflow.y),
-    );
+    // Only items asked for baselines can provide the container's, so the others' are not derived
+    let baselines = if requested_baselines.is_empty() {
+        Baselines::NONE
+    } else {
+        Baselines::new(
+            child_first_baseline(layout_output.baselines.first(), height, overflow.y),
+            child_last_baseline(layout_output.baselines.last(), height, overflow.y),
+        )
+    };
     (contribution, y_without_relative_offset, height, baselines)
 }
 

@@ -2604,17 +2604,21 @@ fn calculate_flex_item(
         + item.margin.cross_start(direction)
         + cross_relative_inset;
 
-    let inner_first_baseline = child_first_baseline(layout_output.baselines.first(), size.height, item.overflow.y);
-    let inner_last_baseline = child_last_baseline(layout_output.baselines.last(), size.height, item.overflow.y);
     // The item's top edge excluding any relative offset, which does not affect baselines
     let top = if direction.is_row() {
         total_offset_cross + item.offset_cross + effective_line_offset_cross + item.margin.cross_start(direction)
     } else {
         *total_offset_main + item.offset_main + item.margin.main_start(direction)
     };
-    item.baseline = top + inner_first_baseline.unwrap_or(size.height);
-    item.baselines = Baselines::new(inner_first_baseline.map(|b| top + b), inner_last_baseline.map(|b| top + b));
     item.border_box_bottom = top + size.height;
+    // Only items asked for baselines can provide the container's, so the others' are not derived
+    item.baselines = if requested_baselines.is_empty() {
+        Baselines::NONE
+    } else {
+        let first = child_first_baseline(layout_output.baselines.first(), size.height, item.overflow.y);
+        let last = child_last_baseline(layout_output.baselines.last(), size.height, item.overflow.y);
+        Baselines::new(first.map(|b| top + b), last.map(|b| top + b))
+    };
 
     let location = if direction.is_row() {
         Point { x: offset_main, y: offset_cross }
