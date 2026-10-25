@@ -305,6 +305,16 @@ impl Baselines {
         Self::decode(self.first)
     }
 
+    /// The last baseline (if `last`) or first baseline of the node, if any
+    #[inline]
+    pub fn get(self, last: bool) -> Option<f32> {
+        if last {
+            self.last()
+        } else {
+            self.first()
+        }
+    }
+
     /// The last baseline of the node, if any
     #[inline]
     pub fn last(self) -> Option<f32> {
