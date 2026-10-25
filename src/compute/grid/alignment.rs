@@ -1,14 +1,18 @@
 //! Alignment of tracks and final positioning of items
 use super::types::GridTrack;
 use crate::compute::common::alignment::{
-    apply_alignment_fallback, child_first_baseline, compute_alignment_offset, resolve_self_alignment_safety,
+    apply_alignment_fallback, child_first_baseline, child_last_baseline, compute_alignment_offset,
+    resolve_self_alignment_safety,
 };
 use crate::geometry::{InBothAbsAxis, Line, Point, Rect, Size};
 use crate::style::{
     AlignContent, AlignItems, AlignItemsKeyword, AlignSelf, AvailableSpace, CoreStyle, GridItemStyle, Overflow,
     Position,
 };
-use crate::tree::{Layout, LayoutPartialTreeExt, NodeId, OofCandidates, SizingMode};
+use crate::tree::{
+    Baselines, Layout, LayoutInput, LayoutPartialTreeExt, NodeId, OofCandidates, RequestedAxis, RequestedBaselines,
+    RunMode, SizingMode,
+};
 use crate::util::sys::f32_max;
 use crate::util::{MaybeMath, MaybeResolve, ResolveOrZero};
 
@@ -99,7 +103,9 @@ pub(super) fn align_and_position_item(
     container_border: Rect<f32>,
     #[cfg(feature = "content_size")] container_is_scroll_container: bool,
     bubbled_candidates: &mut OofCandidates,
-) -> (Rect<f32>, f32, f32, Option<f32>) {
+    run_mode: RunMode,
+    requested_baselines: RequestedBaselines,
+) -> (Rect<f32>, f32, f32, Baselines) {
     let grid_area_size = Size { width: grid_area.right - grid_area.left, height: grid_area.bottom - grid_area.top };
 
     let style = tree.get_grid_child_style(node);
@@ -362,13 +368,19 @@ pub(super) fn align_and_position_item(
         Size { width, height }
     };
 
-    let mut layout_output = tree.perform_child_layout(
+    let mut layout_output = tree.compute_child_layout(
         node,
-        size,
-        containing_block_size.map(Option::Some),
-        grid_area_minus_item_margins_size.map(AvailableSpace::Definite),
-        SizingMode::InherentSize,
-        Line::FALSE,
+        LayoutInput {
+            run_mode,
+            sizing_mode: SizingMode::InherentSize,
+            axis: RequestedAxis::Both,
+            known_dimensions: size,
+            known_dimensions_are_definite: Size { width: true, height: true },
+            parent_size: containing_block_size.map(Option::Some),
+            available_space: grid_area_minus_item_margins_size.map(AvailableSpace::Definite),
+            vertical_margins_are_collapsible: Line::FALSE,
+            requested_baselines,
+        },
     );
 
     // Resolve final size
@@ -406,28 +418,30 @@ pub(super) fn align_and_position_item(
 
     let resolved_margin = Rect { left: x_margin.start, right: x_margin.end, top: y_margin.start, bottom: y_margin.end };
 
-    // Bubble out-of-flow candidates from the item's subtree, translating anchors from
-    // item-relative to container-relative coordinates
-    let mut item_candidates = layout_output.oof_candidates.take();
-    if !item_candidates.is_empty() {
-        item_candidates.translate(Point { x, y });
-        bubbled_candidates.append(&mut item_candidates);
-    }
+    if run_mode == RunMode::PerformLayout {
+        // Bubble out-of-flow candidates from the item's subtree, translating anchors from
+        // item-relative to container-relative coordinates
+        let mut item_candidates = layout_output.oof_candidates.take();
+        if !item_candidates.is_empty() {
+            item_candidates.translate(Point { x, y });
+            bubbled_candidates.append(&mut item_candidates);
+        }
 
-    tree.set_unrounded_layout(
-        node,
-        &Layout {
-            order,
-            location: Point { x, y },
-            size: Size { width, height },
-            #[cfg(feature = "content_size")]
-            scrollable_overflow_rect: layout_output.scrollable_overflow_rect,
-            scrollbar_size,
-            padding,
-            border,
-            margin: resolved_margin,
-        },
-    );
+        tree.set_unrounded_layout(
+            node,
+            &Layout {
+                order,
+                location: Point { x, y },
+                size: Size { width, height },
+                #[cfg(feature = "content_size")]
+                scrollable_overflow_rect: layout_output.scrollable_overflow_rect,
+                scrollbar_size,
+                padding,
+                border,
+                margin: resolved_margin,
+            },
+        );
+    }
 
     #[cfg(feature = "content_size")]
     let contribution = {
@@ -450,8 +464,11 @@ pub(super) fn align_and_position_item(
     #[cfg(not(feature = "content_size"))]
     let contribution = Rect::ZERO;
 
-    let baseline = child_first_baseline(layout_output.baselines.first(), height, overflow.y);
-    (contribution, y_without_relative_offset, height, baseline)
+    let baselines = Baselines::new(
+        child_first_baseline(layout_output.baselines.first(), height, overflow.y),
+        child_last_baseline(layout_output.baselines.last(), height, overflow.y),
+    );
+    (contribution, y_without_relative_offset, height, baselines)
 }
 
 /// Align and size a grid item along a single axis
