@@ -32773,6 +32773,78 @@ mod grid {
 
     #[cfg(feature = "grid")]
     #[test]
+    fn grid_minimum_contribution_baseline_shim_text_clamp__border_box_ltr() {
+        crate::run_xml_test("grid", "grid_minimum_contribution_baseline_shim_text_clamp__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_minimum_contribution_baseline_shim_text_clamp__content_box_ltr() {
+        crate::run_xml_test("grid", "grid_minimum_contribution_baseline_shim_text_clamp__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_minimum_contribution_baseline_shim_text_clamp__border_box_rtl() {
+        crate::run_xml_test("grid", "grid_minimum_contribution_baseline_shim_text_clamp__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_minimum_contribution_baseline_shim_text_clamp__content_box_rtl() {
+        crate::run_xml_test("grid", "grid_minimum_contribution_baseline_shim_text_clamp__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_minimum_contribution_baseline_shim_text_clamp_floor__border_box_ltr() {
+        crate::run_xml_test("grid", "grid_minimum_contribution_baseline_shim_text_clamp_floor__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_minimum_contribution_baseline_shim_text_clamp_floor__content_box_ltr() {
+        crate::run_xml_test("grid", "grid_minimum_contribution_baseline_shim_text_clamp_floor__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_minimum_contribution_baseline_shim_text_clamp_floor__border_box_rtl() {
+        crate::run_xml_test("grid", "grid_minimum_contribution_baseline_shim_text_clamp_floor__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_minimum_contribution_baseline_shim_text_clamp_floor__content_box_rtl() {
+        crate::run_xml_test("grid", "grid_minimum_contribution_baseline_shim_text_clamp_floor__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_minimum_contribution_baseline_shim_text_clamp_margin__border_box_ltr() {
+        crate::run_xml_test("grid", "grid_minimum_contribution_baseline_shim_text_clamp_margin__border_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_minimum_contribution_baseline_shim_text_clamp_margin__content_box_ltr() {
+        crate::run_xml_test("grid", "grid_minimum_contribution_baseline_shim_text_clamp_margin__content_box_ltr");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_minimum_contribution_baseline_shim_text_clamp_margin__border_box_rtl() {
+        crate::run_xml_test("grid", "grid_minimum_contribution_baseline_shim_text_clamp_margin__border_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
+    fn grid_minimum_contribution_baseline_shim_text_clamp_margin__content_box_rtl() {
+        crate::run_xml_test("grid", "grid_minimum_contribution_baseline_shim_text_clamp_margin__content_box_rtl");
+    }
+
+    #[cfg(feature = "grid")]
+    #[test]
     fn grid_minimum_contribution_cyclic_percent_min_and_preferred_size__border_box_ltr() {
         crate::run_xml_test("grid", "grid_minimum_contribution_cyclic_percent_min_and_preferred_size__border_box_ltr");
     }
