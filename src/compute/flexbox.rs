@@ -2802,6 +2802,7 @@ fn item_baselines(
     (Baselines::new(first.map(|b| top + b), last.map(|b| top + b)), top + height)
 }
 
+/// Calculates the layout line
 #[allow(clippy::too_many_arguments)]
 fn calculate_layout_line(
     tree: &mut impl LayoutFlexboxContainer,
