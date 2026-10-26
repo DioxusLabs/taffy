@@ -12,6 +12,55 @@ use taffy_test_helpers::new_test_tree;
 
 #[cfg(feature = "grid")]
 #[test]
+fn grid_absolute_safe_static_alignment_uses_original_containing_block() {
+    for direction in [Direction::Ltr, Direction::Rtl] {
+        for (width, height, x_ltr, x_rtl, y) in [
+            (21.0, 21.0, 3.0, 10.0, 2.5),
+            (33.0, 35.0, 1.0, 0.0, 1.0),
+            (32.0, 29.0, 1.0, 1.0, 1.0),
+            (20.0, 14.0, 4.0, 10.0, 6.0),
+            (0.0, 0.0, 24.0, 10.0, 13.0),
+        ] {
+            let mut taffy = new_test_tree();
+            taffy.disable_rounding();
+            let child = taffy
+                .new_leaf(Style {
+                    position: Position::Absolute,
+                    direction,
+                    size: Size { width: length(width), height: length(height) },
+                    grid_row: Line { start: line(2), end: line(3) },
+                    grid_column: Line { start: line(2), end: line(3) },
+                    justify_self: Some(JustifySelf::SAFE_END),
+                    align_self: Some(AlignSelf::SAFE_CENTER),
+                    ..Default::default()
+                })
+                .unwrap();
+            let root = taffy
+                .new_with_children(
+                    Style {
+                        display: Display::Grid,
+                        position: Position::Relative,
+                        direction,
+                        box_sizing: BoxSizing::ContentBox,
+                        size: Size { width: length(30.0), height: length(25.0) },
+                        padding: Rect { left: length(1.0), right: length(1.0), top: length(2.0), bottom: length(2.0) },
+                        border: Rect { left: length(1.0), right: length(1.0), top: length(1.0), bottom: length(1.0) },
+                        grid_template_rows: vec![length(3.0), length(14.0), length(3.0)],
+                        grid_template_columns: vec![length(2.0), length(20.0), length(2.0)],
+                        ..Default::default()
+                    },
+                    &[child],
+                )
+                .unwrap();
+            taffy.compute_layout(root, Size::MAX_CONTENT).unwrap();
+            let x = if direction == Direction::Rtl { x_rtl } else { x_ltr };
+            assert_eq!(taffy.layout(child).unwrap().location, taffy::Point { x, y }, "{direction:?}: {width}x{height}");
+        }
+    }
+}
+
+#[cfg(feature = "grid")]
+#[test]
 fn grid_safe_align_self_falls_back_to_start_on_overflow() {
     let mut taffy = new_test_tree();
     let child = taffy
