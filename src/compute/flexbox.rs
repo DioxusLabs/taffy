@@ -2206,12 +2206,14 @@ fn calculate_children_base_lines(
             let height = measured_size_and_baselines.size.height;
 
             if is_first_baseline {
-                let baseline = child_first_baseline(measured_size_and_baselines.baselines.first, height, child.overflow.y)
-                    .unwrap_or(height);
+                let baseline =
+                    child_first_baseline(measured_size_and_baselines.baselines.first, height, child.overflow.y)
+                        .unwrap_or(height);
                 child.baseline = baseline + child.margin.top;
             } else {
-                let baseline = child_first_baseline(measured_size_and_baselines.baselines.last, height, child.overflow.y)
-                    .unwrap_or(height);
+                let baseline =
+                    child_first_baseline(measured_size_and_baselines.baselines.last, height, child.overflow.y)
+                        .unwrap_or(height);
                 child.last_baseline = baseline + child.margin.top;
             }
         }

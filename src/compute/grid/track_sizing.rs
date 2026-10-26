@@ -522,10 +522,14 @@ fn resolve_item_baselines(
             let height = measured_size_and_baselines.size.height;
 
             if is_first_baseline {
-                let baseline = child_first_baseline(measured_size_and_baselines.baselines.first, height, item.overflow.y).unwrap_or(height);
+                let baseline =
+                    child_first_baseline(measured_size_and_baselines.baselines.first, height, item.overflow.y)
+                        .unwrap_or(height);
                 item.baseline = Some(baseline);
             } else {
-                let baseline = child_first_baseline(measured_size_and_baselines.baselines.last, height, item.overflow.y).unwrap_or(height);
+                let baseline =
+                    child_first_baseline(measured_size_and_baselines.baselines.last, height, item.overflow.y)
+                        .unwrap_or(height);
                 // Store the item's last-baseline *descent*: the distance from its last baseline
                 // to the bottom of its margin box
                 item.last_baseline = Some(
