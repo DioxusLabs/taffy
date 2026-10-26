@@ -767,7 +767,7 @@ fn compute_inner(
                             Point { x: direction.is_rtl(), y: false },
                             direction.is_rtl(),
                             resolved_padding,
-                            layout.margin,
+                            layout.margin.map(|value| value.min(0.0)),
                         ));
                     }
                 }
@@ -1335,7 +1335,7 @@ fn perform_final_layout_on_in_flow_children(
                         Point { x: direction.is_rtl(), y: false },
                         direction.is_rtl(),
                         resolved_padding,
-                        item_non_auto_margin,
+                        item_non_auto_margin.map(|value| value.min(0.0)),
                     ));
                 }
 
@@ -1807,7 +1807,7 @@ fn perform_final_layout_on_in_flow_children(
                     Point { x: direction.is_rtl(), y: false },
                     direction.is_rtl(),
                     resolved_padding,
-                    resolved_margin,
+                    resolved_margin.map(|value| value.min(0.0)),
                 ));
             }
 
