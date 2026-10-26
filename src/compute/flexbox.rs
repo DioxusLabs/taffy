@@ -13,7 +13,10 @@ use crate::tree::{
     AxisStaticAlign, AxisStaticEdge, AxisStaticPosition, LayoutFlexboxContainer, LayoutPartialTreeExt, NodeId,
     OofPositioningArea,
 };
-use crate::tree::{Baselines, Layout, LayoutInput, LayoutOutput, OofCandidate, OofCandidates, RunMode, SizingMode};
+use crate::tree::{
+    Baselines, InlineContentSizesInput, IntrinsicInlineSize, Layout, LayoutInput, LayoutOutput, OofCandidate,
+    OofCandidates, RunMode, SizingMode,
+};
 use crate::util::debug::debug_log;
 use crate::util::sys::{f32_max, f32_min, new_vec_with_capacity, Vec};
 use crate::util::MaybeMath;
@@ -2010,6 +2013,27 @@ fn determine_hypothetical_cross_size(
         };
 
         let child_inner_cross = child_cross.unwrap_or_else(|| {
+            let known_dimensions_are_definite = item_known_dimension_definiteness(constants, child);
+            // The cross size of a column item under a keyword available width is an intrinsic inline size
+            let intrinsic_inline_size = match child_available_cross {
+                AvailableSpace::MinContent if !constants.is_row => Some(IntrinsicInlineSize::MinContent),
+                AvailableSpace::MaxContent if !constants.is_row => Some(IntrinsicInlineSize::MaxContent),
+                _ => None,
+            };
+            if let Some(size) = intrinsic_inline_size {
+                let input = InlineContentSizesInput {
+                    known_block_size: child.target_size.height.into(),
+                    known_block_size_is_definite: known_dimensions_are_definite.height,
+                    parent_size: constants.node_inner_size,
+                    available_block_space: child_available_main,
+                    sizing_mode: SizingMode::ContentSize,
+                    vertical_margins_are_collapsible: Line::FALSE,
+                };
+                return tree
+                    .compute_child_inline_content_size(child.node, size, &input)
+                    .maybe_clamp(transferred_min_cross, transferred_max_cross)
+                    .max(padding_border_sum);
+            }
             tree.compute_child_layout(
                 child.node,
                 LayoutInput {
@@ -2020,7 +2044,7 @@ fn determine_hypothetical_cross_size(
                         width: if constants.is_row { child.target_size.width.into() } else { child_cross },
                         height: if constants.is_row { child_cross } else { child.target_size.height.into() },
                     },
-                    known_dimensions_are_definite: item_known_dimension_definiteness(constants, child),
+                    known_dimensions_are_definite,
                     parent_size: constants.node_inner_size,
                     available_space: Size {
                         width: if constants.is_row { child_available_main } else { child_available_cross },

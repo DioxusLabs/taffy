@@ -119,6 +119,66 @@ impl TryFrom<RequestedAxis> for AbsoluteAxis {
     }
 }
 
+/// One of a node's two intrinsic inline sizes (Taffy's inline axis is the horizontal axis)
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(Serialize))]
+pub enum IntrinsicInlineSize {
+    /// The smallest inline size the node can have without overflowing
+    MinContent,
+    /// The inline size the node would have given unlimited available inline space
+    MaxContent,
+}
+
+impl IntrinsicInlineSize {
+    /// The available space constraint that the node is measured under for this size
+    #[inline(always)]
+    pub fn available_space(self) -> AvailableSpace {
+        match self {
+            IntrinsicInlineSize::MinContent => AvailableSpace::MinContent,
+            IntrinsicInlineSize::MaxContent => AvailableSpace::MaxContent,
+        }
+    }
+}
+
+/// The inputs to an intrinsic inline size measurement: the node's block-axis constraints and the
+/// percentage bases for its own styles. There are no inline-axis constraints: an intrinsic inline
+/// size is by definition measured with no known width and no available width.
+#[derive(Debug, Copy, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize))]
+pub struct InlineContentSizesInput {
+    /// The node's block size, if the parent has already determined it (see [`LayoutInput::known_dimensions`])
+    pub known_block_size: Option<f32>,
+    /// Whether `known_block_size` is definite (see [`LayoutInput::known_dimensions_are_definite`])
+    pub known_block_size_is_definite: bool,
+    /// The size of the node's containing block, against which its own percentages resolve
+    pub parent_size: Size<Option<f32>>,
+    /// The space available to the node in the block axis
+    pub available_block_space: AvailableSpace,
+    /// Whether the node's style sizes should be taken into account or ignored
+    pub sizing_mode: SizingMode,
+    /// Whether each of the node's vertical margins is collapsible (see [`LayoutInput::vertical_margins_are_collapsible`])
+    pub vertical_margins_are_collapsible: Line<bool>,
+}
+
+impl InlineContentSizesInput {
+    /// The [`LayoutInput`] that measures the node for `size` through [`LayoutPartialTree::compute_child_layout`]
+    ///
+    /// [`LayoutPartialTree::compute_child_layout`]: crate::LayoutPartialTree::compute_child_layout
+    #[inline(always)]
+    pub fn layout_input(&self, size: IntrinsicInlineSize) -> LayoutInput {
+        LayoutInput {
+            run_mode: RunMode::ComputeSize,
+            sizing_mode: self.sizing_mode,
+            axis: RequestedAxis::Horizontal,
+            known_dimensions: Size { width: None, height: self.known_block_size },
+            known_dimensions_are_definite: Size { width: true, height: self.known_block_size_is_definite },
+            parent_size: self.parent_size,
+            available_space: Size { width: size.available_space(), height: self.available_block_space },
+            vertical_margins_are_collapsible: self.vertical_margins_are_collapsible,
+        }
+    }
+}
+
 /// A struct containing the inputs constraints/hints for laying out a node, which are passed in by the parent
 #[derive(Debug, Copy, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize))]

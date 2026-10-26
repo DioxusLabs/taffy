@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Added
+
+- `LayoutPartialTree::compute_child_inline_content_size`: every min-content and max-content width measurement that Taffy's layout algorithms make now goes through this method, which takes an `IntrinsicInlineSize` and an `InlineContentSizesInput` holding only the node's block-axis constraints and percentage bases (an intrinsic inline size has no inline-axis constraints). The default implementation measures the node with `compute_child_layout`; trees that can compute intrinsic inline sizes directly can override it.
+
 ### Fixed
 
 - Flexbox: `align-content: stretch` (and `normal`) and `justify-content: stretch` fall back to `flex-start` rather than `start` when the lines/items overflow the container, so overflowing lines in a `wrap-reverse` container (and items in a `row-reverse`/`column-reverse` container) are packed to the flex-start edge like in Chrome.

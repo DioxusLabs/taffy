@@ -126,7 +126,10 @@
 //! }
 //! ```
 //!
-use super::{DetailedLayoutInfo, Layout, LayoutInput, LayoutOutput, NodeId, RequestedAxis, RunMode, SizingMode};
+use super::{
+    DetailedLayoutInfo, InlineContentSizesInput, IntrinsicInlineSize, Layout, LayoutInput, LayoutOutput, NodeId,
+    RequestedAxis, RunMode, SizingMode,
+};
 use crate::debug::debug_log;
 use crate::geometry::{AbsoluteAxis, Line, Size};
 use crate::style::{AvailableSpace, CoreStyle, OofItemStyle};
@@ -201,6 +204,19 @@ pub trait LayoutPartialTree: TraversePartialTree {
 
     /// Compute the specified node's size or full layout given the specified constraints
     fn compute_child_layout(&mut self, node_id: NodeId, inputs: LayoutInput) -> LayoutOutput;
+
+    /// Compute one of the node's intrinsic inline sizes (its min-content or max-content width) under the
+    /// block-axis constraints in `input`. Every intrinsic inline size measurement made by Taffy's layout
+    /// algorithms goes through this method. The default measures the node with
+    /// [`compute_child_layout`](Self::compute_child_layout) under the corresponding available width.
+    fn compute_child_inline_content_size(
+        &mut self,
+        node_id: NodeId,
+        size: IntrinsicInlineSize,
+        input: &InlineContentSizesInput,
+    ) -> f32 {
+        self.compute_child_layout(node_id, input.layout_input(size)).size.width
+    }
 }
 
 /// Extends [`LayoutPartialTree`] with the operations needed by the out-of-flow positioning pass
@@ -391,7 +407,9 @@ pub trait LayoutBlockContainer: LayoutPartialTree {
 /// A private trait which allows us to add extra convenience methods to types which implement
 /// LayoutTree without making those methods public.
 pub(crate) trait LayoutPartialTreeExt: LayoutPartialTree {
-    /// Compute the size of the node given the specified constraints
+    /// Compute the size of the node in one axis given the specified constraints. A width requested with no
+    /// known width under a `MinContent` or `MaxContent` available width is an intrinsic inline size and is
+    /// computed with [`LayoutPartialTree::compute_child_inline_content_size`].
     #[inline(always)]
     #[allow(clippy::too_many_arguments)]
     fn measure_child_size(
@@ -404,6 +422,24 @@ pub(crate) trait LayoutPartialTreeExt: LayoutPartialTree {
         axis: AbsoluteAxis,
         vertical_margins_are_collapsible: Line<bool>,
     ) -> f32 {
+        if axis == AbsoluteAxis::Horizontal && known_dimensions.width.is_none() {
+            let size = match available_space.width {
+                AvailableSpace::MinContent => Some(IntrinsicInlineSize::MinContent),
+                AvailableSpace::MaxContent => Some(IntrinsicInlineSize::MaxContent),
+                AvailableSpace::Definite(_) => None,
+            };
+            if let Some(size) = size {
+                let input = InlineContentSizesInput {
+                    known_block_size: known_dimensions.height,
+                    known_block_size_is_definite: true,
+                    parent_size,
+                    available_block_space: available_space.height,
+                    sizing_mode,
+                    vertical_margins_are_collapsible,
+                };
+                return self.compute_child_inline_content_size(node_id, size, &input);
+            }
+        }
         self.compute_child_layout(
             node_id,
             LayoutInput {
