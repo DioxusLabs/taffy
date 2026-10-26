@@ -27,6 +27,7 @@ impl ScrollableOverflow {
     pub const ZERO: Self = Self(Rect::ZERO);
 
     /// Pack an origin-containing rectangle and its physical scroll-origin directions.
+    #[inline]
     pub fn new(rect: Rect<f32>, reversed: Point<bool>) -> Self {
         debug_assert!(rect.left <= 0.0 && rect.top <= 0.0 && rect.right >= 0.0 && rect.bottom >= 0.0);
         Self(Rect {
@@ -37,54 +38,64 @@ impl ScrollableOverflow {
     }
 
     /// The physical overflow rectangle, with the packed signs restored.
+    #[inline(always)]
     pub fn rect(self) -> Rect<f32> {
         Rect { right: self.0.right.abs(), bottom: self.0.bottom.abs(), ..self.0 }
     }
 
     /// The physical left overflow edge.
+    #[inline(always)]
     pub fn left(self) -> f32 {
         self.0.left
     }
 
     /// The physical right overflow edge, with its sign restored.
+    #[inline(always)]
     pub fn right(self) -> f32 {
         self.0.right.abs()
     }
 
     /// The physical top overflow edge.
+    #[inline(always)]
     pub fn top(self) -> f32 {
         self.0.top
     }
 
     /// The physical bottom overflow edge, with its sign restored.
+    #[inline(always)]
     pub fn bottom(self) -> f32 {
         self.0.bottom.abs()
     }
 
     /// Whether the physical x/y scroll origins are at the right/bottom edges.
+    #[inline(always)]
     pub fn is_reversed(self) -> Point<bool> {
         Point { x: self.0.right.is_sign_negative(), y: self.0.bottom.is_sign_negative() }
     }
 
     /// Swap the physical axes, preserving origin directions and signed zeroes.
+    #[inline]
     pub fn transpose(self) -> Self {
         Self(self.0.transpose())
     }
 }
 
 impl From<(Rect<f32>, Point<bool>)> for ScrollableOverflow {
+    #[inline]
     fn from((rect, reversed): (Rect<f32>, Point<bool>)) -> Self {
         Self::new(rect, reversed)
     }
 }
 
 impl Default for ScrollableOverflow {
+    #[inline]
     fn default() -> Self {
         Self::ZERO
     }
 }
 
 impl PartialEq for ScrollableOverflow {
+    #[inline]
     fn eq(&self, other: &Self) -> bool {
         self.0.left.to_bits() == other.0.left.to_bits()
             && self.0.right.to_bits() == other.0.right.to_bits()
