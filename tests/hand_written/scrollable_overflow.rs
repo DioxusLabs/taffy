@@ -1,7 +1,7 @@
 //! The scrollable overflow rectangle captures start-side (negative) overflow as well as
 //! end-side overflow. Boxes wholly in the unreachable scrollable overflow region are
 //! excluded for scroll containers, while boxes only partially in the unreachable region
-//! contribute their whole border box.
+//! contribute their border box, clipped to the reachable side of each scroll origin.
 
 use taffy::geometry::Point;
 use taffy::prelude::*;
@@ -10,6 +10,119 @@ use taffy_test_helpers::new_test_tree;
 
 const CONTAINER: f32 = 200.0;
 const CHILD: f32 = 50.0;
+
+#[test]
+fn block_end_margins_do_not_extend_scrollable_overflow() {
+    for direction in [Direction::Ltr, Direction::Rtl] {
+        for bottom_margin in [-100.0, 0.0, 150.0] {
+            for padding in [0.0, 8.0] {
+                let mut tree = new_test_tree();
+                let child = tree
+                    .new_leaf(Style {
+                        size: Size { width: length(50.0), height: length(50.0) },
+                        margin: Rect { top: length(150.0), bottom: length(bottom_margin), ..zero() },
+                        ..Default::default()
+                    })
+                    .unwrap();
+                let node = tree
+                    .new_with_children(
+                        Style {
+                            display: Display::Block,
+                            direction,
+                            size: Size { width: length(200.0), height: length(200.0) },
+                            padding: Rect { bottom: length(padding), ..zero() },
+                            overflow: Point { x: Overflow::Scroll, y: Overflow::Scroll },
+                            ..Default::default()
+                        },
+                        &[child],
+                    )
+                    .unwrap();
+                tree.compute_layout(node, Size::MAX_CONTENT).unwrap();
+                let layout = tree.layout(node).unwrap();
+                let expected_end = 200.0 + if bottom_margin < 0.0 { 0.0 } else { padding };
+                assert_eq!(
+                    layout.scrollable_overflow_rect.bottom(),
+                    expected_end,
+                    "{direction:?} margin {bottom_margin} padding {padding}"
+                );
+            }
+        }
+    }
+}
+
+#[test]
+fn negative_margins_do_not_add_padding_to_overflow_edges() {
+    for display in [Display::Block, Display::Flex, Display::Grid] {
+        for direction in [Direction::Ltr, Direction::Rtl] {
+            for flex_direction in [FlexDirection::Row, FlexDirection::RowReverse, FlexDirection::ColumnReverse] {
+                let mut tree = new_test_tree();
+                let child = tree
+                    .new_leaf(Style {
+                        size: Size { width: length(300.0), height: length(300.0) },
+                        margin: Rect {
+                            left: length(-100.0),
+                            right: length(-100.0),
+                            top: length(-100.0),
+                            bottom: length(-100.0),
+                        },
+                        ..Default::default()
+                    })
+                    .unwrap();
+                let node = tree
+                    .new_with_children(
+                        Style {
+                            display,
+                            direction,
+                            flex_direction,
+                            box_sizing: BoxSizing::ContentBox,
+                            size: Size { width: length(80.0), height: length(80.0) },
+                            padding: Rect {
+                                left: length(16.0),
+                                right: length(4.0),
+                                top: length(1.0),
+                                bottom: length(8.0),
+                            },
+                            border: Rect {
+                                left: length(4.0),
+                                right: length(50.0),
+                                top: length(1.0),
+                                bottom: length(40.0),
+                            },
+                            overflow: Point { x: Overflow::Hidden, y: Overflow::Hidden },
+                            ..Default::default()
+                        },
+                        &[child],
+                    )
+                    .unwrap();
+                tree.compute_layout(node, Size::MAX_CONTENT).unwrap();
+                let layout = tree.layout(node).unwrap();
+                let reversed_x = (direction == Direction::Rtl)
+                    ^ (display == Display::Flex && flex_direction == FlexDirection::RowReverse);
+                let expected_width = (if reversed_x { 204.0 } else { 216.0 })
+                    - if display == Display::Flex && flex_direction != FlexDirection::ColumnReverse {
+                        20.0
+                    } else {
+                        0.0
+                    };
+                let expected_height = if display == Display::Flex && flex_direction == FlexDirection::ColumnReverse {
+                    188.0
+                } else {
+                    201.0
+                };
+                assert_eq!(
+                    100.0 + layout.scroll_width(),
+                    expected_width,
+                    "{display:?} {direction:?} {flex_direction:?}"
+                );
+                assert_eq!(
+                    89.0 + layout.scroll_height(),
+                    expected_height,
+                    "{display:?} {direction:?} {flex_direction:?}"
+                );
+            }
+        }
+    }
+}
 
 fn container_with_absolute_child(
     display: Display,
@@ -56,7 +169,7 @@ fn wholly_unreachable_boxes_are_excluded_for_scroll_containers() {
         // Child entirely before the scroll origin (x from -100 to -50)
         let layout = container_with_absolute_child(display, Overflow::Scroll, Direction::Ltr, Some(-100.0), None);
 
-        assert_eq!(layout.scrollable_overflow_rect, Rect::ZERO, "{display:?}");
+        assert_eq!(layout.scrollable_overflow_rect.rect(), Rect::ZERO, "{display:?}");
         assert_eq!(layout.scroll_width(), 0.0, "{display:?}");
     }
 }
@@ -68,19 +181,18 @@ fn wholly_unreachable_boxes_contribute_to_non_scroll_containers() {
         // start-side overflow is captured in its scrollable overflow rect.
         let layout = container_with_absolute_child(display, Overflow::Visible, Direction::Ltr, Some(-100.0), None);
 
-        assert_eq!(layout.scrollable_overflow_rect.left, -100.0, "{display:?}");
+        assert_eq!(layout.scrollable_overflow_rect.left(), -100.0, "{display:?}");
     }
 }
 
 #[test]
-fn partially_unreachable_boxes_contribute_their_whole_border_box() {
+fn partially_unreachable_boxes_are_clipped_at_the_normal_origin() {
     for display in [Display::Block, Display::Flex, Display::Grid] {
-        // Child straddling the scroll origin (x from -25 to 25): its whole border box is
-        // part of the scrollable overflow area, even though the negative part is unreachable.
+        // Child straddling the scroll origin (x from -25 to 25): the unreachable part is clipped.
         let layout = container_with_absolute_child(display, Overflow::Scroll, Direction::Ltr, Some(-25.0), None);
 
-        assert_eq!(layout.scrollable_overflow_rect.left, -25.0, "{display:?}");
-        assert_eq!(layout.scrollable_overflow_rect.right, 25.0, "{display:?}");
+        assert_eq!(layout.scrollable_overflow_rect.left(), 0.0, "{display:?}");
+        assert_eq!(layout.scrollable_overflow_rect.right(), 25.0, "{display:?}");
         // Only the reachable extent counts towards the scroll width
         assert_eq!(layout.scroll_width(), 0.0, "{display:?}");
     }
@@ -92,7 +204,7 @@ fn end_side_overflow_is_captured_and_scrollable() {
         // Child extending past the end edge (x from 200 to 250)
         let layout = container_with_absolute_child(display, Overflow::Scroll, Direction::Ltr, Some(CONTAINER), None);
 
-        assert_eq!(layout.scrollable_overflow_rect.right, CONTAINER + CHILD, "{display:?}");
+        assert_eq!(layout.scrollable_overflow_rect.right(), CONTAINER + CHILD, "{display:?}");
         assert_eq!(layout.scroll_width(), CHILD, "{display:?}");
     }
 }
@@ -126,8 +238,8 @@ fn absolute_only_containers_include_scroll_container_end_padding() {
         tree.compute_layout(node, Size::MAX_CONTENT).unwrap();
         let layout = tree.layout(node).unwrap();
 
-        assert_eq!(layout.scrollable_overflow_rect.right, 20.0, "{display:?}");
-        assert_eq!(layout.scrollable_overflow_rect.bottom, 30.0, "{display:?}");
+        assert_eq!(layout.scrollable_overflow_rect.right(), 20.0, "{display:?}");
+        assert_eq!(layout.scrollable_overflow_rect.bottom(), 30.0, "{display:?}");
     }
 }
 
@@ -172,7 +284,7 @@ fn scroll_container_in_one_axis_clips_both_axes() {
         // overflow in both axes: the grandchild's y overflow must not propagate.
         let layout = nested_overflow_layout(display, Point { x: Overflow::Hidden, y: Overflow::Visible });
 
-        assert_eq!(layout.scrollable_overflow_rect.bottom, CONTAINER, "{display:?}");
+        assert_eq!(layout.scrollable_overflow_rect.bottom(), CONTAINER, "{display:?}");
     }
 }
 
@@ -183,7 +295,7 @@ fn clip_in_one_axis_does_not_clip_the_other() {
         // still propagates.
         let layout = nested_overflow_layout(display, Point { x: Overflow::Clip, y: Overflow::Visible });
 
-        assert_eq!(layout.scrollable_overflow_rect.bottom, CONTAINER + CHILD, "{display:?}");
+        assert_eq!(layout.scrollable_overflow_rect.bottom(), CONTAINER + CHILD, "{display:?}");
     }
 }
 
@@ -194,7 +306,8 @@ fn wholly_unreachable_boxes_are_excluded_for_rtl_scroll_containers() {
         // *right* edge is wholly unreachable.
         let layout = container_with_absolute_child(display, Overflow::Scroll, Direction::Rtl, None, Some(-100.0));
 
-        assert_eq!(layout.scrollable_overflow_rect, Rect::ZERO, "{display:?}");
+        assert_eq!(layout.scrollable_overflow_rect.left(), 0.0, "{display:?}");
+        assert_eq!(layout.scrollable_overflow_rect.is_reversed(), Point { x: true, y: false }, "{display:?}");
         assert_eq!(layout.scroll_width(), 0.0, "{display:?}");
     }
 }
@@ -205,7 +318,256 @@ fn end_side_overflow_is_captured_for_rtl_scroll_containers() {
         // In RTL, overflow past the *left* edge is reachable end-side overflow.
         let layout = container_with_absolute_child(display, Overflow::Scroll, Direction::Rtl, Some(-CHILD), None);
 
-        assert_eq!(layout.scrollable_overflow_rect.right, CONTAINER + CHILD, "{display:?}");
+        assert_eq!(layout.scrollable_overflow_rect.left(), -CHILD, "{display:?}");
         assert_eq!(layout.scroll_width(), CHILD, "{display:?}");
+    }
+}
+
+fn flex_overflow_layout(direction: Direction, flex_direction: FlexDirection, wrap: FlexWrap, absolute: bool) -> Layout {
+    let mut tree = new_test_tree();
+    let child = tree
+        .new_leaf(Style {
+            position: if absolute { Position::Absolute } else { Position::Relative },
+            flex_shrink: 0.0,
+            size: Size { width: length(300.0), height: length(300.0) },
+            ..Default::default()
+        })
+        .unwrap();
+    let node = tree
+        .new_with_children(
+            Style {
+                display: Display::Flex,
+                direction,
+                flex_direction,
+                flex_wrap: wrap,
+                position: Position::Relative,
+                overflow: Point { x: Overflow::Scroll, y: Overflow::Scroll },
+                size: Size { width: length(CONTAINER), height: length(CONTAINER) },
+                ..Default::default()
+            },
+            &[child],
+        )
+        .unwrap();
+    tree.compute_layout(node, Size::MAX_CONTENT).unwrap();
+    *tree.layout(node).unwrap()
+}
+
+#[test]
+fn flex_reversed_origins_include_negative_overflow() {
+    for direction in [Direction::Ltr, Direction::Rtl] {
+        for flex_direction in
+            [FlexDirection::Row, FlexDirection::RowReverse, FlexDirection::Column, FlexDirection::ColumnReverse]
+        {
+            for wrap in [FlexWrap::NoWrap, FlexWrap::WrapReverse] {
+                // Exercise the same origins for in-flow and absolutely positioned flex children.
+                for absolute in [false, true] {
+                    let layout = flex_overflow_layout(direction, flex_direction, wrap, absolute);
+                    let main_reversed =
+                        matches!(flex_direction, FlexDirection::RowReverse | FlexDirection::ColumnReverse);
+                    let (x, y) = if matches!(flex_direction, FlexDirection::Row | FlexDirection::RowReverse) {
+                        (main_reversed, wrap == FlexWrap::WrapReverse)
+                    } else {
+                        (wrap == FlexWrap::WrapReverse, main_reversed)
+                    };
+                    let reversed = Point { x: x ^ direction.is_rtl(), y };
+                    let context = (direction, flex_direction, wrap, absolute);
+                    assert_eq!(layout.scrollable_overflow_rect.is_reversed(), reversed, "{context:?}");
+                    let overflow = layout.scrollable_overflow_rect;
+                    assert_eq!(overflow.left(), if reversed.x { -100.0 } else { 0.0 }, "{context:?}");
+                    assert_eq!(overflow.top(), if reversed.y { -100.0 } else { 0.0 }, "{context:?}");
+                    assert_eq!(layout.scroll_width(), 100.0, "{context:?}");
+                    assert_eq!(layout.scroll_height(), 100.0, "{context:?}");
+                }
+            }
+        }
+    }
+}
+
+#[test]
+fn wrap_reverse_lines_overflow_above_the_scrollport() {
+    for direction in [Direction::Ltr, Direction::Rtl] {
+        let mut tree = new_test_tree();
+        let mut children = Vec::new();
+        for _ in 0..3 {
+            children.push(
+                tree.new_leaf(Style {
+                    flex_shrink: 0.0,
+                    size: Size { width: length(100.0), height: length(100.0) },
+                    ..Default::default()
+                })
+                .unwrap(),
+            );
+        }
+        let node = tree
+            .new_with_children(
+                Style {
+                    display: Display::Flex,
+                    direction,
+                    flex_wrap: FlexWrap::WrapReverse,
+                    size: Size { width: length(200.0), height: length(100.0) },
+                    overflow: Point { x: Overflow::Scroll, y: Overflow::Scroll },
+                    ..Default::default()
+                },
+                &children,
+            )
+            .unwrap();
+        tree.compute_layout(node, Size::MAX_CONTENT).unwrap();
+        let layout = tree.layout(node).unwrap();
+        assert_eq!(tree.layout(children[2]).unwrap().location.y, -100.0);
+        assert_eq!(layout.scrollable_overflow_rect.top(), -100.0);
+        assert_eq!(layout.scrollable_overflow_rect.is_reversed(), Point { x: direction.is_rtl(), y: true });
+        assert_eq!(layout.scroll_height(), 100.0);
+    }
+}
+
+#[test]
+fn empty_scroll_ranges_and_visible_container_origins() {
+    for display in [Display::Block, Display::Flex, Display::Grid] {
+        for overflow in [Overflow::Visible, Overflow::Scroll] {
+            let mut tree = new_test_tree();
+            let node = tree
+                .new_leaf(Style {
+                    display,
+                    direction: Direction::Rtl,
+                    flex_direction: FlexDirection::ColumnReverse,
+                    flex_wrap: FlexWrap::WrapReverse,
+                    size: Size { width: length(CONTAINER), height: length(CONTAINER) },
+                    overflow: Point { x: overflow, y: overflow },
+                    ..Default::default()
+                })
+                .unwrap();
+            tree.compute_layout(node, Size::MAX_CONTENT).unwrap();
+            let layout = tree.layout(node).unwrap();
+            if overflow == Overflow::Visible {
+                assert_eq!(layout.scrollable_overflow_rect.is_reversed(), Point { x: false, y: false });
+            }
+            assert_eq!(layout.scroll_width(), 0.0);
+            assert_eq!(layout.scroll_height(), 0.0);
+        }
+    }
+}
+
+#[test]
+fn negative_overflow_is_preserved_for_visible_flex_containers() {
+    let mut tree = new_test_tree();
+    let child = tree
+        .new_leaf(Style {
+            flex_shrink: 0.0,
+            size: Size { width: length(300.0), height: length(300.0) },
+            ..Default::default()
+        })
+        .unwrap();
+    let node = tree
+        .new_with_children(
+            Style {
+                display: Display::Flex,
+                flex_direction: FlexDirection::ColumnReverse,
+                flex_wrap: FlexWrap::WrapReverse,
+                size: Size { width: length(CONTAINER), height: length(CONTAINER) },
+                ..Default::default()
+            },
+            &[child],
+        )
+        .unwrap();
+    tree.compute_layout(node, Size::MAX_CONTENT).unwrap();
+    let overflow = tree.layout(node).unwrap().scrollable_overflow_rect;
+    assert_eq!(overflow.is_reversed(), Point { x: false, y: false });
+    assert_eq!(overflow.left(), -100.0);
+    assert_eq!(overflow.top(), -100.0);
+}
+
+#[test]
+fn reversed_flex_origins_clip_unreachable_absolute_overflow() {
+    for flex_direction in [FlexDirection::RowReverse, FlexDirection::ColumnReverse] {
+        for offset in [-100.0_f32, -25.0, 175.0, 200.0] {
+            let mut tree = new_test_tree();
+            let row = flex_direction == FlexDirection::RowReverse;
+            let child = tree
+                .new_leaf(Style {
+                    position: Position::Absolute,
+                    inset: Rect {
+                        left: length(if row { offset } else { 0.0 }),
+                        top: length(if row { 0.0 } else { offset }),
+                        right: auto(),
+                        bottom: auto(),
+                    },
+                    size: Size { width: length(CHILD), height: length(CHILD) },
+                    ..Default::default()
+                })
+                .unwrap();
+            let node = tree
+                .new_with_children(
+                    Style {
+                        display: Display::Flex,
+                        flex_direction,
+                        position: Position::Relative,
+                        size: Size { width: length(CONTAINER), height: length(CONTAINER) },
+                        overflow: Point { x: Overflow::Scroll, y: Overflow::Scroll },
+                        ..Default::default()
+                    },
+                    &[child],
+                )
+                .unwrap();
+            tree.compute_layout(node, Size::MAX_CONTENT).unwrap();
+            let layout = tree.layout(node).unwrap();
+            let overflow = layout.scrollable_overflow_rect;
+            assert!(overflow.right() <= CONTAINER && overflow.bottom() <= CONTAINER);
+            assert_eq!(
+                if row { layout.scroll_width() } else { layout.scroll_height() },
+                (-offset).max(0.0),
+                "{flex_direction:?} {offset}"
+            );
+        }
+    }
+}
+
+#[test]
+fn reversed_flex_scroll_ranges_include_padding_and_exclude_borders() {
+    for direction in [Direction::Ltr, Direction::Rtl] {
+        for flex_direction in
+            [FlexDirection::Row, FlexDirection::RowReverse, FlexDirection::Column, FlexDirection::ColumnReverse]
+        {
+            for wrap in [FlexWrap::NoWrap, FlexWrap::WrapReverse] {
+                let mut tree = new_test_tree();
+                let child = tree
+                    .new_leaf(Style {
+                        flex_shrink: 0.0,
+                        size: Size { width: length(300.0), height: length(300.0) },
+                        ..Default::default()
+                    })
+                    .unwrap();
+                let node = tree
+                    .new_with_children(
+                        Style {
+                            display: Display::Flex,
+                            direction,
+                            flex_direction,
+                            flex_wrap: wrap,
+                            size: Size { width: length(CONTAINER), height: length(CONTAINER) },
+                            border: Rect {
+                                left: length(20.0),
+                                right: length(20.0),
+                                top: length(20.0),
+                                bottom: length(20.0),
+                            },
+                            padding: Rect {
+                                left: length(10.0),
+                                right: length(20.0),
+                                top: length(30.0),
+                                bottom: length(40.0),
+                            },
+                            overflow: Point { x: Overflow::Scroll, y: Overflow::Scroll },
+                            ..Default::default()
+                        },
+                        &[child],
+                    )
+                    .unwrap();
+                tree.compute_layout(node, Size::MAX_CONTENT).unwrap();
+                let layout = tree.layout(node).unwrap();
+                let context = (direction, flex_direction, wrap);
+                assert_eq!(layout.scroll_width(), 170.0, "{context:?}");
+                assert_eq!(layout.scroll_height(), 210.0, "{context:?}");
+            }
+        }
     }
 }

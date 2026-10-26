@@ -78,6 +78,35 @@ mod compressible_replaced {
         assert_eq!(layout.location, Point { x: 10.0, y: 10.0 });
     }
 
+    /// A `width: 100px; max-width: 100%` item in a zero-width grid's `1fr` column.
+    fn grid_item_width_with_percent_max_width(replaced: bool, compressible_replaced: bool) -> f32 {
+        let container = Style {
+            display: Display::Grid,
+            size: Size { width: length(0.0), height: auto() },
+            grid_template_columns: vec![fr(1.0)],
+            ..Default::default()
+        };
+        let child = Style {
+            item_is_replaced: replaced,
+            item_is_compressible_replaced: compressible_replaced,
+            size: Size { width: length(100.0), height: length(20.0) },
+            min_size: Size { width: length(0.0), height: auto() },
+            max_size: Size { width: percent(1.0), height: auto() },
+            ..Default::default()
+        };
+        layout_child(container, child).size.width
+    }
+
+    #[test]
+    fn grid_percent_max_width_does_not_compress_minimum_contribution() {
+        assert_eq!(grid_item_width_with_percent_max_width(false, true), 100.0);
+    }
+
+    #[test]
+    fn grid_percent_max_width_compresses_replaced_minimum_contribution() {
+        assert_eq!(grid_item_width_with_percent_max_width(true, false), 0.0);
+    }
+
     #[test]
     fn replaced_implies_compressible_replaced() {
         let style: Style = Style { item_is_replaced: true, ..Default::default() };

@@ -1,0 +1,21 @@
+<test name="grid_minimum_contribution_baseline_shim_text_clamp_floor__content_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" box-sizing="content-box" direction="rtl" position="relative" align-items="baseline" width="0px" height="0px" grid-template-rows="minmax(auto, 40px)" grid-template-columns="50px 50px">
+      <text box-sizing="content-box" direction="rtl" position="relative" padding-top="25px">
+        X
+      </text>
+      <text box-sizing="content-box" direction="rtl" position="relative" padding-bottom="25px">
+        X
+      </text>
+      <div box-sizing="content-box" direction="rtl" position="absolute" top="0px" left="0px" bottom="0px" right="0px" grid-row-start="1" grid-row-end="2" grid-column-start="1" grid-column-end="3"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="0" height="0" resolved-rows="50px" resolved-columns="50px 50px">
+      <node x="-50" y="0" width="50" height="35"/>
+      <node x="-100" y="25" width="50" height="35"/>
+      <node x="-100" y="0" width="100" height="50"/>
+    </node>
+  </expectations>
+</test>

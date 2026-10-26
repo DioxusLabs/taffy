@@ -1,4 +1,4 @@
-use taffy::{compute_leaf_layout, LayoutInput, LayoutOutput, NodeId, Size, Style, TaffyTree};
+use taffy::{compute_leaf_layout, LayoutInput, LayoutOutput, NodeId, ResolveOrZero, Size, Style, TaffyTree};
 
 /// Creates a `TaffyTree` that uses `TestNodeContext`. The purpose of this function is
 /// to allow `TaffyTree` to be monomophised once in this crate rather than separately for
@@ -66,7 +66,11 @@ pub fn test_measure_function(
     context: Option<&mut TestNodeContext>,
     style: &Style,
 ) -> LayoutOutput {
-    compute_leaf_layout(
+    let is_horizontal_text = matches!(
+        context.as_deref(),
+        Some(TestNodeContext { measure_data: TestMeasureData::AhemText(data), .. }) if data.writing_mode == WritingMode::Horizontal
+    );
+    let mut output = compute_leaf_layout(
         inputs,
         style,
         |_, _| 0.0,
@@ -92,7 +96,16 @@ pub fn test_measure_function(
                 height: known_dimensions.height.unwrap_or(compute_size.height),
             }
         },
-    )
+    );
+    // Ahem text (10px, line-height 1): ascent 8px and descent 2px per line
+    if is_horizontal_text {
+        let padding = style.padding.resolve_or_zero(inputs.parent_size.width, |_, _| 0.0);
+        let border = style.border.resolve_or_zero(inputs.parent_size.width, |_, _| 0.0);
+        let first = padding.top + border.top + 8.0;
+        let last = output.size.height - padding.bottom - border.bottom - 2.0;
+        output.baselines = taffy::Baselines { first: Some(first), last: Some(last.max(first)) };
+    }
+    output
 }
 
 /// Measure data for nodes that returns results based on an intrinsic aspect ratio

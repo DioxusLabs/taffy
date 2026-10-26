@@ -174,6 +174,7 @@ pub fn compute_root_layout(
             // The root is the initial containing block and claims all remaining candidates
             ContainingBlockClaims::ALL,
             overflow,
+            Point { x: direction.is_rtl(), y: false },
             &mut hoisted,
             &mut unclaimed,
         );
@@ -442,14 +443,29 @@ pub fn round_layout(tree: &mut impl RoundTree, node_id: NodeId) {
     /// This is split into a separate function to make it easier to feature flag.
     fn round_scrollable_overflow_rect(
         layout: &mut Layout,
-        unrounded_rect: crate::geometry::Rect<f32>,
+        unrounded_overflow: crate::tree::ScrollableOverflow,
         cumulative_x: f32,
         cumulative_y: f32,
     ) {
-        layout.scrollable_overflow_rect.left = round(cumulative_x + unrounded_rect.left) - round(cumulative_x);
-        layout.scrollable_overflow_rect.right = round(cumulative_x + unrounded_rect.right) - round(cumulative_x);
-        layout.scrollable_overflow_rect.top = round(cumulative_y + unrounded_rect.top) - round(cumulative_y);
-        layout.scrollable_overflow_rect.bottom = round(cumulative_y + unrounded_rect.bottom) - round(cumulative_y);
+        let unrounded_rect = unrounded_overflow.rect();
+        let round_edge = |offset: f32, edge: f32| {
+            let rounded = round(offset + edge) - round(offset);
+            if rounded == 0.0 {
+                // Keep left/top -0.0; ScrollableOverflow::new only re-packs right/bottom signs from reversed.
+                rounded.copysign(edge)
+            } else {
+                rounded
+            }
+        };
+        layout.scrollable_overflow_rect = crate::tree::ScrollableOverflow::new(
+            crate::geometry::Rect {
+                left: round_edge(cumulative_x, unrounded_rect.left),
+                right: round_edge(cumulative_x, unrounded_rect.right),
+                top: round_edge(cumulative_y, unrounded_rect.top),
+                bottom: round_edge(cumulative_y, unrounded_rect.bottom),
+            },
+            unrounded_overflow.is_reversed(),
+        );
     }
 }
 
