@@ -135,12 +135,11 @@ mod caching {
 
     /// A flex container that is only asked for its main size (e.g. because it is an item of a grid
     /// whose tracks are being sized) must not measure the cross size of its items.
-    /// (Without that short-circuit the leaf is measured 13 times in the row case and 12 times in the column case;
-    /// in the column case one of the leaf's 11 measurements is a repeat that the cache's 5 general entries cannot hold)
+    /// (Without that short-circuit the leaf is measured 13 times in the row case and 12 times in the column case)
     #[test]
     #[cfg(all(feature = "grid", feature = "flexbox"))]
     fn measure_count_flex_in_grid() {
-        for (flex_direction, expected_count) in [(FlexDirection::Row, 9), (FlexDirection::Column, 11)] {
+        for (flex_direction, expected_count) in [(FlexDirection::Row, 9), (FlexDirection::Column, 10)] {
             let mut taffy = new_test_tree();
 
             let text = TestNodeContext::ahem_text(

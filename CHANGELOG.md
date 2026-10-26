@@ -4,7 +4,7 @@
 
 ### Performance
 
-- The per-node layout cache keeps a node's min-content and max-content inline sizes in two dedicated entries, which other measurements can no longer evict, and has 5 entries for other measurements (previously 9 entries for all measurements), so `Cache` is 344 B rather than 408 B.
+- The per-node layout cache keeps a node's min-content and max-content inline sizes in two dedicated entries, which other measurements can no longer evict; the other 7 entries hold the remaining measurements.
 
 ### Fixed
 

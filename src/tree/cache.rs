@@ -8,7 +8,7 @@ use crate::tree::{CollapsibleMarginSet, LayoutInput, LayoutOutput, RunMode, Sizi
 use crate::RequestedAxis;
 
 /// The number of general measure entries for each node in the tree
-const CACHE_SIZE: usize = 5;
+const CACHE_SIZE: usize = 7;
 /// The number of inline content size entries for each node in the tree:
 /// one for the min-content size and one for the max-content size
 const INLINE_CONTENT_SIZE_CACHE_SIZE: usize = 2;
