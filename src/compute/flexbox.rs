@@ -2694,7 +2694,7 @@ fn calculate_flex_item(
         } else {
             Point { x: location.x - border.left, y: location.y - border.top }
         };
-        let mut contribution = compute_scrollable_overflow_contribution(
+        let contribution = compute_scrollable_overflow_contribution(
             contribution_location,
             size,
             scrollable_overflow_rect.rect(),
@@ -2707,20 +2707,18 @@ fn calculate_flex_item(
                 - Size { width: constants.scrollbar_gutter.x, height: constants.scrollbar_gutter.y },
             constants.scroll_origin_reversed(),
             layout_direction.is_rtl(),
+            Rect {
+                left: constants.content_box_inset.left
+                    - border.left
+                    - if layout_direction.is_rtl() { constants.scrollbar_gutter.x } else { 0.0 },
+                right: constants.content_box_inset.right
+                    - border.right
+                    - if layout_direction.is_rtl() { 0.0 } else { constants.scrollbar_gutter.x },
+                top: constants.content_box_inset.top - border.top,
+                bottom: constants.content_box_inset.bottom - border.bottom - constants.scrollbar_gutter.y,
+            },
+            item.margin,
         );
-        if constants.is_scroll_container && contribution != Rect::ZERO {
-            let reversed = constants.scroll_origin_reversed();
-            if reversed.x ^ layout_direction.is_rtl() {
-                contribution.left -= if layout_direction.is_rtl() {
-                    constants.content_box_inset.right - border.right
-                } else {
-                    constants.content_box_inset.left - border.left
-                };
-            }
-            if reversed.y {
-                contribution.top -= constants.content_box_inset.top - border.top;
-            }
-        }
         *total_overflow_rect = total_overflow_rect.union(contribution);
     }
 }
@@ -2832,25 +2830,19 @@ fn final_layout_pass(
         }
     }
 
-    // A scroll container's own padding at the end of the content is part of its scrollable
-    // overflow region, so it is included in the overflow rect. Boxes that are not scroll
-    // containers do not extend their overflow region by their own padding.
     #[cfg(feature = "content_size")]
     if constants.is_scroll_container {
-        let reversed = constants.scroll_origin_reversed();
-        if !(reversed.x ^ constants.layout_direction.is_rtl()) {
-            overflow_rect.right += if constants.layout_direction.is_rtl() {
+        overflow_rect = overflow_rect.union(Rect {
+            left: 0.0,
+            right: if constants.layout_direction.is_rtl() {
                 constants.content_box_inset.left - constants.border.left - constants.scrollbar_gutter.x
             } else {
                 constants.content_box_inset.right - constants.border.right - constants.scrollbar_gutter.x
-            };
-        }
-        if !reversed.y {
-            overflow_rect.bottom +=
-                constants.content_box_inset.bottom - constants.border.bottom - constants.scrollbar_gutter.y;
-        }
+            },
+            top: 0.0,
+            bottom: constants.content_box_inset.bottom - constants.border.bottom - constants.scrollbar_gutter.y,
+        });
     }
-
     overflow_rect
 }
 

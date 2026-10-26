@@ -738,6 +738,8 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
             border,
             #[cfg(feature = "content_size")]
             is_scroll_container,
+            #[cfg(feature = "content_size")]
+            padding,
             &mut item.oof_candidates,
         );
         item.y_position = y_position;
@@ -886,11 +888,16 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     if items.is_empty() {
         #[cfg(feature = "content_size")]
         let mut output = {
-            let mut overflow_rect = item_overflow_rect;
-            if is_scroll_container {
-                overflow_rect.right += if direction.is_rtl() { padding.left } else { padding.right };
-                overflow_rect.bottom += padding.bottom;
-            }
+            let overflow_rect = if is_scroll_container {
+                item_overflow_rect.union(Rect {
+                    left: 0.0,
+                    right: if direction.is_rtl() { padding.left } else { padding.right },
+                    top: 0.0,
+                    bottom: padding.bottom,
+                })
+            } else {
+                item_overflow_rect
+            };
             LayoutOutput::from_sizes(
                 container_border_box,
                 finalize_scrollable_overflow(
@@ -937,11 +944,16 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     // scroll containers do not extend their overflow region by their own padding.
     #[cfg(feature = "content_size")]
     let scrollable_overflow_rect = {
-        let mut overflow_rect = item_overflow_rect;
-        if is_scroll_container {
-            overflow_rect.right += if direction.is_rtl() { padding.left } else { padding.right };
-            overflow_rect.bottom += padding.bottom;
-        }
+        let overflow_rect = if is_scroll_container {
+            item_overflow_rect.union(Rect {
+                left: 0.0,
+                right: if direction.is_rtl() { padding.left } else { padding.right },
+                top: 0.0,
+                bottom: padding.bottom,
+            })
+        } else {
+            item_overflow_rect
+        };
         finalize_scrollable_overflow(
             overflow_rect,
             container_border_box - border.sum_axes() - Size { width: scrollbar_gutter.x, height: scrollbar_gutter.y },

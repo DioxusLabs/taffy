@@ -890,6 +890,8 @@ pub(crate) fn perform_oof_layout(
                 area_size,
                 reversed,
                 direction.is_rtl(),
+                Rect::ZERO,
+                Rect::ZERO,
             ));
         }
     }
