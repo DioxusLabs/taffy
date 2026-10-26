@@ -22,7 +22,9 @@ use crate::{BoxGenerationMode, BoxSizing, Dimension, Direction, RequestedAxis};
 
 use super::common::alignment::apply_alignment_fallback;
 #[cfg(feature = "content_size")]
-use super::common::scrollable_overflow::{compute_scrollable_overflow_contribution, finalize_scrollable_overflow};
+use super::common::scrollable_overflow::{
+    compute_scrollable_overflow_contribution, finalize_scrollable_overflow, ScrollableOverflowContainer,
+};
 use super::common::sizing_keyword::{resolve_sizing_keyword, SizingKeywordResolution};
 
 /// The intermediate results of a flexbox calculation for a single item
@@ -193,6 +195,11 @@ struct AlgoConstants {
     /// The space between the content box and the border box.
     /// This consists of padding + border + scrollbar_gutter.
     content_box_inset: Rect<f32>,
+    /// The border and scrollbar gutters surrounding the padding box.
+    padding_box_inset: Rect<f32>,
+    /// The resolved padding used for scrollable overflow contributions.
+    #[cfg(feature = "content_size")]
+    padding: Rect<f32>,
     /// The size reserved for scrollbar gutters in each axis
     scrollbar_gutter: Point<f32>,
     /// Whether the node being laid out is a scroll container
@@ -525,15 +532,8 @@ fn compute_preliminary(tree: &mut impl LayoutFlexboxContainer, node: NodeId, inp
     let mut candidates = OofCandidates::new();
     collect_oof_candidates(tree, node, &constants, &mut flex_lines, &mut candidates);
 
-    let absolute_position_inset = constants.border
-        + Rect {
-            left: if constants.layout_direction.is_rtl() { constants.scrollbar_gutter.x } else { 0.0 },
-            right: if constants.layout_direction.is_rtl() { 0.0 } else { constants.scrollbar_gutter.x },
-            top: 0.0,
-            bottom: constants.scrollbar_gutter.y,
-        };
-    let absolute_position_area = constants.container_size - absolute_position_inset.sum_axes();
-    let absolute_position_offset = Point { x: absolute_position_inset.left, y: absolute_position_inset.top };
+    let absolute_position_area = constants.container_size - constants.padding_box_inset.sum_axes();
+    let absolute_position_offset = Point { x: constants.padding_box_inset.left, y: constants.padding_box_inset.top };
 
     debug_log!("hidden_layout");
     let len = tree.child_count(node);
@@ -731,6 +731,23 @@ fn compute_constants(
         Direction::Rtl => content_box_inset.left += scrollbar_gutter.x,
     };
 
+    let padding_box_inset = border
+        + Rect {
+            left: if layout_direction.is_rtl() { scrollbar_gutter.x } else { 0.0 },
+            right: if layout_direction.is_rtl() { 0.0 } else { scrollbar_gutter.x },
+            top: 0.0,
+            bottom: scrollbar_gutter.y,
+        };
+    #[cfg(feature = "content_size")]
+    let padding = Rect {
+        left: content_box_inset.left - border.left - if layout_direction.is_rtl() { scrollbar_gutter.x } else { 0.0 },
+        right: content_box_inset.right
+            - border.right
+            - if layout_direction.is_rtl() { 0.0 } else { scrollbar_gutter.x },
+        top: content_box_inset.top - border.top,
+        bottom: content_box_inset.bottom - border.bottom - scrollbar_gutter.y,
+    };
+
     let node_outer_size = known_dimensions;
     let node_inner_size = node_outer_size.maybe_sub(content_box_inset.sum_axes());
     let known_main_size_is_definite = known_dimensions_are_definite.main(dir);
@@ -767,6 +784,9 @@ fn compute_constants(
         border,
         gap,
         content_box_inset,
+        padding_box_inset,
+        #[cfg(feature = "content_size")]
+        padding,
         scrollbar_gutter,
         #[cfg(feature = "content_size")]
         is_scroll_container,
@@ -2599,7 +2619,7 @@ fn calculate_flex_item(
     total_offset_cross: f32,
     line_offset_cross: f32,
     #[cfg(feature = "content_size")] total_overflow_rect: &mut Rect<f32>,
-    #[cfg(feature = "content_size")] border: Rect<f32>,
+    #[cfg(feature = "content_size")] overflow_container: &ScrollableOverflowContainer,
     constants: &AlgoConstants,
 ) {
     let container_size = constants.container_size;
@@ -2697,10 +2717,8 @@ fn calculate_flex_item(
 
     #[cfg(feature = "content_size")]
     {
-        let contribution_location = Point {
-            x: location.x - border.left - if layout_direction.is_rtl() { constants.scrollbar_gutter.x } else { 0.0 },
-            y: location.y - border.top,
-        };
+        let contribution_location =
+            Point { x: location.x - constants.padding_box_inset.left, y: location.y - constants.padding_box_inset.top };
         let contribution = compute_scrollable_overflow_contribution(
             contribution_location,
             size,
@@ -2708,21 +2726,7 @@ fn calculate_flex_item(
             item.border,
             item.overflow,
             item.contain,
-            constants.is_scroll_container,
-            container_size
-                - border.sum_axes()
-                - Size { width: constants.scrollbar_gutter.x, height: constants.scrollbar_gutter.y },
-            constants.scroll_origin_reversed(),
-            Rect {
-                left: constants.content_box_inset.left
-                    - border.left
-                    - if layout_direction.is_rtl() { constants.scrollbar_gutter.x } else { 0.0 },
-                right: constants.content_box_inset.right
-                    - border.right
-                    - if layout_direction.is_rtl() { 0.0 } else { constants.scrollbar_gutter.x },
-                top: constants.content_box_inset.top - border.top,
-                bottom: constants.content_box_inset.bottom - border.bottom - constants.scrollbar_gutter.y,
-            },
+            overflow_container,
             item.margin,
         );
         *total_overflow_rect = total_overflow_rect.union(contribution);
@@ -2736,7 +2740,7 @@ fn calculate_layout_line(
     line: &mut FlexLine,
     total_offset_cross: &mut f32,
     #[cfg(feature = "content_size")] overflow_rect: &mut Rect<f32>,
-    #[cfg(feature = "content_size")] border: Rect<f32>,
+    #[cfg(feature = "content_size")] overflow_container: &ScrollableOverflowContainer,
     constants: &AlgoConstants,
 ) {
     let container_size = constants.container_size;
@@ -2766,7 +2770,7 @@ fn calculate_layout_line(
                 #[cfg(feature = "content_size")]
                 overflow_rect,
                 #[cfg(feature = "content_size")]
-                border,
+                overflow_container,
                 constants,
             );
         }
@@ -2781,7 +2785,7 @@ fn calculate_layout_line(
                 #[cfg(feature = "content_size")]
                 overflow_rect,
                 #[cfg(feature = "content_size")]
-                border,
+                overflow_container,
                 constants,
             );
         }
@@ -2799,6 +2803,15 @@ fn final_layout_pass(
     flex_lines: &mut [FlexLine],
     constants: &AlgoConstants,
 ) -> Rect<f32> {
+    #[cfg(feature = "content_size")]
+    let overflow_container = ScrollableOverflowContainer {
+        parent_is_scroll_container: constants.is_scroll_container,
+        parent_size: constants.container_size
+            - constants.border.sum_axes()
+            - Size { width: constants.scrollbar_gutter.x, height: constants.scrollbar_gutter.y },
+        reversed: constants.scroll_origin_reversed(),
+        padding: constants.padding,
+    };
     let mut total_offset_cross = if constants.is_column && constants.layout_direction.is_rtl() {
         constants.container_size.width - constants.content_box_inset.cross_end(constants.dir)
     } else {
@@ -2817,7 +2830,7 @@ fn final_layout_pass(
                 #[cfg(feature = "content_size")]
                 &mut overflow_rect,
                 #[cfg(feature = "content_size")]
-                constants.border,
+                &overflow_container,
                 constants,
             );
         }
@@ -2830,7 +2843,7 @@ fn final_layout_pass(
                 #[cfg(feature = "content_size")]
                 &mut overflow_rect,
                 #[cfg(feature = "content_size")]
-                constants.border,
+                &overflow_container,
                 constants,
             );
         }

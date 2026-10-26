@@ -4,6 +4,18 @@ use crate::style::{Contain, Overflow};
 use crate::tree::ScrollableOverflow;
 use crate::util::sys::{f32_max, f32_min};
 
+/// Container geometry shared by its children's scrollable overflow contributions.
+pub(crate) struct ScrollableOverflowContainer {
+    /// Whether the parent clips unreachable overflow and includes end padding.
+    pub parent_is_scroll_container: bool,
+    /// The extent of the parent's padding-box frame, excluding scrollbar gutters.
+    pub parent_size: Size<f32>,
+    /// The scroll origin in each physical axis.
+    pub reversed: Point<bool>,
+    /// The parent's resolved padding.
+    pub padding: Rect<f32>,
+}
+
 #[inline(always)]
 /// Determine the rectangle that a given node contributes to its parent's scrollable overflow
 /// rectangle.
@@ -35,12 +47,10 @@ pub(crate) fn compute_scrollable_overflow_contribution(
     border: Rect<f32>,
     overflow: Point<Overflow>,
     contain: Contain,
-    parent_is_scroll_container: bool,
-    parent_size: Size<f32>,
-    reversed: Point<bool>,
-    padding: Rect<f32>,
+    container: &ScrollableOverflowContainer,
     margin: Rect<f32>,
 ) -> Rect<f32> {
+    let ScrollableOverflowContainer { parent_is_scroll_container, parent_size, reversed, padding } = *container;
     let scrollable_overflow_rect = Rect {
         left: scrollable_overflow_rect.left + border.left,
         right: scrollable_overflow_rect.right + border.left,
@@ -105,19 +115,21 @@ pub(crate) fn finalize_scrollable_overflow(
     reversed: Point<bool>,
     is_scroll_container: bool,
 ) -> ScrollableOverflow {
-    let size = Size { width: size.width.max(0.0), height: size.height.max(0.0) };
-    let reversed = if is_scroll_container { reversed } else { Point { x: false, y: false } };
-    if is_scroll_container {
+    let size = Size { width: f32_max(size.width, 0.0), height: f32_max(size.height, 0.0) };
+    let reversed = if is_scroll_container {
         if reversed.x {
-            rect.right = f32_min(rect.right, size.width.max(0.0));
+            rect.right = f32_min(rect.right, size.width);
         } else {
             rect.left = 0.0;
         }
         if reversed.y {
-            rect.bottom = f32_min(rect.bottom, size.height.max(0.0));
+            rect.bottom = f32_min(rect.bottom, size.height);
         } else {
             rect.top = 0.0;
         }
-    }
+        reversed
+    } else {
+        Point { x: false, y: false }
+    };
     ScrollableOverflow::new(rect, reversed)
 }

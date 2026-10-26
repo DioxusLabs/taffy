@@ -315,7 +315,9 @@ impl BlockContext<'_> {
 
 use super::common::alignment::{apply_alignment_fallback, child_first_baseline, compute_alignment_offset};
 #[cfg(feature = "content_size")]
-use super::common::scrollable_overflow::{compute_scrollable_overflow_contribution, finalize_scrollable_overflow};
+use super::common::scrollable_overflow::{
+    compute_scrollable_overflow_contribution, finalize_scrollable_overflow, ScrollableOverflowContainer,
+};
 use super::common::sizing_keyword::{resolve_sizing_keyword, SizingKeywordResolution};
 
 /// Per-child data that is accumulated and modified over the course of the layout algorithm
@@ -740,6 +742,12 @@ fn compute_inner(
             #[cfg(feature = "content_size")]
             {
                 inflow_overflow_rect = Rect::ZERO;
+                let overflow_container = ScrollableOverflowContainer {
+                    parent_is_scroll_container: is_scroll_container,
+                    parent_size: final_outer_size - resolved_border.sum_axes() - scrollbar_gutter.sum_axes(),
+                    reversed: Point { x: direction.is_rtl(), y: false },
+                    padding: resolved_padding,
+                };
                 for item in items.iter() {
                     if let Some(layout) = item.final_layout.as_ref() {
                         let contribution_location = Point {
@@ -753,10 +761,7 @@ fn compute_inner(
                             layout.border,
                             item.overflow,
                             item.contain,
-                            is_scroll_container,
-                            final_outer_size - resolved_border.sum_axes() - scrollbar_gutter.sum_axes(),
-                            Point { x: direction.is_rtl(), y: false },
-                            resolved_padding,
+                            &overflow_container,
                             layout.margin.map(|value| value.min(0.0)),
                         ));
                     }
@@ -1143,6 +1148,13 @@ fn perform_final_layout_on_in_flow_children(
 ) -> (Rect<f32>, f32, CollapsibleMarginSet, CollapsibleMarginSet, Option<f32>) {
     // Resolve container_inner_width for sizing child nodes using initial content_box_inset
     let container_inner_width = (container_outer_width - resolved_content_box_inset.horizontal_axis_sum()).max(0.0);
+    #[cfg(feature = "content_size")]
+    let overflow_container = ScrollableOverflowContainer {
+        parent_is_scroll_container: is_scroll_container,
+        parent_size: Size { width: container_inner_width + resolved_padding.horizontal_axis_sum(), height: 0.0 },
+        reversed: Point { x: direction.is_rtl(), y: false },
+        padding: resolved_padding,
+    };
     let container_percentage_resolution_height =
         container_percentage_resolution_height.maybe_sub(resolved_content_box_inset.vertical_axis_sum());
     let parent_size = Size { width: Some(container_inner_width), height: container_percentage_resolution_height };
@@ -1321,10 +1333,7 @@ fn perform_final_layout_on_in_flow_children(
                         item.border,
                         item.overflow,
                         item.contain,
-                        is_scroll_container,
-                        Size { width: container_inner_width + resolved_padding.horizontal_axis_sum(), height: 0.0 },
-                        Point { x: direction.is_rtl(), y: false },
-                        resolved_padding,
+                        &overflow_container,
                         item_non_auto_margin.map(|value| value.min(0.0)),
                     ));
                 }
@@ -1788,10 +1797,7 @@ fn perform_final_layout_on_in_flow_children(
                     item.border,
                     item.overflow,
                     item.contain,
-                    is_scroll_container,
-                    Size { width: container_inner_width + resolved_padding.horizontal_axis_sum(), height: 0.0 },
-                    Point { x: direction.is_rtl(), y: false },
-                    resolved_padding,
+                    &overflow_container,
                     resolved_margin.map(|value| value.min(0.0)),
                 ));
             }

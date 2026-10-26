@@ -20,7 +20,9 @@ use crate::util::{MaybeMath, MaybeResolve, ResolveOrZero};
 use crate::{AxisStaticEdge, BoxSizing, Direction};
 
 #[cfg(feature = "content_size")]
-use super::common::scrollable_overflow::{compute_scrollable_overflow_contribution, finalize_scrollable_overflow};
+use super::common::scrollable_overflow::{
+    compute_scrollable_overflow_contribution, finalize_scrollable_overflow, ScrollableOverflowContainer,
+};
 use super::common::sizing_keyword::resolve_absolute_sizing_keywords;
 
 /// Resolve the final static offset of an out-of-flow box from its static position, given the
@@ -813,6 +815,13 @@ pub(crate) fn perform_oof_layout(
 
     #[cfg(feature = "content_size")]
     let is_scroll_container = container_overflow.x.is_scroll_container() || container_overflow.y.is_scroll_container();
+    #[cfg(feature = "content_size")]
+    let overflow_container = ScrollableOverflowContainer {
+        parent_is_scroll_container: is_scroll_container,
+        parent_size: area_size,
+        reversed,
+        padding: Rect::ZERO,
+    };
 
     // Split the candidate list into an initial work list of claimed candidates and the unclaimed
     // remainder. Further claimed candidates surfaced while laying out a claimed box are appended
@@ -880,10 +889,7 @@ pub(crate) fn perform_oof_layout(
                 layout.border,
                 overflow,
                 contain,
-                is_scroll_container,
-                area_size,
-                reversed,
-                Rect::ZERO,
+                &overflow_container,
                 Rect::ZERO,
             ));
         }

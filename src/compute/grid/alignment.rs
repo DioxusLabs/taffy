@@ -13,7 +13,9 @@ use crate::util::sys::f32_max;
 use crate::util::{MaybeMath, MaybeResolve, ResolveOrZero};
 
 #[cfg(feature = "content_size")]
-use crate::compute::common::scrollable_overflow::compute_scrollable_overflow_contribution;
+use crate::compute::common::scrollable_overflow::{
+    compute_scrollable_overflow_contribution, ScrollableOverflowContainer,
+};
 use crate::compute::common::sizing_keyword::{resolve_sizing_keyword, SizingKeywordResolution};
 use crate::{AbsoluteAxis, BoxSizing, Direction, LayoutGridContainer};
 
@@ -95,10 +97,8 @@ pub(super) fn align_and_position_item(
     container_alignment_styles: InBothAbsAxis<AlignItems>,
     baseline_shim: f32,
     direction: Direction,
-    container_border_box_width: f32,
-    container_inset: Rect<f32>,
-    #[cfg(feature = "content_size")] container_is_scroll_container: bool,
-    #[cfg(feature = "content_size")] container_padding: Rect<f32>,
+    #[cfg(feature = "content_size")] padding_box_inset: Rect<f32>,
+    #[cfg(feature = "content_size")] overflow_container: &ScrollableOverflowContainer,
     bubbled_candidates: &mut OofCandidates,
 ) -> (Rect<f32>, f32, f32, Option<f32>) {
     let grid_area_size = Size { width: grid_area.right - grid_area.left, height: grid_area.bottom - grid_area.top };
@@ -432,7 +432,7 @@ pub(super) fn align_and_position_item(
 
     #[cfg(feature = "content_size")]
     let contribution = {
-        let contribution_location = Point { x: x - container_inset.left, y: y - container_inset.top };
+        let contribution_location = Point { x: x - padding_box_inset.left, y: y - padding_box_inset.top };
         compute_scrollable_overflow_contribution(
             contribution_location,
             Size { width, height },
@@ -440,10 +440,7 @@ pub(super) fn align_and_position_item(
             border,
             overflow,
             contain,
-            container_is_scroll_container,
-            Size { width: container_border_box_width - container_inset.horizontal_axis_sum(), height: 0.0 },
-            Point { x: direction.is_rtl(), y: false },
-            container_padding,
+            overflow_container,
             resolved_margin,
         )
     };
