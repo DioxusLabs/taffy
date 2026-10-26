@@ -20,7 +20,7 @@ use crate::util::{MaybeMath, MaybeResolve, ResolveOrZero};
 use crate::{AxisStaticEdge, BoxSizing, Direction};
 
 #[cfg(feature = "content_size")]
-use super::common::scrollable_overflow::compute_scrollable_overflow_contribution;
+use super::common::scrollable_overflow::{compute_scrollable_overflow_contribution, finalize_scrollable_overflow};
 use super::common::sizing_keyword::resolve_absolute_sizing_keywords;
 
 /// Resolve the final static offset of an out-of-flow box from its static position, given the
@@ -358,7 +358,19 @@ pub fn compute_oof_layout(tree: &mut impl LayoutContainingBlock, node_id: NodeId
     drop(style);
 
     let candidates = output.oof_candidates.take();
-    let result = compute_oof_layout_for_area(tree, node_id, candidates.as_slice(), area, direction, claims);
+    #[cfg(feature = "content_size")]
+    let reversed = output.scrollable_overflow_rect.is_reversed();
+    #[cfg(not(feature = "content_size"))]
+    let reversed = Point { x: false, y: false };
+    let result = compute_oof_layout_for_area_with_origin(
+        tree,
+        node_id,
+        candidates.as_slice(),
+        area,
+        direction,
+        claims,
+        reversed,
+    );
     // Always record the hoisted child list (even when empty) so that lists recorded by previous
     // layout runs do not persist
     tree.clear_hoisted_children(node_id);
@@ -366,7 +378,15 @@ pub fn compute_oof_layout(tree: &mut impl LayoutContainingBlock, node_id: NodeId
     output.oof_candidates = result.unclaimed;
     #[cfg(feature = "content_size")]
     {
-        output.scrollable_overflow_rect = output.scrollable_overflow_rect.union(result.scrollable_overflow_rect);
+        let reversed = output.scrollable_overflow_rect.is_reversed();
+        let overflow = tree.get_core_container_style(node_id).overflow();
+        output.scrollable_overflow_rect = finalize_scrollable_overflow(
+            output.scrollable_overflow_rect.rect().union(result.scrollable_overflow_rect),
+            area.size,
+            false,
+            reversed,
+            overflow.x.is_scroll_container() || overflow.y.is_scroll_container(),
+        );
     }
 }
 
@@ -377,7 +397,7 @@ pub struct OofLayoutResult {
     /// Candidates not claimed by this pass, which must continue bubbling.
     pub unclaimed: OofCandidates,
     /// Scrollable overflow contributed by the claimed candidates, relative to the positioning
-    /// area's origin.
+    /// area's inner top-left edge, in physical coordinates (RTL is not mirrored).
     pub scrollable_overflow_rect: Rect<f32>,
 }
 
@@ -398,6 +418,28 @@ pub fn compute_oof_layout_for_area(
     direction: Direction,
     claims: ContainingBlockClaims,
 ) -> OofLayoutResult {
+    compute_oof_layout_for_area_with_origin(
+        tree,
+        geometry_owner,
+        candidates,
+        area,
+        direction,
+        claims,
+        Point { x: direction.is_rtl(), y: false },
+    )
+}
+
+#[allow(clippy::too_many_arguments)]
+/// Run the positioning pass using the containing block's algorithm-specific physical origins.
+fn compute_oof_layout_for_area_with_origin(
+    tree: &mut impl LayoutContainingBlock,
+    geometry_owner: NodeId,
+    candidates: &[OofCandidate],
+    area: OofPositioningArea,
+    direction: Direction,
+    claims: ContainingBlockClaims,
+    reversed: Point<bool>,
+) -> OofLayoutResult {
     let overflow = tree.get_core_container_style(geometry_owner).overflow();
 
     let mut hoisted = Vec::new();
@@ -411,10 +453,20 @@ pub fn compute_oof_layout_for_area(
         direction,
         claims,
         overflow,
+        reversed,
         &mut hoisted,
         &mut unclaimed,
     );
 
+    #[cfg(feature = "content_size")]
+    let scrollable_overflow_rect = finalize_scrollable_overflow(
+        scrollable_overflow_rect,
+        area.size,
+        direction.is_rtl(),
+        reversed,
+        overflow.x.is_scroll_container() || overflow.y.is_scroll_container(),
+    )
+    .rect();
     OofLayoutResult { hoisted, unclaimed, scrollable_overflow_rect }
 }
 
@@ -746,6 +798,7 @@ pub(crate) fn perform_oof_layout(
     direction: Direction,
     claims: ContainingBlockClaims,
     container_overflow: Point<Overflow>,
+    #[cfg_attr(not(feature = "content_size"), allow(unused_variables))] reversed: Point<bool>,
     hoisted: &mut Vec<NodeId>,
     unclaimed: &mut OofCandidates,
 ) -> Rect<f32> {
@@ -829,10 +882,14 @@ pub(crate) fn perform_oof_layout(
             absolute_overflow_rect = absolute_overflow_rect.union(compute_scrollable_overflow_contribution(
                 relative_location,
                 final_size,
-                layout.scrollable_overflow_rect,
+                layout.scrollable_overflow_rect.rect(),
+                layout.border,
                 overflow,
                 contain,
                 is_scroll_container,
+                area_size,
+                reversed,
+                direction.is_rtl(),
             ));
         }
     }

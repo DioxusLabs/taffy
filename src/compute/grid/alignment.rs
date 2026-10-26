@@ -441,10 +441,14 @@ pub(super) fn align_and_position_item(
         compute_scrollable_overflow_contribution(
             contribution_location,
             Size { width, height },
-            layout_output.scrollable_overflow_rect,
+            layout_output.scrollable_overflow_rect.rect(),
+            border,
             overflow,
             contain,
             container_is_scroll_container,
+            Size { width: container_border_box_width - container_border.horizontal_axis_sum(), height: 0.0 },
+            Point { x: direction.is_rtl(), y: false },
+            direction.is_rtl(),
         )
     };
     #[cfg(not(feature = "content_size"))]

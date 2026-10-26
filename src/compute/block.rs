@@ -315,7 +315,7 @@ impl BlockContext<'_> {
 
 use super::common::alignment::{apply_alignment_fallback, child_first_baseline, compute_alignment_offset};
 #[cfg(feature = "content_size")]
-use super::common::scrollable_overflow::compute_scrollable_overflow_contribution;
+use super::common::scrollable_overflow::{compute_scrollable_overflow_contribution, finalize_scrollable_overflow};
 use super::common::sizing_keyword::{resolve_sizing_keyword, SizingKeywordResolution};
 
 /// Per-child data that is accumulated and modified over the course of the layout algorithm
@@ -756,10 +756,14 @@ fn compute_inner(
                         inflow_overflow_rect = inflow_overflow_rect.union(compute_scrollable_overflow_contribution(
                             contribution_location,
                             layout.size,
-                            layout.scrollable_overflow_rect,
+                            layout.scrollable_overflow_rect.rect(),
+                            layout.border,
                             item.overflow,
                             item.contain,
                             is_scroll_container,
+                            Size { width: container_outer_width - resolved_border.horizontal_axis_sum(), height: 0.0 },
+                            Point { x: direction.is_rtl(), y: false },
+                            direction.is_rtl(),
                         ));
                     }
                 }
@@ -786,7 +790,7 @@ fn compute_inner(
     let mut output = LayoutOutput {
         size: final_outer_size,
         #[cfg(feature = "content_size")]
-        scrollable_overflow_rect: Rect::ZERO,
+        scrollable_overflow_rect: crate::tree::ScrollableOverflow::ZERO,
         baselines: Baselines::from_first(first_baseline),
         top_margin: if own_margins_collapse_with_children.start {
             first_child_top_margin_set
@@ -878,7 +882,13 @@ fn compute_inner(
                 if direction.is_rtl() { resolved_padding.left } else { resolved_padding.right };
             inflow_overflow_rect.bottom += resolved_padding.bottom;
         }
-        output.scrollable_overflow_rect = inflow_overflow_rect;
+        output.scrollable_overflow_rect = finalize_scrollable_overflow(
+            inflow_overflow_rect,
+            final_outer_size - resolved_border.sum_axes() - scrollbar_gutter.sum_axes(),
+            direction.is_rtl(),
+            Point { x: direction.is_rtl(), y: false },
+            is_scroll_container,
+        );
     }
 
     // 5. Perform hidden layout on hidden children
@@ -1311,10 +1321,14 @@ fn perform_final_layout_on_in_flow_children(
                     inflow_overflow_rect = inflow_overflow_rect.union(compute_scrollable_overflow_contribution(
                         contribution_location,
                         item_layout.size,
-                        item_layout.scrollable_overflow_rect,
+                        item_layout.scrollable_overflow_rect.rect(),
+                        item.border,
                         item.overflow,
                         item.contain,
                         is_scroll_container,
+                        Size { width: container_outer_width - resolved_border.horizontal_axis_sum(), height: 0.0 },
+                        Point { x: direction.is_rtl(), y: false },
+                        direction.is_rtl(),
                     ));
                 }
 
@@ -1777,10 +1791,14 @@ fn perform_final_layout_on_in_flow_children(
                 inflow_overflow_rect = inflow_overflow_rect.union(compute_scrollable_overflow_contribution(
                     contribution_location,
                     final_size,
-                    item_layout.scrollable_overflow_rect,
+                    item_layout.scrollable_overflow_rect.rect(),
+                    item.border,
                     item.overflow,
                     item.contain,
                     is_scroll_container,
+                    Size { width: container_outer_width - resolved_border.horizontal_axis_sum(), height: 0.0 },
+                    Point { x: direction.is_rtl(), y: false },
+                    direction.is_rtl(),
                 ));
             }
 
