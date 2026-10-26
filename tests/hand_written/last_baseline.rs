@@ -5,6 +5,7 @@
 #[cfg(test)]
 mod last_baseline {
     use taffy::prelude::*;
+    use taffy::style::Overflow;
     use taffy::{
         compute_block_layout, compute_cached_layout, compute_flexbox_layout, compute_grid_layout, Baselines, Cache,
         CacheTree, LayoutInput, LayoutOutput, LayoutPartialTree, RunMode, SizingMode,
