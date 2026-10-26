@@ -4,7 +4,8 @@
 
 ### Added
 
-- All built-in layout algorithms (flexbox, grid and block) now output the last baseline of a container (`LayoutOutput::baselines.last`) in addition to its first baseline. Last-baseline alignment is not yet supported.
+- All built-in layout algorithms (flexbox, grid and block) now output the last baseline of a container (`LayoutOutput::baselines.last`) in addition to its first baseline.
+- Flexbox and grid support `align-items: last baseline` and `align-self: last baseline`.
 
 ### Fixed
 
