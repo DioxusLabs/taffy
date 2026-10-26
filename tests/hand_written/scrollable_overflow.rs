@@ -11,6 +11,80 @@ use taffy_test_helpers::new_test_tree;
 const CONTAINER: f32 = 200.0;
 const CHILD: f32 = 50.0;
 
+#[test]
+fn negative_margins_do_not_add_padding_to_overflow_edges() {
+    for display in [Display::Block, Display::Flex, Display::Grid] {
+        for direction in [Direction::Ltr, Direction::Rtl] {
+            for flex_direction in [FlexDirection::Row, FlexDirection::RowReverse, FlexDirection::ColumnReverse] {
+                let mut tree = new_test_tree();
+                let child = tree
+                    .new_leaf(Style {
+                        size: Size { width: length(300.0), height: length(300.0) },
+                        margin: Rect {
+                            left: length(-100.0),
+                            right: length(-100.0),
+                            top: length(-100.0),
+                            bottom: length(-100.0),
+                        },
+                        ..Default::default()
+                    })
+                    .unwrap();
+                let node = tree
+                    .new_with_children(
+                        Style {
+                            display,
+                            direction,
+                            flex_direction,
+                            box_sizing: BoxSizing::ContentBox,
+                            size: Size { width: length(80.0), height: length(80.0) },
+                            padding: Rect {
+                                left: length(16.0),
+                                right: length(4.0),
+                                top: length(1.0),
+                                bottom: length(8.0),
+                            },
+                            border: Rect {
+                                left: length(4.0),
+                                right: length(50.0),
+                                top: length(1.0),
+                                bottom: length(40.0),
+                            },
+                            overflow: Point { x: Overflow::Hidden, y: Overflow::Hidden },
+                            ..Default::default()
+                        },
+                        &[child],
+                    )
+                    .unwrap();
+                tree.compute_layout(node, Size::MAX_CONTENT).unwrap();
+                let layout = tree.layout(node).unwrap();
+                let reversed_x = (direction == Direction::Rtl)
+                    ^ (display == Display::Flex && flex_direction == FlexDirection::RowReverse);
+                let expected_width = (if reversed_x { 204.0 } else { 216.0 })
+                    - if display == Display::Flex && flex_direction != FlexDirection::ColumnReverse {
+                        20.0
+                    } else {
+                        0.0
+                    };
+                let expected_height = if display == Display::Flex && flex_direction == FlexDirection::ColumnReverse {
+                    188.0
+                } else {
+                    201.0
+                };
+                assert_eq!(
+                    100.0 + layout.scroll_width(),
+                    expected_width,
+                    "{display:?} {direction:?} {flex_direction:?}"
+                );
+                assert_eq!(
+                    89.0 + layout.scroll_height(),
+                    expected_height,
+                    "{display:?} {direction:?} {flex_direction:?}"
+                );
+            }
+        }
+    }
+}
+
 fn container_with_absolute_child(
     display: Display,
     overflow: Overflow,

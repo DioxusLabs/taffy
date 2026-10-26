@@ -25,6 +25,9 @@ use crate::util::sys::{f32_max, f32_min};
 ///
 /// A box whose containment contains its scrollable overflow (layout or paint containment)
 /// contributes only its border box, regardless of its overflow style.
+///
+/// End padding extends the in-flow child's margin edge, not its propagated overflow.
+/// Union with the border/overflow contribution prevents negative margins from shrinking it.
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn compute_scrollable_overflow_contribution(
     location: Point<f32>,
@@ -37,6 +40,8 @@ pub(crate) fn compute_scrollable_overflow_contribution(
     parent_size: Size<f32>,
     reversed: Point<bool>,
     rtl: bool,
+    padding: Rect<f32>,
+    margin: Rect<f32>,
 ) -> Rect<f32> {
     let scrollable_overflow_rect = Rect {
         left: scrollable_overflow_rect.left + border.left,
@@ -76,7 +81,26 @@ pub(crate) fn compute_scrollable_overflow_contribution(
     if parent_is_scroll_container && is_wholly_unreachable {
         Rect::ZERO
     } else {
-        contribution
+        if parent_is_scroll_container {
+            let padding = if rtl { Rect { left: padding.right, right: padding.left, ..padding } } else { padding };
+            let margin = if rtl { Rect { left: margin.right, right: margin.left, ..margin } } else { margin };
+            let mut padded = contribution;
+            if reversed.x {
+                padded.left = f32_min(padded.left, location.x - f32_max(0.0, padding.left + margin.left));
+            } else {
+                padded.right =
+                    f32_max(padded.right, location.x + size.width + f32_max(0.0, padding.right + margin.right));
+            }
+            if reversed.y {
+                padded.top = f32_min(padded.top, location.y - f32_max(0.0, padding.top + margin.top));
+            } else {
+                padded.bottom =
+                    f32_max(padded.bottom, location.y + size.height + f32_max(0.0, padding.bottom + margin.bottom));
+            }
+            padded
+        } else {
+            contribution
+        }
     }
 }
 
