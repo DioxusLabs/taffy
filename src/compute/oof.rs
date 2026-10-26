@@ -967,6 +967,19 @@ mod tests {
     }
 
     #[test]
+    fn last_baseline_static_alignment_uses_end_edge() {
+        use crate::style::AlignSelf;
+
+        for rtl in [false, true] {
+            for width in [0.0, 20.0, 120.0] {
+                let baseline = AxisStaticPosition::from_alignment(AlignSelf::LAST_BASELINE, AREA, rtl);
+                let end = AxisStaticPosition::from_alignment(AlignSelf::END, AREA, rtl);
+                assert_eq!(resolve_x(baseline, width, MARGIN), resolve_x(end, width, MARGIN));
+            }
+        }
+    }
+
+    #[test]
     fn degenerate_area() {
         // A zero-extent area (static positions emitted by block layout) behaves as an anchor point
         let anchor = AxisStaticPosition::from_edge(40.0, AxisStaticEdge::Start);
