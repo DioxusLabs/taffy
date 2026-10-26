@@ -7,8 +7,11 @@ use crate::style::AvailableSpace;
 use crate::tree::{CollapsibleMarginSet, LayoutInput, LayoutOutput, RunMode, SizingMode};
 use crate::RequestedAxis;
 
-/// The number of cache entries for each node in the tree
-const CACHE_SIZE: usize = 9;
+/// The number of general measure entries for each node in the tree
+const CACHE_SIZE: usize = 5;
+/// The number of inline content size entries for each node in the tree:
+/// one for the min-content size and one for the max-content size
+const INLINE_CONTENT_SIZE_CACHE_SIZE: usize = 2;
 
 // Manually written-out results of float to u32 bit casts because
 // `f32::to_bits` is not yet const at our MSRV.
@@ -122,6 +125,25 @@ impl CacheKey {
     }
 }
 
+/// The slot of `Cache::inline_content_size_entries` that a measurement is stored in: a `ComputeSize`
+/// request for the width (or both axes) of a node with no known width under a `MinContent` (slot 0)
+/// or `MaxContent` (slot 1) width constraint measures the node's inline content size. Other
+/// measurements are stored in the general `Cache::measure_entries`.
+#[inline(always)]
+fn inline_content_size_slot(input: &LayoutInput) -> Option<usize> {
+    if input.run_mode != RunMode::ComputeSize
+        || input.axis == RequestedAxis::Vertical
+        || input.known_dimensions.width.is_some()
+    {
+        return None;
+    }
+    match input.available_space.width {
+        AvailableSpace::MinContent => Some(0),
+        AvailableSpace::MaxContent => Some(1),
+        AvailableSpace::Definite(_) => None,
+    }
+}
+
 impl From<&LayoutInput> for CacheKey {
     fn from(input: &LayoutInput) -> Self {
         // Pack axis enum into spare bits in the known_dimensions and available_space values
@@ -214,7 +236,13 @@ pub(crate) struct CacheEntry<T> {
 pub struct Cache {
     /// The cache entry for the node's final layout
     final_layout_entry: Option<CacheEntry<LayoutOutput>>,
-    /// The cache entries for the node's preliminary size measurements
+    /// The cache entries for the node's min-content and max-content inline sizes (see
+    /// [`inline_content_size_slot`]). Most nodes are only ever measured for these two sizes, so
+    /// they have dedicated entries that are never evicted by other measurements. A node that is
+    /// measured for them under several block-axis inputs keeps the first of each in its slot and
+    /// the others in the general entries.
+    inline_content_size_entries: [Option<CacheEntry<Size<f32>>>; INLINE_CONTENT_SIZE_CACHE_SIZE],
+    /// The cache entries for the node's other preliminary size measurements
     measure_entries: [Option<CacheEntry<Size<f32>>>; CACHE_SIZE],
     /// Tracks which measure entries have been used since the eviction cursor last passed them
     recently_used_entries: u16,
@@ -241,6 +269,7 @@ impl Cache {
         const NONE_MEASURE_ENTRY: Option<CacheEntry<Size<f32>>> = None;
         Self {
             final_layout_entry: None,
+            inline_content_size_entries: [NONE_MEASURE_ENTRY; INLINE_CONTENT_SIZE_CACHE_SIZE],
             measure_entries: [NONE_MEASURE_ENTRY; CACHE_SIZE],
             recently_used_entries: 0,
             next_measure_entry: 0,
@@ -261,13 +290,18 @@ impl Cache {
                 self.final_layout_entry.as_ref().filter(|entry| entry.key == key).map(|e| e.content.clone())
             }
             RunMode::ComputeSize => {
-                for (index, entry) in self.measure_entries.iter().enumerate() {
-                    let Some(entry) = entry else { continue };
-                    if entry.key.kd_available_space == key.kd_available_space
+                let matches = |entry: &CacheEntry<Size<f32>>| {
+                    entry.key.kd_available_space == key.kd_available_space
                         && entry.key.known_dimensions_are_definite == key.known_dimensions_are_definite
                         && (entry.key.x_axis_parent_size() == key.x_axis_parent_size())
                         && entry.key.size_is_valid_for(&key)
-                    {
+                };
+                if let Some(entry) = self.inline_content_size_entries.iter().flatten().find(|entry| matches(entry)) {
+                    return Some(LayoutOutput::from_outer_size(entry.content));
+                }
+                for (index, entry) in self.measure_entries.iter().enumerate() {
+                    let Some(entry) = entry else { continue };
+                    if matches(entry) {
                         self.recently_used_entries |= 1 << index;
                         return Some(LayoutOutput::from_outer_size(entry.content));
                     }
@@ -311,6 +345,16 @@ impl Cache {
                     return;
                 }
                 self.is_empty = false;
+                if let Some(slot) = inline_content_size_slot(input) {
+                    let entry = &mut self.inline_content_size_entries[slot];
+                    match entry {
+                        Some(existing) if existing.key != key => {}
+                        _ => {
+                            *entry = Some(CacheEntry { key, content: layout_output.size });
+                            return;
+                        }
+                    }
+                }
                 if let Some(index) =
                     self.measure_entries.iter().position(|entry| entry.as_ref().is_some_and(|entry| entry.key == key))
                 {
@@ -346,6 +390,7 @@ impl Cache {
         self.final_layout_entry = None;
         /// Workaround for `Option<CacheEntry<_>>` not being `Copy` (required for array repeat expressions)
         const NONE_MEASURE_ENTRY: Option<CacheEntry<Size<f32>>> = None;
+        self.inline_content_size_entries = [NONE_MEASURE_ENTRY; INLINE_CONTENT_SIZE_CACHE_SIZE];
         self.measure_entries = [NONE_MEASURE_ENTRY; CACHE_SIZE];
         self.recently_used_entries = 0;
         self.next_measure_entry = 0;
@@ -354,7 +399,9 @@ impl Cache {
 
     /// Returns true if all cache entries are None, else false
     pub fn is_empty(&self) -> bool {
-        self.final_layout_entry.is_none() && !self.measure_entries.iter().any(|entry| entry.is_some())
+        self.final_layout_entry.is_none()
+            && !self.inline_content_size_entries.iter().any(|entry| entry.is_some())
+            && !self.measure_entries.iter().any(|entry| entry.is_some())
     }
 }
 
@@ -402,6 +449,70 @@ mod tests {
 
         assert_eq!(cache.get(&input(1.0)), Some(output(1.0)));
         assert_eq!(cache.get(&input(2.0)), None);
+    }
+
+    /// A measurement of the node's min-content or max-content width (no known width, keyword available width)
+    fn inline_content_size_input(available_width: AvailableSpace, available_height: AvailableSpace) -> LayoutInput {
+        LayoutInput {
+            axis: RequestedAxis::Horizontal,
+            known_dimensions: Size::NONE,
+            parent_size: Size::NONE,
+            available_space: Size { width: available_width, height: available_height },
+            ..input(0.0)
+        }
+    }
+
+    #[test]
+    fn inline_content_sizes_have_their_own_entries() {
+        let mut cache = Cache::new();
+        for width in 0..CACHE_SIZE {
+            cache.store(&input(width as f32), output(width as f32));
+        }
+        let min_content = inline_content_size_input(AvailableSpace::MinContent, AvailableSpace::MaxContent);
+        let max_content = inline_content_size_input(AvailableSpace::MaxContent, AvailableSpace::MaxContent);
+        cache.store(&min_content, output(10.0));
+        cache.store(&max_content, output(20.0));
+
+        assert_eq!(cache.get(&min_content), Some(output(10.0)));
+        assert_eq!(cache.get(&max_content), Some(output(20.0)));
+        for width in 0..CACHE_SIZE {
+            assert_eq!(cache.get(&input(width as f32)), Some(output(width as f32)));
+        }
+        assert!(cache.inline_content_size_entries.iter().all(|entry| entry.is_some()));
+    }
+
+    #[test]
+    fn inline_content_size_measured_under_other_inputs_uses_the_general_entries() {
+        let mut cache = Cache::new();
+        let first = inline_content_size_input(AvailableSpace::MinContent, AvailableSpace::Definite(100.0));
+        let second = inline_content_size_input(AvailableSpace::MinContent, AvailableSpace::Definite(200.0));
+        cache.store(&first, output(10.0));
+        cache.store(&second, output(20.0));
+        cache.store(&second, output(30.0));
+
+        assert_eq!(cache.get(&first), Some(output(10.0)));
+        assert_eq!(cache.get(&second), Some(output(30.0)));
+        assert_eq!(cache.inline_content_size_entries.iter().flatten().count(), 1);
+        assert_eq!(cache.measure_entries.iter().flatten().count(), 1);
+    }
+
+    #[test]
+    fn measurements_of_other_kinds_use_the_general_entries() {
+        let mut cache = Cache::new();
+        let vertical = LayoutInput {
+            axis: RequestedAxis::Vertical,
+            ..inline_content_size_input(AvailableSpace::MaxContent, AvailableSpace::MaxContent)
+        };
+        let definite = LayoutInput {
+            available_space: Size { width: AvailableSpace::Definite(50.0), height: AvailableSpace::MaxContent },
+            ..inline_content_size_input(AvailableSpace::MaxContent, AvailableSpace::MaxContent)
+        };
+        cache.store(&vertical, output(1.0));
+        cache.store(&definite, output(2.0));
+        cache.store(&input(3.0), output(3.0));
+
+        assert!(cache.inline_content_size_entries.iter().all(|entry| entry.is_none()));
+        assert_eq!(cache.measure_entries.iter().flatten().count(), 3);
     }
 
     #[test]

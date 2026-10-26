@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Performance
+
+- The per-node layout cache keeps a node's min-content and max-content inline sizes in two dedicated entries, which other measurements can no longer evict, and has 5 entries for other measurements (previously 9 entries for all measurements), so `Cache` is 344 B rather than 408 B.
+
 ### Fixed
 
 - Flexbox: `align-content: stretch` (and `normal`) and `justify-content: stretch` fall back to `flex-start` rather than `start` when the lines/items overflow the container, so overflowing lines in a `wrap-reverse` container (and items in a `row-reverse`/`column-reverse` container) are packed to the flex-start edge like in Chrome.
