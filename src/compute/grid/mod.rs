@@ -1,5 +1,7 @@
 //! This module is a partial implementation of the CSS Grid Level 1 specification
 //! <https://www.w3.org/TR/css-grid-1>
+#[cfg(feature = "content_size")]
+use super::common::scrollable_overflow::finalize_scrollable_overflow;
 use crate::geometry::{AbsoluteAxis, AbstractAxis, InBothAbsAxis};
 use crate::geometry::{Line, Point, Rect, Size};
 use crate::style::{AlignContent, AlignItems, AvailableSpace, Contain, ContainingBlockClaims, Overflow};
@@ -889,7 +891,18 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
                 overflow_rect.right += if direction.is_rtl() { padding.left } else { padding.right };
                 overflow_rect.bottom += padding.bottom;
             }
-            LayoutOutput::from_sizes(container_border_box, overflow_rect)
+            LayoutOutput::from_sizes(
+                container_border_box,
+                finalize_scrollable_overflow(
+                    overflow_rect,
+                    container_border_box
+                        - border.sum_axes()
+                        - Size { width: scrollbar_gutter.x, height: scrollbar_gutter.y },
+                    direction.is_rtl(),
+                    Point { x: direction.is_rtl(), y: false },
+                    is_scroll_container,
+                ),
+            )
         };
         #[cfg(not(feature = "content_size"))]
         let mut output = LayoutOutput::from_outer_size(container_border_box);
@@ -929,10 +942,16 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
             overflow_rect.right += if direction.is_rtl() { padding.left } else { padding.right };
             overflow_rect.bottom += padding.bottom;
         }
-        overflow_rect
+        finalize_scrollable_overflow(
+            overflow_rect,
+            container_border_box - border.sum_axes() - Size { width: scrollbar_gutter.x, height: scrollbar_gutter.y },
+            direction.is_rtl(),
+            Point { x: direction.is_rtl(), y: false },
+            is_scroll_container,
+        )
     };
     #[cfg(not(feature = "content_size"))]
-    let scrollable_overflow_rect = item_overflow_rect;
+    let scrollable_overflow_rect = crate::tree::ScrollableOverflow::ZERO;
 
     let mut output = LayoutOutput::from_sizes_and_baselines(
         container_border_box,

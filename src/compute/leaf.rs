@@ -1,8 +1,8 @@
 //! Computes size using styles and measure functions
 
-#[cfg(feature = "content_size")]
-use crate::geometry::Rect;
 use crate::geometry::Size;
+#[cfg(feature = "content_size")]
+use crate::geometry::{Point, Rect};
 use crate::style::{AvailableSpace, Overflow};
 use crate::tree::{Baselines, CollapsibleMarginSet, RunMode};
 use crate::tree::{LayoutInput, LayoutOutput, SizingMode};
@@ -103,7 +103,7 @@ where
             return LayoutOutput {
                 size,
                 #[cfg(feature = "content_size")]
-                scrollable_overflow_rect: Rect::ZERO,
+                scrollable_overflow_rect: crate::tree::ScrollableOverflow::ZERO,
                 baselines: Baselines::NONE,
                 top_margin: CollapsibleMarginSet::ZERO,
                 bottom_margin: CollapsibleMarginSet::ZERO,
@@ -164,12 +164,19 @@ where
         let is_rtl = style.direction().is_rtl();
         let start_padding = if is_rtl { padding.right } else { padding.left };
         let end_padding = if is_rtl { padding.left } else { padding.right };
-        Rect {
+        let rect = Rect {
             left: 0.0,
             right: start_padding + measured_size.width + if is_scroll_container { end_padding } else { 0.0 },
             top: 0.0,
             bottom: padding.top + measured_size.height + if is_scroll_container { padding.bottom } else { 0.0 },
-        }
+        };
+        super::common::scrollable_overflow::finalize_scrollable_overflow(
+            rect,
+            size - border.sum_axes() - Size { width: scrollbar_gutter.x, height: scrollbar_gutter.y },
+            is_rtl,
+            Point { x: is_rtl, y: false },
+            is_scroll_container,
+        )
     };
 
     LayoutOutput {
