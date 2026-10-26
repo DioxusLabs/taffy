@@ -1,12 +1,12 @@
 <test name="align_last_baseline_mixed__content_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div box-sizing="content-box" direction="rtl" width="200px" height="100px">
-      <div box-sizing="content-box" direction="rtl" align-self="baseline" width="40px" height="50px"/>
-      <div box-sizing="content-box" direction="rtl" align-self="baseline" width="40px" height="20px"/>
-      <div box-sizing="content-box" direction="rtl" align-self="last baseline" width="40px" height="50px"/>
-      <div box-sizing="content-box" direction="rtl" align-self="last baseline" width="40px" height="20px"/>
-      <div box-sizing="content-box" direction="rtl" width="40px" height="30px"/>
+    <div box-sizing="content-box" direction="rtl" position="absolute" width="200px" height="100px">
+      <div box-sizing="content-box" direction="rtl" position="relative" align-self="baseline" width="40px" height="50px"/>
+      <div box-sizing="content-box" direction="rtl" position="relative" align-self="baseline" width="40px" height="20px"/>
+      <div box-sizing="content-box" direction="rtl" position="relative" align-self="last baseline" width="40px" height="50px"/>
+      <div box-sizing="content-box" direction="rtl" position="relative" align-self="last baseline" width="40px" height="20px"/>
+      <div box-sizing="content-box" direction="rtl" position="relative" width="40px" height="30px"/>
     </div>
   </input>
   <expectations>
