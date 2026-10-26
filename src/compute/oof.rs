@@ -15,7 +15,7 @@ use crate::tree::{
     AxisStaticPosition, Layout, LayoutContainingBlock, LayoutInput, LayoutOutput, LayoutPartialTreeExt, NodeId,
     OofCandidate, OofCandidates, OofPositioningArea, RequestedAxis, RunMode, SizingMode,
 };
-use crate::util::sys::{f32_max, Vec};
+use crate::util::sys::{f32_max, f32_min, Vec};
 use crate::util::{MaybeMath, MaybeResolve, ResolveOrZero};
 use crate::{AxisStaticEdge, BoxSizing, Direction};
 
@@ -264,6 +264,45 @@ impl OofAxis {
         }
     }
 
+    /// Union the IMCB and original containing block, extending in the scrollable direction.
+    fn overflow_limit(&self, imcb: Line<f32>, original_cb: Line<f32>) -> Line<f32> {
+        let mut limit = Line { start: f32_min(imcb.start, original_cb.start), end: f32_max(imcb.end, original_cb.end) };
+        if self.is_scroll_axis {
+            if self.reversed {
+                limit.start = f32::NEG_INFINITY;
+            } else {
+                limit.end = f32::INFINITY;
+            }
+        }
+        limit
+    }
+
+    /// Align within the IMCB or its overflow limit, using the supplied alignment area.
+    fn align_within_limit(
+        &self,
+        area: Line<f32>,
+        imcb: Line<f32>,
+        original_cb: Line<f32>,
+        size: f32,
+        edge: AxisStaticEdge,
+    ) -> f32 {
+        if size <= imcb.end - imcb.start {
+            // 1. Fits within the IMCB: align as specified
+            align_in_line(area, size, edge)
+        } else {
+            let limit = self.overflow_limit(imcb, original_cb);
+            if size <= limit.end - limit.start {
+                // 2. Fits within the overflow limit rect: cover the IMCB and align
+                // as specified as far as possible without overflowing the limit
+                let start = align_in_line(area, size, edge);
+                f32_max(f32_min(start, limit.end - size), limit.start)
+            } else {
+                // 3. Start-align within the overflow limit rect
+                align_in_line(limit, size, self.start_edge())
+            }
+        }
+    }
+
     /// Compute the physical start of the box's border box given its final size and margins
     /// <https://www.w3.org/TR/css-position-3/#abspos-alignment>
     fn position(&self, size: f32, margin: Line<f32>) -> f32 {
@@ -274,23 +313,11 @@ impl OofAxis {
                 let sp = self.static_position;
                 let margin_box_size = size + margin.start + margin.end;
                 let offset = if sp.align.safety == AlignmentSafety::Safe && margin_box_size > imcb.end - imcb.start {
-                    let Some(original_cb) = self.original_cb else {
-                        return align_in_line(imcb, margin_box_size, self.start_edge()) + margin.start;
-                    };
-                    let mut limit =
-                        Line { start: imcb.start.min(original_cb.start), end: f32_max(imcb.end, original_cb.end) };
-                    if self.is_scroll_axis {
-                        if self.reversed {
-                            limit.start = f32::NEG_INFINITY;
-                        } else {
-                            limit.end = f32::INFINITY;
+                    match self.original_cb {
+                        Some(original_cb) => {
+                            self.align_within_limit(sp.area, imcb, original_cb, margin_box_size, sp.align.keyword)
                         }
-                    }
-                    if margin_box_size <= limit.end - limit.start {
-                        let start = align_in_line(sp.area, margin_box_size, sp.align.keyword);
-                        f32_max(start.min(limit.end - margin_box_size), limit.start)
-                    } else {
-                        align_in_line(limit, margin_box_size, self.start_edge())
+                        None => align_in_line(imcb, margin_box_size, self.start_edge()),
                     }
                 } else {
                     align_in_line(sp.area, margin_box_size, sp.align.keyword)
@@ -318,30 +345,16 @@ impl OofAxis {
                     // Default overflow alignment for absolutely positioned boxes:
                     // <https://www.w3.org/TR/css-align-3/#auto-safety-position>
                     AlignmentSafety::Default => {
-                        if margin_box_size <= imcb_size || self.alignment == OofAlignment::Normal {
-                            // 1. Fits within the IMCB: align as specified
+                        if self.alignment == OofAlignment::Normal {
                             align_in_line(imcb, margin_box_size, edge)
                         } else {
-                            // The overflow limit rect is the bounding rect of the IMCB and the
-                            // containing block, extended to infinity in the scrollable direction
-                            // of a scroll container
-                            let mut limit = Line { start: imcb.start.min(0.0), end: f32_max(imcb.end, self.cb_size) };
-                            if self.is_scroll_axis {
-                                if self.reversed {
-                                    limit.start = f32::NEG_INFINITY;
-                                } else {
-                                    limit.end = f32::INFINITY;
-                                }
-                            }
-                            if margin_box_size <= limit.end - limit.start {
-                                // 2. Fits within the overflow limit rect: cover the IMCB and align
-                                // as specified as far as possible without overflowing the limit
-                                let start = align_in_line(imcb, margin_box_size, edge);
-                                f32_max(start.min(limit.end - margin_box_size), limit.start)
-                            } else {
-                                // 3. Start-align within the overflow limit rect
-                                align_in_line(limit, margin_box_size, self.start_edge())
-                            }
+                            self.align_within_limit(
+                                imcb,
+                                imcb,
+                                Line { start: 0.0, end: self.cb_size },
+                                margin_box_size,
+                                edge,
+                            )
                         }
                     }
                 };
@@ -528,14 +541,12 @@ pub(crate) fn layout_oof_box<Tree: LayoutContainingBlock>(
     before_layout: impl FnOnce(&mut Tree, &LayoutInput),
 ) -> OofBoxLayout {
     let child_style = tree.get_oof_item_style(candidate.node);
-    let original_cb_size = area_size;
-    let original_cb_offset = area_offset;
 
     // If the current node is a grid container then the box is positioned relative to the
     // grid area determined by its grid-placement properties (which falls back to the passed
     // area for `auto` placement)
     #[cfg(feature = "grid")]
-    let (area_size, area_offset, is_grid_cb) = match grid_owner.map(|owner| tree.get_detailed_layout_info(owner)) {
+    let (area_size, area_offset, original_cb) = match grid_owner.map(|owner| tree.get_detailed_layout_info(owner)) {
         Some(DetailedLayoutInfo::Grid(grid_info)) => {
             let area_rect = Rect {
                 left: area_offset.x,
@@ -552,13 +563,18 @@ pub(crate) fn layout_oof_box<Tree: LayoutContainingBlock>(
             (
                 Size { width: grid_area.right - grid_area.left, height: grid_area.bottom - grid_area.top },
                 Point { x: grid_area.left, y: grid_area.top },
-                true,
+                Some(Rect {
+                    left: area_rect.left - grid_area.left,
+                    right: area_rect.right - grid_area.left,
+                    top: area_rect.top - grid_area.top,
+                    bottom: area_rect.bottom - grid_area.top,
+                }),
             )
         }
-        _ => (area_size, area_offset, false),
+        _ => (area_size, area_offset, None),
     };
     #[cfg(not(feature = "grid"))]
-    let is_grid_cb = false;
+    let original_cb: Option<Rect<f32>> = None;
     let area_width = area_size.width;
     let area_height = area_size.height;
 
@@ -629,10 +645,7 @@ pub(crate) fn layout_oof_box<Tree: LayoutContainingBlock>(
 
     let horizontal = OofAxis {
         cb_size: area_width,
-        original_cb: is_grid_cb.then_some(Line {
-            start: original_cb_offset.x - area_offset.x,
-            end: original_cb_offset.x + original_cb_size.width - area_offset.x,
-        }),
+        original_cb: original_cb.map(|rect| Line { start: rect.left, end: rect.right }),
         inset: Line { start: left, end: right },
         margin: Line { start: margin.left, end: margin.right },
         static_position: static_position.x,
@@ -644,10 +657,7 @@ pub(crate) fn layout_oof_box<Tree: LayoutContainingBlock>(
     };
     let vertical = OofAxis {
         cb_size: area_height,
-        original_cb: is_grid_cb.then_some(Line {
-            start: original_cb_offset.y - area_offset.y,
-            end: original_cb_offset.y + original_cb_size.height - area_offset.y,
-        }),
+        original_cb: original_cb.map(|rect| Line { start: rect.top, end: rect.bottom }),
         inset: Line { start: top, end: bottom },
         margin: Line { start: margin.top, end: margin.bottom },
         static_position: static_position.y,
