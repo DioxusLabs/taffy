@@ -679,6 +679,8 @@ fn compute_inner(
         content_box_inset,
         resolved_content_box_inset,
         resolved_border,
+        #[cfg(feature = "content_size")]
+        resolved_padding,
         text_align,
         justify_items,
         direction,
@@ -764,6 +766,8 @@ fn compute_inner(
                             Size { width: container_outer_width - resolved_border.horizontal_axis_sum(), height: 0.0 },
                             Point { x: direction.is_rtl(), y: false },
                             direction.is_rtl(),
+                            resolved_padding,
+                            layout.margin,
                         ));
                     }
                 }
@@ -874,13 +878,13 @@ fn compute_inner(
 
     #[cfg(feature = "content_size")]
     {
-        // A scroll container's own padding at the end of the content is part of its scrollable
-        // overflow region, so it is included in the in-flow overflow rect. Boxes that are not
-        // scroll containers do not extend their overflow region by their own padding.
         if is_scroll_container {
-            inflow_overflow_rect.right +=
-                if direction.is_rtl() { resolved_padding.left } else { resolved_padding.right };
-            inflow_overflow_rect.bottom += resolved_padding.bottom;
+            inflow_overflow_rect = inflow_overflow_rect.union(Rect {
+                left: 0.0,
+                right: if direction.is_rtl() { resolved_padding.left } else { resolved_padding.right },
+                top: 0.0,
+                bottom: resolved_padding.bottom,
+            });
         }
         output.scrollable_overflow_rect = finalize_scrollable_overflow(
             inflow_overflow_rect,
@@ -1133,6 +1137,7 @@ fn perform_final_layout_on_in_flow_children(
     content_box_inset: Rect<f32>,
     resolved_content_box_inset: Rect<f32>,
     resolved_border: Rect<f32>,
+    #[cfg(feature = "content_size")] resolved_padding: Rect<f32>,
     text_align: TextAlign,
     justify_items: AlignItems,
     direction: Direction,
@@ -1329,6 +1334,8 @@ fn perform_final_layout_on_in_flow_children(
                         Size { width: container_outer_width - resolved_border.horizontal_axis_sum(), height: 0.0 },
                         Point { x: direction.is_rtl(), y: false },
                         direction.is_rtl(),
+                        resolved_padding,
+                        item_non_auto_margin,
                     ));
                 }
 
@@ -1799,6 +1806,8 @@ fn perform_final_layout_on_in_flow_children(
                     Size { width: container_outer_width - resolved_border.horizontal_axis_sum(), height: 0.0 },
                     Point { x: direction.is_rtl(), y: false },
                     direction.is_rtl(),
+                    resolved_padding,
+                    resolved_margin,
                 ));
             }
 
