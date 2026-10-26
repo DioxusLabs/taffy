@@ -747,7 +747,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
             grid_area,
             Size { width: grid_area.right - grid_area.left, height: grid_area.bottom - grid_area.top },
             container_alignment_styles,
-            Line { start: item.baseline_shim, end: item.last_baseline_shim },
+            item.baseline_shims,
             direction,
             #[cfg(feature = "content_size")]
             padding_box_inset,

@@ -551,7 +551,7 @@ fn resolve_item_baselines(
             for item in
                 row_items.iter_mut().filter(|item| item.participates_in_baseline_group(AlignItemsKeyword::Baseline))
             {
-                item.baseline_shim = row_max_baseline - margin_box_baseline(item);
+                item.baseline_shims.start = row_max_baseline - margin_box_baseline(item);
                 item.known_dimensions_cache = None;
             }
         }
@@ -567,7 +567,7 @@ fn resolve_item_baselines(
             for item in
                 row_items.iter_mut().filter(|item| item.participates_in_baseline_group(AlignItemsKeyword::LastBaseline))
             {
-                item.last_baseline_shim = row_max_descent - item.last_baseline.unwrap_or(0.0);
+                item.baseline_shims.end = row_max_descent - item.last_baseline.unwrap_or(0.0);
                 item.known_dimensions_cache = None;
             }
         }
