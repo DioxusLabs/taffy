@@ -1,5 +1,7 @@
 //! This module is a partial implementation of the CSS Grid Level 1 specification
 //! <https://www.w3.org/TR/css-grid-1>
+#[cfg(feature = "content_size")]
+use super::common::scrollable_overflow::{finalize_scrollable_overflow, ScrollableOverflowContainer};
 use crate::geometry::{AbsoluteAxis, AbstractAxis, InBothAbsAxis};
 use crate::geometry::{Line, Point, Rect, Size};
 use crate::style::{AlignContent, AlignItems, AvailableSpace, Contain, ContainingBlockClaims, Overflow};
@@ -696,6 +698,21 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
 
     let container_alignment_styles = InBothAbsAxis { horizontal: justify_items, vertical: align_items };
 
+    let padding_box_inset = border
+        + Rect {
+            left: if direction.is_rtl() { scrollbar_gutter.x } else { 0.0 },
+            right: if direction.is_rtl() { 0.0 } else { scrollbar_gutter.x },
+            top: 0.0,
+            bottom: scrollbar_gutter.y,
+        };
+    #[cfg(feature = "content_size")]
+    let overflow_container = ScrollableOverflowContainer {
+        parent_is_scroll_container: is_scroll_container,
+        parent_size: Size { width: container_border_box.width - padding_box_inset.horizontal_axis_sum(), height: 0.0 },
+        reversed: Point { x: direction.is_rtl(), y: false },
+        padding,
+    };
+
     // If the container's size and baselines have been requested, measure the items they are taken from
     if run_mode == RunMode::ComputeSize {
         let baselines = if contain.suppresses_baseline() {
@@ -708,15 +725,19 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
                 &columns,
                 container_alignment_styles,
                 direction,
-                container_border_box.width,
-                border,
                 #[cfg(feature = "content_size")]
-                is_scroll_container,
+                padding_box_inset,
+                #[cfg(feature = "content_size")]
+                &overflow_container,
                 run_mode,
                 inputs.requested_baselines,
             )
         };
-        return LayoutOutput::from_sizes_and_baselines(container_border_box, Rect::ZERO, baselines);
+        return LayoutOutput::from_sizes_and_baselines(
+            container_border_box,
+            crate::tree::ScrollableOverflow::ZERO,
+            baselines,
+        );
     }
 
     // 9. Size, Align, and Position Grid Items
@@ -761,10 +782,10 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
             container_alignment_styles,
             item.baseline_shim,
             direction,
-            container_border_box.width,
-            border,
             #[cfg(feature = "content_size")]
-            is_scroll_container,
+            padding_box_inset,
+            #[cfg(feature = "content_size")]
+            &overflow_container,
             &mut item.oof_candidates,
             RunMode::PerformLayout,
             item_requested_baselines,
@@ -878,15 +899,8 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
         }
     });
 
-    let absolute_position_inset = border
-        + Rect {
-            left: if direction.is_rtl() { scrollbar_gutter.x } else { 0.0 },
-            right: if direction.is_rtl() { 0.0 } else { scrollbar_gutter.x },
-            top: 0.0,
-            bottom: scrollbar_gutter.y,
-        };
-    let absolute_position_area = container_border_box - absolute_position_inset.sum_axes();
-    let absolute_position_offset = Point { x: absolute_position_inset.left, y: absolute_position_inset.top };
+    let absolute_position_area = container_border_box - padding_box_inset.sum_axes();
+    let absolute_position_offset = Point { x: padding_box_inset.left, y: padding_box_inset.top };
     // Determine the grid container baselines
     // Layout containment suppresses the box's baseline for baseline-alignment purposes
     let baselines = if contain.suppresses_baseline() {
@@ -899,10 +913,10 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
             &columns,
             container_alignment_styles,
             direction,
-            container_border_box.width,
-            border,
             #[cfg(feature = "content_size")]
-            is_scroll_container,
+            padding_box_inset,
+            #[cfg(feature = "content_size")]
+            &overflow_container,
             run_mode,
             inputs.requested_baselines,
         )
@@ -937,12 +951,30 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     if items.is_empty() {
         #[cfg(feature = "content_size")]
         let mut output = {
-            let mut overflow_rect = item_overflow_rect;
-            if is_scroll_container {
-                overflow_rect.right += if direction.is_rtl() { padding.left } else { padding.right };
-                overflow_rect.bottom += padding.bottom;
-            }
-            LayoutOutput::from_sizes(container_border_box, overflow_rect)
+            let client_width =
+                (container_border_box.width - border.horizontal_axis_sum() - scrollbar_gutter.x).max(0.0);
+            let overflow_rect = if is_scroll_container {
+                item_overflow_rect.union(Rect {
+                    left: if direction.is_rtl() { (client_width - padding.left).min(0.0) } else { 0.0 },
+                    right: if direction.is_rtl() { client_width } else { padding.right },
+                    top: 0.0,
+                    bottom: padding.bottom,
+                })
+            } else {
+                item_overflow_rect
+                    .union(Rect { right: if direction.is_rtl() { client_width } else { 0.0 }, ..Rect::ZERO })
+            };
+            LayoutOutput::from_sizes(
+                container_border_box,
+                finalize_scrollable_overflow(
+                    overflow_rect,
+                    container_border_box
+                        - border.sum_axes()
+                        - Size { width: scrollbar_gutter.x, height: scrollbar_gutter.y },
+                    Point { x: direction.is_rtl(), y: false },
+                    is_scroll_container,
+                ),
+            )
         };
         #[cfg(not(feature = "content_size"))]
         let mut output = LayoutOutput::from_outer_size(container_border_box);
@@ -956,15 +988,26 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     // scroll containers do not extend their overflow region by their own padding.
     #[cfg(feature = "content_size")]
     let scrollable_overflow_rect = {
-        let mut overflow_rect = item_overflow_rect;
-        if is_scroll_container {
-            overflow_rect.right += if direction.is_rtl() { padding.left } else { padding.right };
-            overflow_rect.bottom += padding.bottom;
-        }
-        overflow_rect
+        let client_width = (container_border_box.width - border.horizontal_axis_sum() - scrollbar_gutter.x).max(0.0);
+        let overflow_rect = if is_scroll_container {
+            item_overflow_rect.union(Rect {
+                left: if direction.is_rtl() { (client_width - padding.left).min(0.0) } else { 0.0 },
+                right: if direction.is_rtl() { client_width } else { padding.right },
+                top: 0.0,
+                bottom: padding.bottom,
+            })
+        } else {
+            item_overflow_rect.union(Rect { right: if direction.is_rtl() { client_width } else { 0.0 }, ..Rect::ZERO })
+        };
+        finalize_scrollable_overflow(
+            overflow_rect,
+            container_border_box - border.sum_axes() - Size { width: scrollbar_gutter.x, height: scrollbar_gutter.y },
+            Point { x: direction.is_rtl(), y: false },
+            is_scroll_container,
+        )
     };
     #[cfg(not(feature = "content_size"))]
-    let scrollable_overflow_rect = item_overflow_rect;
+    let scrollable_overflow_rect = crate::tree::ScrollableOverflow::ZERO;
 
     let mut output = LayoutOutput::from_sizes_and_baselines(container_border_box, scrollable_overflow_rect, baselines);
     output.oof_candidates = oof_candidates;
@@ -1007,9 +1050,8 @@ fn determine_container_baselines(
     columns: &[GridTrack],
     container_alignment_styles: InBothAbsAxis<AlignItems>,
     direction: Direction,
-    container_border_box_width: f32,
-    container_border: Rect<f32>,
-    #[cfg(feature = "content_size")] container_is_scroll_container: bool,
+    #[cfg(feature = "content_size")] padding_box_inset: Rect<f32>,
+    #[cfg(feature = "content_size")] overflow_container: &ScrollableOverflowContainer,
     run_mode: RunMode,
     requested: RequestedBaselines,
 ) -> Baselines {
@@ -1034,10 +1076,10 @@ fn determine_container_baselines(
             container_alignment_styles,
             item.baseline_shim,
             direction,
-            container_border_box_width,
-            container_border,
             #[cfg(feature = "content_size")]
-            container_is_scroll_container,
+            padding_box_inset,
+            #[cfg(feature = "content_size")]
+            overflow_container,
             &mut OofCandidates::new(),
             RunMode::ComputeSize,
             requested,

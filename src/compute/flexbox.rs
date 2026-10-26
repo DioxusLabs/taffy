@@ -24,7 +24,9 @@ use crate::{BoxGenerationMode, BoxSizing, Dimension, Direction, RequestedAxis};
 
 use super::common::alignment::apply_alignment_fallback;
 #[cfg(feature = "content_size")]
-use super::common::scrollable_overflow::compute_scrollable_overflow_contribution;
+use super::common::scrollable_overflow::{
+    compute_scrollable_overflow_contribution, finalize_scrollable_overflow, ScrollableOverflowContainer,
+};
 use super::common::sizing_keyword::{resolve_sizing_keyword, SizingKeywordResolution};
 
 /// The intermediate results of a flexbox calculation for a single item
@@ -201,6 +203,11 @@ struct AlgoConstants {
     /// The space between the content box and the border box.
     /// This consists of padding + border + scrollbar_gutter.
     content_box_inset: Rect<f32>,
+    /// The border and scrollbar gutters surrounding the padding box.
+    padding_box_inset: Rect<f32>,
+    /// The resolved padding used for scrollable overflow contributions.
+    #[cfg(feature = "content_size")]
+    padding: Rect<f32>,
     /// The size reserved for scrollbar gutters in each axis
     scrollbar_gutter: Point<f32>,
     /// Whether the node being laid out is a scroll container
@@ -521,7 +528,11 @@ fn compute_preliminary(tree: &mut impl LayoutFlexboxContainer, node: NodeId, inp
     if run_mode == RunMode::ComputeSize {
         let baselines =
             determine_container_baselines(tree, &flex_lines, &constants, run_mode, inputs.requested_baselines);
-        return LayoutOutput::from_sizes_and_baselines(constants.container_size, Rect::ZERO, baselines);
+        return LayoutOutput::from_sizes_and_baselines(
+            constants.container_size,
+            crate::tree::ScrollableOverflow::ZERO,
+            baselines,
+        );
     }
 
     // Do a final layout pass and gather the resulting layouts
@@ -534,15 +545,8 @@ fn compute_preliminary(tree: &mut impl LayoutFlexboxContainer, node: NodeId, inp
     let mut candidates = OofCandidates::new();
     collect_oof_candidates(tree, node, &constants, &mut flex_lines, &mut candidates);
 
-    let absolute_position_inset = constants.border
-        + Rect {
-            left: if constants.layout_direction.is_rtl() { constants.scrollbar_gutter.x } else { 0.0 },
-            right: if constants.layout_direction.is_rtl() { 0.0 } else { constants.scrollbar_gutter.x },
-            top: 0.0,
-            bottom: constants.scrollbar_gutter.y,
-        };
-    let absolute_position_area = constants.container_size - absolute_position_inset.sum_axes();
-    let absolute_position_offset = Point { x: absolute_position_inset.left, y: absolute_position_inset.top };
+    let absolute_position_area = constants.container_size - constants.padding_box_inset.sum_axes();
+    let absolute_position_offset = Point { x: constants.padding_box_inset.left, y: constants.padding_box_inset.top };
 
     debug_log!("hidden_layout");
     let len = tree.child_count(node);
@@ -564,7 +568,28 @@ fn compute_preliminary(tree: &mut impl LayoutFlexboxContainer, node: NodeId, inp
     // 8.5. Flex Container Baselines
     let baselines = determine_container_baselines(tree, &flex_lines, &constants, run_mode, inputs.requested_baselines);
 
-    let mut output = LayoutOutput::from_sizes_and_baselines(constants.container_size, inflow_overflow_rect, baselines);
+    let mut output = LayoutOutput::from_sizes_and_baselines(
+        constants.container_size,
+        {
+            #[cfg(feature = "content_size")]
+            {
+                finalize_scrollable_overflow(
+                    inflow_overflow_rect,
+                    constants.container_size
+                        - constants.border.sum_axes()
+                        - Size { width: constants.scrollbar_gutter.x, height: constants.scrollbar_gutter.y },
+                    constants.scroll_origin_reversed(),
+                    constants.is_scroll_container,
+                )
+            }
+            #[cfg(not(feature = "content_size"))]
+            {
+                let _ = inflow_overflow_rect;
+                crate::tree::ScrollableOverflow::ZERO
+            }
+        },
+        baselines,
+    );
     output.oof_candidates = candidates;
     output.oof_positioning_area =
         Some(OofPositioningArea { size: absolute_position_area, offset: absolute_position_offset });
@@ -602,6 +627,27 @@ fn compute_empty_container_layout(
     // never read. It still has to be `Some`: that is what makes `compute_oof_layout` clear a
     // stale hoisted-children list from a run in which the container still had descendants.
     let mut output = LayoutOutput::from_outer_size(constants.container_size);
+    #[cfg(feature = "content_size")]
+    {
+        output.scrollable_overflow_rect = finalize_scrollable_overflow(
+            Rect {
+                right: if constants.layout_direction.is_rtl() {
+                    (constants.container_size.width
+                        - constants.border.horizontal_axis_sum()
+                        - constants.scrollbar_gutter.x)
+                        .max(0.0)
+                } else {
+                    0.0
+                },
+                ..Rect::ZERO
+            },
+            constants.container_size
+                - constants.border.sum_axes()
+                - Size { width: constants.scrollbar_gutter.x, height: constants.scrollbar_gutter.y },
+            constants.scroll_origin_reversed(),
+            constants.is_scroll_container,
+        );
+    }
     output.oof_positioning_area = Some(OofPositioningArea { size: Size::ZERO, offset: Point::ZERO });
     output
 }
@@ -680,6 +726,23 @@ fn compute_constants(
         Direction::Rtl => content_box_inset.left += scrollbar_gutter.x,
     };
 
+    let padding_box_inset = border
+        + Rect {
+            left: if layout_direction.is_rtl() { scrollbar_gutter.x } else { 0.0 },
+            right: if layout_direction.is_rtl() { 0.0 } else { scrollbar_gutter.x },
+            top: 0.0,
+            bottom: scrollbar_gutter.y,
+        };
+    #[cfg(feature = "content_size")]
+    let padding = Rect {
+        left: content_box_inset.left - border.left - if layout_direction.is_rtl() { scrollbar_gutter.x } else { 0.0 },
+        right: content_box_inset.right
+            - border.right
+            - if layout_direction.is_rtl() { 0.0 } else { scrollbar_gutter.x },
+        top: content_box_inset.top - border.top,
+        bottom: content_box_inset.bottom - border.bottom - scrollbar_gutter.y,
+    };
+
     let node_outer_size = known_dimensions;
     let node_inner_size = node_outer_size.maybe_sub(content_box_inset.sum_axes());
     let known_main_size_is_definite = known_dimensions_are_definite.main(dir);
@@ -716,6 +779,9 @@ fn compute_constants(
         border,
         gap,
         content_box_inset,
+        padding_box_inset,
+        #[cfg(feature = "content_size")]
+        padding,
         scrollbar_gutter,
         #[cfg(feature = "content_size")]
         is_scroll_container,
@@ -2556,7 +2622,7 @@ fn calculate_flex_item(
     total_offset_cross: f32,
     line_offset_cross: f32,
     #[cfg(feature = "content_size")] total_overflow_rect: &mut Rect<f32>,
-    #[cfg(feature = "content_size")] border: Rect<f32>,
+    #[cfg(feature = "content_size")] overflow_container: &ScrollableOverflowContainer,
     constants: &AlgoConstants,
 ) {
     let container_size = constants.container_size;
@@ -2660,19 +2726,19 @@ fn calculate_flex_item(
 
     #[cfg(feature = "content_size")]
     {
-        let contribution_location = if layout_direction.is_rtl() {
-            Point { x: container_size.width - (location.x + size.width) - border.right, y: location.y - border.top }
-        } else {
-            Point { x: location.x - border.left, y: location.y - border.top }
-        };
-        *total_overflow_rect = total_overflow_rect.union(compute_scrollable_overflow_contribution(
+        let contribution_location =
+            Point { x: location.x - constants.padding_box_inset.left, y: location.y - constants.padding_box_inset.top };
+        let contribution = compute_scrollable_overflow_contribution(
             contribution_location,
             size,
-            scrollable_overflow_rect,
+            scrollable_overflow_rect.rect(),
+            item.border,
             item.overflow,
             item.contain,
-            constants.is_scroll_container,
-        ));
+            overflow_container,
+            item.margin,
+        );
+        *total_overflow_rect = total_overflow_rect.union(contribution);
     }
 }
 
@@ -2817,7 +2883,7 @@ fn calculate_layout_line(
     requested_baselines: RequestedBaselines,
     total_offset_cross: &mut f32,
     #[cfg(feature = "content_size")] overflow_rect: &mut Rect<f32>,
-    #[cfg(feature = "content_size")] border: Rect<f32>,
+    #[cfg(feature = "content_size")] overflow_container: &ScrollableOverflowContainer,
     constants: &AlgoConstants,
 ) {
     let container_size = constants.container_size;
@@ -2862,7 +2928,7 @@ fn calculate_layout_line(
                 #[cfg(feature = "content_size")]
                 overflow_rect,
                 #[cfg(feature = "content_size")]
-                border,
+                overflow_container,
                 constants,
             );
         }
@@ -2878,7 +2944,7 @@ fn calculate_layout_line(
                 #[cfg(feature = "content_size")]
                 overflow_rect,
                 #[cfg(feature = "content_size")]
-                border,
+                overflow_container,
                 constants,
             );
         }
@@ -2897,6 +2963,15 @@ fn final_layout_pass(
     constants: &AlgoConstants,
     requested_baselines: RequestedBaselines,
 ) -> Rect<f32> {
+    #[cfg(feature = "content_size")]
+    let overflow_container = ScrollableOverflowContainer {
+        parent_is_scroll_container: constants.is_scroll_container,
+        parent_size: constants.container_size
+            - constants.border.sum_axes()
+            - Size { width: constants.scrollbar_gutter.x, height: constants.scrollbar_gutter.y },
+        reversed: constants.scroll_origin_reversed(),
+        padding: constants.padding,
+    };
     let mut total_offset_cross = if constants.is_column && constants.layout_direction.is_rtl() {
         constants.container_size.width - constants.content_box_inset.cross_end(constants.dir)
     } else {
@@ -2928,7 +3003,7 @@ fn final_layout_pass(
                 #[cfg(feature = "content_size")]
                 &mut overflow_rect,
                 #[cfg(feature = "content_size")]
-                constants.border,
+                &overflow_container,
                 constants,
             );
         }
@@ -2942,26 +3017,42 @@ fn final_layout_pass(
                 #[cfg(feature = "content_size")]
                 &mut overflow_rect,
                 #[cfg(feature = "content_size")]
-                constants.border,
+                &overflow_container,
                 constants,
             );
         }
     }
 
-    // A scroll container's own padding at the end of the content is part of its scrollable
-    // overflow region, so it is included in the overflow rect. Boxes that are not scroll
-    // containers do not extend their overflow region by their own padding.
     #[cfg(feature = "content_size")]
-    if constants.is_scroll_container {
-        overflow_rect.right += if constants.layout_direction.is_rtl() {
-            constants.content_box_inset.left - constants.border.left - constants.scrollbar_gutter.x
-        } else {
-            constants.content_box_inset.right - constants.border.right - constants.scrollbar_gutter.x
-        };
-        overflow_rect.bottom +=
-            constants.content_box_inset.bottom - constants.border.bottom - constants.scrollbar_gutter.y;
+    if constants.layout_direction.is_rtl() {
+        let client_width =
+            (constants.container_size.width - constants.border.horizontal_axis_sum() - constants.scrollbar_gutter.x)
+                .max(0.0);
+        overflow_rect = overflow_rect.union(Rect { right: client_width, ..Rect::ZERO });
     }
 
+    #[cfg(feature = "content_size")]
+    if constants.is_scroll_container {
+        let client_width =
+            (constants.container_size.width - constants.border.horizontal_axis_sum() - constants.scrollbar_gutter.x)
+                .max(0.0);
+        overflow_rect = overflow_rect.union(Rect {
+            left: if constants.layout_direction.is_rtl() {
+                (client_width
+                    - (constants.content_box_inset.left - constants.border.left - constants.scrollbar_gutter.x))
+                    .min(0.0)
+            } else {
+                0.0
+            },
+            right: if constants.layout_direction.is_rtl() {
+                client_width
+            } else {
+                constants.content_box_inset.right - constants.border.right - constants.scrollbar_gutter.x
+            },
+            top: 0.0,
+            bottom: constants.content_box_inset.bottom - constants.border.bottom - constants.scrollbar_gutter.y,
+        });
+    }
     overflow_rect
 }
 
@@ -3658,5 +3749,16 @@ mod balance {
                 );
             }
         }
+    }
+}
+
+#[cfg(feature = "content_size")]
+impl AlgoConstants {
+    /// Map main/cross reversal to physical axes, including RTL inline progression.
+    fn scroll_origin_reversed(&self) -> Point<bool> {
+        let main = self.dir.is_reverse();
+        let cross = self.is_wrap_reverse;
+        let (x, y) = if self.is_column { (cross, main) } else { (main, cross) };
+        Point { x: x ^ self.layout_direction.is_rtl(), y }
     }
 }

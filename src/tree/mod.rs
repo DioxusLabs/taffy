@@ -16,7 +16,7 @@ pub use cache::{Cache, ClearState};
 pub use layout::{
     AxisStaticAlign, AxisStaticEdge, AxisStaticPosition, Baselines, CollapsibleMarginSet, Layout, LayoutInput,
     LayoutOutput, OofCandidate, OofCandidates, OofPositioningArea, RequestedAxis, RequestedBaselines, RunMode,
-    SizingMode,
+    ScrollableOverflow, SizingMode,
 };
 pub use node::NodeId;
 pub(crate) use traits::LayoutPartialTreeExt;

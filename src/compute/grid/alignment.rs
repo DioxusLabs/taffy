@@ -17,7 +17,9 @@ use crate::util::sys::f32_max;
 use crate::util::{MaybeMath, MaybeResolve, ResolveOrZero};
 
 #[cfg(feature = "content_size")]
-use crate::compute::common::scrollable_overflow::compute_scrollable_overflow_contribution;
+use crate::compute::common::scrollable_overflow::{
+    compute_scrollable_overflow_contribution, ScrollableOverflowContainer,
+};
 use crate::compute::common::sizing_keyword::{resolve_sizing_keyword, SizingKeywordResolution};
 use crate::{AbsoluteAxis, BoxSizing, Direction, LayoutGridContainer};
 
@@ -99,9 +101,8 @@ pub(super) fn align_and_position_item(
     container_alignment_styles: InBothAbsAxis<AlignItems>,
     baseline_shim: f32,
     direction: Direction,
-    container_border_box_width: f32,
-    container_border: Rect<f32>,
-    #[cfg(feature = "content_size")] container_is_scroll_container: bool,
+    #[cfg(feature = "content_size")] padding_box_inset: Rect<f32>,
+    #[cfg(feature = "content_size")] overflow_container: &ScrollableOverflowContainer,
     bubbled_candidates: &mut OofCandidates,
     run_mode: RunMode,
     requested_baselines: RequestedBaselines,
@@ -445,20 +446,16 @@ pub(super) fn align_and_position_item(
 
     #[cfg(feature = "content_size")]
     let contribution = {
-        // Contributions to the container's scrollable overflow rect are measured from the
-        // container's padding-box origin (mirrored for RTL), matching the scrollable overflow region.
-        let contribution_location = if direction.is_rtl() {
-            Point { x: container_border_box_width - (x + width) - container_border.right, y: y - container_border.top }
-        } else {
-            Point { x: x - container_border.left, y: y - container_border.top }
-        };
+        let contribution_location = Point { x: x - padding_box_inset.left, y: y - padding_box_inset.top };
         compute_scrollable_overflow_contribution(
             contribution_location,
             Size { width, height },
-            layout_output.scrollable_overflow_rect,
+            layout_output.scrollable_overflow_rect.rect(),
+            border,
             overflow,
             contain,
-            container_is_scroll_container,
+            overflow_container,
+            resolved_margin,
         )
     };
     #[cfg(not(feature = "content_size"))]
