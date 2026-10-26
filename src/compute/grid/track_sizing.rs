@@ -499,7 +499,7 @@ fn resolve_item_baselines_for_group(
     let mut remaining_items = &mut items[0..];
     while !remaining_items.is_empty() {
         // Get the row line of the current group
-        let current_line = participation_line(&remaining_items[0]);
+        let current_line = participation_line(remaining_items[0]);
 
         // Find the item index of the first item that is in a different group (or None if we've reached the end of the list)
         let next_group_first_item = remaining_items.iter().position(|item| participation_line(item) != current_line);
