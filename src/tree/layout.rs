@@ -41,6 +41,26 @@ impl ScrollableOverflow {
         Rect { right: self.0.right.abs(), bottom: self.0.bottom.abs(), ..self.0 }
     }
 
+    /// The physical left overflow edge.
+    pub fn left(self) -> f32 {
+        self.0.left
+    }
+
+    /// The physical right overflow edge, with its sign restored.
+    pub fn right(self) -> f32 {
+        self.0.right.abs()
+    }
+
+    /// The physical top overflow edge.
+    pub fn top(self) -> f32 {
+        self.0.top
+    }
+
+    /// The physical bottom overflow edge, with its sign restored.
+    pub fn bottom(self) -> f32 {
+        self.0.bottom.abs()
+    }
+
     /// Whether the physical x/y scroll origins are at the right/bottom edges.
     pub fn is_reversed(self) -> Point<bool> {
         Point { x: self.0.right.is_sign_negative(), y: self.0.bottom.is_sign_negative() }
@@ -767,11 +787,11 @@ impl Layout {
     /// This is the reachable extent of the content less the width of the padding box, floored at zero.
     pub fn scroll_width(&self) -> f32 {
         if self.scrollable_overflow_rect.is_reversed().x {
-            return -self.scrollable_overflow_rect.rect().left;
+            return -self.scrollable_overflow_rect.left();
         }
         f32_max(
             0.0,
-            self.scrollable_overflow_rect.rect().right + f32_min(self.scrollbar_size.width, self.size.width)
+            self.scrollable_overflow_rect.right() + f32_min(self.scrollbar_size.width, self.size.width)
                 - self.size.width
                 + self.border.left
                 + self.border.right,
@@ -782,11 +802,11 @@ impl Layout {
     /// This is the reachable extent of the content less the height of the padding box, floored at zero.
     pub fn scroll_height(&self) -> f32 {
         if self.scrollable_overflow_rect.is_reversed().y {
-            return -self.scrollable_overflow_rect.rect().top;
+            return -self.scrollable_overflow_rect.top();
         }
         f32_max(
             0.0,
-            self.scrollable_overflow_rect.rect().bottom + f32_min(self.scrollbar_size.height, self.size.height)
+            self.scrollable_overflow_rect.bottom() + f32_min(self.scrollbar_size.height, self.size.height)
                 - self.size.height
                 + self.border.top
                 + self.border.bottom,
@@ -815,6 +835,26 @@ mod scrollable_overflow_tests {
     use crate::geometry::{Point, Rect};
 
     #[test]
+    fn side_accessors_match_restored_rectangle() {
+        for rect in [
+            Rect::ZERO,
+            Rect { left: -0.0, top: -0.0, right: 0.0, bottom: 0.0 },
+            Rect { left: -10.0, top: -20.0, right: 30.0, bottom: 40.0 },
+        ] {
+            for x in [false, true] {
+                for y in [false, true] {
+                    let overflow = ScrollableOverflow::new(rect, Point { x, y });
+                    let restored = overflow.rect();
+                    assert_eq!(overflow.left().to_bits(), restored.left.to_bits());
+                    assert_eq!(overflow.right().to_bits(), restored.right.to_bits());
+                    assert_eq!(overflow.top().to_bits(), restored.top.to_bits());
+                    assert_eq!(overflow.bottom().to_bits(), restored.bottom.to_bits());
+                }
+            }
+        }
+    }
+
+    #[test]
     fn packing_preserves_flags_rectangles_and_signed_zeroes() {
         for right in [0.0, 10.0] {
             for bottom in [0.0, 20.0] {
@@ -823,10 +863,10 @@ mod scrollable_overflow_tests {
                         let rect = Rect { left: -0.0, right, top: -0.0, bottom };
                         let reversed = Point { x, y };
                         let overflow = ScrollableOverflow::new(rect, reversed);
-                        assert_eq!(overflow.rect().left.to_bits(), (-0.0_f32).to_bits());
-                        assert_eq!(overflow.rect().top.to_bits(), (-0.0_f32).to_bits());
-                        assert_eq!(overflow.rect().right.to_bits(), right.to_bits());
-                        assert_eq!(overflow.rect().bottom.to_bits(), bottom.to_bits());
+                        assert_eq!(overflow.left().to_bits(), (-0.0_f32).to_bits());
+                        assert_eq!(overflow.top().to_bits(), (-0.0_f32).to_bits());
+                        assert_eq!(overflow.right().to_bits(), right.to_bits());
+                        assert_eq!(overflow.bottom().to_bits(), bottom.to_bits());
                         assert_eq!(overflow.is_reversed(), reversed);
                         assert_eq!(overflow.0.right.is_sign_negative(), x);
                         assert_eq!(overflow.0.bottom.is_sign_negative(), y);
