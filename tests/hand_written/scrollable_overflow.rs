@@ -12,6 +12,45 @@ const CONTAINER: f32 = 200.0;
 const CHILD: f32 = 50.0;
 
 #[test]
+fn block_end_margins_do_not_extend_scrollable_overflow() {
+    for direction in [Direction::Ltr, Direction::Rtl] {
+        for bottom_margin in [-100.0, 0.0, 150.0] {
+            for padding in [0.0, 8.0] {
+                let mut tree = new_test_tree();
+                let child = tree
+                    .new_leaf(Style {
+                        size: Size { width: length(50.0), height: length(50.0) },
+                        margin: Rect { top: length(150.0), bottom: length(bottom_margin), ..zero() },
+                        ..Default::default()
+                    })
+                    .unwrap();
+                let node = tree
+                    .new_with_children(
+                        Style {
+                            display: Display::Block,
+                            direction,
+                            size: Size { width: length(200.0), height: length(200.0) },
+                            padding: Rect { bottom: length(padding), ..zero() },
+                            overflow: Point { x: Overflow::Scroll, y: Overflow::Scroll },
+                            ..Default::default()
+                        },
+                        &[child],
+                    )
+                    .unwrap();
+                tree.compute_layout(node, Size::MAX_CONTENT).unwrap();
+                let layout = tree.layout(node).unwrap();
+                let expected_end = 200.0 + if bottom_margin < 0.0 { 0.0 } else { padding };
+                assert_eq!(
+                    layout.scrollable_overflow_rect.rect().bottom,
+                    expected_end,
+                    "{direction:?} margin {bottom_margin} padding {padding}"
+                );
+            }
+        }
+    }
+}
+
+#[test]
 fn negative_margins_do_not_add_padding_to_overflow_edges() {
     for display in [Display::Block, Display::Flex, Display::Grid] {
         for direction in [Direction::Ltr, Direction::Rtl] {
