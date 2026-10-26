@@ -8,7 +8,7 @@ use crate::style::{
     AlignContent, AlignItems, AlignItemsKeyword, AlignSelf, AvailableSpace, CoreStyle, GridItemStyle, Overflow,
     Position,
 };
-use crate::tree::{Layout, LayoutPartialTreeExt, NodeId, OofCandidates, SizingMode};
+use crate::tree::{Baselines, Layout, LayoutPartialTreeExt, NodeId, OofCandidates, SizingMode};
 use crate::util::sys::f32_max;
 use crate::util::{MaybeMath, MaybeResolve, ResolveOrZero};
 
@@ -100,7 +100,7 @@ pub(super) fn align_and_position_item(
     #[cfg(feature = "content_size")] padding_box_inset: Rect<f32>,
     #[cfg(feature = "content_size")] overflow_container: &ScrollableOverflowContainer,
     bubbled_candidates: &mut OofCandidates,
-) -> (Rect<f32>, f32, f32, Option<f32>) {
+) -> (Rect<f32>, f32, f32, Baselines) {
     let grid_area_size = Size { width: grid_area.right - grid_area.left, height: grid_area.bottom - grid_area.top };
 
     let style = tree.get_grid_child_style(node);
@@ -447,8 +447,11 @@ pub(super) fn align_and_position_item(
     #[cfg(not(feature = "content_size"))]
     let contribution = Rect::ZERO;
 
-    let baseline = child_first_baseline(layout_output.baselines.first, height, overflow.y);
-    (contribution, y_without_relative_offset, height, baseline)
+    let baselines = Baselines {
+        first: child_first_baseline(layout_output.baselines.first, height, overflow.y),
+        last: child_first_baseline(layout_output.baselines.last, height, overflow.y),
+    };
+    (contribution, y_without_relative_offset, height, baselines)
 }
 
 /// Align and size a grid item along a single axis
