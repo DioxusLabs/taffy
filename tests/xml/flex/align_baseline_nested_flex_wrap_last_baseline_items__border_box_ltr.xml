@@ -1,0 +1,29 @@
+<test name="align_baseline_nested_flex_wrap_last_baseline_items__border_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div direction="ltr" align-items="baseline" width="200px">
+      <div direction="ltr" width="20px" height="45px"/>
+      <div direction="ltr" flex-wrap="wrap" width="140px" row-gap="10px" column-gap="10px">
+        <div direction="ltr" width="40px" height="10px"/>
+        <div direction="ltr" align-self="last baseline" width="40px" height="30px" margin-top="10px" margin-left="0px" margin-bottom="10px" margin-right="0px"/>
+        <div direction="ltr" width="40px" height="50px"/>
+        <div direction="ltr" width="40px" height="60px"/>
+        <div direction="ltr" align-self="last baseline" width="40px" height="40px" margin-top="10px" margin-left="0px" margin-bottom="10px" margin-right="0px"/>
+        <div direction="ltr" width="40px" height="20px"/>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="200" height="125">
+      <node x="0" y="0" width="20" height="45"/>
+      <node x="20" y="5" width="140" height="120">
+        <node x="0" y="0" width="40" height="10"/>
+        <node x="50" y="10" width="40" height="30"/>
+        <node x="100" y="0" width="40" height="50"/>
+        <node x="0" y="60" width="40" height="60"/>
+        <node x="50" y="70" width="40" height="40"/>
+        <node x="100" y="60" width="40" height="20"/>
+      </node>
+    </node>
+  </expectations>
+</test>
