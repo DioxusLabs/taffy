@@ -742,18 +742,9 @@ fn compute_inner(
                 inflow_overflow_rect = Rect::ZERO;
                 for item in items.iter() {
                     if let Some(layout) = item.final_layout.as_ref() {
-                        let contribution_location = if direction.is_rtl() {
-                            Point {
-                                x: container_outer_width
-                                    - (layout.location.x + layout.size.width)
-                                    - resolved_border.right,
-                                y: layout.location.y - resolved_border.top,
-                            }
-                        } else {
-                            Point {
-                                x: layout.location.x - resolved_border.left,
-                                y: layout.location.y - resolved_border.top,
-                            }
+                        let contribution_location = Point {
+                            x: layout.location.x - resolved_border.left - scrollbar_gutter.left,
+                            y: layout.location.y - resolved_border.top,
                         };
                         inflow_overflow_rect = inflow_overflow_rect.union(compute_scrollable_overflow_contribution(
                             contribution_location,
@@ -763,9 +754,8 @@ fn compute_inner(
                             item.overflow,
                             item.contain,
                             is_scroll_container,
-                            Size { width: container_outer_width - resolved_border.horizontal_axis_sum(), height: 0.0 },
+                            final_outer_size - resolved_border.sum_axes() - scrollbar_gutter.sum_axes(),
                             Point { x: direction.is_rtl(), y: false },
-                            direction.is_rtl(),
                             resolved_padding,
                             layout.margin.map(|value| value.min(0.0)),
                         ));
@@ -878,10 +868,16 @@ fn compute_inner(
 
     #[cfg(feature = "content_size")]
     {
+        let client_width =
+            (final_outer_size.width - resolved_border.horizontal_axis_sum() - scrollbar_gutter.horizontal_axis_sum())
+                .max(0.0);
+        if direction.is_rtl() {
+            inflow_overflow_rect = inflow_overflow_rect.union(Rect { right: client_width, ..Rect::ZERO });
+        }
         if is_scroll_container {
             inflow_overflow_rect = inflow_overflow_rect.union(Rect {
-                left: 0.0,
-                right: if direction.is_rtl() { resolved_padding.left } else { resolved_padding.right },
+                left: if direction.is_rtl() { (client_width - resolved_padding.left).min(0.0) } else { 0.0 },
+                right: if direction.is_rtl() { client_width } else { resolved_padding.right },
                 top: 0.0,
                 bottom: resolved_padding.bottom,
             });
@@ -889,7 +885,6 @@ fn compute_inner(
         output.scrollable_overflow_rect = finalize_scrollable_overflow(
             inflow_overflow_rect,
             final_outer_size - resolved_border.sum_axes() - scrollbar_gutter.sum_axes(),
-            direction.is_rtl(),
             Point { x: direction.is_rtl(), y: false },
             is_scroll_container,
         );
@@ -1315,13 +1310,9 @@ fn perform_final_layout_on_in_flow_children(
                 {
                     // TODO: Should the overflow of floated boxes count as "inflow_overflow_rect"
                     // or should it be counted separately?
-                    let contribution_location = if direction.is_rtl() {
-                        Point {
-                            x: container_outer_width - (location.x + item_layout.size.width) - resolved_border.right,
-                            y: location.y - resolved_border.top,
-                        }
-                    } else {
-                        Point { x: location.x - resolved_border.left, y: location.y - resolved_border.top }
+                    let contribution_location = Point {
+                        x: location.x - resolved_content_box_inset.left + resolved_padding.left,
+                        y: location.y - resolved_border.top,
                     };
                     inflow_overflow_rect = inflow_overflow_rect.union(compute_scrollable_overflow_contribution(
                         contribution_location,
@@ -1331,9 +1322,8 @@ fn perform_final_layout_on_in_flow_children(
                         item.overflow,
                         item.contain,
                         is_scroll_container,
-                        Size { width: container_outer_width - resolved_border.horizontal_axis_sum(), height: 0.0 },
+                        Size { width: container_inner_width + resolved_padding.horizontal_axis_sum(), height: 0.0 },
                         Point { x: direction.is_rtl(), y: false },
-                        direction.is_rtl(),
                         resolved_padding,
                         item_non_auto_margin.map(|value| value.min(0.0)),
                     ));
@@ -1787,13 +1777,9 @@ fn perform_final_layout_on_in_flow_children(
 
             #[cfg(feature = "content_size")]
             {
-                let contribution_location = if direction.is_rtl() {
-                    Point {
-                        x: container_outer_width - (location.x + final_size.width) - resolved_border.right,
-                        y: location.y - resolved_border.top,
-                    }
-                } else {
-                    Point { x: location.x - resolved_border.left, y: location.y - resolved_border.top }
+                let contribution_location = Point {
+                    x: location.x - resolved_content_box_inset.left + resolved_padding.left,
+                    y: location.y - resolved_border.top,
                 };
                 inflow_overflow_rect = inflow_overflow_rect.union(compute_scrollable_overflow_contribution(
                     contribution_location,
@@ -1803,9 +1789,8 @@ fn perform_final_layout_on_in_flow_children(
                     item.overflow,
                     item.contain,
                     is_scroll_container,
-                    Size { width: container_outer_width - resolved_border.horizontal_axis_sum(), height: 0.0 },
+                    Size { width: container_inner_width + resolved_padding.horizontal_axis_sum(), height: 0.0 },
                     Point { x: direction.is_rtl(), y: false },
-                    direction.is_rtl(),
                     resolved_padding,
                     resolved_margin.map(|value| value.min(0.0)),
                 ));

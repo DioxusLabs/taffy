@@ -383,7 +383,6 @@ pub fn compute_oof_layout(tree: &mut impl LayoutContainingBlock, node_id: NodeId
         output.scrollable_overflow_rect = finalize_scrollable_overflow(
             output.scrollable_overflow_rect.rect().union(result.scrollable_overflow_rect),
             area.size,
-            false,
             reversed,
             overflow.x.is_scroll_container() || overflow.y.is_scroll_container(),
         );
@@ -462,7 +461,6 @@ fn compute_oof_layout_for_area_with_origin(
     let scrollable_overflow_rect = finalize_scrollable_overflow(
         scrollable_overflow_rect,
         area.size,
-        direction.is_rtl(),
         reversed,
         overflow.x.is_scroll_container() || overflow.y.is_scroll_container(),
     )
@@ -804,6 +802,10 @@ pub(crate) fn perform_oof_layout(
 ) -> Rect<f32> {
     #[cfg_attr(not(feature = "content_size"), allow(unused_mut))]
     let mut absolute_overflow_rect = Rect::ZERO;
+    #[cfg(feature = "content_size")]
+    if direction.is_rtl() {
+        absolute_overflow_rect = absolute_overflow_rect.union(Rect { right: area_size.width.max(0.0), ..Rect::ZERO });
+    }
 
     if candidates.is_empty() {
         return absolute_overflow_rect;
@@ -870,15 +872,7 @@ pub(crate) fn perform_oof_layout(
 
         #[cfg(feature = "content_size")]
         {
-            // Location is measured from the scroll origin (the inline-start edge: right side in RTL)
-            let relative_location = if direction.is_rtl() {
-                Point {
-                    x: area_size.width - (location.x - area_offset.x) - final_size.width,
-                    y: location.y - area_offset.y,
-                }
-            } else {
-                Point { x: location.x - area_offset.x, y: location.y - area_offset.y }
-            };
+            let relative_location = Point { x: location.x - area_offset.x, y: location.y - area_offset.y };
             absolute_overflow_rect = absolute_overflow_rect.union(compute_scrollable_overflow_contribution(
                 relative_location,
                 final_size,
@@ -889,7 +883,6 @@ pub(crate) fn perform_oof_layout(
                 is_scroll_container,
                 area_size,
                 reversed,
-                direction.is_rtl(),
                 Rect::ZERO,
                 Rect::ZERO,
             ));

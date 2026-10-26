@@ -583,7 +583,6 @@ fn compute_preliminary(tree: &mut impl LayoutFlexboxContainer, node: NodeId, inp
                     constants.container_size
                         - constants.border.sum_axes()
                         - Size { width: constants.scrollbar_gutter.x, height: constants.scrollbar_gutter.y },
-                    constants.layout_direction.is_rtl(),
                     constants.scroll_origin_reversed(),
                     constants.is_scroll_container,
                 )
@@ -636,11 +635,20 @@ fn compute_empty_container_layout(
     #[cfg(feature = "content_size")]
     {
         output.scrollable_overflow_rect = finalize_scrollable_overflow(
-            Rect::ZERO,
+            Rect {
+                right: if constants.layout_direction.is_rtl() {
+                    (constants.container_size.width
+                        - constants.border.horizontal_axis_sum()
+                        - constants.scrollbar_gutter.x)
+                        .max(0.0)
+                } else {
+                    0.0
+                },
+                ..Rect::ZERO
+            },
             constants.container_size
                 - constants.border.sum_axes()
                 - Size { width: constants.scrollbar_gutter.x, height: constants.scrollbar_gutter.y },
-            constants.layout_direction.is_rtl(),
             constants.scroll_origin_reversed(),
             constants.is_scroll_container,
         );
@@ -2689,10 +2697,9 @@ fn calculate_flex_item(
 
     #[cfg(feature = "content_size")]
     {
-        let contribution_location = if layout_direction.is_rtl() {
-            Point { x: container_size.width - (location.x + size.width) - border.right, y: location.y - border.top }
-        } else {
-            Point { x: location.x - border.left, y: location.y - border.top }
+        let contribution_location = Point {
+            x: location.x - border.left - if layout_direction.is_rtl() { constants.scrollbar_gutter.x } else { 0.0 },
+            y: location.y - border.top,
         };
         let contribution = compute_scrollable_overflow_contribution(
             contribution_location,
@@ -2706,7 +2713,6 @@ fn calculate_flex_item(
                 - border.sum_axes()
                 - Size { width: constants.scrollbar_gutter.x, height: constants.scrollbar_gutter.y },
             constants.scroll_origin_reversed(),
-            layout_direction.is_rtl(),
             Rect {
                 left: constants.content_box_inset.left
                     - border.left
@@ -2831,11 +2837,28 @@ fn final_layout_pass(
     }
 
     #[cfg(feature = "content_size")]
+    if constants.layout_direction.is_rtl() {
+        let client_width =
+            (constants.container_size.width - constants.border.horizontal_axis_sum() - constants.scrollbar_gutter.x)
+                .max(0.0);
+        overflow_rect = overflow_rect.union(Rect { right: client_width, ..Rect::ZERO });
+    }
+
+    #[cfg(feature = "content_size")]
     if constants.is_scroll_container {
+        let client_width =
+            (constants.container_size.width - constants.border.horizontal_axis_sum() - constants.scrollbar_gutter.x)
+                .max(0.0);
         overflow_rect = overflow_rect.union(Rect {
-            left: 0.0,
+            left: if constants.layout_direction.is_rtl() {
+                (client_width
+                    - (constants.content_box_inset.left - constants.border.left - constants.scrollbar_gutter.x))
+                    .min(0.0)
+            } else {
+                0.0
+            },
             right: if constants.layout_direction.is_rtl() {
-                constants.content_box_inset.left - constants.border.left - constants.scrollbar_gutter.x
+                client_width
             } else {
                 constants.content_box_inset.right - constants.border.right - constants.scrollbar_gutter.x
             },

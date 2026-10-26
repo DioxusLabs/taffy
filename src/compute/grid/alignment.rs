@@ -96,7 +96,7 @@ pub(super) fn align_and_position_item(
     baseline_shim: f32,
     direction: Direction,
     container_border_box_width: f32,
-    container_border: Rect<f32>,
+    container_inset: Rect<f32>,
     #[cfg(feature = "content_size")] container_is_scroll_container: bool,
     #[cfg(feature = "content_size")] container_padding: Rect<f32>,
     bubbled_candidates: &mut OofCandidates,
@@ -432,13 +432,7 @@ pub(super) fn align_and_position_item(
 
     #[cfg(feature = "content_size")]
     let contribution = {
-        // Contributions to the container's scrollable overflow rect are measured from the
-        // container's padding-box origin (mirrored for RTL), matching the scrollable overflow region.
-        let contribution_location = if direction.is_rtl() {
-            Point { x: container_border_box_width - (x + width) - container_border.right, y: y - container_border.top }
-        } else {
-            Point { x: x - container_border.left, y: y - container_border.top }
-        };
+        let contribution_location = Point { x: x - container_inset.left, y: y - container_inset.top };
         compute_scrollable_overflow_contribution(
             contribution_location,
             Size { width, height },
@@ -447,9 +441,8 @@ pub(super) fn align_and_position_item(
             overflow,
             contain,
             container_is_scroll_container,
-            Size { width: container_border_box_width - container_border.horizontal_axis_sum(), height: 0.0 },
+            Size { width: container_border_box_width - container_inset.horizontal_axis_sum(), height: 0.0 },
             Point { x: direction.is_rtl(), y: false },
-            direction.is_rtl(),
             container_padding,
             resolved_margin,
         )

@@ -735,7 +735,13 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
             item.baseline_shim,
             direction,
             container_border_box.width,
-            border,
+            border
+                + Rect {
+                    left: if direction.is_rtl() { scrollbar_gutter.x } else { 0.0 },
+                    right: if direction.is_rtl() { 0.0 } else { scrollbar_gutter.x },
+                    top: 0.0,
+                    bottom: scrollbar_gutter.y,
+                },
             #[cfg(feature = "content_size")]
             is_scroll_container,
             #[cfg(feature = "content_size")]
@@ -888,15 +894,18 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     if items.is_empty() {
         #[cfg(feature = "content_size")]
         let mut output = {
+            let client_width =
+                (container_border_box.width - border.horizontal_axis_sum() - scrollbar_gutter.x).max(0.0);
             let overflow_rect = if is_scroll_container {
                 item_overflow_rect.union(Rect {
-                    left: 0.0,
-                    right: if direction.is_rtl() { padding.left } else { padding.right },
+                    left: if direction.is_rtl() { (client_width - padding.left).min(0.0) } else { 0.0 },
+                    right: if direction.is_rtl() { client_width } else { padding.right },
                     top: 0.0,
                     bottom: padding.bottom,
                 })
             } else {
                 item_overflow_rect
+                    .union(Rect { right: if direction.is_rtl() { client_width } else { 0.0 }, ..Rect::ZERO })
             };
             LayoutOutput::from_sizes(
                 container_border_box,
@@ -905,7 +914,6 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
                     container_border_box
                         - border.sum_axes()
                         - Size { width: scrollbar_gutter.x, height: scrollbar_gutter.y },
-                    direction.is_rtl(),
                     Point { x: direction.is_rtl(), y: false },
                     is_scroll_container,
                 ),
@@ -944,20 +952,20 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     // scroll containers do not extend their overflow region by their own padding.
     #[cfg(feature = "content_size")]
     let scrollable_overflow_rect = {
+        let client_width = (container_border_box.width - border.horizontal_axis_sum() - scrollbar_gutter.x).max(0.0);
         let overflow_rect = if is_scroll_container {
             item_overflow_rect.union(Rect {
-                left: 0.0,
-                right: if direction.is_rtl() { padding.left } else { padding.right },
+                left: if direction.is_rtl() { (client_width - padding.left).min(0.0) } else { 0.0 },
+                right: if direction.is_rtl() { client_width } else { padding.right },
                 top: 0.0,
                 bottom: padding.bottom,
             })
         } else {
-            item_overflow_rect
+            item_overflow_rect.union(Rect { right: if direction.is_rtl() { client_width } else { 0.0 }, ..Rect::ZERO })
         };
         finalize_scrollable_overflow(
             overflow_rect,
             container_border_box - border.sum_axes() - Size { width: scrollbar_gutter.x, height: scrollbar_gutter.y },
-            direction.is_rtl(),
             Point { x: direction.is_rtl(), y: false },
             is_scroll_container,
         )
