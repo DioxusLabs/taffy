@@ -164,16 +164,17 @@ where
         let is_rtl = style.direction().is_rtl();
         let start_padding = if is_rtl { padding.right } else { padding.left };
         let end_padding = if is_rtl { padding.left } else { padding.right };
+        let client_width = (size.width - border.horizontal_axis_sum() - scrollbar_gutter.x).max(0.0);
+        let content_end = start_padding + measured_size.width + if is_scroll_container { end_padding } else { 0.0 };
         let rect = Rect {
-            left: 0.0,
-            right: start_padding + measured_size.width + if is_scroll_container { end_padding } else { 0.0 },
+            left: if is_rtl { (client_width - content_end).min(0.0) } else { 0.0 },
+            right: if is_rtl { client_width } else { content_end },
             top: 0.0,
             bottom: padding.top + measured_size.height + if is_scroll_container { padding.bottom } else { 0.0 },
         };
         super::common::scrollable_overflow::finalize_scrollable_overflow(
             rect,
             size - border.sum_axes() - Size { width: scrollbar_gutter.x, height: scrollbar_gutter.y },
-            is_rtl,
             Point { x: is_rtl, y: false },
             is_scroll_container,
         )

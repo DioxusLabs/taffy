@@ -8,8 +8,7 @@ use crate::util::sys::{f32_max, f32_min};
 /// Determine the rectangle that a given node contributes to its parent's scrollable overflow
 /// rectangle.
 ///
-/// `location` and the result use the parent's padding-box frame, mirrored horizontally for RTL.
-/// Child overflow and `reversed` use physical axes; this helper converts them into that frame.
+/// `location`, child overflow, and the result use physical axes in the parent's padding-box frame.
 /// Child overflow is relative to its inner border edge, so the child's border is added first.
 /// `parent_size` is the extent of the parent frame (excluding scrollbar gutters). The node's own
 /// `scrollable_overflow_rect` propagates to the parent only where the node's overflow allows it
@@ -39,7 +38,6 @@ pub(crate) fn compute_scrollable_overflow_contribution(
     parent_is_scroll_container: bool,
     parent_size: Size<f32>,
     reversed: Point<bool>,
-    rtl: bool,
     padding: Rect<f32>,
     margin: Rect<f32>,
 ) -> Rect<f32> {
@@ -49,9 +47,6 @@ pub(crate) fn compute_scrollable_overflow_contribution(
         top: scrollable_overflow_rect.top + border.top,
         bottom: scrollable_overflow_rect.bottom + border.top,
     };
-    let scrollable_overflow_rect =
-        if rtl { mirror_x(scrollable_overflow_rect, size.width) } else { scrollable_overflow_rect };
-    let reversed = Point { x: reversed.x ^ rtl, y: reversed.y };
     let is_scroll_container = overflow.x.is_scroll_container() || overflow.y.is_scroll_container();
     let overflow_is_contained = contain.contains_scrollable_overflow();
     let propagates = Point {
@@ -82,8 +77,6 @@ pub(crate) fn compute_scrollable_overflow_contribution(
         Rect::ZERO
     } else {
         if parent_is_scroll_container {
-            let padding = if rtl { Rect { left: padding.right, right: padding.left, ..padding } } else { padding };
-            let margin = if rtl { Rect { left: margin.right, right: margin.left, ..margin } } else { margin };
             let mut padded = contribution;
             if reversed.x {
                 padded.left = f32_min(padded.left, location.x - f32_max(0.0, padding.left + margin.left));
@@ -104,22 +97,15 @@ pub(crate) fn compute_scrollable_overflow_contribution(
     }
 }
 
-/// Convert between physical and RTL-mirrored padding-box coordinates.
-fn mirror_x(rect: Rect<f32>, width: f32) -> Rect<f32> {
-    Rect { left: width - rect.right, right: width - rect.left, ..rect }
-}
-
-/// Convert an algorithm's RTL-mirrored accumulator to physical coordinates and clip unreachable
+/// Pack an algorithm's physical accumulator and clip unreachable
 /// overflow only for scroll containers. All geometry is unpacked until this output boundary.
 pub(crate) fn finalize_scrollable_overflow(
-    rect: Rect<f32>,
+    mut rect: Rect<f32>,
     size: Size<f32>,
-    rtl: bool,
     reversed: Point<bool>,
     is_scroll_container: bool,
 ) -> ScrollableOverflow {
     let size = Size { width: size.width.max(0.0), height: size.height.max(0.0) };
-    let mut rect = if rtl { mirror_x(rect, size.width).union(Rect::ZERO) } else { rect };
     let reversed = if is_scroll_container { reversed } else { Point { x: false, y: false } };
     if is_scroll_container {
         if reversed.x {
