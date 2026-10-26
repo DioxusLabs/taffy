@@ -142,6 +142,23 @@ where
         contribution + margin_axis_sums.get(self.axis)
     }
 
+    /// Retrieve the item's min-content and max-content contributions from the cache or compute them using the
+    /// provided parameters. In the inline axis both are computed with one call into the child.
+    #[inline(always)]
+    fn content_contributions(&mut self, item: &mut GridItem, axis_tracks: &[GridTrack]) -> (f32, f32) {
+        if self.axis != AbstractAxis::Inline {
+            return (
+                self.min_content_contribution(item, axis_tracks),
+                self.max_content_contribution(item, axis_tracks),
+            );
+        }
+        let grid_area_size = self.grid_area_size(item, axis_tracks);
+        let available_space = grid_area_size.with(self.axis, None);
+        let margin_axis_sums = self.margins_axis_sums_with_baseline_shims(item, available_space.width);
+        let (min, max) = item.inline_content_contributions_cached(self.tree, grid_area_size, available_space);
+        (min + margin_axis_sums.get(self.axis), max + margin_axis_sums.get(self.axis))
+    }
+
     /// The minimum contribution of an item is the smallest outer size it can have.
     /// Specifically:
     ///   - If the item’s computed preferred size behaves as auto or depends on the size of its containing block in the relevant axis:
@@ -654,16 +671,25 @@ fn resolve_intrinsic_track_sizes<Tree: LayoutPartialTree>(
                 let track = &axis_tracks[track_index as usize];
                 let max_track_sizing_function = track.max_track_sizing_function;
                 let fit_content_limit = track.fit_content_limit();
-                let min_content_contribution = if track.has_intrinsic_sizing_function() {
-                    Some(item_sizer.min_content_contribution(item, axis_tracks))
-                } else {
-                    None
-                };
+                // If the container size is indefinite and has not yet been resolved then percentage sized
+                // tracks should be treated as auto (this matches Chrome's behaviour and seems sensible)
+                let uses_max_content_contribution = max_track_sizing_function.is_fit_content()
+                    || max_track_sizing_function.is_max_content_alike()
+                    || max_track_sizing_function.uses_percentage() && axis_inner_node_size.is_none();
+                let (min_content_contribution, max_content_contribution) =
+                    match (track.has_intrinsic_sizing_function(), uses_max_content_contribution) {
+                        (true, true) => {
+                            let (min, max) = item_sizer.content_contributions(item, axis_tracks);
+                            (Some(min), Some(max))
+                        }
+                        (true, false) => (Some(item_sizer.min_content_contribution(item, axis_tracks)), None),
+                        (false, true) => (None, Some(item_sizer.max_content_contribution(item, axis_tracks))),
+                        (false, false) => (None, None),
+                    };
                 let planned_increase = if max_track_sizing_function.is_fit_content() {
                     // Always increase the growth limit to at least the size of the *fit-content limited*
                     // max-content contribution
-                    let max_content_contribution =
-                        f32_min(item_sizer.max_content_contribution(item, axis_tracks), fit_content_limit);
+                    let max_content_contribution = f32_min(max_content_contribution.unwrap(), fit_content_limit);
 
                     // If item is not a scroll container, then increase the growth limit to at least the
                     // size of the min-content contribution
@@ -673,12 +699,8 @@ fn resolve_intrinsic_track_sizes<Tree: LayoutPartialTree>(
                         }
                         _ => Some(max_content_contribution),
                     }
-                } else if max_track_sizing_function.is_max_content_alike()
-                    || max_track_sizing_function.uses_percentage() && axis_inner_node_size.is_none()
-                {
-                    // If the container size is indefinite and has not yet been resolved then percentage sized
-                    // tracks should be treated as auto (this matches Chrome's behaviour and seems sensible)
-                    Some(item_sizer.max_content_contribution(item, axis_tracks))
+                } else if uses_max_content_contribution {
+                    max_content_contribution
                 } else if max_track_sizing_function.is_intrinsic() {
                     min_content_contribution
                 } else {

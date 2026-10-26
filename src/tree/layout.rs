@@ -119,6 +119,17 @@ impl TryFrom<RequestedAxis> for AbsoluteAxis {
     }
 }
 
+/// A node's min-content and max-content inline sizes: the sizes it is measured at under a
+/// [`MinContent`](crate::style::AvailableSpace::MinContent) and a [`MaxContent`](crate::style::AvailableSpace::MaxContent)
+/// width constraint with no known width. See [`LayoutPartialTree::compute_child_inline_content_sizes`](crate::LayoutPartialTree::compute_child_inline_content_sizes).
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct InlineContentSizes {
+    /// The min-content inline size
+    pub min_content: f32,
+    /// The max-content inline size
+    pub max_content: f32,
+}
+
 /// A struct containing the inputs constraints/hints for laying out a node, which are passed in by the parent
 #[derive(Debug, Copy, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize))]

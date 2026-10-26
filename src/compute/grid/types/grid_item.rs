@@ -677,6 +677,53 @@ impl GridItem {
         adjusted
     }
 
+    /// Retrieve the item's min-content and max-content contributions in the inline axis from the cache, or compute
+    /// both with [`LayoutPartialTreeExt::measure_child_inline_content_sizes`] using the provided parameters
+    pub fn inline_content_contributions_cached(
+        &mut self,
+        tree: &mut impl LayoutPartialTree,
+        grid_area_size: Size<Option<f32>>,
+        available_space: Size<Option<f32>>,
+    ) -> (f32, f32) {
+        let axis = AbstractAxis::Inline;
+        if let (Some(min), Some(max)) =
+            (self.min_content_contribution_cache.get(axis), self.max_content_contribution_cache.get(axis))
+        {
+            return (min, max);
+        }
+        let known_dimensions = self.known_dimensions_cached(tree, grid_area_size);
+        // A known width, a width that is a sizing keyword or a single cached contribution is handled by the
+        // individual contribution functions
+        if known_dimensions.width.is_some()
+            || self.size.width.is_sizing_keyword()
+            || self.min_content_contribution_cache.get(axis).is_some()
+            || self.max_content_contribution_cache.get(axis).is_some()
+        {
+            return (
+                self.min_content_contribution_cached(axis, tree, grid_area_size, available_space),
+                self.max_content_contribution_cached(axis, tree, grid_area_size, available_space),
+            );
+        }
+        let sizes = tree.measure_child_inline_content_sizes(
+            self.node,
+            known_dimensions,
+            grid_area_size,
+            self.keyword_adjusted_available_space(
+                grid_area_size,
+                self.available_space_minus_margins(grid_area_size, available_space, tree).map(|opt| match opt {
+                    Some(size) => AvailableSpace::Definite(size),
+                    None => AvailableSpace::MaxContent,
+                }),
+                tree,
+            ),
+            SizingMode::InherentSize,
+            Line::FALSE,
+        );
+        self.min_content_contribution_cache.set(axis, Some(sizes.min_content));
+        self.max_content_contribution_cache.set(axis, Some(sizes.max_content));
+        (sizes.min_content, sizes.max_content)
+    }
+
     /// Retrieve the item's max content contribution from the cache or compute it using the provided parameters
     #[inline(always)]
     pub fn max_content_contribution_cached(

@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Added
+
+- `LayoutPartialTree::compute_child_inline_content_sizes` computes a node's min-content and max-content inline sizes (`InlineContentSizes`) in one call. The default implementation measures the node twice; flexbox and grid layout use it where they need both sizes of an item.
+
 ### Performance
 
 - The per-node layout cache keeps a node's min-content and max-content inline sizes in two dedicated entries, which other measurements can no longer evict; the other 7 entries hold the remaining measurements.

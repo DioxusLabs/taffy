@@ -1023,6 +1023,12 @@ fn determine_flex_base_size(
 
         drop(child_style);
 
+        // The style's minimum main size, or `None` if it is automatic (see 4.5 below)
+        let style_min_main_size =
+            child.min_size.or(child.overflow.map(Overflow::maybe_into_automatic_min_size).into()).main(dir);
+        // The item's min-content main size, if it was measured along with its flex base size
+        let mut min_content_main_size: Option<f32> = None;
+
         child.flex_basis = 'flex_basis: {
             // A. If the item has a definite used flex basis, that’s the flex base size.
 
@@ -1120,19 +1126,32 @@ fn determine_flex_base_size(
             //    is auto and not definite, in this calculation use fit-content as the
             //    flex item’s cross size. The flex base size is the item’s resulting main size.
 
-            let child_available_space = Size::MAX_CONTENT
-                .with_main(
-                    dir,
-                    keyword_main_available_space.unwrap_or(
-                        // Map AvailableSpace::Definite to AvailableSpace::MaxContent
-                        if available_space.main(dir) == AvailableSpace::MinContent {
-                            AvailableSpace::MinContent
-                        } else {
-                            AvailableSpace::MaxContent
-                        },
-                    ),
-                )
-                .with_cross(dir, cross_axis_available_space);
+            let main_available_space = keyword_main_available_space.unwrap_or(
+                // Map AvailableSpace::Definite to AvailableSpace::MaxContent
+                if available_space.main(dir) == AvailableSpace::MinContent {
+                    AvailableSpace::MinContent
+                } else {
+                    AvailableSpace::MaxContent
+                },
+            );
+            let child_available_space =
+                Size::MAX_CONTENT.with_main(dir, main_available_space).with_cross(dir, cross_axis_available_space);
+
+            // A row item whose automatic minimum size is also needed is measured for its max-content
+            // and min-content width in one call
+            if dir.is_row() && style_min_main_size.is_none() && main_available_space == AvailableSpace::MaxContent {
+                debug_log!("COMPUTE CHILD BASE SIZE AND MIN SIZE:");
+                let sizes = tree.measure_child_inline_content_sizes(
+                    child.node,
+                    child_known_dimensions,
+                    child_parent_size,
+                    child_available_space,
+                    SizingMode::ContentSize,
+                    Line::FALSE,
+                );
+                min_content_main_size = Some(sizes.min_content);
+                break 'flex_basis sizes.max_content;
+            }
 
             debug_log!("COMPUTE CHILD BASE SIZE:");
             break 'flex_basis tree.measure_child_size(
@@ -1169,11 +1188,8 @@ fn determine_flex_base_size(
         // be set to their usual values in the cross axis so that wrapping content can wrap correctly.
         //
         // See https://drafts.csswg.org/css-sizing-3/#min-percentage-contribution
-        let style_min_main_size =
-            child.min_size.or(child.overflow.map(Overflow::maybe_into_automatic_min_size).into()).main(dir);
-
         child.resolved_minimum_main_size = style_min_main_size.unwrap_or_else(|| {
-            let min_content_main_size = {
+            let min_content_main_size = min_content_main_size.unwrap_or_else(|| {
                 let child_available_space = Size::MIN_CONTENT.with_cross(dir, cross_axis_available_space);
 
                 debug_log!("COMPUTE CHILD MIN SIZE:");
@@ -1186,7 +1202,7 @@ fn determine_flex_base_size(
                     dir.main_axis(),
                     Line::FALSE,
                 )
-            };
+            });
 
             // 4.5. Automatic Minimum Size of Flex Items
             // https://www.w3.org/TR/css-flexbox-1/#min-size-auto

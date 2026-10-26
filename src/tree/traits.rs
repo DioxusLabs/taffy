@@ -126,7 +126,10 @@
 //! }
 //! ```
 //!
-use super::{DetailedLayoutInfo, Layout, LayoutInput, LayoutOutput, NodeId, RequestedAxis, RunMode, SizingMode};
+use super::{
+    DetailedLayoutInfo, InlineContentSizes, Layout, LayoutInput, LayoutOutput, NodeId, RequestedAxis, RunMode,
+    SizingMode,
+};
 use crate::debug::debug_log;
 use crate::geometry::{AbsoluteAxis, Line, Size};
 use crate::style::{AvailableSpace, CoreStyle, OofItemStyle};
@@ -201,6 +204,30 @@ pub trait LayoutPartialTree: TraversePartialTree {
 
     /// Compute the specified node's size or full layout given the specified constraints
     fn compute_child_layout(&mut self, node_id: NodeId, inputs: LayoutInput) -> LayoutOutput;
+
+    /// Compute the node's min-content and max-content inline sizes under the block-axis inputs in `inputs`
+    /// (`inputs.known_dimensions.width` must be `None`; its `available_space.width`, `run_mode` and `axis` are ignored).
+    /// The default measures the node twice through [`compute_child_layout`](Self::compute_child_layout); implementations
+    /// that can compute both sizes in one pass may override it.
+    fn compute_child_inline_content_sizes(&mut self, node_id: NodeId, inputs: LayoutInput) -> InlineContentSizes {
+        let mut measure = |available_width: AvailableSpace| {
+            self.compute_child_layout(
+                node_id,
+                LayoutInput {
+                    run_mode: RunMode::ComputeSize,
+                    axis: RequestedAxis::Horizontal,
+                    available_space: inputs.available_space.map_width(|_| available_width),
+                    ..inputs
+                },
+            )
+            .size
+            .width
+        };
+        InlineContentSizes {
+            min_content: measure(AvailableSpace::MinContent),
+            max_content: measure(AvailableSpace::MaxContent),
+        }
+    }
 }
 
 /// Extends [`LayoutPartialTree`] with the operations needed by the out-of-flow positioning pass
@@ -447,6 +474,34 @@ pub(crate) trait LayoutPartialTreeExt: LayoutPartialTree {
             },
         )
         .size
+    }
+
+    /// Compute the min-content and max-content widths of the node given the specified block-axis constraints
+    /// (`known_dimensions.width` must be `None`; `available_space.width` is ignored)
+    #[inline(always)]
+    fn measure_child_inline_content_sizes(
+        &mut self,
+        node_id: NodeId,
+        known_dimensions: Size<Option<f32>>,
+        parent_size: Size<Option<f32>>,
+        available_space: Size<AvailableSpace>,
+        sizing_mode: SizingMode,
+        vertical_margins_are_collapsible: Line<bool>,
+    ) -> InlineContentSizes {
+        debug_assert!(known_dimensions.width.is_none());
+        self.compute_child_inline_content_sizes(
+            node_id,
+            LayoutInput {
+                known_dimensions,
+                known_dimensions_are_definite: Size { width: true, height: true },
+                parent_size,
+                available_space,
+                sizing_mode,
+                axis: RequestedAxis::Horizontal,
+                run_mode: RunMode::ComputeSize,
+                vertical_margins_are_collapsible,
+            },
+        )
     }
 
     /// Perform a full layout on the node given the specified constraints
