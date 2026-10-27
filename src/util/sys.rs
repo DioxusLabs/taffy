@@ -67,6 +67,13 @@ mod std {
         value.abs()
     }
 
+    /// Copies the sign of another value
+    #[must_use]
+    #[inline(always)]
+    pub(crate) fn copysign(value: f32, sign: f32) -> f32 {
+        value.copysign(sign)
+    }
+
     /// Returns the largest of two f32 values
     #[inline(always)]
     pub(crate) fn f32_max(a: f32, b: f32) -> f32 {
@@ -125,6 +132,9 @@ mod alloc {
 
     /// Computes the absolute value
     pub(crate) use super::polyfill::abs;
+
+    /// Copies the sign of another value
+    pub(crate) use super::polyfill::copysign;
 
     /// Returns the largest of two f32 values
     #[inline(always)]
@@ -202,12 +212,30 @@ mod polyfill {
     #[must_use]
     #[inline(always)]
     pub(crate) fn abs(value: f32) -> f32 {
-        if value.is_sign_positive() {
-            return value;
-        } else if value.is_sign_negative() {
-            return -value;
-        } else {
-            f32::NAN
+        f32::from_bits(value.to_bits() & 0x7fff_ffff)
+    }
+
+    /// Copies the sign of another value
+    #[must_use]
+    #[inline(always)]
+    pub(crate) fn copysign(value: f32, sign: f32) -> f32 {
+        f32::from_bits((value.to_bits() & 0x7fff_ffff) | (sign.to_bits() & 0x8000_0000))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{abs, copysign};
+
+    #[test]
+    fn float_sign_helpers_preserve_bits() {
+        for bits in [0, 0x8000_0000, 0x3fc0_0000, 0xbfc0_0000, 0x7f80_0000, 0xff80_0000, 0x7fc0_1234, 0xffc0_1234] {
+            let value = f32::from_bits(bits);
+            assert_eq!(abs(value).to_bits(), bits & 0x7fff_ffff);
+            for sign_bits in [0, 0x8000_0000, 0x3f80_0000, 0xbf80_0000, 0x7fc0_1234, 0xffc0_1234] {
+                let sign = f32::from_bits(sign_bits);
+                assert_eq!(copysign(value, sign).to_bits(), (bits & 0x7fff_ffff) | (sign_bits & 0x8000_0000));
+            }
         }
     }
 }
