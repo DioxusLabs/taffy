@@ -4,7 +4,7 @@ use crate::style::{AlignItemsKeyword, AlignSelf, AlignmentSafety, AvailableSpace
 use crate::style_helpers::TaffyMaxContent;
 use crate::sys::DefaultCheapStr;
 use crate::tree::NodeId;
-use crate::util::sys::{f32_max, f32_min};
+use crate::util::sys::{abs, copysign, f32_max, f32_min};
 
 /// Scrollable overflow and the physical directions in which scrolling starts at the end edge.
 ///
@@ -31,8 +31,8 @@ impl ScrollableOverflow {
     pub fn new(rect: Rect<f32>, reversed: Point<bool>) -> Self {
         debug_assert!(rect.left <= 0.0 && rect.top <= 0.0 && rect.right >= 0.0 && rect.bottom >= 0.0);
         Self(Rect {
-            right: rect.right.copysign(if reversed.x { -1.0 } else { 1.0 }),
-            bottom: rect.bottom.copysign(if reversed.y { -1.0 } else { 1.0 }),
+            right: copysign(rect.right, if reversed.x { -1.0 } else { 1.0 }),
+            bottom: copysign(rect.bottom, if reversed.y { -1.0 } else { 1.0 }),
             ..rect
         })
     }
@@ -40,7 +40,7 @@ impl ScrollableOverflow {
     /// The physical overflow rectangle, with the packed signs restored.
     #[inline(always)]
     pub fn rect(self) -> Rect<f32> {
-        Rect { right: self.0.right.abs(), bottom: self.0.bottom.abs(), ..self.0 }
+        Rect { right: abs(self.0.right), bottom: abs(self.0.bottom), ..self.0 }
     }
 
     /// The physical left overflow edge.
@@ -52,7 +52,7 @@ impl ScrollableOverflow {
     /// The physical right overflow edge, with its sign restored.
     #[inline(always)]
     pub fn right(self) -> f32 {
-        self.0.right.abs()
+        abs(self.0.right)
     }
 
     /// The physical top overflow edge.
@@ -64,7 +64,7 @@ impl ScrollableOverflow {
     /// The physical bottom overflow edge, with its sign restored.
     #[inline(always)]
     pub fn bottom(self) -> f32 {
-        self.0.bottom.abs()
+        abs(self.0.bottom)
     }
 
     /// Whether the physical x/y scroll origins are at the right/bottom edges.

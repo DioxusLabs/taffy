@@ -15,7 +15,7 @@ use crate::tree::{
     AxisStaticPosition, Layout, LayoutContainingBlock, LayoutInput, LayoutOutput, LayoutPartialTreeExt, NodeId,
     OofCandidate, OofCandidates, OofPositioningArea, RequestedAxis, RunMode, SizingMode,
 };
-use crate::util::sys::{f32_max, Vec};
+use crate::util::sys::{abs, f32_max, Vec};
 use crate::util::{MaybeMath, MaybeResolve, ResolveOrZero};
 use crate::{AxisStaticEdge, BoxSizing, Direction};
 
@@ -188,7 +188,7 @@ impl OofAxis {
                         let center = (sp.area.start + sp.area.end) / 2.0;
                         let start_distance = center;
                         let end_distance = self.cb_size - center;
-                        if start_distance.abs() <= end_distance.abs() {
+                        if abs(start_distance) <= abs(end_distance) {
                             Line { start: 0.0, end: 2.0 * start_distance }
                         } else {
                             Line { start: self.cb_size - 2.0 * end_distance, end: self.cb_size }

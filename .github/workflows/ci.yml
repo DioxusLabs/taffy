@@ -28,6 +28,7 @@ jobs:
         with:
           toolchain: 1.71
       - run: cargo build
+      - run: cargo build --no-default-features --features taffy_tree,flexbox,grid,block_layout,content_size,alloc
 
   build-features-debug:
     name: "Build [debug feature]"

@@ -452,7 +452,7 @@ pub fn round_layout(tree: &mut impl RoundTree, node_id: NodeId) {
             let rounded = round(offset + edge) - round(offset);
             if rounded == 0.0 {
                 // Keep left/top -0.0; ScrollableOverflow::new only re-packs right/bottom signs from reversed.
-                rounded.copysign(edge)
+                crate::util::sys::copysign(rounded, edge)
             } else {
                 rounded
             }
