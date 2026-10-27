@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+### Added
+
+- The `fl` ("fill") unit: a share of the free space of the container, for which content is never measured. Available as `Dimension::fill(n)`, `MaxTrackSizingFunction::fill(n)`, the `fill(n)` style helper, and `<n>fl` when parsing.
+  - Flexbox: an item whose main size is `<n>fl` has no flex basis and no automatic minimum size, and its `flex-*` properties are not used. `fl` items share the space left once every other item is at its hypothetical main size, so other items in the line only grow into space left by `fl` items held to their max sizes.
+  - Grid: an `<n>fl` track sizes like `minmax(0, <n>fr)`, except that it is not grown to fit its items when the grid container is sized to its content.
+  - Everywhere else, `fl` resolves like `stretch`.
+  - In a container that is sized to its content, an `fl` item or track contributes its minimum size (zero by default).
+  - `ExpandedDimension` and `ExpandedMaxTrackSizingFunction` gain a `Fill` variant.
+
 ### Fixed
 
 - Flexbox: `align-content: stretch` (and `normal`) and `justify-content: stretch` fall back to `flex-start` rather than `start` when the lines/items overflow the container, so overflowing lines in a `wrap-reverse` container (and items in a `row-reverse`/`column-reverse` container) are packed to the flex-start edge like in Chrome.

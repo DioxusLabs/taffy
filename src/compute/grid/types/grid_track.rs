@@ -113,15 +113,28 @@ impl GridTrack {
     }
 
     #[inline(always)]
-    /// Returns true if the track is flexible (has a Flex MaxTrackSizingFunction), else false.
+    /// Returns true if the track is flexible (has an `fr` or `fl` MaxTrackSizingFunction), else false.
     pub fn is_flexible(&self) -> bool {
-        self.max_track_sizing_function.is_fr()
+        self.max_track_sizing_function.is_flexible()
     }
 
     #[inline(always)]
     /// Returns true if the track is flexible (has a Flex MaxTrackSizingFunction), else false.
     pub fn uses_percentage(&self) -> bool {
         self.min_track_sizing_function.uses_percentage() || self.max_track_sizing_function.uses_percentage()
+    }
+
+    /// Returns true if the track is sized by "11.5 Resolve Intrinsic Track Sizes": false if its min track sizing
+    /// function is definite and its max track sizing function is definite or flexible
+    #[inline(always)]
+    pub fn is_intrinsic(
+        &self,
+        axis_inner_node_size: Option<f32>,
+        calc_resolver: impl Fn(*const (), f32) -> f32,
+    ) -> bool {
+        self.min_track_sizing_function.definite_value(axis_inner_node_size, &calc_resolver).is_none()
+            || !(self.is_flexible()
+                || self.max_track_sizing_function.definite_value(axis_inner_node_size, &calc_resolver).is_some())
     }
 
     #[inline(always)]
@@ -160,7 +173,7 @@ impl GridTrack {
     #[inline]
     /// Returns the track's flex factor if it is a flex track, else 0.
     pub fn flex_factor(&self) -> f32 {
-        if self.max_track_sizing_function.is_fr() {
+        if self.max_track_sizing_function.is_flexible() {
             self.max_track_sizing_function.0.value()
         } else {
             0.0

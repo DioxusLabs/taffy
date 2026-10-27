@@ -1,7 +1,7 @@
 //! Style types for representing lengths / sizes
 use super::CompactLength;
 use crate::geometry::Rect;
-use crate::style_helpers::{FromLength, FromPercent, TaffyAuto, TaffyZero};
+use crate::style_helpers::{FromFill, FromLength, FromPercent, TaffyAuto, TaffyZero};
 #[cfg(feature = "parse")]
 use crate::util::parse::{from_str_from_css, CssParseResult, FromCss, Parser, Token};
 
@@ -343,6 +343,11 @@ impl FromPercent for Dimension {
         Self::percent(value.into() as f32)
     }
 }
+impl FromFill for Dimension {
+    fn from_fill<Input: Into<f64> + Copy>(factor: Input) -> Self {
+        Self::fill(factor.into() as f32)
+    }
+}
 impl From<LengthPercentage> for Dimension {
     fn from(input: LengthPercentage) -> Self {
         Self(input.0)
@@ -361,6 +366,7 @@ impl FromCss for Dimension {
         match token {
             Token::Percentage { unit_value, .. } => Ok(Self::percent(unit_value)),
             Token::Dimension { unit, value, .. } if unit == "px" => Ok(Self::length(value)),
+            Token::Dimension { unit, value, .. } if unit == "fl" && value.is_sign_positive() => Ok(Self::fill(value)),
             Token::Ident(ref ident) => match ident.as_ref() {
                 "auto" => Ok(Self::auto()),
                 "min-content" => Ok(Self::min_content()),
@@ -444,6 +450,17 @@ impl Dimension {
     #[inline(always)]
     pub const fn stretch() -> Self {
         Self(CompactLength::stretch())
+    }
+
+    /// A share of the free space of the container, in proportion to `factor` (`fl` in CSS).
+    ///
+    /// As the main size of a flex item, the free space is what is left once every other item is at its
+    /// hypothetical size: the item has no automatic minimum size and no flex basis, so its content is
+    /// never measured, and `flex-grow`/`flex-shrink` are not applied. In every other context the size
+    /// resolves like [`stretch`](Self::stretch).
+    #[inline(always)]
+    pub const fn fill(factor: f32) -> Self {
+        Self(CompactLength::fill(factor))
     }
 
     /// The size should be an automatic size based on the box's content
@@ -535,6 +552,19 @@ impl Dimension {
         self.0.tag() == CompactLength::STRETCH_TAG
     }
 
+    /// Returns true if value is an fl value
+    #[inline(always)]
+    pub fn is_fill(self) -> bool {
+        self.0.is_fill()
+    }
+
+    /// Returns true if value is the stretch keyword or an fl value, which resolves like `stretch`
+    /// wherever it is not the main size of a flex item
+    #[inline(always)]
+    pub fn is_stretch_or_fill(self) -> bool {
+        self.0.is_stretch_or_fill()
+    }
+
     /// Returns true if value is the content keyword
     #[inline(always)]
     pub fn is_content(self) -> bool {
@@ -569,6 +599,7 @@ impl Dimension {
             #[cfg(feature = "calc")]
             _ if self.0.is_fit_content_calc() => ExpandedDimension::FitContentCalc(self.0.calc_value()),
             CompactLength::STRETCH_TAG => ExpandedDimension::Stretch,
+            CompactLength::FILL_TAG => ExpandedDimension::Fill(self.0.value()),
             CompactLength::CONTENT_TAG => ExpandedDimension::Content,
             #[cfg(feature = "calc")]
             _ if self.0.is_plain_calc() => ExpandedDimension::Calc(self.0.calc_value()),
@@ -604,6 +635,8 @@ pub enum ExpandedDimension {
     FitContent,
     /// The `stretch` keyword (see [`Dimension::stretch`])
     Stretch,
+    /// An `fl` value (see [`Dimension::fill`])
+    Fill(f32),
     /// The `content` keyword (see [`Dimension::content`])
     Content,
     /// A `calc()` value (see [`Dimension::calc`]). The pointer is an opaque handle to the calc
@@ -632,6 +665,7 @@ impl From<ExpandedDimension> for Dimension {
             #[cfg(feature = "calc")]
             ExpandedDimension::FitContentCalc(ptr) => Self::fit_content_calc(ptr),
             ExpandedDimension::Stretch => Self::stretch(),
+            ExpandedDimension::Fill(val) => Self::fill(val),
             ExpandedDimension::Content => Self::content(),
             #[cfg(feature = "calc")]
             ExpandedDimension::Calc(ptr) => Self::calc(ptr),
@@ -658,6 +692,7 @@ impl<'de> serde::Deserialize<'de> for Dimension {
                 | CompactLength::FIT_CONTENT_PX_TAG
                 | CompactLength::FIT_CONTENT_PERCENT_TAG
                 | CompactLength::STRETCH_TAG
+                | CompactLength::FILL_TAG
                 | CompactLength::CONTENT_TAG
         ) {
             Ok(Self(inner))
@@ -739,6 +774,7 @@ mod expand_tests {
             Dimension::fit_content_percent(0.75),
             Dimension::fit_content(),
             Dimension::stretch(),
+            Dimension::fill(2.0),
             Dimension::content(),
         ];
         for value in cases {

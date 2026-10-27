@@ -238,8 +238,9 @@ pub struct CompactLength(CompactLengthInner);
 /// masks (`is_plain_calc()`, `is_fit_content_calc()`, `has_calc()`) rather than as `match` arms.
 ///
 /// Within the keyword class, bit 3 (`SIZING_KEYWORD_BIT`) is set for the CSS sizing keywords
-/// (`min-content`, `max-content`, `fit-content`, `fit-content()`, `stretch`) and clear for `auto`,
-/// `fr` and `content`. The remaining high bits distinguish variants within a class.
+/// (`min-content`, `max-content`, `fit-content`, `fit-content()`, `stretch`) and for `fl`, which resolves
+/// like `stretch` wherever it is not a flex item's main size or a grid track's max sizing function. It is
+/// clear for `auto`, `fr` and `content`. The remaining high bits distinguish variants within a class.
 impl CompactLength {
     /// Bit set for all non-pointer (i.e. not `calc()`) tags
     pub const NON_POINTER_BIT: usize = 0b0001;
@@ -276,6 +277,8 @@ impl CompactLength {
     pub const FIT_CONTENT_KEYWORD_TAG: usize = 0b0011_1011;
     /// The tag indicating a stretch keyword value
     pub const STRETCH_TAG: usize = 0b0100_1011;
+    /// The tag indicating an fl value
+    pub const FILL_TAG: usize = 0b0101_1011;
     /// The tag indicating a fit-content value with percent limit
     pub const FIT_CONTENT_PERCENT_TAG: usize = 0b0000_1111;
 }
@@ -333,6 +336,16 @@ impl CompactLength {
     #[inline(always)]
     pub const fn fr(val: f32) -> Self {
         Self(CompactLengthInner::from_val(val, Self::FR_TAG))
+    }
+
+    /// A share of the free space of the container, in proportion to the specified factor (`fl` in CSS).
+    ///
+    /// As a flex item's main size or a grid track's max sizing function, the free space is what is left
+    /// after all other items/tracks have been sized, and `fl` suppresses the automatic minimum size (and
+    /// flex basis) so that the item's content is never measured. Elsewhere it resolves like `stretch`.
+    #[inline(always)]
+    pub const fn fill(val: f32) -> Self {
+        Self(CompactLengthInner::from_val(val, Self::FILL_TAG))
     }
 
     /// The size should be the "min-content" size.
@@ -548,6 +561,19 @@ impl CompactLength {
         self.tag() == Self::FR_TAG
     }
 
+    /// Returns true if the value is an fl value
+    #[inline(always)]
+    pub fn is_fill(self) -> bool {
+        self.tag() == Self::FILL_TAG
+    }
+
+    /// Returns true if the value is the stretch keyword or an fl value (which resolves like `stretch`
+    /// wherever it is not a flex item's main size or a grid track's max sizing function)
+    #[inline(always)]
+    pub fn is_stretch_or_fill(self) -> bool {
+        matches!(self.tag(), Self::STRETCH_TAG | Self::FILL_TAG)
+    }
+
     /// Whether the track sizing functions depends on the size of the parent node
     #[inline(always)]
     pub fn uses_percentage(self) -> bool {
@@ -652,6 +678,7 @@ impl<'de> serde::Deserialize<'de> for CompactLength {
                 | CompactLength::FIT_CONTENT_PX_TAG
                 | CompactLength::FIT_CONTENT_PERCENT_TAG
                 | CompactLength::STRETCH_TAG
+                | CompactLength::FILL_TAG
                 | CompactLength::CONTENT_TAG
                 | CompactLength::FR_TAG
         ) {
@@ -681,6 +708,7 @@ mod tests {
         CompactLength::FIT_CONTENT_PX_TAG,
         CompactLength::FIT_CONTENT_KEYWORD_TAG,
         CompactLength::STRETCH_TAG,
+        CompactLength::FILL_TAG,
         CompactLength::CONTENT_TAG,
     ];
     const PERCENTAGE_TAGS: &[usize] = &[CompactLength::PERCENT_TAG, CompactLength::FIT_CONTENT_PERCENT_TAG];
@@ -723,6 +751,7 @@ mod tests {
                     | CompactLength::FIT_CONTENT_PX_TAG
                     | CompactLength::FIT_CONTENT_PERCENT_TAG
                     | CompactLength::STRETCH_TAG
+                    | CompactLength::FILL_TAG
             );
             assert_eq!(value.is_sizing_keyword(), is_sizing_keyword, "tag {tag:#010b}");
         }
@@ -754,6 +783,7 @@ mod tests {
         assert!(!CompactLength::fit_content_px(10.0).uses_percentage());
         assert!(!CompactLength::fit_content_keyword().uses_percentage());
         assert!(!CompactLength::stretch().uses_percentage());
+        assert!(!CompactLength::fill(1.0).uses_percentage());
         assert!(!CompactLength::content().uses_percentage());
         assert!(CompactLength::percent(0.5).uses_percentage());
         assert!(CompactLength::fit_content_percent(0.5).uses_percentage());

@@ -1031,7 +1031,7 @@ fn resolve_stretch_height(
     item_margin: Rect<f32>,
     margins_treated_as_zero: Line<bool>,
 ) -> Option<f32> {
-    if !height_style.is_stretch() {
+    if !height_style.is_stretch_or_fill() {
         return None;
     }
     let mut height = container_inner_height?;

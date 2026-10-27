@@ -8,6 +8,7 @@ mod hand_written {
     mod caching;
     mod compressible_replaced;
     mod detailed_grid_info;
+    mod fill;
     mod fit_content_calc;
     #[cfg(feature = "flexbox_balance")]
     mod flex_line_count;
