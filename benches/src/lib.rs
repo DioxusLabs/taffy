@@ -2,6 +2,8 @@
 // of false positives for this lint. So let's just disable it for this code.
 #![allow(dead_code)]
 
+#[cfg(feature = "cephal")]
+pub mod cephal_helpers;
 pub mod pangui_template;
 pub mod taffy_helpers;
 pub use taffy_helpers::TaffyTreeBuilder;

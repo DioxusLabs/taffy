@@ -67,6 +67,28 @@ fn relayout_benchmarks(c: &mut Criterion) {
     for (shape, fanout, depth) in [("wide", 100, 2), ("balanced", 10, 4), ("deep", 2, 12)] {
         let mut group = c.benchmark_group(format!("relayout/{shape}"));
         for containers in CONTAINERS {
+            #[cfg(feature = "cephal")]
+            {
+                use taffy_benchmarks::cephal_helpers::{available_space, copy_tree, style};
+                let (source, root, _) = build_tree(containers, fanout, depth);
+                let (mut tree, root) = copy_tree(&source, root);
+                tree.disable_rounding();
+                let mut leaf = root;
+                while let Some(child) = tree.children(leaf).next() {
+                    leaf = child;
+                }
+                let space = available_space(Size { width: length(2000.0), height: max_content() });
+                tree.compute_layout(root, space);
+                let heights = [style(&leaf_style(10.0)).size.height, style(&leaf_style(20.0)).size.height];
+                let mut tall = false;
+                group.bench_function(BenchmarkId::new(format!("cephal {}", containers.0), tree.node_count()), |b| {
+                    b.iter(|| {
+                        tall = !tall;
+                        tree.patch_style(leaf, |style| style.size.height = heights[usize::from(tall)]);
+                        tree.compute_layout(root, space);
+                    })
+                });
+            }
             let (mut taffy, root, leaf) = build_tree(containers, fanout, depth);
             let node_count = taffy.total_node_count();
             let mut tall = false;
@@ -85,6 +107,22 @@ fn relayout_benchmarks(c: &mut Criterion) {
     // laid out again and every node whose inputs did not change is answered from its cache.
     let mut group = c.benchmark_group("relayout/resize");
     for containers in CONTAINERS {
+        #[cfg(feature = "cephal")]
+        {
+            use taffy_benchmarks::cephal_helpers::{available_space, copy_tree};
+            let (source, root, _) = build_tree(containers, 10, 4);
+            let (mut tree, root) = copy_tree(&source, root);
+            tree.disable_rounding();
+            tree.compute_layout(root, available_space(Size { width: length(2000.0), height: max_content() }));
+            let mut wide = false;
+            group.bench_function(BenchmarkId::new(format!("cephal {}", containers.0), tree.node_count()), |b| {
+                b.iter(|| {
+                    wide = !wide;
+                    let width = if wide { 2500.0 } else { 2000.0 };
+                    tree.compute_layout(root, available_space(Size { width: length(width), height: max_content() }));
+                })
+            });
+        }
         let (mut taffy, root, _) = build_tree(containers, 10, 4);
         let node_count = taffy.total_node_count();
         let mut wide = false;

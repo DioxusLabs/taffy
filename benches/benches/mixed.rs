@@ -136,6 +136,69 @@ fn mixed_benchmark(c: &mut Criterion) {
 
     for &depth in &depths {
         for &width in &widths {
+            #[cfg(feature = "cephal")]
+            {
+                use taffy_benchmarks::cephal_helpers::{available_space, copy_tree_with_context};
+                let mut tree = None;
+                group.bench_function(BenchmarkId::new("cephal", format!("depth_{depth}_width_{width}")), |b| {
+                    bench_layout(
+                        b,
+                        &mut tree,
+                        || {
+                            let mut source = TaffyTree::new();
+                            let mut rng = ChaCha8Rng::seed_from_u64(12345);
+                            let root = build_mixed_tree(
+                                &mut source,
+                                &mut layout_ctx.borrow_mut(),
+                                &mut font_ctx.borrow_mut(),
+                                depth,
+                                width,
+                                &mut rng,
+                                true,
+                            );
+                            copy_tree_with_context(&source, root, &mut |node| {
+                                source.get_node_context(node).map(|_| {
+                                    ParleyTextContext::new(
+                                        LOREM_IPSUM,
+                                        14.0,
+                                        &mut layout_ctx.borrow_mut(),
+                                        &mut font_ctx.borrow_mut(),
+                                    )
+                                })
+                            })
+                        },
+                        |(tree, _)| tree.clear_layout(),
+                        |(tree, root)| {
+                            tree.compute_layout_with_measure(
+                                *root,
+                                available_space(Size::MAX_CONTENT),
+                                |context: &mut ParleyTextContext, input: cephal::MeasureInput, _: &cephal::Style| {
+                                    let axis = |space| match space {
+                                        cephal::AvailableSpace::Definite(value) => AvailableSpace::Definite(value),
+                                        cephal::AvailableSpace::MinContent => AvailableSpace::MinContent,
+                                        cephal::AvailableSpace::MaxContent => AvailableSpace::MaxContent,
+                                    };
+                                    let size = measure_function(
+                                        Size {
+                                            width: input.known_dimensions.width,
+                                            height: input.known_dimensions.height,
+                                        },
+                                        Size {
+                                            width: axis(input.available_space.width),
+                                            height: axis(input.available_space.height),
+                                        },
+                                        Some(context),
+                                    );
+                                    cephal::MeasureOutput::from_size(cephal::Size {
+                                        width: size.width,
+                                        height: size.height,
+                                    })
+                                },
+                            );
+                        },
+                    )
+                });
+            }
             let benchmark_id = BenchmarkId::new("mixed", format!("depth_{}_width_{}", depth, width));
             let mut tree = None;
             group.bench_with_input(benchmark_id, &(depth, width), |b, &(depth, width)| {
