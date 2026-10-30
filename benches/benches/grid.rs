@@ -133,12 +133,42 @@ fn build_taffy_deep_grid_hierarchy(levels: usize, track_count: usize) -> (TaffyT
     (taffy, root)
 }
 
+#[cfg(feature = "cephal")]
+fn bench_cephal(
+    group: &mut criterion::BenchmarkGroup<'_, criterion::measurement::WallTime>,
+    id: BenchmarkId,
+    build: impl Fn() -> (TaffyTree, NodeId),
+    space: Size<AvailableSpace>,
+) {
+    use taffy_benchmarks::cephal_helpers::{available_space, copy_tree};
+    let mut tree = None;
+    group.bench_function(id, |b| {
+        bench_layout(
+            b,
+            &mut tree,
+            || {
+                let (source, root) = build();
+                copy_tree(&source, root)
+            },
+            |(tree, _)| tree.clear_layout(),
+            |(tree, root)| tree.compute_layout(*root, available_space(space)),
+        )
+    });
+}
+
 fn taffy_benchmarks(c: &mut Criterion) {
     #[cfg(feature = "grid-alternating-spans")]
     {
         let mut group = benchmark_group(c, "grid/alternating_spans");
         for flow in [GridAutoFlow::Row, GridAutoFlow::RowDense, GridAutoFlow::Column, GridAutoFlow::ColumnDense] {
             for item_count in [100, 1000] {
+                #[cfg(feature = "cephal")]
+                bench_cephal(
+                    &mut group,
+                    BenchmarkId::new(format!("cephal {flow:?}"), item_count),
+                    || build_grid_alternating_spans(item_count, flow),
+                    Size::MAX_CONTENT,
+                );
                 let mut tree = None;
                 group.bench_with_input(
                     BenchmarkId::new(format!("{flow:?}"), item_count),
@@ -160,6 +190,13 @@ fn taffy_benchmarks(c: &mut Criterion) {
 
     let mut group = benchmark_group(c, "grid/wide");
     for track_count in [31usize, 100, 316].iter() {
+        #[cfg(feature = "cephal")]
+        bench_cephal(
+            &mut group,
+            BenchmarkId::new(format!("cephal {track_count}x{track_count}"), track_count.pow(2)),
+            || build_grid_flat_hierarchy(*track_count, *track_count),
+            length(12000.0),
+        );
         let mut tree = None;
         group.bench_with_input(
             BenchmarkId::new(format!("{c}x{c}", c = track_count), track_count.pow(2)),
@@ -180,6 +217,13 @@ fn taffy_benchmarks(c: &mut Criterion) {
     let mut group = benchmark_group(c, "grid/deep");
     for (tracks, levels) in [(2, 5), (3, 4), (2, 7) /*, (3, 5)*/].iter() {
         let children_per_level: usize = tracks * tracks;
+        #[cfg(feature = "cephal")]
+        bench_cephal(
+            &mut group,
+            BenchmarkId::new(format!("cephal {tracks}x{tracks}"), children_per_level.pow(*levels as u32)),
+            || build_taffy_deep_grid_hierarchy(*levels, *tracks),
+            length(12000.0),
+        );
         let mut tree = None;
         group.bench_with_input(
             BenchmarkId::new(format!("{c}x{c}", c = tracks), children_per_level.pow(*levels as u32)),
@@ -199,6 +243,13 @@ fn taffy_benchmarks(c: &mut Criterion) {
 
     let mut group = benchmark_group(c, "grid/superdeep");
     for levels in [100, 1000].iter() {
+        #[cfg(feature = "cephal")]
+        bench_cephal(
+            &mut group,
+            BenchmarkId::new("cephal 1x1", levels),
+            || build_taffy_deep_grid_hierarchy(*levels, 1),
+            max_content(),
+        );
         let mut tree = None;
         group.bench_with_input(BenchmarkId::new("1x1", levels), levels, |b, &levels| {
             bench_layout(

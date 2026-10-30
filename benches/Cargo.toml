@@ -23,6 +23,7 @@ ordered-float = { version = "4", optional = true }
 slotmap = { version = "1.0.6", optional = true }
 morphorm = { version = "0.9.0", optional = true }
 torin = { version = "=0.5.0-rc.10", optional = true }
+cephal = { version = "0.2", optional = true }
 parley = "0.11.1"
 
 [features]
@@ -31,6 +32,7 @@ yoga-super-deep = ["yoga"]
 taffy03 = ["dep:taffy_03"]
 morphorm = ["dep:morphorm"]
 torin = ["dep:torin"]
+cephal = ["dep:cephal"]
 content_size = ["taffy/content_size"]
 strict_provenance = ["taffy/strict_provenance"]
 small = []

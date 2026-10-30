@@ -14,6 +14,8 @@ use taffy_benchmarks::pangui_template::{
 };
 use taffy_benchmarks::{bench_layout, benchmark_group, BuildTree, BuildTreeExt, GenStyle, TaffyTreeBuilder};
 
+#[cfg(feature = "cephal")]
+use taffy_benchmarks::cephal_helpers::CephalTreeBuilder;
 #[cfg(feature = "morphorm")]
 use taffy_benchmarks::morphorm_helpers::MorphormTree;
 #[cfg(feature = "taffy03")]
@@ -187,6 +189,8 @@ macro_rules! run_benchmark {
 
 macro_rules! benchmark_each_library {
     ($group: ident, $name: expr, $root: ident) => {
+        #[cfg(feature = "cephal")]
+        run_benchmark!(CephalTreeBuilder<_, _>, "cephal", $group, $name, $root);
         #[cfg(feature = "yoga")]
         run_benchmark!(YogaTreeBuilder<_, _>, "Yoga", $group, $name, $root);
         #[cfg(feature = "taffy03")]
