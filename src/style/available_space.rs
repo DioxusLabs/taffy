@@ -76,6 +76,19 @@ impl AvailableSpace {
         self.into_option().unwrap()
     }
 
+    /// The space that is available to a box that cannot be larger than `max_size`.
+    ///
+    /// A definite amount of space is reduced to `max_size`. Under a max-content constraint the box
+    /// takes the size of its content up to `max_size`, which is how it is sized if `max_size` is the
+    /// available space. A min-content constraint is not affected.
+    pub(crate) fn limit_to_max_size(self, max_size: Option<f32>) -> AvailableSpace {
+        match (self, max_size) {
+            (AvailableSpace::Definite(space), Some(max_size)) => AvailableSpace::Definite(space.min(max_size)),
+            (AvailableSpace::MaxContent, Some(max_size)) => AvailableSpace::Definite(max_size),
+            _ => self,
+        }
+    }
+
     /// Return self if definite or a default value
     pub fn or(self, default: AvailableSpace) -> AvailableSpace {
         match self {
