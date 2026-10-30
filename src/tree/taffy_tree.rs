@@ -107,6 +107,9 @@ struct NodeData {
     /// Whether the node has context data associated with it or not
     pub(crate) has_context: bool,
 
+    /// Whether a context-free leaf has been laid out without populating its cache
+    pub(crate) has_uncached_layout: bool,
+
     /// Out-of-flow (absolute/fixed) boxes whose containing block is this node,
     /// as recorded by the out-of-flow positioning pass
     pub(crate) hoisted_children: ChildrenVec<NodeId>,
@@ -128,6 +131,7 @@ impl NodeData {
             unrounded_layout: Layout::new(),
             final_layout: Layout::new(),
             has_context: false,
+            has_uncached_layout: false,
             hoisted_children: new_const_children_vec(),
             detailed_layout_info: DetailedLayoutInfo::None,
         }
@@ -139,6 +143,7 @@ impl NodeData {
     /// If the node was already marked as dirty, returns true
     #[inline]
     pub fn mark_dirty(&mut self) -> ClearState {
+        self.has_uncached_layout = false;
         self.cache.clear()
     }
 }
@@ -222,7 +227,7 @@ impl<NodeContext> CacheTree for TaffyTree<NodeContext> {
     }
 
     fn cache_clear(&mut self, node_id: NodeId) {
-        self.nodes[node_id.into()].cache.clear();
+        self.nodes[node_id.into()].mark_dirty();
     }
 }
 
@@ -299,6 +304,15 @@ where
             // final layout here so that it does not keep the layout from an earlier visible pass.
             self.taffy.nodes[node_id.into()].final_layout = Layout::with_order(0);
             return compute_hidden_layout(self, node_id);
+        }
+
+        let node_key = node_id.into();
+        let node = &self.taffy.nodes[node_key];
+        if !node.has_context && node.style.display != Display::None && self.child_count(node_id) == 0 {
+            // Context-free leaves are cheaper to recompute than to cache.
+            let output = (self.measure_function)(inputs, node_id, None, &node.style);
+            self.taffy.nodes[node_key].has_uncached_layout = true;
+            return output;
         }
 
         // We run the following wrapped in "compute_cached_layout", which will check the cache for an entry matching the node and inputs and:
@@ -460,7 +474,7 @@ where
     }
 
     fn cache_clear(&mut self, node_id: NodeId) {
-        self.taffy.nodes[node_id.into()].cache.clear();
+        self.taffy.nodes[node_id.into()].mark_dirty();
     }
 }
 
@@ -956,7 +970,11 @@ impl<NodeContext> TaffyTree<NodeContext> {
             }
         }
 
-        mark_dirty_recursive(&mut self.nodes, &self.parents, node.into());
+        let node_key = node.into();
+        self.nodes[node_key].mark_dirty();
+        if let Some(Some(parent)) = self.parents.get(node_key) {
+            mark_dirty_recursive(&mut self.nodes, &self.parents, (*parent).into());
+        }
 
         Ok(())
     }
@@ -964,7 +982,8 @@ impl<NodeContext> TaffyTree<NodeContext> {
     /// Indicates whether the layout of this node needs to be recomputed
     #[inline]
     pub fn dirty(&self, node: NodeId) -> TaffyResult<bool> {
-        Ok(self.nodes[node.into()].cache.is_empty())
+        let node = &self.nodes[node.into()];
+        Ok(!node.has_uncached_layout && node.cache.is_empty())
     }
 
     /// Updates the stored layout of the provided `node` and its children
@@ -1429,6 +1448,92 @@ mod tests {
         assert_eq!(taffy.dirty(child0), Ok(true));
         assert_eq!(taffy.dirty(child1), Ok(false));
         assert_eq!(taffy.dirty(node), Ok(true));
+    }
+
+    #[test]
+    fn context_free_leaf_bypasses_cache() {
+        let mut taffy: TaffyTree<()> = TaffyTree::new();
+        let leaf = taffy.new_leaf(Style::default()).unwrap();
+        let mut calls = 0;
+        let mut view = TaffyView {
+            taffy: &mut taffy,
+            measure_function: |_: LayoutInput, node_id, context: Option<&mut ()>, _: &Style| {
+                assert_eq!(node_id, leaf);
+                assert!(context.is_none());
+                calls += 1;
+                LayoutOutput::from_outer_size(Size { width: 10.0, height: 20.0 })
+            },
+        };
+
+        for run_mode in [RunMode::ComputeSize, RunMode::PerformLayout] {
+            let inputs = LayoutInput { run_mode, ..LayoutInput::HIDDEN };
+            for _ in 0..2 {
+                let output = LayoutPartialTree::compute_child_layout(&mut view, leaf, inputs);
+                assert_eq!(output.size, Size { width: 10.0, height: 20.0 });
+                assert!(view.taffy.nodes[leaf.into()].cache.is_empty());
+                assert_eq!(view.taffy.dirty(leaf), Ok(false));
+            }
+        }
+
+        LayoutPartialTree::compute_child_layout(&mut view, leaf, LayoutInput::HIDDEN);
+        assert_eq!(view.taffy.dirty(leaf), Ok(true));
+        assert_eq!(calls, 4);
+    }
+
+    #[test]
+    fn context_leaf_still_uses_cache() {
+        let mut taffy: TaffyTree<()> = TaffyTree::new();
+        let leaf = taffy.new_leaf_with_context(Style::default(), ()).unwrap();
+        let mut calls = 0;
+        let mut view = TaffyView {
+            taffy: &mut taffy,
+            measure_function: |_: LayoutInput, _, context: Option<&mut ()>, _: &Style| {
+                assert!(context.is_some());
+                calls += 1;
+                LayoutOutput::from_outer_size(Size { width: 10.0, height: 20.0 })
+            },
+        };
+        let inputs = LayoutInput { run_mode: RunMode::PerformLayout, ..LayoutInput::HIDDEN };
+        for _ in 0..2 {
+            let output = LayoutPartialTree::compute_child_layout(&mut view, leaf, inputs);
+            assert_eq!(output.size, Size { width: 10.0, height: 20.0 });
+        }
+        assert!(!view.taffy.nodes[leaf.into()].cache.is_empty());
+        assert_eq!(calls, 1);
+    }
+
+    #[test]
+    fn hidden_context_free_leaf_is_not_measured() {
+        let mut taffy: TaffyTree<()> = TaffyTree::new();
+        let leaf = taffy.new_leaf(Style { display: Display::None, ..Default::default() }).unwrap();
+        taffy
+            .compute_layout_with_measure(leaf, Size::MAX_CONTENT, |_, _, _, _| {
+                panic!("hidden leaves must not be measured")
+            })
+            .unwrap();
+        assert_eq!(taffy.layout(leaf).unwrap().size, Size::ZERO);
+    }
+
+    #[test]
+    #[cfg(feature = "flexbox")]
+    fn context_free_leaf_style_change_invalidates_parent() {
+        let mut taffy: TaffyTree<()> = TaffyTree::new();
+        let leaf = taffy
+            .new_leaf(Style { size: Size { width: length(10.0), height: length(20.0) }, ..Default::default() })
+            .unwrap();
+        let parent = taffy.new_with_children(Style::default(), &[leaf]).unwrap();
+        taffy.compute_layout(parent, Size::MAX_CONTENT).unwrap();
+        assert_eq!(taffy.layout(parent).unwrap().size, Size { width: 10.0, height: 20.0 });
+        assert_eq!(taffy.dirty(leaf), Ok(false));
+
+        taffy
+            .set_style(leaf, Style { size: Size { width: length(30.0), height: length(40.0) }, ..Default::default() })
+            .unwrap();
+        assert_eq!(taffy.dirty(leaf), Ok(true));
+        assert_eq!(taffy.dirty(parent), Ok(true));
+        taffy.compute_layout(parent, Size::MAX_CONTENT).unwrap();
+        assert_eq!(taffy.layout(parent).unwrap().size, Size { width: 30.0, height: 40.0 });
+        assert_eq!(taffy.dirty(leaf), Ok(false));
     }
 
     #[test]
