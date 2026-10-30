@@ -277,6 +277,19 @@ pub trait RoundTree: TraverseTree {
     fn get_unrounded_layout(&self, node_id: NodeId) -> Layout;
     /// Get a reference to the node's final layout
     fn set_final_layout(&mut self, node_id: NodeId, layout: &Layout);
+    /// Whether the node generates no boxes (for example, `display: none`).
+    ///
+    /// Descendants of hidden nodes are visited through their normal child lists, including
+    /// out-of-flow descendants, because hidden layout does not build hoisted child lists.
+    /// Only the node's own style needs to be checked; [`round_layout`](crate::round_layout)
+    /// propagates hidden state to descendants.
+    ///
+    /// The default returns `false`, which keeps the previous behaviour: out-of-flow boxes inside
+    /// hidden subtrees are not visited and keep their final layout from an earlier visible pass.
+    /// Trees that support `display: none` should override this.
+    fn is_hidden(&self, _node_id: NodeId) -> bool {
+        false
+    }
     /// Whether the node is an out-of-flow (absolute/fixed) box. Out-of-flow boxes are hoisted to
     /// their containing block, so [`round_layout`](crate::round_layout) skips them when visiting a
     /// node's children and instead visits them via their containing block's hoisted child list.

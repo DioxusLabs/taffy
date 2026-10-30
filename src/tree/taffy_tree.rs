@@ -294,10 +294,6 @@ where
         // and thus that we should lay out this node using hidden layout regardless of it's own display style.
         if inputs.run_mode == RunMode::PerformHiddenLayout {
             debug_log!("HIDDEN");
-            // `round_layout` reaches out-of-flow boxes only through their containing block's
-            // hoisted child list, and a box inside a hidden subtree is in no such list. Write the
-            // final layout here so that it does not keep the layout from an earlier visible pass.
-            self.taffy.nodes[node_id.into()].final_layout = Layout::with_order(0);
             return compute_hidden_layout(self, node_id);
         }
 
@@ -567,6 +563,11 @@ where
     #[inline(always)]
     fn set_final_layout(&mut self, node_id: NodeId, layout: &Layout) {
         self.taffy.nodes[node_id.into()].final_layout = *layout;
+    }
+
+    #[inline(always)]
+    fn is_hidden(&self, node_id: NodeId) -> bool {
+        self.taffy.nodes[node_id.into()].style.display == Display::None
     }
 
     #[inline(always)]

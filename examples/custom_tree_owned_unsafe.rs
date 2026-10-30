@@ -276,7 +276,11 @@ impl RoundTree for StatelessLayoutTree {
     }
 
     fn is_out_of_flow(&self, node_id: NodeId) -> bool {
-        unsafe { node_from_id(node_id).style.position.is_out_of_flow() }
+        unsafe { node_from_id(node_id).style.position.is_out_of_flow() && !self.is_hidden(node_id) }
+    }
+
+    fn is_hidden(&self, node_id: NodeId) -> bool {
+        unsafe { node_from_id(node_id).style.display == Display::None }
     }
 
     fn hoisted_child_count(&self, node_id: NodeId) -> usize {
