@@ -106,7 +106,7 @@ fn style(node: &LayoutNode, parent_is_row: bool) -> TaffyStyle {
             width: min_max_size(&node.max_width, "MaxWidth"),
             height: min_max_size(&node.max_height, "MaxHeight"),
         },
-        aspect_ratio,
+        aspect_ratio: aspect_ratio.into(),
         gap: Size { width: gap, height: gap },
         padding: Rect {
             left: length(node.padding_left.unwrap_or(0.0)),

@@ -3,6 +3,7 @@ use super::types::GridTrack;
 use crate::compute::common::alignment::{
     apply_alignment_fallback, child_first_baseline, compute_alignment_offset, resolve_self_alignment_safety,
 };
+use crate::compute::common::aspect_ratio::{ApplyAspectRatio, ResolvedAspectRatio};
 use crate::geometry::{InBothAbsAxis, Line, Point, Rect, Size};
 use crate::style::{
     AlignContent, AlignItems, AlignItemsKeyword, AlignSelf, AvailableSpace, CoreStyle, GridItemStyle, Overflow,
@@ -109,7 +110,6 @@ pub(super) fn align_and_position_item(
     #[cfg(feature = "content_size")]
     let contain = style.contain();
     let scrollbar_width = style.scrollbar_width();
-    let aspect_ratio = style.aspect_ratio();
     let is_replaced = style.is_replaced();
     // Fall back to the container's justify-items/align-items if unset (`None`), and then resolve
     // writing-mode-relative self-start/self-end keywords against the item's own direction.
@@ -146,11 +146,12 @@ pub(super) fn align_and_position_item(
 
     let box_sizing_adjustment =
         if style.box_sizing() == BoxSizing::ContentBox { padding_border_size } else { Size::ZERO };
+    let aspect_ratio = ResolvedAspectRatio::new(style.aspect_ratio(), style.box_sizing(), padding_border_size);
 
     let size_style = style.size();
     let inherent_size = size_style
         .maybe_resolve(containing_block_size, |val, basis| tree.calc(val, basis))
-        .maybe_apply_aspect_ratio(aspect_ratio)
+        .apply_aspect_ratio(aspect_ratio)
         .maybe_add(box_sizing_adjustment);
     let min_size = style
         .min_size()
@@ -158,11 +159,11 @@ pub(super) fn align_and_position_item(
         .maybe_add(box_sizing_adjustment)
         .or(padding_border_size.map(Some))
         .maybe_max(padding_border_size)
-        .maybe_apply_aspect_ratio(aspect_ratio);
+        .apply_aspect_ratio(aspect_ratio);
     let max_size = style
         .max_size()
         .maybe_resolve(containing_block_size, |val, basis| tree.calc(val, basis))
-        .maybe_apply_aspect_ratio(aspect_ratio)
+        .apply_aspect_ratio(aspect_ratio)
         .maybe_add(box_sizing_adjustment);
 
     // Resolve `normal` alignment (the default if alignment is set on neither the parent or the node itself)
@@ -295,7 +296,7 @@ pub(super) fn align_and_position_item(
     });
 
     // Reapply aspect ratio after stretch and absolute position width adjustments
-    let Size { width, height } = Size { width, height: inherent_size.height }.maybe_apply_aspect_ratio(aspect_ratio);
+    let Size { width, height } = Size { width, height: inherent_size.height }.apply_aspect_ratio(aspect_ratio);
 
     let height = height.or_else(|| {
         if position.is_out_of_flow() {
@@ -343,7 +344,7 @@ pub(super) fn align_and_position_item(
         None
     });
     // Reapply aspect ratio after stretch and absolute position height adjustments
-    let Size { width, height } = Size { width, height }.maybe_apply_aspect_ratio(aspect_ratio);
+    let Size { width, height } = Size { width, height }.apply_aspect_ratio(aspect_ratio);
 
     // Clamp size by min and max width/height
     let Size { width, height } = Size { width, height }.maybe_clamp(min_size, max_size);

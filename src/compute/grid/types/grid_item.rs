@@ -1,10 +1,11 @@
 //! Contains GridItem used to represent a single grid item during layout
 use super::GridTrack;
+use crate::compute::common::aspect_ratio::{ApplyAspectRatio, ResolvedAspectRatio};
 use crate::compute::common::sizing_keyword::{resolve_sizing_keyword, SizingKeywordResolution};
 use crate::compute::grid::OriginZeroLine;
 use crate::geometry::AbstractAxis;
 use crate::geometry::{Line, Point, Rect, Size};
-use crate::style::{AlignItems, AlignSelf, AvailableSpace, Dimension, LengthPercentageAuto, Overflow};
+use crate::style::{AlignItems, AlignSelf, AspectRatio, AvailableSpace, Dimension, LengthPercentageAuto, Overflow};
 use crate::tree::{LayoutPartialTree, LayoutPartialTreeExt, NodeId, OofCandidates, SizingMode};
 use crate::util::sys::f32_max;
 use crate::util::{MaybeMath, MaybeResolve, ResolveOrZero};
@@ -52,7 +53,7 @@ pub(in super::super) struct GridItem {
     /// The item's max_size style
     pub max_size: Size<LengthPercentageAuto>,
     /// The item's aspect_ratio style
-    pub aspect_ratio: Option<f32>,
+    pub aspect_ratio: AspectRatio,
     /// The item's padding style
     pub padding: Rect<LengthPercentage>,
     /// The item's border style
@@ -332,7 +333,6 @@ impl GridItem {
     ) -> Size<Option<f32>> {
         let margins = self.margins_axis_sums_with_baseline_shims(grid_area_size.width, tree);
 
-        let aspect_ratio = self.aspect_ratio;
         // CSS resolves percentage padding and border against the inline size of the containing
         // block. For a grid item under intrinsic measurement, that inline-size basis is the grid
         // area's width when it is definite.
@@ -344,15 +344,16 @@ impl GridItem {
         let padding_border_size = (padding + border).sum_axes();
         let box_sizing_adjustment =
             if self.box_sizing == BoxSizing::ContentBox { padding_border_size } else { Size::ZERO };
+        let aspect_ratio = ResolvedAspectRatio::new(self.aspect_ratio, self.box_sizing, padding_border_size);
         let inherent_size = self
             .size
             .maybe_resolve(grid_area_size, |val, basis| tree.calc(val, basis))
-            .maybe_apply_aspect_ratio(aspect_ratio)
+            .apply_aspect_ratio(aspect_ratio)
             .maybe_add(box_sizing_adjustment);
         let min_size = self
             .min_size
             .maybe_resolve(grid_area_size, |val, basis| tree.calc(val, basis))
-            .maybe_apply_aspect_ratio(aspect_ratio)
+            .apply_aspect_ratio(aspect_ratio)
             .maybe_add(box_sizing_adjustment)
             // The size of the item is floored by its padding and border
             .or(padding_border_size.map(Some))
@@ -360,7 +361,7 @@ impl GridItem {
         let max_size = self
             .max_size
             .maybe_resolve(grid_area_size, |val, basis| tree.calc(val, basis))
-            .maybe_apply_aspect_ratio(aspect_ratio)
+            .apply_aspect_ratio(aspect_ratio)
             .maybe_add(box_sizing_adjustment);
 
         let grid_area_minus_item_margins_size = grid_area_size.maybe_sub(margins).maybe_max(Size::ZERO);
@@ -397,8 +398,7 @@ impl GridItem {
             None
         });
         // Reapply aspect ratio after stretch and absolute position width adjustments
-        let Size { width, height } =
-            Size { width, height: inherent_size.height }.maybe_apply_aspect_ratio(aspect_ratio);
+        let Size { width, height } = Size { width, height: inherent_size.height }.apply_aspect_ratio(aspect_ratio);
 
         let height = height.or_else(|| {
             // A height that is a sizing keyword is not auto, so it does not stretch. The stretch
@@ -426,7 +426,7 @@ impl GridItem {
             None
         });
         // Reapply aspect ratio after stretch and absolute position height adjustments
-        let Size { width, height } = Size { width, height }.maybe_apply_aspect_ratio(aspect_ratio);
+        let Size { width, height } = Size { width, height }.apply_aspect_ratio(aspect_ratio);
 
         // Clamp size by min and max width/height
         let Size { width, height } = Size { width, height }.maybe_clamp(min_size, max_size);
@@ -714,9 +714,10 @@ impl GridItem {
         let padding_border_size = (padding + border).sum_axes();
         let box_sizing_adjustment =
             if self.box_sizing == BoxSizing::ContentBox { padding_border_size } else { Size::ZERO };
+        let aspect_ratio = ResolvedAspectRatio::new(self.aspect_ratio, self.box_sizing, padding_border_size);
         self.size
             .maybe_resolve(grid_area_size, |val, basis| tree.calc(val, basis))
-            .maybe_apply_aspect_ratio(self.aspect_ratio)
+            .apply_aspect_ratio(aspect_ratio)
             .maybe_add(box_sizing_adjustment)
             .get(axis)
             .map(|size| {
@@ -746,7 +747,7 @@ impl GridItem {
             .or_else(|| {
                 self.min_size
                     .maybe_resolve(grid_area_size.map(|size| size.unwrap_or(0.0)), |val, basis| tree.calc(val, basis))
-                    .maybe_apply_aspect_ratio(self.aspect_ratio)
+                    .apply_aspect_ratio(aspect_ratio)
                     .maybe_add(box_sizing_adjustment)
                     .get(axis)
             })

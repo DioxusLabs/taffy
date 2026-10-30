@@ -237,7 +237,7 @@ fn apply_taffy_style(node: &mut yg::Node, style: &tf::Style) {
     node.set_max_height(into_yg_units(style.max_size.height));
 
     // aspect_ratio
-    if let Some(aspect_ratio) = style.aspect_ratio {
+    if let Some(aspect_ratio) = style.aspect_ratio.ratio() {
         node.set_aspect_ratio(aspect_ratio);
     }
 
