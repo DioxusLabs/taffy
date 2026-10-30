@@ -4,7 +4,9 @@
 //! child's containing block). Instead they emit [`OofCandidate`] records which bubble up the tree
 //! via [`LayoutOutput::oof_candidates`](crate::LayoutOutput) until they reach the box's containing
 //! block, which lays the box out using the routine in this module.
-use crate::compute::common::aspect_ratio::{ApplyAspectRatio, ResolvedAspectRatio};
+use crate::compute::common::aspect_ratio::{
+    transfer_aspect_ratio, transfer_aspect_ratio_limits, ApplyAspectRatio, ResolvedAspectRatio,
+};
 use crate::geometry::{Line, Point, Rect, Size};
 use crate::style::{
     AlignItemsKeyword, AlignSelf, AlignmentSafety, AvailableSpace, ContainingBlockClaims, CoreStyle, OofItemStyle,
@@ -557,22 +559,25 @@ pub(crate) fn layout_oof_box<Tree: LayoutContainingBlock>(
 
     // Compute known dimensions from min/max/inherent size styles
     let size_style = child_style.size();
-    let style_size = size_style
-        .maybe_resolve(area_size, |val, basis| tree.calc(val, basis))
-        .apply_aspect_ratio(aspect_ratio)
-        .maybe_add(box_sizing_adjustment);
-    let mut min_size = child_style
-        .min_size()
-        .maybe_resolve(area_size, |val, basis| tree.calc(val, basis))
-        .apply_aspect_ratio(aspect_ratio)
-        .maybe_add(box_sizing_adjustment)
-        .or(padding_border_sum.map(Some))
-        .maybe_max(padding_border_sum);
-    let max_size = child_style
-        .max_size()
-        .maybe_resolve(area_size, |val, basis| tree.calc(val, basis))
-        .apply_aspect_ratio(aspect_ratio)
-        .maybe_add(box_sizing_adjustment);
+    let size_transfer = transfer_aspect_ratio(
+        &child_style,
+        size_style.maybe_resolve(area_size, |val, basis| tree.calc(val, basis)),
+        aspect_ratio,
+    );
+    let style_size = size_transfer.size.maybe_add(box_sizing_adjustment);
+    let (min_size, max_size) = transfer_aspect_ratio_limits(
+        || size_style.maybe_resolve(area_size, |val, basis| tree.calc(val, basis)),
+        child_style.min_size().maybe_resolve(area_size, |val, basis| tree.calc(val, basis)),
+        child_style.max_size().maybe_resolve(area_size, |val, basis| tree.calc(val, basis)),
+        aspect_ratio,
+    );
+    let mut min_size =
+        min_size.maybe_add(box_sizing_adjustment).or(padding_border_sum.map(Some)).maybe_max(padding_border_sum);
+    let max_size = max_size.maybe_add(box_sizing_adjustment);
+    // An axis with an automatic minimum is sized by its content, floored by the transferred size
+    let aspect_ratio_minimum =
+        size_transfer.automatic_minimum.maybe_add(box_sizing_adjustment).maybe_clamp(min_size, max_size);
+    min_size = min_size.zip_map(aspect_ratio_minimum, |min, ratio_min| ratio_min.or(min));
     let mut known_dimensions = style_size.maybe_clamp(min_size, max_size);
 
     let is_replaced = child_style.is_replaced();
@@ -667,8 +672,12 @@ pub(crate) fn layout_oof_box<Tree: LayoutContainingBlock>(
     // The block axis is the ratio-dependent axis, so a stretched inline size is transferred
     // through the aspect ratio rather than also stretching the block size. An explicit
     // `stretch` in both axes stretches both and ignores the aspect ratio.
-    let stretch_width = known_dimensions.width.is_none() && horizontal.is_stretch_sized(is_replaced, is_table);
-    let stretch_height = known_dimensions.height.is_none() && vertical.is_stretch_sized(is_replaced, is_table);
+    let stretch_width = known_dimensions.width.is_none()
+        && aspect_ratio_minimum.width.is_none()
+        && horizontal.is_stretch_sized(is_replaced, is_table);
+    let stretch_height = known_dimensions.height.is_none()
+        && aspect_ratio_minimum.height.is_none()
+        && vertical.is_stretch_sized(is_replaced, is_table);
     let both_explicit_stretch =
         horizontal.alignment == OofAlignment::Stretch && vertical.alignment == OofAlignment::Stretch;
     let stretch_aspect_ratio =
