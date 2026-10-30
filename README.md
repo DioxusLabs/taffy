@@ -102,11 +102,6 @@ If you are interested in guide-level documentation on CSS layout, then we recomm
 
 ## Benchmarks (vs. [Yoga](https://github.com/facebook/yoga))
 
-The benchmark crate also has optional comparison engines enabled with `--features yoga,taffy03,morphorm,torin,cephal`.
-[Cephal](https://github.com/zortax/cephal) 0.2 requires Rust 1.90 or newer only when its feature is enabled.
-For example, run `cargo bench --manifest-path benches/Cargo.toml --features cephal --bench relayout -- cephal`
-to compare incremental leaf edits and viewport resizing across flex, block, grid and mixed trees.
-
 - Run on a 2021 MacBook Pro with M1 Pro processor using [criterion](https://github.com/bheisler/criterion.rs)
 - The benchmarks measure layout computation only. They do not measure tree creation.
 - Yoga benchmarks were run via the [yoga](https://github.com/bschwind/yoga-rs) crate (Rust bindings), version 0.5.0
