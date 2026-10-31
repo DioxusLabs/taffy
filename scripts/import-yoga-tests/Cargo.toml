@@ -5,4 +5,5 @@ authors = ["Nico Burns"]
 edition = "2021"
 
 [dependencies]
+regex = "1.8.1"
 walkdir = "2.3.3"

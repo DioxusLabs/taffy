@@ -1,0 +1,9 @@
+<test name="box_sizing_content_box_border_start__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div box-sizing="content-box" direction="ltr" position="absolute" flex-direction="column" align-content="flex-start" flex-shrink="0" width="100px" height="100px" border-left="5px"/>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="105" height="100"/>
+  </expectations>
+</test>

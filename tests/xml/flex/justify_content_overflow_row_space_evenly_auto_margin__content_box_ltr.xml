@@ -1,0 +1,17 @@
+<test name="justify_content_overflow_row_space_evenly_auto_margin__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div box-sizing="content-box" direction="ltr" position="absolute" align-content="flex-start" justify-content="space-evenly" flex-shrink="0" width="102px" height="102px">
+      <div box-sizing="content-box" direction="ltr" position="relative" flex-direction="column" align-content="flex-start" flex-shrink="0" width="40px" margin-right="auto"/>
+      <div box-sizing="content-box" direction="ltr" position="relative" flex-direction="column" align-content="flex-start" flex-shrink="0" width="40px"/>
+      <div box-sizing="content-box" direction="ltr" position="relative" flex-direction="column" align-content="flex-start" flex-shrink="0" width="40px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="102" height="102">
+      <node x="0" y="0" width="40" height="102"/>
+      <node x="40" y="0" width="40" height="102"/>
+      <node x="80" y="0" width="40" height="102"/>
+    </node>
+  </expectations>
+</test>

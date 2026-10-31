@@ -1,0 +1,15 @@
+<test name="align_content_space_evenly_with_max_cross_axis_violated_padding_and_border__border_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div direction="ltr" position="absolute" flex-wrap="wrap" align-content="space-evenly" flex-shrink="0" width="500px" max-height="300px" padding-top="2px" padding-left="2px" padding-bottom="2px" padding-right="2px" border-top="5px" border-left="5px" border-bottom="5px" border-right="5px">
+      <div direction="ltr" position="relative" flex-direction="column" align-content="flex-start" flex-shrink="0" width="400px" height="200px"/>
+      <div direction="ltr" position="relative" flex-direction="column" align-content="flex-start" flex-shrink="0" width="400px" height="200px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="500" height="300">
+      <node x="7" y="7" width="400" height="200"/>
+      <node x="7" y="207" width="400" height="200"/>
+    </node>
+  </expectations>
+</test>
