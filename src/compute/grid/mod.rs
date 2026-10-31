@@ -7,7 +7,7 @@ use crate::geometry::{Line, Point, Rect, Size};
 use crate::style::{AlignContent, AlignItems, AvailableSpace, Contain, ContainingBlockClaims, Overflow};
 use crate::tree::{
     AxisStaticPosition, Baselines, Layout, LayoutInput, LayoutOutput, LayoutPartialTreeExt, NodeId, OofCandidate,
-    OofCandidates, OofPositioningArea, RunMode, SizingMode,
+    OofCandidates, OofPositioningArea, RequestedBaselines, RunMode, SizingMode,
 };
 use crate::util::debug::debug_log;
 use crate::util::sys::{f32_max, f32_min, GridTrackVec, Vec};
@@ -267,7 +267,9 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     // is ComputeSize (and thus the container's size is all that we're interested in)
     if run_mode == RunMode::ComputeSize {
         if let Size { width: Some(width), height: Some(height) } = outer_node_size {
-            return LayoutOutput::from_outer_size(Size { width, height });
+            if inputs.requested_baselines.is_empty() {
+                return LayoutOutput::from_outer_size(Size { width, height });
+            }
         }
 
         // We can also short-circuit if the width is known and only the width has been requested.
@@ -492,8 +494,9 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
         height: f32_max(0.0, container_border_box.height - content_box_inset.vertical_axis_sum()),
     };
 
-    // If only the container's size has been requested
-    if run_mode == RunMode::ComputeSize {
+    // If only the container's size has been requested (if baselines were requested as well, the final
+    // track sizes and positions are needed)
+    if run_mode == RunMode::ComputeSize && inputs.requested_baselines.is_empty() {
         return LayoutOutput::from_outer_size(container_border_box);
     }
 
@@ -663,7 +666,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     }
 
     // If only the container's size has been requested
-    if run_mode == RunMode::ComputeSize {
+    if run_mode == RunMode::ComputeSize && inputs.requested_baselines.is_empty() {
         return LayoutOutput::from_outer_size(container_border_box);
     }
 
@@ -693,16 +696,6 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
         false,
     );
 
-    // 9. Size, Align, and Position Grid Items
-
-    #[cfg_attr(not(feature = "content_size"), allow(unused_mut))]
-    let mut item_overflow_rect = Rect::ZERO;
-
-    // Out-of-flow candidates in document order: direct out-of-flow children of the grid
-    // interleaved with candidates bubbled from in-flow children's subtrees. These are laid out
-    // by the out-of-flow positioning pass (`compute_oof_layout`), which runs after this algorithm.
-    let mut oof_candidates = OofCandidates::new();
-
     let container_alignment_styles = InBothAbsAxis { horizontal: justify_items, vertical: align_items };
 
     let padding_box_inset = border
@@ -720,27 +713,67 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
         padding,
     };
 
+    // If the container's size and baselines have been requested, measure the items they are taken from
+    if run_mode == RunMode::ComputeSize {
+        let baselines = if contain.suppresses_baseline() {
+            Baselines::NONE
+        } else {
+            determine_container_baselines(
+                tree,
+                &items,
+                &rows,
+                &columns,
+                container_alignment_styles,
+                direction,
+                #[cfg(feature = "content_size")]
+                padding_box_inset,
+                #[cfg(feature = "content_size")]
+                &overflow_container,
+                run_mode,
+                inputs.requested_baselines,
+            )
+        };
+        return LayoutOutput::from_sizes_and_baselines(
+            container_border_box,
+            crate::tree::ScrollableOverflow::ZERO,
+            baselines,
+        );
+    }
+
+    // 9. Size, Align, and Position Grid Items
+
+    #[cfg_attr(not(feature = "content_size"), allow(unused_mut))]
+    let mut item_overflow_rect = Rect::ZERO;
+
+    // Out-of-flow candidates in document order: direct out-of-flow children of the grid
+    // interleaved with candidates bubbled from in-flow children's subtrees. These are laid out
+    // by the out-of-flow positioning pass (`compute_oof_layout`), which runs after this algorithm.
+    let mut oof_candidates = OofCandidates::new();
+
+    // Only items in the first row can provide the container's first baseline and only items in the
+    // last row its last baseline (for which items participating in baseline alignment provide their
+    // first baseline), so only those items are asked for baselines
+    let requested_baselines = inputs.requested_baselines;
+    let (first_row, last_row) = if requested_baselines.is_empty() {
+        (0, 0)
+    } else {
+        (
+            items.iter().map(|item| item.row_indexes.start).min().unwrap_or(0),
+            items.iter().map(|item| item.row_indexes.end).max().unwrap_or(0),
+        )
+    };
+
     // Position in-flow children (stored in items vector)
     for (index, item) in items.iter_mut().enumerate() {
-        // Tracks are stored in logical order. In RTL the physical offsets are assigned
-        // right-to-left, so an item's physical left edge is derived from its logical end
-        // line and its physical right edge from its logical start line.
-        let grid_area = Rect {
-            top: rows[item.row_indexes.start as usize + 1].offset,
-            bottom: rows[item.row_indexes.end as usize].offset,
-            left: if direction.is_rtl() {
-                columns[item.column_indexes.end as usize - 1].offset
-            } else {
-                columns[item.column_indexes.start as usize + 1].offset
-            },
-            right: if direction.is_rtl() {
-                columns[item.column_indexes.start as usize].offset
-            } else {
-                columns[item.column_indexes.end as usize].offset
-            },
-        };
+        let in_last_row = requested_baselines.last() && item.row_indexes.end == last_row;
+        let item_requested_baselines = RequestedBaselines::new(
+            (requested_baselines.first() && item.row_indexes.start == first_row)
+                || (in_last_row && item.row_indexes.start + 1 == last_row && item.participates_in_baseline_alignment()),
+            in_last_row,
+        );
+        let grid_area = item_grid_area(item, &rows, &columns, direction);
         #[cfg_attr(not(feature = "content_size"), allow(unused_variables))]
-        let (overflow_contribution, y_position, height, baseline) = align_and_position_item(
+        let (overflow_contribution, y_position, height, baselines) = align_and_position_item(
             tree,
             item.node,
             index as u32,
@@ -754,10 +787,13 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
             #[cfg(feature = "content_size")]
             &overflow_container,
             &mut item.oof_candidates,
+            RunMode::PerformLayout,
+            item_requested_baselines,
         );
         item.y_position = y_position;
         item.height = height;
-        item.baseline = baseline;
+        item.baseline = baselines.first();
+        item.last_baseline = baselines.last();
 
         #[cfg(feature = "content_size")]
         {
@@ -865,6 +901,27 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
 
     let absolute_position_area = container_border_box - padding_box_inset.sum_axes();
     let absolute_position_offset = Point { x: padding_box_inset.left, y: padding_box_inset.top };
+    // Determine the grid container baselines
+    // Layout containment suppresses the box's baseline for baseline-alignment purposes
+    let baselines = if contain.suppresses_baseline() {
+        Baselines::NONE
+    } else {
+        determine_container_baselines(
+            tree,
+            &items,
+            &rows,
+            &columns,
+            container_alignment_styles,
+            direction,
+            #[cfg(feature = "content_size")]
+            padding_box_inset,
+            #[cfg(feature = "content_size")]
+            &overflow_container,
+            run_mode,
+            inputs.requested_baselines,
+        )
+    };
+
     // Store the detailed grid info before the out-of-flow positioning pass so that the pass can
     // resolve the grid areas of out-of-flow boxes whose containing block is this grid
     let areas =
@@ -926,27 +983,6 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
         return output;
     }
 
-    // Determine the grid container baseline(s) (currently we only compute the first baseline)
-    // Layout containment suppresses the box's baseline for baseline-alignment purposes
-    let grid_container_baseline: Option<f32> = if contain.suppresses_baseline() {
-        None
-    } else {
-        // Get the row index of the first row containing items
-        let first_row = items.iter().map(|item| item.row_indexes.start).min().unwrap();
-
-        // Check if any items in *this row* participate in baseline alignment
-        // (items with an auto block-axis margin do not participate: https://www.w3.org/TR/css-align-3/#baseline-align-self)
-        let mut first_row_items = items.iter().filter(|item| item.row_indexes.start == first_row);
-        let first_item = first_row_items.next().unwrap();
-        let item = if first_item.participates_in_baseline_alignment() {
-            first_item
-        } else {
-            first_row_items.find(|item| item.participates_in_baseline_alignment()).unwrap_or(first_item)
-        };
-
-        Some(item.y_position + item.baseline.unwrap_or(item.height))
-    };
-
     // A scroll container's own padding at the end of the content is part of its scrollable
     // overflow region, so it is included in the in-flow overflow rect. Boxes that are not
     // scroll containers do not extend their overflow region by their own padding.
@@ -973,14 +1009,134 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     #[cfg(not(feature = "content_size"))]
     let scrollable_overflow_rect = crate::tree::ScrollableOverflow::ZERO;
 
-    let mut output = LayoutOutput::from_sizes_and_baselines(
-        container_border_box,
-        scrollable_overflow_rect,
-        Baselines::from_first(grid_container_baseline),
-    );
+    let mut output = LayoutOutput::from_sizes_and_baselines(container_border_box, scrollable_overflow_rect, baselines);
     output.oof_candidates = oof_candidates;
     output.oof_positioning_area = oof_positioning_area;
     output
+}
+
+/// The grid area of an item. Tracks are stored in logical order. In RTL the physical offsets are assigned
+/// right-to-left, so an item's physical left edge is derived from its logical end line and its physical
+/// right edge from its logical start line.
+#[inline(always)]
+fn item_grid_area(item: &GridItem, rows: &[GridTrack], columns: &[GridTrack], direction: Direction) -> Rect<f32> {
+    Rect {
+        top: rows[item.row_indexes.start as usize + 1].offset,
+        bottom: rows[item.row_indexes.end as usize].offset,
+        left: if direction.is_rtl() {
+            columns[item.column_indexes.end as usize - 1].offset
+        } else {
+            columns[item.column_indexes.start as usize + 1].offset
+        },
+        right: if direction.is_rtl() {
+            columns[item.column_indexes.start as usize].offset
+        } else {
+            columns[item.column_indexes.end as usize].offset
+        },
+    }
+}
+
+/// Determine the grid container's requested baselines.
+///
+/// See <https://www.w3.org/TR/css-grid-2/#grid-baselines>
+///
+/// In `PerformLayout` mode the items' final positions and baselines are used. In `ComputeSize` mode the
+/// items are not laid out, so the items the baselines are taken from are measured in their grid area.
+#[allow(clippy::too_many_arguments)]
+fn determine_container_baselines(
+    tree: &mut impl LayoutGridContainer,
+    items: &[GridItem],
+    rows: &[GridTrack],
+    columns: &[GridTrack],
+    container_alignment_styles: InBothAbsAxis<AlignItems>,
+    direction: Direction,
+    #[cfg(feature = "content_size")] padding_box_inset: Rect<f32>,
+    #[cfg(feature = "content_size")] overflow_container: &ScrollableOverflowContainer,
+    run_mode: RunMode,
+    requested: RequestedBaselines,
+) -> Baselines {
+    if items.is_empty() {
+        return Baselines::NONE;
+    }
+
+    // An item's top edge (excluding any relative offset, which does not affect baselines), height and
+    // baselines relative to its top edge
+    let item_baselines = |tree: &mut _, item_index: usize, requested: RequestedBaselines| {
+        let item = &items[item_index];
+        if run_mode == RunMode::PerformLayout {
+            return (item.y_position, item.height, Baselines::new(item.baseline, item.last_baseline));
+        }
+        let grid_area = item_grid_area(item, rows, columns, direction);
+        let (_, y_position, height, baselines) = align_and_position_item(
+            tree,
+            item.node,
+            item_index as u32,
+            grid_area,
+            Size { width: grid_area.right - grid_area.left, height: grid_area.bottom - grid_area.top },
+            container_alignment_styles,
+            item.baseline_shim,
+            direction,
+            #[cfg(feature = "content_size")]
+            padding_box_inset,
+            #[cfg(feature = "content_size")]
+            overflow_container,
+            &mut OofCandidates::new(),
+            RunMode::ComputeSize,
+            requested,
+        );
+        (y_position, height, baselines)
+    };
+
+    let determine_baseline = |tree: &mut _, is_last: bool| -> Option<f32> {
+        // The first (or last) non-empty row. Items spanning multiple rows count for the row their
+        // span starts (or ends) in.
+        let row = if is_last {
+            items.iter().map(|item| item.row_indexes.end).max()?
+        } else {
+            items.iter().map(|item| item.row_indexes.start).min()?
+        };
+        let in_row =
+            |item: &GridItem| if is_last { item.row_indexes.end == row } else { item.row_indexes.start == row };
+        let starts_in_row = |item: &GridItem| item.row_indexes.start == if is_last { row - 1 } else { row };
+
+        // 1. The shared alignment baseline of the items in the row participating in baseline alignment
+        //    (which is their first baseline, as `last baseline` alignment is not supported). Such items
+        //    must start in the row, even for the last baseline.
+        let participant = items
+            .iter()
+            .position(|item| item.participates_in_baseline_alignment() && in_row(item) && starts_in_row(item));
+        if let Some(index) = participant {
+            let (top, height, baselines) = item_baselines(tree, index, RequestedBaselines::FIRST);
+            return Some(top + baselines.first().unwrap_or(height));
+        }
+
+        // 2. The baseline of the first (or last) item in the row, in grid order, that has one. Grid
+        //    order is by column, then order-modified document order (the order of `items`).
+        let mut row_items: Vec<usize> = (0..items.len()).filter(|&index| in_row(&items[index])).collect();
+        row_items.sort_by_key(|&index| items[index].column_indexes.start);
+        if is_last {
+            row_items.reverse();
+        }
+        let requested = if is_last { RequestedBaselines::LAST } else { RequestedBaselines::FIRST };
+        for index in row_items {
+            let (top, _, baselines) = item_baselines(tree, index, requested);
+            if let Some(baseline) = baselines.get(is_last) {
+                return Some(top + baseline);
+            }
+        }
+
+        // 3. A baseline synthesized from the first (or last) grid item in grid order
+        let grid_order = |index: &usize| (items[*index].row_indexes.start, items[*index].column_indexes.start);
+        let index =
+            if is_last { (0..items.len()).max_by_key(grid_order) } else { (0..items.len()).min_by_key(grid_order) };
+        let (top, height, _) = item_baselines(tree, index?, RequestedBaselines::NONE);
+        Some(top + height)
+    };
+
+    Baselines::new(
+        if requested.first() { determine_baseline(tree, false) } else { None },
+        if requested.last() { determine_baseline(tree, true) } else { None },
+    )
 }
 
 /// Resolve the static-position rectangle (the grid area determined by the grid-placement

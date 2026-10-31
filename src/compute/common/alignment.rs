@@ -10,10 +10,22 @@ use crate::style::{AlignContent, AlignContentKeyword, AlignItems, AlignItemsKeyw
 /// bottom edge. See <https://github.com/w3c/csswg-drafts/issues/7660>
 #[inline]
 pub(crate) fn child_first_baseline(first_baseline: Option<f32>, height: f32, overflow_y: Overflow) -> Option<f32> {
+    child_baseline(first_baseline, height, overflow_y)
+}
+
+/// The last baseline of a child box, determined like [`child_first_baseline`]
+#[inline]
+pub(crate) fn child_last_baseline(last_baseline: Option<f32>, height: f32, overflow_y: Overflow) -> Option<f32> {
+    child_baseline(last_baseline, height, overflow_y)
+}
+
+/// Apply the scroll-container rule to a child's reported baseline
+#[inline]
+fn child_baseline(baseline: Option<f32>, height: f32, overflow_y: Overflow) -> Option<f32> {
     if overflow_y.is_scroll_container() {
-        Some(first_baseline.unwrap_or(height).min(height).max(0.0))
+        Some(baseline.unwrap_or(height).min(height).max(0.0))
     } else {
-        first_baseline
+        baseline
     }
 }
 

@@ -1,6 +1,6 @@
 //! Computes the [flexbox](https://css-tricks.com/snippets/css/a-guide-to-flexbox/) layout algorithm on [`TaffyTree`](crate::TaffyTree) according to the [spec](https://www.w3.org/TR/css-flexbox-1/)
 use crate::compute::common::alignment::{
-    child_first_baseline, compute_alignment_offset, resolve_self_alignment_safety,
+    child_first_baseline, child_last_baseline, compute_alignment_offset, resolve_self_alignment_safety,
 };
 use crate::geometry::{Line, Point, Rect, Size};
 use crate::style::{
@@ -13,7 +13,9 @@ use crate::tree::{
     AxisStaticAlign, AxisStaticEdge, AxisStaticPosition, LayoutFlexboxContainer, LayoutPartialTreeExt, NodeId,
     OofPositioningArea,
 };
-use crate::tree::{Baselines, Layout, LayoutInput, LayoutOutput, OofCandidate, OofCandidates, RunMode, SizingMode};
+use crate::tree::{
+    Baselines, Layout, LayoutInput, LayoutOutput, OofCandidate, OofCandidates, RequestedBaselines, RunMode, SizingMode,
+};
 use crate::util::debug::debug_log;
 use crate::util::sys::{f32_max, f32_min, new_vec_with_capacity, Vec};
 use crate::util::MaybeMath;
@@ -102,6 +104,12 @@ struct FlexItem {
 
     /// The position of the bottom edge of this item
     baseline: f32,
+    /// The item's own first/last baselines (none if it has none), relative to the container's border box.
+    /// Set from the item's final layout.
+    baselines: Baselines,
+    /// The position of the item's border-box bottom edge, from which a baseline is synthesized if it has
+    /// none. Set from the item's final layout.
+    border_box_bottom: f32,
 
     /// A temporary value for the main offset
     ///
@@ -311,7 +319,9 @@ pub fn compute_flexbox_layout(
     // is ComputeSize (and thus the container's size is all that we're interested in)
     if run_mode == RunMode::ComputeSize {
         if let Size { width: Some(width), height: Some(height) } = styled_based_known_dimensions {
-            return LayoutOutput::from_outer_size(Size { width, height });
+            if inputs.requested_baselines.is_empty() {
+                return LayoutOutput::from_outer_size(Size { width, height });
+            }
         }
 
         // We can also short-circuit if the width is known and only the width has been requested.
@@ -319,14 +329,6 @@ pub fn compute_flexbox_layout(
             if let Some(width) = styled_based_known_dimensions.width {
                 return LayoutOutput::from_outer_size(Size { width, height: 0.0 });
             }
-        }
-    }
-
-    // Short-circuit layout if the container's size is fully determined by the container's size and the run mode
-    // is ComputeSize (and thus the container's size is all that we're interested in)
-    if run_mode == RunMode::ComputeSize {
-        if let Size { width: Some(width), height: Some(height) } = styled_based_known_dimensions {
-            return LayoutOutput::from_outer_size(Size { width, height });
         }
     }
 
@@ -513,8 +515,9 @@ fn compute_preliminary(tree: &mut impl LayoutFlexboxContainer, node: NodeId, inp
     let total_line_cross_size = determine_container_cross_size(&flex_lines, known_dimensions, &mut constants);
 
     // We have the container size.
-    // If our caller does not care about performing layout we are done now.
-    if run_mode == RunMode::ComputeSize {
+    // If our caller does not care about performing layout we are done now (unless baselines were
+    // requested, which requires the positions of the lines and of the items they are taken from).
+    if run_mode == RunMode::ComputeSize && inputs.requested_baselines.is_empty() {
         return LayoutOutput::from_outer_size(constants.container_size);
     }
 
@@ -522,9 +525,19 @@ fn compute_preliminary(tree: &mut impl LayoutFlexboxContainer, node: NodeId, inp
     debug_log!("align_flex_lines_per_align_content");
     align_flex_lines_per_align_content(&mut flex_lines, &constants, total_line_cross_size);
 
+    if run_mode == RunMode::ComputeSize {
+        let baselines =
+            determine_container_baselines(tree, &flex_lines, &constants, run_mode, inputs.requested_baselines);
+        return LayoutOutput::from_sizes_and_baselines(
+            constants.container_size,
+            crate::tree::ScrollableOverflow::ZERO,
+            baselines,
+        );
+    }
+
     // Do a final layout pass and gather the resulting layouts
     debug_log!("final_layout_pass");
-    let inflow_overflow_rect = final_layout_pass(tree, &mut flex_lines, &constants);
+    let inflow_overflow_rect = final_layout_pass(tree, &mut flex_lines, &constants, inputs.requested_baselines);
 
     // Collect out-of-flow candidates in document order (direct out-of-flow children interleaved
     // with candidates bubbled from in-flow children's subtrees). These are laid out by the
@@ -552,26 +565,8 @@ fn compute_preliminary(tree: &mut impl LayoutFlexboxContainer, node: NodeId, inp
         }
     }
 
-    // 8.5. Flex Container Baselines: calculate the flex container's first baseline
-    // See https://www.w3.org/TR/css-flexbox-1/#flex-baselines
-    // The baselines are generated from the startmost flex line, where "startmost" refers to the
-    // line's visual position: for wrap-reverse containers the cross axis is flipped, so the
-    // startmost line is the last line in flex-line order rather than the first.
-    let first_line = if constants.is_wrap_reverse { flex_lines.last() } else { flex_lines.first() };
-    let first_vertical_baseline = first_line.and_then(|line| {
-        if constants.is_column {
-            // For column containers the baseline is generated from the startmost item in the line,
-            // which for reverse-direction containers is the last item in flex order.
-            let item = if constants.dir.is_reverse() { line.items.last() } else { line.items.first() };
-            item.map(|child| child.baseline)
-        } else {
-            line.items
-                .iter()
-                .find(|item| item.participates_in_baseline_alignment(constants.dir))
-                .or_else(|| line.items.iter().next())
-                .map(|child| child.baseline)
-        }
-    });
+    // 8.5. Flex Container Baselines
+    let baselines = determine_container_baselines(tree, &flex_lines, &constants, run_mode, inputs.requested_baselines);
 
     let mut output = LayoutOutput::from_sizes_and_baselines(
         constants.container_size,
@@ -593,7 +588,7 @@ fn compute_preliminary(tree: &mut impl LayoutFlexboxContainer, node: NodeId, inp
                 crate::tree::ScrollableOverflow::ZERO
             }
         },
-        Baselines::from_first(first_vertical_baseline),
+        baselines,
     );
     output.oof_candidates = candidates;
     output.oof_positioning_area =
@@ -921,6 +916,8 @@ fn generate_anonymous_flex_items(
                 content_flex_fraction: 0.0,
 
                 baseline: 0.0,
+                baselines: Baselines::NONE,
+                border_box_bottom: 0.0,
 
                 offset_main: 0.0,
                 offset_cross: 0.0,
@@ -2085,6 +2082,7 @@ fn determine_hypothetical_cross_size(
                         height: if constants.is_row { child_available_cross } else { child_available_main },
                     },
                     vertical_margins_are_collapsible: Line::FALSE,
+                    requested_baselines: RequestedBaselines::NONE,
                 },
             )
             .size
@@ -2129,6 +2127,8 @@ fn calculate_children_base_lines(
                 continue;
             }
 
+            // A full layout at the item's hypothetical cross size, which (as baseline-aligned items do
+            // not stretch) is also its final size, so the final layout pass hits this cache entry
             let measured_size_and_baselines = tree.compute_child_layout(
                 child.node,
                 LayoutInput {
@@ -2165,12 +2165,14 @@ fn calculate_children_base_lines(
                     .maybe_sub(child.margin.sum_axes())
                     .maybe_max(Size::ZERO),
                     vertical_margins_are_collapsible: Line::FALSE,
+                    requested_baselines: RequestedBaselines::FIRST,
                 },
             );
 
             let height = measured_size_and_baselines.size.height;
-            let baseline = child_first_baseline(measured_size_and_baselines.baselines.first, height, child.overflow.y)
-                .unwrap_or(height);
+            let baseline =
+                child_first_baseline(measured_size_and_baselines.baselines.first(), height, child.overflow.y)
+                    .unwrap_or(height);
 
             child.baseline = baseline + child.margin.top;
         }
@@ -2615,6 +2617,7 @@ fn align_flex_lines_per_align_content(flex_lines: &mut [FlexLine], constants: &A
 fn calculate_flex_item(
     tree: &mut impl LayoutFlexboxContainer,
     item: &mut FlexItem,
+    requested_baselines: RequestedBaselines,
     total_offset_main: &mut f32,
     total_offset_cross: f32,
     line_offset_cross: f32,
@@ -2639,6 +2642,7 @@ fn calculate_flex_item(
             // The available space passed to the child excludes the child's margins
             available_space: (container_size - item.margin.sum_axes()).map(|s| s.max(0.0).into()),
             vertical_margins_are_collapsible: Line::FALSE,
+            requested_baselines,
         },
     );
     let LayoutOutput {
@@ -2666,16 +2670,21 @@ fn calculate_flex_item(
         + item.margin.cross_start(direction)
         + cross_relative_inset;
 
-    let inner_baseline =
-        child_first_baseline(layout_output.baselines.first, size.height, item.overflow.y).unwrap_or(size.height);
-    if direction.is_row() {
-        let baseline_offset_cross =
-            total_offset_cross + item.offset_cross + effective_line_offset_cross + item.margin.cross_start(direction);
-        item.baseline = baseline_offset_cross + inner_baseline;
+    // The item's top edge excluding any relative offset, which does not affect baselines
+    let top = if direction.is_row() {
+        total_offset_cross + item.offset_cross + effective_line_offset_cross + item.margin.cross_start(direction)
     } else {
-        let baseline_offset_main = *total_offset_main + item.offset_main + item.margin.main_start(direction);
-        item.baseline = baseline_offset_main + inner_baseline;
-    }
+        *total_offset_main + item.offset_main + item.margin.main_start(direction)
+    };
+    item.border_box_bottom = top + size.height;
+    // Only items asked for baselines can provide the container's, so the others' are not derived
+    item.baselines = if requested_baselines.is_empty() {
+        Baselines::NONE
+    } else {
+        let first = child_first_baseline(layout_output.baselines.first(), size.height, item.overflow.y);
+        let last = child_last_baseline(layout_output.baselines.last(), size.height, item.overflow.y);
+        Baselines::new(first.map(|b| top + b), last.map(|b| top + b))
+    };
 
     let location = if direction.is_row() {
         Point { x: offset_main, y: offset_cross }
@@ -2734,10 +2743,144 @@ fn calculate_flex_item(
 }
 
 /// Calculates the layout line
+/// Determine the flex container's requested baselines.
+///
+/// # [8.5. Flex Container Baselines](https://www.w3.org/TR/css-flexbox-1/#flex-baselines)
+///
+/// In `PerformLayout` mode the items' final baselines are used. In `ComputeSize` mode the items are not
+/// laid out, so the items the baselines are taken from are measured at their target size.
+fn determine_container_baselines(
+    tree: &mut impl LayoutFlexboxContainer,
+    flex_lines: &[FlexLine],
+    constants: &AlgoConstants,
+    run_mode: RunMode,
+    requested: RequestedBaselines,
+) -> Baselines {
+    Baselines::new(
+        if requested.first() {
+            determine_container_baseline(tree, flex_lines, constants, run_mode, false)
+        } else {
+            None
+        },
+        if requested.last() { determine_container_baseline(tree, flex_lines, constants, run_mode, true) } else { None },
+    )
+}
+
+/// Determine the flex container's first (or last) baseline. See [`determine_container_baselines`].
+fn determine_container_baseline(
+    tree: &mut impl LayoutFlexboxContainer,
+    flex_lines: &[FlexLine],
+    constants: &AlgoConstants,
+    run_mode: RunMode,
+    is_last: bool,
+) -> Option<f32> {
+    // The startmost (or endmost) line in visual order: for wrap-reverse containers the cross axis
+    // is flipped, so the startmost line is the last line in flex-line order rather than the first.
+    let line_index = if is_last ^ constants.is_wrap_reverse { flex_lines.len().checked_sub(1)? } else { 0 };
+    let line = flex_lines.get(line_index)?;
+    let item_count = line.items.len();
+    if item_count == 0 {
+        return None;
+    }
+    let dir = constants.dir;
+    let requested = if is_last { RequestedBaselines::LAST } else { RequestedBaselines::FIRST };
+    let item_baselines = |tree: &mut _, item_index: usize, requested: RequestedBaselines| {
+        item_baselines(tree, flex_lines, line_index, item_index, constants, run_mode, requested)
+    };
+    // The startmost (or endmost) item in visual order
+    let end_item_index = if is_last ^ dir.is_reverse() { item_count - 1 } else { 0 };
+
+    // Cross-axis baseline set: the startmost (or endmost) item's baseline, synthesized if it has none
+    if constants.is_column {
+        let (baselines, border_box_bottom) = item_baselines(tree, end_item_index, requested);
+        return Some(baselines.get(is_last).unwrap_or(border_box_bottom));
+    }
+
+    // Main-axis baseline set:
+    // 1. The shared alignment baseline of the items participating in baseline alignment (which is their
+    //    first baseline, as `last baseline` alignment is not supported).
+    if let Some(item_index) = line.items.iter().position(|item| item.participates_in_baseline_alignment(dir)) {
+        let (baselines, border_box_bottom) = item_baselines(tree, item_index, RequestedBaselines::FIRST);
+        return Some(baselines.first().unwrap_or(border_box_bottom));
+    }
+    // 2. The baseline of the first (or last) item in order-modified document order that has one
+    for step in 0..item_count {
+        let item_index = if is_last { item_count - 1 - step } else { step };
+        let (baselines, _) = item_baselines(tree, item_index, requested);
+        if let Some(baseline) = baselines.get(is_last) {
+            return Some(baseline);
+        }
+    }
+    // 3. A baseline synthesized from the startmost (or endmost) item
+    Some(item_baselines(tree, end_item_index, RequestedBaselines::NONE).1)
+}
+
+/// An item's baselines relative to the container's border box, and the position of its border-box
+/// bottom edge. See [`determine_container_baselines`].
+fn item_baselines(
+    tree: &mut impl LayoutFlexboxContainer,
+    flex_lines: &[FlexLine],
+    line_index: usize,
+    item_index: usize,
+    constants: &AlgoConstants,
+    run_mode: RunMode,
+    requested: RequestedBaselines,
+) -> (Baselines, f32) {
+    let line = &flex_lines[line_index];
+    let item = &line.items[item_index];
+    if run_mode == RunMode::PerformLayout {
+        return (item.baselines, item.border_box_bottom);
+    }
+
+    let dir = constants.dir;
+    // The item's top edge (excluding any relative offset, which does not affect baselines), as it
+    // will be positioned by `calculate_flex_item`. For rows it is the line's cross offset plus the
+    // item's; for columns it is the main offset of the items that precede it in visual order.
+    let top = if constants.is_row {
+        let preceding_lines =
+            if constants.is_wrap_reverse { &flex_lines[line_index + 1..] } else { &flex_lines[..line_index] };
+        constants.content_box_inset.top
+            + preceding_lines.iter().map(|line| line.offset_cross + line.cross_size).sum::<f32>()
+            + line.offset_cross
+            + item.offset_cross
+            + item.margin.top
+    } else {
+        let preceding_items = if dir.is_reverse() { &line.items[item_index + 1..] } else { &line.items[..item_index] };
+        constants.content_box_inset.top
+            + preceding_items
+                .iter()
+                .map(|item| item.offset_main + item.margin.vertical_axis_sum() + item.target_size.height)
+                .sum::<f32>()
+            + item.offset_main
+            + item.margin.top
+    };
+
+    let layout_output = tree.compute_child_layout(
+        item.node,
+        LayoutInput {
+            run_mode: RunMode::ComputeSize,
+            sizing_mode: SizingMode::ContentSize,
+            axis: RequestedAxis::Both,
+            known_dimensions: item.target_size.map(|s| s.into()),
+            known_dimensions_are_definite: item_known_dimension_definiteness(constants, item),
+            parent_size: constants.node_inner_size,
+            available_space: (constants.container_size - item.margin.sum_axes()).map(|s| s.max(0.0).into()),
+            vertical_margins_are_collapsible: Line::FALSE,
+            requested_baselines: requested,
+        },
+    );
+    let height = layout_output.size.height;
+    let first = child_first_baseline(layout_output.baselines.first(), height, item.overflow.y);
+    let last = child_last_baseline(layout_output.baselines.last(), height, item.overflow.y);
+    (Baselines::new(first.map(|b| top + b), last.map(|b| top + b)), top + height)
+}
+
+/// Calculates the layout line
 #[allow(clippy::too_many_arguments)]
 fn calculate_layout_line(
     tree: &mut impl LayoutFlexboxContainer,
     line: &mut FlexLine,
+    requested_baselines: RequestedBaselines,
     total_offset_cross: &mut f32,
     #[cfg(feature = "content_size")] overflow_rect: &mut Rect<f32>,
     #[cfg(feature = "content_size")] overflow_container: &ScrollableOverflowContainer,
@@ -2759,11 +2902,26 @@ fn calculate_layout_line(
         *total_offset_cross -= line_offset_cross + line.cross_size;
     }
 
+    // In a row any item may provide the line's baselines (the first item that has one does); in a
+    // column only the visually startmost (or endmost) item does. Items participating in baseline
+    // alignment provide their first baseline for the line's last baseline too.
+    let item_count = line.items.len();
+    let (startmost, endmost) =
+        if direction.is_reverse() { (item_count.wrapping_sub(1), 0) } else { (0, item_count.wrapping_sub(1)) };
+    let item_requested_baselines = |index: usize, item: &FlexItem| {
+        RequestedBaselines::new(
+            (requested_baselines.first() && (direction.is_row() || index == startmost))
+                || (requested_baselines.last() && item.participates_in_baseline_alignment(direction)),
+            requested_baselines.last() && (direction.is_row() || index == endmost),
+        )
+    };
+
     if direction.is_reverse() {
-        for item in line.items.iter_mut().rev() {
+        for (index, item) in line.items.iter_mut().enumerate().rev() {
             calculate_flex_item(
                 tree,
                 item,
+                item_requested_baselines(index, item),
                 &mut total_offset_main,
                 *total_offset_cross,
                 line_offset_cross,
@@ -2775,10 +2933,11 @@ fn calculate_layout_line(
             );
         }
     } else {
-        for item in line.items.iter_mut() {
+        for (index, item) in line.items.iter_mut().enumerate() {
             calculate_flex_item(
                 tree,
                 item,
+                item_requested_baselines(index, item),
                 &mut total_offset_main,
                 *total_offset_cross,
                 line_offset_cross,
@@ -2802,6 +2961,7 @@ fn final_layout_pass(
     tree: &mut impl LayoutFlexboxContainer,
     flex_lines: &mut [FlexLine],
     constants: &AlgoConstants,
+    requested_baselines: RequestedBaselines,
 ) -> Rect<f32> {
     #[cfg(feature = "content_size")]
     let overflow_container = ScrollableOverflowContainer {
@@ -2821,11 +2981,24 @@ fn final_layout_pass(
     #[cfg_attr(not(feature = "content_size"), allow(unused_mut))]
     let mut overflow_rect = Rect::ZERO;
 
+    // Only the visually startmost line can provide the container's first baseline and only the
+    // endmost line its last baseline, so only their items are asked for baselines
+    let line_count = flex_lines.len();
+    let (startmost, endmost) =
+        if constants.is_wrap_reverse { (line_count.wrapping_sub(1), 0) } else { (0, line_count.wrapping_sub(1)) };
+    let line_requested_baselines = |index: usize| {
+        RequestedBaselines::new(
+            requested_baselines.first() && index == startmost,
+            requested_baselines.last() && index == endmost,
+        )
+    };
+
     if constants.is_wrap_reverse {
-        for line in flex_lines.iter_mut().rev() {
+        for (index, line) in flex_lines.iter_mut().enumerate().rev() {
             calculate_layout_line(
                 tree,
                 line,
+                line_requested_baselines(index),
                 &mut total_offset_cross,
                 #[cfg(feature = "content_size")]
                 &mut overflow_rect,
@@ -2835,10 +3008,11 @@ fn final_layout_pass(
             );
         }
     } else {
-        for line in flex_lines.iter_mut() {
+        for (index, line) in flex_lines.iter_mut().enumerate() {
             calculate_layout_line(
                 tree,
                 line,
+                line_requested_baselines(index),
                 &mut total_offset_cross,
                 #[cfg(feature = "content_size")]
                 &mut overflow_rect,
