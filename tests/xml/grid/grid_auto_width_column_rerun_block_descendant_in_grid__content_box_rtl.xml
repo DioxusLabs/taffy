@@ -1,0 +1,25 @@
+<test name="grid_auto_width_column_rerun_block_descendant_in_grid__content_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" box-sizing="content-box" direction="rtl" position="absolute" align-items="start" justify-items="start" justify-content="start" width="400px" grid-template-columns="auto auto">
+      <div display="grid" box-sizing="content-box" direction="rtl" position="relative" justify-content="start" grid-template-rows="auto" grid-template-columns="auto auto">
+        <div box-sizing="content-box" direction="rtl" position="relative" width="10px" height="100px" grid-row-start="1" grid-column-start="1"/>
+        <div box-sizing="content-box" direction="rtl" position="relative" justify-self="start" height="100%" grid-row-start="1" grid-column-start="2">
+          <div box-sizing="content-box" direction="rtl" position="relative" height="100%" aspect-ratio="2"/>
+        </div>
+      </div>
+      <div box-sizing="content-box" direction="rtl" position="relative" width="10px" height="10px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="400" height="100" resolved-rows="100px" resolved-columns="210px 10px">
+      <node x="190" y="0" width="210" height="100" resolved-rows="100px" resolved-columns="10px 200px">
+        <node x="200" y="0" width="10" height="100"/>
+        <node x="0" y="0" width="200" height="100">
+          <node x="0" y="0" width="200" height="100"/>
+        </node>
+      </node>
+      <node x="180" y="0" width="10" height="10"/>
+    </node>
+  </expectations>
+</test>

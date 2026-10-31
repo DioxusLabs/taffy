@@ -208,6 +208,10 @@ pub(crate) struct CacheEntry<T> {
     content: T,
 }
 
+/// The content of a size-only cache entry: the computed size, and whether the node's inline size can depend on
+/// its block-axis constraints (see [`LayoutOutput::depends_on_block_constraints`])
+type MeasuredSize = (Size<f32>, bool);
+
 /// A cache for caching the results of a sizing a Grid Item or Flexbox Item
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize))]
@@ -215,7 +219,7 @@ pub struct Cache {
     /// The cache entry for the node's final layout
     final_layout_entry: Option<CacheEntry<LayoutOutput>>,
     /// The cache entries for the node's preliminary size measurements
-    measure_entries: [Option<CacheEntry<Size<f32>>>; CACHE_SIZE],
+    measure_entries: [Option<CacheEntry<MeasuredSize>>; CACHE_SIZE],
     /// Tracks which measure entries have been used since the eviction cursor last passed them
     recently_used_entries: u16,
     /// The next measure entry to consider replacing
@@ -238,7 +242,7 @@ impl Cache {
     /// Create a new empty cache
     pub const fn new() -> Self {
         /// Workaround for `Option<CacheEntry<_>>` not being `Copy` (required for array repeat expressions)
-        const NONE_MEASURE_ENTRY: Option<CacheEntry<Size<f32>>> = None;
+        const NONE_MEASURE_ENTRY: Option<CacheEntry<MeasuredSize>> = None;
         Self {
             final_layout_entry: None,
             measure_entries: [NONE_MEASURE_ENTRY; CACHE_SIZE],
@@ -269,7 +273,10 @@ impl Cache {
                         && entry.key.size_is_valid_for(&key)
                     {
                         self.recently_used_entries |= 1 << index;
-                        return Some(LayoutOutput::from_outer_size(entry.content));
+                        let (size, depends_on_block_constraints) = entry.content;
+                        let mut output = LayoutOutput::from_outer_size(size);
+                        output.depends_on_block_constraints = depends_on_block_constraints;
+                        return Some(output);
                     }
                 }
 
@@ -314,7 +321,8 @@ impl Cache {
                 if let Some(index) =
                     self.measure_entries.iter().position(|entry| entry.as_ref().is_some_and(|entry| entry.key == key))
                 {
-                    self.measure_entries[index].as_mut().unwrap().content = layout_output.size;
+                    self.measure_entries[index].as_mut().unwrap().content =
+                        (layout_output.size, layout_output.depends_on_block_constraints);
                     self.recently_used_entries |= 1 << index;
                     return;
                 }
@@ -326,7 +334,8 @@ impl Cache {
                     }
                 }
                 let entry_index = self.next_measure_entry as usize;
-                self.measure_entries[entry_index] = Some(CacheEntry { key, content: layout_output.size });
+                self.measure_entries[entry_index] =
+                    Some(CacheEntry { key, content: (layout_output.size, layout_output.depends_on_block_constraints) });
                 self.recently_used_entries |= 1 << entry_index;
                 self.next_measure_entry += 1;
                 if self.next_measure_entry == CACHE_SIZE as u8 {
@@ -345,7 +354,7 @@ impl Cache {
         self.is_empty = true;
         self.final_layout_entry = None;
         /// Workaround for `Option<CacheEntry<_>>` not being `Copy` (required for array repeat expressions)
-        const NONE_MEASURE_ENTRY: Option<CacheEntry<Size<f32>>> = None;
+        const NONE_MEASURE_ENTRY: Option<CacheEntry<MeasuredSize>> = None;
         self.measure_entries = [NONE_MEASURE_ENTRY; CACHE_SIZE];
         self.recently_used_entries = 0;
         self.next_measure_entry = 0;

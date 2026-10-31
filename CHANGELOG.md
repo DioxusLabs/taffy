@@ -6,11 +6,13 @@
 
 - Flexbox: `align-content: stretch` (and `normal`) and `justify-content: stretch` fall back to `flex-start` rather than `start` when the lines/items overflow the container, so overflowing lines in a `wrap-reverse` container (and items in a `row-reverse`/`column-reverse` container) are packed to the flex-start edge like in Chrome.
 - Grid: the clamp of an item's content-based minimum size to the fixed max track sizing functions it spans now leaves room for its margins and baseline shim (#1362).
+- Grid: the content-based width of a grid container that is computed by a size-only query (`RunMode::ComputeSize`) now accounts for the column sizing re-run, matching the width computed by `RunMode::PerformLayout` and by Chrome/Firefox, when an item in an intrinsically sized column has an `aspect-ratio` (or reports `depends_on_block_constraints`).
 
 ### Changes
 
 - Replace raw scrollable overflow rectangles in `Layout` and `LayoutOutput` with `ScrollableOverflow`, including physical reversed-scroll-origin flags and sign-restored `left()`, `right()`, `top()`, and `bottom()` accessors. Flex reverse directions and wrap-reverse now retain reachable negative overflow, while scroll containers clip unreachable overflow.
 - `BlockContext::place_floated_box` (and `FloatContext::place_floated_box`) now take a caller-defined `id: u64` for the box, which is stored on `PlacedFloatedBox`. `BlockContext::float_mark` and `BlockContext::floats_placed_since` read back the id and position of the floats placed since a mark, so that custom formatting contexts which place floats do not need to keep their own list of placements.
+- `LayoutOutput` gains a public `depends_on_block_constraints: bool` field: whether the node's width can depend on its block-axis constraints (the `height` of the `known_dimensions`, `parent_size` or `available_space` inputs), for example because the node or one of its descendants has an `aspect-ratio`. It is conservative (`false` is a guarantee, `true` means "may depend"), is stored in the layout cache alongside size-only results, and is propagated upwards by the block, flexbox and grid algorithms. Code that constructs `LayoutOutput` with a struct literal must set it. `compute_leaf_layout` only sets it from the node's `aspect_ratio` style: callers whose measure function returns a width that depends on the height it is passed (e.g. replaced elements with an intrinsic aspect ratio) should set it to `true` on the returned output. `LayoutPartialTree` gains a defaulted `measure_child_size_with_block_dependency` method that returns the flag along with the measured size.
 
 ## 0.15.1
 
