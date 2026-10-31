@@ -102,6 +102,8 @@ struct FlexItem {
 
     /// The position of the bottom edge of this item
     baseline: f32,
+    /// The position of this item's last baseline (relative to the container's border box)
+    last_baseline: f32,
 
     /// A temporary value for the main offset
     ///
@@ -573,6 +575,12 @@ fn compute_preliminary(tree: &mut impl LayoutFlexboxContainer, node: NodeId, inp
         }
     });
 
+    // The container's last baseline is generated from the cross-end-most line (the first line for
+    // wrap-reverse containers). As no items ever participate in last-baseline alignment (which is not
+    // yet supported), it is always generated from the line's last flex item.
+    let last_line = if constants.is_wrap_reverse { flex_lines.first() } else { flex_lines.last() };
+    let last_vertical_baseline = last_line.and_then(|line| line.items.last().map(|child| child.last_baseline));
+
     let mut output = LayoutOutput::from_sizes_and_baselines(
         constants.container_size,
         {
@@ -593,7 +601,7 @@ fn compute_preliminary(tree: &mut impl LayoutFlexboxContainer, node: NodeId, inp
                 crate::tree::ScrollableOverflow::ZERO
             }
         },
-        Baselines::from_first(first_vertical_baseline),
+        Baselines { first: first_vertical_baseline, last: last_vertical_baseline },
     );
     output.oof_candidates = candidates;
     output.oof_positioning_area =
@@ -921,6 +929,7 @@ fn generate_anonymous_flex_items(
                 content_flex_fraction: 0.0,
 
                 baseline: 0.0,
+                last_baseline: 0.0,
 
                 offset_main: 0.0,
                 offset_cross: 0.0,
@@ -2668,13 +2677,17 @@ fn calculate_flex_item(
 
     let inner_baseline =
         child_first_baseline(layout_output.baselines.first, size.height, item.overflow.y).unwrap_or(size.height);
+    let inner_last_baseline =
+        child_first_baseline(layout_output.baselines.last, size.height, item.overflow.y).unwrap_or(size.height);
     if direction.is_row() {
         let baseline_offset_cross =
             total_offset_cross + item.offset_cross + effective_line_offset_cross + item.margin.cross_start(direction);
         item.baseline = baseline_offset_cross + inner_baseline;
+        item.last_baseline = baseline_offset_cross + inner_last_baseline;
     } else {
         let baseline_offset_main = *total_offset_main + item.offset_main + item.margin.main_start(direction);
         item.baseline = baseline_offset_main + inner_baseline;
+        item.last_baseline = baseline_offset_main + inner_last_baseline;
     }
 
     let location = if direction.is_row() {
