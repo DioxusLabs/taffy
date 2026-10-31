@@ -411,7 +411,14 @@ pub fn compute_block_layout(
     inputs: LayoutInput,
     block_ctx: Option<&mut BlockContext<'_>>,
 ) -> LayoutOutput {
-    let LayoutInput { known_dimensions, parent_size, run_mode, .. } = inputs;
+    let LayoutInput {
+        #[cfg(feature = "yoga_flexbox")]
+            yoga_available_size: _,
+        known_dimensions,
+        parent_size,
+        run_mode,
+        ..
+    } = inputs;
     let style = tree.get_block_container_style(node_id);
 
     // Pull these out earlier to avoid borrowing issues
@@ -485,7 +492,12 @@ pub fn compute_block_layout(
         Some(inherited_bfc) if !establishes_new_bfc => compute_inner(
             tree,
             node_id,
-            LayoutInput { known_dimensions: styled_based_known_dimensions, ..inputs },
+            LayoutInput {
+                #[cfg(feature = "yoga_flexbox")]
+                yoga_available_size: Size::NONE,
+                known_dimensions: styled_based_known_dimensions,
+                ..inputs
+            },
             inherited_bfc,
         ),
         _ => {
@@ -494,7 +506,12 @@ pub fn compute_block_layout(
             compute_inner(
                 tree,
                 node_id,
-                LayoutInput { known_dimensions: styled_based_known_dimensions, ..inputs },
+                LayoutInput {
+                    #[cfg(feature = "yoga_flexbox")]
+                    yoga_available_size: Size::NONE,
+                    known_dimensions: styled_based_known_dimensions,
+                    ..inputs
+                },
                 &mut root_ctx,
             )
         }
@@ -516,7 +533,14 @@ fn compute_inner(
     #[allow(unused_mut)] mut block_ctx: &mut BlockContext<'_>,
 ) -> LayoutOutput {
     let LayoutInput {
-        known_dimensions, parent_size, available_space, run_mode, vertical_margins_are_collapsible, ..
+        #[cfg(feature = "yoga_flexbox")]
+            yoga_available_size: _,
+        known_dimensions,
+        parent_size,
+        available_space,
+        run_mode,
+        vertical_margins_are_collapsible,
+        ..
     } = inputs;
 
     let style = tree.get_block_container_style(node_id);
@@ -850,6 +874,8 @@ fn compute_inner(
                 node: item.node_id,
                 order: item.order,
                 position: item.position,
+                #[cfg(feature = "yoga_flexbox")]
+                yoga_parent_is_row: false,
                 static_position: Point {
                     x: AxisStaticPosition::from_alignment(justify_self, inline_area, direction.is_rtl()),
                     y: AxisStaticPosition::from_alignment(align_self, block_area, false),
@@ -1490,6 +1516,8 @@ fn perform_final_layout_on_in_flow_children(
             //
 
             let inputs = LayoutInput {
+                #[cfg(feature = "yoga_flexbox")]
+                yoga_available_size: Size::NONE,
                 run_mode,
                 sizing_mode: SizingMode::InherentSize,
                 axis: RequestedAxis::Both,

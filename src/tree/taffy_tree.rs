@@ -32,7 +32,15 @@ use crate::{compute::compute_grid_layout, LayoutGridContainer};
 
 #[cfg(feature = "grid")]
 use crate::compute::grid::DetailedGridInfo;
+#[cfg(feature = "yoga_flexbox")]
+use crate::compute::yoga_flexbox::{
+    compute_yoga_flexbox_layout, compute_yoga_leaf_layout, YogaConfig, YogaDetailedInfo, YogaFlexboxNodeState,
+};
 use crate::tree::layout::DetailedLayoutInfo;
+#[cfg(feature = "yoga_flexbox")]
+use crate::tree::{LayoutYogaFlexboxContainer, YogaCacheParams};
+#[cfg(feature = "yoga_flexbox")]
+use crate::util::ResolveOrZero;
 
 /// The error Taffy generates on invalid operations
 pub type TaffyResult<T> = Result<T, TaffyError>;
@@ -80,11 +88,18 @@ impl std::error::Error for TaffyError {}
 pub(crate) struct TaffyConfig {
     /// Whether to round layout values
     pub(crate) use_rounding: bool,
+    /// Configuration for `Display::YogaFlexbox` nodes
+    #[cfg(feature = "yoga_flexbox")]
+    pub(crate) yoga_config: YogaConfig,
 }
 
 impl Default for TaffyConfig {
     fn default() -> Self {
-        Self { use_rounding: true }
+        Self {
+            use_rounding: true,
+            #[cfg(feature = "yoga_flexbox")]
+            yoga_config: YogaConfig::default(),
+        }
     }
 }
 
@@ -116,6 +131,9 @@ struct NodeData {
 
     /// The computation result from layout algorithm
     pub(crate) detailed_layout_info: DetailedLayoutInfo,
+    /// Layout state Yoga's flexbox algorithm carries between passes
+    #[cfg(feature = "yoga_flexbox")]
+    pub(crate) yoga_state: YogaFlexboxNodeState,
 }
 
 impl NodeData {
@@ -130,6 +148,8 @@ impl NodeData {
             has_context: false,
             hoisted_children: new_const_children_vec(),
             detailed_layout_info: DetailedLayoutInfo::None,
+            #[cfg(feature = "yoga_flexbox")]
+            yoga_state: YogaFlexboxNodeState::NONE,
         }
     }
 
@@ -139,6 +159,8 @@ impl NodeData {
     /// If the node was already marked as dirty, returns true
     #[inline]
     pub fn mark_dirty(&mut self) -> ClearState {
+        #[cfg(feature = "yoga_flexbox")]
+        self.yoga_state.mark_dirty();
         self.cache.clear()
     }
 }
@@ -214,7 +236,7 @@ impl<NodeContext> TraverseTree for TaffyTree<NodeContext> {}
 // CacheTree impl for TaffyTree
 impl<NodeContext> CacheTree for TaffyTree<NodeContext> {
     fn cache_get(&mut self, node_id: NodeId, input: &LayoutInput) -> Option<LayoutOutput> {
-        self.nodes[node_id.into()].cache.get(input)
+        self.cache_get_for_display(node_id, input)
     }
 
     fn cache_store(&mut self, node_id: NodeId, input: &LayoutInput, layout_output: LayoutOutput) {
@@ -251,6 +273,8 @@ impl<NodeContext> PrintTree for TaffyTree<NodeContext> {
             }
             #[cfg(feature = "grid")]
             (_, Display::Grid) => "GRID",
+            #[cfg(feature = "yoga_flexbox")]
+            (_, Display::YogaFlexbox) => "YOGA-FLEXBOX",
         }
     }
 
@@ -324,6 +348,24 @@ where
                 (Display::Flex, true) => compute_flexbox_layout(tree, node_id, inputs),
                 #[cfg(feature = "grid")]
                 (Display::Grid, true) => compute_grid_layout(tree, node_id, inputs),
+                #[cfg(feature = "yoga_flexbox")]
+                (Display::YogaFlexbox, true) => compute_yoga_flexbox_layout(tree, node_id, inputs),
+                #[cfg(feature = "yoga_flexbox")]
+                (Display::YogaFlexbox, false) => {
+                    let node_key = node_id.into();
+                    let config = tree.taffy.config.yoga_config;
+                    let style = &tree.taffy.nodes[node_key].style;
+                    let has_context = tree.taffy.nodes[node_key].has_context;
+                    let node_context = has_context.then(|| tree.taffy.node_context_data.get_mut(node_key)).flatten();
+                    let measure_function = &mut tree.measure_function;
+                    compute_yoga_leaf_layout(
+                        inputs,
+                        style,
+                        &config,
+                        |_, _| 0.0,
+                        |inputs| measure_function(inputs, node_id, node_context, style),
+                    )
+                }
                 (_, false) => {
                     let node_key = node_id.into();
                     let style = &tree.taffy.nodes[node_key].style;
@@ -452,7 +494,7 @@ where
     MeasureFunction: FnMut(LayoutInput, NodeId, Option<&mut NodeContext>, &Style) -> LayoutOutput,
 {
     fn cache_get(&mut self, node_id: NodeId, input: &LayoutInput) -> Option<LayoutOutput> {
-        self.taffy.nodes[node_id.into()].cache.get(input)
+        self.taffy.cache_get_for_display(node_id, input)
     }
 
     fn cache_store(&mut self, node_id: NodeId, input: &LayoutInput, layout_output: LayoutOutput) {
@@ -521,6 +563,67 @@ where
     #[inline(always)]
     fn get_flexbox_child_style(&self, child_node_id: NodeId) -> Self::FlexboxItemStyle<'_> {
         &self.taffy.nodes[child_node_id.into()].style
+    }
+}
+
+#[cfg(feature = "yoga_flexbox")]
+impl<NodeContext, MeasureFunction> LayoutYogaFlexboxContainer for TaffyView<'_, NodeContext, MeasureFunction>
+where
+    MeasureFunction: FnMut(LayoutInput, NodeId, Option<&mut NodeContext>, &Style) -> LayoutOutput,
+{
+    #[inline(always)]
+    fn yoga_config(&self) -> &YogaConfig {
+        &self.taffy.config.yoga_config
+    }
+
+    #[inline(always)]
+    fn yoga_node_state(&self, node_id: NodeId) -> YogaFlexboxNodeState {
+        self.taffy.nodes[node_id.into()].yoga_state
+    }
+
+    #[inline(always)]
+    fn set_yoga_node_state(&mut self, node_id: NodeId, state: YogaFlexboxNodeState) {
+        self.taffy.nodes[node_id.into()].yoga_state = state;
+    }
+
+    #[inline(always)]
+    fn has_measure_func(&self, node_id: NodeId) -> bool {
+        self.taffy.has_measure_func(node_id)
+    }
+
+    fn measure_yoga_leaf(&mut self, node_id: NodeId, inputs: LayoutInput) -> LayoutOutput {
+        let node_key = node_id.into();
+        let style = &self.taffy.nodes[node_key].style;
+        let node_context = self.taffy.node_context_data.get_mut(node_key);
+        (self.measure_function)(inputs, node_id, node_context, style)
+    }
+
+    /// `TaffyTree` has no separate baseline function: the measure function is called with the final
+    /// size as known dimensions and its `baselines.first` is the baseline.
+    fn yoga_baseline(&mut self, node_id: NodeId, size: Size<f32>) -> Option<f32> {
+        let node_key = node_id.into();
+        if !self.taffy.nodes[node_key].has_context {
+            return None;
+        }
+        let style = &self.taffy.nodes[node_key].style;
+        let node_context = self.taffy.node_context_data.get_mut(node_key);
+        let inputs = LayoutInput {
+            run_mode: RunMode::ComputeSize,
+            sizing_mode: crate::tree::SizingMode::ContentSize,
+            axis: crate::tree::RequestedAxis::Both,
+            known_dimensions: size.map(Some),
+            known_dimensions_are_definite: Size { width: true, height: true },
+            parent_size: size.map(Some),
+            available_space: size.map(AvailableSpace::Definite),
+            vertical_margins_are_collapsible: crate::geometry::Line::FALSE,
+            yoga_available_size: Size::NONE,
+        };
+        (self.measure_function)(inputs, node_id, node_context, style).baselines.first
+    }
+
+    #[inline(always)]
+    fn set_detailed_yoga_info(&mut self, node_id: NodeId, info: YogaDetailedInfo) {
+        self.taffy.nodes[node_id.into()].detailed_layout_info = DetailedLayoutInfo::YogaFlexbox(info);
     }
 }
 
@@ -618,6 +721,25 @@ impl<NodeContext> TaffyTree<NodeContext> {
     /// Disable rounding of layout values. Rounding is enabled by default.
     pub fn disable_rounding(&mut self) {
         self.config.use_rounding = false;
+    }
+
+    /// Set the configuration used by `Display::YogaFlexbox` nodes.
+    ///
+    /// Changing it marks the whole tree dirty when Yoga would (see `YogaConfig::update_invalidates_layout`).
+    #[cfg(feature = "yoga_flexbox")]
+    pub fn set_yoga_config(&mut self, config: YogaConfig) {
+        if self.config.yoga_config.update_invalidates_layout(&config) {
+            for node in self.nodes.values_mut() {
+                node.mark_dirty();
+            }
+        }
+        self.config.yoga_config = config;
+    }
+
+    /// The configuration used by `Display::YogaFlexbox` nodes
+    #[cfg(feature = "yoga_flexbox")]
+    pub fn yoga_config(&self) -> &YogaConfig {
+        &self.config.yoga_config
     }
 
     /// Creates and adds a new unattached leaf node to the tree, and returns the node of the new node
@@ -978,9 +1100,20 @@ impl<NodeContext> TaffyTree<NodeContext> {
         MeasureFunction: FnMut(LayoutInput, NodeId, Option<&mut NodeContext>, &Style) -> LayoutOutput,
     {
         let use_rounding = self.config.use_rounding;
+        // A Yoga root rounds like Yoga (point scale factor from the YogaConfig, 0 = no rounding)
+        #[cfg(feature = "yoga_flexbox")]
+        let yoga_scale = (self.nodes[node_id.into()].style.display == crate::style::Display::YogaFlexbox)
+            .then_some(self.config.yoga_config.point_scale_factor);
         let mut taffy_view = TaffyView { taffy: self, measure_function };
         compute_root_layout(&mut taffy_view, node_id, available_space);
         if use_rounding {
+            #[cfg(feature = "yoga_flexbox")]
+            if let Some(scale) = yoga_scale {
+                crate::compute::yoga_flexbox::round_yoga_layout(&mut taffy_view, node_id, scale, |view, id| {
+                    view.taffy.has_measure_func(id)
+                });
+                return Ok(());
+            }
             round_layout(&mut taffy_view, node_id);
         }
         Ok(())
@@ -1006,6 +1139,41 @@ impl<NodeContext> TaffyTree<NodeContext> {
             taffy: self,
             measure_function: |inputs, _, _, style| compute_leaf_layout(inputs, style, |_, _| 0.0, |_, _| Size::ZERO),
         }
+    }
+
+    /// Returns a view of the TaffyTree that implements the Yoga flexbox container trait
+    #[cfg(all(test, feature = "yoga_flexbox"))]
+    pub(crate) fn as_yoga_layout_tree(&mut self) -> impl LayoutYogaFlexboxContainer + '_ {
+        TaffyView {
+            taffy: self,
+            measure_function: |inputs, _, _, style| compute_leaf_layout(inputs, style, |_, _| 0.0, |_, _| Size::ZERO),
+        }
+    }
+}
+
+impl<NodeContext> TaffyTree<NodeContext> {
+    /// Cache lookup that applies Yoga's matching rules to `Display::YogaFlexbox` nodes
+    #[inline]
+    fn cache_get_for_display(&mut self, node_id: NodeId, input: &LayoutInput) -> Option<LayoutOutput> {
+        let key = node_id.into();
+        #[cfg(feature = "yoga_flexbox")]
+        if self.nodes[key].style.display == Display::YogaFlexbox {
+            let params = YogaCacheParams {
+                point_scale_factor: self.config.yoga_config.point_scale_factor,
+                has_measure_func: self.has_measure_func(node_id),
+                margin: self.nodes[key].style.margin.resolve_or_zero(input.parent_size.width, |_, _| 0.0).sum_axes(),
+            };
+            return self.nodes[key].cache.get_yoga(input, &params);
+        }
+        self.nodes[key].cache.get(input)
+    }
+
+    /// Whether the node is a leaf with a node context, i.e. is measured by the measure function
+    #[cfg(feature = "yoga_flexbox")]
+    #[inline]
+    fn has_measure_func(&self, node_id: NodeId) -> bool {
+        let key = node_id.into();
+        self.nodes[key].has_context && self.children[key].is_empty()
     }
 }
 

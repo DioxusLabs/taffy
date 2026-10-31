@@ -58,6 +58,8 @@ flexbox = []
 flexbox_balance = ["flexbox"]
 ## Enables the CSS Grid layout algorithm. See [`compute_grid_layout`](crate::compute_grid_layout).
 grid = ["dep:smallvec"]
+## Enables the Yoga-compatible flexbox layout algorithm, a port of [Yoga](https://github.com/facebook/yoga) (work in progress). See [`yoga_flexbox`](crate::yoga_flexbox).
+yoga_flexbox = ["flexbox"]
 ## Enables calc() values for all layout algorithms
 calc = []
 ## Causes all algorithms to compute and output a content size for each node
@@ -121,4 +123,4 @@ members = [
 ]
 # The Parley example and benches are excluded from the workspace as their dependencies require a newer
 # Rust version than Taffy's MSRV
-exclude = ["examples/parley", "benches"]
+exclude = ["examples/parley", "benches", "scripts/yoga_diff"]

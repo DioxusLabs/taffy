@@ -58,6 +58,15 @@ jobs:
         run: sudo apt-get update && sudo apt-get install libfontconfig-dev
       - run: cd examples/parley && cargo build
 
+  # Yoga parity: replay the layouts recorded from C++ Yoga in scripts/yoga_diff/fixtures/recorded
+  yoga-parity:
+    name: "Yoga parity fixtures"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+      - run: cd scripts/yoga_diff && cargo run --release -- check fixtures/recorded --tol 0.01
+
   # No features
   test-features-none:
     name: "Test Suite [no features]"

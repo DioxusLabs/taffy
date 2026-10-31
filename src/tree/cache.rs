@@ -7,6 +7,11 @@ use crate::style::AvailableSpace;
 use crate::tree::{CollapsibleMarginSet, LayoutInput, LayoutOutput, RunMode, SizingMode};
 use crate::RequestedAxis;
 
+#[cfg(feature = "yoga_flexbox")]
+mod yoga;
+#[cfg(feature = "yoga_flexbox")]
+pub use yoga::YogaCacheParams;
+
 /// The number of cache entries for each node in the tree
 const CACHE_SIZE: usize = 9;
 
@@ -92,6 +97,9 @@ struct CacheKey {
     /// Whether each known dimension is definite. Normalized such that an axis
     /// without a known dimension is always `true`.
     known_dimensions_are_definite: Size<bool>,
+    /// The bits of [`LayoutInput::yoga_available_size`] (`None` encoded as in `size_option_cache_key`)
+    #[cfg(feature = "yoga_flexbox")]
+    yoga_available_size: u64,
 }
 
 impl CacheKey {
@@ -133,6 +141,8 @@ impl From<&LayoutInput> for CacheKey {
 
         Self {
             kd_available_space: size_mixed_cache_key(input.known_dimensions, input.available_space),
+            #[cfg(feature = "yoga_flexbox")]
+            yoga_available_size: size_option_cache_key(input.yoga_available_size),
             parent_size: (size_option_cache_key(input.parent_size) & NON_SIGN_BITS_MASK) | extra_bits,
             known_dimensions_are_definite: input
                 .known_dimensions_are_definite
@@ -374,6 +384,8 @@ mod tests {
 
     fn input(width: f32) -> LayoutInput {
         LayoutInput {
+            #[cfg(feature = "yoga_flexbox")]
+            yoga_available_size: Size::NONE,
             run_mode: RunMode::ComputeSize,
             sizing_mode: SizingMode::InherentSize,
             axis: RequestedAxis::Both,
@@ -445,6 +457,8 @@ mod tests {
 
     fn perform_layout_input(width: f32, height: f32) -> LayoutInput {
         LayoutInput {
+            #[cfg(feature = "yoga_flexbox")]
+            yoga_available_size: Size::NONE,
             run_mode: RunMode::PerformLayout,
             known_dimensions: Size { width: Some(width), height: Some(height) },
             parent_size: Size { width: Some(width), height: Some(height) },
@@ -455,10 +469,30 @@ mod tests {
     /// Inputs that differ from `input`/`perform_layout_input` only in their mode
     fn other_modes(input: LayoutInput) -> [LayoutInput; 4] {
         [
-            LayoutInput { sizing_mode: SizingMode::ContentSize, ..input },
-            LayoutInput { vertical_margins_are_collapsible: Line::TRUE, ..input },
-            LayoutInput { vertical_margins_are_collapsible: Line { start: true, end: false }, ..input },
-            LayoutInput { vertical_margins_are_collapsible: Line { start: false, end: true }, ..input },
+            LayoutInput {
+                #[cfg(feature = "yoga_flexbox")]
+                yoga_available_size: Size::NONE,
+                sizing_mode: SizingMode::ContentSize,
+                ..input
+            },
+            LayoutInput {
+                #[cfg(feature = "yoga_flexbox")]
+                yoga_available_size: Size::NONE,
+                vertical_margins_are_collapsible: Line::TRUE,
+                ..input
+            },
+            LayoutInput {
+                #[cfg(feature = "yoga_flexbox")]
+                yoga_available_size: Size::NONE,
+                vertical_margins_are_collapsible: Line { start: true, end: false },
+                ..input
+            },
+            LayoutInput {
+                #[cfg(feature = "yoga_flexbox")]
+                yoga_available_size: Size::NONE,
+                vertical_margins_are_collapsible: Line { start: false, end: true },
+                ..input
+            },
         ]
     }
 
@@ -467,6 +501,8 @@ mod tests {
         let mut modes = [CacheMode::INITIAL; 8];
         for (index, mode) in modes.iter_mut().enumerate() {
             *mode = CacheMode::from(&LayoutInput {
+                #[cfg(feature = "yoga_flexbox")]
+                yoga_available_size: Size::NONE,
                 sizing_mode: if index & 1 == 0 { SizingMode::ContentSize } else { SizingMode::InherentSize },
                 vertical_margins_are_collapsible: Line { start: index & 2 != 0, end: index & 4 != 0 },
                 ..input(1.0)
@@ -537,12 +573,25 @@ mod tests {
     #[test]
     #[cfg(all(debug_assertions, feature = "std"))]
     fn mode_change_evictions_are_counted_for_non_empty_caches_only() {
-        let content_size = LayoutInput { sizing_mode: SizingMode::ContentSize, ..input(1.0) };
+        let content_size = LayoutInput {
+            #[cfg(feature = "yoga_flexbox")]
+            yoga_available_size: Size::NONE,
+            sizing_mode: SizingMode::ContentSize,
+            ..input(1.0)
+        };
         let evictions = cache_mode_change_evictions();
 
         let mut cache = Cache::new();
         cache.store(&content_size, output(1.0));
-        cache.store(&LayoutInput { sizing_mode: SizingMode::ContentSize, ..input(2.0) }, output(2.0));
+        cache.store(
+            &LayoutInput {
+                #[cfg(feature = "yoga_flexbox")]
+                yoga_available_size: Size::NONE,
+                sizing_mode: SizingMode::ContentSize,
+                ..input(2.0)
+            },
+            output(2.0),
+        );
         assert_eq!(cache_mode_change_evictions(), evictions);
 
         cache.store(&input(1.0), output(1.0));
