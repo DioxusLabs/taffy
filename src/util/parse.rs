@@ -16,7 +16,7 @@ pub struct ParseError(String);
 
 impl core::fmt::Display for ParseError {
     fn fmt(&self, fmt: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        write!(fmt, "{}", &self.0)
+        write!(fmt, "{}", self.0)
     }
 }
 impl<'i> From<CssParseError<'i>> for ParseError {

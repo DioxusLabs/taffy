@@ -13,6 +13,9 @@ mod float;
 #[cfg(feature = "grid")]
 mod grid;
 
+#[cfg(feature = "parse")]
+mod declarations;
+
 pub use self::alignment::{
     AlignContent, AlignContentKeyword, AlignItems, AlignItemsKeyword, AlignSelf, AlignmentSafety, JustifyContent,
     JustifyItems, JustifySelf,
@@ -1734,6 +1737,266 @@ mod tests {
         assert!("layout none".parse::<Contain>().is_err());
         assert!("content layout".parse::<Contain>().is_err());
         assert!("layout content".parse::<Contain>().is_err());
+    }
+
+    #[test]
+    #[cfg(feature = "parse")]
+    fn parse_style_declarations() {
+        use super::{Dimension, Display, LengthPercentageAuto};
+
+        let style: Style<DefaultCheapStr> = "display: flex; width: 100px; margin: 5px 10px".parse().unwrap();
+        assert_eq!(style.display, Display::Flex);
+        assert_eq!(style.size.width, Dimension::length(100.0));
+        assert_eq!(style.size.height, Dimension::auto());
+        assert_eq!(style.margin.top, LengthPercentageAuto::length(5.0));
+        assert_eq!(style.margin.right, LengthPercentageAuto::length(10.0));
+        assert_eq!(style.margin.bottom, LengthPercentageAuto::length(5.0));
+        assert_eq!(style.margin.left, LengthPercentageAuto::length(10.0));
+
+        assert_eq!("".parse::<Style<DefaultCheapStr>>().unwrap(), Style::DEFAULT);
+        assert_eq!("  ;  ".parse::<Style<DefaultCheapStr>>().unwrap(), Style::DEFAULT);
+    }
+
+    #[test]
+    #[cfg(feature = "parse")]
+    fn parse_style_declarations_box_shorthands() {
+        use super::{LengthPercentage, LengthPercentageAuto};
+
+        fn parse(input: &str) -> Style<DefaultCheapStr> {
+            input.parse().unwrap()
+        }
+        let (a, b, c, d) = (
+            LengthPercentageAuto::length(1.0),
+            LengthPercentageAuto::length(2.0),
+            LengthPercentageAuto::length(3.0),
+            LengthPercentageAuto::length(4.0),
+        );
+        assert_eq!(parse("margin: 1px").margin, Rect { top: a, right: a, bottom: a, left: a });
+        assert_eq!(parse("margin: 1px 2px").margin, Rect { top: a, right: b, bottom: a, left: b });
+        assert_eq!(parse("margin: 1px 2px 3px").margin, Rect { top: a, right: b, bottom: c, left: b });
+        assert_eq!(parse("margin: 1px 2px 3px 4px").margin, Rect { top: a, right: b, bottom: c, left: d });
+        assert_eq!(parse("margin: auto").margin.top, LengthPercentageAuto::auto());
+        assert_eq!(parse("margin: 0").margin.top, LengthPercentageAuto::length(0.0));
+        assert_eq!(parse("margin: 50%").margin.left, LengthPercentageAuto::percent(0.5));
+
+        let p = |v| LengthPercentage::length(v);
+        assert_eq!(
+            parse("padding: 1px 2px").padding,
+            Rect { top: p(1.0), right: p(2.0), bottom: p(1.0), left: p(2.0) }
+        );
+        assert_eq!(
+            parse("border-width: 1px 2px 3px").border,
+            Rect { top: p(1.0), right: p(2.0), bottom: p(3.0), left: p(2.0) }
+        );
+        assert_eq!(parse("inset: 1px 2px 3px").inset, Rect { top: a, right: b, bottom: c, left: b });
+        assert_eq!(
+            parse("inset: 0").inset,
+            Rect {
+                top: LengthPercentageAuto::length(0.0),
+                right: LengthPercentageAuto::length(0.0),
+                bottom: LengthPercentageAuto::length(0.0),
+                left: LengthPercentageAuto::length(0.0)
+            }
+        );
+        assert_eq!(parse("left: 4px; inset: 1px").inset.left, a);
+    }
+
+    #[test]
+    #[cfg(feature = "parse")]
+    fn parse_style_declarations_order_and_syntax() {
+        use super::{Dimension, LengthPercentageAuto, Overflow};
+
+        fn parse(input: &str) -> Style<DefaultCheapStr> {
+            input.parse().unwrap()
+        }
+
+        assert_eq!(parse("margin: 1px; margin-left: 4px").margin.left, LengthPercentageAuto::length(4.0));
+        assert_eq!(parse("margin-left: 4px; margin: 1px").margin.left, LengthPercentageAuto::length(1.0));
+        assert_eq!(parse("width: 1px; width: 2px").size.width, Dimension::length(2.0));
+        assert_eq!(parse("width: 10px !important").size.width, Dimension::length(10.0));
+        assert_eq!(parse("/* a */ WIDTH: /* b */ 10px; /* c */ Height: 5px").size.height, Dimension::length(5.0));
+        assert_eq!(parse("overflow: hidden scroll").overflow, Point { x: Overflow::Hidden, y: Overflow::Scroll });
+        assert_eq!(parse("overflow: clip").overflow, Point { x: Overflow::Clip, y: Overflow::Clip });
+        assert_eq!(parse("overflow: hidden; overflow-y: scroll").overflow.y, Overflow::Scroll);
+        assert_eq!(parse("aspect-ratio: auto").aspect_ratio, None);
+        assert_eq!(parse("aspect-ratio: 0.5").aspect_ratio, Some(0.5));
+        assert_eq!(parse("aspect-ratio: 16 / 9").aspect_ratio, Some(16.0 / 9.0));
+        assert_eq!(parse("min-width: auto; max-height: 50%").min_size.width, LengthPercentageAuto::auto());
+        assert_eq!(parse("max-height: 50%").max_size.height, LengthPercentageAuto::percent(0.5));
+    }
+
+    #[test]
+    #[cfg(feature = "parse")]
+    fn parse_style_declarations_border_shorthands() {
+        use super::LengthPercentage;
+
+        fn parse(input: &str) -> Style<DefaultCheapStr> {
+            input.parse().unwrap()
+        }
+        let px = |v| LengthPercentage::length(v);
+        let zero = LengthPercentage::length(0.0);
+
+        assert_eq!(
+            parse("border: 2px solid black").border,
+            Rect { top: px(2.0), right: px(2.0), bottom: px(2.0), left: px(2.0) }
+        );
+        assert_eq!(parse("border: 2px dotted #fff").border.top, px(2.0));
+        assert_eq!(parse("border: thin").border.top, px(1.0));
+        assert_eq!(parse("border: medium").border.top, px(3.0));
+        assert_eq!(parse("border: thick rgb(0, 0, 0)").border.top, px(5.0));
+        assert_eq!(parse("border: none").border, Rect { top: zero, right: zero, bottom: zero, left: zero });
+        assert_eq!(parse("border: solid").border.top, zero);
+        assert_eq!(
+            parse("border-top: 3px solid red").border,
+            Rect { top: px(3.0), right: zero, bottom: zero, left: zero }
+        );
+        assert_eq!(parse("border-left: 3px; border-left-width: 4px").border.left, px(4.0));
+        assert_eq!(parse("border-left-width: 4px; border-left: 3px").border.left, px(3.0));
+        assert_eq!(parse("border-bottom: 1px; border-top-width: 2px").border.bottom, px(1.0));
+        assert_eq!(parse("border-right-width: 1px").border.right, px(1.0));
+        assert_eq!(parse("border-bottom-width: 1px").border.bottom, px(1.0));
+        assert_eq!(parse("border-top-width: 1px").border.top, px(1.0));
+
+        assert!("border: 2px 3px".parse::<Style<DefaultCheapStr>>().is_err());
+        assert!("border: 2px solid black red".parse::<Style<DefaultCheapStr>>().is_err());
+        assert!("border: 2px auto".parse::<Style<DefaultCheapStr>>().is_err());
+        assert!("border-width: -1px".parse::<Style<DefaultCheapStr>>().is_err());
+    }
+
+    #[test]
+    #[cfg(feature = "parse")]
+    fn parse_style_declarations_alignment_and_gap() {
+        use super::{AlignItems, LengthPercentage};
+
+        fn parse(input: &str) -> Style<DefaultCheapStr> {
+            input.parse().unwrap()
+        }
+
+        assert_eq!(parse("align-self: auto").align_self, None);
+        assert_eq!(parse("justify-self: auto").justify_self, None);
+        assert_eq!(parse("align-self: center").align_self, Some(AlignItems::CENTER));
+        assert_eq!(parse("justify-self: start").justify_self, Some(AlignItems::START));
+        assert_eq!(
+            parse("gap: 10px 20px").gap,
+            Size { width: LengthPercentage::length(20.0), height: LengthPercentage::length(10.0) }
+        );
+        assert_eq!(
+            parse("gap: 5px").gap,
+            Size { width: LengthPercentage::length(5.0), height: LengthPercentage::length(5.0) }
+        );
+        assert_eq!(parse("row-gap: 3px").gap.height, LengthPercentage::length(3.0));
+        assert_eq!(parse("column-gap: 3px").gap.width, LengthPercentage::length(3.0));
+        assert_eq!(parse("row-gap: 3px; gap: 1px 2px").gap.height, LengthPercentage::length(1.0));
+        assert_eq!(parse("row-gap: 3px; gap: 1px 2px").gap.width, LengthPercentage::length(2.0));
+    }
+
+    #[test]
+    #[cfg(all(feature = "parse", feature = "flexbox"))]
+    fn parse_style_declarations_flex() {
+        use super::{Dimension, FlexDirection, FlexWrap};
+
+        fn parse(input: &str) -> Style<DefaultCheapStr> {
+            input.parse().unwrap()
+        }
+        fn flex(input: &str) -> (f32, f32, Dimension) {
+            let style = parse(input);
+            (style.flex_grow, style.flex_shrink, style.flex_basis)
+        }
+
+        assert_eq!(flex("flex: none"), (0.0, 0.0, Dimension::auto()));
+        assert_eq!(flex("flex: initial"), (0.0, 1.0, Dimension::auto()));
+        assert_eq!(flex("flex: auto"), (1.0, 1.0, Dimension::auto()));
+        assert_eq!(flex("flex: 2"), (2.0, 1.0, Dimension::percent(0.0)));
+        assert_eq!(flex("flex: 1 1 0"), (1.0, 1.0, Dimension::length(0.0)));
+        assert_eq!(flex("flex: 2 3 30px"), (2.0, 3.0, Dimension::length(30.0)));
+        assert_eq!(flex("flex: 1 30px"), (1.0, 1.0, Dimension::length(30.0)));
+        assert_eq!(flex("flex: 30px 2"), (2.0, 1.0, Dimension::length(30.0)));
+        assert_eq!(flex("flex: 2 0"), (2.0, 0.0, Dimension::percent(0.0)));
+        assert_eq!(flex("flex: 1 1 auto; flex-grow: 3"), (3.0, 1.0, Dimension::auto()));
+        assert_eq!(flex("flex-basis: 0; flex-shrink: 0"), (0.0, 0.0, Dimension::length(0.0)));
+        assert_eq!(flex("flex-basis: auto"), (0.0, 1.0, Dimension::auto()));
+
+        assert!("flex: 1 2 3 4".parse::<Style<DefaultCheapStr>>().is_err());
+        assert!("flex: -1".parse::<Style<DefaultCheapStr>>().is_err());
+        assert!("flex: 1 auto 1".parse::<Style<DefaultCheapStr>>().is_err());
+        assert!("flex: 1px 2px 3px".parse::<Style<DefaultCheapStr>>().is_err());
+        assert!("flex-grow: -1".parse::<Style<DefaultCheapStr>>().is_err());
+        assert!("flex: 1 1 1px 1px".parse::<Style<DefaultCheapStr>>().is_err());
+
+        let style = parse("flex-flow: column wrap");
+        assert_eq!((style.flex_direction, style.flex_wrap), (FlexDirection::Column, FlexWrap::Wrap));
+        let style = parse("flex-flow: wrap column");
+        assert_eq!((style.flex_direction, style.flex_wrap), (FlexDirection::Column, FlexWrap::Wrap));
+        let style = parse("flex-flow: wrap-reverse");
+        assert_eq!((style.flex_direction, style.flex_wrap), (FlexDirection::Row, FlexWrap::WrapReverse));
+        let style = parse("flex-wrap: wrap; flex-flow: column");
+        assert_eq!((style.flex_direction, style.flex_wrap), (FlexDirection::Column, FlexWrap::NoWrap));
+        assert!("flex-flow: column row".parse::<Style<DefaultCheapStr>>().is_err());
+        assert!("flex-flow: wrap wrap".parse::<Style<DefaultCheapStr>>().is_err());
+    }
+
+    #[test]
+    #[cfg(all(feature = "parse", feature = "grid"))]
+    fn parse_style_declarations_grid() {
+        use crate::style::GridPlacement;
+        use crate::style_helpers::{line, span};
+
+        fn parse(input: &str) -> Style<DefaultCheapStr> {
+            input.parse().unwrap()
+        }
+        type P = GridPlacement<DefaultCheapStr>;
+
+        assert_eq!(parse("grid-row: 1 / 3").grid_row, Line { start: line::<P>(1), end: line::<P>(3) });
+        assert_eq!(parse("grid-row: 1").grid_row, Line { start: line::<P>(1), end: P::Auto });
+        assert_eq!(parse("grid-row: span 2").grid_row, Line { start: span::<P>(2), end: P::Auto });
+        assert_eq!(parse("grid-column: 1 / span 3").grid_column, Line { start: line::<P>(1), end: span::<P>(3) });
+        assert_eq!(parse("grid-row-end: 4").grid_row.end, line::<P>(4));
+        assert_eq!(parse("grid-column-start: 2").grid_column.start, line::<P>(2));
+        assert_eq!(parse("grid-area: 1 / 2 / 3 / 4").grid_row, Line { start: line::<P>(1), end: line::<P>(3) });
+        assert_eq!(parse("grid-area: 1 / 2 / 3 / 4").grid_column, Line { start: line::<P>(2), end: line::<P>(4) });
+        assert_eq!(parse("grid-area: 1 / 2 / 3").grid_column, Line { start: line::<P>(2), end: P::Auto });
+        assert_eq!(parse("grid-area: 1 / 2").grid_row, Line { start: line::<P>(1), end: P::Auto });
+        assert_eq!(parse("grid-area: 2").grid_column, Line { start: P::Auto, end: P::Auto });
+        assert_eq!(parse("grid-area: header").grid_row.end, P::NamedLine("header".into(), 0));
+        assert_eq!(parse("grid-area: header").grid_column.end, P::NamedLine("header".into(), 0));
+
+        let style = parse("grid-template-columns: 10px 20px; grid-template-rows: 30px");
+        assert_eq!(style.grid_template_columns.len(), 2);
+        assert_eq!(style.grid_template_rows.len(), 1);
+
+        let style = parse("grid: 10px / 20px 30px");
+        assert_eq!(style.grid_template_rows.len(), 1);
+        assert_eq!(style.grid_template_columns.len(), 2);
+        assert_eq!(style.grid_template_row_names.len(), 2);
+        assert_eq!(style.grid_template_column_names.len(), 3);
+        assert_eq!(style.grid_auto_rows.len(), 0);
+
+        assert!("grid-row: 1 / 2 / 3".parse::<Style<DefaultCheapStr>>().is_err());
+        assert!("grid-area: 1 / 2 / 3 / 4 / 5".parse::<Style<DefaultCheapStr>>().is_err());
+        assert!("grid-template: 10px".parse::<Style<DefaultCheapStr>>().is_err());
+        assert!("grid-template-columns: none".parse::<Style<DefaultCheapStr>>().is_err());
+    }
+
+    #[test]
+    #[cfg(feature = "parse")]
+    fn parse_style_declarations_errors() {
+        fn error(input: &str) -> String {
+            match input.parse::<Style<DefaultCheapStr>>() {
+                Ok(_) => panic!("expected `{input}` to fail"),
+                Err(err) => err.to_string(),
+            }
+        }
+
+        assert!(error("foo: bar").contains("unknown property `foo`"));
+        assert!(error("width: 1px; scrollbar-width: 1px").contains("unknown property `scrollbar-width`"));
+        assert!(error("margin-inline-start: 1px").contains("unknown property `margin-inline-start`"));
+        assert!(error("width: banana").contains("invalid value for `width`"));
+        assert!(error("width: 10px 20px").contains("invalid value for `width`"));
+        assert!(error("margin: 1px 2px 3px 4px 5px").contains("invalid value for `margin`"));
+        assert!("display: flex !foo".parse::<Style<DefaultCheapStr>>().is_err());
+        assert!(error("aspect-ratio: 0").contains("invalid value for `aspect-ratio`"));
+        assert!(error("width:").contains("invalid value for `width`"));
+        assert!(error("width: 1px; 'height'").contains("unexpected"));
     }
 
     // NOTE: Please feel free the update the sizes in this test as required. This test is here to prevent unintentional size changes

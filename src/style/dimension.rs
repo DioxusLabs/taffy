@@ -31,6 +31,7 @@ impl FromCss for LengthPercentage {
         match parser.next()?.clone() {
             Token::Percentage { unit_value, .. } => Ok(Self::percent(unit_value)),
             Token::Dimension { unit, value, .. } if unit == "px" => Ok(Self::length(value)),
+            Token::Number { value: 0.0, .. } => Ok(Self::length(0.0)),
             token => Err(parser.new_unexpected_token_error(token))?,
         }
     }
@@ -176,6 +177,7 @@ impl FromCss for LengthPercentageAuto {
         match parser.next()?.clone() {
             Token::Percentage { unit_value, .. } => Ok(Self::percent(unit_value)),
             Token::Dimension { unit, value, .. } if unit == "px" => Ok(Self::length(value)),
+            Token::Number { value: 0.0, .. } => Ok(Self::length(0.0)),
             Token::Ident(ident) if ident == "auto" => Ok(Self::auto()),
             token => Err(parser.new_unexpected_token_error(token))?,
         }
@@ -361,6 +363,7 @@ impl FromCss for Dimension {
         match token {
             Token::Percentage { unit_value, .. } => Ok(Self::percent(unit_value)),
             Token::Dimension { unit, value, .. } if unit == "px" => Ok(Self::length(value)),
+            Token::Number { value: 0.0, .. } => Ok(Self::length(0.0)),
             Token::Ident(ref ident) => match ident.as_ref() {
                 "auto" => Ok(Self::auto()),
                 "min-content" => Ok(Self::min_content()),

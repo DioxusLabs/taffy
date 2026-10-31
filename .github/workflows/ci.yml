@@ -285,6 +285,14 @@ jobs:
             exit 1
           fi
 
+  lint-fixtures:
+    name: Lint Test Fixture Styles
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Lint fixture styles
+        run: cargo run -p lint-fixtures
+
   gentest:
     name: Generated Test Freshness
     runs-on: ubuntu-latest
