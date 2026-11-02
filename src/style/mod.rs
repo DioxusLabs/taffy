@@ -1847,6 +1847,16 @@ mod tests {
         assert_eq!(parse("border: none").border, Rect { top: zero, right: zero, bottom: zero, left: zero });
         assert_eq!(parse("border: solid").border.top, zero);
         assert_eq!(
+            parse("border-top-width: 2px; border: 0").border,
+            Rect { top: zero, right: zero, bottom: zero, left: zero }
+        );
+        assert_eq!(parse("border: 0 solid red").border.top, zero);
+        assert_eq!(parse("border-width: 1px; border-width: 0").border.top, zero);
+        assert_eq!(
+            parse("border-width: 0 2px").border,
+            Rect { top: zero, right: px(2.0), bottom: zero, left: px(2.0) }
+        );
+        assert_eq!(
             parse("border-top: 3px solid red").border,
             Rect { top: px(3.0), right: zero, bottom: zero, left: zero }
         );

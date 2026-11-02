@@ -304,6 +304,7 @@ fn parse_line_width<'i>(input: &mut Parser<'i, '_>) -> CssParseResult<'i, Length
     let width = match input.next()?.clone() {
         Token::Percentage { unit_value, .. } if unit_value >= 0.0 => return Ok(LengthPercentage::percent(unit_value)),
         Token::Dimension { unit, value, .. } if unit.eq_ignore_ascii_case("px") && value >= 0.0 => value,
+        Token::Number { value: 0.0, .. } => 0.0,
         Token::Ident(ident) if ident.eq_ignore_ascii_case("thin") => 1.0,
         Token::Ident(ident) if ident.eq_ignore_ascii_case("medium") => 3.0,
         Token::Ident(ident) if ident.eq_ignore_ascii_case("thick") => 5.0,
