@@ -1683,4 +1683,33 @@ mod tests {
         assert_eq!(last, Baselines::new(None, Some(36.0)));
         assert_eq!(layout, Baselines::new(Some(30.0), Some(36.0)));
     }
+
+    #[test]
+    fn grid_last_baseline_comes_from_baseline_aligned_items_in_the_last_row() {
+        // Row 1: two plain items. Row 2: two baseline-aligned items whose first baselines differ (30 and
+        // 15), so the second is shifted down by 15. The container's last baseline is the row's shared
+        // alignment baseline (40 + 30), not the last baseline of the last item in grid order (55 + 18).
+        let mut tree: TaffyTree<Size<f32>> = TaffyTree::new();
+        let baseline = Style { align_self: Some(AlignItems::BASELINE), ..Default::default() };
+        let row1 = tree.new_leaf_with_context(Style::default(), Size { width: 50.0, height: 40.0 }).unwrap();
+        let row1b = tree.new_leaf_with_context(Style::default(), Size { width: 50.0, height: 40.0 }).unwrap();
+        let a = tree.new_leaf_with_context(baseline.clone(), Size { width: 50.0, height: 40.0 }).unwrap();
+        let b = tree.new_leaf_with_context(baseline, Size { width: 50.0, height: 20.0 }).unwrap();
+        let grid = tree
+            .new_with_children(
+                Style {
+                    display: Display::Grid,
+                    grid_template_columns: vec![fr(1.0), fr(1.0)],
+                    grid_template_rows: vec![auto(), auto()],
+                    ..Default::default()
+                },
+                &[row1, row1b, a, b],
+            )
+            .unwrap();
+
+        let last = compute_baselines(&mut tree, grid, RunMode::ComputeSize, RequestedBaselines::LAST);
+        let layout = compute_baselines(&mut tree, grid, RunMode::PerformLayout, RequestedBaselines::BOTH);
+        assert_eq!(last, Baselines::new(None, Some(70.0)));
+        assert_eq!(layout, Baselines::new(Some(30.0), Some(70.0)));
+    }
 }

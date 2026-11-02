@@ -175,6 +175,12 @@ impl GridItem {
         self.size.height.0.uses_percentage() && (self.crosses_intrinsic_row || self.crosses_flexible_row)
     }
 
+    /// Whether the item spans a single row. Track-vec indexes interleave gutters and tracks, so a
+    /// single-row span covers two indexes.
+    pub fn spans_single_row(&self) -> bool {
+        self.row_indexes.end == self.row_indexes.start + 2
+    }
+
     /// Returns true if the item participates in baseline alignment: it has `align-self: baseline`
     /// and neither of its block-axis margins are `auto`.
     /// See <https://www.w3.org/TR/css-align-3/#baseline-align-self>
