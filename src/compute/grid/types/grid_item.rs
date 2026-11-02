@@ -66,6 +66,8 @@ pub(in super::super) struct GridItem {
     /// The item's first baseline (horizontal), measured from the top of its border box. Set from the item's
     /// intrinsic layout when resolving baseline alignment during track sizing, then from its final layout.
     pub baseline: Option<f32>,
+    /// The item's last baseline (horizontal), measured from the top of its border box. Set from its final layout.
+    pub last_baseline: Option<f32>,
     /// Shim for baseline alignment that acts like an extra top margin
     /// TODO: Support last baseline and vertical text baselines
     pub baseline_shim: f32,
@@ -139,6 +141,7 @@ impl GridItem {
             align_self: style.align_self().unwrap_or(parent_align_items),
             justify_self: style.justify_self().unwrap_or(parent_justify_items),
             baseline: None,
+            last_baseline: None,
             baseline_shim: 0.0,
             row_indexes: Line { start: 0, end: 0 }, // Properly initialised later
             column_indexes: Line { start: 0, end: 0 }, // Properly initialised later
@@ -170,6 +173,12 @@ impl GridItem {
     #[inline(always)]
     pub fn has_cyclic_block_size_dependency(&self) -> bool {
         self.size.height.0.uses_percentage() && (self.crosses_intrinsic_row || self.crosses_flexible_row)
+    }
+
+    /// Whether the item spans a single row. Track-vec indexes interleave gutters and tracks, so a
+    /// single-row span covers two indexes.
+    pub fn spans_single_row(&self) -> bool {
+        self.row_indexes.end == self.row_indexes.start + 2
     }
 
     /// Returns true if the item participates in baseline alignment: it has `align-self: baseline`
