@@ -768,7 +768,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
         let in_last_row = requested_baselines.last() && item.row_indexes.end == last_row;
         let item_requested_baselines = RequestedBaselines::new(
             (requested_baselines.first() && item.row_indexes.start == first_row)
-                || (in_last_row && item.row_indexes.start + 1 == last_row && item.participates_in_baseline_alignment()),
+                || (in_last_row && item.spans_single_row() && item.participates_in_baseline_alignment()),
             in_last_row,
         );
         let grid_area = item_grid_area(item, &rows, &columns, direction);
@@ -1097,7 +1097,8 @@ fn determine_container_baselines(
         };
         let in_row =
             |item: &GridItem| if is_last { item.row_indexes.end == row } else { item.row_indexes.start == row };
-        let starts_in_row = |item: &GridItem| item.row_indexes.start == if is_last { row - 1 } else { row };
+        let starts_in_row =
+            |item: &GridItem| if is_last { item.spans_single_row() } else { item.row_indexes.start == row };
 
         // 1. The shared alignment baseline of the items in the row participating in baseline alignment
         //    (which is their first baseline, as `last baseline` alignment is not supported). Such items
