@@ -1,5 +1,5 @@
 //! Computes the CSS block layout algorithm in the case that the block container being laid out contains only block-level boxes
-use crate::geometry::{Line, Point, Rect, Size};
+use crate::geometry::{FloatInsets, Line, Point, Rect, Size};
 use crate::style::{
     AlignContent, AlignContentKeyword, AlignItems, AlignItemsKeyword, AlignSelf, AlignmentSafety, AvailableSpace,
     CoreStyle, LengthPercentageAuto, Overflow, Position,
@@ -64,8 +64,8 @@ impl BlockFormattingContext {
         BlockContext {
             bfc: self,
             y_offset: 0.0,
-            insets: [0.0, 0.0],
-            content_box_insets: [0.0, 0.0],
+            insets: FloatInsets::ZERO,
+            content_box_insets: FloatInsets::ZERO,
             float_content_contribution: f32::NEG_INFINITY,
             is_root: true,
             #[cfg(feature = "float_layout")]
@@ -97,9 +97,9 @@ pub struct BlockContext<'bfc> {
     /// root node of the Block Formatting Context it belongs to.
     y_offset: f32,
     /// The x-inset of the border-box in from each side of the block node, relative to the root node of the Block Formatting Context it belongs to.
-    insets: [f32; 2],
+    insets: FloatInsets,
     /// The x-insets of the content box
-    content_box_insets: [f32; 2],
+    content_box_insets: FloatInsets,
     /// The height that floats take up in the element (`f32::NEG_INFINITY` if the element's
     /// subtree does not contain any floats)
     float_content_contribution: f32,
@@ -120,8 +120,8 @@ pub struct BlockContext<'bfc> {
 
 impl BlockContext<'_> {
     /// Create a sub-`BlockContext` for a child block node
-    pub fn sub_context(&mut self, additional_y_offset: f32, insets: [f32; 2]) -> BlockContext<'_> {
-        let insets = [self.insets[0] + insets[0], self.insets[1] + insets[1]];
+    pub fn sub_context(&mut self, additional_y_offset: f32, insets: FloatInsets) -> BlockContext<'_> {
+        let insets = self.insets + insets;
         BlockContext {
             bfc: self.bfc,
             y_offset: self.y_offset + additional_y_offset,
@@ -157,9 +157,8 @@ impl BlockContext<'_> {
 
     /// Set the x-axis content-box insets of the `BlockContext`. These are the difference between the border-box
     /// and the content-box of the box (padding + border + scrollbar_gutter).
-    pub fn apply_content_box_inset(&mut self, content_box_x_insets: [f32; 2]) {
-        self.content_box_insets[0] = self.insets[0] + content_box_x_insets[0];
-        self.content_box_insets[1] = self.insets[1] + content_box_x_insets[1];
+    pub fn apply_content_box_inset(&mut self, content_box_x_insets: FloatInsets) {
+        self.content_box_insets = self.insets + content_box_x_insets;
     }
 
     /// Whether the float context contains any floats
@@ -196,7 +195,7 @@ impl BlockContext<'_> {
             clear,
         );
         pos.y -= self.y_offset;
-        pos.x -= self.insets[0];
+        pos.x -= self.insets.left;
 
         self.float_content_contribution = self.float_content_contribution.max(pos.y + floated_box.height);
 
@@ -218,7 +217,7 @@ impl BlockContext<'_> {
         let right = float_context.right_floats()[mark.right..].iter().map(|placed| (placed, FloatDirection::Right));
         left.chain(right).map(move |(placed, direction)| {
             let pos = float_context.placed_position(placed, direction);
-            (placed.id, Point { x: pos.x - self.insets[0], y: pos.y - self.y_offset })
+            (placed.id, Point { x: pos.x - self.insets.left, y: pos.y - self.y_offset })
         })
     }
 
@@ -232,7 +231,7 @@ impl BlockContext<'_> {
             after,
         );
         slot.y -= self.y_offset;
-        slot.x -= self.insets[0];
+        slot.x -= self.insets.left;
         slot
     }
 
@@ -242,7 +241,7 @@ impl BlockContext<'_> {
         &self,
         min_y: f32,
         min_height: f32,
-        margins: [f32; 2],
+        margins: FloatInsets,
         direction: Direction,
         clear: Clear,
         after: Option<usize>,
@@ -257,7 +256,7 @@ impl BlockContext<'_> {
             after,
         );
         slot.y -= self.y_offset;
-        slot.x -= self.insets[0];
+        slot.x -= self.insets.left;
         slot
     }
 
@@ -554,7 +553,7 @@ fn compute_inner(
 
     // Apply content box inset
     #[cfg(feature = "float_layout")]
-    block_ctx.apply_content_box_inset([content_box_inset.left, content_box_inset.right]);
+    block_ctx.apply_content_box_inset(FloatInsets::new(content_box_inset.left, content_box_inset.right));
 
     let box_sizing_adjustment =
         if style.box_sizing() == BoxSizing::ContentBox { padding_border_size } else { Size::ZERO };
@@ -1250,7 +1249,10 @@ fn perform_final_layout_on_in_flow_children(
     #[cfg(feature = "float_layout")]
     if block_ctx.is_bfc_root() {
         block_ctx.set_width(container_outer_width);
-        block_ctx.apply_content_box_inset([resolved_content_box_inset.left, resolved_content_box_inset.right]);
+        block_ctx.apply_content_box_inset(FloatInsets::new(
+            resolved_content_box_inset.left,
+            resolved_content_box_inset.right,
+        ));
     }
 
     // If this block's top margin does not collapse with its children's then the position of its
@@ -1447,7 +1449,7 @@ fn perform_final_layout_on_in_flow_children(
                     // BFC) are not reflected in the flag
                     #[cfg(feature = "float_layout")]
                     if has_active_floats || block_ctx.has_active_floats(min_y) {
-                        let x_margins = [item_non_auto_margin.left, item_non_auto_margin.right];
+                        let x_margins = FloatInsets::new(item_non_auto_margin.left, item_non_auto_margin.right);
                         // An auto width resolves to at least the negation of the margin sum
                         // (so that the margin box width is non-negative, per CSS2 §10.3.3)
                         let min_auto_width = -item_non_auto_x_margin_sum;
@@ -1571,7 +1573,7 @@ fn perform_final_layout_on_in_flow_children(
                 // TODO: account for auto margins
                 let inset_left = item_non_auto_margin.left + content_box_inset.left;
                 let inset_right = container_outer_width - width - inset_left;
-                let insets = [inset_left, inset_right];
+                let insets = FloatInsets::new(inset_left, inset_right);
 
                 // Compute child layout. The child's position is estimated from its top margin collapsed with
                 // the preceding margins (the child's own collapsed-through margins are not yet known).

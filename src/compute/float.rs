@@ -28,7 +28,7 @@
 
 use core::ops::Range;
 
-use crate::{debug::debug_log, sys::Vec, AvailableSpace, Clear, Direction, FloatDirection, Point, Size};
+use crate::{debug::debug_log, sys::Vec, AvailableSpace, Clear, Direction, FloatDirection, FloatInsets, Point, Size};
 
 /// Tolerance used when checking whether a box fits in a horizontal space, to absorb `f32`
 /// rounding errors (e.g. percentage widths and margins that sum to exactly 100% may otherwise
@@ -95,8 +95,8 @@ pub struct PlacedFloatedBox {
 struct Segment {
     /// The vertical start and end points of the segment
     y: Range<f32>,
-    /// Left inset in slot 0. Right inset in slot 1.
-    insets: [f32; 2],
+    /// The space taken up by floats on each side
+    insets: FloatInsets,
     /// Whether a float actually occupies the left (slot 0) / right (slot 1) inset.
     /// The insets of a segment created for a float are seeded with the float's containing
     /// block insets on both sides, so a non-zero inset alone does not imply a float.
@@ -112,7 +112,7 @@ impl Segment {
         floated_box: Size<f32>,
         direction: FloatDirection,
         bfc_width: f32,
-        cb_insets: [f32; 2],
+        cb_insets: FloatInsets,
     ) -> bool {
         float_fits_horizontally(floated_box.width, direction, bfc_width, self.insets, cb_insets)
     }
@@ -135,17 +135,46 @@ fn float_fits_horizontally(
     width: f32,
     direction: FloatDirection,
     bfc_width: f32,
-    float_insets: [f32; 2],
-    cb_insets: [f32; 2],
+    float_insets: FloatInsets,
+    cb_insets: FloatInsets,
 ) -> bool {
-    let lead = direction as usize;
-    let trail = 1 - lead;
-    let x_inset = float_insets[lead].max(cb_insets[lead]);
+    let lead = direction;
+    let trail = opposite(direction);
+    let x_inset = float_insets.side(lead).max(cb_insets.side(lead));
     let fits_opposite_floats =
-        float_insets[trail] == 0.0 || x_inset + width <= bfc_width - float_insets[trail] + FIT_TOLERANCE;
+        float_insets.side(trail) == 0.0 || x_inset + width <= bfc_width - float_insets.side(trail) + FIT_TOLERANCE;
     let fits_containing_block =
-        float_insets[lead] == 0.0 || x_inset + width <= bfc_width - cb_insets[trail] + FIT_TOLERANCE;
+        float_insets.side(lead) == 0.0 || x_inset + width <= bfc_width - cb_insets.side(trail) + FIT_TOLERANCE;
     fits_opposite_floats && fits_containing_block
+}
+
+/// The side opposite to the one a box floated in `direction` is floated towards
+#[inline(always)]
+fn opposite(direction: FloatDirection) -> FloatDirection {
+    match direction {
+        FloatDirection::Left => FloatDirection::Right,
+        FloatDirection::Right => FloatDirection::Left,
+    }
+}
+
+impl FloatInsets {
+    /// The inset on the side that a box floated in `direction` is floated towards
+    #[inline(always)]
+    pub fn side(self, direction: FloatDirection) -> f32 {
+        match direction {
+            FloatDirection::Left => self.left,
+            FloatDirection::Right => self.right,
+        }
+    }
+
+    /// A mutable reference to the inset on the side that a box floated in `direction` is floated towards
+    #[inline(always)]
+    pub fn side_mut(&mut self, direction: FloatDirection) -> &mut f32 {
+        match direction {
+            FloatDirection::Left => &mut self.left,
+            FloatDirection::Right => &mut self.right,
+        }
+    }
 }
 
 /// Helper type for placing a single floated box
@@ -159,30 +188,28 @@ struct FloatFitter {
     /// The total height of the set of segments currently being considered
     slot_height: f64,
     /// The union of the float insets of the set of segments currently being considered
-    float_insets: [f32; 2],
+    float_insets: FloatInsets,
     /// The insets of the box's containing block from the edges of the Block Formatting Context
-    cb_insets: [f32; 2],
+    cb_insets: FloatInsets,
 }
 
 impl FloatFitter {
     /// Create a new `FloatFitter`
-    fn new(bfc_width: f32, slot_height: f32, cb_insets: [f32; 2]) -> Self {
-        Self { bfc_width, slot_height: slot_height as f64, float_insets: [0.0, 0.0], cb_insets }
+    fn new(bfc_width: f32, slot_height: f32, cb_insets: FloatInsets) -> Self {
+        Self { bfc_width, slot_height: slot_height as f64, float_insets: FloatInsets::ZERO, cb_insets }
     }
 
     // Horizontal fitting
 
     /// Union the insets of another segment. This is a "max" of the insets on each side.
-    fn union_insets(&mut self, insets: [f32; 2]) {
-        self.float_insets[0] = self.float_insets[0].max(insets[0]);
-        self.float_insets[1] = self.float_insets[1].max(insets[1]);
+    fn union_insets(&mut self, insets: FloatInsets) {
+        self.float_insets = self.float_insets.max(insets);
     }
 
     /// The inset from the edge of the BFC (on the side the box is floated towards) that the
     /// box would be placed at given the currently accounted for insets
     fn placed_inset(&self, direction: FloatDirection) -> f32 {
-        let lead = direction as usize;
-        self.float_insets[lead].max(self.cb_insets[lead])
+        self.float_insets.side(direction).max(self.cb_insets.side(direction))
     }
 
     /// Given the currently accounted for insets, check whether there is an x position
@@ -322,7 +349,7 @@ impl FloatContext {
         id: u64,
         floated_box: Size<f32>,
         min_y: f32,
-        containing_block_insets: [f32; 2],
+        containing_block_insets: FloatInsets,
         direction: FloatDirection,
         clear: Clear,
     ) -> Point<f32> {
@@ -351,7 +378,7 @@ impl FloatContext {
         id: u64,
         floated_box: Size<f32>,
         min_y: f32,
-        containing_block_insets: [f32; 2],
+        containing_block_insets: FloatInsets,
         direction: FloatDirection,
         clear: Clear,
     ) -> PlacedFloatedBox {
@@ -409,7 +436,7 @@ impl FloatContext {
             // segment below all existing segments. A new segment will always have space for
             // the float, so we can exit the loop at this point.
             let Some(start_segment) = self.segments.get(start_idx) else {
-                break (None, None, containing_block_insets[slot]);
+                break (None, None, containing_block_insets.side(direction));
             };
 
             // Candidate start segment doesn't have (horizontal) space for the float:
@@ -493,13 +520,17 @@ impl FloatContext {
             // margin.
             let last_y_end = self.segments.last().map(|seg| seg.y.end).unwrap_or(f32::NEG_INFINITY);
             if start_y > last_y_end {
-                self.segments.push(Segment { y: last_y_end..start_y, insets: [0.0, 0.0], has_float: [false; 2] });
+                self.segments.push(Segment {
+                    y: last_y_end..start_y,
+                    insets: FloatInsets::ZERO,
+                    has_float: [false; 2],
+                });
             }
 
             let start_y = last_y_end.max(start_y);
 
             let mut insets = containing_block_insets;
-            insets[slot] += floated_box.width;
+            *insets.side_mut(direction) += floated_box.width;
             let mut has_float = [false; 2];
             has_float[slot] = true;
             self.segments.push(Segment { y: start_y..(start_y + floated_box.height), insets, has_float });
@@ -514,7 +545,7 @@ impl FloatContext {
                 width: floated_box.width,
                 height: floated_box.height,
                 y: start_y,
-                x_inset: containing_block_insets[slot],
+                x_inset: containing_block_insets.side(direction),
             };
         }
 
@@ -570,7 +601,7 @@ impl FloatContext {
         // Update inset for the range of segments that the float is placed in
         let placed_inset_plus_width = placed_inset + floated_box.width;
         for segment in &mut self.segments[start_idx..=end_idx] {
-            segment.insets[slot] = placed_inset_plus_width;
+            *segment.insets.side_mut(direction) = placed_inset_plus_width;
             segment.has_float[slot] = true;
         }
 
@@ -617,16 +648,16 @@ impl FloatContext {
         &self,
         min_y: f32,
         height: f32,
-        containing_block_insets: [f32; 2],
+        containing_block_insets: FloatInsets,
         clear: Clear,
         after: Option<usize>,
     ) -> ContentSlot {
         if !self.has_active_floats(min_y) {
             return ContentSlot {
                 segment_id: None,
-                x: containing_block_insets[0],
+                x: containing_block_insets.left,
                 y: min_y,
-                width: self.available_width - containing_block_insets[0] - containing_block_insets[1],
+                width: self.available_width - containing_block_insets.sum(),
                 height: f32::INFINITY,
             };
         }
@@ -652,15 +683,12 @@ impl FloatContext {
 
                 // Combine the insets of every segment beside the content's height, then extend
                 // the slot down over any further segments that don't narrow it
-                let mut insets = [
-                    containing_block_insets[0].max(segment.insets[0]),
-                    containing_block_insets[1].max(segment.insets[1]),
-                ];
+                let mut insets = containing_block_insets.max(segment.insets);
                 let mut slot_height = f32::INFINITY;
                 for segment in &self.segments[start_idx + 1..] {
                     if segment.y.start < end_y {
-                        insets = [insets[0].max(segment.insets[0]), insets[1].max(segment.insets[1])];
-                    } else if segment.insets[0] > insets[0] || segment.insets[1] > insets[1] {
+                        insets = insets.max(segment.insets);
+                    } else if segment.insets.left > insets.left || segment.insets.right > insets.right {
                         slot_height = segment.y.start - y;
                         break;
                     }
@@ -668,17 +696,17 @@ impl FloatContext {
 
                 ContentSlot {
                     segment_id: Some(start_idx),
-                    x: insets[0],
+                    x: insets.left,
                     y,
-                    width: self.available_width - insets[0] - insets[1],
+                    width: self.available_width - insets.sum(),
                     height: slot_height,
                 }
             }
             None => ContentSlot {
                 segment_id: None,
-                x: containing_block_insets[0],
+                x: containing_block_insets.left,
                 y: min_y,
-                width: self.available_width - containing_block_insets[0] - containing_block_insets[1],
+                width: self.available_width - containing_block_insets.sum(),
                 height: f32::INFINITY,
             },
         }
@@ -713,17 +741,17 @@ impl FloatContext {
         &self,
         min_y: f32,
         min_height: f32,
-        containing_block_insets: [f32; 2],
-        margins: [f32; 2],
+        containing_block_insets: FloatInsets,
+        margins: FloatInsets,
         direction: Direction,
         clear: Clear,
         after: Option<usize>,
     ) -> BfcSlot {
-        let margin_insets = [containing_block_insets[0] + margins[0], containing_block_insets[1] + margins[1]];
-        let no_float_width = self.available_width - margin_insets[0] - margin_insets[1];
+        let margin_insets = containing_block_insets + margins;
+        let no_float_width = self.available_width - margin_insets.sum();
         let no_float_slot = BfcSlot {
             segment_id: None,
-            x: margin_insets[0],
+            x: margin_insets.left,
             y: min_y,
             border_width: no_float_width,
             stretch_width: no_float_width,
@@ -754,37 +782,43 @@ impl FloatContext {
                 let mut insets = segment.insets;
                 let mut has_float = segment.has_float;
                 for segment in self.segments[start_idx + 1..].iter().take_while(|seg| seg.y.start < y + min_height) {
-                    insets = [insets[0].max(segment.insets[0]), insets[1].max(segment.insets[1])];
+                    insets = insets.max(segment.insets);
                     has_float = [has_float[0] || segment.has_float[0], has_float[1] || segment.has_float[1]];
                 }
 
                 let lead = match direction {
-                    Direction::Ltr => 0,
-                    Direction::Rtl => 1,
+                    Direction::Ltr => FloatDirection::Left,
+                    Direction::Rtl => FloatDirection::Right,
                 };
-                let trail = 1 - lead;
-                let has_lead_float = has_float[lead];
-                let has_trail_float = has_float[trail];
-                let mut fit_insets = [0.0; 2];
-                let mut stretch_insets = [0.0; 2];
-                fit_insets[lead] =
-                    if has_lead_float { insets[lead].max(margin_insets[lead]) } else { margin_insets[lead] };
-                stretch_insets[lead] = fit_insets[lead];
-                fit_insets[trail] = if has_trail_float {
-                    insets[trail].max(containing_block_insets[trail])
+                let trail = opposite(lead);
+                let has_lead_float = has_float[lead as usize];
+                let has_trail_float = has_float[trail as usize];
+                let mut fit_insets = FloatInsets::ZERO;
+                let mut stretch_insets = FloatInsets::ZERO;
+                *fit_insets.side_mut(lead) = if has_lead_float {
+                    insets.side(lead).max(margin_insets.side(lead))
+                } else {
+                    margin_insets.side(lead)
+                };
+                *stretch_insets.side_mut(lead) = fit_insets.side(lead);
+                *fit_insets.side_mut(trail) = if has_trail_float {
+                    insets.side(trail).max(containing_block_insets.side(trail))
                 } else {
                     // A positive trailing margin may overflow the containing block edge (it does
                     // not affect fit), but a negative one widens the space for the border box
-                    margin_insets[trail].min(containing_block_insets[trail])
+                    margin_insets.side(trail).min(containing_block_insets.side(trail))
                 };
-                stretch_insets[trail] =
-                    if has_trail_float { insets[trail].max(margin_insets[trail]) } else { margin_insets[trail] };
+                *stretch_insets.side_mut(trail) = if has_trail_float {
+                    insets.side(trail).max(margin_insets.side(trail))
+                } else {
+                    margin_insets.side(trail)
+                };
                 BfcSlot {
                     segment_id: Some(start_idx),
-                    x: fit_insets[0],
+                    x: fit_insets.left,
                     y,
-                    border_width: self.available_width - fit_insets[0] - fit_insets[1],
-                    stretch_width: self.available_width - stretch_insets[0] - stretch_insets[1],
+                    border_width: self.available_width - fit_insets.sum(),
+                    stretch_width: self.available_width - stretch_insets.sum(),
                 }
             }
             // Below all floats
