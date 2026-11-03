@@ -1125,6 +1125,75 @@ fn determine_content_based_container_width(
     max_child_width
 }
 
+/// Resolve the known dimensions an in-flow block-level item is laid out with
+#[allow(clippy::too_many_arguments)]
+fn block_item_known_dimensions(
+    tree: &mut impl LayoutBlockContainer,
+    item: &BlockItem,
+    stretch_width: f32,
+    container_inner_width: f32,
+    container_percentage_resolution_height: Option<f32>,
+    item_non_auto_margin: Rect<f32>,
+    children_margins_adjoin_own_edges: Line<bool>,
+    parent_size: Size<Option<f32>>,
+    is_stretch: bool,
+    is_fit_content: bool,
+) -> Size<Option<f32>> {
+    // Unless stretched, tables and compressible replaced elements resolve their own width
+    // <https://www.w3.org/TR/CSS22/visudet.html#block-replaced-width>
+    if (item.is_table || item.is_compressible_replaced) && !is_stretch {
+        Size::NONE
+    } else {
+        // The automatic width of a block-level box whose `justify-self` is neither `normal` nor `stretch`
+        // is equivalent to `fit-content` rather than `stretch`
+        let width_style = if is_fit_content && item.size_style.width.is_auto() {
+            Dimension::fit_content()
+        } else {
+            item.size_style.width
+        };
+
+        // Items with a sizing keyword width (min-content, max-content, fit-content,
+        // fit-content(...), stretch) resolve their width either directly or by measuring
+        // the item under the corresponding available space constraint
+        let keyword_width =
+            resolve_sizing_keyword(width_style, Some(stretch_width), Some(container_inner_width), |val, basis| {
+                tree.calc(val, basis)
+            })
+            .map(|resolution| match resolution {
+                SizingKeywordResolution::Exact(width) => width,
+                SizingKeywordResolution::Measure(item_available_width) => tree.measure_child_size(
+                    item.node_id,
+                    Size::NONE,
+                    parent_size,
+                    Size { width: item_available_width, height: AvailableSpace::MaxContent },
+                    SizingMode::InherentSize,
+                    crate::AbsoluteAxis::Horizontal,
+                    // Must match the value passed when laying the item out (see `Cache`)
+                    if item.is_in_same_bfc { Line::TRUE } else { Line::FALSE },
+                ),
+            });
+
+        let keyword_height = resolve_stretch_height(
+            item.size_style.height,
+            container_percentage_resolution_height,
+            item_non_auto_margin,
+            children_margins_adjoin_own_edges,
+        );
+
+        item.size
+            .map_width(|width| {
+                Some(
+                    width
+                        .or(keyword_width)
+                        .unwrap_or(stretch_width)
+                        .maybe_clamp(item.min_size.width, item.max_size.width),
+                )
+            })
+            .map_height(|height| height.or(keyword_height))
+            .maybe_clamp(item.min_size, item.max_size)
+    }
+}
+
 /// Compute each child's final size and position
 #[inline]
 #[allow(clippy::too_many_arguments)]
@@ -1431,61 +1500,18 @@ fn perform_final_layout_on_in_flow_children(
                 _ => Some(justify_self),
             };
 
-            // Unless stretched, tables and compressible replaced elements resolve their own width
-            // <https://www.w3.org/TR/CSS22/visudet.html#block-replaced-width>
-            let known_dimensions = if (item.is_table || item.is_compressible_replaced) && !is_stretch {
-                Size::NONE
-            } else {
-                // The automatic width of a block-level box whose `justify-self` is neither `normal` nor `stretch`
-                // is equivalent to `fit-content` rather than `stretch`
-                let width_style = if non_stretch_justify_self.is_some() && item.size_style.width.is_auto() {
-                    Dimension::fit_content()
-                } else {
-                    item.size_style.width
-                };
-
-                // Items with a sizing keyword width (min-content, max-content, fit-content,
-                // fit-content(...), stretch) resolve their width either directly or by measuring
-                // the item under the corresponding available space constraint
-                let keyword_width = resolve_sizing_keyword(
-                    width_style,
-                    Some(stretch_width),
-                    Some(container_inner_width),
-                    |val, basis| tree.calc(val, basis),
-                )
-                .map(|resolution| match resolution {
-                    SizingKeywordResolution::Exact(width) => width,
-                    SizingKeywordResolution::Measure(item_available_width) => tree.measure_child_size(
-                        item.node_id,
-                        Size::NONE,
-                        parent_size,
-                        Size { width: item_available_width, height: AvailableSpace::MaxContent },
-                        SizingMode::InherentSize,
-                        crate::AbsoluteAxis::Horizontal,
-                        // Must match the value passed when laying the item out (see `Cache`)
-                        if item.is_in_same_bfc { Line::TRUE } else { Line::FALSE },
-                    ),
-                });
-
-                let keyword_height = resolve_stretch_height(
-                    item.size_style.height,
-                    container_percentage_resolution_height,
-                    item_non_auto_margin,
-                    children_margins_adjoin_own_edges,
-                );
-
-                item.size
-                    .map_width(|width| {
-                        Some(
-                            width
-                                .or(keyword_width)
-                                .unwrap_or(stretch_width)
-                                .maybe_clamp(item.min_size.width, item.max_size.width),
-                        )
-                    })
-                    .map_height(|height| height.or(keyword_height))
-                    .maybe_clamp(item.min_size, item.max_size)
-            };
+            let known_dimensions = block_item_known_dimensions(
+                tree,
+                item,
+                stretch_width,
+                container_inner_width,
+                container_percentage_resolution_height,
+                item_non_auto_margin,
+                children_margins_adjoin_own_edges,
+                parent_size,
+                is_stretch,
+                non_stretch_justify_self.is_some(),
+            );
 
             //
 
