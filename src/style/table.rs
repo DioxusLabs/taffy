@@ -51,6 +51,25 @@ crate::util::parse::impl_parse_for_keyword_enum!(Visibility,
     "collapse" => Collapse,
 );
 
+/// Which side of the table a caption is placed on (CSS `caption-side`)
+///
+/// <https://www.w3.org/TR/css-tables-3/#caption-side-property>
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub enum CaptionSide {
+    /// The caption is placed above the table box
+    #[default]
+    Top,
+    /// The caption is placed below the table box
+    Bottom,
+}
+
+#[cfg(feature = "parse")]
+crate::util::parse::impl_parse_for_keyword_enum!(CaptionSide,
+    "top" => Top,
+    "bottom" => Bottom,
+);
+
 /// The role a child node plays within a table, as determined by its `display` value.
 ///
 /// Taffy expects a well-formed table tree (table → row group / row → cell) as produced
@@ -69,6 +88,8 @@ pub enum TableRole {
     ColumnGroup,
     /// `display: table-column` (col)
     Column,
+    /// `display: table-caption` (caption)
+    Caption,
     /// Any other display value
     Other,
 }
@@ -122,5 +143,11 @@ pub trait TableItemStyle: CoreStyle {
     #[inline(always)]
     fn rowspan(&self) -> u16 {
         Style::<Self::CustomIdent>::DEFAULT.rowspan
+    }
+
+    /// Which side of the table a caption is placed on (`caption-side`)
+    #[inline(always)]
+    fn caption_side(&self) -> CaptionSide {
+        Style::<Self::CustomIdent>::DEFAULT.caption_side
     }
 }
