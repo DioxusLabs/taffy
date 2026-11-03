@@ -1914,7 +1914,9 @@ fn perform_final_layout_on_in_flow_children<Tree: LayoutBlockContainer>(
         if active_margin_set_has_clearance { CollapsibleMarginSet::ZERO } else { active_collapsible_margin_set };
     let bottom_y_margin_offset = if active_margin_set_has_clearance {
         active_collapsible_margin_set.resolve()
-    } else if own_margins_collapse_with_children.end {
+    } else if own_margins_collapse_with_children.end
+        || (is_collapsing_with_first_margin_set && own_margins_collapse_with_children.start)
+    {
         0.0
     } else {
         last_child_bottom_margin_set.resolve()

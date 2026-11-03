@@ -4386,6 +4386,26 @@ mod block {
     }
 
     #[test]
+    fn block_margin_y_first_child_collapse_through_with_border_bottom__border_box_ltr() {
+        crate::run_xml_test("block", "block_margin_y_first_child_collapse_through_with_border_bottom__border_box_ltr");
+    }
+
+    #[test]
+    fn block_margin_y_first_child_collapse_through_with_border_bottom__content_box_ltr() {
+        crate::run_xml_test("block", "block_margin_y_first_child_collapse_through_with_border_bottom__content_box_ltr");
+    }
+
+    #[test]
+    fn block_margin_y_first_child_collapse_through_with_border_bottom__border_box_rtl() {
+        crate::run_xml_test("block", "block_margin_y_first_child_collapse_through_with_border_bottom__border_box_rtl");
+    }
+
+    #[test]
+    fn block_margin_y_first_child_collapse_through_with_border_bottom__content_box_rtl() {
+        crate::run_xml_test("block", "block_margin_y_first_child_collapse_through_with_border_bottom__content_box_rtl");
+    }
+
+    #[test]
     fn block_margin_y_first_granchild_collapse_positive_and_negative__border_box_ltr() {
         crate::run_xml_test("block", "block_margin_y_first_granchild_collapse_positive_and_negative__border_box_ltr");
     }
