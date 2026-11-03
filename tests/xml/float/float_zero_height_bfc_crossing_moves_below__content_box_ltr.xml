@@ -1,0 +1,17 @@
+<test name="float_zero_height_bfc_crossing_moves_below__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="block" box-sizing="content-box" direction="ltr" position="absolute" width="500px">
+      <div display="block" box-sizing="content-box" direction="ltr" position="relative" float="left" width="10px" height="30px"/>
+      <div display="block" box-sizing="content-box" direction="ltr" position="relative" float="left" clear="left" width="100px" height="0px"/>
+      <div display="block" box-sizing="content-box" direction="ltr" position="relative" overflow-x="hidden" overflow-y="hidden" scrollbar-width="15" width="450px" height="40px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="500" height="70">
+      <node x="0" y="0" width="10" height="30"/>
+      <node x="0" y="30" width="100" height="0"/>
+      <node x="0" y="30" width="450" height="40" scroll_width="0" scroll_height="0"/>
+    </node>
+  </expectations>
+</test>

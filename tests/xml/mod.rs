@@ -21656,6 +21656,66 @@ mod float {
     fn float_simple__content_box_rtl() {
         crate::run_xml_test("float", "float_simple__content_box_rtl");
     }
+
+    #[test]
+    fn float_zero_height_bfc_crossing_moves_below__border_box_ltr() {
+        crate::run_xml_test("float", "float_zero_height_bfc_crossing_moves_below__border_box_ltr");
+    }
+
+    #[test]
+    fn float_zero_height_bfc_crossing_moves_below__content_box_ltr() {
+        crate::run_xml_test("float", "float_zero_height_bfc_crossing_moves_below__content_box_ltr");
+    }
+
+    #[test]
+    fn float_zero_height_bfc_crossing_moves_below__border_box_rtl() {
+        crate::run_xml_test("float", "float_zero_height_bfc_crossing_moves_below__border_box_rtl");
+    }
+
+    #[test]
+    fn float_zero_height_bfc_crossing_moves_below__content_box_rtl() {
+        crate::run_xml_test("float", "float_zero_height_bfc_crossing_moves_below__content_box_rtl");
+    }
+
+    #[test]
+    fn float_zero_height_bfc_crossing_narrows__border_box_ltr() {
+        crate::run_xml_test("float", "float_zero_height_bfc_crossing_narrows__border_box_ltr");
+    }
+
+    #[test]
+    fn float_zero_height_bfc_crossing_narrows__content_box_ltr() {
+        crate::run_xml_test("float", "float_zero_height_bfc_crossing_narrows__content_box_ltr");
+    }
+
+    #[test]
+    fn float_zero_height_bfc_crossing_narrows__border_box_rtl() {
+        crate::run_xml_test("float", "float_zero_height_bfc_crossing_narrows__border_box_rtl");
+    }
+
+    #[test]
+    fn float_zero_height_bfc_crossing_narrows__content_box_rtl() {
+        crate::run_xml_test("float", "float_zero_height_bfc_crossing_narrows__content_box_rtl");
+    }
+
+    #[test]
+    fn float_zero_height_later_float_same_y__border_box_ltr() {
+        crate::run_xml_test("float", "float_zero_height_later_float_same_y__border_box_ltr");
+    }
+
+    #[test]
+    fn float_zero_height_later_float_same_y__content_box_ltr() {
+        crate::run_xml_test("float", "float_zero_height_later_float_same_y__content_box_ltr");
+    }
+
+    #[test]
+    fn float_zero_height_later_float_same_y__border_box_rtl() {
+        crate::run_xml_test("float", "float_zero_height_later_float_same_y__border_box_rtl");
+    }
+
+    #[test]
+    fn float_zero_height_later_float_same_y__content_box_rtl() {
+        crate::run_xml_test("float", "float_zero_height_later_float_same_y__content_box_rtl");
+    }
 }
 
 mod grid {
