@@ -308,6 +308,7 @@ impl LayoutInput {
             parent_size: self.parent_size.transpose(),
             available_space: self.available_space.transpose(),
             vertical_margins_are_collapsible: Line::FALSE,
+            content_offset_y: 0.0,
         }
     }
 }
