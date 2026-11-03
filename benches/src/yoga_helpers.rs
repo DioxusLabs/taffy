@@ -206,7 +206,12 @@ fn apply_taffy_style(node: &mut yg::Node, style: &tf::Style) {
         tf::Display::Grid => panic!("Yoga does not support CSS Grid layout"),
         tf::Display::Block => panic!("Yoga does not support CSS Block layout"),
         tf::Display::FlowRoot => panic!("Yoga does not support CSS Block layout"),
-        tf::Display::Table | tf::Display::TableRowGroup | tf::Display::TableRow | tf::Display::TableCell => {
+        tf::Display::Table
+        | tf::Display::TableRowGroup
+        | tf::Display::TableRow
+        | tf::Display::TableCell
+        | tf::Display::TableColumnGroup
+        | tf::Display::TableColumn => {
             panic!("Yoga does not support CSS Table layout")
         }
     });
