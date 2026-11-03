@@ -366,6 +366,7 @@ impl core::fmt::Display for Display {
             Display::TableColumnGroup => write!(f, "TABLE-COLUMN-GROUP"),
             #[cfg(feature = "table_layout")]
             Display::TableColumn => write!(f, "TABLE-COLUMN"),
+            #[cfg(feature = "table_layout")]
             Display::TableCaption => write!(f, "TABLE-CAPTION"),
         }
     }
