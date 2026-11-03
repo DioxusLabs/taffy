@@ -716,6 +716,7 @@ pub(crate) fn layout_oof_box<Tree: LayoutContainingBlock>(
         axis: RequestedAxis::Both,
         run_mode: RunMode::PerformLayout,
         vertical_margins_are_collapsible: Line::FALSE,
+        content_offset_y: 0.0,
     };
     before_layout(tree, &layout_input);
     let mut layout_output = tree.compute_child_layout(candidate.node, layout_input);
