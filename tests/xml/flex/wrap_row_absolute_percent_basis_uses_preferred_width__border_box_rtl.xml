@@ -1,0 +1,21 @@
+<test name="wrap_row_absolute_percent_basis_uses_preferred_width__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div direction="rtl" position="relative" width="400px" height="200px">
+      <div display="flex" direction="rtl" position="absolute" flex-wrap="wrap" top="0px" left="20px">
+        <div direction="rtl" position="relative" width="30px" height="10px"/>
+        <div direction="rtl" position="relative" width="50px" height="10px"/>
+        <div direction="rtl" position="relative" flex-basis="100%" width="96px" height="8px"/>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="400" height="200">
+      <node x="20" y="0" width="176" height="18">
+        <node x="146" y="0" width="30" height="10"/>
+        <node x="96" y="0" width="50" height="10"/>
+        <node x="0" y="10" width="176" height="8"/>
+      </node>
+    </node>
+  </expectations>
+</test>

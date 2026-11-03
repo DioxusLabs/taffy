@@ -20596,6 +20596,26 @@ mod flex {
     }
 
     #[test]
+    fn wrap_row_absolute_percent_basis_uses_preferred_width__border_box_ltr() {
+        crate::run_xml_test("flex", "wrap_row_absolute_percent_basis_uses_preferred_width__border_box_ltr");
+    }
+
+    #[test]
+    fn wrap_row_absolute_percent_basis_uses_preferred_width__content_box_ltr() {
+        crate::run_xml_test("flex", "wrap_row_absolute_percent_basis_uses_preferred_width__content_box_ltr");
+    }
+
+    #[test]
+    fn wrap_row_absolute_percent_basis_uses_preferred_width__border_box_rtl() {
+        crate::run_xml_test("flex", "wrap_row_absolute_percent_basis_uses_preferred_width__border_box_rtl");
+    }
+
+    #[test]
+    fn wrap_row_absolute_percent_basis_uses_preferred_width__content_box_rtl() {
+        crate::run_xml_test("flex", "wrap_row_absolute_percent_basis_uses_preferred_width__content_box_rtl");
+    }
+
+    #[test]
     fn wrap_row_align_items_center__border_box_ltr() {
         crate::run_xml_test("flex", "wrap_row_align_items_center__border_box_ltr");
     }

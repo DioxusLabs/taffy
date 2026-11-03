@@ -426,6 +426,23 @@ fn compute_preliminary(tree: &mut impl LayoutFlexboxContainer, node: NodeId, inp
     } else {
         // Sets constants.container_size and constants.outer_container_size
         determine_container_main_size(tree, available_space, &mut flex_lines, &mut constants);
+
+        // A wrapping row whose width comes from its content is laid out again at that width, as browsers
+        // size a shrink-to-fit box's inline size before laying it out: its percentage flex bases resolve
+        // against that width and its lines (and so its height) wrap against it.
+        let only_width_requested = run_mode == RunMode::ComputeSize && inputs.axis == RequestedAxis::Horizontal;
+        if constants.is_row && constants.is_wrap && !only_width_requested {
+            let width = constants.container_size.main(constants.dir);
+            return compute_preliminary(
+                tree,
+                node,
+                LayoutInput {
+                    known_dimensions: known_dimensions.with_main(constants.dir, Some(width)),
+                    known_dimensions_are_definite: inputs.known_dimensions_are_definite.with_main(constants.dir, true),
+                    ..inputs
+                },
+            );
+        }
         constants.node_inner_size.set_main(constants.dir, Some(constants.inner_container_size.main(constants.dir)));
         constants.node_outer_size.set_main(constants.dir, Some(constants.container_size.main(constants.dir)));
 
@@ -1118,14 +1135,18 @@ fn determine_flex_base_size(
                     None => None,
                 }
             } else {
-                if let Some(flex_basis) = flex_basis.or(main_size.filter(|_| flex_basis_style.is_auto())) {
+                // A percentage flex basis that cannot be resolved because this container's main size
+                // is indefinite behaves as `auto` in a row, matching browsers: the container is then
+                // being sized from its items' contributions, which use their preferred main size.
+                let basis_is_auto = flex_basis_style.is_auto() || (dir.is_row() && flex_basis.is_none());
+                if let Some(flex_basis) = flex_basis.or(main_size.filter(|_| basis_is_auto)) {
                     child.flex_basis_is_definite = true;
                     break 'flex_basis flex_basis;
                 };
 
                 // A main size that is a sizing keyword either resolves to an exact size or
                 // determines the available space constraint the item is measured under
-                if flex_basis_style.is_auto() {
+                if basis_is_auto {
                     match resolve_sizing_keyword(
                         child.size_style.main(dir),
                         main_stretch_size,
