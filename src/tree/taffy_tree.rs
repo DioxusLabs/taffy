@@ -261,6 +261,10 @@ impl<NodeContext> PrintTree for TaffyTree<NodeContext> {
             (_, Display::TableRow) => "TABLE-ROW",
             #[cfg(feature = "table_layout")]
             (_, Display::TableCell) => "TABLE-CELL",
+            #[cfg(feature = "table_layout")]
+            (_, Display::TableColumnGroup) => "TABLE-COLUMN-GROUP",
+            #[cfg(feature = "table_layout")]
+            (_, Display::TableColumn) => "TABLE-COLUMN",
         }
     }
 
@@ -336,12 +340,18 @@ where
                 (Display::Grid, true) => compute_grid_layout(tree, node_id, inputs),
                 #[cfg(feature = "table_layout")]
                 (Display::Table, true) => compute_table_layout(tree, node_id, inputs),
-                // Cells are block containers. Rows and row groups are laid out by their parent
-                // table; one encountered here is outside a table, so fall back to block layout.
+                // Cells are block containers. Rows, row groups, columns and column groups are
+                // laid out by their parent table; one encountered here is outside a table, so
+                // fall back to block layout.
                 #[cfg(feature = "table_layout")]
-                (Display::TableCell | Display::TableRow | Display::TableRowGroup, true) => {
-                    compute_block_layout(tree, node_id, inputs, None)
-                }
+                (
+                    Display::TableCell
+                    | Display::TableRow
+                    | Display::TableRowGroup
+                    | Display::TableColumnGroup
+                    | Display::TableColumn,
+                    true,
+                ) => compute_block_layout(tree, node_id, inputs, None),
                 (_, false) => {
                     let node_key = node_id.into();
                     let style = &tree.taffy.nodes[node_key].style;

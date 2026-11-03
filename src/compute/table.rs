@@ -12,8 +12,8 @@ use crate::compute::common::scrollable_overflow::{
 };
 use crate::geometry::{AbsoluteAxis, Line, Point, Rect, Size};
 use crate::style::{
-    AlignContentKeyword, AvailableSpace, BoxGenerationMode, CompactLength, CoreStyle, Direction, TableContainerStyle,
-    TableItemStyle, TableLayout, TableRole,
+    AlignContentKeyword, AvailableSpace, BoxGenerationMode, CompactLength, CoreStyle, Dimension, Direction,
+    TableContainerStyle, TableItemStyle, TableLayout, TableRole,
 };
 use crate::style_helpers::TaffyMaxContent;
 use crate::tree::traits::{LayoutPartialTreeExt, LayoutTableContainer};
@@ -81,6 +81,32 @@ struct Column {
     used: f32,
 }
 
+/// A column box (`display: table-column`) of the table
+struct ColumnBox {
+    /// The node id of the column
+    node_id: NodeId,
+    /// The column's index among its parent's children
+    order: u32,
+    /// Index of the column group this column belongs to, if any
+    group: Option<usize>,
+    /// The first grid column the box covers
+    start: usize,
+    /// The number of grid columns the box covers (HTML `span`)
+    span: usize,
+}
+
+/// A column group box (`display: table-column-group`) of the table
+struct ColumnGroupBox {
+    /// The node id of the column group
+    node_id: NodeId,
+    /// The group's index among the table's children
+    order: u32,
+    /// The first grid column the box covers
+    start: usize,
+    /// The number of grid columns the box covers
+    span: usize,
+}
+
 /// The table's cells, placed into rows and columns
 struct Grid {
     /// The rows of every row group, in document order
@@ -89,7 +115,11 @@ struct Grid {
     cells: Vec<Cell>,
     /// The table's row groups, in document order
     groups: Vec<Group>,
-    /// The number of columns the placed cells add up to
+    /// The table's column boxes, in document order
+    column_boxes: Vec<ColumnBox>,
+    /// The table's column groups, in document order
+    column_groups: Vec<ColumnGroupBox>,
+    /// The number of columns the placed cells and the column boxes add up to
     col_count: usize,
     /// The rows and cells that generate no box, which still need their layout cleared
     hidden: Vec<NodeId>,
@@ -107,6 +137,8 @@ impl Grid {
             rows: Vec::new(),
             cells: Vec::new(),
             groups: Vec::new(),
+            column_boxes: Vec::new(),
+            column_groups: Vec::new(),
             col_count: 0,
             hidden: Vec::new(),
             oof: OofCandidates::new(),
@@ -205,15 +237,16 @@ pub fn compute_table_layout(
     };
 
     // Phase 1: place cells into the grid
-    let Grid { mut rows, cells, groups, col_count, hidden, oof: mut oof_candidates, .. } =
-        build_grid(tree, node_id, static_position);
+    let Grid {
+        mut rows, cells, groups, column_boxes, column_groups, col_count, hidden, oof: mut oof_candidates, ..
+    } = build_grid(tree, node_id, static_position);
 
     let oof_positioning_area = |size: Size<f32>| OofPositioningArea {
         size: size - border.sum_axes(),
         offset: Point { x: border.left, y: border.top },
     };
 
-    if col_count == 0 || rows.is_empty() {
+    if col_count == 0 {
         let size = Size {
             width: styled_known.width.unwrap_or(pb_size.width).maybe_clamp(min_size.width, max_size.width),
             height: styled_known.height.unwrap_or(pb_size.height).maybe_clamp(min_size.height, max_size.height),
@@ -224,7 +257,9 @@ pub fn compute_table_layout(
                 tree.set_unrounded_layout(child_id, &Layout::with_order(order as u32));
             }
         }
-        let mut output = LayoutOutput::from_outer_size(size);
+        // A table with no rows has its baseline on its bottom content edge (css-tables-3 §3.10.2)
+        let baselines = Baselines::from_first(Some(size.height - padding_border.bottom));
+        let mut output = LayoutOutput::from_sizes_and_baselines(size, ScrollableOverflow::ZERO, baselines);
         output.oof_candidates = oof_candidates;
         output.oof_positioning_area = Some(oof_positioning_area(size));
         return output;
@@ -234,7 +269,7 @@ pub fn compute_table_layout(
     //
     // Fixed layout reads the column widths off the first row alone and never looks at content
     let is_fixed = table_layout_mode == TableLayout::Fixed && styled_known.width.is_some();
-    let mut columns = measure_columns(tree, &cells, col_count, h_spacing, is_fixed);
+    let mut columns = measure_columns(tree, &cells, &column_boxes, &column_groups, col_count, h_spacing, is_fixed);
 
     // Phase 3: resolve the table's used width and the columns' used widths
     let total_h_spacing = h_spacing * (col_count as f32 + 1.0);
@@ -369,7 +404,8 @@ pub fn compute_table_layout(
         }
     }
 
-    let total_v_spacing = v_spacing * (num_rows as f32 + 1.0);
+    // A table with no rows has no border-spacing in the block axis either
+    let total_v_spacing = if num_rows == 0 { 0.0 } else { v_spacing * (num_rows as f32 + 1.0) };
     // Row percentages resolve against the space a definite-height table leaves for its rows
     let percentage_basis = styled_known.height.map(|h| (h - pb_size.height - total_v_spacing).max(0.0));
 
@@ -439,6 +475,39 @@ pub fn compute_table_layout(
     // Row and row-group boxes exclude the outer border-spacing, which belongs to the table
     let grid_origin_x = padding_border.left + h_spacing;
     let grid_width = assignable + h_spacing * (col_count as f32 - 1.0);
+
+    // Column and column-group boxes span the grid's rows and the tracks they cover
+    let rows_top = padding_border.top + v_spacing;
+    let rows_height = if num_rows == 0 { 0.0 } else { y - v_spacing - rows_top };
+    let track_extent = |start: usize, span: usize| -> (f32, f32) {
+        let range = start.min(col_count)..(start + span).min(col_count);
+        if range.is_empty() {
+            return (grid_origin_x, 0.0);
+        }
+        let x = col_x[range.clone()].iter().copied().fold(f32::INFINITY, f32::min);
+        let width = columns[range.clone()].iter().map(|c| c.used).sum::<f32>() + h_spacing * (range.len() as f32 - 1.0);
+        (x, width)
+    };
+    let mut column_group_x: Vec<f32> = Vec::with_capacity(column_groups.len());
+    for group in column_groups.iter() {
+        let (x, width) = track_extent(group.start, group.span);
+        column_group_x.push(x);
+        set_item_layout(
+            tree,
+            group.node_id,
+            group.order,
+            Point { x, y: rows_top },
+            Size { width, height: rows_height },
+        );
+    }
+    for column in column_boxes.iter() {
+        let (x, width) = track_extent(column.start, column.span);
+        let location = match column.group {
+            Some(g) => Point { x: x - column_group_x[g], y: 0.0 },
+            None => Point { x, y: rows_top },
+        };
+        set_item_layout(tree, column.node_id, column.order, location, Size { width, height: rows_height });
+    }
 
     let mut group_origin: Vec<Point<f32>> = Vec::with_capacity(groups.len());
     for (group_index, group) in groups.iter().enumerate() {
@@ -596,38 +665,118 @@ fn build_grid(
     let mut occupancy: Vec<usize> = Vec::new();
     let table_children = visible_children(tree, node_id, &mut grid);
     let mut index = 0;
+    // The next grid column a column box takes; column boxes claim columns in document order,
+    // independently of the cells
+    let mut next_col = 0;
+    // The end of the last column box with a specified width. Column boxes past the cells only
+    // add grid columns when they have a width (Blink and Gecko drop the rest)
+    let mut definite_cols_end = 0;
+
+    let is_row_run_end =
+        |role: TableRole| matches!(role, TableRole::RowGroup | TableRole::ColumnGroup | TableRole::Column);
 
     while index < table_children.len() {
         occupancy.clear();
-        let group_id = table_children[index];
+        let child_id = table_children[index];
 
-        if tree.get_table_child_style(group_id).table_role() == TableRole::RowGroup {
-            let group = Some(grid.groups.len());
-            grid.groups.push(Group { node_id: group_id, order: index as u32 });
+        let role = tree.get_table_child_style(child_id).table_role();
+        match role {
+            TableRole::RowGroup => {
+                let group = Some(grid.groups.len());
+                grid.groups.push(Group { node_id: child_id, order: index as u32 });
 
-            let group_rows = visible_children(tree, group_id, &mut grid);
-            for (row, &row_id) in group_rows.iter().enumerate() {
-                place_row(tree, row_id, group, row as u32, group_rows.len() - row, &mut occupancy, &mut grid);
+                let group_rows = visible_children(tree, child_id, &mut grid);
+                for (row, &row_id) in group_rows.iter().enumerate() {
+                    place_row(tree, row_id, group, row as u32, group_rows.len() - row, &mut occupancy, &mut grid);
+                }
+                index += 1;
             }
-            index += 1;
-        } else {
-            // Rows outside a row group belong to one anonymous group, which the run of
-            // consecutive non-group children marks out
-            let mut end = index + 1;
-            while end < table_children.len()
-                && tree.get_table_child_style(table_children[end]).table_role() != TableRole::RowGroup
-            {
-                end += 1;
+            TableRole::ColumnGroup => {
+                let group_index = grid.column_groups.len();
+                let start = next_col;
+                let group_children = visible_children(tree, child_id, &mut grid);
+                let mut has_columns = false;
+                for (order, &column_id) in group_children.iter().enumerate() {
+                    let column_style = tree.get_table_child_style(column_id);
+                    let is_column = column_style.table_role() == TableRole::Column;
+                    let span = (column_style.colspan() as usize).max(1);
+                    drop(column_style);
+                    if !is_column {
+                        // Anything but a column inside a column group generates no box
+                        grid.hidden.push(column_id);
+                        continue;
+                    }
+                    has_columns = true;
+                    grid.column_boxes.push(ColumnBox {
+                        node_id: column_id,
+                        order: order as u32,
+                        group: Some(group_index),
+                        start: next_col,
+                        span,
+                    });
+                    next_col += span;
+                    if has_specified_width(tree, column_id) || has_specified_width(tree, child_id) {
+                        definite_cols_end = next_col;
+                    }
+                }
+                // A column group with no columns spans the columns its own `span` says
+                if !has_columns {
+                    next_col += (tree.get_table_child_style(child_id).colspan() as usize).max(1);
+                    if has_specified_width(tree, child_id) {
+                        definite_cols_end = next_col;
+                    }
+                }
+                grid.column_groups.push(ColumnGroupBox {
+                    node_id: child_id,
+                    order: index as u32,
+                    start,
+                    span: next_col - start,
+                });
+                index += 1;
             }
-            for (offset, &row_id) in table_children[index..end].iter().enumerate() {
-                let row = index + offset;
-                place_row(tree, row_id, None, row as u32, end - row, &mut occupancy, &mut grid);
+            TableRole::Column => {
+                let span = (tree.get_table_child_style(child_id).colspan() as usize).max(1);
+                grid.column_boxes.push(ColumnBox {
+                    node_id: child_id,
+                    order: index as u32,
+                    group: None,
+                    start: next_col,
+                    span,
+                });
+                next_col += span;
+                if has_specified_width(tree, child_id) {
+                    definite_cols_end = next_col;
+                }
+                index += 1;
             }
-            index = end;
+            _ => {
+                // Rows outside a row group belong to one anonymous group, which the run of
+                // consecutive non-group children marks out
+                let mut end = index + 1;
+                while end < table_children.len()
+                    && !is_row_run_end(tree.get_table_child_style(table_children[end]).table_role())
+                {
+                    end += 1;
+                }
+                for (offset, &row_id) in table_children[index..end].iter().enumerate() {
+                    let row = index + offset;
+                    place_row(tree, row_id, None, row as u32, end - row, &mut occupancy, &mut grid);
+                }
+                index = end;
+            }
         }
     }
 
+    // Column boxes add grid columns of their own (css-tables-3 §2.3), as far as the last one
+    // with a specified width
+    grid.col_count = grid.col_count.max(definite_cols_end);
+
     grid
+}
+
+/// Whether a column or column group box has a `width` other than `auto`
+fn has_specified_width(tree: &impl LayoutTableContainer, node_id: NodeId) -> bool {
+    tree.get_table_child_style(node_id).size().width.tag() != CompactLength::AUTO_TAG
 }
 
 /// Collect the children of `node_id` that take part in the grid, pushing the ones that generate
@@ -807,12 +956,55 @@ fn distribute(columns: &mut [Column], extra: f32, field: impl Fn(&mut Column) ->
 fn measure_columns(
     tree: &mut impl LayoutTableContainer,
     cells: &[Cell],
+    column_boxes: &[ColumnBox],
+    column_groups: &[ColumnGroupBox],
     col_count: usize,
     h_spacing: f32,
     is_fixed: bool,
 ) -> Vec<Column> {
     let mut columns: Vec<Column> = core::iter::repeat_with(Column::default).take(col_count).collect();
     let mut spans: Vec<(usize, usize, CellMeasure)> = Vec::new();
+
+    // A column box's `width` constrains every column it spans before the cells are looked at
+    // (CSS 2.1 §17.5.2.2 step 2); in a fixed table it takes precedence over the first row. The
+    // column's minimum still comes from its cells, so a narrow table can shrink it below the width.
+    // A column group's `width` stands in for the columns it holds that have none of their own,
+    // and for the columns a group with no column boxes spans by itself
+    let width_measure = |width_dim: Dimension| -> Option<CellMeasure> {
+        match width_dim.tag() {
+            CompactLength::LENGTH_TAG => {
+                Some(CellMeasure { min: 0.0, max: width_dim.value().max(0.0), percent: None, is_constrained: true })
+            }
+            CompactLength::PERCENT_TAG => {
+                Some(CellMeasure { min: 0.0, max: 0.0, percent: Some(width_dim.value()), is_constrained: false })
+            }
+            _ => None,
+        }
+    };
+    let mut constrain = |start: usize, span: usize, measure: &CellMeasure| {
+        let range = start.min(col_count)..(start + span).min(col_count);
+        for column in columns[range].iter_mut() {
+            encompass(column, measure);
+        }
+    };
+    for column_box in column_boxes.iter() {
+        let own_width = tree.get_table_child_style(column_box.node_id).size().width;
+        let group_width = column_box
+            .group
+            .map(|g| tree.get_table_child_style(column_groups[g].node_id).size().width)
+            .filter(|_| own_width.tag() == CompactLength::AUTO_TAG);
+        if let Some(measure) = width_measure(own_width).or_else(|| group_width.and_then(width_measure)) {
+            constrain(column_box.start, column_box.span, &measure);
+        }
+    }
+    for (index, group) in column_groups.iter().enumerate() {
+        if column_boxes.iter().any(|c| c.group == Some(index)) {
+            continue;
+        }
+        if let Some(measure) = width_measure(tree.get_table_child_style(group.node_id).size().width) {
+            constrain(group.start, group.span, &measure);
+        }
+    }
 
     // Fixed layout takes its column widths from the first row alone
     for cell in cells.iter().filter(|c| !is_fixed || c.row == 0) {
