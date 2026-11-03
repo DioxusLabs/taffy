@@ -12,8 +12,8 @@ use crate::compute::common::scrollable_overflow::{
 };
 use crate::geometry::{AbsoluteAxis, Line, Point, Rect, Size};
 use crate::style::{
-    AlignContentKeyword, AvailableSpace, BoxGenerationMode, CompactLength, CoreStyle, Dimension, Direction,
-    TableContainerStyle, TableItemStyle, TableLayout, TableRole, Visibility,
+    AlignContentKeyword, AvailableSpace, BoxGenerationMode, CaptionSide, CompactLength, CoreStyle, Dimension,
+    Direction, Position, TableContainerStyle, TableItemStyle, TableLayout, TableRole, Visibility,
 };
 use crate::style_helpers::TaffyMaxContent;
 use crate::tree::traits::{LayoutPartialTreeExt, LayoutTableContainer};
@@ -109,6 +109,46 @@ struct ColumnGroupBox {
     span: usize,
 }
 
+/// A caption box (`display: table-caption`) of the table
+struct CaptionBox {
+    /// The node id of the caption
+    node_id: NodeId,
+    /// The caption's index among the table's children
+    order: u32,
+    /// Which side of the table box the caption sits on
+    side: CaptionSide,
+}
+
+/// A caption sized at the table's width, waiting to be placed above or below the table box
+struct CaptionLayout {
+    /// The node id of the caption
+    node_id: NodeId,
+    /// The caption's index among the table's children
+    order: u32,
+    /// Which side of the table box the caption sits on
+    side: CaptionSide,
+    /// The caption's border box size
+    size: Size<f32>,
+    /// Its margins, with `auto` margins resolved
+    margin: Rect<f32>,
+    /// Its resolved padding
+    padding: Rect<f32>,
+    /// Its resolved border
+    border: Rect<f32>,
+    /// The offset a `position: relative` caption's `inset` moves it by
+    relative_offset: Point<f32>,
+    /// The scrollable overflow of its content
+    #[cfg(feature = "content_size")]
+    scrollable_overflow_rect: ScrollableOverflow,
+}
+
+impl CaptionLayout {
+    /// The height of the caption's margin box
+    fn outer_height(&self) -> f32 {
+        self.size.height + self.margin.vertical_axis_sum()
+    }
+}
+
 /// The table's cells, placed into rows and columns
 struct Grid {
     /// The rows of every row group, in document order
@@ -121,6 +161,8 @@ struct Grid {
     column_boxes: Vec<ColumnBox>,
     /// The table's column groups, in document order
     column_groups: Vec<ColumnGroupBox>,
+    /// The table's captions, in document order
+    captions: Vec<CaptionBox>,
     /// The number of columns the placed cells and the column boxes add up to
     col_count: usize,
     /// The rows and cells that generate no box, which still need their layout cleared
@@ -141,6 +183,7 @@ impl Grid {
             groups: Vec::new(),
             column_boxes: Vec::new(),
             column_groups: Vec::new(),
+            captions: Vec::new(),
             col_count: 0,
             hidden: Vec::new(),
             oof: OofCandidates::new(),
@@ -244,39 +287,72 @@ pub fn compute_table_layout(
 
     // Phase 1: place cells into the grid
     let Grid {
-        mut rows, cells, groups, column_boxes, column_groups, col_count, hidden, oof: mut oof_candidates, ..
+        mut rows,
+        cells,
+        groups,
+        column_boxes,
+        column_groups,
+        captions,
+        col_count,
+        hidden,
+        oof: mut oof_candidates,
+        ..
     } = build_grid(tree, node_id, static_position);
+    let rtl = tree.get_table_container_style(node_id).direction() == Direction::Rtl;
 
-    let oof_positioning_area = |size: Size<f32>| OofPositioningArea {
+    // Captions sit above and below the table box, inside the table's own box: there is no table
+    // wrapper box. The table box is never narrower than the widest caption's min-content width
+    // (css-tables-3 §3.9.1, CAPMIN), and the captions are sized at the table box's width
+    let capmin = captions
+        .iter()
+        .map(|caption| caption_min_content_width(tree, caption.node_id, parent_width))
+        .fold(0.0, f32::max);
+    // The table box's position and size inside the table's box, once the captions are placed
+    let oof_positioning_area = |box_top: f32, size: Size<f32>| OofPositioningArea {
         size: size - border.sum_axes(),
-        offset: Point { x: border.left, y: border.top },
+        offset: Point { x: border.left, y: box_top + border.top },
     };
 
     if col_count == 0 && rows.is_empty() {
         // The table is never smaller than its own padding and border, whatever its box-sizing
-        let size = Size {
-            width: styled_known
-                .width
-                .unwrap_or(pb_size.width)
-                .maybe_clamp(min_size.width, max_size.width)
-                .max(pb_size.width),
-            height: styled_known
-                .height
-                .unwrap_or(pb_size.height)
-                .maybe_clamp(min_size.height, max_size.height)
-                .max(pb_size.height),
-        };
+        let width = styled_known
+            .width
+            .unwrap_or(pb_size.width)
+            .maybe_clamp(min_size.width, max_size.width)
+            .max(pb_size.width)
+            .max(capmin);
+        let caption_layouts = layout_captions(tree, &captions, width, rtl, run_mode);
+        let captions_height: f32 = caption_layouts.iter().map(CaptionLayout::outer_height).sum();
+        let known_height = known_dimensions.height.map(|h| (h - captions_height).max(0.0)).or(specified_size.height);
+        let height =
+            known_height.unwrap_or(pb_size.height).maybe_clamp(min_size.height, max_size.height).max(pb_size.height);
+        let size = Size { width, height };
         if run_mode == RunMode::PerformLayout {
             for order in 0..tree.child_count(node_id) {
                 let child_id = tree.get_child_id(node_id, order);
                 tree.set_unrounded_layout(child_id, &Layout::with_order(order as u32));
             }
         }
+        let (box_top, box_bottom) = place_captions(tree, &caption_layouts, height, run_mode);
+        oof_candidates.translate(Point { x: 0.0, y: box_top });
         // A table with no rows has its baseline on its bottom content edge (css-tables-3 §3.10.2)
-        let baselines = Baselines::from_first(Some(size.height));
-        let mut output = LayoutOutput::from_sizes_and_baselines(size, ScrollableOverflow::ZERO, baselines);
+        let baselines = Baselines::from_first(Some(box_top + size.height));
+        let outer_size = Size { width, height: box_top + height + box_bottom };
+        #[cfg(feature = "content_size")]
+        let scrollable_overflow_rect = captions_scrollable_overflow(
+            &caption_layouts,
+            box_top + height,
+            border,
+            padding,
+            outer_size,
+            is_scroll_container,
+            Rect::ZERO,
+        );
+        #[cfg(not(feature = "content_size"))]
+        let scrollable_overflow_rect = ScrollableOverflow::ZERO;
+        let mut output = LayoutOutput::from_sizes_and_baselines(outer_size, scrollable_overflow_rect, baselines);
         output.oof_candidates = oof_candidates;
-        output.oof_positioning_area = Some(oof_positioning_area(size));
+        output.oof_positioning_area = Some(oof_positioning_area(box_top, size));
         return output;
     }
 
@@ -305,7 +381,8 @@ pub fn compute_table_layout(
             };
             (shrink_to_fit + pb_size.width).maybe_clamp(min_size.width, max_size.width).max(grid_min + pb_size.width)
         }
-    };
+    }
+    .max(capmin);
     let assignable = table_width - pb_size.width - total_h_spacing;
 
     if is_fixed {
@@ -348,6 +425,15 @@ pub fn compute_table_layout(
     if run_mode == RunMode::ComputeSize && axis == RequestedAxis::Horizontal {
         return LayoutOutput::from_outer_size(Size { width: table_width, height: styled_known.height.unwrap_or(0.0) });
     }
+
+    // The captions take their share of a height imposed on the table; `height` on the table
+    // itself is the table box's
+    let caption_layouts = layout_captions(tree, &captions, table_width, rtl, run_mode);
+    let captions_height: f32 = caption_layouts.iter().map(CaptionLayout::outer_height).sum();
+    let styled_known = Size {
+        width: styled_known.width,
+        height: known_dimensions.height.map(|h| (h - captions_height).max(0.0)).or(specified_size.height),
+    };
 
     // Phase 4: resolve row heights by sizing each cell at its final width
     let num_rows = rows.len();
@@ -499,10 +585,13 @@ pub fn compute_table_layout(
         row.baseline = Some(row.fallback_descent.map_or(0.0, |descent| (row.used_height - descent).max(0.0)));
     }
 
-    let final_size = Size { width: table_width, height: table_height };
+    let table_box_size = Size { width: table_width, height: table_height };
+    let (box_top, box_bottom) = place_captions(tree, &caption_layouts, table_height, run_mode);
+    let final_size = Size { width: table_width, height: box_top + table_height + box_bottom };
+    oof_candidates.translate(Point { x: 0.0, y: box_top });
     // The table's baseline is its first row's baseline (css-tables-3 §4.2)
     let table_baseline =
-        rows.first().and_then(|row| row.baseline).map(|baseline| padding_border.top + v_spacing + baseline);
+        rows.first().and_then(|row| row.baseline).map(|baseline| box_top + padding_border.top + v_spacing + baseline);
     let baselines = Baselines::from_first(table_baseline);
 
     if run_mode == RunMode::ComputeSize {
@@ -510,7 +599,6 @@ pub fn compute_table_layout(
     }
 
     // Phase 5: position rows, row groups, and cells (in RTL the first column is rightmost)
-    let rtl = tree.get_table_container_style(node_id).direction() == Direction::Rtl;
     let mut col_x: Vec<f32> = Vec::with_capacity(col_count);
     let mut x = padding_border.left + h_spacing;
     for col in columns.iter() {
@@ -523,7 +611,7 @@ pub fn compute_table_layout(
         }
     }
     let mut row_y: Vec<f32> = Vec::with_capacity(num_rows);
-    let mut y = padding_border.top + v_spacing;
+    let mut y = box_top + padding_border.top + v_spacing;
     for row in rows.iter() {
         row_y.push(y);
         y += row.used_height + if row.collapsed { 0.0 } else { v_spacing };
@@ -533,7 +621,7 @@ pub fn compute_table_layout(
     let grid_origin_x = padding_border.left + h_spacing;
 
     // Column and column-group boxes span the grid's rows and the tracks they cover
-    let rows_top = padding_border.top + v_spacing;
+    let rows_top = box_top + padding_border.top + v_spacing;
     let rows_height = if num_rows == 0 { 0.0 } else { y - v_spacing - rows_top };
     let track_extent = |start: usize, span: usize| -> (f32, f32) {
         let range = start.min(col_count)..(start + span).min(col_count);
@@ -572,7 +660,7 @@ pub fn compute_table_layout(
         let range = group_row_range(&rows, group_index);
         let (start_y, end_y) = match range.end.checked_sub(1) {
             Some(last) if !range.is_empty() => (row_y[range.start], row_y[last] + rows[last].used_height),
-            _ => (padding_border.top + v_spacing, padding_border.top + v_spacing),
+            _ => (rows_top, rows_top),
         };
         let origin = Point { x: grid_origin_x, y: start_y };
         group_origin.push(origin);
@@ -592,7 +680,7 @@ pub fn compute_table_layout(
     #[cfg(feature = "content_size")]
     let overflow_container = ScrollableOverflowContainer {
         parent_is_scroll_container: is_scroll_container,
-        parent_size: final_size - border.sum_axes(),
+        parent_size: table_box_size - border.sum_axes(),
         reversed: Point { x: rtl, y: false },
         padding,
     };
@@ -660,7 +748,7 @@ pub fn compute_table_layout(
         {
             // Contributions are measured from the table's padding-box origin
             let cell_size = Size { width: cell_width, height: cell_height };
-            let contribution_location = Point { x: cell_x - border.left, y: row_y[cell.row] - border.top };
+            let contribution_location = Point { x: cell_x - border.left, y: row_y[cell.row] - box_top - border.top };
             cell_overflow_rect = cell_overflow_rect.union(compute_scrollable_overflow_contribution(
                 contribution_location,
                 cell_size,
@@ -687,19 +775,218 @@ pub fn compute_table_layout(
     }
 
     #[cfg(feature = "content_size")]
-    let scrollable_overflow_rect = finalize_scrollable_overflow(
-        cell_overflow_rect,
-        final_size - border.sum_axes(),
-        Point { x: rtl, y: false },
+    let scrollable_overflow_rect = captions_scrollable_overflow(
+        &caption_layouts,
+        box_top + table_height,
+        border,
+        padding,
+        final_size,
         is_scroll_container,
+        cell_overflow_rect,
     );
     #[cfg(not(feature = "content_size"))]
     let scrollable_overflow_rect = ScrollableOverflow::ZERO;
 
     let mut output = LayoutOutput::from_sizes_and_baselines(final_size, scrollable_overflow_rect, baselines);
     output.oof_candidates = oof_candidates;
-    output.oof_positioning_area = Some(oof_positioning_area(final_size));
+    output.oof_positioning_area = Some(oof_positioning_area(box_top, table_box_size));
     output
+}
+
+/// The min-content width of a caption's margin box, which the table box is never narrower than
+fn caption_min_content_width(tree: &mut impl LayoutTableContainer, node_id: NodeId, parent_width: Option<f32>) -> f32 {
+    let margin = tree
+        .get_table_child_style(node_id)
+        .margin()
+        .resolve_or_zero(parent_width, |v, b| tree.calc(v, b))
+        .horizontal_axis_sum();
+    let width = tree.measure_child_size(
+        node_id,
+        Size::NONE,
+        Size { width: parent_width, height: None },
+        Size { width: AvailableSpace::MinContent, height: AvailableSpace::MaxContent },
+        SizingMode::InherentSize,
+        AbsoluteAxis::Horizontal,
+        Line::FALSE,
+    );
+    width + margin
+}
+
+/// Size the captions as block-level boxes in a containing block as wide as the table box
+/// (CSS 2.1 §17.4): an auto-width caption stretches to the table, `auto` margins centre a
+/// narrower one, and a percentage height is treated as `auto` (as Blink and Gecko do)
+fn layout_captions(
+    tree: &mut impl LayoutTableContainer,
+    captions: &[CaptionBox],
+    table_width: f32,
+    rtl: bool,
+    run_mode: RunMode,
+) -> Vec<CaptionLayout> {
+    let mut layouts = Vec::with_capacity(captions.len());
+    for caption in captions {
+        let style = tree.get_table_child_style(caption.node_id);
+        let margin = style.margin().map(|m| m.resolve_to_option(table_width, |v, b| tree.calc(v, b)));
+        let padding = style.padding().resolve_or_zero(Some(table_width), |v, b| tree.calc(v, b));
+        let border = style.border().resolve_or_zero(Some(table_width), |v, b| tree.calc(v, b));
+        let pb_size = (padding + border).sum_axes();
+        let box_sizing_adjustment = if style.box_sizing() == BoxSizing::ContentBox { pb_size } else { Size::ZERO };
+        let parent_size = Size { width: Some(table_width), height: None };
+        let width_style = style.size().width;
+        let min_width = style.min_size().width.maybe_resolve(parent_size.width, |v, b| tree.calc(v, b));
+        let max_width = style.max_size().width.maybe_resolve(parent_size.width, |v, b| tree.calc(v, b));
+        let relative_offset = if style.position() == Position::Relative {
+            let inset = style.inset().zip_size(parent_size, |p, s| p.maybe_resolve(s, |v, b| tree.calc(v, b)));
+            let x = if rtl { inset.right.map(|x| -x).or(inset.left) } else { inset.left.or(inset.right.map(|x| -x)) };
+            Point { x: x.unwrap_or(0.0), y: inset.top.or(inset.bottom.map(|y| -y)).unwrap_or(0.0) }
+        } else {
+            Point::ZERO
+        };
+        drop(style);
+
+        let non_auto_margin = margin.map(|m| m.unwrap_or(0.0));
+        let stretch_width = (table_width - non_auto_margin.horizontal_axis_sum()).max(0.0);
+        let width = width_style
+            .maybe_resolve(parent_size.width, |v, b| tree.calc(v, b))
+            .map(|w| w + box_sizing_adjustment.width)
+            .unwrap_or(stretch_width)
+            .maybe_clamp(
+                min_width.map(|w| w + box_sizing_adjustment.width),
+                max_width.map(|w| w + box_sizing_adjustment.width),
+            );
+
+        let free_space = table_width - width - non_auto_margin.horizontal_axis_sum();
+        let mut resolved_margin = non_auto_margin;
+        match (margin.left, margin.right) {
+            (None, None) => {
+                resolved_margin.left = free_space / 2.0;
+                resolved_margin.right = free_space / 2.0;
+            }
+            (None, Some(_)) => resolved_margin.left = free_space,
+            (Some(_), None) => resolved_margin.right = free_space,
+            (Some(_), Some(_)) => {}
+        }
+
+        let output = tree.compute_child_layout(
+            caption.node_id,
+            LayoutInput {
+                known_dimensions: Size { width: Some(width), height: None },
+                known_dimensions_are_definite: Size { width: true, height: false },
+                parent_size,
+                available_space: Size { width: AvailableSpace::Definite(width), height: AvailableSpace::MaxContent },
+                sizing_mode: SizingMode::InherentSize,
+                axis: RequestedAxis::Both,
+                run_mode,
+                vertical_margins_are_collapsible: Line::FALSE,
+                content_offset_y: 0.0,
+            },
+        );
+
+        layouts.push(CaptionLayout {
+            node_id: caption.node_id,
+            order: caption.order,
+            side: caption.side,
+            size: Size { width, height: output.size.height },
+            margin: resolved_margin,
+            padding,
+            border,
+            relative_offset,
+            #[cfg(feature = "content_size")]
+            scrollable_overflow_rect: output.scrollable_overflow_rect,
+        });
+    }
+    layouts
+}
+
+/// Stack the top captions above the table box and the bottom captions below it, in document
+/// order. Returns the height the captions take above and below the table box. Caption margins
+/// do not collapse with each other or with the table.
+fn place_captions(
+    tree: &mut impl LayoutTableContainer,
+    captions: &[CaptionLayout],
+    table_box_height: f32,
+    run_mode: RunMode,
+) -> (f32, f32) {
+    let top: f32 = captions.iter().filter(|c| c.side == CaptionSide::Top).map(CaptionLayout::outer_height).sum();
+    let bottom: f32 = captions.iter().filter(|c| c.side == CaptionSide::Bottom).map(CaptionLayout::outer_height).sum();
+    if run_mode != RunMode::PerformLayout {
+        return (top, bottom);
+    }
+
+    let mut top_y = 0.0;
+    let mut bottom_y = top + table_box_height;
+    for caption in captions {
+        let y = match caption.side {
+            CaptionSide::Top => &mut top_y,
+            CaptionSide::Bottom => &mut bottom_y,
+        };
+        let location = Point { x: caption.margin.left, y: *y + caption.margin.top } + caption.relative_offset;
+        *y += caption.outer_height();
+        tree.set_unrounded_layout(
+            caption.node_id,
+            &Layout {
+                order: caption.order,
+                location,
+                size: caption.size,
+                #[cfg(feature = "content_size")]
+                scrollable_overflow_rect: caption.scrollable_overflow_rect,
+                scrollbar_size: Size::ZERO,
+                padding: caption.padding,
+                border: caption.border,
+                margin: caption.margin,
+            },
+        );
+    }
+    (top, bottom)
+}
+
+/// The table's scrollable overflow once the captions, which lie outside the table box but
+/// inside the table's own box, are added to the cells' contributions. Contributions are
+/// measured from the table box's padding-box origin.
+#[cfg(feature = "content_size")]
+fn captions_scrollable_overflow(
+    captions: &[CaptionLayout],
+    table_box_bottom: f32,
+    border: Rect<f32>,
+    padding: Rect<f32>,
+    outer_size: Size<f32>,
+    is_scroll_container: bool,
+    mut overflow_rect: Rect<f32>,
+) -> ScrollableOverflow {
+    let box_top: f32 = captions.iter().filter(|c| c.side == CaptionSide::Top).map(CaptionLayout::outer_height).sum();
+    let container = ScrollableOverflowContainer {
+        parent_is_scroll_container: is_scroll_container,
+        parent_size: outer_size - border.sum_axes(),
+        reversed: Point { x: false, y: false },
+        padding,
+    };
+    let mut top_y = 0.0;
+    let mut bottom_y = table_box_bottom;
+    for caption in captions {
+        let y = match caption.side {
+            CaptionSide::Top => &mut top_y,
+            CaptionSide::Bottom => &mut bottom_y,
+        };
+        let location =
+            Point { x: caption.margin.left - border.left, y: *y + caption.margin.top - box_top - border.top }
+                + caption.relative_offset;
+        *y += caption.outer_height();
+        overflow_rect = overflow_rect.union(compute_scrollable_overflow_contribution(
+            location,
+            caption.size,
+            caption.scrollable_overflow_rect.rect(),
+            caption.border,
+            Point { x: crate::style::Overflow::Visible, y: crate::style::Overflow::Visible },
+            crate::style::Contain::NONE,
+            &container,
+            caption.margin.map(|value| value.min(0.0)),
+        ));
+    }
+    finalize_scrollable_overflow(
+        overflow_rect,
+        outer_size - border.sum_axes(),
+        Point { x: false, y: false },
+        is_scroll_container,
+    )
 }
 
 /// The rows a row group holds, which `build_grid` places contiguously
@@ -730,8 +1017,9 @@ fn build_grid(
     // add grid columns when they have a width (Blink and Gecko drop the rest)
     let mut definite_cols_end = 0;
 
-    let is_row_run_end =
-        |role: TableRole| matches!(role, TableRole::RowGroup | TableRole::ColumnGroup | TableRole::Column);
+    let is_row_run_end = |role: TableRole| {
+        matches!(role, TableRole::RowGroup | TableRole::ColumnGroup | TableRole::Column | TableRole::Caption)
+    };
 
     while index < table_children.len() {
         occupancy.clear();
@@ -791,6 +1079,11 @@ fn build_grid(
                     start,
                     span: next_col - start,
                 });
+                index += 1;
+            }
+            TableRole::Caption => {
+                let side = tree.get_table_child_style(child_id).caption_side();
+                grid.captions.push(CaptionBox { node_id: child_id, order: index as u32, side });
                 index += 1;
             }
             TableRole::Column => {
