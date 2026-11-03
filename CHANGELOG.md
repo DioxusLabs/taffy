@@ -10,6 +10,7 @@
 - Float: a zero-height float is now recorded in the float context, so content and boxes establishing a new block formatting context whose vertical extent crosses its position avoid it. Previously it only affected `clear` and the position of later floats.
 - Block: when a block with no top border or padding has a bottom border or padding, the margins of leading children that collapse through it (and so collapse with its own top margin) are no longer also added to its height. Previously such a block was too tall by the collapsed margin.
 - Block: the min-content contribution of a compressible replaced child (e.g. an image) with a percentage `width` or `max-width` now resolves that percentage against zero, so a shrink-to-fit block (e.g. an `inline-block` or float) holding a `width: 100%` image is capped by the available width rather than growing to the image's natural width.
+- Block/float: a box that establishes a new block formatting context (e.g. `overflow: hidden` or `display: flow-root`) beside floats now avoids the floats beside its laid-out height, not only those beside its styled (minimum) height. It is narrowed to the space beside the floats it reaches, or moved down to the next slot if it doesn't fit there.
 
 ### Changes
 
