@@ -1368,6 +1368,10 @@ fn measure_columns(
             _ => None,
         }
     };
+    // Every column box starts a track of its own
+    for column_box in column_boxes.iter().filter(|c| c.start < col_count) {
+        columns[column_box.start].is_mergeable = false;
+    }
     let mut constrain = |start: usize, span: usize, measure: &CellMeasure| {
         let range = start.min(col_count)..(start + span).min(col_count);
         let has_width = measure.max > 0.0 || measure.percent.is_some();
