@@ -489,46 +489,6 @@ impl FloatContext {
             }
         };
 
-        // A zero-height float takes up no vertical space, but still narrows content and floats
-        // whose vertical extent crosses its position, so it is recorded as a zero-height segment.
-        // Zero-width floats are recorded too: their edge acts as an obstacle that boxes
-        // establishing an independent formatting context may not be placed to the outside of
-        // (e.g. via a negative margin).
-        if floated_box.height == 0.0 {
-            let insert_idx = match start {
-                Some(mut idx) => {
-                    if start_y != self.segments[idx].y.start {
-                        self.subdivide_segment(idx, start_y);
-                        idx += 1;
-                    }
-                    idx
-                }
-                None => {
-                    let last_y_end = self.segments.last().map(|seg| seg.y.end).unwrap_or(f32::NEG_INFINITY);
-                    if start_y > last_y_end {
-                        self.segments.push(Segment {
-                            y: last_y_end..start_y,
-                            insets: FloatInsets::ZERO,
-                            has_float: [false; 2],
-                        });
-                    }
-                    start_y = start_y.max(last_y_end);
-                    self.segments.len()
-                }
-            };
-
-            let below = self.segments.get(insert_idx);
-            let mut insets = below.map_or(containing_block_insets, |segment| segment.insets);
-            let mut has_float = below.map_or([false; 2], |segment| segment.has_float);
-            insets[direction] = placed_inset + floated_box.width;
-            has_float[slot] = true;
-            self.segments.insert(insert_idx, Segment { y: start_y..start_y, insets, has_float });
-
-            self.update_last_placed_float(direction, insert_idx..(insert_idx + 1));
-
-            return PlacedFloatedBox { id, width: floated_box.width, height: 0.0, y: start_y, x_inset: placed_inset };
-        }
-
         // Handle case where floated box is placed after all existing segments
         if start.is_none() {
             // Before the first float, the context is float-free all the way up: the first float
@@ -580,6 +540,14 @@ impl FloatContext {
             if let Some(end_idx) = end.as_mut() {
                 *end_idx += 1;
             }
+        }
+
+        // A zero-height float takes up no vertical space, but still narrows content and floats
+        // whose vertical extent crosses its position, so it gets its own zero-height segment
+        if floated_box.height == 0.0 {
+            let segment = self.segments[start_idx].clone();
+            self.segments.insert(start_idx, Segment { y: start_y..start_y, ..segment });
+            end = Some(start_idx);
         }
 
         let end_idx = match end {
