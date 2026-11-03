@@ -1,5 +1,5 @@
 use taffy::prelude::*;
-use taffy::{Direction, Point, TableLayout, Visibility};
+use taffy::{CaptionSide, Direction, Point, TableLayout, Visibility};
 use taffy_test_helpers::new_test_tree;
 
 /// css-tables-3 §6.1 and CSS 2.2 §17.6.1: a row and a row group have no padding, and their
@@ -224,7 +224,7 @@ fn collapsed_row_shortens_the_table() {
         &mut tree,
         Style { border_spacing: Size { width: length(5.0), height: length(5.0) }, ..Default::default() },
         &[],
-        &[&[cell.clone()], &[cell.clone()], &[cell]],
+        &[std::slice::from_ref(&cell), std::slice::from_ref(&cell), std::slice::from_ref(&cell)],
     );
     let collapsed_row = tree.child_at_index(table, 1).unwrap();
     tree.set_style(
@@ -323,4 +323,71 @@ fn rtl_table_mirrors_its_columns() {
     assert_eq!(tree.layout(second_cell).unwrap().size.width, 50.0);
     assert_eq!(tree.layout(spanning_cell).unwrap().location.x, 0.0);
     assert_eq!(tree.layout(spanning_cell).unwrap().size.width, 75.0);
+}
+
+/// Captions sit above (`caption-side: top`) and below (`bottom`) the table box, in document
+/// order, inside the table's own box; the table's baseline moves down with the table box
+#[test]
+fn captions_stack_around_the_table_box() {
+    let mut tree = new_test_tree();
+    let caption = |tree: &mut TaffyTree<taffy_test_helpers::TestNodeContext>, side: CaptionSide, height: f32| {
+        tree.new_leaf(Style {
+            display: Display::TableCaption,
+            caption_side: side,
+            size: Size { width: auto(), height: length(height) },
+            margin: Rect { left: zero(), right: zero(), top: length(2.0), bottom: length(3.0) },
+            ..Default::default()
+        })
+        .unwrap()
+    };
+    let top = caption(&mut tree, CaptionSide::Top, 10.0);
+    let bottom = caption(&mut tree, CaptionSide::Bottom, 20.0);
+    let cell = Style::default();
+    let table = table_with_columns(
+        &mut tree,
+        Style { padding: Rect::length(5.0), ..Default::default() },
+        &[top, bottom],
+        &[&[cell]],
+    );
+    let row = tree.child_at_index(table, 2).unwrap();
+
+    tree.compute_layout(table, Size::MAX_CONTENT).unwrap();
+
+    // Captions take 15 above and 25 below the 20-high table box, and stretch to the table's width
+    assert_eq!(tree.layout(table).unwrap().size, Size { width: 30.0, height: 60.0 });
+    assert_eq!(tree.layout(top).unwrap().location, Point { x: 0.0, y: 2.0 });
+    assert_eq!(tree.layout(top).unwrap().size, Size { width: 30.0, height: 10.0 });
+    assert_eq!(tree.layout(row).unwrap().location, Point { x: 5.0, y: 20.0 });
+    assert_eq!(tree.layout(bottom).unwrap().location, Point { x: 0.0, y: 37.0 });
+}
+
+/// The table box is never narrower than a caption's min-content width, and `auto` margins
+/// centre a caption narrower than the table
+#[test]
+fn caption_widens_and_centres_in_the_table() {
+    let mut tree = new_test_tree();
+    let wide = tree
+        .new_leaf(Style {
+            display: Display::TableCaption,
+            size: Size { width: length(100.0), height: length(10.0) },
+            ..Default::default()
+        })
+        .unwrap();
+    let centred = tree
+        .new_leaf(Style {
+            display: Display::TableCaption,
+            size: Size { width: length(40.0), height: length(10.0) },
+            margin: Rect::auto(),
+            ..Default::default()
+        })
+        .unwrap();
+    let cell = Style::default();
+    let table = table_with_columns(&mut tree, Style::default(), &[wide, centred], &[&[cell]]);
+    let cell_id = tree.child_at_index(tree.child_at_index(table, 2).unwrap(), 0).unwrap();
+
+    tree.compute_layout(table, Size::MAX_CONTENT).unwrap();
+
+    assert_eq!(tree.layout(table).unwrap().size, Size { width: 100.0, height: 30.0 });
+    assert_eq!(tree.layout(cell_id).unwrap().size.width, 100.0);
+    assert_eq!(tree.layout(centred).unwrap().location, Point { x: 30.0, y: 10.0 });
 }

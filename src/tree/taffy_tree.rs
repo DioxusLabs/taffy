@@ -265,6 +265,8 @@ impl<NodeContext> PrintTree for TaffyTree<NodeContext> {
             (_, Display::TableColumnGroup) => "TABLE-COLUMN-GROUP",
             #[cfg(feature = "table_layout")]
             (_, Display::TableColumn) => "TABLE-COLUMN",
+            #[cfg(feature = "table_layout")]
+            (_, Display::TableCaption) => "TABLE-CAPTION",
         }
     }
 
@@ -340,12 +342,13 @@ where
                 (Display::Grid, true) => compute_grid_layout(tree, node_id, inputs),
                 #[cfg(feature = "table_layout")]
                 (Display::Table, true) => compute_table_layout(tree, node_id, inputs),
-                // Cells are block containers. Rows, row groups, columns and column groups are
-                // laid out by their parent table; one encountered here is outside a table, so
-                // fall back to block layout.
+                // Cells and captions are block containers. Rows, row groups, columns and column
+                // groups are laid out by their parent table; one encountered here is outside a
+                // table, so fall back to block layout.
                 #[cfg(feature = "table_layout")]
                 (
                     Display::TableCell
+                    | Display::TableCaption
                     | Display::TableRow
                     | Display::TableRowGroup
                     | Display::TableColumnGroup

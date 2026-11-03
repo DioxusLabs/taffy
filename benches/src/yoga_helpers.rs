@@ -211,7 +211,8 @@ fn apply_taffy_style(node: &mut yg::Node, style: &tf::Style) {
         | tf::Display::TableRow
         | tf::Display::TableCell
         | tf::Display::TableColumnGroup
-        | tf::Display::TableColumn => {
+        | tf::Display::TableColumn
+        | tf::Display::TableCaption => {
             panic!("Yoga does not support CSS Table layout")
         }
     });
