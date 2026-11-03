@@ -1,5 +1,5 @@
 use taffy::prelude::*;
-use taffy::{Point, TableLayout};
+use taffy::{Point, TableLayout, Visibility};
 use taffy_test_helpers::new_test_tree;
 
 /// css-tables-3 §6.1 and CSS 2.2 §17.6.1: a row and a row group have no padding, and their
@@ -186,4 +186,58 @@ fn columns_without_rows_size_the_table() {
 
     assert_eq!(tree.layout(table).unwrap().size, Size { width: 64.0, height: 6.0 });
     assert_eq!(tree.layout(col).unwrap().size, Size { width: 60.0, height: 0.0 });
+}
+
+/// CSS 2.1 §17.5.5: a collapsed column takes no room (nor does its spacing) and the table
+/// narrows by what it took; the other columns keep their widths
+#[test]
+fn collapsed_column_narrows_the_table() {
+    let mut tree = new_test_tree();
+    let visible_col = tree.new_leaf(Style { display: Display::TableColumn, ..Default::default() }).unwrap();
+    let collapsed_col = tree
+        .new_leaf(Style { display: Display::TableColumn, visibility: Visibility::Collapse, ..Default::default() })
+        .unwrap();
+    let cell = Style::default();
+    let table = table_with_columns(
+        &mut tree,
+        Style { border_spacing: Size { width: length(5.0), height: length(5.0) }, ..Default::default() },
+        &[visible_col, collapsed_col],
+        &[&[cell.clone(), cell.clone(), cell]],
+    );
+    let row = tree.child_at_index(table, 2).unwrap();
+    let third_cell = tree.child_at_index(row, 2).unwrap();
+
+    tree.compute_layout(table, Size::MAX_CONTENT).unwrap();
+
+    // 5 + 20 + 5 + 20 + 5 wide: the middle column and one spacing are gone
+    assert_eq!(tree.layout(table).unwrap().size, Size { width: 55.0, height: 20.0 });
+    assert_eq!(tree.layout(collapsed_col).unwrap().size.width, 0.0);
+    assert_eq!(tree.layout(third_cell).unwrap().location.x, 25.0);
+}
+
+/// A collapsed row (or row group) takes no room and the table shortens by what it took
+#[test]
+fn collapsed_row_shortens_the_table() {
+    let mut tree = new_test_tree();
+    let cell = Style::default();
+    let table = table_with_columns(
+        &mut tree,
+        Style { border_spacing: Size { width: length(5.0), height: length(5.0) }, ..Default::default() },
+        &[],
+        &[&[cell.clone()], &[cell.clone()], &[cell]],
+    );
+    let collapsed_row = tree.child_at_index(table, 1).unwrap();
+    tree.set_style(
+        collapsed_row,
+        Style { display: Display::TableRow, visibility: Visibility::Collapse, ..Default::default() },
+    )
+    .unwrap();
+    let last_row = tree.child_at_index(table, 2).unwrap();
+
+    tree.compute_layout(table, Size::MAX_CONTENT).unwrap();
+
+    // 5 + 10 + 5 + 10 + 5 tall: the middle row and one spacing are gone
+    assert_eq!(tree.layout(table).unwrap().size, Size { width: 30.0, height: 35.0 });
+    assert_eq!(tree.layout(collapsed_row).unwrap().size.height, 0.0);
+    assert_eq!(tree.layout(last_row).unwrap().location.y, 20.0);
 }
