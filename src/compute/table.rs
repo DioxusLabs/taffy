@@ -51,6 +51,9 @@ struct CellMeasure {
     percent: Option<f32>,
     /// Whether the cell has a fixed (length) specified width
     is_constrained: bool,
+    /// The inline padding and border a content-box percentage width adds to the cell's column
+    /// in a fixed table
+    percent_padding_border: f32,
 }
 
 /// One cell's resolved geometry, carried from row sizing through to positioning
@@ -75,6 +78,8 @@ struct Column {
     max: f32,
     /// Largest percentage specified on any cell in this column
     percent: Option<f32>,
+    /// The inline padding and border a fixed table adds to the column's percentage width
+    percent_padding_border: f32,
     /// Whether a column or column group with `visibility: collapse` removes this column
     collapsed: bool,
     /// Whether any cell in this column has a fixed (length) specified width
@@ -358,8 +363,12 @@ pub fn compute_table_layout(
 
     // Phase 2: collect intrinsic size contributions per column
     //
-    // Fixed layout reads the column widths off the first row alone and never looks at content
-    let is_fixed = table_layout_mode == TableLayout::Fixed && styled_known.width.is_some();
+    // Fixed layout reads the column widths off the first row alone and never looks at content. It
+    // applies to every `width` but `auto` and `max-content` (css-tables-3 §3.9.3, csswg-drafts#10937)
+    let width_tag = raw_size.width.tag();
+    let is_fixed = table_layout_mode == TableLayout::Fixed
+        && width_tag != CompactLength::AUTO_TAG
+        && width_tag != CompactLength::MAX_CONTENT_TAG;
     let mut columns = measure_columns(tree, &cells, &column_boxes, &column_groups, col_count, h_spacing, is_fixed);
 
     // Phase 3: resolve the table's used width and the columns' used widths
@@ -367,7 +376,12 @@ pub fn compute_table_layout(
     let total_h_spacing = if col_count == 0 { 0.0 } else { h_spacing * (col_count as f32 + 1.0) };
     let (grid_min_sum, grid_max_sum) = grid_min_max(&columns, is_fixed);
     let grid_min = grid_min_sum + total_h_spacing;
-    let grid_max = grid_max_sum + total_h_spacing;
+    // A fixed table whose percentage width has nothing to resolve against is as wide as it can be
+    let grid_max = if is_fixed && styled_known.width.is_none() && width_tag & CompactLength::PERCENTAGE_BIT != 0 {
+        UNBOUNDED_TABLE_WIDTH
+    } else {
+        grid_max_sum + total_h_spacing
+    };
 
     let table_width = match styled_known.width {
         Some(w) => w.max(grid_min + pb_size.width),
@@ -1327,12 +1341,20 @@ fn measure_columns(
     // and for the columns a group with no column boxes spans by itself
     let width_measure = |width_dim: Dimension| -> Option<CellMeasure> {
         match width_dim.tag() {
-            CompactLength::LENGTH_TAG => {
-                Some(CellMeasure { min: 0.0, max: width_dim.value().max(0.0), percent: None, is_constrained: true })
-            }
-            CompactLength::PERCENT_TAG => {
-                Some(CellMeasure { min: 0.0, max: 0.0, percent: Some(width_dim.value()), is_constrained: false })
-            }
+            CompactLength::LENGTH_TAG => Some(CellMeasure {
+                min: 0.0,
+                max: width_dim.value().max(0.0),
+                percent: None,
+                is_constrained: true,
+                percent_padding_border: 0.0,
+            }),
+            CompactLength::PERCENT_TAG => Some(CellMeasure {
+                min: 0.0,
+                max: 0.0,
+                percent: Some(width_dim.value()),
+                is_constrained: false,
+                percent_padding_border: 0.0,
+            }),
             _ => None,
         }
     };
@@ -1366,6 +1388,18 @@ fn measure_columns(
         let cell_style = tree.get_table_child_style(cell.node_id);
         let width_dim = cell_style.size().width;
         let width_tag = width_dim.tag();
+        // A fixed table resolves a percentage against its own width and adds the cell's padding and
+        // border on top for a content-box cell, where an auto table takes it as the border-box width
+        let percent_padding_border = if is_fixed
+            && width_tag == CompactLength::PERCENT_TAG
+            && cell_style.box_sizing() == BoxSizing::ContentBox
+        {
+            let padding = cell_style.padding().resolve_or_zero(None, |v, b| tree.calc(v, b));
+            let border = cell_style.border().resolve_or_zero(None, |v, b| tree.calc(v, b));
+            padding.horizontal_axis_sum() + border.horizontal_axis_sum()
+        } else {
+            0.0
+        };
         drop(cell_style);
 
         let mut measure = CellMeasure {
@@ -1373,6 +1407,7 @@ fn measure_columns(
             max: 0.0,
             percent: (width_tag == CompactLength::PERCENT_TAG).then(|| width_dim.value()),
             is_constrained: width_tag == CompactLength::LENGTH_TAG,
+            percent_padding_border,
         };
 
         if !is_fixed {
@@ -1411,6 +1446,21 @@ fn measure_columns(
     for (col, colspan, measure) in spans.iter() {
         let range = *col..(col + colspan).min(col_count);
         let spanned_spacing = h_spacing * (range.len() as f32 - 1.0);
+
+        // A fixed table shares a spanning cell's width or percentage evenly between the columns it
+        // spans that have none yet; its padding and border are part of that width
+        if is_fixed {
+            let span = range.len() as f32;
+            for column in columns[range].iter_mut().filter(|c| !c.is_constrained && c.percent.is_none()) {
+                if measure.is_constrained {
+                    column.max = ((measure.max - spanned_spacing) / span).max(0.0);
+                    column.is_constrained = true;
+                } else if let Some(percent) = measure.percent {
+                    column.percent = Some(percent / span);
+                }
+            }
+            continue;
+        }
 
         // Whatever a spanning cell's percentage asks for beyond the percentages already on the
         // columns is shared out over the remaining ones, weighted by max-content width
@@ -1483,8 +1533,13 @@ fn encompass(column: &mut Column, cell: &CellMeasure) {
 
     if let Some(percent) = cell.percent {
         column.percent = Some(column.percent.map_or(percent, |p: f32| p.max(percent)));
+        column.percent_padding_border = column.percent_padding_border.max(cell.percent_padding_border);
     }
 }
+
+/// The width Blink hands a table that asks to be as wide as possible: one whose columns claim the
+/// whole 100%, or a fixed table with a percentage width and no width to resolve it against
+const UNBOUNDED_TABLE_WIDTH: f32 = 1_000_000.0;
 
 /// Sum the columns into the table's min-content and max-content grid widths
 /// (<https://www.w3.org/TR/css-tables-3/#computing-the-table-width>). Percentages have nothing to
@@ -1492,9 +1547,6 @@ fn encompass(column: &mut Column, cell: &CellMeasure) {
 /// whose content needs `w` forces a total of at least `w / p`, and columns without a percentage
 /// have to fit in the `1 - Σp` the percentage columns leave behind.
 fn grid_min_max(columns: &[Column], is_fixed: bool) -> (f32, f32) {
-    /// The width Blink hands a table whose columns claim the whole 100%
-    const UNBOUNDED_WIDTH: f32 = 1_000_000.0;
-
     let mut min = 0.0;
     let mut max = 0.0;
     let mut percent_estimate: f32 = 0.0;
@@ -1523,7 +1575,7 @@ fn grid_min_max(columns: &[Column], is_fixed: bool) -> (f32, f32) {
         let from_percentages = if non_percent_max == 0.0 {
             0.0
         } else if percent_sum >= 1.0 {
-            UNBOUNDED_WIDTH
+            UNBOUNDED_TABLE_WIDTH
         } else {
             non_percent_max / (1.0 - percent_sum)
         };
@@ -1711,7 +1763,8 @@ fn resolve_fixed_layout_columns(columns: &mut [Column], assignable: f32) {
     let auto_count = columns.len() - fixed_count - percent_count - zero_width_count;
 
     let fixed_sum: f32 = columns.iter().filter(|c| is_fixed_column(c)).map(|c| c.max).sum();
-    let percent_sum: f32 = columns.iter().filter(|c| c.percent.is_some()).map(|c| percent_width(c, assignable)).sum();
+    let percent_width = |column: &Column| column.percent.unwrap_or(0.0) * assignable + column.percent_padding_border;
+    let percent_sum: f32 = columns.iter().filter(|c| c.percent.is_some()).map(percent_width).sum();
 
     let mut assigned = 0.0;
     let mut last = None;
@@ -1735,11 +1788,7 @@ fn resolve_fixed_layout_columns(columns: &mut [Column], assignable: f32) {
         let scale = if rescale && percent_sum > 0.0 { target / percent_sum } else { 1.0 };
 
         for (index, column) in columns.iter_mut().enumerate().filter(|(_, c)| c.percent.is_some()) {
-            column.used = if percent_sum > 0.0 {
-                scale * percent_width(column, assignable)
-            } else {
-                target / percent_count as f32
-            };
+            column.used = if percent_sum > 0.0 { scale * percent_width(column) } else { target / percent_count as f32 };
             assigned += column.used;
             last = Some(index);
         }
