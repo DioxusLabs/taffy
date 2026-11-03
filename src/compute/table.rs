@@ -157,7 +157,6 @@ pub fn compute_table_layout(
     let style = tree.get_table_container_style(node_id);
     let raw_padding = style.padding();
     let raw_border = style.border();
-    let raw_margin = style.margin();
     let raw_size = style.size();
     let raw_min_size = style.min_size();
     let raw_max_size = style.max_size();
@@ -175,7 +174,6 @@ pub fn compute_table_layout(
     let parent_width = parent_size.width;
     let padding = raw_padding.resolve_or_zero(parent_width, |v, b| tree.calc(v, b));
     let border = raw_border.resolve_or_zero(parent_width, |v, b| tree.calc(v, b));
-    let margin = raw_margin.resolve_or_zero(parent_width, |v, b| tree.calc(v, b));
     let padding_border = padding + border;
     let pb_size = padding_border.sum_axes();
 
@@ -248,7 +246,7 @@ pub fn compute_table_layout(
         Some(w) => w.max(grid_min + pb_size.width),
         None => {
             let shrink_to_fit = match available_space.width {
-                AvailableSpace::Definite(w) => (w - margin.horizontal_axis_sum() - pb_size.width)
+                AvailableSpace::Definite(w) => (w - pb_size.width)
                     .maybe_clamp(max_size.width.map(|m| m - pb_size.width), None)
                     .clamp(grid_min, grid_max.max(grid_min)),
                 AvailableSpace::MaxContent => grid_max,
