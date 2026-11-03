@@ -38053,6 +38053,54 @@ mod table {
 
     #[cfg(feature = "table_layout")]
     #[test]
+    fn table_cell_height_shorter_than_content__border_box_ltr() {
+        crate::run_xml_test("table", "table_cell_height_shorter_than_content__border_box_ltr");
+    }
+
+    #[cfg(feature = "table_layout")]
+    #[test]
+    fn table_cell_height_shorter_than_content__content_box_ltr() {
+        crate::run_xml_test("table", "table_cell_height_shorter_than_content__content_box_ltr");
+    }
+
+    #[cfg(feature = "table_layout")]
+    #[test]
+    fn table_cell_height_shorter_than_content__border_box_rtl() {
+        crate::run_xml_test("table", "table_cell_height_shorter_than_content__border_box_rtl");
+    }
+
+    #[cfg(feature = "table_layout")]
+    #[test]
+    fn table_cell_height_shorter_than_content__content_box_rtl() {
+        crate::run_xml_test("table", "table_cell_height_shorter_than_content__content_box_rtl");
+    }
+
+    #[cfg(feature = "table_layout")]
+    #[test]
+    fn table_cell_percent_padding__border_box_ltr() {
+        crate::run_xml_test("table", "table_cell_percent_padding__border_box_ltr");
+    }
+
+    #[cfg(feature = "table_layout")]
+    #[test]
+    fn table_cell_percent_padding__content_box_ltr() {
+        crate::run_xml_test("table", "table_cell_percent_padding__content_box_ltr");
+    }
+
+    #[cfg(feature = "table_layout")]
+    #[test]
+    fn table_cell_percent_padding__border_box_rtl() {
+        crate::run_xml_test("table", "table_cell_percent_padding__border_box_rtl");
+    }
+
+    #[cfg(feature = "table_layout")]
+    #[test]
+    fn table_cell_percent_padding__content_box_rtl() {
+        crate::run_xml_test("table", "table_cell_percent_padding__content_box_rtl");
+    }
+
+    #[cfg(feature = "table_layout")]
+    #[test]
     fn table_colspan_auto_columns__border_box_ltr() {
         crate::run_xml_test("table", "table_colspan_auto_columns__border_box_ltr");
     }

@@ -61,12 +61,23 @@ struct CellMeasure {
 struct CellSizing {
     /// The width of every column the cell spans, plus the spacing between them
     width: f32,
-    /// The height the cell asks for at that width
+    /// The height the cell's content takes at that width
     height: f32,
+    /// The border-box height the cell's `height` and `min-height` styles make it at least
+    min_height: f32,
     /// The cell's own baseline, when it takes part in row baseline alignment
     baseline: Option<f32>,
     /// How far baseline alignment pushes the cell's content down
     shift: f32,
+}
+
+impl CellSizing {
+    /// The height the cell needs from the rows it spans: its content, pushed down by baseline
+    /// alignment, or its specified height, whichever is larger. A cell's `height` is a minimum
+    /// and the row grows to fit the content (CSS 2.1 §17.5.3)
+    fn required_height(&self) -> f32 {
+        (self.shift + self.height).max(self.min_height)
+    }
 }
 
 /// Accumulated sizing constraints for one column of the table grid
@@ -472,15 +483,13 @@ pub fn compute_table_layout(
     for (cell, sizing) in cells.iter().zip(sizing.iter_mut()) {
         let participates =
             tree.get_table_child_style(cell.node_id).align_content().keyword == AlignContentKeyword::Normal;
-        let cell_parent_size = Size { width: Some(table_width - pb_size.width), height: None };
+        // Percentages on a cell resolve against the row's width (the grid, without the outer
+        // border-spacing), which is also the basis block layout is handed for the cell below
+        let cell_parent_size = Size { width: Some(grid_width), height: None };
         let output = tree.compute_child_layout(
             cell.node_id,
             LayoutInput {
-                known_dimensions: Size { width: Some(sizing.width), height: None }.or(cell_style_size(
-                    tree,
-                    cell.node_id,
-                    cell_parent_size,
-                )),
+                known_dimensions: Size { width: Some(sizing.width), height: None },
                 known_dimensions_are_definite: Size { width: true, height: true },
                 parent_size: cell_parent_size,
                 available_space: Size {
@@ -496,6 +505,7 @@ pub fn compute_table_layout(
             },
         );
         sizing.height = output.size.height;
+        sizing.min_height = cell_min_height(tree, cell.node_id, cell_parent_size).unwrap_or(0.0);
 
         let cell_style = tree.get_table_child_style(cell.node_id);
         let height_dim = cell_style.size().height;
@@ -511,12 +521,12 @@ pub fn compute_table_layout(
             } else if height_dim.tag() == CompactLength::LENGTH_TAG {
                 row.is_constrained = true;
             }
-            row.used_height = row.used_height.max(output.size.height);
+            row.used_height = row.used_height.max(sizing.required_height());
         }
 
         let cell_style = tree.get_table_child_style(cell.node_id);
-        let pb_bottom = cell_style.padding().resolve_or_zero(parent_width, |v, b| tree.calc(v, b)).bottom
-            + cell_style.border().resolve_or_zero(parent_width, |v, b| tree.calc(v, b)).bottom;
+        let pb_bottom = cell_style.padding().resolve_or_zero(cell_parent_size.width, |v, b| tree.calc(v, b)).bottom
+            + cell_style.border().resolve_or_zero(cell_parent_size.width, |v, b| tree.calc(v, b)).bottom;
         drop(cell_style);
 
         // A cell with no children and no line box is empty (Blitz lays out text-only cells
@@ -526,7 +536,7 @@ pub fn compute_table_layout(
         let row = &mut rows[cell.row];
         let is_empty = tree.child_count(cell.node_id) == 0 && output.baselines.first.is_none();
         if participates && !is_empty {
-            let baseline = output.baselines.first.unwrap_or(output.size.height - pb_bottom);
+            let baseline = output.baselines.first.unwrap_or(sizing.height - pb_bottom);
             sizing.baseline = Some(baseline);
             row.baseline = Some(row.baseline.map_or(baseline, |b: f32| b.max(baseline)));
         } else {
@@ -541,7 +551,7 @@ pub fn compute_table_layout(
             sizing.shift = row_baseline - baseline;
             if cell.rowspan == 1 {
                 let row = &mut rows[cell.row];
-                row.used_height = row.used_height.max(sizing.shift + sizing.height);
+                row.used_height = row.used_height.max(sizing.required_height());
             }
         }
     }
@@ -564,7 +574,7 @@ pub fn compute_table_layout(
 
     for (cell, sizing) in cells.iter().zip(sizing.iter()).filter(|(cell, _)| cell.rowspan > 1) {
         let range = cell.row..(cell.row + cell.rowspan).min(num_rows);
-        let target = sizing.shift + sizing.height - v_spacing * (range.len() as f32 - 1.0);
+        let target = sizing.required_height() - v_spacing * (range.len() as f32 - 1.0);
         distribute_excess_height(&mut rows[range], target, true, percentage_basis);
     }
 
@@ -730,8 +740,8 @@ pub fn compute_table_layout(
         );
 
         let cell_style = tree.get_table_child_style(cell.node_id);
-        let cell_padding = cell_style.padding().resolve_or_zero(parent_width, |v, b| tree.calc(v, b));
-        let cell_border = cell_style.border().resolve_or_zero(parent_width, |v, b| tree.calc(v, b));
+        let cell_padding = cell_style.padding().resolve_or_zero(Some(grid_width), |v, b| tree.calc(v, b));
+        let cell_border = cell_style.border().resolve_or_zero(Some(grid_width), |v, b| tree.calc(v, b));
         #[cfg(feature = "content_size")]
         let cell_overflow = cell_style.overflow();
         #[cfg(feature = "content_size")]
@@ -1902,6 +1912,41 @@ fn cell_style_size(
         _ => None,
     });
     min_max_definite_size.or(clamped_style_size)
+}
+
+/// The border-box height a cell's `height` and `min-height` styles make it at least, if either
+/// is set. A cell's specified height is a minimum: its row grows to fit the content
+/// (CSS 2.1 §17.5.3). A percentage height has nothing to resolve against here and is ignored.
+fn cell_min_height(tree: &impl LayoutTableContainer, node_id: NodeId, parent_size: Size<Option<f32>>) -> Option<f32> {
+    let style = tree.get_table_child_style(node_id);
+    let padding = style.padding().resolve_or_zero(parent_size.width, |v, b| tree.calc(v, b));
+    let border = style.border().resolve_or_zero(parent_size.width, |v, b| tree.calc(v, b));
+    let box_sizing_adjustment = if style.box_sizing() == BoxSizing::ContentBox {
+        padding.vertical_axis_sum() + border.vertical_axis_sum()
+    } else {
+        0.0
+    };
+    let min_height = style
+        .min_size()
+        .height
+        .maybe_resolve(parent_size.height, |v, b| tree.calc(v, b))
+        .maybe_add(box_sizing_adjustment);
+    let max_height = style
+        .max_size()
+        .height
+        .maybe_resolve(parent_size.height, |v, b| tree.calc(v, b))
+        .maybe_add(box_sizing_adjustment);
+    let height = style
+        .size()
+        .height
+        .maybe_resolve(parent_size.height, |v, b| tree.calc(v, b))
+        .maybe_add(box_sizing_adjustment)
+        .maybe_clamp(min_height, max_height);
+    match (height, min_height) {
+        (Some(height), Some(min)) => Some(height.max(min)),
+        (height, None) => height,
+        (None, min) => min,
+    }
 }
 
 /// The border-box `min-width` and `max-width` of a cell, where they are lengths
