@@ -1,0 +1,15 @@
+<test name="float_bfc_root_padding_border_below_float_margin__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="flow-root" box-sizing="content-box" direction="ltr" position="absolute" width="100px" padding-bottom="7px" border-bottom="3px">
+      <div display="block" box-sizing="content-box" direction="ltr" position="relative" height="10px"/>
+      <div display="block" box-sizing="content-box" direction="ltr" position="relative" float="left" width="20px" height="30px" margin-bottom="5px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="100" height="55">
+      <node x="0" y="0" width="100" height="10"/>
+      <node x="0" y="10" width="20" height="30"/>
+    </node>
+  </expectations>
+</test>
