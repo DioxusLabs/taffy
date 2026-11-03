@@ -639,12 +639,13 @@ impl FloatContext {
         clear: Clear,
         after: Option<usize>,
     ) -> ContentSlot {
+        // Subtract each inset separately (here and below): `- insets.sum()` rounds differently for large values
         if !self.has_active_floats(min_y) {
             return ContentSlot {
                 segment_id: None,
                 x: containing_block_insets.left,
                 y: min_y,
-                width: self.available_width - containing_block_insets.sum(),
+                width: self.available_width - containing_block_insets.left - containing_block_insets.right,
                 height: f32::INFINITY,
             };
         }
@@ -685,7 +686,7 @@ impl FloatContext {
                     segment_id: Some(start_idx),
                     x: insets.left,
                     y,
-                    width: self.available_width - insets.sum(),
+                    width: self.available_width - insets.left - insets.right,
                     height: slot_height,
                 }
             }
@@ -693,7 +694,7 @@ impl FloatContext {
                 segment_id: None,
                 x: containing_block_insets.left,
                 y: min_y,
-                width: self.available_width - containing_block_insets.sum(),
+                width: self.available_width - containing_block_insets.left - containing_block_insets.right,
                 height: f32::INFINITY,
             },
         }
@@ -735,7 +736,7 @@ impl FloatContext {
         after: Option<usize>,
     ) -> BfcSlot {
         let margin_insets = containing_block_insets + margins;
-        let no_float_width = self.available_width - margin_insets.sum();
+        let no_float_width = self.available_width - margin_insets.left - margin_insets.right;
         let no_float_slot = BfcSlot {
             segment_id: None,
             x: margin_insets.left,
@@ -798,8 +799,8 @@ impl FloatContext {
                     segment_id: Some(start_idx),
                     x: fit_insets.left,
                     y,
-                    border_width: self.available_width - fit_insets.sum(),
-                    stretch_width: self.available_width - stretch_insets.sum(),
+                    border_width: self.available_width - fit_insets.left - fit_insets.right,
+                    stretch_width: self.available_width - stretch_insets.left - stretch_insets.right,
                 }
             }
             // Below all floats
