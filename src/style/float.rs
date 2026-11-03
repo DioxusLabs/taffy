@@ -37,6 +37,17 @@ pub enum FloatDirection {
     Right = 1,
 }
 
+impl FloatDirection {
+    /// The opposite side: `Right` for `Left` and `Left` for `Right`
+    #[inline(always)]
+    pub fn opposite(self) -> Self {
+        match self {
+            Self::Left => Self::Right,
+            Self::Right => Self::Left,
+        }
+    }
+}
+
 impl Float {
     /// Whether the box is floated
     pub fn is_floated(self) -> bool {
