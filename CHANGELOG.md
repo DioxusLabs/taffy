@@ -8,6 +8,7 @@
 - Grid: the clamp of an item's content-based minimum size to the fixed max track sizing functions it spans now leaves room for its margins and baseline shim (#1362).
 - Block/float: the auto height of a box that establishes a new block formatting context (e.g. a float or `display: flow-root`) and contains floats now includes its bottom padding and border below the bottom margin edge of those floats. Previously the floats' bottom edge was used as the box's outer height, so the bottom padding and border overlapped them.
 - Float: a zero-height float is now recorded in the float context, so content and boxes establishing a new block formatting context whose vertical extent crosses its position avoid it. Previously it only affected `clear` and the position of later floats.
+- Block: when a block with no top border or padding has a bottom border or padding, the margins of leading children that collapse through it (and so collapse with its own top margin) are no longer also added to its height. Previously such a block was too tall by the collapsed margin.
 
 ### Changes
 
