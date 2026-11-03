@@ -72,6 +72,9 @@ pub struct BfcSlot {
     /// the negative-margin lower bound). This differs from `border_width` in that the
     /// trailing margin is subtracted (except for any part of it that overlaps a float).
     pub stretch_width: f32,
+    /// How far down from the slot's top its widths stay valid: a box taller than this may be
+    /// beside further floats.
+    pub height: f32,
 }
 
 /// A floated box
@@ -115,6 +118,22 @@ impl Segment {
         cb_insets: FloatInsets,
     ) -> bool {
         float_fits_horizontally(floated_box.width, direction, bfc_width, self.insets, cb_insets)
+    }
+
+    /// Widen this segment's float insets and occupied sides to cover `other`'s
+    fn union(&mut self, other: &Segment) {
+        self.insets = self.insets.max(other.insets);
+        self.has_float = [self.has_float[0] || other.has_float[0], self.has_float[1] || other.has_float[1]];
+    }
+
+    /// Whether this segment is narrower than `other` on either side: a larger inset, or a float
+    /// on a side where `other` has none. The latter counts even if the inset doesn't grow, since
+    /// `find_bfc_slot` only applies the insets on sides that have a float.
+    fn is_narrower_than(&self, other: &Segment) -> bool {
+        self.insets.left > other.insets.left
+            || self.insets.right > other.insets.right
+            || (self.has_float[0] && !other.has_float[0])
+            || (self.has_float[1] && !other.has_float[1])
     }
 }
 
@@ -743,6 +762,7 @@ impl FloatContext {
             y: min_y,
             border_width: no_float_width,
             stretch_width: no_float_width,
+            height: f32::INFINITY,
         };
 
         if !self.has_active_floats(min_y) {
@@ -766,13 +786,17 @@ impl FloatContext {
             Some(segment) => {
                 let y = segment.y.start.max(min_y);
 
-                // Combine the float insets of every segment beside the box's minimum height
-                let mut insets = segment.insets;
-                let mut has_float = segment.has_float;
-                for segment in self.segments[start_idx + 1..].iter().take_while(|seg| seg.y.start < y + min_height) {
-                    insets = insets.max(segment.insets);
-                    has_float = [has_float[0] || segment.has_float[0], has_float[1] || segment.has_float[1]];
+                // Combine the float insets of every segment beside the box's minimum height, then
+                // extend the slot down over any further segments that don't narrow it
+                let mut combined = segment.clone();
+                let mut lower_segments = self.segments[start_idx + 1..].iter().peekable();
+                while let Some(segment) = lower_segments.next_if(|seg| seg.y.start < y + min_height) {
+                    combined.union(segment);
                 }
+                let slot_height = lower_segments
+                    .find(|seg| seg.is_narrower_than(&combined))
+                    .map_or(f32::INFINITY, |seg| seg.y.start - y);
+                let Segment { insets, has_float, .. } = combined;
 
                 let lead = match direction {
                     Direction::Ltr => FloatDirection::Left,
@@ -801,6 +825,7 @@ impl FloatContext {
                     y,
                     border_width: self.available_width - fit_insets.left - fit_insets.right,
                     stretch_width: self.available_width - stretch_insets.left - stretch_insets.right,
+                    height: slot_height,
                 }
             }
             // Below all floats
