@@ -1,7 +1,7 @@
 <test name="table_fixed_layout_auto_width__border_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="table" direction="ltr" table-layout="fixed" border-spacing-x="0px" border-spacing-y="0px">
+    <div display="table" direction="ltr" position="absolute" table-layout="fixed" border-spacing-x="0px" border-spacing-y="0px">
       <div display="table-row-group" direction="ltr">
         <div display="table-row" direction="ltr">
           <div display="table-cell" direction="ltr" width="100px" height="20px" padding-top="0px" padding-left="0px" padding-bottom="0px" padding-right="0px"/>
@@ -9,7 +9,7 @@
         </div>
         <div display="table-row" direction="ltr">
           <div display="table-cell" direction="ltr" height="20px" padding-top="0px" padding-left="0px" padding-bottom="0px" padding-right="0px">
-            <div direction="ltr" width="300px" height="20px"/>
+            <div direction="ltr" position="relative" width="300px" height="20px"/>
           </div>
           <div display="table-cell" direction="ltr" height="20px" padding-top="0px" padding-left="0px" padding-bottom="0px" padding-right="0px"/>
         </div>

@@ -1,17 +1,17 @@
 <test name="table_fixed_layout_overflow_content__border_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="table" direction="ltr" table-layout="fixed" border-spacing-x="0px" border-spacing-y="0px" width="100px">
-      <div display="table-row-group" direction="ltr">
-        <div display="table-row" direction="ltr">
-          <div display="table-cell" direction="ltr" width="50px" height="20px"/>
-          <div display="table-cell" direction="ltr" width="50px" height="20px"/>
+    <div display="table" direction="ltr" position="absolute" table-layout="fixed" border-spacing-x="0px" border-spacing-y="0px" width="100px">
+      <div display="table-row-group" direction="ltr" position="relative">
+        <div display="table-row" direction="ltr" position="relative">
+          <div display="table-cell" direction="ltr" position="relative" width="50px" height="20px"/>
+          <div display="table-cell" direction="ltr" position="relative" width="50px" height="20px"/>
         </div>
-        <div display="table-row" direction="ltr">
-          <text display="table-cell" direction="ltr" height="20px">
+        <div display="table-row" direction="ltr" position="relative">
+          <text display="table-cell" direction="ltr" position="relative" height="20px">
             HHHH​HHHH
           </text>
-          <text display="table-cell" direction="ltr" height="20px">
+          <text display="table-cell" direction="ltr" position="relative" height="20px">
             HH
           </text>
         </div>
