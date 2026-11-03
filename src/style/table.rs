@@ -37,6 +37,10 @@ pub enum TableRole {
     Row,
     /// `display: table-row-group` (thead, tbody, tfoot)
     RowGroup,
+    /// `display: table-column-group` (colgroup)
+    ColumnGroup,
+    /// `display: table-column` (col)
+    Column,
     /// Any other display value
     Other,
 }

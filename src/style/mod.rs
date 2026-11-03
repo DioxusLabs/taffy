@@ -277,6 +277,12 @@ pub enum Display {
     /// A cell within a table row. The cell's content follows the block layout algorithm.
     #[cfg(feature = "table_layout")]
     TableCell,
+    /// A group of columns within a table (colgroup). Laid out by the parent table.
+    #[cfg(feature = "table_layout")]
+    TableColumnGroup,
+    /// A column within a table (col). Laid out by the parent table.
+    #[cfg(feature = "table_layout")]
+    TableColumn,
     /// The node is hidden, and it's children will also be hidden
     None,
 }
@@ -324,6 +330,10 @@ crate::util::parse::impl_parse_for_keyword_enum!(Display,
     "table-row" => TableRow,
     #[cfg(feature = "table_layout")]
     "table-cell" => TableCell,
+    #[cfg(feature = "table_layout")]
+    "table-column-group" => TableColumnGroup,
+    #[cfg(feature = "table_layout")]
+    "table-column" => TableColumn,
 );
 
 impl core::fmt::Display for Display {
@@ -346,6 +356,10 @@ impl core::fmt::Display for Display {
             Display::TableRow => write!(f, "TABLE-ROW"),
             #[cfg(feature = "table_layout")]
             Display::TableCell => write!(f, "TABLE-CELL"),
+            #[cfg(feature = "table_layout")]
+            Display::TableColumnGroup => write!(f, "TABLE-COLUMN-GROUP"),
+            #[cfg(feature = "table_layout")]
+            Display::TableColumn => write!(f, "TABLE-COLUMN"),
         }
     }
 }
@@ -1695,6 +1709,8 @@ impl<S: CheapCloneStr> TableItemStyle for Style<S> {
             Display::TableCell => TableRole::Cell,
             Display::TableRow => TableRole::Row,
             Display::TableRowGroup => TableRole::RowGroup,
+            Display::TableColumnGroup => TableRole::ColumnGroup,
+            Display::TableColumn => TableRole::Column,
             _ => TableRole::Other,
         }
     }
