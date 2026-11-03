@@ -1471,7 +1471,7 @@ fn measure_columns(
     spans.sort_by_key(|(col, colspan, _)| (*colspan, *col));
     for (col, colspan, measure) in spans.iter() {
         let range = *col..(col + colspan).min(col_count);
-        let spanned = &mut columns[range];
+        let spanned = &mut columns[range.clone()];
         let spaced_count = spanned.iter().filter(|c| !c.is_mergeable).count();
         let spanned_spacing = h_spacing * (spaced_count.max(1) as f32 - 1.0);
 
