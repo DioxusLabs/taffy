@@ -391,3 +391,45 @@ fn caption_widens_and_centres_in_the_table() {
     assert_eq!(tree.layout(cell_id).unwrap().size.width, 100.0);
     assert_eq!(tree.layout(centred).unwrap().location, Point { x: 30.0, y: 10.0 });
 }
+
+/// A table's specified size and insets only give a minimum: an absolutely positioned table that
+/// is wider than them is positioned using the width it actually ends up with
+#[test]
+fn absolutely_positioned_table_is_positioned_by_its_used_size() {
+    let mut tree = new_test_tree();
+    let content = tree
+        .new_leaf(Style { size: Size { width: length(120.0), height: length(10.0) }, ..Default::default() })
+        .unwrap();
+    let cell = tree.new_with_children(Style { display: Display::TableCell, ..Default::default() }, &[content]).unwrap();
+    let row = tree.new_with_children(Style { display: Display::TableRow, ..Default::default() }, &[cell]).unwrap();
+    let table = tree
+        .new_with_children(
+            Style {
+                display: Display::Table,
+                item_is_table: true,
+                position: Position::Absolute,
+                inset: Rect { left: auto(), right: length(0.0), top: length(0.0), bottom: auto() },
+                size: Size { width: length(50.0), height: auto() },
+                border_spacing: Size::zero(),
+                ..Default::default()
+            },
+            &[row],
+        )
+        .unwrap();
+    let container = tree
+        .new_with_children(
+            Style {
+                display: Display::Block,
+                size: Size { width: length(200.0), height: length(200.0) },
+                ..Default::default()
+            },
+            &[table],
+        )
+        .unwrap();
+
+    tree.compute_layout(container, Size::MAX_CONTENT).unwrap();
+
+    let layout = tree.layout(table).unwrap();
+    assert_eq!(layout.size, Size { width: 120.0, height: 10.0 });
+    assert_eq!(layout.location, Point { x: 80.0, y: 0.0 });
+}
