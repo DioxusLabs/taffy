@@ -608,9 +608,15 @@ impl FloatContext {
     }
 
     /// Search for a space suitable for laying out non-floated content into
+    ///
+    /// The returned slot avoids the floats beside any part of `height` below its top edge (a line
+    /// box is shortened by every float its vertical extent intersects). The slot's `height` is
+    /// how far down from its top edge its width stays valid: content taller than that may be
+    /// beside further floats.
     pub fn find_content_slot(
         &self,
         min_y: f32,
+        height: f32,
         containing_block_insets: [f32; 2],
         clear: Clear,
         after: Option<usize>,
@@ -641,14 +647,31 @@ impl FloatContext {
         let segment = self.segments.get(start_idx);
         match segment {
             Some(segment) => {
-                let inset_left = segment.insets[0].max(containing_block_insets[0]);
-                let inset_right = segment.insets[1].max(containing_block_insets[1]);
+                let y = segment.y.start.max(min_y);
+                let end_y = y + height;
+
+                // Combine the insets of every segment beside the content's height, then extend
+                // the slot down over any further segments that don't narrow it
+                let mut insets = [
+                    containing_block_insets[0].max(segment.insets[0]),
+                    containing_block_insets[1].max(segment.insets[1]),
+                ];
+                let mut slot_height = f32::INFINITY;
+                for segment in &self.segments[start_idx + 1..] {
+                    if segment.y.start < end_y {
+                        insets = [insets[0].max(segment.insets[0]), insets[1].max(segment.insets[1])];
+                    } else if segment.insets[0] > insets[0] || segment.insets[1] > insets[1] {
+                        slot_height = segment.y.start - y;
+                        break;
+                    }
+                }
+
                 ContentSlot {
                     segment_id: Some(start_idx),
-                    x: inset_left,
-                    y: segment.y.start.max(min_y),
-                    width: self.available_width - inset_left - inset_right,
-                    height: f32::INFINITY,
+                    x: insets[0],
+                    y,
+                    width: self.available_width - insets[0] - insets[1],
+                    height: slot_height,
                 }
             }
             None => ContentSlot {
