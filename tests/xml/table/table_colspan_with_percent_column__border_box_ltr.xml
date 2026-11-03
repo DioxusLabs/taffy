@@ -1,7 +1,7 @@
 <test name="table_colspan_with_percent_column__border_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="table" direction="ltr" border-spacing-x="0px" border-spacing-y="0px" width="200px">
+    <div display="table" direction="ltr" position="absolute" border-spacing-x="0px" border-spacing-y="0px" width="200px">
       <div display="table-row-group" direction="ltr">
         <div display="table-row" direction="ltr">
           <div display="table-cell" direction="ltr" colspan="2" height="20px" padding-top="0px" padding-left="0px" padding-bottom="0px" padding-right="0px"/>

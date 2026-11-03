@@ -1,15 +1,15 @@
 <test name="table_fixed_layout_with_border_spacing__border_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="table" direction="rtl" table-layout="fixed" border-spacing-x="10px" border-spacing-y="10px" width="200px">
-      <div display="table-row-group" direction="rtl">
-        <div display="table-row" direction="rtl">
-          <div display="table-cell" direction="rtl" width="50px" height="20px"/>
-          <div display="table-cell" direction="rtl" width="100px" height="20px"/>
+    <div display="table" direction="rtl" position="absolute" table-layout="fixed" border-spacing-x="10px" border-spacing-y="10px" width="200px">
+      <div display="table-row-group" direction="rtl" position="relative">
+        <div display="table-row" direction="rtl" position="relative">
+          <div display="table-cell" direction="rtl" position="relative" width="50px" height="20px"/>
+          <div display="table-cell" direction="rtl" position="relative" width="100px" height="20px"/>
         </div>
-        <div display="table-row" direction="rtl">
-          <div display="table-cell" direction="rtl" height="20px"/>
-          <div display="table-cell" direction="rtl" height="20px"/>
+        <div display="table-row" direction="rtl" position="relative">
+          <div display="table-cell" direction="rtl" position="relative" height="20px"/>
+          <div display="table-cell" direction="rtl" position="relative" height="20px"/>
         </div>
       </div>
     </div>

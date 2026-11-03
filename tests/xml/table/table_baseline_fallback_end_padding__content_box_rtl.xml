@@ -1,8 +1,8 @@
 <test name="table_baseline_fallback_end_padding__content_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="flex" box-sizing="content-box" direction="rtl" align-items="baseline">
-      <div display="block" box-sizing="content-box" direction="rtl" width="20px" height="10px"/>
+    <div display="flex" box-sizing="content-box" direction="rtl" position="absolute" align-items="baseline">
+      <div display="block" box-sizing="content-box" direction="rtl" position="relative" width="20px" height="10px"/>
       <div display="table" direction="rtl" border-spacing-x="0px" border-spacing-y="0px">
         <div display="table-row-group" box-sizing="content-box" direction="rtl">
           <div display="table-row" box-sizing="content-box" direction="rtl">

@@ -1,17 +1,17 @@
 <test name="table_fixed_layout_percent_columns__content_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="table" box-sizing="content-box" direction="ltr" table-layout="fixed" border-spacing-x="0px" border-spacing-y="0px" width="200px">
-      <div display="table-row-group" box-sizing="content-box" direction="ltr">
-        <div display="table-row" box-sizing="content-box" direction="ltr">
-          <div display="table-cell" box-sizing="content-box" direction="ltr" width="25%" height="20px"/>
-          <div display="table-cell" box-sizing="content-box" direction="ltr" width="75%" height="20px"/>
+    <div display="table" box-sizing="content-box" direction="ltr" position="absolute" table-layout="fixed" border-spacing-x="0px" border-spacing-y="0px" width="200px">
+      <div display="table-row-group" box-sizing="content-box" direction="ltr" position="relative">
+        <div display="table-row" box-sizing="content-box" direction="ltr" position="relative">
+          <div display="table-cell" box-sizing="content-box" direction="ltr" position="relative" width="25%" height="20px"/>
+          <div display="table-cell" box-sizing="content-box" direction="ltr" position="relative" width="75%" height="20px"/>
         </div>
-        <div display="table-row" box-sizing="content-box" direction="ltr">
-          <text display="table-cell" box-sizing="content-box" direction="ltr" height="20px">
+        <div display="table-row" box-sizing="content-box" direction="ltr" position="relative">
+          <text display="table-cell" box-sizing="content-box" direction="ltr" position="relative" height="20px">
             HH
           </text>
-          <text display="table-cell" box-sizing="content-box" direction="ltr" height="20px">
+          <text display="table-cell" box-sizing="content-box" direction="ltr" position="relative" height="20px">
             HH
           </text>
         </div>
