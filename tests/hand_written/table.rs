@@ -241,3 +241,48 @@ fn collapsed_row_shortens_the_table() {
     assert_eq!(tree.layout(collapsed_row).unwrap().size.height, 0.0);
     assert_eq!(tree.layout(last_row).unwrap().location.y, 20.0);
 }
+
+/// A table with rows but no cells is as tall as its rows (and spacing) say; one with no rows at
+/// all is just its padding and border
+#[test]
+fn table_without_cells_has_row_heights() {
+    let mut tree = new_test_tree();
+    let mut rows = Vec::new();
+    for height in [20.0, 30.0] {
+        let style = Style {
+            display: Display::TableRow,
+            size: Size { width: auto(), height: length(height) },
+            ..Default::default()
+        };
+        rows.push(tree.new_leaf(style).unwrap());
+    }
+    let table = tree
+        .new_with_children(
+            Style {
+                display: Display::Table,
+                border: Rect::length(5.0),
+                border_spacing: Size { width: length(2.0), height: length(2.0) },
+                ..Default::default()
+            },
+            &rows,
+        )
+        .unwrap();
+    tree.compute_layout(table, Size::MAX_CONTENT).unwrap();
+    // 5 + 2 + 20 + 2 + 30 + 2 + 5
+    assert_eq!(tree.layout(table).unwrap().size, Size { width: 10.0, height: 66.0 });
+    assert_eq!(tree.layout(rows[1]).unwrap().location.y, 29.0);
+
+    let empty = tree
+        .new_with_children(
+            Style {
+                display: Display::Table,
+                border: Rect::length(5.0),
+                size: Size { width: length(0.0), height: length(0.0) },
+                ..Default::default()
+            },
+            &[],
+        )
+        .unwrap();
+    tree.compute_layout(empty, Size::MAX_CONTENT).unwrap();
+    assert_eq!(tree.layout(empty).unwrap().size, Size { width: 10.0, height: 10.0 });
+}
