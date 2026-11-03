@@ -236,6 +236,7 @@ impl BlockContext<'_> {
     pub fn find_bfc_slot(
         &self,
         min_y: f32,
+        min_height: f32,
         margins: [f32; 2],
         direction: Direction,
         clear: Clear,
@@ -243,6 +244,7 @@ impl BlockContext<'_> {
     ) -> BfcSlot {
         let mut slot = self.bfc.float_context.find_bfc_slot(
             min_y + self.y_offset,
+            min_height,
             self.content_box_insets,
             margins,
             direction,
@@ -1447,9 +1449,25 @@ fn perform_final_layout_on_in_flow_children(
 
                         // Find the highest slot (at or below `min_y`) with enough horizontal space
                         // for the item's border box, which must not overlap any float
+                        // The item's height isn't known until it is laid out, so only its styled
+                        // (minimum) height is checked against floats below its top edge
+                        let min_height = item
+                            .size
+                            .height
+                            .maybe_clamp(item.min_size.height, item.max_size.height)
+                            .or(item.min_size.height)
+                            .unwrap_or(0.0)
+                            .max(item.padding_border_sum.height);
                         let mut slot_segment = None;
                         let slot = loop {
-                            let slot = block_ctx.find_bfc_slot(min_y, x_margins, direction, item.clear, slot_segment);
+                            let slot = block_ctx.find_bfc_slot(
+                                min_y,
+                                min_height,
+                                x_margins,
+                                direction,
+                                item.clear,
+                                slot_segment,
+                            );
                             let Some(segment_id) = slot.segment_id else { break slot };
                             let width = item
                                 .size
