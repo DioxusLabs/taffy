@@ -1205,8 +1205,8 @@ fn block_item_known_dimensions(
 /// Compute each child's final size and position
 #[inline]
 #[allow(clippy::too_many_arguments)]
-fn perform_final_layout_on_in_flow_children(
-    tree: &mut impl LayoutBlockContainer,
+fn perform_final_layout_on_in_flow_children<Tree: LayoutBlockContainer>(
+    tree: &mut Tree,
     run_mode: RunMode,
     items: &mut [BlockItem],
     container_outer_width: f32,
@@ -1423,6 +1423,43 @@ fn perform_final_layout_on_in_flow_children(
 
             // Handle non-floated boxes
 
+            // `justify-self` on an in-flow block-level box (css-align-3 §6.1.1). `None` takes the
+            // container's `justify-items`, and `normal` lays the box out according to the default
+            // block layout rules. `stretch` does too: the default rules already stretch an
+            // auto-width box, so it only differs from `normal` for tables and replaced boxes, which
+            // would otherwise resolve their own width.
+            let justify_self =
+                item.justify_self.unwrap_or(justify_items).resolve_self_relative(item.direction, direction, true);
+            let is_stretch = justify_self.keyword == AlignItemsKeyword::Stretch;
+            // The (resolved) `justify-self` if it is neither `normal` nor `stretch`
+            let non_stretch_justify_self = match justify_self.keyword {
+                AlignItemsKeyword::Normal | AlignItemsKeyword::Stretch => None,
+                _ => Some(justify_self),
+            };
+
+            // The inputs to lay the item out with, given the stretch width available to it
+            let item_inputs = |tree: &mut Tree, stretch_width: f32| LayoutInput {
+                run_mode,
+                sizing_mode: SizingMode::InherentSize,
+                axis: RequestedAxis::Both,
+                known_dimensions: block_item_known_dimensions(
+                    tree,
+                    item,
+                    stretch_width,
+                    container_inner_width,
+                    container_percentage_resolution_height,
+                    item_non_auto_margin,
+                    children_margins_adjoin_own_edges,
+                    parent_size,
+                    is_stretch,
+                    non_stretch_justify_self.is_some(),
+                ),
+                known_dimensions_are_definite: Size { width: true, height: true },
+                parent_size,
+                available_space: available_space.map_width(|_| AvailableSpace::Definite(stretch_width)),
+                vertical_margins_are_collapsible: if item.is_in_same_bfc { Line::TRUE } else { Line::FALSE },
+            };
+
             let mut y_margin_offset: f32 = 0.0;
             #[cfg(feature = "float_layout")]
             let mut item_avoids_floats = false;
@@ -1513,45 +1550,7 @@ fn perform_final_layout_on_in_flow_children(
                 }
             };
 
-            // `justify-self` on an in-flow block-level box (css-align-3 §6.1.1). `None` takes the
-            // container's `justify-items`, and `normal` lays the box out according to the default
-            // block layout rules. `stretch` does too: the default rules already stretch an
-            // auto-width box, so it only differs from `normal` for tables and replaced boxes, which
-            // would otherwise resolve their own width.
-            let justify_self =
-                item.justify_self.unwrap_or(justify_items).resolve_self_relative(item.direction, direction, true);
-            let is_stretch = justify_self.keyword == AlignItemsKeyword::Stretch;
-            // The (resolved) `justify-self` if it is neither `normal` nor `stretch`
-            let non_stretch_justify_self = match justify_self.keyword {
-                AlignItemsKeyword::Normal | AlignItemsKeyword::Stretch => None,
-                _ => Some(justify_self),
-            };
-
-            let known_dimensions = block_item_known_dimensions(
-                tree,
-                item,
-                stretch_width,
-                container_inner_width,
-                container_percentage_resolution_height,
-                item_non_auto_margin,
-                children_margins_adjoin_own_edges,
-                parent_size,
-                is_stretch,
-                non_stretch_justify_self.is_some(),
-            );
-
-            //
-
-            let inputs = LayoutInput {
-                run_mode,
-                sizing_mode: SizingMode::InherentSize,
-                axis: RequestedAxis::Both,
-                known_dimensions,
-                known_dimensions_are_definite: Size { width: true, height: true },
-                parent_size,
-                available_space: available_space.map_width(|_| AvailableSpace::Definite(stretch_width)),
-                vertical_margins_are_collapsible: if item.is_in_same_bfc { Line::TRUE } else { Line::FALSE },
-            };
+            let inputs = item_inputs(tree, stretch_width);
 
             #[cfg(feature = "float_layout")]
             let clear_threshold = block_ctx.cleared_threshold(item.clear);
@@ -1568,7 +1567,7 @@ fn perform_final_layout_on_in_flow_children(
             let mut item_layout = if item.is_in_same_bfc {
                 // Replaced elements may not have a known width (they are sized by their
                 // measure function rather than stretch-sized)
-                let width = known_dimensions.width.unwrap_or(stretch_width).max(item.padding_border_sum.width);
+                let width = inputs.known_dimensions.width.unwrap_or(stretch_width).max(item.padding_border_sum.width);
 
                 // TODO: account for auto margins
                 let inset_left = item_non_auto_margin.left + content_box_inset.left;
