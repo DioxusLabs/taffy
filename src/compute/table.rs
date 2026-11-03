@@ -13,7 +13,7 @@ use crate::compute::common::scrollable_overflow::{
 use crate::geometry::{AbsoluteAxis, Line, Point, Rect, Size};
 use crate::style::{
     AlignContentKeyword, AvailableSpace, BoxGenerationMode, CompactLength, CoreStyle, Dimension, Direction,
-    TableContainerStyle, TableItemStyle, TableLayout, TableRole,
+    TableContainerStyle, TableItemStyle, TableLayout, TableRole, Visibility,
 };
 use crate::style_helpers::TaffyMaxContent;
 use crate::tree::traits::{LayoutPartialTreeExt, LayoutTableContainer};
@@ -75,6 +75,8 @@ struct Column {
     max: f32,
     /// Largest percentage specified on any cell in this column
     percent: Option<f32>,
+    /// Whether a column or column group with `visibility: collapse` removes this column
+    collapsed: bool,
     /// Whether any cell in this column has a fixed (length) specified width
     is_constrained: bool,
     /// The resolved used width
@@ -153,6 +155,8 @@ struct Group {
     node_id: NodeId,
     /// The group's index among the table's children
     order: u32,
+    /// Whether the group has `visibility: collapse`, which collapses its rows
+    collapsed: bool,
 }
 
 /// A row of the table grid
@@ -163,6 +167,8 @@ struct Row {
     group: Option<usize>,
     /// The row's index among its parent's children
     order: u32,
+    /// Whether the row (or its group) has `visibility: collapse`, which removes it from the table
+    collapsed: bool,
     /// The resolved used height
     used_height: f32,
     /// The largest percentage height specified on the row or one of its cells
@@ -297,6 +303,37 @@ pub fn compute_table_layout(
     } else {
         resolve_auto_layout_columns(&mut columns, assignable);
     }
+
+    // A column or column group with `visibility: collapse` removes its columns from the table
+    // once the other columns are sized (CSS 2.1 §17.5.5): they and their spacing take no room
+    // and the table narrows by what they took
+    let mut collapsed_width = 0.0;
+    for column_box in column_boxes.iter() {
+        let own = tree.get_table_child_style(column_box.node_id).visibility() == Visibility::Collapse;
+        let group = column_box
+            .group
+            .is_some_and(|g| tree.get_table_child_style(column_groups[g].node_id).visibility() == Visibility::Collapse);
+        if own || group {
+            let range = column_box.start.min(col_count)..(column_box.start + column_box.span).min(col_count);
+            for column in columns[range].iter_mut() {
+                column.collapsed = true;
+            }
+        }
+    }
+    for group in column_groups.iter() {
+        if tree.get_table_child_style(group.node_id).visibility() == Visibility::Collapse {
+            let range = group.start.min(col_count)..(group.start + group.span).min(col_count);
+            for column in columns[range].iter_mut() {
+                column.collapsed = true;
+            }
+        }
+    }
+    for column in columns.iter_mut().filter(|c| c.collapsed) {
+        collapsed_width += column.used + h_spacing;
+        column.used = 0.0;
+    }
+    let table_width = table_width - collapsed_width;
+    let grid_width = assignable - collapsed_width + h_spacing * (col_count as f32 - 1.0);
 
     if run_mode == RunMode::ComputeSize && axis == RequestedAxis::Horizontal {
         return LayoutOutput::from_outer_size(Size { width: table_width, height: styled_known.height.unwrap_or(0.0) });
@@ -438,6 +475,14 @@ pub fn compute_table_layout(
 
     distribute_excess_height(&mut rows, table_height - pb_size.height - total_v_spacing, false, percentage_basis);
 
+    // Collapsed rows and their spacing take no room, and the table shortens by what they took
+    let mut collapsed_height = 0.0;
+    for row in rows.iter_mut().filter(|r| r.collapsed) {
+        collapsed_height += row.used_height + v_spacing;
+        row.used_height = 0.0;
+    }
+    let table_height = table_height - collapsed_height;
+
     for row in rows.iter_mut().filter(|r| r.baseline.is_none()) {
         row.baseline = row.fallback_descent.map(|descent| (row.used_height - descent).max(0.0));
     }
@@ -458,7 +503,7 @@ pub fn compute_table_layout(
     let mut x = padding_border.left + h_spacing;
     for col in columns.iter() {
         col_x.push(x);
-        x += col.used + h_spacing;
+        x += col.used + if col.collapsed { 0.0 } else { h_spacing };
     }
     if rtl {
         for (i, col) in columns.iter().enumerate() {
@@ -469,12 +514,11 @@ pub fn compute_table_layout(
     let mut y = padding_border.top + v_spacing;
     for row in rows.iter() {
         row_y.push(y);
-        y += row.used_height + v_spacing;
+        y += row.used_height + if row.collapsed { 0.0 } else { v_spacing };
     }
 
     // Row and row-group boxes exclude the outer border-spacing, which belongs to the table
     let grid_origin_x = padding_border.left + h_spacing;
-    let grid_width = assignable + h_spacing * (col_count as f32 - 1.0);
 
     // Column and column-group boxes span the grid's rows and the tracks they cover
     let rows_top = padding_border.top + v_spacing;
@@ -485,7 +529,9 @@ pub fn compute_table_layout(
             return (grid_origin_x, 0.0);
         }
         let x = col_x[range.clone()].iter().copied().fold(f32::INFINITY, f32::min);
-        let width = columns[range.clone()].iter().map(|c| c.used).sum::<f32>() + h_spacing * (range.len() as f32 - 1.0);
+        let visible = columns[range.clone()].iter().filter(|c| !c.collapsed).count();
+        let width =
+            columns[range.clone()].iter().map(|c| c.used).sum::<f32>() + h_spacing * (visible.max(1) as f32 - 1.0);
         (x, width)
     };
     let mut column_group_x: Vec<f32> = Vec::with_capacity(column_groups.len());
@@ -541,9 +587,9 @@ pub fn compute_table_layout(
     for (cell, sizing) in cells.iter().zip(sizing.iter()) {
         let cell_width = sizing.width;
         let range = cell.row..(cell.row + cell.rowspan).min(num_rows);
-        let span_len = range.len();
+        let visible_rows = rows[range.clone()].iter().filter(|r| !r.collapsed).count();
         let cell_height: f32 =
-            rows[range].iter().map(|r| r.used_height).sum::<f32>() + v_spacing * (span_len as f32 - 1.0);
+            rows[range].iter().map(|r| r.used_height).sum::<f32>() + v_spacing * (visible_rows.max(1) as f32 - 1.0);
 
         let mut output = tree.compute_child_layout(
             cell.node_id,
@@ -683,7 +729,8 @@ fn build_grid(
         match role {
             TableRole::RowGroup => {
                 let group = Some(grid.groups.len());
-                grid.groups.push(Group { node_id: child_id, order: index as u32 });
+                let collapsed = tree.get_table_child_style(child_id).visibility() == Visibility::Collapse;
+                grid.groups.push(Group { node_id: child_id, order: index as u32, collapsed });
 
                 let group_rows = visible_children(tree, child_id, &mut grid);
                 for (row, &row_id) in group_rows.iter().enumerate() {
@@ -813,10 +860,13 @@ fn place_row(
     grid: &mut Grid,
 ) {
     let row_index = grid.rows.len();
+    let collapsed = group.is_some_and(|g| grid.groups[g].collapsed)
+        || tree.get_table_child_style(row_id).visibility() == Visibility::Collapse;
     grid.rows.push(Row {
         node_id: row_id,
         group,
         order,
+        collapsed,
         used_height: 0.0,
         percent: None,
         is_constrained: false,
