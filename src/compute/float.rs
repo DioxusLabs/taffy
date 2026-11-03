@@ -489,21 +489,6 @@ impl FloatContext {
             }
         };
 
-        // Short-circuit for zero-height boxes. Zero-width boxes are still recorded in segments:
-        // their edge acts as an obstacle that boxes establishing an independent formatting
-        // context may not be placed to the outside of (e.g. via a negative margin).
-        if floated_box.height == 0.0 {
-            // TODO: need to update last_placed_float?
-
-            return PlacedFloatedBox {
-                id,
-                width: floated_box.width,
-                height: floated_box.height,
-                y: start_y,
-                x_inset: placed_inset,
-            };
-        }
-
         // Handle case where floated box is placed after all existing segments
         if start.is_none() {
             // Before the first float, the context is float-free all the way up: the first float
@@ -555,6 +540,14 @@ impl FloatContext {
             if let Some(end_idx) = end.as_mut() {
                 *end_idx += 1;
             }
+        }
+
+        // A zero-height float takes up no vertical space, but still narrows content and floats
+        // whose vertical extent crosses its position, so it gets its own zero-height segment
+        if floated_box.height == 0.0 {
+            let segment = self.segments[start_idx].clone();
+            self.segments.insert(start_idx, Segment { y: start_y..start_y, ..segment });
+            end = Some(start_idx);
         }
 
         let end_idx = match end {

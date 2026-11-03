@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    A BFC root whose height crosses a zero-height float is too wide to fit beside it and moves below it
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="display: block; width: 500px;">
+  <div style="display: block; float: left; width: 10px; height: 30px;"></div>
+  <div style="display: block; float: left; clear: left; width: 100px; height: 0;"></div>
+  <div style="display: block; overflow: hidden; width: 450px; height: 40px;"></div>
+</div>
+
+</body>
+</html>
