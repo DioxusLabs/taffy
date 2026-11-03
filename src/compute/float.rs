@@ -652,19 +652,13 @@ impl FloatContext {
 
                 // Combine the insets of every segment beside the content's height, then extend
                 // the slot down over any further segments that don't narrow it
-                let insets_of = |segment: &Segment| {
-                    [
-                        segment.insets[0].max(containing_block_insets[0]),
-                        segment.insets[1].max(containing_block_insets[1]),
-                    ]
-                };
-                let mut insets = insets_of(segment);
+                let mut insets = containing_block_insets;
                 let mut slot_height = f32::INFINITY;
-                for segment in &self.segments[start_idx + 1..] {
-                    let segment_insets = insets_of(segment);
-                    if segment.y.start < end_y {
-                        insets = [insets[0].max(segment_insets[0]), insets[1].max(segment_insets[1])];
-                    } else if segment_insets[0] > insets[0] || segment_insets[1] > insets[1] {
+                for segment in &self.segments[start_idx..] {
+                    // The slot's own segment counts even when `height` is zero
+                    if segment.y.start <= y || segment.y.start < end_y {
+                        insets = [insets[0].max(segment.insets[0]), insets[1].max(segment.insets[1])];
+                    } else if segment.insets[0] > insets[0] || segment.insets[1] > insets[1] {
                         slot_height = segment.y.start - y;
                         break;
                     }
