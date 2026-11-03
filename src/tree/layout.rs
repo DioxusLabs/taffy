@@ -248,6 +248,21 @@ pub struct LayoutInput {
     ///
     ///   "The exact size of this node is WIDTHxHEIGHT. Please lay out your children"
     ///
+    /// A known dimension is the size of the node itself (its border box, so it includes padding and border but not margin)
+    /// rather than a constraint on the space around it. It is a hard constraint: when a dimension is `Some`, the
+    /// algorithm uses it as the node's size in that axis, and the size it returns for that axis is not expected to
+    /// differ from it (the caller will ignore it and only use the size in the other axis). The algorithms that lay
+    /// out containers (block, flexbox, grid) use it in place of the size they would otherwise work out from the node's
+    /// style and content, and the leaf algorithm clamps it to the node's min and max size styles when
+    /// [`SizingMode::InherentSize`] is used.
+    ///
+    /// A `Some` known dimension takes precedence over [`available_space`](Self::available_space) in the same axis, so
+    /// the available space in that axis can generally be ignored. For example, the leaf algorithm passes a
+    /// [`AvailableSpace::Definite`] equal to the known content size (the known dimension less padding and border)
+    /// on to the measure function in place of the available space it was given.
+    ///
+    /// A dimension that is `None` is not known, and the node picks its own size in that axis,
+    /// guided by [`available_space`](Self::available_space) and its style.
     pub known_dimensions: Size<Option<f32>>,
     /// Whether each known dimension should be treated as a *definite* size when laying out the node's
     /// own content (resolving percentage sizes of children, and collecting flex items into flex lines).
@@ -264,6 +279,18 @@ pub struct LayoutInput {
     pub parent_size: Size<Option<f32>>,
     /// Available space represents an amount of space to layout into, and is used as a soft constraint
     /// for the purpose of wrapping.
+    ///
+    /// It describes the space around the node (roughly, the size of its containing block) rather than the size of
+    /// the node itself. It answers the question "if you had this much space, what size would you be?". This is
+    /// closely related to [`parent_size`](Self::parent_size), but the two can differ: `available_space` is
+    /// [`AvailableSpace::MinContent`] or [`AvailableSpace::MaxContent`] when a parent is sizing the node under an
+    /// intrinsic size constraint as part of a multi-pass layout algorithm, even if the size of the parent is known.
+    /// A node that has no known dimension in an axis should lay out to the available space in that axis if it is
+    /// [`AvailableSpace::Definite`] (for example to decide where text wraps), to its min-content size if it is
+    /// [`AvailableSpace::MinContent`], and to its max-content size if it is [`AvailableSpace::MaxContent`].
+    ///
+    /// It is ignored in any axis where [`known_dimensions`](Self::known_dimensions) is `Some`, as the known dimension
+    /// takes precedence.
     ///
     /// A definite available space is the space available to the node's border box: the parent
     /// subtracts the node's margins before passing it, and the node must not subtract them again.
