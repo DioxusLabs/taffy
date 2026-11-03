@@ -436,6 +436,7 @@ fn build_style<S: CheapCloneStr>(xnode: roxmltree::Node) -> taffy::Style<S> {
         colspan: parse_or(xnode.attribute("colspan"), 1),
         rowspan: parse_or(xnode.attribute("rowspan"), 1),
         visibility: parse_or_default(xnode.attribute("visibility")),
+        caption_side: parse_or_default(xnode.attribute("caption-side")),
         flex_direction: parse_or_default(xnode.attribute("flex-direction")),
         flex_wrap: parse_or_default(xnode.attribute("flex-wrap")),
         #[cfg(feature = "flexbox_balance")]

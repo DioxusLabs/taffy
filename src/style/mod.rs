@@ -47,7 +47,7 @@ pub use self::grid::{GridTemplateArea, GridTemplateAreas, NamedGridLine, Templat
 #[cfg(feature = "grid")]
 pub(crate) use self::grid::{NonNamedGridPlacement, OriginZeroGridPlacement};
 #[cfg(feature = "table_layout")]
-pub use self::table::{TableContainerStyle, TableItemStyle, TableLayout, TableRole, Visibility};
+pub use self::table::{CaptionSide, TableContainerStyle, TableItemStyle, TableLayout, TableRole, Visibility};
 
 use crate::geometry::{Point, Rect, Size};
 use crate::style_helpers::TaffyAuto as _;
@@ -283,6 +283,10 @@ pub enum Display {
     /// A column within a table (col). Laid out by the parent table.
     #[cfg(feature = "table_layout")]
     TableColumn,
+    /// A caption of a table. Laid out by the parent table above or below the table box
+    /// (`caption-side`); the caption's content follows the block layout algorithm.
+    #[cfg(feature = "table_layout")]
+    TableCaption,
     /// The node is hidden, and it's children will also be hidden
     None,
 }
@@ -334,6 +338,8 @@ crate::util::parse::impl_parse_for_keyword_enum!(Display,
     "table-column-group" => TableColumnGroup,
     #[cfg(feature = "table_layout")]
     "table-column" => TableColumn,
+    #[cfg(feature = "table_layout")]
+    "table-caption" => TableCaption,
 );
 
 impl core::fmt::Display for Display {
@@ -360,6 +366,7 @@ impl core::fmt::Display for Display {
             Display::TableColumnGroup => write!(f, "TABLE-COLUMN-GROUP"),
             #[cfg(feature = "table_layout")]
             Display::TableColumn => write!(f, "TABLE-COLUMN"),
+            Display::TableCaption => write!(f, "TABLE-CAPTION"),
         }
     }
 }
@@ -870,6 +877,9 @@ pub struct Style<S: CheapCloneStr = DefaultCheapStr> {
     /// `visibility` is a painting matter and does not affect layout
     #[cfg(feature = "table_layout")]
     pub visibility: Visibility,
+    /// Which side of the table a caption (`display: table-caption`) is placed on
+    #[cfg(feature = "table_layout")]
+    pub caption_side: CaptionSide,
 
     // Flexbox container properties
     /// Which direction does the main axis flow in?
@@ -992,6 +1002,8 @@ impl<S: CheapCloneStr> Style<S> {
         rowspan: 1,
         #[cfg(feature = "table_layout")]
         visibility: Visibility::Visible,
+        #[cfg(feature = "table_layout")]
+        caption_side: CaptionSide::Top,
         // Flexbox
         #[cfg(feature = "flexbox")]
         flex_direction: FlexDirection::Row,
@@ -1718,6 +1730,7 @@ impl<S: CheapCloneStr> TableItemStyle for Style<S> {
             Display::TableRowGroup => TableRole::RowGroup,
             Display::TableColumnGroup => TableRole::ColumnGroup,
             Display::TableColumn => TableRole::Column,
+            Display::TableCaption => TableRole::Caption,
             _ => TableRole::Other,
         }
     }
@@ -1740,6 +1753,11 @@ impl<S: CheapCloneStr> TableItemStyle for Style<S> {
     #[inline(always)]
     fn visibility(&self) -> Visibility {
         self.visibility
+    }
+
+    #[inline(always)]
+    fn caption_side(&self) -> CaptionSide {
+        self.caption_side
     }
 }
 
@@ -1768,6 +1786,11 @@ impl<T: TableItemStyle> TableItemStyle for &'_ T {
     #[inline(always)]
     fn visibility(&self) -> Visibility {
         (*self).visibility()
+    }
+
+    #[inline(always)]
+    fn caption_side(&self) -> CaptionSide {
+        (*self).caption_side()
     }
 }
 
@@ -1853,6 +1876,8 @@ mod tests {
             rowspan: 1,
             #[cfg(feature = "table_layout")]
             visibility: crate::style::Visibility::Visible,
+            #[cfg(feature = "table_layout")]
+            caption_side: crate::style::CaptionSide::Top,
             #[cfg(feature = "flexbox")]
             flex_grow: 0.0,
             #[cfg(feature = "flexbox")]
@@ -1987,12 +2012,12 @@ mod tests {
         assert_type_size::<GridTemplateComponent<String>>(56);
         assert_type_size::<GridPlacement<String>>(32);
         assert_type_size::<Line<GridPlacement<String>>>(64);
-        assert_type_size::<Style<String>>(576);
+        assert_type_size::<Style<String>>(584);
 
         // String-type dependent (Arc<str>)
         assert_type_size::<GridTemplateComponent<Arc<str>>>(56);
         assert_type_size::<GridPlacement<Arc<str>>>(24);
         assert_type_size::<Line<GridPlacement<Arc<str>>>>(48);
-        assert_type_size::<Style<Arc<str>>>(544);
+        assert_type_size::<Style<Arc<str>>>(552);
     }
 }

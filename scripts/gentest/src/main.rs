@@ -682,6 +682,7 @@ fn generate_node(w: &mut XmlWriter, node: &Value) {
     maybe_write(w, "colspan", get_num_attr(&style["colspan"], None));
     maybe_write(w, "rowspan", get_num_attr(&style["rowspan"], None));
     maybe_write(w, "visibility", get_str_attr(&style["visibility"], None));
+    maybe_write(w, "caption_side", get_str_attr(&style["captionSide"], None));
     maybe_write(w, "align-items", get_str_attr(&style["alignItems"], None));
     maybe_write(w, "align-self", get_str_attr(&style["alignSelf"], None));
     maybe_write(w, "justify-items", get_str_attr(&style["justifyItems"], None));
