@@ -721,6 +721,10 @@ pub(crate) fn layout_oof_box<Tree: LayoutContainingBlock>(
     before_layout(tree, &layout_input);
     let mut layout_output = tree.compute_child_layout(candidate.node, layout_input);
 
+    // A table is never smaller than its content, so its insets and specified size only give a
+    // minimum: the box is positioned using the size the table algorithm settled on
+    let final_size = if is_table { final_size.f32_max(layout_output.size) } else { final_size };
+
     // Resolve auto margins <https://www.w3.org/TR/css-position-3/#abspos-margins>
     let horizontal_margin = horizontal.resolve_margins(final_size.width);
     let vertical_margin = vertical.resolve_margins(final_size.height);
