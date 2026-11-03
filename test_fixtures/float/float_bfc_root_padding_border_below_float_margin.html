@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    Flow-root height includes its bottom padding and border below floats taller than in-flow content
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="display: flow-root; width: 100px; padding-bottom: 7px; border-bottom: 3px solid;">
+  <div style="display: block; height: 10px;"></div>
+  <div style="display: block; float: left; width: 20px; height: 30px; margin-bottom: 5px;"></div>
+</div>
+
+</body>
+</html>

@@ -693,10 +693,12 @@ fn compute_inner(
         block_ctx,
     );
 
-    // Root BFCs contain floats
+    // Root BFCs contain floats: the content height extends to the bottom margin edge of any
+    // floated descendant, and the container's bottom padding and border sit below that
     #[cfg(feature = "float_layout")]
     if block_ctx.is_bfc_root() || establishes_new_bfc {
-        intrinsic_outer_height = intrinsic_outer_height.max(block_ctx.floated_content_height_contribution());
+        intrinsic_outer_height = intrinsic_outer_height
+            .max(block_ctx.floated_content_height_contribution() + resolved_content_box_inset.bottom);
     }
 
     let container_outer_height = known_dimensions
