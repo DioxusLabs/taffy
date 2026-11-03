@@ -84,6 +84,10 @@ struct Column {
     collapsed: bool,
     /// Whether any cell in this column has a fixed (length) specified width
     is_constrained: bool,
+    /// Whether the column merges into its neighbours: an auto table drops a column that no cell
+    /// starts in and no column box gives a width, along with its border-spacing
+    /// (css-tables-3 §3.4.2, track merging)
+    is_mergeable: bool,
     /// The resolved used width
     used: f32,
 }
@@ -372,8 +376,10 @@ pub fn compute_table_layout(
     let mut columns = measure_columns(tree, &cells, &column_boxes, &column_groups, col_count, h_spacing, is_fixed);
 
     // Phase 3: resolve the table's used width and the columns' used widths
-    // A table with no columns has no border-spacing in the inline axis either
-    let total_h_spacing = if col_count == 0 { 0.0 } else { h_spacing * (col_count as f32 + 1.0) };
+    // A table with no columns has no border-spacing in the inline axis either, and merged
+    // columns take none
+    let spaced_count = columns.iter().filter(|c| !c.is_mergeable).count();
+    let total_h_spacing = if spaced_count == 0 { 0.0 } else { h_spacing * (spaced_count as f32 + 1.0) };
     let (grid_min_sum, grid_max_sum) = grid_min_max(&columns, is_fixed);
     let grid_min = grid_min_sum + total_h_spacing;
     // A fixed table whose percentage width has nothing to resolve against is as wide as it can be
@@ -429,12 +435,12 @@ pub fn compute_table_layout(
             }
         }
     }
-    for column in columns.iter_mut().filter(|c| c.collapsed) {
+    for column in columns.iter_mut().filter(|c| c.collapsed && !c.is_mergeable) {
         collapsed_width += column.used + h_spacing;
         column.used = 0.0;
     }
     let table_width = table_width - collapsed_width;
-    let grid_width = assignable - collapsed_width + h_spacing * (col_count as f32 - 1.0).max(0.0);
+    let grid_width = assignable - collapsed_width + h_spacing * (spaced_count as f32 - 1.0).max(0.0);
 
     if run_mode == RunMode::ComputeSize && axis == RequestedAxis::Horizontal {
         return LayoutOutput::from_outer_size(Size { width: table_width, height: styled_known.height.unwrap_or(0.0) });
@@ -454,9 +460,9 @@ pub fn compute_table_layout(
     let mut sizing: Vec<CellSizing> = cells
         .iter()
         .map(|cell| {
-            let range = cell.col..(cell.col + cell.colspan).min(col_count);
-            let width =
-                columns[range.clone()].iter().map(|c| c.used).sum::<f32>() + h_spacing * (range.len() as f32 - 1.0);
+            let spanned = &columns[cell.col..(cell.col + cell.colspan).min(col_count)];
+            let spaced = spanned.iter().filter(|c| !c.is_mergeable).count();
+            let width = spanned.iter().map(|c| c.used).sum::<f32>() + h_spacing * (spaced.max(1) as f32 - 1.0);
             CellSizing { width, ..CellSizing::default() }
         })
         .collect();
@@ -617,7 +623,7 @@ pub fn compute_table_layout(
     let mut x = padding_border.left + h_spacing;
     for col in columns.iter() {
         col_x.push(x);
-        x += col.used + if col.collapsed { 0.0 } else { h_spacing };
+        x += col.used + if col.collapsed || col.is_mergeable { 0.0 } else { h_spacing };
     }
     if rtl {
         for (i, col) in columns.iter().enumerate() {
@@ -643,7 +649,7 @@ pub fn compute_table_layout(
             return (grid_origin_x, 0.0);
         }
         let x = col_x[range.clone()].iter().copied().fold(f32::INFINITY, f32::min);
-        let visible = columns[range.clone()].iter().filter(|c| !c.collapsed).count();
+        let visible = columns[range.clone()].iter().filter(|c| !c.collapsed && !c.is_mergeable).count();
         let width =
             columns[range.clone()].iter().map(|c| c.used).sum::<f32>() + h_spacing * (visible.max(1) as f32 - 1.0);
         (x, width)
@@ -1331,8 +1337,12 @@ fn measure_columns(
     h_spacing: f32,
     is_fixed: bool,
 ) -> Vec<Column> {
-    let mut columns: Vec<Column> = core::iter::repeat_with(Column::default).take(col_count).collect();
+    let mut columns: Vec<Column> =
+        core::iter::repeat_with(|| Column { is_mergeable: !is_fixed, ..Column::default() }).take(col_count).collect();
     let mut spans: Vec<(usize, usize, CellMeasure)> = Vec::new();
+    for cell in cells.iter() {
+        columns[cell.col].is_mergeable = false;
+    }
 
     // A column box's `width` constrains every column it spans before the cells are looked at
     // (CSS 2.1 §17.5.2.2 step 2); in a fixed table it takes precedence over the first row. The
@@ -1358,10 +1368,16 @@ fn measure_columns(
             _ => None,
         }
     };
+    // Every column box starts a track of its own
+    for column_box in column_boxes.iter().filter(|c| c.start < col_count) {
+        columns[column_box.start].is_mergeable = false;
+    }
     let mut constrain = |start: usize, span: usize, measure: &CellMeasure| {
         let range = start.min(col_count)..(start + span).min(col_count);
+        let has_width = measure.max > 0.0 || measure.percent.is_some();
         for column in columns[range].iter_mut() {
             encompass(column, measure);
+            column.is_mergeable &= !has_width;
         }
     };
     for column_box in column_boxes.iter() {
@@ -1435,6 +1451,14 @@ fn measure_columns(
             );
         }
 
+        // `min-width` and `max-width` clamp both measures, `max-width` winning
+        // (<https://www.w3.org/TR/css-tables-3/#outer-min-content>)
+        if !is_fixed {
+            let (min_width, max_width) = cell_min_max_width(tree, cell.node_id);
+            measure.min = measure.min.maybe_max(min_width).maybe_min(max_width);
+            measure.max = measure.max.maybe_min(max_width).maybe_max(min_width).max(measure.min);
+        }
+
         if cell.colspan > 1 {
             spans.push((cell.col, cell.colspan, measure));
         } else if !(is_fixed && columns[cell.col].is_constrained) {
@@ -1443,9 +1467,13 @@ fn measure_columns(
         }
     }
 
+    // Narrower spans settle first, so wider ones distribute over the columns they leave behind
+    spans.sort_by_key(|(col, colspan, _)| (*colspan, *col));
     for (col, colspan, measure) in spans.iter() {
         let range = *col..(col + colspan).min(col_count);
-        let spanned_spacing = h_spacing * (range.len() as f32 - 1.0);
+        let spanned = &mut columns[range.clone()];
+        let spaced_count = spanned.iter().filter(|c| !c.is_mergeable).count();
+        let spanned_spacing = h_spacing * (spaced_count.max(1) as f32 - 1.0);
 
         // A fixed table shares a spanning cell's width or percentage evenly between the columns it
         // spans that have none yet; its padding and border are part of that width
@@ -1465,26 +1493,40 @@ fn measure_columns(
         // Whatever a spanning cell's percentage asks for beyond the percentages already on the
         // columns is shared out over the remaining ones, weighted by max-content width
         if let Some(percent) = measure.percent {
-            let spanned = &columns[range.clone()];
+            let is_auto = |c: &Column| c.percent.is_none() && !c.is_mergeable;
             let surplus = percent - spanned.iter().filter_map(|c| c.percent).sum::<f32>();
-            let auto_count = spanned.iter().filter(|c| c.percent.is_none()).count();
-            let auto_max: f32 = spanned.iter().filter(|c| c.percent.is_none()).map(|c| c.max).sum();
+            let auto_count = spanned.iter().filter(|c| is_auto(c)).count();
+            let auto_max: f32 = spanned.iter().filter(|c| is_auto(c)).map(|c| c.max).sum();
 
             if surplus > 0.0 && auto_count > 0 {
-                for col in columns[range.clone()].iter_mut().filter(|c| c.percent.is_none()) {
+                for col in spanned.iter_mut().filter(|c| is_auto(c)) {
                     let share = if auto_max > 0.0 { surplus * col.max / auto_max } else { surplus / auto_count as f32 };
                     col.percent = Some(share);
                 }
             }
         }
 
-        let current_min: f32 = columns[range.clone()].iter().map(|c| c.min).sum::<f32>() + spanned_spacing;
-        if measure.min > current_min {
-            distribute(&mut columns[range.clone()], measure.min - current_min, |c| &mut c.min);
+        // The cell's measures are shared out the way the table's width is shared out over its
+        // columns. Its max-content width only grows columns with a specified width when it has
+        // one of its own
+        if is_fixed {
+            let current_min: f32 = spanned.iter().map(|c| c.min).sum::<f32>() + spanned_spacing;
+            if measure.min > current_min {
+                distribute(spanned, measure.min - current_min, |c| &mut c.min);
+            }
+            let current_max: f32 = spanned.iter().map(|c| c.max).sum::<f32>() + spanned_spacing;
+            if measure.max > current_max {
+                distribute(spanned, measure.max - current_max, |c| &mut c.max);
+            }
+            continue;
         }
-        let current_max: f32 = columns[range.clone()].iter().map(|c| c.max).sum::<f32>() + spanned_spacing;
-        if measure.max > current_max {
-            distribute(&mut columns[range.clone()], measure.max - current_max, |c| &mut c.max);
+        let min_sizes = distribute_width(spanned, (measure.min - spanned_spacing).max(0.0), true);
+        for (column, size) in spanned.iter_mut().zip(min_sizes) {
+            column.min = column.min.max(size);
+        }
+        let max_sizes = distribute_width(spanned, (measure.max - spanned_spacing).max(0.0), measure.is_constrained);
+        for (column, size) in spanned.iter_mut().zip(max_sizes) {
+            column.max = column.max.max(column.min).max(size);
         }
     }
 
@@ -1586,30 +1628,38 @@ fn grid_min_max(columns: &[Column], is_fixed: bool) -> (f32, f32) {
 }
 
 /// Resolve used column widths for `table-layout: auto` over `assignable`, the table's content
-/// width minus all border-spacing. Implements the spec's width distribution algorithm
+/// width minus all border-spacing
+fn resolve_auto_layout_columns(columns: &mut [Column], assignable: f32) {
+    let sizes = distribute_width(columns, assignable, true);
+    for (column, size) in columns.iter_mut().zip(sizes) {
+        column.used = size;
+    }
+}
+
+/// Share `target` out over `columns` with the width distribution algorithm
 /// (<https://www.w3.org/TR/css-tables-3/#width-distribution-algorithm>): size every column four
 /// ways, find the first sizing that reaches the target, and share the shortfall among the columns
-/// that sizing was about to grow.
-fn resolve_auto_layout_columns(columns: &mut [Column], assignable: f32) {
+/// that sizing was about to grow. Mergeable columns get nothing.
+///
+/// Past every column's max-content width, auto columns soak up the rest, then columns with a
+/// specified width (only if `grow_constrained` is set), then percentage columns.
+fn distribute_width(columns: &[Column], target: f32, grow_constrained: bool) -> Vec<f32> {
     const MIN: usize = 0;
     const PERCENTAGE: usize = 1;
     const SPECIFIED: usize = 2;
     const MAX: usize = 3;
 
-    if columns.is_empty() {
-        return;
-    }
-
+    let mut sizes: Vec<f32> = core::iter::repeat(0.0).take(columns.len()).collect();
     let mut guess = [0.0f32; 4];
     // What each guess adds over the one before it, summed over the columns it grows
     let mut growth = [0.0f32; 4];
     let (mut percent_count, mut fixed_count, mut auto_count) = (0usize, 0usize, 0usize);
     let (mut percent_sum, mut fixed_max_sum, mut auto_max_sum) = (0.0f32, 0.0f32, 0.0f32);
 
-    for column in columns.iter() {
+    for column in columns.iter().filter(|c| !c.is_mergeable) {
         guess[MIN] += column.min;
         if let Some(percent) = column.percent {
-            let width = percent_width(column, assignable);
+            let width = percent_width(column, target);
             percent_count += 1;
             percent_sum += percent;
             guess[PERCENTAGE] += width;
@@ -1632,24 +1682,28 @@ fn resolve_auto_layout_columns(columns: &mut [Column], assignable: f32) {
             growth[MAX] += column.max - column.min;
         }
     }
+    if percent_count + fixed_count + auto_count == 0 {
+        return sizes;
+    }
 
-    // Columns never go below their minimums, however narrow the table is
-    let target = assignable.max(guess[MIN]);
+    // Columns never go below their minimums, however narrow the target is
+    let target = target.max(guess[MIN]);
     let mut shortfall = 0.0;
     let mut last_grown = None;
+    let columns = columns.iter().zip(sizes.iter_mut()).enumerate().filter(|(_, (c, _))| !c.is_mergeable);
 
     match (MIN..=MAX).find(|&i| guess[i] >= target) {
         Some(MIN) => {
-            for column in columns.iter_mut() {
-                column.used = column.min;
+            for (_, (column, size)) in columns {
+                *size = column.min;
             }
         }
         // Percentage columns grow towards their percentage of the table
         Some(PERCENTAGE) => {
             let distributable = target - guess[MIN];
             shortfall = distributable;
-            for (index, column) in columns.iter_mut().enumerate() {
-                column.used = column.min;
+            for (index, (column, size)) in columns {
+                *size = column.min;
                 if column.percent.is_some() {
                     let wanted = percent_width(column, target) - column.min;
                     let delta = if growth[PERCENTAGE] > 0.0 {
@@ -1657,7 +1711,7 @@ fn resolve_auto_layout_columns(columns: &mut [Column], assignable: f32) {
                     } else {
                         distributable / percent_count as f32
                     };
-                    column.used += delta;
+                    *size += delta;
                     shortfall -= delta;
                     last_grown = Some(index);
                 }
@@ -1667,20 +1721,20 @@ fn resolve_auto_layout_columns(columns: &mut [Column], assignable: f32) {
         Some(SPECIFIED) => {
             let distributable = target - guess[PERCENTAGE];
             shortfall = distributable;
-            for (index, column) in columns.iter_mut().enumerate() {
+            for (index, (column, size)) in columns {
                 if column.percent.is_some() {
-                    column.used = percent_width(column, target);
+                    *size = percent_width(column, target);
                 } else if column.is_constrained {
                     let delta = if growth[SPECIFIED] > 0.0 {
                         distributable * (column.max - column.min) / growth[SPECIFIED]
                     } else {
                         distributable / fixed_count as f32
                     };
-                    column.used = column.min + delta;
+                    *size = column.min + delta;
                     shortfall -= delta;
                     last_grown = Some(index);
                 } else {
-                    column.used = column.min;
+                    *size = column.min;
                 }
             }
         }
@@ -1692,18 +1746,18 @@ fn resolve_auto_layout_columns(columns: &mut [Column], assignable: f32) {
             let is_exact_match = target == guess[MAX];
             shortfall = if is_exact_match { 0.0 } else { distributable };
 
-            for (index, column) in columns.iter_mut().enumerate() {
+            for (index, (column, size)) in columns {
                 if column.percent.is_some() {
-                    column.used = percent_width(column, target);
+                    *size = percent_width(column, target);
                 } else if column.is_constrained || is_exact_match {
-                    column.used = column.max;
+                    *size = column.max;
                 } else {
                     let delta = if growth[MAX] > 0.0 {
                         distributable * (column.max - column.min) / growth[MAX]
                     } else {
                         distributable / auto_count as f32
                     };
-                    column.used = column.min + delta;
+                    *size = column.min + delta;
                     shortfall -= delta;
                     last_grown = Some(index);
                 }
@@ -1713,30 +1767,27 @@ fn resolve_auto_layout_columns(columns: &mut [Column], assignable: f32) {
         None => {
             let distributable = target - guess[MAX];
             shortfall = distributable;
+            let grow_fixed = auto_count == 0 && fixed_count > 0 && grow_constrained;
+            let grow_percent = auto_count == 0 && !grow_fixed;
 
-            for (index, column) in columns.iter_mut().enumerate() {
-                let percent = column.percent;
-                let (weight, weight_sum, count) = if auto_count > 0 {
-                    (column.max, auto_max_sum, auto_count)
-                } else if fixed_count > 0 {
-                    (column.max, fixed_max_sum, fixed_count)
-                } else {
-                    (percent.unwrap_or(0.0), percent_sum, percent_count)
+            for (index, (column, size)) in columns {
+                let (grows, weight, weight_sum, count) = match (column.percent, column.is_constrained) {
+                    (Some(percent), _) => (grow_percent, percent, percent_sum, percent_count),
+                    (None, true) => (grow_fixed, column.max, fixed_max_sum, fixed_count),
+                    (None, false) => (true, column.max, auto_max_sum, auto_count),
                 };
-                let grows = match (percent, column.is_constrained) {
-                    (Some(_), _) => auto_count == 0 && fixed_count == 0,
-                    (None, true) => auto_count == 0,
-                    (None, false) => true,
+                *size = match (column.percent, column.is_constrained) {
+                    (Some(_), _) => percent_width(column, target),
+                    (None, true) if auto_count == 0 && !grow_constrained => 0.0,
+                    _ => column.max,
                 };
-
-                column.used = if percent.is_some() { percent_width(column, target) } else { column.max };
                 if grows {
                     let delta = if weight_sum > 0.0 {
                         distributable * weight / weight_sum
                     } else {
                         distributable / count as f32
                     };
-                    column.used += delta;
+                    *size += delta;
                     shortfall -= delta;
                     last_grown = Some(index);
                 }
@@ -1744,10 +1795,11 @@ fn resolve_auto_layout_columns(columns: &mut [Column], assignable: f32) {
         }
     }
 
-    // Rounding leaves the columns a hair short of the table, which the last one takes up
+    // Rounding leaves the columns a hair short of the target, which the last one takes up
     if let Some(index) = last_grown {
-        columns[index].used += shortfall;
+        sizes[index] += shortfall;
     }
+    sizes
 }
 
 /// Resolve used column widths for `table-layout: fixed`: columns with a specified width take it,
@@ -1850,6 +1902,21 @@ fn cell_style_size(
         _ => None,
     });
     min_max_definite_size.or(clamped_style_size)
+}
+
+/// The border-box `min-width` and `max-width` of a cell, where they are lengths
+fn cell_min_max_width(tree: &impl LayoutTableContainer, node_id: NodeId) -> (Option<f32>, Option<f32>) {
+    let style = tree.get_table_child_style(node_id);
+    let padding = style.padding().resolve_or_zero(None, |v, b| tree.calc(v, b));
+    let border = style.border().resolve_or_zero(None, |v, b| tree.calc(v, b));
+    let box_sizing_adjustment = if style.box_sizing() == BoxSizing::ContentBox {
+        padding.horizontal_components().sum() + border.horizontal_components().sum()
+    } else {
+        0.0
+    };
+    let min_width = style.min_size().width.maybe_resolve(None, |v, b| tree.calc(v, b)).maybe_add(box_sizing_adjustment);
+    let max_width = style.max_size().width.maybe_resolve(None, |v, b| tree.calc(v, b)).maybe_add(box_sizing_adjustment);
+    (min_width, max_width)
 }
 
 /// Write a positioned layout for a non-cell table item (row or row group).
