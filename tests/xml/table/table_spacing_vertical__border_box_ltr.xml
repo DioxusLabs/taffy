@@ -1,13 +1,13 @@
 <test name="table_spacing_vertical__border_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="table" direction="ltr" border-spacing-x="0px" border-spacing-y="10px">
-      <div display="table-row-group" direction="ltr">
-        <div display="table-row" direction="ltr">
-          <div display="table-cell" direction="ltr" width="40px" height="20px"/>
+    <div display="table" direction="ltr" position="absolute" border-spacing-x="0px" border-spacing-y="10px">
+      <div display="table-row-group" direction="ltr" position="relative">
+        <div display="table-row" direction="ltr" position="relative">
+          <div display="table-cell" direction="ltr" position="relative" width="40px" height="20px"/>
         </div>
-        <div display="table-row" direction="ltr">
-          <div display="table-cell" direction="ltr" width="40px" height="20px"/>
+        <div display="table-row" direction="ltr" position="relative">
+          <div display="table-cell" direction="ltr" position="relative" width="40px" height="20px"/>
         </div>
       </div>
     </div>

@@ -1,12 +1,12 @@
 <test name="table_nested_table_in_grid_area__content_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="grid" box-sizing="content-box" direction="rtl" width="200px" grid-template-columns="100px 100px">
-      <div display="table" box-sizing="content-box" direction="rtl" border-spacing-x="0px" border-spacing-y="0px">
-        <div display="table-row-group" box-sizing="content-box" direction="rtl">
-          <div display="table-row" box-sizing="content-box" direction="rtl">
-            <div display="table-cell" box-sizing="content-box" direction="rtl" width="40px" height="20px"/>
-            <div display="table-cell" box-sizing="content-box" direction="rtl" width="40px" height="20px"/>
+    <div display="grid" box-sizing="content-box" direction="rtl" position="absolute" width="200px" grid-template-columns="100px 100px">
+      <div display="table" box-sizing="content-box" direction="rtl" position="relative" border-spacing-x="0px" border-spacing-y="0px">
+        <div display="table-row-group" box-sizing="content-box" direction="rtl" position="relative">
+          <div display="table-row" box-sizing="content-box" direction="rtl" position="relative">
+            <div display="table-cell" box-sizing="content-box" direction="rtl" position="relative" width="40px" height="20px"/>
+            <div display="table-cell" box-sizing="content-box" direction="rtl" position="relative" width="40px" height="20px"/>
           </div>
         </div>
       </div>

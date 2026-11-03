@@ -1,12 +1,12 @@
 <test name="table_percent_cell_in_percent_table__border_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="block" direction="ltr" width="200px">
-      <div display="table" direction="ltr" border-spacing-x="0px" border-spacing-y="0px" width="50%">
-        <div display="table-row-group" direction="ltr">
-          <div display="table-row" direction="ltr">
-            <div display="table-cell" direction="ltr" width="50%" height="20px"/>
-            <div display="table-cell" direction="ltr" width="50%" height="20px"/>
+    <div display="block" direction="ltr" position="absolute" width="200px">
+      <div display="table" direction="ltr" position="relative" border-spacing-x="0px" border-spacing-y="0px" width="50%">
+        <div display="table-row-group" direction="ltr" position="relative">
+          <div display="table-row" direction="ltr" position="relative">
+            <div display="table-cell" direction="ltr" position="relative" width="50%" height="20px"/>
+            <div display="table-cell" direction="ltr" position="relative" width="50%" height="20px"/>
           </div>
         </div>
       </div>

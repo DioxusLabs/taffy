@@ -1,7 +1,7 @@
 <test name="table_colspan_two_of_three__border_box_rtl" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="table" direction="rtl" border-spacing-x="0px" border-spacing-y="0px">
+    <div display="table" direction="rtl" position="absolute" border-spacing-x="0px" border-spacing-y="0px">
       <div display="table-row-group" direction="rtl">
         <div display="table-row" direction="rtl">
           <div display="table-cell" direction="rtl" colspan="2" width="100px" height="20px" padding-top="0px" padding-left="0px" padding-bottom="0px" padding-right="0px"/>
