@@ -23,6 +23,34 @@ crate::util::parse::impl_parse_for_keyword_enum!(TableLayout,
     "fixed" => Fixed,
 );
 
+/// The value of the `visibility` property, as far as layout is concerned.
+///
+/// Only table layout reads this: a row, row group, column or column group with
+/// `visibility: collapse` is removed from the table and the space it took up is given to the
+/// content after it (CSS 2.1 §17.5.5). Elsewhere `visibility` affects painting only, which is
+/// the responsibility of the code painting the tree.
+///
+/// <https://www.w3.org/TR/CSS21/visufx.html#propdef-visibility>
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub enum Visibility {
+    /// The box is visible
+    #[default]
+    Visible,
+    /// The box is invisible but still takes up space
+    Hidden,
+    /// Rows, row groups, columns and column groups are removed from the table; for any other
+    /// box this is the same as `hidden`
+    Collapse,
+}
+
+#[cfg(feature = "parse")]
+crate::util::parse::impl_parse_for_keyword_enum!(Visibility,
+    "visible" => Visible,
+    "hidden" => Hidden,
+    "collapse" => Collapse,
+);
+
 /// The role a child node plays within a table, as determined by its `display` value.
 ///
 /// Taffy expects a well-formed table tree (table → row group / row → cell) as produced
@@ -76,10 +104,18 @@ pub trait TableItemStyle: CoreStyle {
         Style::<Self::CustomIdent>::DEFAULT.align_content
     }
 
-    /// The number of columns this cell spans (HTML `colspan`)
+    /// The number of columns this cell spans (HTML `colspan`), or the number of columns a column
+    /// or column group spans (HTML `span`)
     #[inline(always)]
     fn colspan(&self) -> u16 {
         Style::<Self::CustomIdent>::DEFAULT.colspan
+    }
+
+    /// Whether a row, row group, column or column group is collapsed out of the table
+    /// (`visibility: collapse`)
+    #[inline(always)]
+    fn visibility(&self) -> Visibility {
+        Style::<Self::CustomIdent>::DEFAULT.visibility
     }
 
     /// The number of rows this cell spans (HTML `rowspan`)

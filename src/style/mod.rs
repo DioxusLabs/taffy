@@ -47,7 +47,7 @@ pub use self::grid::{GridTemplateArea, GridTemplateAreas, NamedGridLine, Templat
 #[cfg(feature = "grid")]
 pub(crate) use self::grid::{NonNamedGridPlacement, OriginZeroGridPlacement};
 #[cfg(feature = "table_layout")]
-pub use self::table::{TableContainerStyle, TableItemStyle, TableLayout, TableRole};
+pub use self::table::{TableContainerStyle, TableItemStyle, TableLayout, TableRole, Visibility};
 
 use crate::geometry::{Point, Rect, Size};
 use crate::style_helpers::TaffyAuto as _;
@@ -865,6 +865,11 @@ pub struct Style<S: CheapCloneStr = DefaultCheapStr> {
     /// The number of rows this cell spans
     #[cfg(feature = "table_layout")]
     pub rowspan: u16,
+    /// Whether the box is collapsed out of its table. Only table layout reads this, for rows,
+    /// row groups, columns and column groups with `visibility: collapse`; for every other box
+    /// `visibility` is a painting matter and does not affect layout
+    #[cfg(feature = "table_layout")]
+    pub visibility: Visibility,
 
     // Flexbox container properties
     /// Which direction does the main axis flow in?
@@ -985,6 +990,8 @@ impl<S: CheapCloneStr> Style<S> {
         colspan: 1,
         #[cfg(feature = "table_layout")]
         rowspan: 1,
+        #[cfg(feature = "table_layout")]
+        visibility: Visibility::Visible,
         // Flexbox
         #[cfg(feature = "flexbox")]
         flex_direction: FlexDirection::Row,
@@ -1729,6 +1736,11 @@ impl<S: CheapCloneStr> TableItemStyle for Style<S> {
     fn rowspan(&self) -> u16 {
         self.rowspan
     }
+
+    #[inline(always)]
+    fn visibility(&self) -> Visibility {
+        self.visibility
+    }
 }
 
 #[cfg(feature = "table_layout")]
@@ -1751,6 +1763,11 @@ impl<T: TableItemStyle> TableItemStyle for &'_ T {
     #[inline(always)]
     fn rowspan(&self) -> u16 {
         (*self).rowspan()
+    }
+
+    #[inline(always)]
+    fn visibility(&self) -> Visibility {
+        (*self).visibility()
     }
 }
 
@@ -1834,6 +1851,8 @@ mod tests {
             colspan: 1,
             #[cfg(feature = "table_layout")]
             rowspan: 1,
+            #[cfg(feature = "table_layout")]
+            visibility: crate::style::Visibility::Visible,
             #[cfg(feature = "flexbox")]
             flex_grow: 0.0,
             #[cfg(feature = "flexbox")]
