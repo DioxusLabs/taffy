@@ -1,5 +1,5 @@
 use taffy::prelude::*;
-use taffy::{Point, TableLayout, Visibility};
+use taffy::{Direction, Point, TableLayout, Visibility};
 use taffy_test_helpers::new_test_tree;
 
 /// css-tables-3 §6.1 and CSS 2.2 §17.6.1: a row and a row group have no padding, and their
@@ -285,4 +285,42 @@ fn table_without_cells_has_row_heights() {
         .unwrap();
     tree.compute_layout(empty, Size::MAX_CONTENT).unwrap();
     assert_eq!(tree.layout(empty).unwrap().size, Size { width: 10.0, height: 10.0 });
+}
+
+/// In a `direction: rtl` table the first column is the rightmost one, and a spanning cell
+/// starts at the leftmost column it covers
+#[test]
+fn rtl_table_mirrors_its_columns() {
+    let mut tree = new_test_tree();
+    let narrow = Style { size: Size { width: length(20.0), height: length(10.0) }, ..Default::default() };
+    let wide = Style { size: Size { width: length(50.0), height: length(10.0) }, ..Default::default() };
+    let spanning = Style { colspan: 2, size: Size { width: auto(), height: length(10.0) }, ..Default::default() };
+    let table = table_with_columns(
+        &mut tree,
+        Style {
+            direction: Direction::Rtl,
+            border_spacing: Size { width: length(5.0), height: length(0.0) },
+            ..Default::default()
+        },
+        &[],
+        &[&[narrow, wide], &[spanning]],
+    );
+    let first_row = tree.child_at_index(table, 0).unwrap();
+    let first_cell = tree.child_at_index(first_row, 0).unwrap();
+    let second_cell = tree.child_at_index(first_row, 1).unwrap();
+    let second_row = tree.child_at_index(table, 1).unwrap();
+    let spanning_cell = tree.child_at_index(second_row, 0).unwrap();
+
+    tree.compute_layout(table, Size::MAX_CONTENT).unwrap();
+
+    // 5 + 20 + 5 + 50 + 5 wide; the rows start after the outer spacing
+    assert_eq!(tree.layout(table).unwrap().size.width, 85.0);
+    assert_eq!(tree.layout(first_row).unwrap().location.x, 5.0);
+    // The first (narrow) column is on the right, the second on the left
+    assert_eq!(tree.layout(first_cell).unwrap().location.x, 55.0);
+    assert_eq!(tree.layout(first_cell).unwrap().size.width, 20.0);
+    assert_eq!(tree.layout(second_cell).unwrap().location.x, 0.0);
+    assert_eq!(tree.layout(second_cell).unwrap().size.width, 50.0);
+    assert_eq!(tree.layout(spanning_cell).unwrap().location.x, 0.0);
+    assert_eq!(tree.layout(spanning_cell).unwrap().size.width, 75.0);
 }
