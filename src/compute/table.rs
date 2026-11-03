@@ -252,10 +252,19 @@ pub fn compute_table_layout(
         offset: Point { x: border.left, y: border.top },
     };
 
-    if col_count == 0 {
+    if col_count == 0 && rows.is_empty() {
+        // The table is never smaller than its own padding and border, whatever its box-sizing
         let size = Size {
-            width: styled_known.width.unwrap_or(pb_size.width).maybe_clamp(min_size.width, max_size.width),
-            height: styled_known.height.unwrap_or(pb_size.height).maybe_clamp(min_size.height, max_size.height),
+            width: styled_known
+                .width
+                .unwrap_or(pb_size.width)
+                .maybe_clamp(min_size.width, max_size.width)
+                .max(pb_size.width),
+            height: styled_known
+                .height
+                .unwrap_or(pb_size.height)
+                .maybe_clamp(min_size.height, max_size.height)
+                .max(pb_size.height),
         };
         if run_mode == RunMode::PerformLayout {
             for order in 0..tree.child_count(node_id) {
@@ -264,7 +273,7 @@ pub fn compute_table_layout(
             }
         }
         // A table with no rows has its baseline on its bottom content edge (css-tables-3 §3.10.2)
-        let baselines = Baselines::from_first(Some(size.height - padding_border.bottom));
+        let baselines = Baselines::from_first(Some(size.height));
         let mut output = LayoutOutput::from_sizes_and_baselines(size, ScrollableOverflow::ZERO, baselines);
         output.oof_candidates = oof_candidates;
         output.oof_positioning_area = Some(oof_positioning_area(size));
@@ -278,7 +287,8 @@ pub fn compute_table_layout(
     let mut columns = measure_columns(tree, &cells, &column_boxes, &column_groups, col_count, h_spacing, is_fixed);
 
     // Phase 3: resolve the table's used width and the columns' used widths
-    let total_h_spacing = h_spacing * (col_count as f32 + 1.0);
+    // A table with no columns has no border-spacing in the inline axis either
+    let total_h_spacing = if col_count == 0 { 0.0 } else { h_spacing * (col_count as f32 + 1.0) };
     let (grid_min_sum, grid_max_sum) = grid_min_max(&columns, is_fixed);
     let grid_min = grid_min_sum + total_h_spacing;
     let grid_max = grid_max_sum + total_h_spacing;
@@ -333,7 +343,7 @@ pub fn compute_table_layout(
         column.used = 0.0;
     }
     let table_width = table_width - collapsed_width;
-    let grid_width = assignable - collapsed_width + h_spacing * (col_count as f32 - 1.0);
+    let grid_width = assignable - collapsed_width + h_spacing * (col_count as f32 - 1.0).max(0.0);
 
     if run_mode == RunMode::ComputeSize && axis == RequestedAxis::Horizontal {
         return LayoutOutput::from_outer_size(Size { width: table_width, height: styled_known.height.unwrap_or(0.0) });
@@ -483,8 +493,10 @@ pub fn compute_table_layout(
     }
     let table_height = table_height - collapsed_height;
 
+    // A row with no baseline-aligned cell synthesises one from its lowest cell's bottom content
+    // edge, a row with no cells at all has its baseline on its top edge, as the browsers do
     for row in rows.iter_mut().filter(|r| r.baseline.is_none()) {
-        row.baseline = row.fallback_descent.map(|descent| (row.used_height - descent).max(0.0));
+        row.baseline = Some(row.fallback_descent.map_or(0.0, |descent| (row.used_height - descent).max(0.0)));
     }
 
     let final_size = Size { width: table_width, height: table_height };
