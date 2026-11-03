@@ -18,7 +18,8 @@ use crate::style::{
 use crate::style_helpers::TaffyMaxContent;
 use crate::tree::traits::{LayoutPartialTreeExt, LayoutTableContainer};
 use crate::tree::{
-    Baselines, Layout, LayoutInput, LayoutOutput, NodeId, RequestedAxis, RunMode, ScrollableOverflow, SizingMode,
+    AxisStaticEdge, AxisStaticPosition, Baselines, Layout, LayoutInput, LayoutOutput, NodeId, OofCandidate,
+    OofCandidates, OofPositioningArea, RequestedAxis, RunMode, ScrollableOverflow, SizingMode,
 };
 use crate::util::sys::Vec;
 use crate::util::{MaybeMath, MaybeResolve, ResolveOrZero};
@@ -81,7 +82,6 @@ struct Column {
 }
 
 /// The table's cells, placed into rows and columns
-#[derive(Default)]
 struct Grid {
     /// The rows of every row group, in document order
     rows: Vec<Row>,
@@ -93,6 +93,26 @@ struct Grid {
     col_count: usize,
     /// The rows and cells that generate no box, which still need their layout cleared
     hidden: Vec<NodeId>,
+    /// The out-of-flow children of the table, its row groups and its rows. They take no part in
+    /// the grid and are laid out by their containing block
+    oof: OofCandidates,
+    /// The static position every out-of-flow child gets: the start of the table's content box
+    static_position: Point<AxisStaticPosition>,
+}
+
+impl Grid {
+    /// An empty grid whose out-of-flow children get `static_position`
+    fn new(static_position: Point<AxisStaticPosition>) -> Self {
+        Self {
+            rows: Vec::new(),
+            cells: Vec::new(),
+            groups: Vec::new(),
+            col_count: 0,
+            hidden: Vec::new(),
+            oof: OofCandidates::new(),
+            static_position,
+        }
+    }
 }
 
 /// A row group of the table
@@ -179,8 +199,21 @@ pub fn compute_table_layout(
     let h_spacing = border_spacing.width.resolve_or_zero(parent_width, |v, b| tree.calc(v, b));
     let v_spacing = border_spacing.height.resolve_or_zero(parent_width, |v, b| tree.calc(v, b));
 
+    // The static position of an out-of-flow child of the table, a row group or a row is the
+    // top-left of the table's content box
+    let static_position = Point {
+        x: AxisStaticPosition::from_edge(padding_border.left, AxisStaticEdge::Start),
+        y: AxisStaticPosition::from_edge(padding_border.top, AxisStaticEdge::Start),
+    };
+
     // Phase 1: place cells into the grid
-    let Grid { mut rows, cells, groups, col_count, hidden } = build_grid(tree, node_id);
+    let Grid { mut rows, cells, groups, col_count, hidden, oof: mut oof_candidates, .. } =
+        build_grid(tree, node_id, static_position);
+
+    let oof_positioning_area = |size: Size<f32>| OofPositioningArea {
+        size: size - border.sum_axes(),
+        offset: Point { x: border.left, y: border.top },
+    };
 
     if col_count == 0 || rows.is_empty() {
         let size = Size {
@@ -193,7 +226,10 @@ pub fn compute_table_layout(
                 tree.set_unrounded_layout(child_id, &Layout::with_order(order as u32));
             }
         }
-        return LayoutOutput::from_outer_size(size);
+        let mut output = LayoutOutput::from_outer_size(size);
+        output.oof_candidates = oof_candidates;
+        output.oof_positioning_area = Some(oof_positioning_area(size));
+        return output;
     }
 
     // Phase 2: collect intrinsic size contributions per column
@@ -298,8 +334,10 @@ pub fn compute_table_layout(
                 + cell_style.border().resolve_or_zero(parent_width, |v, b| tree.calc(v, b)).bottom;
             drop(cell_style);
 
+            // A cell with no children and no line box is empty (Blitz lays out text-only
+            // cells with no child nodes, so an output baseline also counts as content)
             let row = &mut rows[cell.row];
-            if tree.child_count(cell.node_id) == 0 {
+            if tree.child_count(cell.node_id) == 0 && output.baselines.first.is_none() {
                 row.fallback_descent = Some(row.fallback_descent.map_or(pb_bottom, |d: f32| d.min(pb_bottom)));
             } else {
                 let baseline = output.baselines.first.unwrap_or(output.size.height - pb_bottom);
@@ -439,7 +477,7 @@ pub fn compute_table_layout(
         let cell_height: f32 =
             rows[range].iter().map(|r| r.used_height).sum::<f32>() + v_spacing * (span_len as f32 - 1.0);
 
-        let output = tree.compute_child_layout(
+        let mut output = tree.compute_child_layout(
             cell.node_id,
             LayoutInput {
                 known_dimensions: Size { width: Some(cell_width), height: Some(cell_height) },
@@ -470,6 +508,12 @@ pub fn compute_table_layout(
         let col_range = cell.col..(cell.col + cell.colspan).min(col_count);
         let cell_x = col_x[col_range].iter().copied().fold(f32::INFINITY, f32::min);
         let location = Point { x: cell_x - grid_origin_x, y: 0.0 };
+
+        if !output.oof_candidates.is_empty() {
+            // Translate anchors from cell-relative to table-relative coordinates
+            output.oof_candidates.translate(Point { x: cell_x, y: row_y[cell.row] });
+            oof_candidates.append(&mut output.oof_candidates);
+        }
 
         tree.set_unrounded_layout(
             cell.node_id,
@@ -526,7 +570,10 @@ pub fn compute_table_layout(
     #[cfg(not(feature = "content_size"))]
     let scrollable_overflow_rect = ScrollableOverflow::ZERO;
 
-    LayoutOutput::from_sizes_and_baselines(final_size, scrollable_overflow_rect, baselines)
+    let mut output = LayoutOutput::from_sizes_and_baselines(final_size, scrollable_overflow_rect, baselines);
+    output.oof_candidates = oof_candidates;
+    output.oof_positioning_area = Some(oof_positioning_area(final_size));
+    output
 }
 
 /// The rows a row group holds, which `build_grid` places contiguously
@@ -540,11 +587,15 @@ fn group_row_range(rows: &[Row], group: usize) -> core::ops::Range<usize> {
 /// Place every cell of the table into the grid, and collect its row groups. Rows outside a row
 /// group belong to an anonymous one, and a rowspan never leaves the group it starts in
 /// (css-tables-3 §2.2)
-fn build_grid(tree: &mut impl LayoutTableContainer, node_id: NodeId) -> Grid {
-    let mut grid = Grid::default();
+fn build_grid(
+    tree: &mut impl LayoutTableContainer,
+    node_id: NodeId,
+    static_position: Point<AxisStaticPosition>,
+) -> Grid {
+    let mut grid = Grid::new(static_position);
     // How many further rows the cell placed in each column still covers
     let mut occupancy: Vec<usize> = Vec::new();
-    let table_children = visible_children(tree, node_id, &mut grid.hidden);
+    let table_children = visible_children(tree, node_id, &mut grid);
     let mut index = 0;
 
     while index < table_children.len() {
@@ -555,7 +606,7 @@ fn build_grid(tree: &mut impl LayoutTableContainer, node_id: NodeId) -> Grid {
             let group = Some(grid.groups.len());
             grid.groups.push(Group { node_id: group_id, order: index as u32 });
 
-            let group_rows = visible_children(tree, group_id, &mut grid.hidden);
+            let group_rows = visible_children(tree, group_id, &mut grid);
             for (row, &row_id) in group_rows.iter().enumerate() {
                 place_row(tree, row_id, group, row as u32, group_rows.len() - row, &mut occupancy, &mut grid);
             }
@@ -580,13 +631,19 @@ fn build_grid(tree: &mut impl LayoutTableContainer, node_id: NodeId) -> Grid {
     grid
 }
 
-/// Collect the children of `node_id` that generate a box, pushing the rest onto `hidden`
-fn visible_children(tree: &impl LayoutTableContainer, node_id: NodeId, hidden: &mut Vec<NodeId>) -> Vec<NodeId> {
+/// Collect the children of `node_id` that take part in the grid, pushing the ones that generate
+/// no box onto `grid.hidden` and the out-of-flow ones onto `grid.oof`
+fn visible_children(tree: &impl LayoutTableContainer, node_id: NodeId, grid: &mut Grid) -> Vec<NodeId> {
     let mut visible = Vec::with_capacity(tree.child_count(node_id));
     for index in 0..tree.child_count(node_id) {
         let child_id = tree.get_child_id(node_id, index);
-        if tree.get_table_child_style(child_id).box_generation_mode() == BoxGenerationMode::None {
-            hidden.push(child_id);
+        let style = tree.get_table_child_style(child_id);
+        let position = style.position();
+        if style.box_generation_mode() == BoxGenerationMode::None {
+            grid.hidden.push(child_id);
+        } else if position.is_out_of_flow() {
+            let static_position = grid.static_position;
+            grid.oof.push(OofCandidate { node: child_id, order: index as u32, position, static_position });
         } else {
             visible.push(child_id);
         }
@@ -620,7 +677,7 @@ fn place_row(
         fallback_descent: None,
     });
 
-    let row_cells = visible_children(tree, row_id, &mut grid.hidden);
+    let row_cells = visible_children(tree, row_id, grid);
     let mut col = 0;
     for (cell, &cell_id) in row_cells.iter().enumerate() {
         let cell_style = tree.get_table_child_style(cell_id);
