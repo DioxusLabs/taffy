@@ -326,22 +326,23 @@ pub fn compute_table_layout(
             row.used_height = row.used_height.max(output.size.height);
         }
 
-        if participates {
-            let cell_style = tree.get_table_child_style(cell.node_id);
-            let pb_bottom = cell_style.padding().resolve_or_zero(parent_width, |v, b| tree.calc(v, b)).bottom
-                + cell_style.border().resolve_or_zero(parent_width, |v, b| tree.calc(v, b)).bottom;
-            drop(cell_style);
+        let cell_style = tree.get_table_child_style(cell.node_id);
+        let pb_bottom = cell_style.padding().resolve_or_zero(parent_width, |v, b| tree.calc(v, b)).bottom
+            + cell_style.border().resolve_or_zero(parent_width, |v, b| tree.calc(v, b)).bottom;
+        drop(cell_style);
 
-            // A cell with no children and no line box is empty (Blitz lays out text-only
-            // cells with no child nodes, so an output baseline also counts as content)
-            let row = &mut rows[cell.row];
-            if tree.child_count(cell.node_id) == 0 && output.baselines.first.is_none() {
-                row.fallback_descent = Some(row.fallback_descent.map_or(pb_bottom, |d: f32| d.min(pb_bottom)));
-            } else {
-                let baseline = output.baselines.first.unwrap_or(output.size.height - pb_bottom);
-                sizing.baseline = Some(baseline);
-                row.baseline = Some(row.baseline.map_or(baseline, |b: f32| b.max(baseline)));
-            }
+        // A cell with no children and no line box is empty (Blitz lays out text-only cells
+        // with no child nodes, so an output baseline also counts as content). Empty cells and
+        // cells that are not baseline-aligned leave the row's baseline to its lowest cell's
+        // content edge if no cell settles it (CSS 2.1 §17.5.3)
+        let row = &mut rows[cell.row];
+        let is_empty = tree.child_count(cell.node_id) == 0 && output.baselines.first.is_none();
+        if participates && !is_empty {
+            let baseline = output.baselines.first.unwrap_or(output.size.height - pb_bottom);
+            sizing.baseline = Some(baseline);
+            row.baseline = Some(row.baseline.map_or(baseline, |b: f32| b.max(baseline)));
+        } else {
+            row.fallback_descent = Some(row.fallback_descent.map_or(pb_bottom, |d: f32| d.min(pb_bottom)));
         }
     }
 
