@@ -65,10 +65,10 @@ pub trait TableItemStyle: CoreStyle {
         TableRole::Other
     }
 
-    /// How a cell aligns its content in the block axis. `None` means the cell takes part in
+    /// How a cell aligns its content in the block axis. `normal` means the cell takes part in
     /// its row's baseline alignment
     #[inline(always)]
-    fn align_content(&self) -> Option<AlignContent> {
+    fn align_content(&self) -> AlignContent {
         Style::<Self::CustomIdent>::DEFAULT.align_content
     }
 

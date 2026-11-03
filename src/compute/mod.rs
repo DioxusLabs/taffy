@@ -272,6 +272,7 @@ fn compute_in_flow_root_layout(
         axis: RequestedAxis::Both,
         run_mode: RunMode::PerformLayout,
         vertical_margins_are_collapsible: Line::FALSE,
+        content_offset_y: 0.0,
     };
     *root_is_cached = tree.cache_get(root, &inputs).is_some();
 
