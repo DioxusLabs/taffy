@@ -1700,7 +1700,7 @@ impl<S: CheapCloneStr> TableItemStyle for Style<S> {
     }
 
     #[inline(always)]
-    fn align_content(&self) -> Option<AlignContent> {
+    fn align_content(&self) -> AlignContent {
         self.align_content
     }
 
@@ -1723,7 +1723,7 @@ impl<T: TableItemStyle> TableItemStyle for &'_ T {
     }
 
     #[inline(always)]
-    fn align_content(&self) -> Option<AlignContent> {
+    fn align_content(&self) -> AlignContent {
         (*self).align_content()
     }
 
