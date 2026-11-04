@@ -1,0 +1,23 @@
+<test name="multiple_container_children_overflow_column__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div direction="rtl" position="absolute" flex-direction="column" align-content="flex-start" flex-shrink="0" width="200px" height="300px">
+      <div direction="rtl" position="relative" flex-direction="column" align-content="flex-start" flex-shrink="0">
+        <div direction="rtl" position="relative" flex-direction="column" align-content="flex-start" flex-shrink="0" height="400px"/>
+      </div>
+      <div direction="rtl" position="relative" flex-direction="column" align-content="flex-start" flex-shrink="0">
+        <div direction="rtl" position="relative" flex-direction="column" align-content="flex-start" flex-shrink="0" height="500px"/>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="200" height="300">
+      <node x="0" y="0" width="200" height="400">
+        <node x="0" y="0" width="200" height="400"/>
+      </node>
+      <node x="0" y="400" width="200" height="500">
+        <node x="0" y="0" width="200" height="500"/>
+      </node>
+    </node>
+  </expectations>
+</test>

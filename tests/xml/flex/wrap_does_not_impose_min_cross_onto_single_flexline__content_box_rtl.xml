@@ -1,0 +1,13 @@
+<test name="wrap_does_not_impose_min_cross_onto_single_flexline__content_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div box-sizing="content-box" direction="rtl" position="absolute" flex-wrap="wrap" align-items="stretch" align-content="flex-start" flex-shrink="0" min-height="400px">
+      <div box-sizing="content-box" direction="rtl" position="relative" flex-direction="column" align-content="flex-start" flex-grow="1" flex-basis="0%"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="0" height="400">
+      <node x="0" y="0" width="0" height="0"/>
+    </node>
+  </expectations>
+</test>

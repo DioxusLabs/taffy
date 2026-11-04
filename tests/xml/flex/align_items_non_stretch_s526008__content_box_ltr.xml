@@ -1,0 +1,25 @@
+<test name="align_items_non_stretch_s526008__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div box-sizing="content-box" direction="ltr" position="absolute" flex-direction="column" align-content="flex-start" flex-shrink="0" width="400px" height="400px">
+      <div box-sizing="content-box" direction="ltr" position="relative" align-content="flex-start" flex-shrink="0">
+        <div box-sizing="content-box" direction="ltr" position="relative" flex-direction="column" align-items="flex-start" align-content="flex-start" flex-shrink="0">
+          <div box-sizing="content-box" direction="ltr" position="relative" flex-direction="column" align-content="flex-start" flex-shrink="0">
+            <div box-sizing="content-box" direction="ltr" position="relative" flex-direction="column" align-content="flex-start" flex-shrink="0" width="0px" height="10px"/>
+          </div>
+        </div>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="400" height="400">
+      <node x="0" y="0" width="400" height="10">
+        <node x="0" y="0" width="0" height="10">
+          <node x="0" y="0" width="0" height="10">
+            <node x="0" y="0" width="0" height="10"/>
+          </node>
+        </node>
+      </node>
+    </node>
+  </expectations>
+</test>

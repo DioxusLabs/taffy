@@ -1,0 +1,37 @@
+<test name="static_position_justify_flex_start_position_set_amalgamation__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div box-sizing="content-box" direction="ltr" position="absolute" flex-direction="column" align-content="flex-start" flex-shrink="0">
+      <div box-sizing="content-box" direction="ltr" position="relative" flex-direction="column" align-content="flex-start" flex-shrink="0" margin-top="5px" margin-left="4px" margin-bottom="1px" margin-right="9px" padding-top="9px" padding-left="2px" padding-bottom="13px" padding-right="11px" border-top="6px" border-left="5px" border-bottom="8px" border-right="7px">
+        <div box-sizing="content-box" direction="ltr" flex-direction="column" align-content="flex-start" justify-content="flex-start" flex-shrink="0" margin-top="6px" margin-left="8px" margin-bottom="9px" margin-right="3px" padding-top="7px" padding-left="1px" padding-bottom="4px" padding-right="9px" border-top="10px" border-left="8px" border-bottom="1px" border-right="2px">
+          <div box-sizing="content-box" direction="ltr" position="absolute" flex-direction="column" align-content="flex-start" flex-shrink="0" width="21%" margin-top="12px" margin-left="9px" margin-bottom="7px" margin-right="4px" padding-top="3px" padding-left="5px" padding-bottom="10px" padding-right="8px" border-top="1px" border-left="2px" border-bottom="9px" border-right="5px" right="30px">
+            <div box-sizing="content-box" direction="ltr" position="relative" flex-direction="column" align-content="flex-start" flex-shrink="0" width="100px" height="50px" margin-top="12px" margin-left="9px" margin-bottom="7px" margin-right="4px" padding-top="3px" padding-left="5px" padding-bottom="10px" padding-right="8px" border-top="1px" border-left="2px" border-bottom="9px" border-right="5px"/>
+          </div>
+          <div box-sizing="content-box" direction="ltr" position="relative" flex-direction="column" align-content="flex-start" flex-shrink="0" width="10%" margin-top="12px" margin-left="9px" margin-bottom="7px" margin-right="4px" padding-top="3px" padding-left="5px" padding-bottom="10px" padding-right="8px" border-top="1px" border-left="2px" border-bottom="9px" border-right="5px">
+            <div box-sizing="content-box" direction="ltr" position="relative" flex-direction="column" align-content="flex-start" flex-shrink="0" width="100px" height="50px" margin-top="12px" margin-left="9px" margin-bottom="7px" margin-right="4px" padding-top="3px" padding-left="5px" padding-bottom="10px" padding-right="8px" border-top="1px" border-left="2px" border-bottom="9px" border-right="5px"/>
+          </div>
+          <div box-sizing="content-box" direction="ltr" position="relative" flex-direction="column" align-content="flex-start" flex-shrink="0" width="10%" margin-top="12px" margin-left="9px" margin-bottom="7px" margin-right="4px" padding-top="3px" padding-left="5px" padding-bottom="10px" padding-right="8px" border-top="1px" border-left="2px" border-bottom="9px" border-right="5px">
+            <div box-sizing="content-box" direction="ltr" position="relative" flex-direction="column" align-content="flex-start" flex-shrink="0" width="100px" height="50px" margin-top="12px" margin-left="9px" margin-bottom="7px" margin-right="4px" padding-top="3px" padding-left="5px" padding-bottom="10px" padding-right="8px" border-top="1px" border-left="2px" border-bottom="9px" border-right="5px"/>
+          </div>
+        </div>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="235" height="347">
+      <node x="4" y="5" width="222" height="341">
+        <node x="15" y="21" width="186" height="290">
+          <node x="117" y="50" width="64" height="115">
+            <node x="16" y="16" width="120" height="73"/>
+          </node>
+          <node x="18" y="29" width="37" height="115">
+            <node x="16" y="16" width="120" height="73"/>
+          </node>
+          <node x="18" y="163" width="37" height="115">
+            <node x="16" y="16" width="120" height="73"/>
+          </node>
+        </node>
+      </node>
+    </node>
+  </expectations>
+</test>

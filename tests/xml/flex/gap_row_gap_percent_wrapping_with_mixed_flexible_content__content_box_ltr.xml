@@ -1,0 +1,17 @@
+<test name="gap_row_gap_percent_wrapping_with_mixed_flexible_content__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div box-sizing="content-box" direction="ltr" position="absolute" align-content="flex-start" flex-shrink="0" width="300px" height="300px" row-gap="10%" column-gap="10%">
+      <div box-sizing="content-box" direction="ltr" position="relative" flex-direction="column" align-content="flex-start" flex-shrink="0" width="10px"/>
+      <div box-sizing="content-box" direction="ltr" position="relative" flex-direction="column" align-content="flex-start" flex-grow="1" flex-basis="0%"/>
+      <div box-sizing="content-box" direction="ltr" position="relative" flex-direction="column" align-content="flex-start" flex-shrink="0" width="10%"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="300" height="300">
+      <node x="0" y="0" width="10" height="300"/>
+      <node x="40" y="0" width="200" height="300"/>
+      <node x="270" y="0" width="30" height="300"/>
+    </node>
+  </expectations>
+</test>

@@ -1,0 +1,17 @@
+<test name="justify_content_overflow_row_space_around__content_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div box-sizing="content-box" direction="rtl" position="absolute" align-content="flex-start" justify-content="space-around" flex-shrink="0" width="102px" height="102px">
+      <div box-sizing="content-box" direction="rtl" position="relative" flex-direction="column" align-content="flex-start" flex-shrink="0" width="40px"/>
+      <div box-sizing="content-box" direction="rtl" position="relative" flex-direction="column" align-content="flex-start" flex-shrink="0" width="40px"/>
+      <div box-sizing="content-box" direction="rtl" position="relative" flex-direction="column" align-content="flex-start" flex-shrink="0" width="40px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="102" height="102">
+      <node x="62" y="0" width="40" height="102"/>
+      <node x="22" y="0" width="40" height="102"/>
+      <node x="-18" y="0" width="40" height="102"/>
+    </node>
+  </expectations>
+</test>

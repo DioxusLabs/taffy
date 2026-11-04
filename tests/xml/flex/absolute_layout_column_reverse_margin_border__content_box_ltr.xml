@@ -1,0 +1,13 @@
+<test name="absolute_layout_column_reverse_margin_border__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div box-sizing="content-box" direction="ltr" position="absolute" flex-direction="column-reverse" align-content="flex-start" flex-shrink="0" width="200px" height="200px">
+      <div box-sizing="content-box" direction="ltr" position="absolute" flex-direction="column" align-content="flex-start" flex-shrink="0" width="50px" height="50px" margin-left="3px" margin-right="4px" border-left="1px" border-right="7px" left="5px" right="3px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="200" height="200">
+      <node x="8" y="150" width="58" height="50"/>
+    </node>
+  </expectations>
+</test>

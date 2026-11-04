@@ -1,0 +1,13 @@
+<test name="zero_aspect_ratio_behaves_like_auto__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div direction="rtl" position="absolute" flex-direction="column" align-content="flex-start" flex-shrink="0" width="300px" height="300px">
+      <div direction="rtl" position="relative" flex-direction="column" align-content="flex-start" flex-shrink="0" width="50px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="300" height="300">
+      <node x="250" y="0" width="50" height="0"/>
+    </node>
+  </expectations>
+</test>

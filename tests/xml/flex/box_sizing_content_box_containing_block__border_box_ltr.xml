@@ -1,0 +1,17 @@
+<test name="box_sizing_content_box_containing_block__border_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div box-sizing="content-box" direction="ltr" position="absolute" flex-direction="column" align-content="flex-start" flex-shrink="0" width="100px" height="100px" padding-top="12px" padding-left="12px" padding-bottom="12px" padding-right="12px" border-top="8px" border-left="8px" border-bottom="8px" border-right="8px">
+      <div direction="ltr" flex-direction="column" align-content="flex-start" flex-shrink="0">
+        <div direction="ltr" position="absolute" flex-direction="column" align-content="flex-start" flex-shrink="0" width="50px" height="25%"/>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="140" height="140">
+      <node x="20" y="20" width="100" height="0">
+        <node x="20" y="20" width="50" height="31"/>
+      </node>
+    </node>
+  </expectations>
+</test>
