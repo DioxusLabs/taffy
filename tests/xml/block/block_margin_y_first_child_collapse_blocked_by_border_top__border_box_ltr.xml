@@ -2,7 +2,7 @@
   <viewport width="max-content" height="max-content"/>
   <input>
     <div display="block" direction="ltr" position="absolute" width="50px">
-      <div display="block" direction="ltr" position="relative" margin-top="10px">
+      <div display="block" direction="ltr" position="relative" margin-top="10px" border-top="1px">
         <div display="block" direction="ltr" position="relative" margin-top="10px">
           <div direction="ltr" position="relative" height="10px"/>
         </div>
@@ -10,9 +10,9 @@
     </div>
   </input>
   <expectations>
-    <node x="0" y="0" width="50" height="20">
-      <node x="0" y="10" width="50" height="10">
-        <node x="0" y="0" width="50" height="10">
+    <node x="0" y="0" width="50" height="31">
+      <node x="0" y="10" width="50" height="21">
+        <node x="0" y="11" width="50" height="10">
           <node x="0" y="0" width="50" height="10"/>
         </node>
       </node>
