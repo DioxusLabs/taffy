@@ -1,0 +1,27 @@
+<test name="wrap_items_sum_to_max_content_width__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div box-sizing="content-box" direction="ltr" position="absolute" flex-wrap="wrap" align-items="flex-start" width="640px">
+      <div box-sizing="content-box" direction="ltr" position="relative" flex-wrap="wrap" column-gap="4px">
+        <div box-sizing="content-box" direction="ltr" position="relative" width="82.68px" height="10px"/>
+        <div box-sizing="content-box" direction="ltr" position="relative" width="82.68px" height="10px"/>
+        <div box-sizing="content-box" direction="ltr" position="relative" width="82.68px" height="10px"/>
+        <div box-sizing="content-box" direction="ltr" position="relative" width="82.68px" height="10px"/>
+        <div box-sizing="content-box" direction="ltr" position="relative" width="82.68px" height="10px"/>
+        <div box-sizing="content-box" direction="ltr" position="relative" width="82.68px" height="10px"/>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="640" height="10">
+      <node x="0" y="0" width="516" height="10">
+        <node x="0" y="0" width="83" height="10"/>
+        <node x="87" y="0" width="82" height="10"/>
+        <node x="173" y="0" width="83" height="10"/>
+        <node x="260" y="0" width="83" height="10"/>
+        <node x="347" y="0" width="82" height="10"/>
+        <node x="433" y="0" width="83" height="10"/>
+      </node>
+    </node>
+  </expectations>
+</test>

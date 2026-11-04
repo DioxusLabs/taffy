@@ -45,6 +45,10 @@ Flexbox layout is ~15-20% faster for deep trees.
 - Grid: don't resolve a form control's percentage max size against zero in its minimum contribution (#1351).
 - Grid: count `calc()` track sizes as fixed sizing functions in `auto-fill`/`auto-fit` repetitions (#1320).
 
+### Fixed
+
+- Flexbox: absorb `f32` rounding errors when breaking items into flex lines (greedy and `flex-wrap: balance`), using the same tolerance as the float fit checks. A wrapping container sized to the max-content sum of its items (e.g. a `flex-wrap: wrap` flex item) could previously wrap its last item, because the line-breaking loop adds the same sizes in a different order and can exceed that sum by an ulp.
+
 ## 0.15.0
 
 The MSRV for this release is 1.71.
