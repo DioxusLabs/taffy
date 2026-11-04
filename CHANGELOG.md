@@ -9,6 +9,8 @@
 - Block/float: the auto height of a box that establishes a new block formatting context (e.g. a float or `display: flow-root`) and contains floats now includes its bottom padding and border below the bottom margin edge of those floats. Previously the floats' bottom edge was used as the box's outer height, so the bottom padding and border overlapped them.
 - Float: a zero-height float is now recorded in the float context, so content and boxes establishing a new block formatting context whose vertical extent crosses its position avoid it. Previously it only affected `clear` and the position of later floats.
 - Block: when a block with no top border or padding has a bottom border or padding, the margins of leading children that collapse through it (and so collapse with its own top margin) are no longer also added to its height. Previously such a block was too tall by the collapsed margin.
+- Flexbox/Grid: the space available to the children of a container with an `auto` size is now limited by the container's `max-width`/`max-height`, also when the container is sized under a max-content constraint. Previously the children were sized as if the max size was not set and only the container itself was clamped, so e.g. text in a flex column or grid with `max-width: 200px` was wrapped at the unclamped width (#884).
+- `compute_root_layout`: the width that a block root takes from a definite available space is now clamped by its `min-width`/`max-width`.
 
 ### Changes
 

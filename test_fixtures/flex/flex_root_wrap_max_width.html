@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    A wrapping flex root with a max-width (and an auto width) wraps its items at its max-width
+  </title>
+</head>
+<body>
+
+<!-- The items are 100px wide together, which is more than the max-width of the root:
+     the second item wraps and the root is as wide as its max-width -->
+<div id="test-root" style="flex-wrap: wrap; max-width: 80px;">
+  <div style="width: 50px; height: 50px;"></div>
+  <div style="width: 50px; height: 50px;"></div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,15 @@
+<test name="block_root_max_width_definite_viewport__border_box_ltr" use-rounding="true">
+  <viewport width="150px" height="max-content"/>
+  <input>
+    <div display="block" direction="ltr" position="relative" max-width="100px">
+      <text direction="ltr" position="relative">
+        HH​HH​HH​HH​HH​HH​HH​HH​HH​HH
+      </text>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="100" height="20">
+      <node x="0" y="0" width="100" height="20"/>
+    </node>
+  </expectations>
+</test>
