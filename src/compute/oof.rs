@@ -101,7 +101,10 @@ impl OofAlignment {
             AlignItemsKeyword::Normal => Self::Normal,
             AlignItemsKeyword::Stretch => Self::Stretch,
             AlignItemsKeyword::Center => Self::Center,
-            AlignItemsKeyword::End | AlignItemsKeyword::FlexEnd | AlignItemsKeyword::SelfEnd => Self::End,
+            AlignItemsKeyword::End
+            | AlignItemsKeyword::FlexEnd
+            | AlignItemsKeyword::SelfEnd
+            | AlignItemsKeyword::LastBaseline => Self::End,
             // The fallback alignment of `baseline` is `start`
             AlignItemsKeyword::Start
             | AlignItemsKeyword::FlexStart
@@ -961,6 +964,19 @@ mod tests {
     fn unsafe_alignment_never_falls_back() {
         let sp_x = sp(AREA, AxisStaticEdge::End, AlignmentSafety::Unsafe, AxisStaticEdge::Start);
         assert_eq!(resolve_x(sp_x, 120.0, NO_MARGIN), -10.0);
+    }
+
+    #[test]
+    fn last_baseline_static_alignment_uses_end_edge() {
+        use crate::style::AlignSelf;
+
+        for rtl in [false, true] {
+            for width in [0.0, 20.0, 120.0] {
+                let baseline = AxisStaticPosition::from_alignment(AlignSelf::LAST_BASELINE, AREA, rtl);
+                let end = AxisStaticPosition::from_alignment(AlignSelf::END, AREA, rtl);
+                assert_eq!(resolve_x(baseline, width, MARGIN), resolve_x(end, width, MARGIN));
+            }
+        }
     }
 
     #[test]
