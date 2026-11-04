@@ -114,6 +114,9 @@ pub use crate::compute::{
 };
 #[doc(inline)]
 pub use crate::style::Style;
+#[cfg(feature = "builder")]
+#[doc(inline)]
+pub use crate::style::StyleBuilder;
 #[doc(inline)]
 pub use crate::tree::traits::*;
 #[cfg(feature = "taffy_tree")]
