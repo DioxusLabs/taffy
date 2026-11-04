@@ -1593,7 +1593,9 @@ fn determine_container_main_size(
                         } else {
                             Some(item.flex_basis)
                         };
-                        let flex_basis_min = clamping_basis.filter(|_| item.flex_shrink == 0.0);
+                        // An item that cannot shrink contributes at least its hypothetical main size: its flex
+                        // base size clamped by its max size
+                        let flex_basis_min = clamping_basis.maybe_min(style_max).filter(|_| item.flex_shrink == 0.0);
                         let flex_basis_max = clamping_basis.filter(|_| item.flex_grow == 0.0);
 
                         let min_main_size = style_min

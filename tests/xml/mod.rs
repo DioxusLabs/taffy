@@ -14500,6 +14500,26 @@ mod flex {
     }
 
     #[test]
+    fn flex_shrink_0_max_content_contribution_capped_by_max_height__border_box_ltr() {
+        crate::run_xml_test("flex", "flex_shrink_0_max_content_contribution_capped_by_max_height__border_box_ltr");
+    }
+
+    #[test]
+    fn flex_shrink_0_max_content_contribution_capped_by_max_height__content_box_ltr() {
+        crate::run_xml_test("flex", "flex_shrink_0_max_content_contribution_capped_by_max_height__content_box_ltr");
+    }
+
+    #[test]
+    fn flex_shrink_0_max_content_contribution_capped_by_max_height__border_box_rtl() {
+        crate::run_xml_test("flex", "flex_shrink_0_max_content_contribution_capped_by_max_height__border_box_rtl");
+    }
+
+    #[test]
+    fn flex_shrink_0_max_content_contribution_capped_by_max_height__content_box_rtl() {
+        crate::run_xml_test("flex", "flex_shrink_0_max_content_contribution_capped_by_max_height__content_box_rtl");
+    }
+
+    #[test]
     fn flex_shrink_by_outer_margin_with_max_size__border_box_ltr() {
         crate::run_xml_test("flex", "flex_shrink_by_outer_margin_with_max_size__border_box_ltr");
     }
