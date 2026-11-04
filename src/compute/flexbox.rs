@@ -867,23 +867,21 @@ fn generate_anonymous_flex_items(
             } else {
                 Size::ZERO
             };
+            let size = child_style.size().maybe_resolve(percent_resolution_size, |val, basis| tree.calc(val, basis));
+            let min_size =
+                child_style.min_size().maybe_resolve(percent_resolution_size, |val, basis| tree.calc(val, basis));
+            let max_size =
+                child_style.max_size().maybe_resolve(percent_resolution_size, |val, basis| tree.calc(val, basis));
+            // A size transferred through the aspect ratio is based on the other axis' definite size
+            // clamped by that axis' min/max sizes (Chrome and Firefox agree on this)
+            let transferred_size = size.maybe_clamp(min_size, max_size).maybe_apply_aspect_ratio(aspect_ratio);
             FlexItem {
                 node: child,
                 order: index as u32,
-                size: child_style
-                    .size()
-                    .maybe_resolve(percent_resolution_size, |val, basis| tree.calc(val, basis))
-                    .maybe_apply_aspect_ratio(aspect_ratio)
-                    .maybe_add(box_sizing_adjustment),
+                size: size.or(transferred_size).maybe_add(box_sizing_adjustment),
                 size_style: child_style.size(),
-                min_size: child_style
-                    .min_size()
-                    .maybe_resolve(percent_resolution_size, |val, basis| tree.calc(val, basis))
-                    .maybe_add(box_sizing_adjustment),
-                max_size: child_style
-                    .max_size()
-                    .maybe_resolve(percent_resolution_size, |val, basis| tree.calc(val, basis))
-                    .maybe_add(box_sizing_adjustment),
+                min_size: min_size.maybe_add(box_sizing_adjustment),
+                max_size: max_size.maybe_add(box_sizing_adjustment),
                 aspect_ratio,
 
                 relative_inset: if child_style.position() == Position::Relative {

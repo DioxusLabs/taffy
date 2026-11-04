@@ -10442,6 +10442,58 @@ mod flex {
     }
 
     #[test]
+    fn aspect_ratio_flex_column_basis_from_max_clamped_cross_size__border_box_ltr() {
+        crate::run_xml_test("flex", "aspect_ratio_flex_column_basis_from_max_clamped_cross_size__border_box_ltr");
+    }
+
+    #[test]
+    fn aspect_ratio_flex_column_basis_from_max_clamped_cross_size__content_box_ltr() {
+        crate::run_xml_test("flex", "aspect_ratio_flex_column_basis_from_max_clamped_cross_size__content_box_ltr");
+    }
+
+    #[test]
+    fn aspect_ratio_flex_column_basis_from_max_clamped_cross_size__border_box_rtl() {
+        crate::run_xml_test("flex", "aspect_ratio_flex_column_basis_from_max_clamped_cross_size__border_box_rtl");
+    }
+
+    #[test]
+    fn aspect_ratio_flex_column_basis_from_max_clamped_cross_size__content_box_rtl() {
+        crate::run_xml_test("flex", "aspect_ratio_flex_column_basis_from_max_clamped_cross_size__content_box_rtl");
+    }
+
+    #[test]
+    fn aspect_ratio_flex_column_basis_from_max_clamped_cross_size_flex_shrink_0__border_box_ltr() {
+        crate::run_xml_test(
+            "flex",
+            "aspect_ratio_flex_column_basis_from_max_clamped_cross_size_flex_shrink_0__border_box_ltr",
+        );
+    }
+
+    #[test]
+    fn aspect_ratio_flex_column_basis_from_max_clamped_cross_size_flex_shrink_0__content_box_ltr() {
+        crate::run_xml_test(
+            "flex",
+            "aspect_ratio_flex_column_basis_from_max_clamped_cross_size_flex_shrink_0__content_box_ltr",
+        );
+    }
+
+    #[test]
+    fn aspect_ratio_flex_column_basis_from_max_clamped_cross_size_flex_shrink_0__border_box_rtl() {
+        crate::run_xml_test(
+            "flex",
+            "aspect_ratio_flex_column_basis_from_max_clamped_cross_size_flex_shrink_0__border_box_rtl",
+        );
+    }
+
+    #[test]
+    fn aspect_ratio_flex_column_basis_from_max_clamped_cross_size_flex_shrink_0__content_box_rtl() {
+        crate::run_xml_test(
+            "flex",
+            "aspect_ratio_flex_column_basis_from_max_clamped_cross_size_flex_shrink_0__content_box_rtl",
+        );
+    }
+
+    #[test]
     fn aspect_ratio_flex_column_fill_height__border_box_ltr() {
         crate::run_xml_test("flex", "aspect_ratio_flex_column_fill_height__border_box_ltr");
     }
