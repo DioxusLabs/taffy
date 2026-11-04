@@ -14,6 +14,8 @@ mod hand_written {
     mod floats;
     mod grid_percentage_rerun;
     mod initial_containing_block;
+    #[cfg(all(feature = "flexbox", feature = "grid", feature = "block_layout"))]
+    mod last_baseline;
     mod measure;
     mod min_max_overrides;
     mod negative_available_space;
