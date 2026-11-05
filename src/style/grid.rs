@@ -5,6 +5,7 @@ use super::{
 };
 use crate::compute::grid::{GridCoordinate, GridLine, OriginZeroLine, MAX_GRID_TRACKS};
 use crate::geometry::{AbsoluteAxis, AbstractAxis, Line, MinMax, Size};
+use crate::style::CalcHandle;
 use crate::style_helpers::*;
 use crate::sys::{DefaultCheapStr, Vec};
 use core::cmp::{max, min};
@@ -922,8 +923,8 @@ impl MaxTrackSizingFunction {
     /// The low 3 bits are used as a tag value and will be returned as 0.
     #[inline]
     #[cfg(feature = "calc")]
-    pub fn calc(ptr: *const ()) -> Self {
-        Self(CompactLength::calc(ptr))
+    pub fn calc(handle: CalcHandle) -> Self {
+        Self(CompactLength::calc(handle))
     }
 
     /// A `fit-content()` track sizing function whose limit is a `calc()` value. The value passed here is treated
@@ -932,8 +933,8 @@ impl MaxTrackSizingFunction {
     /// The low 3 bits are used as a tag value and will be returned as 0.
     #[inline]
     #[cfg(feature = "calc")]
-    pub fn fit_content_calc(ptr: *const ()) -> Self {
-        Self(CompactLength::fit_content_calc(ptr))
+    pub fn fit_content_calc(handle: CalcHandle) -> Self {
+        Self(CompactLength::fit_content_calc(handle))
     }
 
     /// Create a LengthPercentageAuto from a raw `CompactLength`.
@@ -1018,7 +1019,7 @@ impl MaxTrackSizingFunction {
     pub fn definite_value(
         self,
         parent_size: Option<f32>,
-        calc_resolver: impl Fn(*const (), f32) -> f32,
+        calc_resolver: impl Fn(CalcHandle, f32) -> f32,
     ) -> Option<f32> {
         match self.0.tag() {
             CompactLength::LENGTH_TAG => Some(self.0.value()),
@@ -1036,7 +1037,7 @@ impl MaxTrackSizingFunction {
     pub fn fit_content_limit(
         self,
         parent_size: Option<f32>,
-        calc_resolver: impl Fn(*const (), f32) -> f32,
+        calc_resolver: impl Fn(CalcHandle, f32) -> f32,
     ) -> Option<f32> {
         #[cfg(not(feature = "calc"))]
         let _ = &calc_resolver;
@@ -1059,7 +1060,7 @@ impl MaxTrackSizingFunction {
     pub fn definite_limit(
         self,
         parent_size: Option<f32>,
-        calc_resolver: impl Fn(*const (), f32) -> f32,
+        calc_resolver: impl Fn(CalcHandle, f32) -> f32,
     ) -> Option<f32> {
         match self.0.tag() {
             CompactLength::FIT_CONTENT_PX_TAG => Some(self.0.value()),
@@ -1076,7 +1077,7 @@ impl MaxTrackSizingFunction {
     pub fn resolved_percentage_size(
         self,
         parent_size: f32,
-        calc_resolver: impl Fn(*const (), f32) -> f32,
+        calc_resolver: impl Fn(CalcHandle, f32) -> f32,
     ) -> Option<f32> {
         self.0.resolved_percentage_size(parent_size, calc_resolver)
     }
@@ -1134,13 +1135,13 @@ pub enum ExpandedMaxTrackSizingFunction {
     /// Track maximum size should be content sized under a max-content constraint, but not larger than
     /// the `calc()` limit (an opaque handle to the calc representation)
     #[cfg(feature = "calc")]
-    FitContentCalc(*const ()),
+    FitContentCalc(CalcHandle),
     /// A fraction of the leftover space (see [`MaxTrackSizingFunction::fr`])
     Fr(f32),
     /// A `calc()` value (see [`MaxTrackSizingFunction::calc`]). The pointer is an opaque handle to
     /// the calc representation, exactly as passed to the constructor.
     #[cfg(feature = "calc")]
-    Calc(*const ()),
+    Calc(CalcHandle),
 }
 
 impl From<MaxTrackSizingFunction> for ExpandedMaxTrackSizingFunction {
@@ -1160,10 +1161,10 @@ impl From<ExpandedMaxTrackSizingFunction> for MaxTrackSizingFunction {
             ExpandedMaxTrackSizingFunction::FitContentPx(val) => Self::fit_content_px(val),
             ExpandedMaxTrackSizingFunction::FitContentPercent(val) => Self::fit_content_percent(val),
             #[cfg(feature = "calc")]
-            ExpandedMaxTrackSizingFunction::FitContentCalc(ptr) => Self::fit_content_calc(ptr),
+            ExpandedMaxTrackSizingFunction::FitContentCalc(handle) => Self::fit_content_calc(handle),
             ExpandedMaxTrackSizingFunction::Fr(val) => Self::fr(val),
             #[cfg(feature = "calc")]
-            ExpandedMaxTrackSizingFunction::Calc(ptr) => Self::calc(ptr),
+            ExpandedMaxTrackSizingFunction::Calc(handle) => Self::calc(handle),
         }
     }
 }
@@ -1322,8 +1323,8 @@ impl MinTrackSizingFunction {
     /// The low 3 bits are used as a tag value and will be returned as 0.
     #[inline]
     #[cfg(feature = "calc")]
-    pub fn calc(ptr: *const ()) -> Self {
-        Self(CompactLength::calc(ptr))
+    pub fn calc(handle: CalcHandle) -> Self {
+        Self(CompactLength::calc(handle))
     }
 
     /// Create a LengthPercentageAuto from a raw `CompactLength`.
@@ -1388,7 +1389,7 @@ impl MinTrackSizingFunction {
     pub fn definite_value(
         self,
         parent_size: Option<f32>,
-        calc_resolver: impl Fn(*const (), f32) -> f32,
+        calc_resolver: impl Fn(CalcHandle, f32) -> f32,
     ) -> Option<f32> {
         match self.0.tag() {
             CompactLength::LENGTH_TAG => Some(self.0.value()),
@@ -1405,7 +1406,7 @@ impl MinTrackSizingFunction {
     pub fn resolved_percentage_size(
         self,
         parent_size: f32,
-        calc_resolver: impl Fn(*const (), f32) -> f32,
+        calc_resolver: impl Fn(CalcHandle, f32) -> f32,
     ) -> Option<f32> {
         self.0.resolved_percentage_size(parent_size, calc_resolver)
     }
@@ -1454,7 +1455,7 @@ pub enum ExpandedMinTrackSizingFunction {
     /// A `calc()` value (see [`MinTrackSizingFunction::calc`]). The pointer is an opaque handle to
     /// the calc representation, exactly as passed to the constructor.
     #[cfg(feature = "calc")]
-    Calc(*const ()),
+    Calc(CalcHandle),
 }
 
 impl From<MinTrackSizingFunction> for ExpandedMinTrackSizingFunction {
@@ -1472,7 +1473,7 @@ impl From<ExpandedMinTrackSizingFunction> for MinTrackSizingFunction {
             ExpandedMinTrackSizingFunction::MinContent => Self::min_content(),
             ExpandedMinTrackSizingFunction::MaxContent => Self::max_content(),
             #[cfg(feature = "calc")]
-            ExpandedMinTrackSizingFunction::Calc(ptr) => Self::calc(ptr),
+            ExpandedMinTrackSizingFunction::Calc(handle) => Self::calc(handle),
         }
     }
 }
@@ -1950,7 +1951,7 @@ mod expand_tests {
         #[repr(align(8))]
         struct Aligned(u64);
         static HANDLE: Aligned = Aligned(0);
-        let handle = &HANDLE as *const Aligned as *const ();
+        let handle = CalcHandle::from_ptr(&HANDLE as *const Aligned as *const ());
 
         assert_eq!(MaxTrackSizingFunction::calc(handle).expand(), ExpandedMaxTrackSizingFunction::Calc(handle));
         assert_eq!(
