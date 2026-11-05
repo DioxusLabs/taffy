@@ -51,15 +51,118 @@ mod compat {
     pub fn untag_ptr(ptr: *const (), mask: usize) -> *const () {
         (ptr as usize & !mask) as *const ()
     }
+
+    /// Create a pointer without provenance from an address (requires Rust 1.84)
+    #[inline(always)]
+    #[cfg(all(target_pointer_width = "64", feature = "strict_provenance"))]
+    pub fn ptr_from_addr(addr: u64) -> *const () {
+        core::ptr::without_provenance(addr as usize)
+    }
+
+    /// Create a pointer from an address (works back to Rust 1.0)
+    #[inline(always)]
+    #[cfg(all(target_pointer_width = "64", not(feature = "strict_provenance")))]
+    pub fn ptr_from_addr(addr: u64) -> *const () {
+        addr as usize as *const ()
+    }
+
+    /// Get the address of a pointer without exposing its provenance (requires Rust 1.84)
+    #[inline(always)]
+    #[cfg(all(target_pointer_width = "64", feature = "strict_provenance"))]
+    pub fn ptr_addr(ptr: *const ()) -> u64 {
+        ptr.addr() as u64
+    }
+
+    /// Get the address of a pointer (works back to Rust 1.0)
+    #[inline(always)]
+    #[cfg(all(target_pointer_width = "64", not(feature = "strict_provenance")))]
+    pub fn ptr_addr(ptr: *const ()) -> u64 {
+        ptr as usize as u64
+    }
 }
 
 #[cfg(not(any(target_pointer_width = "32", target_pointer_width = "64")))]
 std::compile_error!("Taffy only supports targets with a pointer width of 32 or 64 bits");
 
+/// An opaque handle to a `calc()` expression, stored in a [`CompactLength`] and passed back to
+/// [`LayoutPartialTree::resolve_calc_value`](crate::LayoutPartialTree::resolve_calc_value) when the
+/// expression needs to be resolved.
+///
+/// A handle is either a pointer ([`CalcHandle::from_ptr`]) or an integer ([`CalcHandle::from_bits`])
+/// of up to 64 bits on every target. To be stored in a [`CompactLength`] it must be non-zero and its
+/// low 3 bits must be zero (they are used for the tag), which any 8-byte aligned pointer satisfies.
+///
+/// On 64-bit targets the handle is stored as a pointer, so a handle created with `from_ptr` keeps its
+/// provenance (and with the `strict_provenance` feature, Taffy only uses strict provenance APIs).
+/// On 32-bit targets the handle is stored as a `u64`, so `from_ptr` exposes the pointer's provenance
+/// and [`CalcHandle::ptr`] recovers it.
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
+pub struct CalcHandle(#[cfg(target_pointer_width = "64")] *const (), #[cfg(target_pointer_width = "32")] u64);
+
+#[cfg(target_pointer_width = "64")]
+impl CalcHandle {
+    /// Create a handle from a pointer
+    #[inline(always)]
+    pub fn from_ptr(ptr: *const ()) -> Self {
+        Self(ptr)
+    }
+
+    /// Create a handle from an integer
+    #[inline(always)]
+    pub fn from_bits(bits: u64) -> Self {
+        Self(compat::ptr_from_addr(bits))
+    }
+
+    /// Get the handle as a pointer. If the handle was created with [`CalcHandle::from_ptr`], this is
+    /// the pointer it was created from (with its provenance).
+    #[inline(always)]
+    pub fn ptr(self) -> *const () {
+        self.0
+    }
+
+    /// Get the handle as an integer. If the handle was created with [`CalcHandle::from_bits`], this
+    /// is the integer it was created from.
+    #[inline(always)]
+    pub fn to_bits(self) -> u64 {
+        compat::ptr_addr(self.0)
+    }
+}
+
+#[cfg(target_pointer_width = "32")]
+impl CalcHandle {
+    /// Create a handle from a pointer. On 32-bit targets this exposes the pointer's provenance.
+    #[inline(always)]
+    pub fn from_ptr(ptr: *const ()) -> Self {
+        Self(ptr as usize as u64)
+    }
+
+    /// Create a handle from an integer
+    #[inline(always)]
+    pub fn from_bits(bits: u64) -> Self {
+        Self(bits)
+    }
+
+    /// Get the handle as a pointer. If the handle was created with [`CalcHandle::from_ptr`], this is
+    /// the pointer it was created from (with its exposed provenance). Handles created from integers
+    /// are truncated to 32 bits.
+    #[inline(always)]
+    pub fn ptr(self) -> *const () {
+        self.0 as usize as *const ()
+    }
+
+    /// Get the handle as an integer. If the handle was created with [`CalcHandle::from_bits`], this
+    /// is the integer it was created from.
+    #[inline(always)]
+    pub fn to_bits(self) -> u64 {
+        self.0
+    }
+}
+
 /// CompactLengthInner implementation for 64 bit platforms
 #[cfg(target_pointer_width = "64")]
 mod inner {
     use super::compat::{f32_from_bits, f32_to_bits, tag_ptr, untag_ptr};
+    use super::CalcHandle;
 
     /// The low byte (8 bits)
     const TAG_MASK: usize = 0b11111111;
@@ -76,10 +179,10 @@ mod inner {
         tagged_ptr: *const (),
     }
     impl CompactLengthInner {
-        /// Construct a `CompactLengthInner` from a tag and pointer
+        /// Construct a `CompactLengthInner` from a tag and calc handle
         #[inline(always)]
-        pub(super) fn from_ptr(ptr: *const (), tag: usize) -> Self {
-            let tagged_ptr = tag_ptr(ptr, tag);
+        pub(super) fn from_calc(handle: CalcHandle, tag: usize) -> Self {
+            let tagged_ptr = tag_ptr(handle.0, tag);
             Self { tagged_ptr }
         }
 
@@ -110,10 +213,10 @@ mod inner {
             (self.tagged_ptr as usize) & TAG_MASK
         }
 
-        /// Get the pointer value (with the tag bits cleared)
+        /// Get the calc handle (with the tag bits cleared)
         #[inline(always)]
-        pub(super) fn ptr(self) -> *const () {
-            untag_ptr(self.tagged_ptr, CALC_TAG_MASK)
+        pub(super) fn calc_handle(self) -> CalcHandle {
+            CalcHandle(untag_ptr(self.tagged_ptr, CALC_TAG_MASK))
         }
 
         /// Get the numeric value
@@ -142,74 +245,77 @@ mod inner {
 #[cfg(target_pointer_width = "32")]
 mod inner {
     use super::compat::{f32_from_bits, f32_to_bits};
+    use super::CalcHandle;
 
-    /// On 32 bit platforms the tag is stored separately.
-    /// Either an f32 value or a pointer (or neither) are packed into the ptr field
-    /// depending on the variant indicated by the tag
+    /// The low byte (8 bits)
+    const TAG_MASK: u64 = 0b11111111;
+    /// The low 3 bits
+    const CALC_TAG_MASK: u64 = 0b111;
+
+    /// On 32 bit platforms the tag, value and calc handle are packed into a single `u64`, using the
+    /// same layout as on 64 bit platforms (so calc handles have the same 61 bits available).
     #[derive(Copy, Clone, Debug, PartialEq)]
     pub(super) struct CompactLengthInner {
-        /// The tag indicating what kind of value we are storing
-        tag: usize,
-        /// The pointer of numeric value
-        ptr: *const (),
+        /// The tagged value
+        bits: u64,
     }
 
     impl CompactLengthInner {
-        /// Construct a `CompactLengthInner` from a tag and pointer
+        /// Construct a `CompactLengthInner` from a tag and calc handle
         #[inline(always)]
-        pub(super) fn from_ptr(ptr: *const (), tag: usize) -> Self {
-            Self { ptr, tag }
+        pub(super) fn from_calc(handle: CalcHandle, tag: usize) -> Self {
+            Self { bits: handle.0 | tag as u64 }
         }
 
         /// Construct a `CompactLengthInner` from a tag and numeric value
         #[inline(always)]
         pub(super) const fn from_val(val: f32, tag: usize) -> Self {
-            Self { ptr: f32_to_bits(val) as usize as *const (), tag }
+            Self { bits: ((f32_to_bits(val) as u64) << 32) | tag as u64 }
         }
 
         /// Construct a `CompactLengthInner` from only a tag
         #[inline(always)]
         pub(super) const fn from_tag(tag: usize) -> Self {
-            Self { ptr: 0 as *const (), tag }
+            Self { bits: tag as u64 }
         }
 
         /// Get the calc tag (low 3 bits)
         #[inline(always)]
         #[cfg(feature = "calc")]
         pub(super) fn calc_tag(self) -> usize {
-            self.tag
+            (self.bits & CALC_TAG_MASK) as usize
         }
 
         /// Get the general tag (low 8 bits)
         #[inline(always)]
         pub(super) fn tag(self) -> usize {
-            self.tag
+            (self.bits & TAG_MASK) as usize
         }
 
-        /// Get the pointer value
+        /// Get the calc handle (with the tag bits cleared)
         #[inline(always)]
-        pub(super) fn ptr(self) -> *const () {
-            self.ptr
+        pub(super) fn calc_handle(self) -> CalcHandle {
+            CalcHandle(self.bits & !CALC_TAG_MASK)
         }
 
         /// Get the numeric value
         #[inline(always)]
         pub(super) fn value(self) -> f32 {
-            f32_from_bits(self.ptr as u32)
+            f32_from_bits((self.bits >> 32) as u32)
         }
 
         /// Get the serialized value.
         #[inline(always)]
         #[cfg(feature = "serde")]
         pub(super) fn serialized(self) -> u64 {
-            (self.tag as u64) << 32 | (self.ptr as u64)
+            self.bits.rotate_left(32)
         }
 
         /// Derialized from a value.
         #[inline(always)]
         #[cfg(feature = "serde")]
         pub(super) fn from_serialized(value: u64) -> Self {
-            Self { tag: (value >> 32) as usize, ptr: (value & 0xFFFFFFFF) as usize as *const () }
+            Self { bits: value.rotate_right(32) }
         }
     }
 }
@@ -302,10 +408,10 @@ impl CompactLength {
     /// The low 3 bits are used as a tag value and will be returned as 0.
     #[inline]
     #[cfg(feature = "calc")]
-    pub fn calc(ptr: *const ()) -> Self {
-        assert_ne!(ptr as u64, 0);
-        assert_eq!(ptr as u64 & 0b111, 0);
-        Self(CompactLengthInner::from_ptr(ptr, Self::CALC_TAG))
+    pub fn calc(handle: CalcHandle) -> Self {
+        assert_ne!(handle.to_bits(), 0);
+        assert_eq!(handle.to_bits() & 0b111, 0);
+        Self(CompactLengthInner::from_calc(handle, Self::CALC_TAG))
     }
 
     /// A `fit-content(calc())` value. The value passed here is treated as an opaque handle to
@@ -314,10 +420,10 @@ impl CompactLength {
     /// The low 3 bits are used as a tag value and will be returned as 0.
     #[inline]
     #[cfg(feature = "calc")]
-    pub fn fit_content_calc(ptr: *const ()) -> Self {
-        assert_ne!(ptr as u64, 0);
-        assert_eq!(ptr as u64 & 0b111, 0);
-        Self(CompactLengthInner::from_ptr(ptr, Self::FIT_CONTENT_CALC_TAG))
+    pub fn fit_content_calc(handle: CalcHandle) -> Self {
+        assert_ne!(handle.to_bits(), 0);
+        assert_eq!(handle.to_bits() & 0b111, 0);
+        Self(CompactLengthInner::from_calc(handle, Self::FIT_CONTENT_CALC_TAG))
     }
 
     /// The dimension should be automatically computed according to algorithm-specific rules
@@ -418,11 +524,11 @@ impl CompactLength {
         self.0.value()
     }
 
-    /// Get the calc pointer of the `CompactLength`
+    /// Get the calc handle of the `CompactLength`
     #[inline(always)]
     #[cfg(feature = "calc")]
-    pub fn calc_value(self) -> *const () {
-        self.0.ptr()
+    pub fn calc_value(self) -> CalcHandle {
+        self.0.calc_handle()
     }
 
     /// Returns true if the value is a plain calc() value (not a fit-content(calc()) value)
@@ -560,12 +666,12 @@ impl CompactLength {
     pub fn resolved_percentage_size(
         self,
         parent_size: f32,
-        calc_resolver: impl Fn(*const (), f32) -> f32,
+        calc_resolver: impl Fn(CalcHandle, f32) -> f32,
     ) -> Option<f32> {
         match self.tag() {
             CompactLength::PERCENT_TAG => Some(self.value() * parent_size),
             #[cfg(feature = "calc")]
-            _ if self.is_plain_calc() => Some(calc_resolver(self.0.ptr(), parent_size)),
+            _ if self.is_plain_calc() => Some(calc_resolver(self.0.calc_handle(), parent_size)),
             _ => None,
         }
     }
@@ -664,7 +770,7 @@ impl<'de> serde::Deserialize<'de> for CompactLength {
 
 #[cfg(test)]
 mod tests {
-    use super::{CompactLength, CompactLengthInner};
+    use super::{CalcHandle, CompactLength, CompactLengthInner};
 
     impl CompactLength {
         fn from_raw_tag(tag: usize) -> Self {
@@ -763,7 +869,7 @@ mod tests {
     #[cfg(feature = "calc")]
     fn fit_content_calc_round_trips_pointer() {
         let boxed = Box::new(0u64);
-        let ptr = &*boxed as *const u64 as *const ();
+        let ptr = CalcHandle::from_ptr(&*boxed as *const u64 as *const ());
         let value = CompactLength::fit_content_calc(ptr);
         assert!(value.is_fit_content_calc());
         assert!(value.has_calc());
@@ -788,7 +894,7 @@ mod tests {
     #[test]
     fn calc_round_trips_pointer() {
         let boxed = Box::new(42u64);
-        let ptr = &*boxed as *const u64 as *const ();
+        let ptr = CalcHandle::from_ptr(&*boxed as *const u64 as *const ());
         let value = CompactLength::calc(ptr);
         assert!(value.is_plain_calc());
         assert!(value.uses_percentage());
@@ -796,5 +902,33 @@ mod tests {
         assert!(!value.is_auto());
         assert!(!value.is_intrinsic());
         assert_eq!(value.calc_value(), ptr);
+    }
+
+    #[test]
+    #[cfg(feature = "calc")]
+    fn calc_round_trips_64_bit_integer_handle() {
+        let bits = (0xDEAD_BEEF_u64 << 32) | (0x1234_5678 << 3);
+        let handle = CalcHandle::from_bits(bits);
+        assert_eq!(handle.to_bits(), bits);
+
+        let value = CompactLength::calc(handle);
+        assert!(value.is_plain_calc());
+        assert_eq!(value.calc_value(), handle);
+        assert_eq!(value.calc_value().to_bits(), bits);
+
+        let value = CompactLength::fit_content_calc(handle);
+        assert!(value.is_fit_content_calc());
+        assert_eq!(value.calc_value().to_bits(), bits);
+    }
+
+    #[test]
+    #[cfg(feature = "calc")]
+    #[allow(unsafe_code)]
+    fn calc_pointer_handle_can_be_dereferenced() {
+        let boxed = Box::new(42u64);
+        let value = CompactLength::calc(CalcHandle::from_ptr(&*boxed as *const u64 as *const ()));
+        // SAFETY: the handle was created from a pointer to `boxed`, which is still alive
+        let read = unsafe { *(value.calc_value().ptr() as *const u64) };
+        assert_eq!(read, 42);
     }
 }

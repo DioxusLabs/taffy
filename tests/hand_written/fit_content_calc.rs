@@ -1,11 +1,11 @@
-//! `fit-content()` with a `calc()` limit. Taffy stores the calc() as an opaque pointer which is resolved
+//! `fit-content()` with a `calc()` limit. Taffy stores the calc() as an opaque `CalcHandle` which is resolved
 //! through `LayoutPartialTree::resolve_calc_value`, so these tests use a minimal custom tree whose calc
 //! values are `pct * basis + px`.
 #[cfg(all(feature = "calc", feature = "grid", feature = "block_layout"))]
 mod fit_content_calc {
     use taffy::{
         compute_block_layout, compute_cached_layout, compute_grid_layout, compute_leaf_layout, compute_root_layout,
-        prelude::*, Cache, CacheTree, Layout, LayoutInput, LayoutOutput, Style,
+        prelude::*, Cache, CacheTree, CalcHandle, Layout, LayoutInput, LayoutOutput, Style,
     };
 
     /// A calc() value of the form `pct * basis + px`. 8-byte aligned so that its address can be tagged.
@@ -17,12 +17,12 @@ mod fit_content_calc {
 
     fn calc(px: f32, pct: f32) -> LengthPercentage {
         let ptr: &'static Calc = Box::leak(Box::new(Calc { px, pct }));
-        LengthPercentage::calc(ptr as *const Calc as *const ())
+        LengthPercentage::calc(CalcHandle::from_ptr(ptr as *const Calc as *const ()))
     }
 
-    fn resolve_calc(val: *const (), basis: f32) -> f32 {
+    fn resolve_calc(val: CalcHandle, basis: f32) -> f32 {
         // SAFETY: every calc pointer in this test is created by `calc` above and never freed
-        let calc = unsafe { &*(val as *const Calc) };
+        let calc = unsafe { &*(val.ptr() as *const Calc) };
         calc.pct * basis + calc.px
     }
 
@@ -119,7 +119,7 @@ mod fit_content_calc {
         fn set_unrounded_layout(&mut self, node_id: NodeId, layout: &Layout) {
             self.node_from_id_mut(node_id).layout = *layout
         }
-        fn resolve_calc_value(&self, val: *const (), basis: f32) -> f32 {
+        fn resolve_calc_value(&self, val: CalcHandle, basis: f32) -> f32 {
             resolve_calc(val, basis)
         }
         fn compute_child_layout(&mut self, node_id: NodeId, inputs: LayoutInput) -> LayoutOutput {

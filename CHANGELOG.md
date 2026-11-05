@@ -17,6 +17,7 @@
 - `BlockContext::find_content_slot` (and `FloatContext::find_content_slot`) now take the `height` of the content to be placed, and avoid the floats beside any part of that height rather than only those at its top edge. The returned `ContentSlot::height` is now how far down the slot's width stays valid (previously always infinite).
 - Add `FloatDirection::opposite` and a public `FloatInsets` type (`left`/`right`), which replaces the `[f32; 2]` insets and margins taken by `BlockContext::sub_context`, `BlockContext::apply_content_box_inset`, `BlockContext::find_bfc_slot` and the `FloatContext` placement methods.
 - `BfcSlot` (returned by `BlockContext::find_bfc_slot` and `FloatContext::find_bfc_slot`) has a new `height` field: how far down from its top the slot's widths stay valid. A box taller than this may be beside further floats.
+- BREAKING: `calc()` values are now stored as a `CalcHandle` instead of a `*const ()`. `CompactLength::calc`, `LengthPercentage::calc`, `Dimension::calc` (and the other `calc`/`fit_content_calc` constructors) take a `CalcHandle`, `calc_value()` and the `Expanded*::Calc` variants return one, and `LayoutPartialTree::resolve_calc_value` (and every calc resolver closure) receives one. Create a handle with `CalcHandle::from_ptr` or `CalcHandle::from_bits` and read it back with `ptr()` or `to_bits()`. Integer handles now have the same 61 bits available on 32-bit targets as on 64-bit targets (previously 32-bit targets were limited to a 32-bit pointer) (#1399).
 
 ## 0.15.1
 
