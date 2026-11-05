@@ -129,6 +129,7 @@
 use super::{DetailedLayoutInfo, Layout, LayoutInput, LayoutOutput, NodeId, RequestedAxis, RunMode, SizingMode};
 use crate::debug::debug_log;
 use crate::geometry::{AbsoluteAxis, Line, Size};
+use crate::style::CalcHandle;
 use crate::style::{AvailableSpace, CoreStyle, OofItemStyle};
 #[cfg(feature = "flexbox")]
 use crate::style::{FlexboxContainerStyle, FlexboxItemStyle};
@@ -188,9 +189,9 @@ pub trait LayoutPartialTree: TraversePartialTree {
     /// styles are expressed in the axes of the node laying them out.
     fn get_core_container_style(&self, node_id: NodeId) -> Self::CoreContainerStyle<'_>;
 
-    /// Resolve calc value
+    /// Resolve a `calc()` value (identified by the [`CalcHandle`] it was created with) against a percentage basis
     #[inline(always)]
-    fn resolve_calc_value(&self, val: *const (), basis: f32) -> f32 {
+    fn resolve_calc_value(&self, val: CalcHandle, basis: f32) -> f32 {
         let _ = val;
         let _ = basis;
         0.0
@@ -478,14 +479,14 @@ pub(crate) trait LayoutPartialTreeExt: LayoutPartialTree {
     /// Alias to `resolve_calc_value` with a shorter function name
     #[inline(always)]
     #[cfg(feature = "calc")]
-    fn calc(&self, val: *const (), basis: f32) -> f32 {
+    fn calc(&self, val: CalcHandle, basis: f32) -> f32 {
         self.resolve_calc_value(val, basis)
     }
 
     /// Alias to `resolve_calc_value` with a shorter function name
     #[inline(always)]
     #[cfg(not(feature = "calc"))]
-    fn calc(&self, _val: *const (), _basis: f32) -> f32 {
+    fn calc(&self, _val: CalcHandle, _basis: f32) -> f32 {
         0.0
     }
 }
