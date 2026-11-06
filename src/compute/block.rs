@@ -342,6 +342,11 @@ struct BlockItem {
     /// being stretch-sized <https://www.w3.org/TR/CSS22/visudet.html#block-replaced-width>
     is_compressible_replaced: bool,
 
+    /// For compressible replaced items, the cap on their min-content contribution from a
+    /// percentage `width` or `max-width` resolved against zero
+    /// <https://drafts.csswg.org/css-sizing-3/#replaced-percentage-min-contribution>
+    min_content_width_cap: Option<f32>,
+
     /// Whether the child is a non-independent block or inline node
     is_in_same_bfc: bool,
 
@@ -960,6 +965,14 @@ fn generate_item_list(
             let is_block = child_style.is_block();
             let is_table = child_style.is_table();
             let is_compressible_replaced = child_style.is_compressible_replaced();
+            let min_content_width_cap = if is_compressible_replaced {
+                let calc = |val, basis| tree.calc(val, basis);
+                let width = child_style.size().width.maybe_resolve(Some(0.0), calc);
+                let max_width = child_style.max_size().width.maybe_resolve(Some(0.0), calc);
+                width.map_or(max_width, |width| Some(width.maybe_min(max_width))).maybe_add(box_sizing_adjustment.width)
+            } else {
+                None
+            };
             let is_scroll_container = overflow.x.is_scroll_container() || overflow.y.is_scroll_container();
             let contain = child_style.contain();
 
@@ -976,6 +989,7 @@ fn generate_item_list(
                 order: order as u32,
                 is_table,
                 is_compressible_replaced,
+                min_content_width_cap,
                 is_in_same_bfc,
                 #[cfg(feature = "float_layout")]
                 float,
@@ -1102,7 +1116,7 @@ fn determine_content_based_container_width(
                     Some(SizingKeywordResolution::Exact(width)) => AvailableSpace::Definite(width),
                     None => available_space.width.maybe_sub(item_x_margin_sum),
                 };
-            tree.measure_child_size(
+            let width = tree.measure_child_size(
                 item.node_id,
                 known_dimensions,
                 Size::NONE,
@@ -1111,7 +1125,16 @@ fn determine_content_based_container_width(
                 crate::AbsoluteAxis::Horizontal,
                 // Must match the value passed when laying the item out (see `Cache`)
                 if item.is_in_same_bfc { Line::TRUE } else { Line::FALSE },
-            )
+            );
+            // The cap is the item's min-content contribution, so its fit-content contribution is
+            // min(max-content, max(cap, available))
+            match (item.min_content_width_cap, item_available_width) {
+                (Some(cap), AvailableSpace::MinContent) => width.min(cap).maybe_max(item.min_size.width),
+                (Some(cap), AvailableSpace::Definite(available)) => {
+                    width.min(cap.max(available)).maybe_max(item.min_size.width)
+                }
+                _ => width,
+            }
         });
 
         let width = f32_max(width, item.padding_border_sum.width) + item_x_margin_sum;
