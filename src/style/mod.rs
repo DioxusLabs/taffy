@@ -18,7 +18,7 @@ pub use self::alignment::{
     JustifyItems, JustifySelf,
 };
 pub use self::available_space::AvailableSpace;
-pub use self::compact_length::CompactLength;
+pub use self::compact_length::{CalcHandle, CompactLength};
 pub use self::dimension::{
     Dimension, ExpandedDimension, ExpandedLengthPercentage, ExpandedLengthPercentageAuto, LengthPercentage,
     LengthPercentageAuto,

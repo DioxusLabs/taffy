@@ -2,6 +2,7 @@
 //! `fit-content(...)`, and `stretch`) on the `width`/`height` style properties
 use crate::geometry::{AbsoluteAxis, Line, Rect, Size};
 use crate::style::AvailableSpace;
+use crate::style::CalcHandle;
 use crate::tree::{LayoutPartialTree, LayoutPartialTreeExt, NodeId, SizingMode};
 use crate::util::sys::f32_max;
 use crate::{CompactLength, Dimension};
@@ -29,7 +30,7 @@ pub(crate) fn resolve_sizing_keyword(
     style: Dimension,
     stretch_size: Option<f32>,
     percent_resolution_basis: Option<f32>,
-    calc_resolver: impl Fn(*const (), f32) -> f32,
+    calc_resolver: impl Fn(CalcHandle, f32) -> f32,
 ) -> Option<SizingKeywordResolution> {
     #[cfg(not(feature = "calc"))]
     let _ = &calc_resolver;
