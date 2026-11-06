@@ -1,0 +1,1997 @@
+//! Computes CSS Table layout (CSS 2.1 §17 / [css-tables-3](https://www.w3.org/TR/css-tables-3/))
+//!
+//! Implements the automatic and fixed table layout algorithms for well-formed table trees
+//! (table → optional row group → row → cell). Anonymous box fixup
+//! (<https://www.w3.org/TR/css-tables-3/#fixup>) is the responsibility of the code
+//! constructing the tree. Border collapsing is likewise expected to be resolved by the
+//! embedder: with `border-collapse: collapse`, resolve the winning border for each edge,
+//! write half of it into each cell's border style, and set `border_spacing` to zero.
+#[cfg(feature = "content_size")]
+use crate::compute::common::scrollable_overflow::{
+    compute_scrollable_overflow_contribution, finalize_scrollable_overflow, ScrollableOverflowContainer,
+};
+use crate::geometry::{AbsoluteAxis, Line, Point, Rect, Size};
+use crate::style::{
+    AlignContentKeyword, AvailableSpace, BoxGenerationMode, CaptionSide, CompactLength, CoreStyle, Dimension,
+    Direction, Position, TableContainerStyle, TableItemStyle, TableLayout, TableRole, Visibility,
+};
+use crate::style_helpers::TaffyMaxContent;
+use crate::tree::traits::{LayoutPartialTreeExt, LayoutTableContainer};
+use crate::tree::{
+    AxisStaticEdge, AxisStaticPosition, Baselines, Layout, LayoutInput, LayoutOutput, NodeId, OofCandidate,
+    OofCandidates, OofPositioningArea, RequestedAxis, RunMode, ScrollableOverflow, SizingMode,
+};
+use crate::util::sys::Vec;
+use crate::util::{MaybeMath, MaybeResolve, ResolveOrZero};
+use crate::BoxSizing;
+
+/// A cell placed into the table grid
+struct Cell {
+    /// The node id of the cell
+    node_id: NodeId,
+    /// Index of the first row this cell occupies
+    row: usize,
+    /// Index of the first column this cell occupies
+    col: usize,
+    /// Number of columns spanned
+    colspan: usize,
+    /// Number of rows spanned
+    rowspan: usize,
+    /// The cell's index among its row's children
+    order: u32,
+}
+
+/// One cell's inline constraints, as measured for column sizing
+struct CellMeasure {
+    /// The cell's min-content inline size (border-box)
+    min: f32,
+    /// The cell's max-content inline size (border-box)
+    max: f32,
+    /// The column-width percentage specified on the cell, if any
+    percent: Option<f32>,
+    /// Whether the cell has a fixed (length) specified width
+    is_constrained: bool,
+    /// The inline padding and border a content-box percentage width adds to the cell's column
+    /// in a fixed table
+    percent_padding_border: f32,
+}
+
+/// One cell's resolved geometry, carried from row sizing through to positioning
+#[derive(Clone, Copy, Default)]
+struct CellSizing {
+    /// The width of every column the cell spans, plus the spacing between them
+    width: f32,
+    /// The height the cell's content takes at that width
+    height: f32,
+    /// The border-box height the cell's `height` and `min-height` styles make it at least
+    min_height: f32,
+    /// The cell's own baseline, when it takes part in row baseline alignment
+    baseline: Option<f32>,
+    /// How far baseline alignment pushes the cell's content down
+    shift: f32,
+}
+
+impl CellSizing {
+    /// The height the cell needs from the rows it spans: its content, pushed down by baseline
+    /// alignment, or its specified height, whichever is larger. A cell's `height` is a minimum
+    /// and the row grows to fit the content (CSS 2.1 §17.5.3)
+    fn required_height(&self) -> f32 {
+        (self.shift + self.height).max(self.min_height)
+    }
+}
+
+/// Accumulated sizing constraints for one column of the table grid
+#[derive(Clone, Copy, Default)]
+struct Column {
+    /// Largest min-content contribution of any cell in this column
+    min: f32,
+    /// Largest max-content contribution of any cell in this column
+    max: f32,
+    /// Largest percentage specified on any cell in this column
+    percent: Option<f32>,
+    /// The inline padding and border a fixed table adds to the column's percentage width
+    percent_padding_border: f32,
+    /// Whether a column or column group with `visibility: collapse` removes this column
+    collapsed: bool,
+    /// Whether any cell in this column has a fixed (length) specified width
+    is_constrained: bool,
+    /// Whether the column merges into its neighbours: an auto table drops a column that no cell
+    /// starts in and no column box gives a width, along with its border-spacing
+    /// (css-tables-3 §3.4.2, track merging)
+    is_mergeable: bool,
+    /// The resolved used width
+    used: f32,
+}
+
+/// A column box (`display: table-column`) of the table
+struct ColumnBox {
+    /// The node id of the column
+    node_id: NodeId,
+    /// The column's index among its parent's children
+    order: u32,
+    /// Index of the column group this column belongs to, if any
+    group: Option<usize>,
+    /// The first grid column the box covers
+    start: usize,
+    /// The number of grid columns the box covers (HTML `span`)
+    span: usize,
+}
+
+/// A column group box (`display: table-column-group`) of the table
+struct ColumnGroupBox {
+    /// The node id of the column group
+    node_id: NodeId,
+    /// The group's index among the table's children
+    order: u32,
+    /// The first grid column the box covers
+    start: usize,
+    /// The number of grid columns the box covers
+    span: usize,
+}
+
+/// A caption box (`display: table-caption`) of the table
+struct CaptionBox {
+    /// The node id of the caption
+    node_id: NodeId,
+    /// The caption's index among the table's children
+    order: u32,
+    /// Which side of the table box the caption sits on
+    side: CaptionSide,
+}
+
+/// A caption sized at the table's width, waiting to be placed above or below the table box
+struct CaptionLayout {
+    /// The node id of the caption
+    node_id: NodeId,
+    /// The caption's index among the table's children
+    order: u32,
+    /// Which side of the table box the caption sits on
+    side: CaptionSide,
+    /// The caption's border box size
+    size: Size<f32>,
+    /// Its margins, with `auto` margins resolved
+    margin: Rect<f32>,
+    /// Its resolved padding
+    padding: Rect<f32>,
+    /// Its resolved border
+    border: Rect<f32>,
+    /// The offset a `position: relative` caption's `inset` moves it by
+    relative_offset: Point<f32>,
+    /// The scrollable overflow of its content
+    #[cfg(feature = "content_size")]
+    scrollable_overflow_rect: ScrollableOverflow,
+}
+
+impl CaptionLayout {
+    /// The height of the caption's margin box
+    fn outer_height(&self) -> f32 {
+        self.size.height + self.margin.vertical_axis_sum()
+    }
+}
+
+/// The table's cells, placed into rows and columns
+struct Grid {
+    /// The rows of every row group, in document order
+    rows: Vec<Row>,
+    /// Every cell, in the order its row placed it
+    cells: Vec<Cell>,
+    /// The table's row groups, in document order
+    groups: Vec<Group>,
+    /// The table's column boxes, in document order
+    column_boxes: Vec<ColumnBox>,
+    /// The table's column groups, in document order
+    column_groups: Vec<ColumnGroupBox>,
+    /// The table's captions, in document order
+    captions: Vec<CaptionBox>,
+    /// The number of columns the placed cells and the column boxes add up to
+    col_count: usize,
+    /// The rows and cells that generate no box, which still need their layout cleared
+    hidden: Vec<NodeId>,
+    /// The out-of-flow children of the table, its row groups and its rows. They take no part in
+    /// the grid and are laid out by their containing block
+    oof: OofCandidates,
+    /// The static position every out-of-flow child gets: the start of the table's content box
+    static_position: Point<AxisStaticPosition>,
+}
+
+impl Grid {
+    /// An empty grid whose out-of-flow children get `static_position`
+    fn new(static_position: Point<AxisStaticPosition>) -> Self {
+        Self {
+            rows: Vec::new(),
+            cells: Vec::new(),
+            groups: Vec::new(),
+            column_boxes: Vec::new(),
+            column_groups: Vec::new(),
+            captions: Vec::new(),
+            col_count: 0,
+            hidden: Vec::new(),
+            oof: OofCandidates::new(),
+            static_position,
+        }
+    }
+}
+
+/// A row group of the table
+struct Group {
+    /// The node id of the row group
+    node_id: NodeId,
+    /// The group's index among the table's children
+    order: u32,
+    /// Whether the group has `visibility: collapse`, which collapses its rows
+    collapsed: bool,
+}
+
+/// A row of the table grid
+struct Row {
+    /// The node id of the row
+    node_id: NodeId,
+    /// Index of the row group this row belongs to, if any
+    group: Option<usize>,
+    /// The row's index among its parent's children
+    order: u32,
+    /// Whether the row (or its group) has `visibility: collapse`, which removes it from the table
+    collapsed: bool,
+    /// The resolved used height
+    used_height: f32,
+    /// The largest percentage height specified on the row or one of its cells
+    percent: Option<f32>,
+    /// Whether the row or one of its cells specifies a height
+    is_constrained: bool,
+    /// Whether a rowspanning cell starts in this row
+    has_rowspan_start: bool,
+    /// The row's baseline, once its cells have settled it
+    baseline: Option<f32>,
+    /// How far above the row's bottom edge to synthesise a baseline for a row with no cell
+    /// that has one of its own
+    fallback_descent: Option<f32>,
+}
+
+/// Computes the layout of [`LayoutTableContainer`] according to the CSS table layout algorithm
+pub fn compute_table_layout(
+    tree: &mut impl LayoutTableContainer,
+    node_id: NodeId,
+    inputs: LayoutInput,
+) -> LayoutOutput {
+    let LayoutInput { known_dimensions, parent_size, available_space, run_mode, axis, .. } = inputs;
+
+    let style = tree.get_table_container_style(node_id);
+    let raw_padding = style.padding();
+    let raw_border = style.border();
+    let raw_size = style.size();
+    let raw_min_size = style.min_size();
+    let raw_max_size = style.max_size();
+    let box_sizing = style.box_sizing();
+    let aspect_ratio = style.aspect_ratio();
+    let border_spacing = style.border_spacing();
+    let table_layout_mode = style.table_layout();
+    #[cfg(feature = "content_size")]
+    let is_scroll_container = {
+        let overflow = style.overflow();
+        overflow.x.is_scroll_container() || overflow.y.is_scroll_container()
+    };
+    drop(style);
+
+    let parent_width = parent_size.width;
+    let padding = raw_padding.resolve_or_zero(parent_width, |v, b| tree.calc(v, b));
+    let border = raw_border.resolve_or_zero(parent_width, |v, b| tree.calc(v, b));
+    let padding_border = padding + border;
+    let pb_size = padding_border.sum_axes();
+
+    let box_sizing_adjustment = if box_sizing == BoxSizing::ContentBox { pb_size } else { Size::ZERO };
+    let min_size = raw_min_size
+        .maybe_resolve(parent_size, |v, b| tree.calc(v, b))
+        .maybe_apply_aspect_ratio(aspect_ratio)
+        .maybe_add(box_sizing_adjustment);
+    let max_size = raw_max_size
+        .maybe_resolve(parent_size, |v, b| tree.calc(v, b))
+        .maybe_apply_aspect_ratio(aspect_ratio)
+        .maybe_add(box_sizing_adjustment);
+    let specified_size = raw_size
+        .maybe_resolve(parent_size, |v, b| tree.calc(v, b))
+        .maybe_apply_aspect_ratio(aspect_ratio)
+        .maybe_add(box_sizing_adjustment)
+        .maybe_clamp(min_size, max_size);
+
+    let styled_known = known_dimensions.or(specified_size);
+
+    let h_spacing = border_spacing.width.resolve_or_zero(parent_width, |v, b| tree.calc(v, b));
+    let v_spacing = border_spacing.height.resolve_or_zero(parent_width, |v, b| tree.calc(v, b));
+
+    // The static position of an out-of-flow child of the table, a row group or a row is the
+    // top-left of the table's content box
+    let static_position = Point {
+        x: AxisStaticPosition::from_edge(padding_border.left, AxisStaticEdge::Start),
+        y: AxisStaticPosition::from_edge(padding_border.top, AxisStaticEdge::Start),
+    };
+
+    // Phase 1: place cells into the grid
+    let Grid {
+        mut rows,
+        cells,
+        groups,
+        column_boxes,
+        column_groups,
+        captions,
+        col_count,
+        hidden,
+        oof: mut oof_candidates,
+        ..
+    } = build_grid(tree, node_id, static_position);
+    let rtl = tree.get_table_container_style(node_id).direction() == Direction::Rtl;
+
+    // Captions sit above and below the table box, inside the table's own box: there is no table
+    // wrapper box. The table box is never narrower than the widest caption's min-content width
+    // (css-tables-3 §3.9.1, CAPMIN), and the captions are sized at the table box's width
+    let capmin = captions
+        .iter()
+        .map(|caption| caption_min_content_width(tree, caption.node_id, parent_width))
+        .fold(0.0, f32::max);
+    // The table box's position and size inside the table's box, once the captions are placed
+    let oof_positioning_area = |box_top: f32, size: Size<f32>| OofPositioningArea {
+        size: size - border.sum_axes(),
+        offset: Point { x: border.left, y: box_top + border.top },
+    };
+
+    if col_count == 0 && rows.is_empty() {
+        // The table is never smaller than its own padding and border, whatever its box-sizing
+        let width = styled_known
+            .width
+            .unwrap_or(pb_size.width)
+            .maybe_clamp(min_size.width, max_size.width)
+            .max(pb_size.width)
+            .max(capmin);
+        let caption_layouts = layout_captions(tree, &captions, width, rtl, run_mode);
+        let captions_height: f32 = caption_layouts.iter().map(CaptionLayout::outer_height).sum();
+        let known_height = known_dimensions.height.map(|h| (h - captions_height).max(0.0)).or(specified_size.height);
+        let height =
+            known_height.unwrap_or(pb_size.height).maybe_clamp(min_size.height, max_size.height).max(pb_size.height);
+        let size = Size { width, height };
+        if run_mode == RunMode::PerformLayout {
+            for order in 0..tree.child_count(node_id) {
+                let child_id = tree.get_child_id(node_id, order);
+                tree.set_unrounded_layout(child_id, &Layout::with_order(order as u32));
+            }
+        }
+        let (box_top, box_bottom) = place_captions(tree, &caption_layouts, height, run_mode);
+        oof_candidates.translate(Point { x: 0.0, y: box_top });
+        // A table with no rows has its baseline on its bottom content edge (css-tables-3 §3.10.2)
+        let baselines = Baselines::from_first(Some(box_top + size.height));
+        let outer_size = Size { width, height: box_top + height + box_bottom };
+        #[cfg(feature = "content_size")]
+        let scrollable_overflow_rect = captions_scrollable_overflow(
+            &caption_layouts,
+            box_top + height,
+            border,
+            padding,
+            outer_size,
+            is_scroll_container,
+            Rect::ZERO,
+        );
+        #[cfg(not(feature = "content_size"))]
+        let scrollable_overflow_rect = ScrollableOverflow::ZERO;
+        let mut output = LayoutOutput::from_sizes_and_baselines(outer_size, scrollable_overflow_rect, baselines);
+        output.oof_candidates = oof_candidates;
+        output.oof_positioning_area = Some(oof_positioning_area(box_top, size));
+        return output;
+    }
+
+    // Phase 2: collect intrinsic size contributions per column
+    //
+    // Fixed layout reads the column widths off the first row alone and never looks at content. It
+    // applies to every `width` but `auto` and `max-content` (css-tables-3 §3.9.3, csswg-drafts#10937)
+    let width_tag = raw_size.width.tag();
+    let is_fixed = table_layout_mode == TableLayout::Fixed
+        && width_tag != CompactLength::AUTO_TAG
+        && width_tag != CompactLength::MAX_CONTENT_TAG;
+    let mut columns = measure_columns(tree, &cells, &column_boxes, &column_groups, col_count, h_spacing, is_fixed);
+
+    // Phase 3: resolve the table's used width and the columns' used widths
+    // A table with no columns has no border-spacing in the inline axis either, and merged
+    // columns take none
+    let spaced_count = columns.iter().filter(|c| !c.is_mergeable).count();
+    let total_h_spacing = if spaced_count == 0 { 0.0 } else { h_spacing * (spaced_count as f32 + 1.0) };
+    let (grid_min_sum, grid_max_sum) = grid_min_max(&columns, is_fixed);
+    let grid_min = grid_min_sum + total_h_spacing;
+    // A fixed table whose percentage width has nothing to resolve against is as wide as it can be
+    let grid_max = if is_fixed && styled_known.width.is_none() && width_tag & CompactLength::PERCENTAGE_BIT != 0 {
+        UNBOUNDED_TABLE_WIDTH
+    } else {
+        grid_max_sum + total_h_spacing
+    };
+
+    let table_width = match styled_known.width {
+        Some(w) => w.max(grid_min + pb_size.width),
+        None => {
+            let shrink_to_fit = match available_space.width {
+                AvailableSpace::Definite(w) => (w - pb_size.width)
+                    .maybe_clamp(max_size.width.map(|m| m - pb_size.width), None)
+                    .clamp(grid_min, grid_max.max(grid_min)),
+                AvailableSpace::MaxContent => grid_max,
+                AvailableSpace::MinContent => grid_min,
+            };
+            (shrink_to_fit + pb_size.width).maybe_clamp(min_size.width, max_size.width).max(grid_min + pb_size.width)
+        }
+    }
+    .max(capmin);
+    let assignable = table_width - pb_size.width - total_h_spacing;
+
+    if is_fixed {
+        resolve_fixed_layout_columns(&mut columns, assignable);
+    } else {
+        resolve_auto_layout_columns(&mut columns, assignable);
+    }
+
+    // A column or column group with `visibility: collapse` removes its columns from the table
+    // once the other columns are sized (CSS 2.1 §17.5.5): they and their spacing take no room
+    // and the table narrows by what they took
+    let mut collapsed_width = 0.0;
+    for column_box in column_boxes.iter() {
+        let own = tree.get_table_child_style(column_box.node_id).visibility() == Visibility::Collapse;
+        let group = column_box
+            .group
+            .is_some_and(|g| tree.get_table_child_style(column_groups[g].node_id).visibility() == Visibility::Collapse);
+        if own || group {
+            let range = column_box.start.min(col_count)..(column_box.start + column_box.span).min(col_count);
+            for column in columns[range].iter_mut() {
+                column.collapsed = true;
+            }
+        }
+    }
+    for group in column_groups.iter() {
+        if tree.get_table_child_style(group.node_id).visibility() == Visibility::Collapse {
+            let range = group.start.min(col_count)..(group.start + group.span).min(col_count);
+            for column in columns[range].iter_mut() {
+                column.collapsed = true;
+            }
+        }
+    }
+    for column in columns.iter_mut().filter(|c| c.collapsed && !c.is_mergeable) {
+        collapsed_width += column.used + h_spacing;
+        column.used = 0.0;
+    }
+    let table_width = table_width - collapsed_width;
+    let grid_width = assignable - collapsed_width + h_spacing * (spaced_count as f32 - 1.0).max(0.0);
+
+    if run_mode == RunMode::ComputeSize && axis == RequestedAxis::Horizontal {
+        return LayoutOutput::from_outer_size(Size { width: table_width, height: styled_known.height.unwrap_or(0.0) });
+    }
+
+    // The captions take their share of a height imposed on the table; `height` on the table
+    // itself is the table box's
+    let caption_layouts = layout_captions(tree, &captions, table_width, rtl, run_mode);
+    let captions_height: f32 = caption_layouts.iter().map(CaptionLayout::outer_height).sum();
+    let styled_known = Size {
+        width: styled_known.width,
+        height: known_dimensions.height.map(|h| (h - captions_height).max(0.0)).or(specified_size.height),
+    };
+
+    // Phase 4: resolve row heights by sizing each cell at its final width
+    let num_rows = rows.len();
+    let mut sizing: Vec<CellSizing> = cells
+        .iter()
+        .map(|cell| {
+            let spanned = &columns[cell.col..(cell.col + cell.colspan).min(col_count)];
+            let spaced = spanned.iter().filter(|c| !c.is_mergeable).count();
+            let width = spanned.iter().map(|c| c.used).sum::<f32>() + h_spacing * (spaced.max(1) as f32 - 1.0);
+            CellSizing { width, ..CellSizing::default() }
+        })
+        .collect();
+
+    // Row baseline alignment per CSS 2.1 §17.5.4. An empty cell has no baseline of its own, so
+    // the row falls back to sitting its baseline on the shallowest such cell's content edge
+    for (cell, sizing) in cells.iter().zip(sizing.iter_mut()) {
+        let participates =
+            tree.get_table_child_style(cell.node_id).align_content().keyword == AlignContentKeyword::Normal;
+        // Percentages on a cell resolve against the row's width (the grid, without the outer
+        // border-spacing), which is also the basis block layout is handed for the cell below
+        let cell_parent_size = Size { width: Some(grid_width), height: None };
+        let output = tree.compute_child_layout(
+            cell.node_id,
+            LayoutInput {
+                known_dimensions: Size { width: Some(sizing.width), height: None },
+                known_dimensions_are_definite: Size { width: true, height: true },
+                parent_size: cell_parent_size,
+                available_space: Size {
+                    width: AvailableSpace::Definite(sizing.width),
+                    height: AvailableSpace::MaxContent,
+                },
+                sizing_mode: SizingMode::ContentSize,
+                axis: RequestedAxis::Both,
+                // Size-only results come from the cache without their baselines
+                run_mode: if participates { RunMode::PerformLayout } else { RunMode::ComputeSize },
+                vertical_margins_are_collapsible: Line::FALSE,
+                content_offset_y: 0.0,
+            },
+        );
+        sizing.height = output.size.height;
+        sizing.min_height = cell_min_height(tree, cell.node_id, cell_parent_size).unwrap_or(0.0);
+
+        let cell_style = tree.get_table_child_style(cell.node_id);
+        let height_dim = cell_style.size().height;
+        drop(cell_style);
+
+        let row = &mut rows[cell.row];
+        if cell.rowspan > 1 {
+            row.has_rowspan_start = true;
+        } else {
+            if height_dim.tag() == CompactLength::PERCENT_TAG {
+                row.percent = Some(row.percent.map_or(height_dim.value(), |p: f32| p.max(height_dim.value())));
+                row.is_constrained = true;
+            } else if height_dim.tag() == CompactLength::LENGTH_TAG {
+                row.is_constrained = true;
+            }
+            row.used_height = row.used_height.max(sizing.required_height());
+        }
+
+        let cell_style = tree.get_table_child_style(cell.node_id);
+        let pb_bottom = cell_style.padding().resolve_or_zero(cell_parent_size.width, |v, b| tree.calc(v, b)).bottom
+            + cell_style.border().resolve_or_zero(cell_parent_size.width, |v, b| tree.calc(v, b)).bottom;
+        drop(cell_style);
+
+        // A cell with no children and no line box is empty (Blitz lays out text-only cells
+        // with no child nodes, so an output baseline also counts as content). Empty cells and
+        // cells that are not baseline-aligned leave the row's baseline to its lowest cell's
+        // content edge if no cell settles it (CSS 2.1 §17.5.3)
+        let row = &mut rows[cell.row];
+        let is_empty = tree.child_count(cell.node_id) == 0 && output.baselines.first.is_none();
+        if participates && !is_empty {
+            let baseline = output.baselines.first.unwrap_or(sizing.height - pb_bottom);
+            sizing.baseline = Some(baseline);
+            row.baseline = Some(row.baseline.map_or(baseline, |b: f32| b.max(baseline)));
+        } else {
+            row.fallback_descent = Some(row.fallback_descent.map_or(pb_bottom, |d: f32| d.min(pb_bottom)));
+        }
+    }
+
+    // A rowspanning cell lends its ascent to the row it starts in but not its descent, which
+    // the rows it spans absorb instead
+    for (cell, sizing) in cells.iter().zip(sizing.iter_mut()) {
+        if let (Some(baseline), Some(row_baseline)) = (sizing.baseline, rows[cell.row].baseline) {
+            sizing.shift = row_baseline - baseline;
+            if cell.rowspan == 1 {
+                let row = &mut rows[cell.row];
+                row.used_height = row.used_height.max(sizing.required_height());
+            }
+        }
+    }
+
+    for row in rows.iter_mut() {
+        let height_dim = tree.get_table_child_style(row.node_id).size().height;
+        if height_dim.tag() == CompactLength::PERCENT_TAG {
+            row.percent = Some(row.percent.map_or(height_dim.value(), |p: f32| p.max(height_dim.value())));
+            row.is_constrained = true;
+        } else if height_dim.tag() == CompactLength::LENGTH_TAG {
+            row.used_height = row.used_height.max(height_dim.value());
+            row.is_constrained = true;
+        }
+    }
+
+    // A table with no rows has no border-spacing in the block axis either
+    let total_v_spacing = if num_rows == 0 { 0.0 } else { v_spacing * (num_rows as f32 + 1.0) };
+    // Row percentages resolve against the space a definite-height table leaves for its rows
+    let percentage_basis = styled_known.height.map(|h| (h - pb_size.height - total_v_spacing).max(0.0));
+
+    for (cell, sizing) in cells.iter().zip(sizing.iter()).filter(|(cell, _)| cell.rowspan > 1) {
+        let range = cell.row..(cell.row + cell.rowspan).min(num_rows);
+        let target = sizing.required_height() - v_spacing * (range.len() as f32 - 1.0);
+        distribute_excess_height(&mut rows[range], target, true, percentage_basis);
+    }
+
+    for (group_index, group) in groups.iter().enumerate() {
+        let group_height = tree
+            .get_table_child_style(group.node_id)
+            .size()
+            .height
+            .maybe_resolve(percentage_basis, |v, b| tree.calc(v, b));
+
+        if let Some(height) = group_height {
+            let range = group_row_range(&rows, group_index);
+            let target = height - v_spacing * (range.len() as f32 - 1.0);
+            distribute_excess_height(&mut rows[range], target, false, percentage_basis);
+        }
+    }
+
+    let content_height = rows.iter().map(|r| r.used_height).sum::<f32>() + total_v_spacing;
+    let table_height = styled_known
+        .height
+        .unwrap_or((content_height + pb_size.height).maybe_clamp(min_size.height, max_size.height))
+        .max(content_height + pb_size.height)
+        .maybe_max(min_size.height);
+
+    distribute_excess_height(&mut rows, table_height - pb_size.height - total_v_spacing, false, percentage_basis);
+
+    // Collapsed rows and their spacing take no room, and the table shortens by what they took
+    let mut collapsed_height = 0.0;
+    for row in rows.iter_mut().filter(|r| r.collapsed) {
+        collapsed_height += row.used_height + v_spacing;
+        row.used_height = 0.0;
+    }
+    let table_height = table_height - collapsed_height;
+
+    // A row with no baseline-aligned cell synthesises one from its lowest cell's bottom content
+    // edge, a row with no cells at all has its baseline on its top edge, as the browsers do
+    for row in rows.iter_mut().filter(|r| r.baseline.is_none()) {
+        row.baseline = Some(row.fallback_descent.map_or(0.0, |descent| (row.used_height - descent).max(0.0)));
+    }
+
+    let table_box_size = Size { width: table_width, height: table_height };
+    let (box_top, box_bottom) = place_captions(tree, &caption_layouts, table_height, run_mode);
+    let final_size = Size { width: table_width, height: box_top + table_height + box_bottom };
+    oof_candidates.translate(Point { x: 0.0, y: box_top });
+    // The table's baseline is its first row's baseline (css-tables-3 §4.2)
+    let table_baseline =
+        rows.first().and_then(|row| row.baseline).map(|baseline| box_top + padding_border.top + v_spacing + baseline);
+    let baselines = Baselines::from_first(table_baseline);
+
+    if run_mode == RunMode::ComputeSize {
+        return LayoutOutput::from_sizes_and_baselines(final_size, ScrollableOverflow::ZERO, baselines);
+    }
+
+    // Phase 5: position rows, row groups, and cells (in RTL the first column is rightmost)
+    let mut col_x: Vec<f32> = Vec::with_capacity(col_count);
+    let mut x = padding_border.left + h_spacing;
+    for col in columns.iter() {
+        col_x.push(x);
+        x += col.used + if col.collapsed || col.is_mergeable { 0.0 } else { h_spacing };
+    }
+    if rtl {
+        for (i, col) in columns.iter().enumerate() {
+            col_x[i] = table_width - pb_size.width + padding_border.left - (col_x[i] - padding_border.left) - col.used;
+        }
+    }
+    let mut row_y: Vec<f32> = Vec::with_capacity(num_rows);
+    let mut y = box_top + padding_border.top + v_spacing;
+    for row in rows.iter() {
+        row_y.push(y);
+        y += row.used_height + if row.collapsed { 0.0 } else { v_spacing };
+    }
+
+    // Row and row-group boxes exclude the outer border-spacing, which belongs to the table
+    let grid_origin_x = padding_border.left + h_spacing;
+
+    // Column and column-group boxes span the grid's rows and the tracks they cover
+    let rows_top = box_top + padding_border.top + v_spacing;
+    let rows_height = if num_rows == 0 { 0.0 } else { y - v_spacing - rows_top };
+    let track_extent = |start: usize, span: usize| -> (f32, f32) {
+        let range = start.min(col_count)..(start + span).min(col_count);
+        if range.is_empty() {
+            return (grid_origin_x, 0.0);
+        }
+        let x = col_x[range.clone()].iter().copied().fold(f32::INFINITY, f32::min);
+        let visible = columns[range.clone()].iter().filter(|c| !c.collapsed && !c.is_mergeable).count();
+        let width =
+            columns[range.clone()].iter().map(|c| c.used).sum::<f32>() + h_spacing * (visible.max(1) as f32 - 1.0);
+        (x, width)
+    };
+    let mut column_group_x: Vec<f32> = Vec::with_capacity(column_groups.len());
+    for group in column_groups.iter() {
+        let (x, width) = track_extent(group.start, group.span);
+        column_group_x.push(x);
+        set_item_layout(
+            tree,
+            group.node_id,
+            group.order,
+            Point { x, y: rows_top },
+            Size { width, height: rows_height },
+        );
+    }
+    for column in column_boxes.iter() {
+        let (x, width) = track_extent(column.start, column.span);
+        let location = match column.group {
+            Some(g) => Point { x: x - column_group_x[g], y: 0.0 },
+            None => Point { x, y: rows_top },
+        };
+        set_item_layout(tree, column.node_id, column.order, location, Size { width, height: rows_height });
+    }
+
+    let mut group_origin: Vec<Point<f32>> = Vec::with_capacity(groups.len());
+    for (group_index, group) in groups.iter().enumerate() {
+        let range = group_row_range(&rows, group_index);
+        let (start_y, end_y) = match range.end.checked_sub(1) {
+            Some(last) if !range.is_empty() => (row_y[range.start], row_y[last] + rows[last].used_height),
+            _ => (rows_top, rows_top),
+        };
+        let origin = Point { x: grid_origin_x, y: start_y };
+        group_origin.push(origin);
+
+        set_item_layout(tree, group.node_id, group.order, origin, Size { width: grid_width, height: end_y - start_y });
+    }
+
+    for (row_index, row) in rows.iter().enumerate() {
+        let origin = match row.group {
+            Some(g) => Point { x: 0.0, y: row_y[row_index] - group_origin[g].y },
+            None => Point { x: grid_origin_x, y: row_y[row_index] },
+        };
+        set_item_layout(tree, row.node_id, row.order, origin, Size { width: grid_width, height: row.used_height });
+    }
+
+    let mut cell_overflow_rect = Rect::ZERO;
+    #[cfg(feature = "content_size")]
+    let overflow_container = ScrollableOverflowContainer {
+        parent_is_scroll_container: is_scroll_container,
+        parent_size: table_box_size - border.sum_axes(),
+        reversed: Point { x: rtl, y: false },
+        padding,
+    };
+    for (cell, sizing) in cells.iter().zip(sizing.iter()) {
+        let cell_width = sizing.width;
+        let range = cell.row..(cell.row + cell.rowspan).min(num_rows);
+        let visible_rows = rows[range.clone()].iter().filter(|r| !r.collapsed).count();
+        let cell_height: f32 =
+            rows[range].iter().map(|r| r.used_height).sum::<f32>() + v_spacing * (visible_rows.max(1) as f32 - 1.0);
+
+        let mut output = tree.compute_child_layout(
+            cell.node_id,
+            LayoutInput {
+                known_dimensions: Size { width: Some(cell_width), height: Some(cell_height) },
+                known_dimensions_are_definite: Size { width: true, height: true },
+                parent_size: Size { width: Some(grid_width), height: Some(table_height - pb_size.height) },
+                available_space: Size {
+                    width: AvailableSpace::Definite(cell_width),
+                    height: AvailableSpace::Definite(cell_height),
+                },
+                sizing_mode: SizingMode::ContentSize,
+                axis: RequestedAxis::Both,
+                run_mode: RunMode::PerformLayout,
+                vertical_margins_are_collapsible: Line::FALSE,
+                content_offset_y: sizing.shift,
+            },
+        );
+
+        let cell_style = tree.get_table_child_style(cell.node_id);
+        let cell_padding = cell_style.padding().resolve_or_zero(Some(grid_width), |v, b| tree.calc(v, b));
+        let cell_border = cell_style.border().resolve_or_zero(Some(grid_width), |v, b| tree.calc(v, b));
+        #[cfg(feature = "content_size")]
+        let cell_overflow = cell_style.overflow();
+        #[cfg(feature = "content_size")]
+        let cell_contain = cell_style.contain();
+        drop(cell_style);
+
+        // A spanning cell starts at its leftmost spanned column, which in RTL is the last one
+        let col_range = cell.col..(cell.col + cell.colspan).min(col_count);
+        let cell_x = col_x[col_range].iter().copied().fold(f32::INFINITY, f32::min);
+        let location = Point { x: cell_x - grid_origin_x, y: 0.0 };
+
+        if !output.oof_candidates.is_empty() {
+            // Translate anchors from cell-relative to table-relative coordinates
+            output.oof_candidates.translate(Point { x: cell_x, y: row_y[cell.row] });
+            oof_candidates.append(&mut output.oof_candidates);
+        }
+
+        tree.set_unrounded_layout(
+            cell.node_id,
+            &Layout {
+                order: cell.order,
+                location,
+                size: Size { width: cell_width, height: cell_height },
+                #[cfg(feature = "content_size")]
+                scrollable_overflow_rect: output.scrollable_overflow_rect,
+                scrollbar_size: Size::ZERO,
+                padding: cell_padding,
+                border: cell_border,
+                margin: Rect::ZERO,
+            },
+        );
+
+        #[cfg(feature = "content_size")]
+        {
+            // Contributions are measured from the table's padding-box origin
+            let cell_size = Size { width: cell_width, height: cell_height };
+            let contribution_location = Point { x: cell_x - border.left, y: row_y[cell.row] - box_top - border.top };
+            cell_overflow_rect = cell_overflow_rect.union(compute_scrollable_overflow_contribution(
+                contribution_location,
+                cell_size,
+                output.scrollable_overflow_rect.rect(),
+                cell_border,
+                cell_overflow,
+                cell_contain,
+                &overflow_container,
+                Rect::ZERO,
+            ));
+        }
+    }
+
+    for (order, &child_id) in hidden.iter().enumerate() {
+        tree.set_unrounded_layout(child_id, &Layout::with_order(order as u32));
+        tree.perform_child_layout(
+            child_id,
+            Size::NONE,
+            Size::NONE,
+            Size::MAX_CONTENT,
+            SizingMode::InherentSize,
+            Line::FALSE,
+        );
+    }
+
+    #[cfg(feature = "content_size")]
+    let scrollable_overflow_rect = captions_scrollable_overflow(
+        &caption_layouts,
+        box_top + table_height,
+        border,
+        padding,
+        final_size,
+        is_scroll_container,
+        cell_overflow_rect,
+    );
+    #[cfg(not(feature = "content_size"))]
+    let scrollable_overflow_rect = ScrollableOverflow::ZERO;
+
+    let mut output = LayoutOutput::from_sizes_and_baselines(final_size, scrollable_overflow_rect, baselines);
+    output.oof_candidates = oof_candidates;
+    output.oof_positioning_area = Some(oof_positioning_area(box_top, table_box_size));
+    output
+}
+
+/// The min-content width of a caption's margin box, which the table box is never narrower than
+fn caption_min_content_width(tree: &mut impl LayoutTableContainer, node_id: NodeId, parent_width: Option<f32>) -> f32 {
+    let margin = tree
+        .get_table_child_style(node_id)
+        .margin()
+        .resolve_or_zero(parent_width, |v, b| tree.calc(v, b))
+        .horizontal_axis_sum();
+    let width = tree.measure_child_size(
+        node_id,
+        Size::NONE,
+        Size { width: parent_width, height: None },
+        Size { width: AvailableSpace::MinContent, height: AvailableSpace::MaxContent },
+        SizingMode::InherentSize,
+        AbsoluteAxis::Horizontal,
+        Line::FALSE,
+    );
+    width + margin
+}
+
+/// Size the captions as block-level boxes in a containing block as wide as the table box
+/// (CSS 2.1 §17.4): an auto-width caption stretches to the table, `auto` margins centre a
+/// narrower one, and a percentage height is treated as `auto` (as Blink and Gecko do)
+fn layout_captions(
+    tree: &mut impl LayoutTableContainer,
+    captions: &[CaptionBox],
+    table_width: f32,
+    rtl: bool,
+    run_mode: RunMode,
+) -> Vec<CaptionLayout> {
+    let mut layouts = Vec::with_capacity(captions.len());
+    for caption in captions {
+        let style = tree.get_table_child_style(caption.node_id);
+        let margin = style.margin().map(|m| m.resolve_to_option(table_width, |v, b| tree.calc(v, b)));
+        let padding = style.padding().resolve_or_zero(Some(table_width), |v, b| tree.calc(v, b));
+        let border = style.border().resolve_or_zero(Some(table_width), |v, b| tree.calc(v, b));
+        let pb_size = (padding + border).sum_axes();
+        let box_sizing_adjustment = if style.box_sizing() == BoxSizing::ContentBox { pb_size } else { Size::ZERO };
+        let parent_size = Size { width: Some(table_width), height: None };
+        let width_style = style.size().width;
+        let min_width = style.min_size().width.maybe_resolve(parent_size.width, |v, b| tree.calc(v, b));
+        let max_width = style.max_size().width.maybe_resolve(parent_size.width, |v, b| tree.calc(v, b));
+        let relative_offset = if style.position() == Position::Relative {
+            let inset = style.inset().zip_size(parent_size, |p, s| p.maybe_resolve(s, |v, b| tree.calc(v, b)));
+            let x = if rtl { inset.right.map(|x| -x).or(inset.left) } else { inset.left.or(inset.right.map(|x| -x)) };
+            Point { x: x.unwrap_or(0.0), y: inset.top.or(inset.bottom.map(|y| -y)).unwrap_or(0.0) }
+        } else {
+            Point::ZERO
+        };
+        drop(style);
+
+        let non_auto_margin = margin.map(|m| m.unwrap_or(0.0));
+        let stretch_width = (table_width - non_auto_margin.horizontal_axis_sum()).max(0.0);
+        let width = width_style
+            .maybe_resolve(parent_size.width, |v, b| tree.calc(v, b))
+            .map(|w| w + box_sizing_adjustment.width)
+            .unwrap_or(stretch_width)
+            .maybe_clamp(
+                min_width.map(|w| w + box_sizing_adjustment.width),
+                max_width.map(|w| w + box_sizing_adjustment.width),
+            );
+
+        let free_space = table_width - width - non_auto_margin.horizontal_axis_sum();
+        let mut resolved_margin = non_auto_margin;
+        match (margin.left, margin.right) {
+            (None, None) => {
+                resolved_margin.left = free_space / 2.0;
+                resolved_margin.right = free_space / 2.0;
+            }
+            (None, Some(_)) => resolved_margin.left = free_space,
+            (Some(_), None) => resolved_margin.right = free_space,
+            (Some(_), Some(_)) => {}
+        }
+
+        let output = tree.compute_child_layout(
+            caption.node_id,
+            LayoutInput {
+                known_dimensions: Size { width: Some(width), height: None },
+                known_dimensions_are_definite: Size { width: true, height: false },
+                parent_size,
+                available_space: Size { width: AvailableSpace::Definite(width), height: AvailableSpace::MaxContent },
+                sizing_mode: SizingMode::InherentSize,
+                axis: RequestedAxis::Both,
+                run_mode,
+                vertical_margins_are_collapsible: Line::FALSE,
+                content_offset_y: 0.0,
+            },
+        );
+
+        layouts.push(CaptionLayout {
+            node_id: caption.node_id,
+            order: caption.order,
+            side: caption.side,
+            size: Size { width, height: output.size.height },
+            margin: resolved_margin,
+            padding,
+            border,
+            relative_offset,
+            #[cfg(feature = "content_size")]
+            scrollable_overflow_rect: output.scrollable_overflow_rect,
+        });
+    }
+    layouts
+}
+
+/// Stack the top captions above the table box and the bottom captions below it, in document
+/// order. Returns the height the captions take above and below the table box. Caption margins
+/// do not collapse with each other or with the table.
+fn place_captions(
+    tree: &mut impl LayoutTableContainer,
+    captions: &[CaptionLayout],
+    table_box_height: f32,
+    run_mode: RunMode,
+) -> (f32, f32) {
+    let top: f32 = captions.iter().filter(|c| c.side == CaptionSide::Top).map(CaptionLayout::outer_height).sum();
+    let bottom: f32 = captions.iter().filter(|c| c.side == CaptionSide::Bottom).map(CaptionLayout::outer_height).sum();
+    if run_mode != RunMode::PerformLayout {
+        return (top, bottom);
+    }
+
+    let mut top_y = 0.0;
+    let mut bottom_y = top + table_box_height;
+    for caption in captions {
+        let y = match caption.side {
+            CaptionSide::Top => &mut top_y,
+            CaptionSide::Bottom => &mut bottom_y,
+        };
+        let location = Point { x: caption.margin.left, y: *y + caption.margin.top } + caption.relative_offset;
+        *y += caption.outer_height();
+        tree.set_unrounded_layout(
+            caption.node_id,
+            &Layout {
+                order: caption.order,
+                location,
+                size: caption.size,
+                #[cfg(feature = "content_size")]
+                scrollable_overflow_rect: caption.scrollable_overflow_rect,
+                scrollbar_size: Size::ZERO,
+                padding: caption.padding,
+                border: caption.border,
+                margin: caption.margin,
+            },
+        );
+    }
+    (top, bottom)
+}
+
+/// The table's scrollable overflow once the captions, which lie outside the table box but
+/// inside the table's own box, are added to the cells' contributions. Contributions are
+/// measured from the table box's padding-box origin.
+#[cfg(feature = "content_size")]
+fn captions_scrollable_overflow(
+    captions: &[CaptionLayout],
+    table_box_bottom: f32,
+    border: Rect<f32>,
+    padding: Rect<f32>,
+    outer_size: Size<f32>,
+    is_scroll_container: bool,
+    mut overflow_rect: Rect<f32>,
+) -> ScrollableOverflow {
+    let box_top: f32 = captions.iter().filter(|c| c.side == CaptionSide::Top).map(CaptionLayout::outer_height).sum();
+    let container = ScrollableOverflowContainer {
+        parent_is_scroll_container: is_scroll_container,
+        parent_size: outer_size - border.sum_axes(),
+        reversed: Point { x: false, y: false },
+        padding,
+    };
+    let mut top_y = 0.0;
+    let mut bottom_y = table_box_bottom;
+    for caption in captions {
+        let y = match caption.side {
+            CaptionSide::Top => &mut top_y,
+            CaptionSide::Bottom => &mut bottom_y,
+        };
+        let location =
+            Point { x: caption.margin.left - border.left, y: *y + caption.margin.top - box_top - border.top }
+                + caption.relative_offset;
+        *y += caption.outer_height();
+        overflow_rect = overflow_rect.union(compute_scrollable_overflow_contribution(
+            location,
+            caption.size,
+            caption.scrollable_overflow_rect.rect(),
+            caption.border,
+            Point { x: crate::style::Overflow::Visible, y: crate::style::Overflow::Visible },
+            crate::style::Contain::NONE,
+            &container,
+            caption.margin.map(|value| value.min(0.0)),
+        ));
+    }
+    finalize_scrollable_overflow(
+        overflow_rect,
+        outer_size - border.sum_axes(),
+        Point { x: false, y: false },
+        is_scroll_container,
+    )
+}
+
+/// The rows a row group holds, which `build_grid` places contiguously
+fn group_row_range(rows: &[Row], group: usize) -> core::ops::Range<usize> {
+    let start = rows.iter().position(|r| r.group == Some(group)).unwrap_or(0);
+    let len = rows[start..].iter().take_while(|r| r.group == Some(group)).count();
+
+    start..start + len
+}
+
+/// Place every cell of the table into the grid, and collect its row groups. Rows outside a row
+/// group belong to an anonymous one, and a rowspan never leaves the group it starts in
+/// (css-tables-3 §2.2)
+fn build_grid(
+    tree: &mut impl LayoutTableContainer,
+    node_id: NodeId,
+    static_position: Point<AxisStaticPosition>,
+) -> Grid {
+    let mut grid = Grid::new(static_position);
+    // How many further rows the cell placed in each column still covers
+    let mut occupancy: Vec<usize> = Vec::new();
+    let table_children = visible_children(tree, node_id, &mut grid);
+    let mut index = 0;
+    // The next grid column a column box takes; column boxes claim columns in document order,
+    // independently of the cells
+    let mut next_col = 0;
+    // The end of the last column box with a specified width. Column boxes past the cells only
+    // add grid columns when they have a width (Blink and Gecko drop the rest)
+    let mut definite_cols_end = 0;
+
+    let is_row_run_end = |role: TableRole| {
+        matches!(role, TableRole::RowGroup | TableRole::ColumnGroup | TableRole::Column | TableRole::Caption)
+    };
+
+    while index < table_children.len() {
+        occupancy.clear();
+        let child_id = table_children[index];
+
+        let role = tree.get_table_child_style(child_id).table_role();
+        match role {
+            TableRole::RowGroup => {
+                let group = Some(grid.groups.len());
+                let collapsed = tree.get_table_child_style(child_id).visibility() == Visibility::Collapse;
+                grid.groups.push(Group { node_id: child_id, order: index as u32, collapsed });
+
+                let group_rows = visible_children(tree, child_id, &mut grid);
+                for (row, &row_id) in group_rows.iter().enumerate() {
+                    place_row(tree, row_id, group, row as u32, group_rows.len() - row, &mut occupancy, &mut grid);
+                }
+                index += 1;
+            }
+            TableRole::ColumnGroup => {
+                let group_index = grid.column_groups.len();
+                let start = next_col;
+                let group_children = visible_children(tree, child_id, &mut grid);
+                let mut has_columns = false;
+                for (order, &column_id) in group_children.iter().enumerate() {
+                    let column_style = tree.get_table_child_style(column_id);
+                    let is_column = column_style.table_role() == TableRole::Column;
+                    let span = (column_style.colspan() as usize).max(1);
+                    drop(column_style);
+                    if !is_column {
+                        // Anything but a column inside a column group generates no box
+                        grid.hidden.push(column_id);
+                        continue;
+                    }
+                    has_columns = true;
+                    grid.column_boxes.push(ColumnBox {
+                        node_id: column_id,
+                        order: order as u32,
+                        group: Some(group_index),
+                        start: next_col,
+                        span,
+                    });
+                    next_col += span;
+                    if has_specified_width(tree, column_id) || has_specified_width(tree, child_id) {
+                        definite_cols_end = next_col;
+                    }
+                }
+                // A column group with no columns spans the columns its own `span` says
+                if !has_columns {
+                    next_col += (tree.get_table_child_style(child_id).colspan() as usize).max(1);
+                    if has_specified_width(tree, child_id) {
+                        definite_cols_end = next_col;
+                    }
+                }
+                grid.column_groups.push(ColumnGroupBox {
+                    node_id: child_id,
+                    order: index as u32,
+                    start,
+                    span: next_col - start,
+                });
+                index += 1;
+            }
+            TableRole::Caption => {
+                let side = tree.get_table_child_style(child_id).caption_side();
+                grid.captions.push(CaptionBox { node_id: child_id, order: index as u32, side });
+                index += 1;
+            }
+            TableRole::Column => {
+                let span = (tree.get_table_child_style(child_id).colspan() as usize).max(1);
+                grid.column_boxes.push(ColumnBox {
+                    node_id: child_id,
+                    order: index as u32,
+                    group: None,
+                    start: next_col,
+                    span,
+                });
+                next_col += span;
+                if has_specified_width(tree, child_id) {
+                    definite_cols_end = next_col;
+                }
+                index += 1;
+            }
+            _ => {
+                // Rows outside a row group belong to one anonymous group, which the run of
+                // consecutive non-group children marks out
+                let mut end = index + 1;
+                while end < table_children.len()
+                    && !is_row_run_end(tree.get_table_child_style(table_children[end]).table_role())
+                {
+                    end += 1;
+                }
+                for (offset, &row_id) in table_children[index..end].iter().enumerate() {
+                    let row = index + offset;
+                    place_row(tree, row_id, None, row as u32, end - row, &mut occupancy, &mut grid);
+                }
+                index = end;
+            }
+        }
+    }
+
+    // Column boxes add grid columns of their own (css-tables-3 §2.3), as far as the last one
+    // with a specified width
+    grid.col_count = grid.col_count.max(definite_cols_end);
+
+    grid
+}
+
+/// Whether a column or column group box has a `width` other than `auto`
+fn has_specified_width(tree: &impl LayoutTableContainer, node_id: NodeId) -> bool {
+    tree.get_table_child_style(node_id).size().width.tag() != CompactLength::AUTO_TAG
+}
+
+/// Collect the children of `node_id` that take part in the grid, pushing the ones that generate
+/// no box onto `grid.hidden` and the out-of-flow ones onto `grid.oof`
+fn visible_children(tree: &impl LayoutTableContainer, node_id: NodeId, grid: &mut Grid) -> Vec<NodeId> {
+    let mut visible = Vec::with_capacity(tree.child_count(node_id));
+    for index in 0..tree.child_count(node_id) {
+        let child_id = tree.get_child_id(node_id, index);
+        let style = tree.get_table_child_style(child_id);
+        let position = style.position();
+        if style.box_generation_mode() == BoxGenerationMode::None {
+            grid.hidden.push(child_id);
+        } else if position.is_out_of_flow() {
+            let static_position = grid.static_position;
+            grid.oof.push(OofCandidate { node: child_id, order: index as u32, position, static_position });
+        } else {
+            visible.push(child_id);
+        }
+    }
+
+    visible
+}
+
+/// Place one row's cells into the grid, skipping columns still covered by
+/// rowspanning cells from earlier rows. `rows_left` counts this row and the ones after it in
+/// the same row group, which is as far as a rowspan can reach.
+fn place_row(
+    tree: &mut impl LayoutTableContainer,
+    row_id: NodeId,
+    group: Option<usize>,
+    order: u32,
+    rows_left: usize,
+    occupancy: &mut Vec<usize>,
+    grid: &mut Grid,
+) {
+    let row_index = grid.rows.len();
+    let collapsed = group.is_some_and(|g| grid.groups[g].collapsed)
+        || tree.get_table_child_style(row_id).visibility() == Visibility::Collapse;
+    grid.rows.push(Row {
+        node_id: row_id,
+        group,
+        order,
+        collapsed,
+        used_height: 0.0,
+        percent: None,
+        is_constrained: false,
+        has_rowspan_start: false,
+        baseline: None,
+        fallback_descent: None,
+    });
+
+    let row_cells = visible_children(tree, row_id, grid);
+    let mut col = 0;
+    for (cell, &cell_id) in row_cells.iter().enumerate() {
+        let cell_style = tree.get_table_child_style(cell_id);
+        let colspan = (cell_style.colspan() as usize).max(1);
+        let rowspan = (cell_style.rowspan() as usize).clamp(1, rows_left);
+        drop(cell_style);
+
+        while occupancy.get(col).is_some_and(|&o| o > 0) {
+            col += 1;
+        }
+        if occupancy.len() < col + colspan {
+            occupancy.resize(col + colspan, 0);
+        }
+        // Covers this row plus rowspan - 1 more; the end-of-row decrement consumes this row.
+        // A colspan may overlap a slot an earlier rowspan still holds, which HTML calls a table
+        // model error and lets stand, so the longer span keeps the slot.
+        for slot in occupancy[col..col + colspan].iter_mut() {
+            *slot = (*slot).max(rowspan);
+        }
+
+        grid.cells.push(Cell { node_id: cell_id, row: row_index, col, colspan, rowspan, order: cell as u32 });
+        col += colspan;
+    }
+
+    grid.col_count = grid.col_count.max(occupancy.len().max(col));
+    for slot in occupancy.iter_mut() {
+        *slot = slot.saturating_sub(1);
+    }
+}
+
+/// Grow `rows` until their heights sum to `target`. css-tables-3 leaves this undefined
+/// (<https://github.com/w3c/csswg-drafts/issues/4418>), so this follows Blink's priority order:
+/// percentage rows first, then the rows a rowspan starts in, then unconstrained rows, then empty
+/// rows, and finally every non-empty row in proportion to its height.
+fn distribute_excess_height(
+    rows: &mut [Row],
+    target: f32,
+    is_rowspan_distribution: bool,
+    percentage_basis: Option<f32>,
+) {
+    let deficit = |row: &Row| match (row.percent, percentage_basis) {
+        (Some(percent), Some(basis)) => (percent * basis - row.used_height).max(0.0),
+        _ => 0.0,
+    };
+
+    let mut total: f32 = rows.iter().map(|r| r.used_height).sum();
+    let mut extra = target - total;
+    if rows.is_empty() || extra <= 0.0 {
+        return;
+    }
+
+    let percent_deficit: f32 = rows.iter().map(deficit).sum();
+    if percent_deficit > 0.0 {
+        let distributable = percent_deficit.min(extra);
+        for row in rows.iter_mut() {
+            let delta = distributable * deficit(row) / percent_deficit;
+            row.used_height += delta;
+            total += delta;
+            extra -= delta;
+        }
+        if extra <= 0.0 {
+            return;
+        }
+    }
+
+    // A rowspan's excess goes to the rows where the spans it crosses begin, not to its own row
+    if is_rowspan_distribution {
+        let originating = rows[1..].iter().filter(|r| r.has_rowspan_start).count();
+        if originating > 0 {
+            for row in rows[1..].iter_mut().filter(|r| r.has_rowspan_start) {
+                row.used_height += extra / originating as f32;
+            }
+            return;
+        }
+    }
+
+    let unconstrained: f32 =
+        rows.iter().filter(|r| !r.is_constrained && r.used_height > 0.0).map(|r| r.used_height).sum();
+    if unconstrained > 0.0 {
+        for row in rows.iter_mut().filter(|r| !r.is_constrained && r.used_height > 0.0) {
+            row.used_height += extra * row.used_height / unconstrained;
+        }
+        return;
+    }
+
+    let empty_count = rows.iter().filter(|r| r.used_height == 0.0).count();
+    let constrained_non_empty = rows.iter().filter(|r| r.used_height > 0.0 && r.is_constrained).count();
+
+    if is_rowspan_distribution {
+        // Nothing to grow proportionally, so the last row absorbs the lot
+        if empty_count == rows.len() {
+            rows[rows.len() - 1].used_height += extra;
+            return;
+        }
+    } else if empty_count > 0 && empty_count + constrained_non_empty == rows.len() {
+        let unconstrained_empty = rows.iter().filter(|r| r.used_height == 0.0 && !r.is_constrained).count();
+        let grow_unconstrained_only = unconstrained_empty > 0;
+        let count = if grow_unconstrained_only { unconstrained_empty } else { empty_count };
+
+        for row in rows.iter_mut().filter(|r| r.used_height == 0.0) {
+            if !grow_unconstrained_only || !row.is_constrained {
+                row.used_height = extra / count as f32;
+            }
+        }
+        return;
+    }
+
+    if total > 0.0 {
+        for row in rows.iter_mut().filter(|r| r.used_height > 0.0) {
+            row.used_height += extra * row.used_height / total;
+        }
+    }
+}
+
+/// Distribute `extra` over `field` across `columns`, proportionally to what each column already
+/// has, or equally when they all have nothing
+fn distribute(columns: &mut [Column], extra: f32, field: impl Fn(&mut Column) -> &mut f32) {
+    let total: f32 = columns.iter_mut().map(|col| *field(col)).sum();
+    let count = columns.len() as f32;
+    for col in columns.iter_mut() {
+        let share = if total > 0.0 { extra * *field(col) / total } else { extra / count };
+        *field(col) += share;
+    }
+}
+
+/// Measure every cell and fold its inline constraints into the column it occupies, then settle
+/// the columns' percentages against each other
+fn measure_columns(
+    tree: &mut impl LayoutTableContainer,
+    cells: &[Cell],
+    column_boxes: &[ColumnBox],
+    column_groups: &[ColumnGroupBox],
+    col_count: usize,
+    h_spacing: f32,
+    is_fixed: bool,
+) -> Vec<Column> {
+    let mut columns: Vec<Column> =
+        core::iter::repeat_with(|| Column { is_mergeable: !is_fixed, ..Column::default() }).take(col_count).collect();
+    let mut spans: Vec<(usize, usize, CellMeasure)> = Vec::new();
+    for cell in cells.iter() {
+        columns[cell.col].is_mergeable = false;
+    }
+
+    // A column box's `width` constrains every column it spans before the cells are looked at
+    // (CSS 2.1 §17.5.2.2 step 2); in a fixed table it takes precedence over the first row. The
+    // column's minimum still comes from its cells, so a narrow table can shrink it below the width.
+    // A column group's `width` stands in for the columns it holds that have none of their own,
+    // and for the columns a group with no column boxes spans by itself
+    let width_measure = |width_dim: Dimension| -> Option<CellMeasure> {
+        match width_dim.tag() {
+            CompactLength::LENGTH_TAG => Some(CellMeasure {
+                min: 0.0,
+                max: width_dim.value().max(0.0),
+                percent: None,
+                is_constrained: true,
+                percent_padding_border: 0.0,
+            }),
+            CompactLength::PERCENT_TAG => Some(CellMeasure {
+                min: 0.0,
+                max: 0.0,
+                percent: Some(width_dim.value()),
+                is_constrained: false,
+                percent_padding_border: 0.0,
+            }),
+            _ => None,
+        }
+    };
+    // Every column box starts a track of its own
+    for column_box in column_boxes.iter().filter(|c| c.start < col_count) {
+        columns[column_box.start].is_mergeable = false;
+    }
+    let mut constrain = |start: usize, span: usize, measure: &CellMeasure| {
+        let range = start.min(col_count)..(start + span).min(col_count);
+        let has_width = measure.max > 0.0 || measure.percent.is_some();
+        for column in columns[range].iter_mut() {
+            encompass(column, measure);
+            column.is_mergeable &= !has_width;
+        }
+    };
+    for column_box in column_boxes.iter() {
+        let own_width = tree.get_table_child_style(column_box.node_id).size().width;
+        let group_width = column_box
+            .group
+            .map(|g| tree.get_table_child_style(column_groups[g].node_id).size().width)
+            .filter(|_| own_width.tag() == CompactLength::AUTO_TAG);
+        if let Some(measure) = width_measure(own_width).or_else(|| group_width.and_then(width_measure)) {
+            constrain(column_box.start, column_box.span, &measure);
+        }
+    }
+    for (index, group) in column_groups.iter().enumerate() {
+        if column_boxes.iter().any(|c| c.group == Some(index)) {
+            continue;
+        }
+        if let Some(measure) = width_measure(tree.get_table_child_style(group.node_id).size().width) {
+            constrain(group.start, group.span, &measure);
+        }
+    }
+
+    // Fixed layout takes its column widths from the first row alone
+    for cell in cells.iter().filter(|c| !is_fixed || c.row == 0) {
+        let cell_style = tree.get_table_child_style(cell.node_id);
+        let width_dim = cell_style.size().width;
+        let width_tag = width_dim.tag();
+        // A fixed table resolves a percentage against its own width and adds the cell's padding and
+        // border on top for a content-box cell, where an auto table takes it as the border-box width
+        let percent_padding_border = if is_fixed
+            && width_tag == CompactLength::PERCENT_TAG
+            && cell_style.box_sizing() == BoxSizing::ContentBox
+        {
+            let padding = cell_style.padding().resolve_or_zero(None, |v, b| tree.calc(v, b));
+            let border = cell_style.border().resolve_or_zero(None, |v, b| tree.calc(v, b));
+            padding.horizontal_axis_sum() + border.horizontal_axis_sum()
+        } else {
+            0.0
+        };
+        drop(cell_style);
+
+        let mut measure = CellMeasure {
+            min: 0.0,
+            max: 0.0,
+            percent: (width_tag == CompactLength::PERCENT_TAG).then(|| width_dim.value()),
+            is_constrained: width_tag == CompactLength::LENGTH_TAG,
+            percent_padding_border,
+        };
+
+        if !is_fixed {
+            // Specified widths count toward max-content only; columns may shrink below them
+            measure.min = tree.measure_child_size(
+                cell.node_id,
+                Size::NONE,
+                Size::NONE,
+                Size { width: AvailableSpace::MinContent, height: AvailableSpace::MinContent },
+                SizingMode::ContentSize,
+                AbsoluteAxis::Horizontal,
+                Line::FALSE,
+            );
+        }
+        // A fixed table never looks at content, so only a specified width is worth measuring
+        if !is_fixed || measure.is_constrained || cell.colspan > 1 {
+            measure.max = tree.measure_child_size(
+                cell.node_id,
+                cell_style_size(tree, cell.node_id, Size::NONE),
+                Size::NONE,
+                Size { width: AvailableSpace::MaxContent, height: AvailableSpace::MaxContent },
+                SizingMode::ContentSize,
+                AbsoluteAxis::Horizontal,
+                Line::FALSE,
+            );
+        }
+
+        // `min-width` and `max-width` clamp both measures, `max-width` winning
+        // (<https://www.w3.org/TR/css-tables-3/#outer-min-content>)
+        if !is_fixed {
+            let (min_width, max_width) = cell_min_max_width(tree, cell.node_id);
+            measure.min = measure.min.maybe_max(min_width).maybe_min(max_width);
+            measure.max = measure.max.maybe_min(max_width).maybe_max(min_width).max(measure.min);
+        }
+
+        if cell.colspan > 1 {
+            spans.push((cell.col, cell.colspan, measure));
+        } else if !(is_fixed && columns[cell.col].is_constrained) {
+            // A fixed table's column keeps the first width it is given
+            encompass(&mut columns[cell.col], &measure);
+        }
+    }
+
+    // Narrower spans settle first, so wider ones distribute over the columns they leave behind
+    spans.sort_by_key(|(col, colspan, _)| (*colspan, *col));
+    for (col, colspan, measure) in spans.iter() {
+        let range = *col..(col + colspan).min(col_count);
+        let spanned = &mut columns[range.clone()];
+        let spaced_count = spanned.iter().filter(|c| !c.is_mergeable).count();
+        let spanned_spacing = h_spacing * (spaced_count.max(1) as f32 - 1.0);
+
+        // A fixed table shares a spanning cell's width or percentage evenly between the columns it
+        // spans that have none yet; its padding and border are part of that width
+        if is_fixed {
+            let span = range.len() as f32;
+            for column in columns[range].iter_mut().filter(|c| !c.is_constrained && c.percent.is_none()) {
+                if measure.is_constrained {
+                    column.max = ((measure.max - spanned_spacing) / span).max(0.0);
+                    column.is_constrained = true;
+                } else if let Some(percent) = measure.percent {
+                    column.percent = Some(percent / span);
+                }
+            }
+            continue;
+        }
+
+        // Whatever a spanning cell's percentage asks for beyond the percentages already on the
+        // columns is shared out over the remaining ones, weighted by max-content width
+        if let Some(percent) = measure.percent {
+            let is_auto = |c: &Column| c.percent.is_none() && !c.is_mergeable;
+            let surplus = percent - spanned.iter().filter_map(|c| c.percent).sum::<f32>();
+            let auto_count = spanned.iter().filter(|c| is_auto(c)).count();
+            let auto_max: f32 = spanned.iter().filter(|c| is_auto(c)).map(|c| c.max).sum();
+
+            if surplus > 0.0 && auto_count > 0 {
+                for col in spanned.iter_mut().filter(|c| is_auto(c)) {
+                    let share = if auto_max > 0.0 { surplus * col.max / auto_max } else { surplus / auto_count as f32 };
+                    col.percent = Some(share);
+                }
+            }
+        }
+
+        // The cell's measures are shared out the way the table's width is shared out over its
+        // columns. Its max-content width only grows columns with a specified width when it has
+        // one of its own
+        if is_fixed {
+            let current_min: f32 = spanned.iter().map(|c| c.min).sum::<f32>() + spanned_spacing;
+            if measure.min > current_min {
+                distribute(spanned, measure.min - current_min, |c| &mut c.min);
+            }
+            let current_max: f32 = spanned.iter().map(|c| c.max).sum::<f32>() + spanned_spacing;
+            if measure.max > current_max {
+                distribute(spanned, measure.max - current_max, |c| &mut c.max);
+            }
+            continue;
+        }
+        let min_sizes = distribute_width(spanned, (measure.min - spanned_spacing).max(0.0), true);
+        for (column, size) in spanned.iter_mut().zip(min_sizes) {
+            column.min = column.min.max(size);
+        }
+        let max_sizes = distribute_width(spanned, (measure.max - spanned_spacing).max(0.0), measure.is_constrained);
+        for (column, size) in spanned.iter_mut().zip(max_sizes) {
+            column.max = column.max.max(column.min).max(size);
+        }
+    }
+
+    for col in columns.iter_mut() {
+        col.max = col.max.max(col.min);
+    }
+
+    // Percentages cannot claim more than the whole table between them. An auto table caps each
+    // column by what the columns before it left of 100%; a fixed one scales them all down
+    if is_fixed {
+        let total: f32 = columns.iter().filter_map(|c| c.percent).sum();
+        if total > 1.0 {
+            for col in columns.iter_mut() {
+                col.percent = col.percent.map(|percent| percent / total);
+            }
+        }
+    } else {
+        let mut budget = 1.0f32;
+        for col in columns.iter_mut().filter(|c| c.percent.is_some()) {
+            let capped = col.percent.unwrap_or(0.0).min(budget).max(0.0);
+            budget -= capped;
+            col.percent = Some(capped);
+        }
+    }
+
+    columns
+}
+
+/// The width a percentage column asks for, which never drops below the column's minimum
+fn percent_width(column: &Column, target: f32) -> f32 {
+    column.min.max(column.percent.unwrap_or(0.0) * target)
+}
+
+/// Merge one cell's inline constraints into its column. A column pinned by a specified width only
+/// grows to an unconstrained cell's *minimum*, so a wrappable cell wraps instead of widening it
+fn encompass(column: &mut Column, cell: &CellMeasure) {
+    column.min = column.min.max(cell.min);
+    column.max = if column.is_constrained == cell.is_constrained {
+        column.max.max(cell.max)
+    } else if column.is_constrained {
+        column.max.max(cell.min)
+    } else {
+        column.min.max(cell.max)
+    };
+    column.is_constrained |= cell.is_constrained;
+
+    if let Some(percent) = cell.percent {
+        column.percent = Some(column.percent.map_or(percent, |p: f32| p.max(percent)));
+        column.percent_padding_border = column.percent_padding_border.max(cell.percent_padding_border);
+    }
+}
+
+/// The width Blink hands a table that asks to be as wide as possible: one whose columns claim the
+/// whole 100%, or a fixed table with a percentage width and no width to resolve it against
+const UNBOUNDED_TABLE_WIDTH: f32 = 1_000_000.0;
+
+/// Sum the columns into the table's min-content and max-content grid widths
+/// (<https://www.w3.org/TR/css-tables-3/#computing-the-table-width>). Percentages have nothing to
+/// resolve against yet, so they act as constraints on the total instead: a column at `p` percent
+/// whose content needs `w` forces a total of at least `w / p`, and columns without a percentage
+/// have to fit in the `1 - Σp` the percentage columns leave behind.
+fn grid_min_max(columns: &[Column], is_fixed: bool) -> (f32, f32) {
+    let mut min = 0.0;
+    let mut max = 0.0;
+    let mut percent_estimate: f32 = 0.0;
+    let mut non_percent_max = 0.0;
+    let mut percent_sum = 0.0;
+
+    for column in columns.iter() {
+        // A fixed table cannot shrink a specified column below its width
+        let is_fixed_column = column.is_constrained && column.percent.is_none();
+        min += if is_fixed && is_fixed_column { column.max } else { column.min };
+        max += column.max;
+
+        match column.percent {
+            Some(percent) if percent > 0.0 => {
+                if column.max > 0.0 {
+                    percent_estimate = percent_estimate.max(column.max / percent);
+                }
+            }
+            _ => non_percent_max += column.max,
+        }
+        percent_sum += column.percent.unwrap_or(0.0);
+    }
+
+    percent_sum = percent_sum.min(1.0);
+    if percent_sum > 0.0 {
+        let from_percentages = if non_percent_max == 0.0 {
+            0.0
+        } else if percent_sum >= 1.0 {
+            UNBOUNDED_TABLE_WIDTH
+        } else {
+            non_percent_max / (1.0 - percent_sum)
+        };
+        max = max.max(from_percentages).max(percent_estimate);
+    }
+
+    (min, max.max(min))
+}
+
+/// Resolve used column widths for `table-layout: auto` over `assignable`, the table's content
+/// width minus all border-spacing
+fn resolve_auto_layout_columns(columns: &mut [Column], assignable: f32) {
+    let sizes = distribute_width(columns, assignable, true);
+    for (column, size) in columns.iter_mut().zip(sizes) {
+        column.used = size;
+    }
+}
+
+/// Share `target` out over `columns` with the width distribution algorithm
+/// (<https://www.w3.org/TR/css-tables-3/#width-distribution-algorithm>): size every column four
+/// ways, find the first sizing that reaches the target, and share the shortfall among the columns
+/// that sizing was about to grow. Mergeable columns get nothing.
+///
+/// Past every column's max-content width, auto columns soak up the rest, then columns with a
+/// specified width (only if `grow_constrained` is set), then percentage columns.
+fn distribute_width(columns: &[Column], target: f32, grow_constrained: bool) -> Vec<f32> {
+    const MIN: usize = 0;
+    const PERCENTAGE: usize = 1;
+    const SPECIFIED: usize = 2;
+    const MAX: usize = 3;
+
+    let mut sizes: Vec<f32> = core::iter::repeat(0.0).take(columns.len()).collect();
+    let mut guess = [0.0f32; 4];
+    // What each guess adds over the one before it, summed over the columns it grows
+    let mut growth = [0.0f32; 4];
+    let (mut percent_count, mut fixed_count, mut auto_count) = (0usize, 0usize, 0usize);
+    let (mut percent_sum, mut fixed_max_sum, mut auto_max_sum) = (0.0f32, 0.0f32, 0.0f32);
+
+    for column in columns.iter().filter(|c| !c.is_mergeable) {
+        guess[MIN] += column.min;
+        if let Some(percent) = column.percent {
+            let width = percent_width(column, target);
+            percent_count += 1;
+            percent_sum += percent;
+            guess[PERCENTAGE] += width;
+            guess[SPECIFIED] += width;
+            guess[MAX] += width;
+            growth[PERCENTAGE] += width - column.min;
+        } else if column.is_constrained {
+            fixed_count += 1;
+            fixed_max_sum += column.max;
+            guess[PERCENTAGE] += column.min;
+            guess[SPECIFIED] += column.max;
+            guess[MAX] += column.max;
+            growth[SPECIFIED] += column.max - column.min;
+        } else {
+            auto_count += 1;
+            auto_max_sum += column.max;
+            guess[PERCENTAGE] += column.min;
+            guess[SPECIFIED] += column.min;
+            guess[MAX] += column.max;
+            growth[MAX] += column.max - column.min;
+        }
+    }
+    if percent_count + fixed_count + auto_count == 0 {
+        return sizes;
+    }
+
+    // Columns never go below their minimums, however narrow the target is
+    let target = target.max(guess[MIN]);
+    let mut shortfall = 0.0;
+    let mut last_grown = None;
+    let columns = columns.iter().zip(sizes.iter_mut()).enumerate().filter(|(_, (c, _))| !c.is_mergeable);
+
+    match (MIN..=MAX).find(|&i| guess[i] >= target) {
+        Some(MIN) => {
+            for (_, (column, size)) in columns {
+                *size = column.min;
+            }
+        }
+        // Percentage columns grow towards their percentage of the table
+        Some(PERCENTAGE) => {
+            let distributable = target - guess[MIN];
+            shortfall = distributable;
+            for (index, (column, size)) in columns {
+                *size = column.min;
+                if column.percent.is_some() {
+                    let wanted = percent_width(column, target) - column.min;
+                    let delta = if growth[PERCENTAGE] > 0.0 {
+                        distributable * wanted / growth[PERCENTAGE]
+                    } else {
+                        distributable / percent_count as f32
+                    };
+                    *size += delta;
+                    shortfall -= delta;
+                    last_grown = Some(index);
+                }
+            }
+        }
+        // Columns with a specified width grow towards it, auto columns stay at their minimum
+        Some(SPECIFIED) => {
+            let distributable = target - guess[PERCENTAGE];
+            shortfall = distributable;
+            for (index, (column, size)) in columns {
+                if column.percent.is_some() {
+                    *size = percent_width(column, target);
+                } else if column.is_constrained {
+                    let delta = if growth[SPECIFIED] > 0.0 {
+                        distributable * (column.max - column.min) / growth[SPECIFIED]
+                    } else {
+                        distributable / fixed_count as f32
+                    };
+                    *size = column.min + delta;
+                    shortfall -= delta;
+                    last_grown = Some(index);
+                } else {
+                    *size = column.min;
+                }
+            }
+        }
+        // Auto columns grow towards their max-content width
+        Some(_) => {
+            let distributable = target - guess[SPECIFIED];
+            // An exact match usually means an auto-width table, where handing out max-content
+            // widths directly avoids rounding a column into wrapping its content
+            let is_exact_match = target == guess[MAX];
+            shortfall = if is_exact_match { 0.0 } else { distributable };
+
+            for (index, (column, size)) in columns {
+                if column.percent.is_some() {
+                    *size = percent_width(column, target);
+                } else if column.is_constrained || is_exact_match {
+                    *size = column.max;
+                } else {
+                    let delta = if growth[MAX] > 0.0 {
+                        distributable * (column.max - column.min) / growth[MAX]
+                    } else {
+                        distributable / auto_count as f32
+                    };
+                    *size = column.min + delta;
+                    shortfall -= delta;
+                    last_grown = Some(index);
+                }
+            }
+        }
+        // Wider than every column's max-content width, so one category soaks up the rest
+        None => {
+            let distributable = target - guess[MAX];
+            shortfall = distributable;
+            let grow_fixed = auto_count == 0 && fixed_count > 0 && grow_constrained;
+            let grow_percent = auto_count == 0 && !grow_fixed;
+
+            for (index, (column, size)) in columns {
+                let (grows, weight, weight_sum, count) = match (column.percent, column.is_constrained) {
+                    (Some(percent), _) => (grow_percent, percent, percent_sum, percent_count),
+                    (None, true) => (grow_fixed, column.max, fixed_max_sum, fixed_count),
+                    (None, false) => (true, column.max, auto_max_sum, auto_count),
+                };
+                *size = match (column.percent, column.is_constrained) {
+                    (Some(_), _) => percent_width(column, target),
+                    (None, true) if auto_count == 0 && !grow_constrained => 0.0,
+                    _ => column.max,
+                };
+                if grows {
+                    let delta = if weight_sum > 0.0 {
+                        distributable * weight / weight_sum
+                    } else {
+                        distributable / count as f32
+                    };
+                    *size += delta;
+                    shortfall -= delta;
+                    last_grown = Some(index);
+                }
+            }
+        }
+    }
+
+    // Rounding leaves the columns a hair short of the target, which the last one takes up
+    if let Some(index) = last_grown {
+        sizes[index] += shortfall;
+    }
+    sizes
+}
+
+/// Resolve used column widths for `table-layout: fixed`: columns with a specified width take it,
+/// percentage columns share out what is left, and auto columns split whatever remains
+fn resolve_fixed_layout_columns(columns: &mut [Column], assignable: f32) {
+    // Every browser treats a zero-width column as auto
+    let is_fixed_column = |column: &Column| column.is_constrained && column.percent.is_none() && column.max > 0.0;
+    let is_zero_width = |column: &Column| column.is_constrained && column.percent.is_none() && column.max == 0.0;
+
+    let fixed_count = columns.iter().filter(|c| is_fixed_column(c)).count();
+    let percent_count = columns.iter().filter(|c| c.percent.is_some()).count();
+    let zero_width_count = columns.iter().filter(|c| is_zero_width(c)).count();
+    let auto_count = columns.len() - fixed_count - percent_count - zero_width_count;
+
+    let fixed_sum: f32 = columns.iter().filter(|c| is_fixed_column(c)).map(|c| c.max).sum();
+    let percent_width = |column: &Column| column.percent.unwrap_or(0.0) * assignable + column.percent_padding_border;
+    let percent_sum: f32 = columns.iter().filter(|c| c.percent.is_some()).map(percent_width).sum();
+
+    let mut assigned = 0.0;
+    let mut last = None;
+
+    if fixed_count > 0 {
+        // Columns with a specified width only stretch when nothing else can take the space
+        let target = (assignable - percent_sum).max(0.0);
+        let rescale = (fixed_sum < target && auto_count == 0) || fixed_sum > assignable;
+        let scale = if rescale && fixed_sum > 0.0 { target / fixed_sum } else { 1.0 };
+
+        for (index, column) in columns.iter_mut().enumerate().filter(|(_, c)| is_fixed_column(c)) {
+            column.used = scale * column.max;
+            assigned += column.used;
+            last = Some(index);
+        }
+    }
+
+    if percent_count > 0 && assigned < assignable {
+        let target = assignable - assigned;
+        let rescale = (percent_sum < target && auto_count == 0) || percent_sum > target;
+        let scale = if rescale && percent_sum > 0.0 { target / percent_sum } else { 1.0 };
+
+        for (index, column) in columns.iter_mut().enumerate().filter(|(_, c)| c.percent.is_some()) {
+            column.used = if percent_sum > 0.0 { scale * percent_width(column) } else { target / percent_count as f32 };
+            assigned += column.used;
+            last = Some(index);
+        }
+    }
+
+    // Zero-width columns only grow when there is nothing else left to grow
+    let grow_zero_width = zero_width_count == columns.len();
+    let share_count = if grow_zero_width { zero_width_count } else { auto_count };
+    let remaining = assignable - assigned;
+
+    for (index, column) in columns.iter_mut().enumerate() {
+        if column.percent.is_some() || is_fixed_column(column) || (is_zero_width(column) && !grow_zero_width) {
+            continue;
+        }
+        column.used = remaining / share_count as f32;
+        assigned += column.used;
+        last = Some(index);
+    }
+
+    if let Some(index) = last {
+        columns[index].used += assignable - assigned;
+    }
+}
+
+/// The border-box size that a cell's own `size`, `min-size` and `max-size` styles give it, as
+/// block layout would derive under `SizingMode::InherentSize`. Cells are measured with
+/// `SizingMode::ContentSize` (their min-content width must ignore their specified width) and a
+/// node's cache only holds results for one sizing mode, so the styled size is passed in as
+/// known dimensions wherever it should apply.
+fn cell_style_size(
+    tree: &impl LayoutTableContainer,
+    node_id: NodeId,
+    parent_size: Size<Option<f32>>,
+) -> Size<Option<f32>> {
+    let style = tree.get_table_child_style(node_id);
+    let aspect_ratio = style.aspect_ratio();
+    let padding = style.padding().resolve_or_zero(parent_size.width, |v, b| tree.calc(v, b));
+    let border = style.border().resolve_or_zero(parent_size.width, |v, b| tree.calc(v, b));
+    let box_sizing_adjustment =
+        if style.box_sizing() == BoxSizing::ContentBox { (padding + border).sum_axes() } else { Size::ZERO };
+    let min_size = style
+        .min_size()
+        .maybe_resolve(parent_size, |v, b| tree.calc(v, b))
+        .maybe_apply_aspect_ratio(aspect_ratio)
+        .maybe_add(box_sizing_adjustment);
+    let max_size = style
+        .max_size()
+        .maybe_resolve(parent_size, |v, b| tree.calc(v, b))
+        .maybe_apply_aspect_ratio(aspect_ratio)
+        .maybe_add(box_sizing_adjustment);
+    let clamped_style_size = style
+        .size()
+        .maybe_resolve(parent_size, |v, b| tree.calc(v, b))
+        .maybe_apply_aspect_ratio(aspect_ratio)
+        .maybe_add(box_sizing_adjustment)
+        .maybe_clamp(min_size, max_size);
+    let min_max_definite_size = min_size.zip_map(max_size, |min, max| match (min, max) {
+        (Some(min), Some(max)) if max <= min => Some(min),
+        _ => None,
+    });
+    min_max_definite_size.or(clamped_style_size)
+}
+
+/// The border-box height a cell's `height` and `min-height` styles make it at least, if either
+/// is set. A cell's specified height is a minimum: its row grows to fit the content
+/// (CSS 2.1 §17.5.3). A percentage height has nothing to resolve against here and is ignored.
+fn cell_min_height(tree: &impl LayoutTableContainer, node_id: NodeId, parent_size: Size<Option<f32>>) -> Option<f32> {
+    let style = tree.get_table_child_style(node_id);
+    let padding = style.padding().resolve_or_zero(parent_size.width, |v, b| tree.calc(v, b));
+    let border = style.border().resolve_or_zero(parent_size.width, |v, b| tree.calc(v, b));
+    let box_sizing_adjustment = if style.box_sizing() == BoxSizing::ContentBox {
+        padding.vertical_axis_sum() + border.vertical_axis_sum()
+    } else {
+        0.0
+    };
+    let min_height = style
+        .min_size()
+        .height
+        .maybe_resolve(parent_size.height, |v, b| tree.calc(v, b))
+        .maybe_add(box_sizing_adjustment);
+    let max_height = style
+        .max_size()
+        .height
+        .maybe_resolve(parent_size.height, |v, b| tree.calc(v, b))
+        .maybe_add(box_sizing_adjustment);
+    let height = style
+        .size()
+        .height
+        .maybe_resolve(parent_size.height, |v, b| tree.calc(v, b))
+        .maybe_add(box_sizing_adjustment)
+        .maybe_clamp(min_height, max_height);
+    match (height, min_height) {
+        (Some(height), Some(min)) => Some(height.max(min)),
+        (height, None) => height,
+        (None, min) => min,
+    }
+}
+
+/// The border-box `min-width` and `max-width` of a cell, where they are lengths
+fn cell_min_max_width(tree: &impl LayoutTableContainer, node_id: NodeId) -> (Option<f32>, Option<f32>) {
+    let style = tree.get_table_child_style(node_id);
+    let padding = style.padding().resolve_or_zero(None, |v, b| tree.calc(v, b));
+    let border = style.border().resolve_or_zero(None, |v, b| tree.calc(v, b));
+    let box_sizing_adjustment = if style.box_sizing() == BoxSizing::ContentBox {
+        padding.horizontal_components().sum() + border.horizontal_components().sum()
+    } else {
+        0.0
+    };
+    let min_width = style.min_size().width.maybe_resolve(None, |v, b| tree.calc(v, b)).maybe_add(box_sizing_adjustment);
+    let max_width = style.max_size().width.maybe_resolve(None, |v, b| tree.calc(v, b)).maybe_add(box_sizing_adjustment);
+    (min_width, max_width)
+}
+
+/// Write a positioned layout for a non-cell table item (row or row group).
+///
+/// Padding does not apply to a row or a row group (css-tables-3 §6.1), and in the separate
+/// borders model its border is ignored (CSS 2.2 §17.6.1). Under `border-collapse: collapse`
+/// the border belongs to the grid line rather than the box, and Taffy leaves that resolution
+/// to the tree builder.
+fn set_item_layout(
+    tree: &mut impl LayoutTableContainer,
+    node_id: NodeId,
+    order: u32,
+    location: Point<f32>,
+    size: Size<f32>,
+) {
+    tree.set_unrounded_layout(
+        node_id,
+        &Layout {
+            order,
+            location,
+            size,
+            #[cfg(feature = "content_size")]
+            scrollable_overflow_rect: ScrollableOverflow::new(
+                Rect { left: 0.0, right: size.width, top: 0.0, bottom: size.height },
+                Point { x: false, y: false },
+            ),
+            scrollbar_size: Size::ZERO,
+            padding: Rect::ZERO,
+            border: Rect::ZERO,
+            margin: Rect::ZERO,
+        },
+    );
+}

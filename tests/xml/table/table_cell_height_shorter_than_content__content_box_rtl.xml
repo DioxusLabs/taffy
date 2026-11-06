@@ -1,0 +1,27 @@
+<test name="table_cell_height_shorter_than_content__content_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="table" box-sizing="content-box" direction="rtl" position="absolute" border-spacing-x="0px" border-spacing-y="0px">
+      <div display="table-row" box-sizing="content-box" direction="rtl" position="relative">
+        <div display="table-cell" box-sizing="content-box" direction="rtl" position="relative" height="20px" padding-top="0px" padding-left="0px" padding-bottom="0px" padding-right="0px">
+          <div display="block" box-sizing="content-box" direction="rtl" position="relative" width="50px" height="100px"/>
+        </div>
+        <div display="table-cell" box-sizing="content-box" direction="rtl" position="relative" height="150px" padding-top="0px" padding-left="0px" padding-bottom="0px" padding-right="0px">
+          <div display="block" box-sizing="content-box" direction="rtl" position="relative" width="50px" height="30px"/>
+        </div>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="100" height="150">
+      <node x="0" y="0" width="100" height="150">
+        <node x="50" y="0" width="50" height="150">
+          <node x="0" y="0" width="50" height="100"/>
+        </node>
+        <node x="0" y="0" width="50" height="150">
+          <node x="0" y="70" width="50" height="30"/>
+        </node>
+      </node>
+    </node>
+  </expectations>
+</test>

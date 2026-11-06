@@ -27,4 +27,6 @@ mod hand_written {
     mod scroll_size;
     mod scrollable_overflow;
     mod serde;
+    #[cfg(feature = "table_layout")]
+    mod table;
 }
