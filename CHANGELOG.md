@@ -10,6 +10,8 @@
 - Float: a zero-height float is now recorded in the float context, so content and boxes establishing a new block formatting context whose vertical extent crosses its position avoid it. Previously it only affected `clear` and the position of later floats.
 - Block: when a block with no top border or padding has a bottom border or padding, the margins of leading children that collapse through it (and so collapse with its own top margin) are no longer also added to its height. Previously such a block was too tall by the collapsed margin.
 - Block: the min-content contribution of a compressible replaced child (e.g. an image) with a percentage `width` or `max-width` now resolves that percentage against zero, so a shrink-to-fit block (e.g. an `inline-block` or float) holding a `width: 100%` image is capped by the available width rather than growing to the image's natural width.
+- Flexbox: a size transferred through `aspect-ratio` from an item's definite size is now based on that size clamped by the item's min/max size. Previously an item with e.g. `width: 100%; max-width: 240px; aspect-ratio: 1` in a column container got its flex basis (and so its height) from the unclamped width.
+- Flexbox: the min-/max-content contribution of an item with `flex-shrink: 0` is no longer raised above the item's max size by its flex base size, so e.g. a column containing an item with `height: 327px; max-height: 240px; flex-shrink: 0` is now 240px rather than 327px tall.
 
 ### Changes
 
