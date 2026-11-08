@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Performance
+
+- `TaffyTree` switches to FxHash for node contexts when `std` is enabled, for faster hash computation.
+
 ### Fixed
 
 - Flexbox: `align-content: stretch` (and `normal`) and `justify-content: stretch` fall back to `flex-start` rather than `start` when the lines/items overflow the container, so overflowing lines in a `wrap-reverse` container (and items in a `row-reverse`/`column-reverse` container) are packed to the flex-start edge like in Chrome.

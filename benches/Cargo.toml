@@ -65,6 +65,11 @@ path = "benches/mixed.rs"
 harness = false
 
 [[bench]]
+name = "node_context"
+path = "benches/node_context.rs"
+harness = false
+
+[[bench]]
 name = "relayout"
 path = "benches/relayout.rs"
 harness = false
