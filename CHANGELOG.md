@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+The MSRV is now 1.77 (required by `rustc-hash`).
+
 ### Performance
 
 - `TaffyTree` switches to FxHash for node contexts when `std` is enabled, for faster hash computation.
