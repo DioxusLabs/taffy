@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Performance
+
+- `compute_cached_layout` passes an `AvailableSpace::MinContent` height on as `AvailableSpace::MaxContent`, as the min-content block size of a box is its max-content block size. Size queries that differ only in this constraint now share one cache entry, so nested flex and grid containers lay out and measure their children fewer times.
+
 ### Fixed
 
 - Flexbox: `align-content: stretch` (and `normal`) and `justify-content: stretch` fall back to `flex-start` rather than `start` when the lines/items overflow the container, so overflowing lines in a `wrap-reverse` container (and items in a `row-reverse`/`column-reverse` container) are packed to the flex-start edge like in Chrome.
