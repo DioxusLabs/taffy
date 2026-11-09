@@ -2,7 +2,7 @@
 #[cfg(not(feature = "std"))]
 use slotmap::SecondaryMap;
 #[cfg(feature = "std")]
-/// FxHash is faster than SipHash, and node keys come from Taffy, so they don't need SipHash's HashDoS protection.
+/// Node contexts, hashed with FxHash.
 type SecondaryMap<K, V> = slotmap::SparseSecondaryMap<K, V, core::hash::BuildHasherDefault<rustc_hash::FxHasher>>;
 use slotmap::{DefaultKey, SlotMap};
 
