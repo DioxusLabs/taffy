@@ -7,6 +7,7 @@ The MSRV is now 1.85.
 ### Performance
 
 - `TaffyTree` switches to FxHash for node contexts when `std` is enabled, for faster hash computation.
+- `compute_cached_layout` passes an `AvailableSpace::MinContent` height on as `AvailableSpace::MaxContent`, as the min-content block size of a box is its max-content block size. Size queries that differ only in this constraint now share one cache entry, so nested flex and grid containers lay out and measure their children fewer times.
 
 ### Fixed
 
