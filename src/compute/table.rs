@@ -247,6 +247,48 @@ struct Row {
     fallback_descent: Option<f32>,
 }
 
+/// The table's own resolved style, which every phase of the algorithm reads
+#[derive(Clone, Copy)]
+struct TableConstants {
+    /// The table's resolved padding
+    padding: Rect<f32>,
+    /// The table's resolved border
+    border: Rect<f32>,
+    /// The table's padding and border together
+    padding_border: Rect<f32>,
+    /// The sum of the table's padding and border in each axis
+    pb_size: Size<f32>,
+    /// The table's border-box `min-size`
+    min_size: Size<Option<f32>>,
+    /// The table's border-box `max-size`
+    max_size: Size<Option<f32>>,
+    /// The table's border-box `size`, clamped by its `min-size` and `max-size`
+    specified_size: Size<Option<f32>>,
+    /// The horizontal border-spacing
+    h_spacing: f32,
+    /// The vertical border-spacing
+    v_spacing: f32,
+    /// Whether the table uses the fixed table layout algorithm
+    is_fixed: bool,
+    /// Whether the table's `width` is a percentage or a `calc()` with a percentage in it
+    width_has_percentage: bool,
+    /// Whether the table's `direction` is `rtl`, which puts its first column on the right
+    rtl: bool,
+    /// Whether the table is a scroll container in either axis
+    #[cfg(feature = "content_size")]
+    is_scroll_container: bool,
+}
+
+impl TableConstants {
+    /// The table box's position and size inside the table's box, once the captions are placed
+    fn oof_positioning_area(&self, box_top: f32, size: Size<f32>) -> OofPositioningArea {
+        OofPositioningArea {
+            size: size - self.border.sum_axes(),
+            offset: Point { x: self.border.left, y: box_top + self.border.top },
+        }
+    }
+}
+
 /// Computes the layout of [`LayoutTableContainer`] according to the CSS table layout algorithm
 pub fn compute_table_layout(
     tree: &mut impl LayoutTableContainer,
@@ -255,48 +297,12 @@ pub fn compute_table_layout(
 ) -> LayoutOutput {
     let LayoutInput { known_dimensions, parent_size, available_space, run_mode, axis, .. } = inputs;
 
-    let style = tree.get_table_container_style(node_id);
-    let raw_padding = style.padding();
-    let raw_border = style.border();
-    let raw_size = style.size();
-    let raw_min_size = style.min_size();
-    let raw_max_size = style.max_size();
-    let box_sizing = style.box_sizing();
-    let aspect_ratio = style.aspect_ratio();
-    let border_spacing = style.border_spacing();
-    let table_layout_mode = style.table_layout();
+    let constants = compute_constants(tree, node_id, parent_size);
+    let TableConstants { padding, border, padding_border, pb_size, min_size, max_size, specified_size, .. } = constants;
+    let TableConstants { h_spacing, v_spacing, is_fixed, rtl, .. } = constants;
     #[cfg(feature = "content_size")]
-    let is_scroll_container = {
-        let overflow = style.overflow();
-        overflow.x.is_scroll_container() || overflow.y.is_scroll_container()
-    };
-    drop(style);
-
-    let parent_width = parent_size.width;
-    let padding = raw_padding.resolve_or_zero(parent_width, |v, b| tree.calc(v, b));
-    let border = raw_border.resolve_or_zero(parent_width, |v, b| tree.calc(v, b));
-    let padding_border = padding + border;
-    let pb_size = padding_border.sum_axes();
-
-    let box_sizing_adjustment = if box_sizing == BoxSizing::ContentBox { pb_size } else { Size::ZERO };
-    let min_size = raw_min_size
-        .maybe_resolve(parent_size, |v, b| tree.calc(v, b))
-        .maybe_apply_aspect_ratio(aspect_ratio)
-        .maybe_add(box_sizing_adjustment);
-    let max_size = raw_max_size
-        .maybe_resolve(parent_size, |v, b| tree.calc(v, b))
-        .maybe_apply_aspect_ratio(aspect_ratio)
-        .maybe_add(box_sizing_adjustment);
-    let specified_size = raw_size
-        .maybe_resolve(parent_size, |v, b| tree.calc(v, b))
-        .maybe_apply_aspect_ratio(aspect_ratio)
-        .maybe_add(box_sizing_adjustment)
-        .maybe_clamp(min_size, max_size);
-
+    let is_scroll_container = constants.is_scroll_container;
     let styled_known = known_dimensions.or(specified_size);
-
-    let h_spacing = border_spacing.width.resolve_or_zero(parent_width, |v, b| tree.calc(v, b));
-    let v_spacing = border_spacing.height.resolve_or_zero(parent_width, |v, b| tree.calc(v, b));
 
     // The static position of an out-of-flow child of the table, a row group or a row is the
     // top-left of the table's content box
@@ -318,72 +324,20 @@ pub fn compute_table_layout(
         oof: mut oof_candidates,
         ..
     } = build_grid(tree, node_id, static_position);
-    let rtl = tree.get_table_container_style(node_id).direction() == Direction::Rtl;
 
     // Captions sit above and below the table box, inside the table's own box: there is no table
     // wrapper box. The table box is never narrower than the widest caption's min-content width
     // (css-tables-3 §3.9.1, CAPMIN), and the captions are sized at the table box's width
     let capmin = captions
         .iter()
-        .map(|caption| caption_min_content_width(tree, caption.node_id, parent_width))
+        .map(|caption| caption_min_content_width(tree, caption.node_id, parent_size.width))
         .fold(0.0, f32::max);
-    // The table box's position and size inside the table's box, once the captions are placed
-    let oof_positioning_area = |box_top: f32, size: Size<f32>| OofPositioningArea {
-        size: size - border.sum_axes(),
-        offset: Point { x: border.left, y: box_top + border.top },
-    };
 
     if col_count == 0 && rows.is_empty() {
-        // The table is never smaller than its own padding and border, whatever its box-sizing
-        let width = styled_known
-            .width
-            .unwrap_or(pb_size.width)
-            .maybe_clamp(min_size.width, max_size.width)
-            .max(pb_size.width)
-            .max(capmin);
-        let caption_layouts = layout_captions(tree, &captions, width, rtl, run_mode);
-        let captions_height: f32 = caption_layouts.iter().map(CaptionLayout::outer_height).sum();
-        let known_height = known_dimensions.height.map(|h| (h - captions_height).max(0.0)).or(specified_size.height);
-        let height =
-            known_height.unwrap_or(pb_size.height).maybe_clamp(min_size.height, max_size.height).max(pb_size.height);
-        let size = Size { width, height };
-        if run_mode == RunMode::PerformLayout {
-            for order in 0..tree.child_count(node_id) {
-                let child_id = tree.get_child_id(node_id, order);
-                tree.set_unrounded_layout(child_id, &Layout::with_order(order as u32));
-            }
-        }
-        let (box_top, box_bottom) = place_captions(tree, &caption_layouts, height, run_mode);
-        oof_candidates.translate(Point { x: 0.0, y: box_top });
-        // A table with no rows has its baseline on its bottom content edge (css-tables-3 §3.10.2)
-        let baselines = Baselines::from_first(Some(box_top + size.height));
-        let outer_size = Size { width, height: box_top + height + box_bottom };
-        #[cfg(feature = "content_size")]
-        let scrollable_overflow_rect = captions_scrollable_overflow(
-            &caption_layouts,
-            box_top + height,
-            border,
-            padding,
-            outer_size,
-            is_scroll_container,
-            Rect::ZERO,
-        );
-        #[cfg(not(feature = "content_size"))]
-        let scrollable_overflow_rect = ScrollableOverflow::ZERO;
-        let mut output = LayoutOutput::from_sizes_and_baselines(outer_size, scrollable_overflow_rect, baselines);
-        output.oof_candidates = oof_candidates;
-        output.oof_positioning_area = Some(oof_positioning_area(box_top, size));
-        return output;
+        return compute_empty_table_layout(tree, node_id, &constants, inputs, &captions, oof_candidates, capmin);
     }
 
     // Phase 2: collect intrinsic size contributions per column
-    //
-    // Fixed layout reads the column widths off the first row alone and never looks at content. It
-    // applies to every `width` but `auto` and `max-content` (css-tables-3 §3.9.3, csswg-drafts#10937)
-    let width_tag = raw_size.width.tag();
-    let is_fixed = table_layout_mode == TableLayout::Fixed
-        && width_tag != CompactLength::AUTO_TAG
-        && width_tag != CompactLength::MAX_CONTENT_TAG;
     let mut columns = new_columns(tree, &cells, &column_boxes, &column_groups, col_count);
     if is_fixed {
         measure_fixed_layout_columns(tree, &cells, h_spacing, &mut columns);
@@ -399,7 +353,7 @@ pub fn compute_table_layout(
     let (grid_min_sum, grid_max_sum) = grid_min_max(&columns, is_fixed);
     let grid_min = grid_min_sum + total_h_spacing;
     // A fixed table whose percentage width has nothing to resolve against is as wide as it can be
-    let grid_max = if is_fixed && styled_known.width.is_none() && width_tag & CompactLength::PERCENTAGE_BIT != 0 {
+    let grid_max = if is_fixed && styled_known.width.is_none() && constants.width_has_percentage {
         UNBOUNDED_TABLE_WIDTH
     } else {
         grid_max_sum + total_h_spacing
@@ -830,7 +784,140 @@ pub fn compute_table_layout(
 
     let mut output = LayoutOutput::from_sizes_and_baselines(final_size, scrollable_overflow_rect, baselines);
     output.oof_candidates = oof_candidates;
-    output.oof_positioning_area = Some(oof_positioning_area(box_top, table_box_size));
+    output.oof_positioning_area = Some(constants.oof_positioning_area(box_top, table_box_size));
+    output
+}
+
+/// Resolve the table's own style against its parent's size
+#[inline]
+fn compute_constants(
+    tree: &impl LayoutTableContainer,
+    node_id: NodeId,
+    parent_size: Size<Option<f32>>,
+) -> TableConstants {
+    let style = tree.get_table_container_style(node_id);
+    let raw_padding = style.padding();
+    let raw_border = style.border();
+    let raw_size = style.size();
+    let raw_min_size = style.min_size();
+    let raw_max_size = style.max_size();
+    let box_sizing = style.box_sizing();
+    let aspect_ratio = style.aspect_ratio();
+    let border_spacing = style.border_spacing();
+    let table_layout_mode = style.table_layout();
+    let rtl = style.direction() == Direction::Rtl;
+    #[cfg(feature = "content_size")]
+    let is_scroll_container = {
+        let overflow = style.overflow();
+        overflow.x.is_scroll_container() || overflow.y.is_scroll_container()
+    };
+    drop(style);
+
+    let parent_width = parent_size.width;
+    let padding = raw_padding.resolve_or_zero(parent_width, |v, b| tree.calc(v, b));
+    let border = raw_border.resolve_or_zero(parent_width, |v, b| tree.calc(v, b));
+    let padding_border = padding + border;
+    let pb_size = padding_border.sum_axes();
+
+    let box_sizing_adjustment = if box_sizing == BoxSizing::ContentBox { pb_size } else { Size::ZERO };
+    let min_size = raw_min_size
+        .maybe_resolve(parent_size, |v, b| tree.calc(v, b))
+        .maybe_apply_aspect_ratio(aspect_ratio)
+        .maybe_add(box_sizing_adjustment);
+    let max_size = raw_max_size
+        .maybe_resolve(parent_size, |v, b| tree.calc(v, b))
+        .maybe_apply_aspect_ratio(aspect_ratio)
+        .maybe_add(box_sizing_adjustment);
+    let specified_size = raw_size
+        .maybe_resolve(parent_size, |v, b| tree.calc(v, b))
+        .maybe_apply_aspect_ratio(aspect_ratio)
+        .maybe_add(box_sizing_adjustment)
+        .maybe_clamp(min_size, max_size);
+
+    let h_spacing = border_spacing.width.resolve_or_zero(parent_width, |v, b| tree.calc(v, b));
+    let v_spacing = border_spacing.height.resolve_or_zero(parent_width, |v, b| tree.calc(v, b));
+
+    // Fixed layout reads the column widths off the first row alone and never looks at content. It
+    // applies to every `width` but `auto` and `max-content` (css-tables-3 §3.9.3, csswg-drafts#10937)
+    let width_tag = raw_size.width.tag();
+    let is_fixed = table_layout_mode == TableLayout::Fixed
+        && width_tag != CompactLength::AUTO_TAG
+        && width_tag != CompactLength::MAX_CONTENT_TAG;
+
+    TableConstants {
+        padding,
+        border,
+        padding_border,
+        pb_size,
+        min_size,
+        max_size,
+        specified_size,
+        h_spacing,
+        v_spacing,
+        is_fixed,
+        width_has_percentage: width_tag & CompactLength::PERCENTAGE_BIT != 0,
+        rtl,
+        #[cfg(feature = "content_size")]
+        is_scroll_container,
+    }
+}
+
+/// Lay out a table with no rows and no columns: only its captions, padding and border take room
+#[inline]
+fn compute_empty_table_layout(
+    tree: &mut impl LayoutTableContainer,
+    node_id: NodeId,
+    constants: &TableConstants,
+    inputs: LayoutInput,
+    captions: &[CaptionBox],
+    mut oof_candidates: OofCandidates,
+    capmin: f32,
+) -> LayoutOutput {
+    let LayoutInput { known_dimensions, run_mode, .. } = inputs;
+    let TableConstants { pb_size, min_size, max_size, specified_size, rtl, .. } = *constants;
+    #[cfg(feature = "content_size")]
+    let TableConstants { padding, border, is_scroll_container, .. } = *constants;
+    let styled_known = known_dimensions.or(specified_size);
+
+    // The table is never smaller than its own padding and border, whatever its box-sizing
+    let width = styled_known
+        .width
+        .unwrap_or(pb_size.width)
+        .maybe_clamp(min_size.width, max_size.width)
+        .max(pb_size.width)
+        .max(capmin);
+    let caption_layouts = layout_captions(tree, captions, width, rtl, run_mode);
+    let captions_height: f32 = caption_layouts.iter().map(CaptionLayout::outer_height).sum();
+    let known_height = known_dimensions.height.map(|h| (h - captions_height).max(0.0)).or(specified_size.height);
+    let height =
+        known_height.unwrap_or(pb_size.height).maybe_clamp(min_size.height, max_size.height).max(pb_size.height);
+    let size = Size { width, height };
+    if run_mode == RunMode::PerformLayout {
+        for order in 0..tree.child_count(node_id) {
+            let child_id = tree.get_child_id(node_id, order);
+            tree.set_unrounded_layout(child_id, &Layout::with_order(order as u32));
+        }
+    }
+    let (box_top, box_bottom) = place_captions(tree, &caption_layouts, height, run_mode);
+    oof_candidates.translate(Point { x: 0.0, y: box_top });
+    // A table with no rows has its baseline on its bottom content edge (css-tables-3 §3.10.2)
+    let baselines = Baselines::from_first(Some(box_top + size.height));
+    let outer_size = Size { width, height: box_top + height + box_bottom };
+    #[cfg(feature = "content_size")]
+    let scrollable_overflow_rect = captions_scrollable_overflow(
+        &caption_layouts,
+        box_top + height,
+        border,
+        padding,
+        outer_size,
+        is_scroll_container,
+        Rect::ZERO,
+    );
+    #[cfg(not(feature = "content_size"))]
+    let scrollable_overflow_rect = ScrollableOverflow::ZERO;
+    let mut output = LayoutOutput::from_sizes_and_baselines(outer_size, scrollable_overflow_rect, baselines);
+    output.oof_candidates = oof_candidates;
+    output.oof_positioning_area = Some(constants.oof_positioning_area(box_top, size));
     output
 }
 
