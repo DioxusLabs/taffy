@@ -247,6 +247,24 @@ struct Row {
     fallback_descent: Option<f32>,
 }
 
+/// Where the grid's tracks sit in the table's box, once their sizes are known
+struct GridGeometry {
+    /// The x of each column's left edge
+    col_x: Vec<f32>,
+    /// The y of each row's top edge
+    row_y: Vec<f32>,
+    /// The x of the left edge of the rows and row groups
+    grid_origin_x: f32,
+    /// The width of the rows and row groups: the grid without the outer border-spacing
+    grid_width: f32,
+    /// The y of the first row's top edge
+    rows_top: f32,
+    /// The height from the first row's top edge to the last row's bottom edge
+    rows_height: f32,
+    /// The height the captions above the table box take
+    box_top: f32,
+}
+
 /// The table's own resolved style, which every phase of the algorithm reads
 #[derive(Clone, Copy)]
 struct TableConstants {
@@ -298,10 +316,9 @@ pub fn compute_table_layout(
     let LayoutInput { known_dimensions, parent_size, available_space, run_mode, axis, .. } = inputs;
 
     let constants = compute_constants(tree, node_id, parent_size);
-    let TableConstants { padding, border, padding_border, pb_size, specified_size, .. } = constants;
-    let TableConstants { h_spacing, v_spacing, is_fixed, rtl, .. } = constants;
+    let TableConstants { padding_border, pb_size, specified_size, h_spacing, v_spacing, is_fixed, rtl, .. } = constants;
     #[cfg(feature = "content_size")]
-    let is_scroll_container = constants.is_scroll_container;
+    let TableConstants { padding, border, is_scroll_container, .. } = constants;
     let styled_known = known_dimensions.or(specified_size);
 
     // The static position of an out-of-flow child of the table, a row group or a row is the
@@ -378,7 +395,6 @@ pub fn compute_table_layout(
     };
 
     // Phase 4: resolve row heights by sizing each cell at its final width
-    let num_rows = rows.len();
     let mut sizing = measure_cell_heights(tree, &cells, &columns, &mut rows, h_spacing, grid_width);
     align_cell_baselines(&cells, &mut sizing, &mut rows);
     apply_row_heights(tree, &mut rows);
@@ -401,186 +417,13 @@ pub fn compute_table_layout(
     }
 
     // Phase 5: position rows, row groups, and cells (in RTL the first column is rightmost)
-    let mut col_x: Vec<f32> = Vec::with_capacity(col_count);
-    let mut x = padding_border.left + h_spacing;
-    for col in columns.iter() {
-        col_x.push(x);
-        x += col.used + if col.collapsed || col.is_mergeable { 0.0 } else { h_spacing };
-    }
-    if rtl {
-        for (i, col) in columns.iter().enumerate() {
-            col_x[i] = table_width - pb_size.width + padding_border.left - (col_x[i] - padding_border.left) - col.used;
-        }
-    }
-    let mut row_y: Vec<f32> = Vec::with_capacity(num_rows);
-    let mut y = box_top + padding_border.top + v_spacing;
-    for row in rows.iter() {
-        row_y.push(y);
-        y += row.used_height + if row.collapsed { 0.0 } else { v_spacing };
-    }
-
-    // Row and row-group boxes exclude the outer border-spacing, which belongs to the table
-    let grid_origin_x = padding_border.left + h_spacing;
-
-    // Column and column-group boxes span the grid's rows and the tracks they cover
-    let rows_top = box_top + padding_border.top + v_spacing;
-    let rows_height = if num_rows == 0 { 0.0 } else { y - v_spacing - rows_top };
-    let track_extent = |start: usize, span: usize| -> (f32, f32) {
-        let range = start.min(col_count)..(start + span).min(col_count);
-        if range.is_empty() {
-            return (grid_origin_x, 0.0);
-        }
-        let x = col_x[range.clone()].iter().copied().fold(f32::INFINITY, f32::min);
-        let visible = columns[range.clone()].iter().filter(|c| !c.collapsed && !c.is_mergeable).count();
-        let width =
-            columns[range.clone()].iter().map(|c| c.used).sum::<f32>() + h_spacing * (visible.max(1) as f32 - 1.0);
-        (x, width)
-    };
-    let mut column_group_x: Vec<f32> = Vec::with_capacity(column_groups.len());
-    for column_group in column_groups.iter() {
-        let (x, width) = track_extent(column_group.start, column_group.span);
-        column_group_x.push(x);
-        set_item_layout(
-            tree,
-            column_group.node_id,
-            column_group.order,
-            Point { x, y: rows_top },
-            Size { width, height: rows_height },
-        );
-    }
-    for column in column_boxes.iter() {
-        let (x, width) = track_extent(column.start, column.span);
-        let location = match column.column_group {
-            Some(g) => Point { x: x - column_group_x[g], y: 0.0 },
-            None => Point { x, y: rows_top },
-        };
-        set_item_layout(tree, column.node_id, column.order, location, Size { width, height: rows_height });
-    }
-
-    let mut row_group_origin: Vec<Point<f32>> = Vec::with_capacity(row_groups.len());
-    for (row_group_index, row_group) in row_groups.iter().enumerate() {
-        let range = row_group_range(&rows, row_group_index);
-        let (start_y, end_y) = match range.end.checked_sub(1) {
-            Some(last) if !range.is_empty() => (row_y[range.start], row_y[last] + rows[last].used_height),
-            _ => (rows_top, rows_top),
-        };
-        let origin = Point { x: grid_origin_x, y: start_y };
-        row_group_origin.push(origin);
-
-        set_item_layout(
-            tree,
-            row_group.node_id,
-            row_group.order,
-            origin,
-            Size { width: grid_width, height: end_y - start_y },
-        );
-    }
-
-    for (row_index, row) in rows.iter().enumerate() {
-        let origin = match row.row_group {
-            Some(g) => Point { x: 0.0, y: row_y[row_index] - row_group_origin[g].y },
-            None => Point { x: grid_origin_x, y: row_y[row_index] },
-        };
-        set_item_layout(tree, row.node_id, row.order, origin, Size { width: grid_width, height: row.used_height });
-    }
-
-    let mut cell_overflow_rect = Rect::ZERO;
-    #[cfg(feature = "content_size")]
-    let overflow_container = ScrollableOverflowContainer {
-        parent_is_scroll_container: is_scroll_container,
-        parent_size: table_box_size - border.sum_axes(),
-        reversed: Point { x: rtl, y: false },
-        padding,
-    };
-    for (cell, sizing) in cells.iter().zip(sizing.iter()) {
-        let cell_width = sizing.width;
-        let range = cell.row..(cell.row + cell.rowspan).min(num_rows);
-        let visible_rows = rows[range.clone()].iter().filter(|r| !r.collapsed).count();
-        let cell_height: f32 =
-            rows[range].iter().map(|r| r.used_height).sum::<f32>() + v_spacing * (visible_rows.max(1) as f32 - 1.0);
-
-        let mut output = tree.compute_child_layout(
-            cell.node_id,
-            LayoutInput {
-                known_dimensions: Size { width: Some(cell_width), height: Some(cell_height) },
-                known_dimensions_are_definite: Size { width: true, height: true },
-                parent_size: Size { width: Some(grid_width), height: Some(table_height - pb_size.height) },
-                available_space: Size {
-                    width: AvailableSpace::Definite(cell_width),
-                    height: AvailableSpace::Definite(cell_height),
-                },
-                sizing_mode: SizingMode::ContentSize,
-                axis: RequestedAxis::Both,
-                run_mode: RunMode::PerformLayout,
-                vertical_margins_are_collapsible: Line::FALSE,
-                content_offset_y: sizing.shift,
-            },
-        );
-
-        let cell_style = tree.get_table_child_style(cell.node_id);
-        let cell_padding = cell_style.padding().resolve_or_zero(Some(grid_width), |v, b| tree.calc(v, b));
-        let cell_border = cell_style.border().resolve_or_zero(Some(grid_width), |v, b| tree.calc(v, b));
-        #[cfg(feature = "content_size")]
-        let cell_overflow = cell_style.overflow();
-        #[cfg(feature = "content_size")]
-        let cell_contain = cell_style.contain();
-        drop(cell_style);
-
-        // A spanning cell starts at its leftmost spanned column, which in RTL is the last one
-        let col_range = cell.col..(cell.col + cell.colspan).min(col_count);
-        let cell_x = col_x[col_range].iter().copied().fold(f32::INFINITY, f32::min);
-        let location = Point { x: cell_x - grid_origin_x, y: 0.0 };
-
-        if !output.oof_candidates.is_empty() {
-            // Translate anchors from cell-relative to table-relative coordinates
-            output.oof_candidates.translate(Point { x: cell_x, y: row_y[cell.row] });
-            oof_candidates.append(&mut output.oof_candidates);
-        }
-
-        tree.set_unrounded_layout(
-            cell.node_id,
-            &Layout {
-                order: cell.order,
-                location,
-                size: Size { width: cell_width, height: cell_height },
-                #[cfg(feature = "content_size")]
-                scrollable_overflow_rect: output.scrollable_overflow_rect,
-                scrollbar_size: Size::ZERO,
-                padding: cell_padding,
-                border: cell_border,
-                margin: Rect::ZERO,
-            },
-        );
-
-        #[cfg(feature = "content_size")]
-        {
-            // Contributions are measured from the table's padding-box origin
-            let cell_size = Size { width: cell_width, height: cell_height };
-            let contribution_location = Point { x: cell_x - border.left, y: row_y[cell.row] - box_top - border.top };
-            cell_overflow_rect = cell_overflow_rect.union(compute_scrollable_overflow_contribution(
-                contribution_location,
-                cell_size,
-                output.scrollable_overflow_rect.rect(),
-                cell_border,
-                cell_overflow,
-                cell_contain,
-                &overflow_container,
-                Rect::ZERO,
-            ));
-        }
-    }
-
-    for (order, &child_id) in hidden.iter().enumerate() {
-        tree.set_unrounded_layout(child_id, &Layout::with_order(order as u32));
-        tree.perform_child_layout(
-            child_id,
-            Size::NONE,
-            Size::NONE,
-            Size::MAX_CONTENT,
-            SizingMode::InherentSize,
-            Line::FALSE,
-        );
-    }
+    let grid = position_tracks(&constants, &columns, &rows, table_width, grid_width, box_top);
+    layout_column_boxes(tree, h_spacing, &columns, &column_boxes, &column_groups, &grid);
+    layout_row_groups_and_rows(tree, &rows, &row_groups, &grid);
+    let (cell_overflow_rect, mut cell_oof_candidates) =
+        layout_cells(tree, &constants, &cells, &sizing, &rows, &grid, table_box_size);
+    oof_candidates.append(&mut cell_oof_candidates);
+    layout_hidden_children(tree, &hidden);
 
     #[cfg(feature = "content_size")]
     let scrollable_overflow_rect = captions_scrollable_overflow(
@@ -2166,6 +2009,254 @@ fn cell_min_max_width(tree: &impl LayoutTableContainer, node_id: NodeId) -> (Opt
     let min_width = style.min_size().width.maybe_resolve(None, |v, b| tree.calc(v, b)).maybe_add(box_sizing_adjustment);
     let max_width = style.max_size().width.maybe_resolve(None, |v, b| tree.calc(v, b)).maybe_add(box_sizing_adjustment);
     (min_width, max_width)
+}
+
+/// Position the columns and rows of the grid in the table's box (in RTL the first column is
+/// rightmost)
+#[inline]
+fn position_tracks(
+    constants: &TableConstants,
+    columns: &[Column],
+    rows: &[Row],
+    table_width: f32,
+    grid_width: f32,
+    box_top: f32,
+) -> GridGeometry {
+    let TableConstants { padding_border, pb_size, h_spacing, v_spacing, rtl, .. } = *constants;
+    let mut col_x: Vec<f32> = Vec::with_capacity(columns.len());
+    let mut x = padding_border.left + h_spacing;
+    for col in columns.iter() {
+        col_x.push(x);
+        x += col.used + if col.collapsed || col.is_mergeable { 0.0 } else { h_spacing };
+    }
+    if rtl {
+        for (i, col) in columns.iter().enumerate() {
+            col_x[i] = table_width - pb_size.width + padding_border.left - (col_x[i] - padding_border.left) - col.used;
+        }
+    }
+    let mut row_y: Vec<f32> = Vec::with_capacity(rows.len());
+    let mut y = box_top + padding_border.top + v_spacing;
+    for row in rows.iter() {
+        row_y.push(y);
+        y += row.used_height + if row.collapsed { 0.0 } else { v_spacing };
+    }
+
+    // Row and row-group boxes exclude the outer border-spacing, which belongs to the table
+    let grid_origin_x = padding_border.left + h_spacing;
+
+    let rows_top = box_top + padding_border.top + v_spacing;
+    let rows_height = if rows.is_empty() { 0.0 } else { y - v_spacing - rows_top };
+
+    GridGeometry { col_x, row_y, grid_origin_x, grid_width, rows_top, rows_height, box_top }
+}
+
+/// Column and column-group boxes span the grid's rows and the tracks they cover
+#[inline]
+fn layout_column_boxes(
+    tree: &mut impl LayoutTableContainer,
+    h_spacing: f32,
+    columns: &[Column],
+    column_boxes: &[ColumnBox],
+    column_groups: &[ColumnGroupBox],
+    grid: &GridGeometry,
+) {
+    let GridGeometry { ref col_x, grid_origin_x, rows_top, rows_height, .. } = *grid;
+    let col_count = columns.len();
+    let track_extent = |start: usize, span: usize| -> (f32, f32) {
+        let range = start.min(col_count)..(start + span).min(col_count);
+        if range.is_empty() {
+            return (grid_origin_x, 0.0);
+        }
+        let x = col_x[range.clone()].iter().copied().fold(f32::INFINITY, f32::min);
+        let visible = columns[range.clone()].iter().filter(|c| !c.collapsed && !c.is_mergeable).count();
+        let width =
+            columns[range.clone()].iter().map(|c| c.used).sum::<f32>() + h_spacing * (visible.max(1) as f32 - 1.0);
+        (x, width)
+    };
+    let mut column_group_x: Vec<f32> = Vec::with_capacity(column_groups.len());
+    for column_group in column_groups.iter() {
+        let (x, width) = track_extent(column_group.start, column_group.span);
+        column_group_x.push(x);
+        set_item_layout(
+            tree,
+            column_group.node_id,
+            column_group.order,
+            Point { x, y: rows_top },
+            Size { width, height: rows_height },
+        );
+    }
+    for column in column_boxes.iter() {
+        let (x, width) = track_extent(column.start, column.span);
+        let location = match column.column_group {
+            Some(g) => Point { x: x - column_group_x[g], y: 0.0 },
+            None => Point { x, y: rows_top },
+        };
+        set_item_layout(tree, column.node_id, column.order, location, Size { width, height: rows_height });
+    }
+}
+
+/// Position the row groups and rows, which span the grid's width
+#[inline]
+fn layout_row_groups_and_rows(
+    tree: &mut impl LayoutTableContainer,
+    rows: &[Row],
+    row_groups: &[RowGroup],
+    grid: &GridGeometry,
+) {
+    let GridGeometry { ref row_y, grid_origin_x, grid_width, rows_top, .. } = *grid;
+    let mut row_group_origin: Vec<Point<f32>> = Vec::with_capacity(row_groups.len());
+    for (row_group_index, row_group) in row_groups.iter().enumerate() {
+        let range = row_group_range(rows, row_group_index);
+        let (start_y, end_y) = match range.end.checked_sub(1) {
+            Some(last) if !range.is_empty() => (row_y[range.start], row_y[last] + rows[last].used_height),
+            _ => (rows_top, rows_top),
+        };
+        let origin = Point { x: grid_origin_x, y: start_y };
+        row_group_origin.push(origin);
+
+        set_item_layout(
+            tree,
+            row_group.node_id,
+            row_group.order,
+            origin,
+            Size { width: grid_width, height: end_y - start_y },
+        );
+    }
+
+    for (row_index, row) in rows.iter().enumerate() {
+        let origin = match row.row_group {
+            Some(g) => Point { x: 0.0, y: row_y[row_index] - row_group_origin[g].y },
+            None => Point { x: grid_origin_x, y: row_y[row_index] },
+        };
+        set_item_layout(tree, row.node_id, row.order, origin, Size { width: grid_width, height: row.used_height });
+    }
+}
+
+/// Lay every cell out at its final size and position it in its row. Returns the cells'
+/// contribution to the table's scrollable overflow and their out-of-flow descendants, in the
+/// table's coordinate space
+#[inline]
+fn layout_cells(
+    tree: &mut impl LayoutTableContainer,
+    constants: &TableConstants,
+    cells: &[Cell],
+    sizing: &[CellSizing],
+    rows: &[Row],
+    grid: &GridGeometry,
+    table_box_size: Size<f32>,
+) -> (Rect<f32>, OofCandidates) {
+    let TableConstants { pb_size, v_spacing, .. } = *constants;
+    #[cfg(feature = "content_size")]
+    let TableConstants { padding, border, rtl, is_scroll_container, .. } = *constants;
+    let GridGeometry { ref col_x, ref row_y, grid_origin_x, grid_width, .. } = *grid;
+    #[cfg(feature = "content_size")]
+    let box_top = grid.box_top;
+    let col_count = col_x.len();
+    let num_rows = rows.len();
+    let mut oof_candidates = OofCandidates::new();
+    let mut cell_overflow_rect = Rect::ZERO;
+    #[cfg(feature = "content_size")]
+    let overflow_container = ScrollableOverflowContainer {
+        parent_is_scroll_container: is_scroll_container,
+        parent_size: table_box_size - border.sum_axes(),
+        reversed: Point { x: rtl, y: false },
+        padding,
+    };
+    for (cell, sizing) in cells.iter().zip(sizing.iter()) {
+        let cell_width = sizing.width;
+        let range = cell.row..(cell.row + cell.rowspan).min(num_rows);
+        let visible_rows = rows[range.clone()].iter().filter(|r| !r.collapsed).count();
+        let cell_height: f32 =
+            rows[range].iter().map(|r| r.used_height).sum::<f32>() + v_spacing * (visible_rows.max(1) as f32 - 1.0);
+
+        let mut output = tree.compute_child_layout(
+            cell.node_id,
+            LayoutInput {
+                known_dimensions: Size { width: Some(cell_width), height: Some(cell_height) },
+                known_dimensions_are_definite: Size { width: true, height: true },
+                parent_size: Size { width: Some(grid_width), height: Some(table_box_size.height - pb_size.height) },
+                available_space: Size {
+                    width: AvailableSpace::Definite(cell_width),
+                    height: AvailableSpace::Definite(cell_height),
+                },
+                sizing_mode: SizingMode::ContentSize,
+                axis: RequestedAxis::Both,
+                run_mode: RunMode::PerformLayout,
+                vertical_margins_are_collapsible: Line::FALSE,
+                content_offset_y: sizing.shift,
+            },
+        );
+
+        let cell_style = tree.get_table_child_style(cell.node_id);
+        let cell_padding = cell_style.padding().resolve_or_zero(Some(grid_width), |v, b| tree.calc(v, b));
+        let cell_border = cell_style.border().resolve_or_zero(Some(grid_width), |v, b| tree.calc(v, b));
+        #[cfg(feature = "content_size")]
+        let cell_overflow = cell_style.overflow();
+        #[cfg(feature = "content_size")]
+        let cell_contain = cell_style.contain();
+        drop(cell_style);
+
+        // A spanning cell starts at its leftmost spanned column, which in RTL is the last one
+        let col_range = cell.col..(cell.col + cell.colspan).min(col_count);
+        let cell_x = col_x[col_range].iter().copied().fold(f32::INFINITY, f32::min);
+        let location = Point { x: cell_x - grid_origin_x, y: 0.0 };
+
+        if !output.oof_candidates.is_empty() {
+            // Translate anchors from cell-relative to table-relative coordinates
+            output.oof_candidates.translate(Point { x: cell_x, y: row_y[cell.row] });
+            oof_candidates.append(&mut output.oof_candidates);
+        }
+
+        tree.set_unrounded_layout(
+            cell.node_id,
+            &Layout {
+                order: cell.order,
+                location,
+                size: Size { width: cell_width, height: cell_height },
+                #[cfg(feature = "content_size")]
+                scrollable_overflow_rect: output.scrollable_overflow_rect,
+                scrollbar_size: Size::ZERO,
+                padding: cell_padding,
+                border: cell_border,
+                margin: Rect::ZERO,
+            },
+        );
+
+        #[cfg(feature = "content_size")]
+        {
+            // Contributions are measured from the table's padding-box origin
+            let cell_size = Size { width: cell_width, height: cell_height };
+            let contribution_location = Point { x: cell_x - border.left, y: row_y[cell.row] - box_top - border.top };
+            cell_overflow_rect = cell_overflow_rect.union(compute_scrollable_overflow_contribution(
+                contribution_location,
+                cell_size,
+                output.scrollable_overflow_rect.rect(),
+                cell_border,
+                cell_overflow,
+                cell_contain,
+                &overflow_container,
+                Rect::ZERO,
+            ));
+        }
+    }
+
+    (cell_overflow_rect, oof_candidates)
+}
+
+/// Clear the layout of the children that generate no box
+#[inline]
+fn layout_hidden_children(tree: &mut impl LayoutTableContainer, hidden: &[NodeId]) {
+    for (order, &child_id) in hidden.iter().enumerate() {
+        tree.set_unrounded_layout(child_id, &Layout::with_order(order as u32));
+        tree.perform_child_layout(
+            child_id,
+            Size::NONE,
+            Size::NONE,
+            Size::MAX_CONTENT,
+            SizingMode::InherentSize,
+            Line::FALSE,
+        );
+    }
 }
 
 /// Write a positioned layout for a non-cell table item (row or row group).
