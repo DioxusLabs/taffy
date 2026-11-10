@@ -298,7 +298,7 @@ pub fn compute_table_layout(
     let LayoutInput { known_dimensions, parent_size, available_space, run_mode, axis, .. } = inputs;
 
     let constants = compute_constants(tree, node_id, parent_size);
-    let TableConstants { padding, border, padding_border, pb_size, min_size, max_size, specified_size, .. } = constants;
+    let TableConstants { padding, border, padding_border, pb_size, specified_size, .. } = constants;
     let TableConstants { h_spacing, v_spacing, is_fixed, rtl, .. } = constants;
     #[cfg(feature = "content_size")]
     let is_scroll_container = constants.is_scroll_container;
@@ -379,152 +379,13 @@ pub fn compute_table_layout(
 
     // Phase 4: resolve row heights by sizing each cell at its final width
     let num_rows = rows.len();
-    let mut sizing: Vec<CellSizing> = cells
-        .iter()
-        .map(|cell| {
-            let spanned = &columns[cell.col..(cell.col + cell.colspan).min(col_count)];
-            let spaced = spanned.iter().filter(|c| !c.is_mergeable).count();
-            let width = spanned.iter().map(|c| c.used).sum::<f32>() + h_spacing * (spaced.max(1) as f32 - 1.0);
-            CellSizing { width, ..CellSizing::default() }
-        })
-        .collect();
-
-    // Row baseline alignment per CSS 2.1 §17.5.4. An empty cell has no baseline of its own, so
-    // the row falls back to sitting its baseline on the shallowest such cell's content edge
-    for (cell, sizing) in cells.iter().zip(sizing.iter_mut()) {
-        let participates =
-            tree.get_table_child_style(cell.node_id).align_content().keyword == AlignContentKeyword::Normal;
-        // Percentages on a cell resolve against the row's width (the grid, without the outer
-        // border-spacing), which is also the basis block layout is handed for the cell below
-        let cell_parent_size = Size { width: Some(grid_width), height: None };
-        let output = tree.compute_child_layout(
-            cell.node_id,
-            LayoutInput {
-                known_dimensions: Size { width: Some(sizing.width), height: None },
-                known_dimensions_are_definite: Size { width: true, height: true },
-                parent_size: cell_parent_size,
-                available_space: Size {
-                    width: AvailableSpace::Definite(sizing.width),
-                    height: AvailableSpace::MaxContent,
-                },
-                sizing_mode: SizingMode::ContentSize,
-                axis: RequestedAxis::Both,
-                // Size-only results come from the cache without their baselines
-                run_mode: if participates { RunMode::PerformLayout } else { RunMode::ComputeSize },
-                vertical_margins_are_collapsible: Line::FALSE,
-                content_offset_y: 0.0,
-            },
-        );
-        sizing.height = output.size.height;
-        sizing.min_height = cell_min_height(tree, cell.node_id, cell_parent_size).unwrap_or(0.0);
-
-        let cell_style = tree.get_table_child_style(cell.node_id);
-        let height_dim = cell_style.size().height;
-        drop(cell_style);
-
-        let row = &mut rows[cell.row];
-        if cell.rowspan > 1 {
-            row.has_rowspan_start = true;
-        } else {
-            if height_dim.tag() == CompactLength::PERCENT_TAG {
-                row.percent = Some(row.percent.map_or(height_dim.value(), |p: f32| p.max(height_dim.value())));
-                row.is_constrained = true;
-            } else if height_dim.tag() == CompactLength::LENGTH_TAG {
-                row.is_constrained = true;
-            }
-            row.used_height = row.used_height.max(sizing.required_height());
-        }
-
-        let cell_style = tree.get_table_child_style(cell.node_id);
-        let pb_bottom = cell_style.padding().resolve_or_zero(cell_parent_size.width, |v, b| tree.calc(v, b)).bottom
-            + cell_style.border().resolve_or_zero(cell_parent_size.width, |v, b| tree.calc(v, b)).bottom;
-        drop(cell_style);
-
-        // A cell with no children and no line box is empty (Blitz lays out text-only cells
-        // with no child nodes, so an output baseline also counts as content). Empty cells and
-        // cells that are not baseline-aligned leave the row's baseline to its lowest cell's
-        // content edge if no cell settles it (CSS 2.1 §17.5.3)
-        let row = &mut rows[cell.row];
-        let is_empty = tree.child_count(cell.node_id) == 0 && output.baselines.first.is_none();
-        if participates && !is_empty {
-            let baseline = output.baselines.first.unwrap_or(sizing.height - pb_bottom);
-            sizing.baseline = Some(baseline);
-            row.baseline = Some(row.baseline.map_or(baseline, |b: f32| b.max(baseline)));
-        } else {
-            row.fallback_descent = Some(row.fallback_descent.map_or(pb_bottom, |d: f32| d.min(pb_bottom)));
-        }
-    }
-
-    // A rowspanning cell lends its ascent to the row it starts in but not its descent, which
-    // the rows it spans absorb instead
-    for (cell, sizing) in cells.iter().zip(sizing.iter_mut()) {
-        if let (Some(baseline), Some(row_baseline)) = (sizing.baseline, rows[cell.row].baseline) {
-            sizing.shift = row_baseline - baseline;
-            if cell.rowspan == 1 {
-                let row = &mut rows[cell.row];
-                row.used_height = row.used_height.max(sizing.required_height());
-            }
-        }
-    }
-
-    for row in rows.iter_mut() {
-        let height_dim = tree.get_table_child_style(row.node_id).size().height;
-        if height_dim.tag() == CompactLength::PERCENT_TAG {
-            row.percent = Some(row.percent.map_or(height_dim.value(), |p: f32| p.max(height_dim.value())));
-            row.is_constrained = true;
-        } else if height_dim.tag() == CompactLength::LENGTH_TAG {
-            row.used_height = row.used_height.max(height_dim.value());
-            row.is_constrained = true;
-        }
-    }
-
-    // A table with no rows has no border-spacing in the block axis either
-    let total_v_spacing = if num_rows == 0 { 0.0 } else { v_spacing * (num_rows as f32 + 1.0) };
-    // Row percentages resolve against the space a definite-height table leaves for its rows
-    let percentage_basis = styled_known.height.map(|h| (h - pb_size.height - total_v_spacing).max(0.0));
-
-    for (cell, sizing) in cells.iter().zip(sizing.iter()).filter(|(cell, _)| cell.rowspan > 1) {
-        let range = cell.row..(cell.row + cell.rowspan).min(num_rows);
-        let target = sizing.required_height() - v_spacing * (range.len() as f32 - 1.0);
-        distribute_excess_height(&mut rows[range], target, true, percentage_basis);
-    }
-
-    for (row_group_index, row_group) in row_groups.iter().enumerate() {
-        let row_group_height = tree
-            .get_table_child_style(row_group.node_id)
-            .size()
-            .height
-            .maybe_resolve(percentage_basis, |v, b| tree.calc(v, b));
-
-        if let Some(height) = row_group_height {
-            let range = row_group_range(&rows, row_group_index);
-            let target = height - v_spacing * (range.len() as f32 - 1.0);
-            distribute_excess_height(&mut rows[range], target, false, percentage_basis);
-        }
-    }
-
-    let content_height = rows.iter().map(|r| r.used_height).sum::<f32>() + total_v_spacing;
-    let table_height = styled_known
-        .height
-        .unwrap_or((content_height + pb_size.height).maybe_clamp(min_size.height, max_size.height))
-        .max(content_height + pb_size.height)
-        .maybe_max(min_size.height);
-
-    distribute_excess_height(&mut rows, table_height - pb_size.height - total_v_spacing, false, percentage_basis);
-
-    // Collapsed rows and their spacing take no room, and the table shortens by what they took
-    let mut collapsed_height = 0.0;
-    for row in rows.iter_mut().filter(|r| r.collapsed) {
-        collapsed_height += row.used_height + v_spacing;
-        row.used_height = 0.0;
-    }
-    let table_height = table_height - collapsed_height;
-
-    // A row with no baseline-aligned cell synthesises one from its lowest cell's bottom content
-    // edge, a row with no cells at all has its baseline on its top edge, as the browsers do
-    for row in rows.iter_mut().filter(|r| r.baseline.is_none()) {
-        row.baseline = Some(row.fallback_descent.map_or(0.0, |descent| (row.used_height - descent).max(0.0)));
-    }
+    let mut sizing = measure_cell_heights(tree, &cells, &columns, &mut rows, h_spacing, grid_width);
+    align_cell_baselines(&cells, &mut sizing, &mut rows);
+    apply_row_heights(tree, &mut rows);
+    let table_height =
+        distribute_row_heights(tree, &constants, &cells, &sizing, &row_groups, &mut rows, styled_known.height);
+    let table_height = table_height - collapse_rows(&mut rows, v_spacing);
+    synthesise_row_baselines(&mut rows);
 
     let table_box_size = Size { width: table_width, height: table_height };
     let (box_top, box_bottom) = place_captions(tree, &caption_layouts, table_height, run_mode);
@@ -1291,6 +1152,179 @@ fn place_row(
     }
 }
 
+/// Lay every cell out at its final width to find the height and baseline its content takes, and
+/// start each row off at the heights and baselines of the cells that start in it
+#[inline]
+fn measure_cell_heights(
+    tree: &mut impl LayoutTableContainer,
+    cells: &[Cell],
+    columns: &[Column],
+    rows: &mut [Row],
+    h_spacing: f32,
+    grid_width: f32,
+) -> Vec<CellSizing> {
+    let col_count = columns.len();
+    let mut sizing: Vec<CellSizing> = cells
+        .iter()
+        .map(|cell| {
+            let spanned = &columns[cell.col..(cell.col + cell.colspan).min(col_count)];
+            let spaced = spanned.iter().filter(|c| !c.is_mergeable).count();
+            let width = spanned.iter().map(|c| c.used).sum::<f32>() + h_spacing * (spaced.max(1) as f32 - 1.0);
+            CellSizing { width, ..CellSizing::default() }
+        })
+        .collect();
+
+    // Row baseline alignment per CSS 2.1 §17.5.4. An empty cell has no baseline of its own, so
+    // the row falls back to sitting its baseline on the shallowest such cell's content edge
+    for (cell, sizing) in cells.iter().zip(sizing.iter_mut()) {
+        let participates =
+            tree.get_table_child_style(cell.node_id).align_content().keyword == AlignContentKeyword::Normal;
+        // Percentages on a cell resolve against the row's width (the grid, without the outer
+        // border-spacing), which is also the basis block layout is handed for the cell below
+        let cell_parent_size = Size { width: Some(grid_width), height: None };
+        let output = tree.compute_child_layout(
+            cell.node_id,
+            LayoutInput {
+                known_dimensions: Size { width: Some(sizing.width), height: None },
+                known_dimensions_are_definite: Size { width: true, height: true },
+                parent_size: cell_parent_size,
+                available_space: Size {
+                    width: AvailableSpace::Definite(sizing.width),
+                    height: AvailableSpace::MaxContent,
+                },
+                sizing_mode: SizingMode::ContentSize,
+                axis: RequestedAxis::Both,
+                // Size-only results come from the cache without their baselines
+                run_mode: if participates { RunMode::PerformLayout } else { RunMode::ComputeSize },
+                vertical_margins_are_collapsible: Line::FALSE,
+                content_offset_y: 0.0,
+            },
+        );
+        sizing.height = output.size.height;
+        sizing.min_height = cell_min_height(tree, cell.node_id, cell_parent_size).unwrap_or(0.0);
+
+        let cell_style = tree.get_table_child_style(cell.node_id);
+        let height_dim = cell_style.size().height;
+        drop(cell_style);
+
+        let row = &mut rows[cell.row];
+        if cell.rowspan > 1 {
+            row.has_rowspan_start = true;
+        } else {
+            if height_dim.tag() == CompactLength::PERCENT_TAG {
+                row.percent = Some(row.percent.map_or(height_dim.value(), |p: f32| p.max(height_dim.value())));
+                row.is_constrained = true;
+            } else if height_dim.tag() == CompactLength::LENGTH_TAG {
+                row.is_constrained = true;
+            }
+            row.used_height = row.used_height.max(sizing.required_height());
+        }
+
+        let cell_style = tree.get_table_child_style(cell.node_id);
+        let pb_bottom = cell_style.padding().resolve_or_zero(cell_parent_size.width, |v, b| tree.calc(v, b)).bottom
+            + cell_style.border().resolve_or_zero(cell_parent_size.width, |v, b| tree.calc(v, b)).bottom;
+        drop(cell_style);
+
+        // A cell with no children and no line box is empty (Blitz lays out text-only cells
+        // with no child nodes, so an output baseline also counts as content). Empty cells and
+        // cells that are not baseline-aligned leave the row's baseline to its lowest cell's
+        // content edge if no cell settles it (CSS 2.1 §17.5.3)
+        let row = &mut rows[cell.row];
+        let is_empty = tree.child_count(cell.node_id) == 0 && output.baselines.first.is_none();
+        if participates && !is_empty {
+            let baseline = output.baselines.first.unwrap_or(sizing.height - pb_bottom);
+            sizing.baseline = Some(baseline);
+            row.baseline = Some(row.baseline.map_or(baseline, |b: f32| b.max(baseline)));
+        } else {
+            row.fallback_descent = Some(row.fallback_descent.map_or(pb_bottom, |d: f32| d.min(pb_bottom)));
+        }
+    }
+
+    sizing
+}
+
+/// Shift each baseline-aligned cell's content down to its row's baseline, growing the row to fit
+#[inline]
+fn align_cell_baselines(cells: &[Cell], sizing: &mut [CellSizing], rows: &mut [Row]) {
+    // A rowspanning cell lends its ascent to the row it starts in but not its descent, which
+    // the rows it spans absorb instead
+    for (cell, sizing) in cells.iter().zip(sizing.iter_mut()) {
+        if let (Some(baseline), Some(row_baseline)) = (sizing.baseline, rows[cell.row].baseline) {
+            sizing.shift = row_baseline - baseline;
+            if cell.rowspan == 1 {
+                let row = &mut rows[cell.row];
+                row.used_height = row.used_height.max(sizing.required_height());
+            }
+        }
+    }
+}
+
+/// Apply each row's own `height`: a length is a minimum, and a percentage is resolved against the
+/// table's height when the rows are grown
+#[inline]
+fn apply_row_heights(tree: &impl LayoutTableContainer, rows: &mut [Row]) {
+    for row in rows.iter_mut() {
+        let height_dim = tree.get_table_child_style(row.node_id).size().height;
+        if height_dim.tag() == CompactLength::PERCENT_TAG {
+            row.percent = Some(row.percent.map_or(height_dim.value(), |p: f32| p.max(height_dim.value())));
+            row.is_constrained = true;
+        } else if height_dim.tag() == CompactLength::LENGTH_TAG {
+            row.used_height = row.used_height.max(height_dim.value());
+            row.is_constrained = true;
+        }
+    }
+}
+
+/// Grow the rows to fit the rowspanning cells, then the row groups' heights, then the table's own
+/// height. Returns the table box's border-box height
+#[inline]
+fn distribute_row_heights(
+    tree: &impl LayoutTableContainer,
+    constants: &TableConstants,
+    cells: &[Cell],
+    sizing: &[CellSizing],
+    row_groups: &[RowGroup],
+    rows: &mut [Row],
+    styled_height: Option<f32>,
+) -> f32 {
+    let TableConstants { pb_size, min_size, max_size, v_spacing, .. } = *constants;
+    let num_rows = rows.len();
+    // A table with no rows has no border-spacing in the block axis either
+    let total_v_spacing = if num_rows == 0 { 0.0 } else { v_spacing * (num_rows as f32 + 1.0) };
+    // Row percentages resolve against the space a definite-height table leaves for its rows
+    let percentage_basis = styled_height.map(|h| (h - pb_size.height - total_v_spacing).max(0.0));
+
+    for (cell, sizing) in cells.iter().zip(sizing.iter()).filter(|(cell, _)| cell.rowspan > 1) {
+        let range = cell.row..(cell.row + cell.rowspan).min(num_rows);
+        let target = sizing.required_height() - v_spacing * (range.len() as f32 - 1.0);
+        distribute_excess_height(&mut rows[range], target, true, percentage_basis);
+    }
+
+    for (row_group_index, row_group) in row_groups.iter().enumerate() {
+        let row_group_height = tree
+            .get_table_child_style(row_group.node_id)
+            .size()
+            .height
+            .maybe_resolve(percentage_basis, |v, b| tree.calc(v, b));
+
+        if let Some(height) = row_group_height {
+            let range = row_group_range(rows, row_group_index);
+            let target = height - v_spacing * (range.len() as f32 - 1.0);
+            distribute_excess_height(&mut rows[range], target, false, percentage_basis);
+        }
+    }
+
+    let content_height = rows.iter().map(|r| r.used_height).sum::<f32>() + total_v_spacing;
+    let table_height = styled_height
+        .unwrap_or((content_height + pb_size.height).maybe_clamp(min_size.height, max_size.height))
+        .max(content_height + pb_size.height)
+        .maybe_max(min_size.height);
+
+    distribute_excess_height(rows, table_height - pb_size.height - total_v_spacing, false, percentage_basis);
+
+    table_height
+}
+
 /// Grow `rows` until their heights sum to `target`. css-tables-3 leaves this undefined
 /// (<https://github.com/w3c/csswg-drafts/issues/4418>), so this follows Blink's priority order:
 /// percentage rows first, then the rows a rowspan starts in, then unconstrained rows, then empty
@@ -1372,6 +1406,27 @@ fn distribute_excess_height(
         for row in rows.iter_mut().filter(|r| r.used_height > 0.0) {
             row.used_height += extra * row.used_height / total;
         }
+    }
+}
+
+/// Collapsed rows and their spacing take no room, and the table shortens by what they took.
+/// Returns the height they took
+#[inline]
+fn collapse_rows(rows: &mut [Row], v_spacing: f32) -> f32 {
+    let mut collapsed_height = 0.0;
+    for row in rows.iter_mut().filter(|r| r.collapsed) {
+        collapsed_height += row.used_height + v_spacing;
+        row.used_height = 0.0;
+    }
+    collapsed_height
+}
+
+/// A row with no baseline-aligned cell synthesises one from its lowest cell's bottom content
+/// edge, a row with no cells at all has its baseline on its top edge, as the browsers do
+#[inline]
+fn synthesise_row_baselines(rows: &mut [Row]) {
+    for row in rows.iter_mut().filter(|r| r.baseline.is_none()) {
+        row.baseline = Some(row.fallback_descent.map_or(0.0, |descent| (row.used_height - descent).max(0.0)));
     }
 }
 
