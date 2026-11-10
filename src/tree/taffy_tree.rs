@@ -145,7 +145,7 @@ impl NodeData {
 
 /// An entire tree of UI nodes. The entry point to Taffy's high-level API.
 ///
-/// Allows you to build a tree of UI nodes, run Taffy's layout algorithms over that tree, and then access the resultant layout.]
+/// Allows you to build a tree of UI nodes, run Taffy's layout algorithms over that tree, and then access the resultant layout.
 #[derive(Debug, Clone)]
 pub struct TaffyTree<NodeContext = ()> {
     /// The [`NodeData`] for each node stored in this tree
