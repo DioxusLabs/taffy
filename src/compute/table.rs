@@ -384,7 +384,12 @@ pub fn compute_table_layout(
     let is_fixed = table_layout_mode == TableLayout::Fixed
         && width_tag != CompactLength::AUTO_TAG
         && width_tag != CompactLength::MAX_CONTENT_TAG;
-    let mut columns = measure_columns(tree, &cells, &column_boxes, &column_groups, col_count, h_spacing, is_fixed);
+    let mut columns = new_columns(tree, &cells, &column_boxes, &column_groups, col_count);
+    if is_fixed {
+        measure_fixed_layout_columns(tree, &cells, h_spacing, &mut columns);
+    } else {
+        measure_auto_layout_columns(tree, &cells, h_spacing, &mut columns);
+    }
 
     // Phase 3: resolve the table's used width and the columns' used widths
     // A table with no columns has no border-spacing in the inline axis either, and merged
@@ -1325,20 +1330,17 @@ fn distribute_excess_height(
     }
 }
 
-/// Measure every cell and fold its inline constraints into the column it occupies, then settle
-/// the columns' percentages against each other
-fn measure_columns(
-    tree: &mut impl LayoutTableContainer,
+/// One column per grid track, with the widths of the table's column and column-group boxes
+/// applied. Track merging is worked out as an auto table does it
+fn new_columns(
+    tree: &impl LayoutTableContainer,
     cells: &[Cell],
     column_boxes: &[ColumnBox],
     column_groups: &[ColumnGroupBox],
     col_count: usize,
-    h_spacing: f32,
-    is_fixed: bool,
 ) -> Vec<Column> {
     let mut columns: Vec<Column> =
-        core::iter::repeat_with(|| Column { is_mergeable: !is_fixed, ..Column::default() }).take(col_count).collect();
-    let mut spans: Vec<(usize, usize, CellMeasure)> = Vec::new();
+        core::iter::repeat_with(|| Column { is_mergeable: true, ..Column::default() }).take(col_count).collect();
     for cell in cells.iter() {
         columns[cell.col].is_mergeable = false;
     }
@@ -1398,70 +1400,144 @@ fn measure_columns(
         }
     }
 
-    // Fixed layout takes its column widths from the first row alone
-    for cell in cells.iter().filter(|c| !is_fixed || c.row == 0) {
+    columns
+}
+
+/// Size the columns of a `table-layout: fixed` table, which takes its column widths from the
+/// column boxes and the first row alone and never looks at content (css-tables-3 §3.9.3)
+fn measure_fixed_layout_columns(
+    tree: &mut impl LayoutTableContainer,
+    cells: &[Cell],
+    h_spacing: f32,
+    columns: &mut [Column],
+) {
+    let col_count = columns.len();
+    // A fixed table merges no tracks
+    for column in columns.iter_mut() {
+        column.is_mergeable = false;
+    }
+
+    // No earlier rowspan reaches into the first row, so its cells never share a column
+    for cell in cells.iter().filter(|c| c.row == 0) {
         let cell_style = tree.get_table_child_style(cell.node_id);
         let width_dim = cell_style.size().width;
         let width_tag = width_dim.tag();
         // A fixed table resolves a percentage against its own width and adds the cell's padding and
         // border on top for a content-box cell, where an auto table takes it as the border-box width
-        let percent_padding_border = if is_fixed
-            && width_tag == CompactLength::PERCENT_TAG
-            && cell_style.box_sizing() == BoxSizing::ContentBox
-        {
-            let padding = cell_style.padding().resolve_or_zero(None, |v, b| tree.calc(v, b));
-            let border = cell_style.border().resolve_or_zero(None, |v, b| tree.calc(v, b));
-            padding.horizontal_axis_sum() + border.horizontal_axis_sum()
-        } else {
-            0.0
-        };
+        let percent_padding_border =
+            if width_tag == CompactLength::PERCENT_TAG && cell_style.box_sizing() == BoxSizing::ContentBox {
+                let padding = cell_style.padding().resolve_or_zero(None, |v, b| tree.calc(v, b));
+                let border = cell_style.border().resolve_or_zero(None, |v, b| tree.calc(v, b));
+                padding.horizontal_axis_sum() + border.horizontal_axis_sum()
+            } else {
+                0.0
+            };
         drop(cell_style);
 
-        let mut measure = CellMeasure {
+        let is_constrained = width_tag == CompactLength::LENGTH_TAG;
+        let measure = CellMeasure {
             min: 0.0,
-            max: 0.0,
+            // Only a specified width is worth measuring
+            max: if is_constrained {
+                tree.measure_child_size(
+                    cell.node_id,
+                    cell_style_size(tree, cell.node_id, Size::NONE),
+                    Size::NONE,
+                    Size { width: AvailableSpace::MaxContent, height: AvailableSpace::MaxContent },
+                    SizingMode::ContentSize,
+                    AbsoluteAxis::Horizontal,
+                    Line::FALSE,
+                )
+            } else {
+                0.0
+            },
             percent: (width_tag == CompactLength::PERCENT_TAG).then(|| width_dim.value()),
-            is_constrained: width_tag == CompactLength::LENGTH_TAG,
+            is_constrained,
             percent_padding_border,
         };
 
-        if !is_fixed {
-            // Specified widths count toward max-content only; columns may shrink below them
-            measure.min = tree.measure_child_size(
-                cell.node_id,
-                Size::NONE,
-                Size::NONE,
-                Size { width: AvailableSpace::MinContent, height: AvailableSpace::MinContent },
-                SizingMode::ContentSize,
-                AbsoluteAxis::Horizontal,
-                Line::FALSE,
-            );
+        if cell.colspan == 1 {
+            // A column keeps the first width it is given
+            if !columns[cell.col].is_constrained {
+                encompass(&mut columns[cell.col], &measure);
+            }
+            continue;
         }
-        // A fixed table never looks at content, so only a specified width is worth measuring
-        if !is_fixed || measure.is_constrained {
-            measure.max = tree.measure_child_size(
-                cell.node_id,
-                cell_style_size(tree, cell.node_id, Size::NONE),
-                Size::NONE,
-                Size { width: AvailableSpace::MaxContent, height: AvailableSpace::MaxContent },
-                SizingMode::ContentSize,
-                AbsoluteAxis::Horizontal,
-                Line::FALSE,
-            );
+
+        // A spanning cell shares its width or percentage evenly between the columns it spans that
+        // have none yet; its padding and border are part of that width
+        let range = cell.col..(cell.col + cell.colspan).min(col_count);
+        let span = range.len() as f32;
+        let spanned_spacing = h_spacing * (span - 1.0);
+        for column in columns[range].iter_mut().filter(|c| !c.is_constrained && c.percent.is_none()) {
+            if measure.is_constrained {
+                column.max = ((measure.max - spanned_spacing) / span).max(0.0);
+                column.is_constrained = true;
+            } else if let Some(percent) = measure.percent {
+                column.percent = Some(percent / span);
+            }
         }
+    }
+
+    // Percentages cannot claim more than the whole table between them, so they all scale down
+    let total: f32 = columns.iter().filter_map(|c| c.percent).sum();
+    if total > 1.0 {
+        for col in columns.iter_mut() {
+            col.percent = col.percent.map(|percent| percent / total);
+        }
+    }
+}
+
+/// Size the columns of a `table-layout: auto` table from every cell's min-content and max-content
+/// widths, then settle the columns' percentages against each other
+fn measure_auto_layout_columns(
+    tree: &mut impl LayoutTableContainer,
+    cells: &[Cell],
+    h_spacing: f32,
+    columns: &mut [Column],
+) {
+    let col_count = columns.len();
+    let mut spans: Vec<(usize, usize, CellMeasure)> = Vec::new();
+
+    for cell in cells.iter() {
+        let width_dim = tree.get_table_child_style(cell.node_id).size().width;
+        let width_tag = width_dim.tag();
+
+        // Specified widths count toward max-content only; columns may shrink below them
+        let min = tree.measure_child_size(
+            cell.node_id,
+            Size::NONE,
+            Size::NONE,
+            Size { width: AvailableSpace::MinContent, height: AvailableSpace::MinContent },
+            SizingMode::ContentSize,
+            AbsoluteAxis::Horizontal,
+            Line::FALSE,
+        );
+        let max = tree.measure_child_size(
+            cell.node_id,
+            cell_style_size(tree, cell.node_id, Size::NONE),
+            Size::NONE,
+            Size { width: AvailableSpace::MaxContent, height: AvailableSpace::MaxContent },
+            SizingMode::ContentSize,
+            AbsoluteAxis::Horizontal,
+            Line::FALSE,
+        );
 
         // `min-width` and `max-width` clamp both measures, `max-width` winning
         // (<https://www.w3.org/TR/css-tables-3/#outer-min-content>)
-        if !is_fixed {
-            let (min_width, max_width) = cell_min_max_width(tree, cell.node_id);
-            measure.min = measure.min.maybe_max(min_width).maybe_min(max_width);
-            measure.max = measure.max.maybe_min(max_width).maybe_max(min_width).max(measure.min);
-        }
+        let (min_width, max_width) = cell_min_max_width(tree, cell.node_id);
+        let min = min.maybe_max(min_width).maybe_min(max_width);
+        let measure = CellMeasure {
+            min,
+            max: max.maybe_min(max_width).maybe_max(min_width).max(min),
+            percent: (width_tag == CompactLength::PERCENT_TAG).then(|| width_dim.value()),
+            is_constrained: width_tag == CompactLength::LENGTH_TAG,
+            percent_padding_border: 0.0,
+        };
 
         if cell.colspan > 1 {
             spans.push((cell.col, cell.colspan, measure));
-        } else if !(is_fixed && columns[cell.col].is_constrained) {
-            // A fixed table's column keeps the first width it is given
+        } else {
             encompass(&mut columns[cell.col], &measure);
         }
     }
@@ -1469,25 +1545,9 @@ fn measure_columns(
     // Narrower spans settle first, so wider ones distribute over the columns they leave behind
     spans.sort_by_key(|(col, colspan, _)| (*colspan, *col));
     for (col, colspan, measure) in spans.iter() {
-        let range = *col..(col + colspan).min(col_count);
-        let spanned = &mut columns[range.clone()];
+        let spanned = &mut columns[*col..(col + colspan).min(col_count)];
         let spaced_count = spanned.iter().filter(|c| !c.is_mergeable).count();
         let spanned_spacing = h_spacing * (spaced_count.max(1) as f32 - 1.0);
-
-        // A fixed table shares a spanning cell's width or percentage evenly between the columns it
-        // spans that have none yet; its padding and border are part of that width
-        if is_fixed {
-            let span = range.len() as f32;
-            for column in columns[range].iter_mut().filter(|c| !c.is_constrained && c.percent.is_none()) {
-                if measure.is_constrained {
-                    column.max = ((measure.max - spanned_spacing) / span).max(0.0);
-                    column.is_constrained = true;
-                } else if let Some(percent) = measure.percent {
-                    column.percent = Some(percent / span);
-                }
-            }
-            continue;
-        }
 
         // Whatever a spanning cell's percentage asks for beyond the percentages already on the
         // columns is shared out over the remaining ones, weighted by max-content width
@@ -1522,25 +1582,14 @@ fn measure_columns(
         col.max = col.max.max(col.min);
     }
 
-    // Percentages cannot claim more than the whole table between them. An auto table caps each
-    // column by what the columns before it left of 100%; a fixed one scales them all down
-    if is_fixed {
-        let total: f32 = columns.iter().filter_map(|c| c.percent).sum();
-        if total > 1.0 {
-            for col in columns.iter_mut() {
-                col.percent = col.percent.map(|percent| percent / total);
-            }
-        }
-    } else {
-        let mut budget = 1.0f32;
-        for col in columns.iter_mut().filter(|c| c.percent.is_some()) {
-            let capped = col.percent.unwrap_or(0.0).min(budget).max(0.0);
-            budget -= capped;
-            col.percent = Some(capped);
-        }
+    // Percentages cannot claim more than the whole table between them: each column is capped by
+    // what the columns before it left of 100%
+    let mut budget = 1.0f32;
+    for col in columns.iter_mut().filter(|c| c.percent.is_some()) {
+        let capped = col.percent.unwrap_or(0.0).min(budget).max(0.0);
+        budget -= capped;
+        col.percent = Some(capped);
     }
-
-    columns
 }
 
 /// The width a percentage column asks for, which never drops below the column's minimum
