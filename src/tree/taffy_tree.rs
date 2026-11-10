@@ -277,6 +277,22 @@ where
     pub(crate) measure_function: MeasureFunction,
 }
 
+/// Replaces a min-content constraint on the available height with a max-content constraint.
+///
+/// A box is laid out the same way under both: in its block axis its min-content size is its max-content
+/// size (<https://www.w3.org/TR/css-sizing-3/#min-content-block-size>), and browsers apply this to flex
+/// and grid containers as well as to block containers. Passing on a single constraint lets size queries
+/// that differ only in this respect share a cache entry.
+///
+/// `TaffyTree` has no writing modes, so the height of a node is always its block size.
+#[inline(always)]
+fn coalesce_block_size_constraint(mut available_space: Size<AvailableSpace>) -> Size<AvailableSpace> {
+    if available_space.height == AvailableSpace::MinContent {
+        available_space.height = AvailableSpace::MaxContent;
+    }
+    available_space
+}
+
 impl<NodeContext, MeasureFunction> TaffyView<'_, NodeContext, MeasureFunction>
 where
     MeasureFunction: FnMut(LayoutInput, NodeId, Option<&mut NodeContext>, &Style) -> LayoutOutput,
@@ -287,7 +303,7 @@ where
     fn compute_child_layout(
         &mut self,
         node_id: NodeId,
-        inputs: LayoutInput,
+        mut inputs: LayoutInput,
         #[cfg(feature = "block_layout")] block_ctx: Option<&mut BlockContext<'_>>,
     ) -> LayoutOutput {
         // If RunMode is PerformHiddenLayout then this indicates that an ancestor node is `Display::None`
@@ -300,6 +316,8 @@ where
             self.taffy.nodes[node_id.into()].final_layout = Layout::with_order(0);
             return compute_hidden_layout(self, node_id);
         }
+
+        inputs.available_space = coalesce_block_size_constraint(inputs.available_space);
 
         // We run the following wrapped in "compute_cached_layout", which will check the cache for an entry matching the node and inputs and:
         //   - Return that entry if exists
@@ -979,6 +997,9 @@ impl<NodeContext> TaffyTree<NodeContext> {
     {
         let use_rounding = self.config.use_rounding;
         let mut taffy_view = TaffyView { taffy: self, measure_function };
+        // Done here as well as in `compute_child_layout` so that `compute_root_layout` checks whether the
+        // root's layout is cached using the same inputs as the root is then laid out with.
+        let available_space = coalesce_block_size_constraint(available_space);
         compute_root_layout(&mut taffy_view, node_id, available_space);
         if use_rounding {
             round_layout(&mut taffy_view, node_id);

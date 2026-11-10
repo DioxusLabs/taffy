@@ -1,0 +1,25 @@
+<test name="gridflex_row_flex_min_height_child_in_grid_min_content_row__content_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" box-sizing="content-box" direction="rtl" position="absolute" width="200px" grid-template-rows="min-content">
+      <div box-sizing="content-box" direction="rtl" position="relative" align-items="flex-start">
+        <div box-sizing="content-box" direction="rtl" position="relative" flex-direction="column" flex-wrap="wrap" min-height="50px">
+          <div box-sizing="content-box" direction="rtl" position="relative" width="20px" height="40px"/>
+          <div box-sizing="content-box" direction="rtl" position="relative" width="20px" height="40px"/>
+          <div box-sizing="content-box" direction="rtl" position="relative" width="20px" height="40px"/>
+        </div>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="200" height="120" resolved-rows="120px" resolved-columns="200px">
+      <node x="0" y="0" width="200" height="120">
+        <node x="180" y="0" width="20" height="120">
+          <node x="0" y="0" width="20" height="40"/>
+          <node x="0" y="40" width="20" height="40"/>
+          <node x="0" y="80" width="20" height="40"/>
+        </node>
+      </node>
+    </node>
+  </expectations>
+</test>

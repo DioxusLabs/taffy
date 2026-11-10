@@ -357,6 +357,29 @@ mod oof_hoisting {
         assert_eq!(tree.hoisted_children(root).unwrap(), &[fixed]);
     }
 
+    /// A min-content available height is laid out as a max-content one. The root's cached layout must
+    /// still be recognised as cached on the second pass, or its hoisted children are recorded twice.
+    #[test]
+    fn hoisted_children_not_duplicated_with_min_content_root_height() {
+        let mut tree: TaffyTree<()> = TaffyTree::new();
+        let fixed = tree
+            .new_leaf(Style {
+                position: Position::Fixed,
+                size: Size { width: length(30.0), height: length(30.0) },
+                ..Default::default()
+            })
+            .unwrap();
+        let inner = tree.new_with_children(leaf_style(50.0, 50.0), &[fixed]).unwrap();
+        let root = tree.new_with_children(leaf_style(200.0, 200.0), &[inner]).unwrap();
+        let space = Size { width: AvailableSpace::MaxContent, height: AvailableSpace::MinContent };
+
+        tree.compute_layout(root, space).unwrap();
+        assert_eq!(tree.hoisted_children(root).unwrap(), &[fixed]);
+
+        tree.compute_layout(root, space).unwrap();
+        assert_eq!(tree.hoisted_children(root).unwrap(), &[fixed]);
+    }
+
     /// Rounding recurses into hoisted boxes via their containing block, so a hoisted box's
     /// rounded location is computed against the containing block's cumulative offset.
     #[test]

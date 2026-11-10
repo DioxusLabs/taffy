@@ -329,25 +329,17 @@ fn compute_in_flow_root_layout(
 /// Attempts to find a cached layout for the specified node and layout inputs.
 ///
 /// Uses the provided closure to compute the layout (and then stores the result in the cache) if no cached layout is found.
-///
-/// A min-content constraint in the block axis is passed on as a max-content constraint, because the min-content
-/// block size of a box is its max-content block size (<https://www.w3.org/TR/css-sizing-3/#min-content-block-size>).
 #[inline(always)]
 pub fn compute_cached_layout<Tree: CacheTree + ?Sized, ComputeFunction>(
     tree: &mut Tree,
     node: NodeId,
-    mut inputs: LayoutInput,
+    inputs: LayoutInput,
     compute_uncached: ComputeFunction,
 ) -> LayoutOutput
 where
     ComputeFunction: FnOnce(&mut Tree, NodeId, LayoutInput) -> LayoutOutput,
 {
     debug_push_node!(node);
-
-    // Both constraints produce the same layout, so give them the same cache key
-    if inputs.available_space.height == AvailableSpace::MinContent {
-        inputs.available_space.height = AvailableSpace::MaxContent;
-    }
 
     // First we check if we have a cached result for the given input
     let cache_entry = tree.cache_get(node, &inputs);
