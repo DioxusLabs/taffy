@@ -1325,17 +1325,6 @@ fn distribute_excess_height(
     }
 }
 
-/// Distribute `extra` over `field` across `columns`, proportionally to what each column already
-/// has, or equally when they all have nothing
-fn distribute(columns: &mut [Column], extra: f32, field: impl Fn(&mut Column) -> &mut f32) {
-    let total: f32 = columns.iter_mut().map(|col| *field(col)).sum();
-    let count = columns.len() as f32;
-    for col in columns.iter_mut() {
-        let share = if total > 0.0 { extra * *field(col) / total } else { extra / count };
-        *field(col) += share;
-    }
-}
-
 /// Measure every cell and fold its inline constraints into the column it occupies, then settle
 /// the columns' percentages against each other
 fn measure_columns(
@@ -1449,7 +1438,7 @@ fn measure_columns(
             );
         }
         // A fixed table never looks at content, so only a specified width is worth measuring
-        if !is_fixed || measure.is_constrained || cell.colspan > 1 {
+        if !is_fixed || measure.is_constrained {
             measure.max = tree.measure_child_size(
                 cell.node_id,
                 cell_style_size(tree, cell.node_id, Size::NONE),
@@ -1519,17 +1508,6 @@ fn measure_columns(
         // The cell's measures are shared out the way the table's width is shared out over its
         // columns. Its max-content width only grows columns with a specified width when it has
         // one of its own
-        if is_fixed {
-            let current_min: f32 = spanned.iter().map(|c| c.min).sum::<f32>() + spanned_spacing;
-            if measure.min > current_min {
-                distribute(spanned, measure.min - current_min, |c| &mut c.min);
-            }
-            let current_max: f32 = spanned.iter().map(|c| c.max).sum::<f32>() + spanned_spacing;
-            if measure.max > current_max {
-                distribute(spanned, measure.max - current_max, |c| &mut c.max);
-            }
-            continue;
-        }
         let min_sizes = distribute_width(spanned, (measure.min - spanned_spacing).max(0.0), true);
         for (column, size) in spanned.iter_mut().zip(min_sizes) {
             column.min = column.min.max(size);

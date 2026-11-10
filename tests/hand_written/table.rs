@@ -433,3 +433,43 @@ fn absolutely_positioned_table_is_positioned_by_its_used_size() {
     assert_eq!(layout.size, Size { width: 120.0, height: 10.0 });
     assert_eq!(layout.location, Point { x: 80.0, y: 0.0 });
 }
+
+/// A fixed table never looks at content (css-tables-3 §3.9.3): a spanning cell without a specified
+/// width shares nothing out over its columns, so its content is never measured at an intrinsic width
+#[test]
+fn fixed_layout_does_not_measure_spanning_cell_content() {
+    let mut tree = new_test_tree();
+    let text = taffy_test_helpers::TestNodeContext::ahem_text(
+        "HH\u{200B}HH".to_string(),
+        taffy_test_helpers::WritingMode::Horizontal,
+    );
+    let leaf = tree.new_leaf_with_context(Style::default(), text).unwrap();
+    let spanning = tree
+        .new_with_children(Style { display: Display::TableCell, colspan: 2, ..Default::default() }, &[leaf])
+        .unwrap();
+    let row = tree.new_with_children(Style { display: Display::TableRow, ..Default::default() }, &[spanning]).unwrap();
+    let table = tree
+        .new_with_children(
+            Style {
+                display: Display::Table,
+                table_layout: TableLayout::Fixed,
+                border_spacing: Size::zero(),
+                size: Size { width: length(100.0), height: auto() },
+                ..Default::default()
+            },
+            &[row],
+        )
+        .unwrap();
+
+    let mut intrinsic_measures = 0;
+    tree.compute_layout_with_measure(table, Size::MAX_CONTENT, |inputs, node_id, context, style| {
+        if inputs.known_dimensions.width.is_none() && !inputs.available_space.width.is_definite() {
+            intrinsic_measures += 1;
+        }
+        taffy_test_helpers::test_measure_function(inputs, node_id, context, style)
+    })
+    .unwrap();
+
+    assert_eq!(intrinsic_measures, 0);
+    assert_eq!(tree.layout(spanning).unwrap().size.width, 100.0);
+}
