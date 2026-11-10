@@ -37,7 +37,14 @@ fn layout(taffy: &mut TaffyTree<f32>, root: NodeId) {
 
 fn node_context_benchmarks(c: &mut Criterion) {
     let mut group = benchmark_group(c, "node_context");
-    for leaf_count in [1_000, 10_000, 100_000] {
+    let leaf_counts = [
+        #[cfg(feature = "small")]
+        1_000usize,
+        10_000,
+        #[cfg(feature = "large")]
+        100_000,
+    ];
+    for leaf_count in leaf_counts {
         group.bench_with_input(BenchmarkId::new("create", leaf_count), &leaf_count, |b, &leaf_count| {
             b.iter(|| black_box(build_tree(leaf_count)))
         });
