@@ -350,29 +350,8 @@ pub fn compute_table_layout(
     // columns take none
     let spaced_count = columns.iter().filter(|c| !c.is_mergeable).count();
     let total_h_spacing = if spaced_count == 0 { 0.0 } else { h_spacing * (spaced_count as f32 + 1.0) };
-    let (grid_min_sum, grid_max_sum) = grid_min_max(&columns, is_fixed);
-    let grid_min = grid_min_sum + total_h_spacing;
-    // A fixed table whose percentage width has nothing to resolve against is as wide as it can be
-    let grid_max = if is_fixed && styled_known.width.is_none() && constants.width_has_percentage {
-        UNBOUNDED_TABLE_WIDTH
-    } else {
-        grid_max_sum + total_h_spacing
-    };
-
-    let table_width = match styled_known.width {
-        Some(w) => w.max(grid_min + pb_size.width),
-        None => {
-            let shrink_to_fit = match available_space.width {
-                AvailableSpace::Definite(w) => (w - pb_size.width)
-                    .maybe_clamp(max_size.width.map(|m| m - pb_size.width), None)
-                    .clamp(grid_min, grid_max.max(grid_min)),
-                AvailableSpace::MaxContent => grid_max,
-                AvailableSpace::MinContent => grid_min,
-            };
-            (shrink_to_fit + pb_size.width).maybe_clamp(min_size.width, max_size.width).max(grid_min + pb_size.width)
-        }
-    }
-    .max(capmin);
+    let table_width =
+        determine_table_width(&constants, &columns, total_h_spacing, styled_known.width, available_space.width, capmin);
     let assignable = table_width - pb_size.width - total_h_spacing;
 
     if is_fixed {
@@ -381,34 +360,7 @@ pub fn compute_table_layout(
         resolve_auto_layout_columns(&mut columns, assignable);
     }
 
-    // A column or column group with `visibility: collapse` removes its columns from the table
-    // once the other columns are sized (CSS 2.1 §17.5.5): they and their spacing take no room
-    // and the table narrows by what they took
-    let mut collapsed_width = 0.0;
-    for column_box in column_boxes.iter() {
-        let own = tree.get_table_child_style(column_box.node_id).visibility() == Visibility::Collapse;
-        let in_collapsed_group = column_box
-            .column_group
-            .is_some_and(|g| tree.get_table_child_style(column_groups[g].node_id).visibility() == Visibility::Collapse);
-        if own || in_collapsed_group {
-            let range = column_box.start.min(col_count)..(column_box.start + column_box.span).min(col_count);
-            for column in columns[range].iter_mut() {
-                column.collapsed = true;
-            }
-        }
-    }
-    for column_group in column_groups.iter() {
-        if tree.get_table_child_style(column_group.node_id).visibility() == Visibility::Collapse {
-            let range = column_group.start.min(col_count)..(column_group.start + column_group.span).min(col_count);
-            for column in columns[range].iter_mut() {
-                column.collapsed = true;
-            }
-        }
-    }
-    for column in columns.iter_mut().filter(|c| c.collapsed && !c.is_mergeable) {
-        collapsed_width += column.used + h_spacing;
-        column.used = 0.0;
-    }
+    let collapsed_width = collapse_columns(tree, h_spacing, &mut columns, &column_boxes, &column_groups);
     let table_width = table_width - collapsed_width;
     let grid_width = assignable - collapsed_width + h_spacing * (spaced_count as f32 - 1.0).max(0.0);
 
@@ -1757,6 +1709,43 @@ fn grid_min_max(columns: &[Column], is_fixed: bool) -> (f32, f32) {
     (min, max.max(min))
 }
 
+/// The table's used border-box width: its specified width, or else its shrink-to-fit width, and
+/// never narrower than its columns' minimum (css-tables-3 §3.9.1) or its widest caption
+#[inline]
+fn determine_table_width(
+    constants: &TableConstants,
+    columns: &[Column],
+    total_h_spacing: f32,
+    styled_width: Option<f32>,
+    available_width: AvailableSpace,
+    capmin: f32,
+) -> f32 {
+    let TableConstants { pb_size, min_size, max_size, is_fixed, .. } = *constants;
+    let (grid_min_sum, grid_max_sum) = grid_min_max(columns, is_fixed);
+    let grid_min = grid_min_sum + total_h_spacing;
+    // A fixed table whose percentage width has nothing to resolve against is as wide as it can be
+    let grid_max = if is_fixed && styled_width.is_none() && constants.width_has_percentage {
+        UNBOUNDED_TABLE_WIDTH
+    } else {
+        grid_max_sum + total_h_spacing
+    };
+
+    match styled_width {
+        Some(w) => w.max(grid_min + pb_size.width),
+        None => {
+            let shrink_to_fit = match available_width {
+                AvailableSpace::Definite(w) => (w - pb_size.width)
+                    .maybe_clamp(max_size.width.map(|m| m - pb_size.width), None)
+                    .clamp(grid_min, grid_max.max(grid_min)),
+                AvailableSpace::MaxContent => grid_max,
+                AvailableSpace::MinContent => grid_min,
+            };
+            (shrink_to_fit + pb_size.width).maybe_clamp(min_size.width, max_size.width).max(grid_min + pb_size.width)
+        }
+    }
+    .max(capmin)
+}
+
 /// Resolve used column widths for `table-layout: auto` over `assignable`, the table's content
 /// width minus all border-spacing
 fn resolve_auto_layout_columns(columns: &mut [Column], assignable: f32) {
@@ -1993,6 +1982,46 @@ fn resolve_fixed_layout_columns(columns: &mut [Column], assignable: f32) {
     if let Some(index) = last {
         columns[index].used += assignable - assigned;
     }
+}
+
+/// A column or column group with `visibility: collapse` removes its columns from the table
+/// once the other columns are sized (CSS 2.1 §17.5.5): they and their spacing take no room
+/// and the table narrows by what they took
+#[inline]
+fn collapse_columns(
+    tree: &impl LayoutTableContainer,
+    h_spacing: f32,
+    columns: &mut [Column],
+    column_boxes: &[ColumnBox],
+    column_groups: &[ColumnGroupBox],
+) -> f32 {
+    let col_count = columns.len();
+    let mut collapsed_width = 0.0;
+    for column_box in column_boxes.iter() {
+        let own = tree.get_table_child_style(column_box.node_id).visibility() == Visibility::Collapse;
+        let in_collapsed_group = column_box
+            .column_group
+            .is_some_and(|g| tree.get_table_child_style(column_groups[g].node_id).visibility() == Visibility::Collapse);
+        if own || in_collapsed_group {
+            let range = column_box.start.min(col_count)..(column_box.start + column_box.span).min(col_count);
+            for column in columns[range].iter_mut() {
+                column.collapsed = true;
+            }
+        }
+    }
+    for column_group in column_groups.iter() {
+        if tree.get_table_child_style(column_group.node_id).visibility() == Visibility::Collapse {
+            let range = column_group.start.min(col_count)..(column_group.start + column_group.span).min(col_count);
+            for column in columns[range].iter_mut() {
+                column.collapsed = true;
+            }
+        }
+    }
+    for column in columns.iter_mut().filter(|c| c.collapsed && !c.is_mergeable) {
+        collapsed_width += column.used + h_spacing;
+        column.used = 0.0;
+    }
+    collapsed_width
 }
 
 /// The border-box size that a cell's own `size`, `min-size` and `max-size` styles give it, as
