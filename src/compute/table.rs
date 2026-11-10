@@ -110,7 +110,7 @@ struct ColumnBox {
     /// The column's index among its parent's children
     order: u32,
     /// Index of the column group this column belongs to, if any
-    group: Option<usize>,
+    column_group: Option<usize>,
     /// The first grid column the box covers
     start: usize,
     /// The number of grid columns the box covers (HTML `span`)
@@ -176,7 +176,7 @@ struct Grid {
     /// Every cell, in the order its row placed it
     cells: Vec<Cell>,
     /// The table's row groups, in document order
-    groups: Vec<Group>,
+    row_groups: Vec<RowGroup>,
     /// The table's column boxes, in document order
     column_boxes: Vec<ColumnBox>,
     /// The table's column groups, in document order
@@ -200,7 +200,7 @@ impl Grid {
         Self {
             rows: Vec::new(),
             cells: Vec::new(),
-            groups: Vec::new(),
+            row_groups: Vec::new(),
             column_boxes: Vec::new(),
             column_groups: Vec::new(),
             captions: Vec::new(),
@@ -213,7 +213,7 @@ impl Grid {
 }
 
 /// A row group of the table
-struct Group {
+struct RowGroup {
     /// The node id of the row group
     node_id: NodeId,
     /// The group's index among the table's children
@@ -227,7 +227,7 @@ struct Row {
     /// The node id of the row
     node_id: NodeId,
     /// Index of the row group this row belongs to, if any
-    group: Option<usize>,
+    row_group: Option<usize>,
     /// The row's index among its parent's children
     order: u32,
     /// Whether the row (or its group) has `visibility: collapse`, which removes it from the table
@@ -309,7 +309,7 @@ pub fn compute_table_layout(
     let Grid {
         mut rows,
         cells,
-        groups,
+        row_groups,
         column_boxes,
         column_groups,
         captions,
@@ -433,19 +433,19 @@ pub fn compute_table_layout(
     let mut collapsed_width = 0.0;
     for column_box in column_boxes.iter() {
         let own = tree.get_table_child_style(column_box.node_id).visibility() == Visibility::Collapse;
-        let group = column_box
-            .group
+        let in_collapsed_group = column_box
+            .column_group
             .is_some_and(|g| tree.get_table_child_style(column_groups[g].node_id).visibility() == Visibility::Collapse);
-        if own || group {
+        if own || in_collapsed_group {
             let range = column_box.start.min(col_count)..(column_box.start + column_box.span).min(col_count);
             for column in columns[range].iter_mut() {
                 column.collapsed = true;
             }
         }
     }
-    for group in column_groups.iter() {
-        if tree.get_table_child_style(group.node_id).visibility() == Visibility::Collapse {
-            let range = group.start.min(col_count)..(group.start + group.span).min(col_count);
+    for column_group in column_groups.iter() {
+        if tree.get_table_child_style(column_group.node_id).visibility() == Visibility::Collapse {
+            let range = column_group.start.min(col_count)..(column_group.start + column_group.span).min(col_count);
             for column in columns[range].iter_mut() {
                 column.collapsed = true;
             }
@@ -583,15 +583,15 @@ pub fn compute_table_layout(
         distribute_excess_height(&mut rows[range], target, true, percentage_basis);
     }
 
-    for (group_index, group) in groups.iter().enumerate() {
-        let group_height = tree
-            .get_table_child_style(group.node_id)
+    for (row_group_index, row_group) in row_groups.iter().enumerate() {
+        let row_group_height = tree
+            .get_table_child_style(row_group.node_id)
             .size()
             .height
             .maybe_resolve(percentage_basis, |v, b| tree.calc(v, b));
 
-        if let Some(height) = group_height {
-            let range = group_row_range(&rows, group_index);
+        if let Some(height) = row_group_height {
+            let range = row_group_range(&rows, row_group_index);
             let target = height - v_spacing * (range.len() as f32 - 1.0);
             distribute_excess_height(&mut rows[range], target, false, percentage_basis);
         }
@@ -670,42 +670,48 @@ pub fn compute_table_layout(
         (x, width)
     };
     let mut column_group_x: Vec<f32> = Vec::with_capacity(column_groups.len());
-    for group in column_groups.iter() {
-        let (x, width) = track_extent(group.start, group.span);
+    for column_group in column_groups.iter() {
+        let (x, width) = track_extent(column_group.start, column_group.span);
         column_group_x.push(x);
         set_item_layout(
             tree,
-            group.node_id,
-            group.order,
+            column_group.node_id,
+            column_group.order,
             Point { x, y: rows_top },
             Size { width, height: rows_height },
         );
     }
     for column in column_boxes.iter() {
         let (x, width) = track_extent(column.start, column.span);
-        let location = match column.group {
+        let location = match column.column_group {
             Some(g) => Point { x: x - column_group_x[g], y: 0.0 },
             None => Point { x, y: rows_top },
         };
         set_item_layout(tree, column.node_id, column.order, location, Size { width, height: rows_height });
     }
 
-    let mut group_origin: Vec<Point<f32>> = Vec::with_capacity(groups.len());
-    for (group_index, group) in groups.iter().enumerate() {
-        let range = group_row_range(&rows, group_index);
+    let mut row_group_origin: Vec<Point<f32>> = Vec::with_capacity(row_groups.len());
+    for (row_group_index, row_group) in row_groups.iter().enumerate() {
+        let range = row_group_range(&rows, row_group_index);
         let (start_y, end_y) = match range.end.checked_sub(1) {
             Some(last) if !range.is_empty() => (row_y[range.start], row_y[last] + rows[last].used_height),
             _ => (rows_top, rows_top),
         };
         let origin = Point { x: grid_origin_x, y: start_y };
-        group_origin.push(origin);
+        row_group_origin.push(origin);
 
-        set_item_layout(tree, group.node_id, group.order, origin, Size { width: grid_width, height: end_y - start_y });
+        set_item_layout(
+            tree,
+            row_group.node_id,
+            row_group.order,
+            origin,
+            Size { width: grid_width, height: end_y - start_y },
+        );
     }
 
     for (row_index, row) in rows.iter().enumerate() {
-        let origin = match row.group {
-            Some(g) => Point { x: 0.0, y: row_y[row_index] - group_origin[g].y },
+        let origin = match row.row_group {
+            Some(g) => Point { x: 0.0, y: row_y[row_index] - row_group_origin[g].y },
             None => Point { x: grid_origin_x, y: row_y[row_index] },
         };
         set_item_layout(tree, row.node_id, row.order, origin, Size { width: grid_width, height: row.used_height });
@@ -1025,9 +1031,9 @@ fn captions_scrollable_overflow(
 }
 
 /// The rows a row group holds, which `build_grid` places contiguously
-fn group_row_range(rows: &[Row], group: usize) -> core::ops::Range<usize> {
-    let start = rows.iter().position(|r| r.group == Some(group)).unwrap_or(0);
-    let len = rows[start..].iter().take_while(|r| r.group == Some(group)).count();
+fn row_group_range(rows: &[Row], row_group: usize) -> core::ops::Range<usize> {
+    let start = rows.iter().position(|r| r.row_group == Some(row_group)).unwrap_or(0);
+    let len = rows[start..].iter().take_while(|r| r.row_group == Some(row_group)).count();
 
     start..start + len
 }
@@ -1063,18 +1069,18 @@ fn build_grid(
         let role = tree.get_table_child_style(child_id).table_role();
         match role {
             TableRole::RowGroup => {
-                let group = Some(grid.groups.len());
+                let row_group = Some(grid.row_groups.len());
                 let collapsed = tree.get_table_child_style(child_id).visibility() == Visibility::Collapse;
-                grid.groups.push(Group { node_id: child_id, order: index as u32, collapsed });
+                grid.row_groups.push(RowGroup { node_id: child_id, order: index as u32, collapsed });
 
                 let group_rows = visible_children(tree, child_id, &mut grid);
                 for (row, &row_id) in group_rows.iter().enumerate() {
-                    place_row(tree, row_id, group, row as u32, group_rows.len() - row, &mut occupancy, &mut grid);
+                    place_row(tree, row_id, row_group, row as u32, group_rows.len() - row, &mut occupancy, &mut grid);
                 }
                 index += 1;
             }
             TableRole::ColumnGroup => {
-                let group_index = grid.column_groups.len();
+                let column_group_index = grid.column_groups.len();
                 let start = next_col;
                 let group_children = visible_children(tree, child_id, &mut grid);
                 let mut has_columns = false;
@@ -1092,7 +1098,7 @@ fn build_grid(
                     grid.column_boxes.push(ColumnBox {
                         node_id: column_id,
                         order: order as u32,
-                        group: Some(group_index),
+                        column_group: Some(column_group_index),
                         start: next_col,
                         span,
                     });
@@ -1126,7 +1132,7 @@ fn build_grid(
                 grid.column_boxes.push(ColumnBox {
                     node_id: child_id,
                     order: index as u32,
-                    group: None,
+                    column_group: None,
                     start: next_col,
                     span,
                 });
@@ -1193,18 +1199,18 @@ fn visible_children(tree: &impl LayoutTableContainer, node_id: NodeId, grid: &mu
 fn place_row(
     tree: &mut impl LayoutTableContainer,
     row_id: NodeId,
-    group: Option<usize>,
+    row_group: Option<usize>,
     order: u32,
     rows_left: usize,
     occupancy: &mut Vec<usize>,
     grid: &mut Grid,
 ) {
     let row_index = grid.rows.len();
-    let collapsed = group.is_some_and(|g| grid.groups[g].collapsed)
+    let collapsed = row_group.is_some_and(|g| grid.row_groups[g].collapsed)
         || tree.get_table_child_style(row_id).visibility() == Visibility::Collapse;
     grid.rows.push(Row {
         node_id: row_id,
-        group,
+        row_group,
         order,
         collapsed,
         used_height: 0.0,
@@ -1384,19 +1390,19 @@ fn new_columns(
     for column_box in column_boxes.iter() {
         let own_width = tree.get_table_child_style(column_box.node_id).size().width;
         let group_width = column_box
-            .group
+            .column_group
             .map(|g| tree.get_table_child_style(column_groups[g].node_id).size().width)
             .filter(|_| own_width.tag() == CompactLength::AUTO_TAG);
         if let Some(measure) = width_measure(own_width).or_else(|| group_width.and_then(width_measure)) {
             constrain(column_box.start, column_box.span, &measure);
         }
     }
-    for (index, group) in column_groups.iter().enumerate() {
-        if column_boxes.iter().any(|c| c.group == Some(index)) {
+    for (index, column_group) in column_groups.iter().enumerate() {
+        if column_boxes.iter().any(|c| c.column_group == Some(index)) {
             continue;
         }
-        if let Some(measure) = width_measure(tree.get_table_child_style(group.node_id).size().width) {
-            constrain(group.start, group.span, &measure);
+        if let Some(measure) = width_measure(tree.get_table_child_style(column_group.node_id).size().width) {
+            constrain(column_group.start, column_group.span, &measure);
         }
     }
 
