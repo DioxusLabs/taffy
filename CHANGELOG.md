@@ -4,6 +4,7 @@
 
 ### Fixed
 
+- Block: the intrinsic (shrink-to-fit) width of a block container now measures its children against its definite or specified height, so their percentage heights and max-heights resolve as they do in the final layout. Previously they were measured with no parent size, so e.g. a `max-height: 100%` column-wrap flex container inside a `width: max-content; height: 100px` block never wrapped when sizing the block.
 - Flexbox: `align-content: stretch` (and `normal`) and `justify-content: stretch` fall back to `flex-start` rather than `start` when the lines/items overflow the container, so overflowing lines in a `wrap-reverse` container (and items in a `row-reverse`/`column-reverse` container) are packed to the flex-start edge like in Chrome.
 - Grid: the clamp of an item's content-based minimum size to the fixed max track sizing functions it spans now leaves room for its margins and baseline shim (#1362).
 - Block/float: the auto height of a box that establishes a new block formatting context (e.g. a float or `display: flow-root`) and contains floats now includes its bottom padding and border below the bottom margin edge of those floats. Previously the floats' bottom edge was used as the box's outer height, so the bottom padding and border overlapped them.
