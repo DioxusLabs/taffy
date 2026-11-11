@@ -205,7 +205,7 @@ pub(crate) fn compute_explicit_grid_size_in_axis(
     let num_repetitions = if remaining_tracks == 0 {
         0
     } else {
-        let max_repetitions = (remaining_tracks + repetition_track_count as u32 - 1) / repetition_track_count as u32;
+        let max_repetitions = remaining_tracks.div_ceil(repetition_track_count as u32);
         num_repetitions.clamp(1, max_repetitions) as u16
     };
 

@@ -2,8 +2,11 @@
 
 ## Unreleased
 
+The MSRV is now 1.77 (required by `rustc-hash`).
+
 ### Performance
 
+- `TaffyTree` switches to FxHash for node contexts when `std` is enabled, for faster hash computation.
 - `TaffyTree` passes an `AvailableSpace::MinContent` height on to a node's layout as `AvailableSpace::MaxContent`, as a box's min-content block size is its max-content block size. Size queries that differ only in this constraint now share one cache entry, so nested flex and grid containers lay out and measure their children fewer times. Measure functions no longer receive `AvailableSpace::MinContent` in the height axis. `compute_cached_layout` is unchanged: a custom tree whose nodes may be laid out with `height` as their inline axis (e.g. to support vertical writing modes) must only do the same where `height` is the node's block axis.
 
 ### Fixed
