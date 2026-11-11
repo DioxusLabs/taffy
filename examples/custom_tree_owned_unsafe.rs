@@ -7,6 +7,7 @@ use common::image::{image_measure_function, ImageContext};
 use common::text::{text_measure_function, FontMetrics, TextContext, WritingMode, LOREM_IPSUM};
 use taffy::tree::Cache;
 use taffy::util::print_tree;
+use taffy::CalcHandle;
 use taffy::{
     compute_cached_layout, compute_flexbox_layout, compute_grid_layout, compute_leaf_layout, compute_oof_layout,
     compute_root_layout, prelude::*, round_layout, CacheTree, LayoutContainingBlock,
@@ -148,7 +149,7 @@ impl LayoutPartialTree for StatelessLayoutTree {
         unsafe { node_from_id_mut(node_id).unrounded_layout = *layout };
     }
 
-    fn resolve_calc_value(&self, _val: *const (), _basis: f32) -> f32 {
+    fn resolve_calc_value(&self, _val: CalcHandle, _basis: f32) -> f32 {
         0.0
     }
 

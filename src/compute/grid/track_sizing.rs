@@ -3,6 +3,7 @@
 use super::types::{GridItem, GridTrack, TrackCounts};
 use crate::compute::common::alignment::child_first_baseline;
 use crate::geometry::{AbstractAxis, Line, Size};
+use crate::style::CalcHandle;
 use crate::style::{AlignContent, AlignContentKeyword, AvailableSpace};
 use crate::style_helpers::TaffyMinContent;
 use crate::tree::{LayoutPartialTree, LayoutPartialTreeExt, SizingMode};
@@ -118,7 +119,7 @@ where
 
     /// Simple pass-through function to `LayoutPartialTreeExt::calc`
     #[inline(always)]
-    fn calc(&self, val: *const (), basis: f32) -> f32 {
+    fn calc(&self, val: CalcHandle, basis: f32) -> f32 {
         self.tree.calc(val, basis)
     }
 

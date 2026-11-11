@@ -4,6 +4,7 @@ use crate::compute::common::sizing_keyword::{resolve_sizing_keyword, SizingKeywo
 use crate::compute::grid::OriginZeroLine;
 use crate::geometry::AbstractAxis;
 use crate::geometry::{Line, Point, Rect, Size};
+use crate::style::CalcHandle;
 use crate::style::{AlignItems, AlignSelf, AvailableSpace, Dimension, LengthPercentageAuto, Overflow};
 use crate::tree::{LayoutPartialTree, LayoutPartialTreeExt, NodeId, OofCandidates, SizingMode};
 use crate::util::sys::f32_max;
@@ -249,7 +250,7 @@ impl GridItem {
         axis: AbstractAxis,
         axis_tracks: &[GridTrack],
         axis_parent_size: Option<f32>,
-        resolve_calc_value: &dyn Fn(*const (), f32) -> f32,
+        resolve_calc_value: &dyn Fn(CalcHandle, f32) -> f32,
     ) -> Option<f32> {
         let spanned_tracks = &axis_tracks[self.track_range_excluding_lines(axis)];
         let tracks_all_fixed = spanned_tracks.iter().all(|track| {
@@ -275,7 +276,7 @@ impl GridItem {
         axis: AbstractAxis,
         axis_tracks: &[GridTrack],
         axis_parent_size: Option<f32>,
-        resolve_calc_value: &dyn Fn(*const (), f32) -> f32,
+        resolve_calc_value: &dyn Fn(CalcHandle, f32) -> f32,
     ) -> Option<f32> {
         let spanned_tracks = &axis_tracks[self.track_range_excluding_lines(axis)];
         let tracks_all_fixed = spanned_tracks.iter().all(|track| {
@@ -455,7 +456,7 @@ impl GridItem {
         other_axis_tracks: &[GridTrack],
         available_space: Size<Option<f32>>,
         get_track_size_estimate: impl Fn(&GridTrack, Option<f32>) -> Option<f32>,
-        resolve_calc_value: &impl Fn(*const (), f32) -> f32,
+        resolve_calc_value: &impl Fn(CalcHandle, f32) -> f32,
     ) -> Size<Option<f32>> {
         let mut size = Size::NONE;
         size.set(
@@ -501,7 +502,7 @@ impl GridItem {
         other_axis_tracks: &[GridTrack],
         available_space: Size<Option<f32>>,
         get_track_size_estimate: impl Fn(&GridTrack, Option<f32>) -> Option<f32>,
-        resolve_calc_value: &impl Fn(*const (), f32) -> f32,
+        resolve_calc_value: &impl Fn(CalcHandle, f32) -> f32,
     ) -> Size<Option<f32>> {
         self.grid_area_size_cache.unwrap_or_else(|| {
             let grid_area_size = self.grid_area_size(

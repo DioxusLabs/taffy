@@ -1,6 +1,7 @@
 //! Style types for representing lengths / sizes
 use super::CompactLength;
 use crate::geometry::Rect;
+use crate::style::CalcHandle;
 use crate::style_helpers::{FromLength, FromPercent, TaffyAuto, TaffyZero};
 #[cfg(feature = "parse")]
 use crate::util::parse::{from_str_from_css, CssParseResult, FromCss, Parser, Token};
@@ -60,8 +61,8 @@ impl LengthPercentage {
     /// The low 3 bits are used as a tag value and will be returned as 0.
     #[inline(always)]
     #[cfg(feature = "calc")]
-    pub fn calc(ptr: *const ()) -> Self {
-        Self(CompactLength::calc(ptr))
+    pub fn calc(handle: CalcHandle) -> Self {
+        Self(CompactLength::calc(handle))
     }
 
     /// Create a LengthPercentage from a raw `CompactLength`.
@@ -106,7 +107,7 @@ pub enum ExpandedLengthPercentage {
     /// A `calc()` value (see [`LengthPercentage::calc`]). The pointer is an opaque handle to the
     /// calc representation, exactly as passed to the constructor.
     #[cfg(feature = "calc")]
-    Calc(*const ()),
+    Calc(CalcHandle),
 }
 
 impl From<LengthPercentage> for ExpandedLengthPercentage {
@@ -121,7 +122,7 @@ impl From<ExpandedLengthPercentage> for LengthPercentage {
             ExpandedLengthPercentage::Length(val) => Self::length(val),
             ExpandedLengthPercentage::Percent(val) => Self::percent(val),
             #[cfg(feature = "calc")]
-            ExpandedLengthPercentage::Calc(ptr) => Self::calc(ptr),
+            ExpandedLengthPercentage::Calc(handle) => Self::calc(handle),
         }
     }
 }
@@ -213,8 +214,8 @@ impl LengthPercentageAuto {
     /// The low 3 bits are used as a tag value and will be returned as 0.
     #[inline]
     #[cfg(feature = "calc")]
-    pub fn calc(ptr: *const ()) -> Self {
-        Self(CompactLength::calc(ptr))
+    pub fn calc(handle: CalcHandle) -> Self {
+        Self(CompactLength::calc(handle))
     }
 
     /// Create a LengthPercentageAuto from a raw `CompactLength`.
@@ -235,7 +236,7 @@ impl LengthPercentageAuto {
     ///   - Some(resolved) using the provided context for Percent variants
     ///   - None for Auto variants
     #[inline(always)]
-    pub fn resolve_to_option(self, context: f32, calc_resolver: impl Fn(*const (), f32) -> f32) -> Option<f32> {
+    pub fn resolve_to_option(self, context: f32, calc_resolver: impl Fn(CalcHandle, f32) -> f32) -> Option<f32> {
         match self.0.tag() {
             CompactLength::LENGTH_TAG => Some(self.0.value()),
             CompactLength::PERCENT_TAG => Some(context * self.0.value()),
@@ -284,7 +285,7 @@ pub enum ExpandedLengthPercentageAuto {
     /// A `calc()` value (see [`LengthPercentageAuto::calc`]). The pointer is an opaque handle to
     /// the calc representation, exactly as passed to the constructor.
     #[cfg(feature = "calc")]
-    Calc(*const ()),
+    Calc(CalcHandle),
 }
 
 impl From<LengthPercentageAuto> for ExpandedLengthPercentageAuto {
@@ -300,7 +301,7 @@ impl From<ExpandedLengthPercentageAuto> for LengthPercentageAuto {
             ExpandedLengthPercentageAuto::Percent(val) => Self::percent(val),
             ExpandedLengthPercentageAuto::Auto => Self::auto(),
             #[cfg(feature = "calc")]
-            ExpandedLengthPercentageAuto::Calc(ptr) => Self::calc(ptr),
+            ExpandedLengthPercentageAuto::Calc(handle) => Self::calc(handle),
         }
     }
 }
@@ -469,8 +470,8 @@ impl Dimension {
     /// The low 3 bits are used as a tag value and will be returned as 0.
     #[inline]
     #[cfg(feature = "calc")]
-    pub fn calc(ptr: *const ()) -> Self {
-        Self(CompactLength::calc(ptr))
+    pub fn calc(handle: CalcHandle) -> Self {
+        Self(CompactLength::calc(handle))
     }
 
     /// A `fit-content()` value whose limit is a `calc()` value. The value passed here is treated as an opaque
@@ -479,8 +480,8 @@ impl Dimension {
     /// The low 3 bits are used as a tag value and will be returned as 0.
     #[inline]
     #[cfg(feature = "calc")]
-    pub fn fit_content_calc(ptr: *const ()) -> Self {
-        Self(CompactLength::fit_content_calc(ptr))
+    pub fn fit_content_calc(handle: CalcHandle) -> Self {
+        Self(CompactLength::fit_content_calc(handle))
     }
 
     /// Returns true if the value is a `fit-content()` value with a `calc()` limit
@@ -489,10 +490,10 @@ impl Dimension {
         self.0.is_fit_content_calc()
     }
 
-    /// Get the calc() pointer (valid for `calc()` and `fit-content(calc())` values)
+    /// Get the calc() handle (valid for `calc()` and `fit-content(calc())` values)
     #[inline(always)]
     #[cfg(feature = "calc")]
-    pub fn calc_value(self) -> *const () {
+    pub fn calc_value(self) -> CalcHandle {
         self.0.calc_value()
     }
 
@@ -599,7 +600,7 @@ pub enum ExpandedDimension {
     FitContentPercent(f32),
     /// The size is the fit-content size with a `calc()` limit (an opaque handle to the calc representation)
     #[cfg(feature = "calc")]
-    FitContentCalc(*const ()),
+    FitContentCalc(CalcHandle),
     /// The `fit-content` keyword with no limit (see [`Dimension::fit_content`])
     FitContent,
     /// The `stretch` keyword (see [`Dimension::stretch`])
@@ -609,7 +610,7 @@ pub enum ExpandedDimension {
     /// A `calc()` value (see [`Dimension::calc`]). The pointer is an opaque handle to the calc
     /// representation, exactly as passed to the constructor.
     #[cfg(feature = "calc")]
-    Calc(*const ()),
+    Calc(CalcHandle),
 }
 
 impl From<Dimension> for ExpandedDimension {
@@ -630,11 +631,11 @@ impl From<ExpandedDimension> for Dimension {
             ExpandedDimension::FitContentPercent(val) => Self::fit_content_percent(val),
             ExpandedDimension::FitContent => Self::fit_content(),
             #[cfg(feature = "calc")]
-            ExpandedDimension::FitContentCalc(ptr) => Self::fit_content_calc(ptr),
+            ExpandedDimension::FitContentCalc(handle) => Self::fit_content_calc(handle),
             ExpandedDimension::Stretch => Self::stretch(),
             ExpandedDimension::Content => Self::content(),
             #[cfg(feature = "calc")]
-            ExpandedDimension::Calc(ptr) => Self::calc(ptr),
+            ExpandedDimension::Calc(handle) => Self::calc(handle),
         }
     }
 }
@@ -698,12 +699,12 @@ mod expand_tests {
     /// A helper that produces a valid `calc()` handle for tests: a non-null pointer whose low
     /// three bits are zero (as required by `CompactLength::calc`).
     #[cfg(feature = "calc")]
-    fn calc_handle() -> *const () {
+    fn calc_handle() -> CalcHandle {
         #[allow(dead_code)]
         #[repr(align(8))]
         struct Aligned(u64);
         static HANDLE: Aligned = Aligned(0);
-        &HANDLE as *const Aligned as *const ()
+        CalcHandle::from_ptr(&HANDLE as *const Aligned as *const ())
     }
 
     #[test]

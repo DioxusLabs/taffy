@@ -3,6 +3,7 @@
 use crate::geometry::Size;
 #[cfg(feature = "content_size")]
 use crate::geometry::{Point, Rect};
+use crate::style::CalcHandle;
 use crate::style::{AvailableSpace, Overflow};
 use crate::tree::{Baselines, CollapsibleMarginSet, RunMode};
 use crate::tree::{LayoutInput, LayoutOutput, SizingMode};
@@ -20,7 +21,7 @@ use core::unreachable;
 pub fn compute_leaf_layout<MeasureFunction>(
     inputs: LayoutInput,
     style: &impl CoreStyle,
-    resolve_calc_value: impl Fn(*const (), f32) -> f32,
+    resolve_calc_value: impl Fn(CalcHandle, f32) -> f32,
     measure_function: MeasureFunction,
 ) -> LayoutOutput
 where
