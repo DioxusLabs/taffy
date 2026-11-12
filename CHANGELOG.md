@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-The MSRV is now 1.77 (required by `rustc-hash`).
+The MSRV is now 1.85.
 
 ### Performance
 
