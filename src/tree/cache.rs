@@ -84,7 +84,6 @@ fn size_mixed_cache_key(kd: Size<Option<f32>>, avs: Size<AvailableSpace>) -> u64
 
 /// Space-optimised cache key that packs bits into as small a size as possible
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-#[cfg_attr(feature = "serde", derive(Serialize))]
 struct CacheKey {
     /// The initial cached size of the node itself
     kd_available_space: u64,
@@ -149,7 +148,6 @@ impl From<&LayoutInput> for CacheKey {
 /// so they only change for a given node when one of those changes. Rather than keying every entry
 /// on them, a [`Cache`] records the single mode that all of its entries were computed with.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-#[cfg_attr(feature = "serde", derive(Serialize))]
 struct CacheMode(u8);
 
 impl CacheMode {
@@ -201,7 +199,6 @@ pub fn cache_mode_change_evictions() -> usize {
 
 /// Cached intermediate layout results
 #[derive(Debug, Clone, PartialEq)]
-#[cfg_attr(feature = "serde", derive(Serialize))]
 pub(crate) struct CacheEntry<T> {
     /// The key for the cache entry
     key: CacheKey,
@@ -211,7 +208,6 @@ pub(crate) struct CacheEntry<T> {
 
 /// A cache for caching the results of a sizing a Grid Item or Flexbox Item
 #[derive(Debug)]
-#[cfg_attr(feature = "serde", derive(Serialize))]
 pub struct Cache {
     /// The cache entry for the node's final layout
     final_layout_entry: Option<CacheEntry<LayoutOutput>>,
@@ -220,7 +216,6 @@ pub struct Cache {
     /// Tracks which measure entries have been used since the eviction cursor last passed them.
     /// Atomic so that [`Cache::get`] can take `&self`. Each flag is only ever written with a
     /// plain (non read-modify-write) `Relaxed` store, so a racing write can at worst lose a hint.
-    #[cfg_attr(feature = "serde", serde(serialize_with = "serialize_atomic_u16"))]
     recently_used_entries: AtomicU16,
     /// The next measure entry to consider replacing
     next_measure_entry: u8,
@@ -230,12 +225,6 @@ pub struct Cache {
     /// entries were computed with. Results are only retrieved for inputs that have the same mode,
     /// and storing a result that was computed with a different mode drops the existing entries.
     mode: CacheMode,
-}
-
-/// Serializes an `AtomicU16` as a `u16` (serde only implements `Serialize` for atomics with `std`)
-#[cfg(feature = "serde")]
-fn serialize_atomic_u16<S: serde::Serializer>(value: &AtomicU16, serializer: S) -> Result<S::Ok, S::Error> {
-    serializer.serialize_u16(value.load(Ordering::Relaxed))
 }
 
 impl Clone for Cache {
