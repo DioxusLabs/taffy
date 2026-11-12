@@ -63,7 +63,7 @@ pub(super) fn place_grid_items(
 
     // 2. Place remaining children with definite secondary axis positions
     for (item, &placement) in items.iter_mut().zip(placements.iter()) {
-        if !(placement.get(secondary_axis).is_definite() && !placement.get(primary_axis).is_definite()) {
+        if !placement.get(secondary_axis).is_definite() || placement.get(primary_axis).is_definite() {
             continue;
         }
         #[cfg(test)]
