@@ -19,6 +19,7 @@ The MSRV is now 1.85.
 
 ### Changes
 
+- Upgrade `cssparser` to 0.38 (used by the `parse` feature). Parse error messages no longer name the offending token, as cssparser no longer stores it.
 - The `strict_provenance` feature is now a no-op: `CompactLength` always uses the strict provenance pointer APIs (stable since Rust 1.84).
 - `Cache` no longer implements `Serialize` when the `serde` feature is enabled.
 - `CacheTree::cache_get` and `Cache::get` now take `&self` rather than `&mut self`. `Cache` stores its measure-entry eviction clock in an `AtomicU16` (updated with relaxed loads and stores) so that a cache hit can record the entry as recently used through a shared reference.
