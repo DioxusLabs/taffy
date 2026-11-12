@@ -6,6 +6,7 @@ use crate::geometry::Size;
 use crate::style::AvailableSpace;
 use crate::tree::{CollapsibleMarginSet, LayoutInput, LayoutOutput, RunMode, SizingMode};
 use crate::RequestedAxis;
+use core::sync::atomic::{AtomicU16, Ordering};
 
 /// The number of cache entries for each node in the tree
 const CACHE_SIZE: usize = 9;
@@ -209,15 +210,18 @@ pub(crate) struct CacheEntry<T> {
 }
 
 /// A cache for caching the results of a sizing a Grid Item or Flexbox Item
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize))]
 pub struct Cache {
     /// The cache entry for the node's final layout
     final_layout_entry: Option<CacheEntry<LayoutOutput>>,
     /// The cache entries for the node's preliminary size measurements
     measure_entries: [Option<CacheEntry<Size<f32>>>; CACHE_SIZE],
-    /// Tracks which measure entries have been used since the eviction cursor last passed them
-    recently_used_entries: u16,
+    /// Tracks which measure entries have been used since the eviction cursor last passed them.
+    /// Atomic so that [`Cache::get`] can take `&self`. Each flag is only ever written with a
+    /// plain (non read-modify-write) `Relaxed` store, so a racing write can at worst lose a hint.
+    #[cfg_attr(feature = "serde", serde(serialize_with = "serialize_atomic_u16"))]
+    recently_used_entries: AtomicU16,
     /// The next measure entry to consider replacing
     next_measure_entry: u8,
     /// Tracks if all cache entries are empty
@@ -226,6 +230,36 @@ pub struct Cache {
     /// entries were computed with. Results are only retrieved for inputs that have the same mode,
     /// and storing a result that was computed with a different mode drops the existing entries.
     mode: CacheMode,
+}
+
+/// Serializes an `AtomicU16` as a `u16` (serde only implements `Serialize` for atomics with `std`)
+#[cfg(feature = "serde")]
+fn serialize_atomic_u16<S: serde::Serializer>(value: &AtomicU16, serializer: S) -> Result<S::Ok, S::Error> {
+    serializer.serialize_u16(value.load(Ordering::Relaxed))
+}
+
+impl Clone for Cache {
+    fn clone(&self) -> Self {
+        Self {
+            final_layout_entry: self.final_layout_entry.clone(),
+            measure_entries: self.measure_entries.clone(),
+            recently_used_entries: AtomicU16::new(self.recently_used_entries.load(Ordering::Relaxed)),
+            next_measure_entry: self.next_measure_entry,
+            is_empty: self.is_empty,
+            mode: self.mode,
+        }
+    }
+}
+
+impl PartialEq for Cache {
+    fn eq(&self, other: &Self) -> bool {
+        self.final_layout_entry == other.final_layout_entry
+            && self.measure_entries == other.measure_entries
+            && self.recently_used_entries.load(Ordering::Relaxed) == other.recently_used_entries.load(Ordering::Relaxed)
+            && self.next_measure_entry == other.next_measure_entry
+            && self.is_empty == other.is_empty
+            && self.mode == other.mode
+    }
 }
 
 impl Default for Cache {
@@ -242,7 +276,7 @@ impl Cache {
         Self {
             final_layout_entry: None,
             measure_entries: [NONE_MEASURE_ENTRY; CACHE_SIZE],
-            recently_used_entries: 0,
+            recently_used_entries: AtomicU16::new(0),
             next_measure_entry: 0,
             is_empty: true,
             mode: CacheMode::INITIAL,
@@ -251,7 +285,7 @@ impl Cache {
 
     /// Try to retrieve a cached result from the cache
     #[inline]
-    pub fn get(&mut self, input: &LayoutInput) -> Option<LayoutOutput> {
+    pub fn get(&self, input: &LayoutInput) -> Option<LayoutOutput> {
         if self.mode != CacheMode::from(input) {
             return None;
         }
@@ -268,7 +302,8 @@ impl Cache {
                         && (entry.key.x_axis_parent_size() == key.x_axis_parent_size())
                         && entry.key.size_is_valid_for(&key)
                     {
-                        self.recently_used_entries |= 1 << index;
+                        let used = self.recently_used_entries.load(Ordering::Relaxed);
+                        self.recently_used_entries.store(used | 1 << index, Ordering::Relaxed);
                         return Some(LayoutOutput::from_outer_size(entry.content));
                     }
                 }
@@ -315,11 +350,11 @@ impl Cache {
                     self.measure_entries.iter().position(|entry| entry.as_ref().is_some_and(|entry| entry.key == key))
                 {
                     self.measure_entries[index].as_mut().unwrap().content = layout_output.size;
-                    self.recently_used_entries |= 1 << index;
+                    *self.recently_used_entries.get_mut() |= 1 << index;
                     return;
                 }
-                while self.recently_used_entries & (1 << self.next_measure_entry) != 0 {
-                    self.recently_used_entries &= !(1 << self.next_measure_entry);
+                while *self.recently_used_entries.get_mut() & (1 << self.next_measure_entry) != 0 {
+                    *self.recently_used_entries.get_mut() &= !(1 << self.next_measure_entry);
                     self.next_measure_entry += 1;
                     if self.next_measure_entry == CACHE_SIZE as u8 {
                         self.next_measure_entry = 0;
@@ -327,7 +362,7 @@ impl Cache {
                 }
                 let entry_index = self.next_measure_entry as usize;
                 self.measure_entries[entry_index] = Some(CacheEntry { key, content: layout_output.size });
-                self.recently_used_entries |= 1 << entry_index;
+                *self.recently_used_entries.get_mut() |= 1 << entry_index;
                 self.next_measure_entry += 1;
                 if self.next_measure_entry == CACHE_SIZE as u8 {
                     self.next_measure_entry = 0;
@@ -347,7 +382,7 @@ impl Cache {
         /// Workaround for `Option<CacheEntry<_>>` not being `Copy` (required for array repeat expressions)
         const NONE_MEASURE_ENTRY: Option<CacheEntry<Size<f32>>> = None;
         self.measure_entries = [NONE_MEASURE_ENTRY; CACHE_SIZE];
-        self.recently_used_entries = 0;
+        *self.recently_used_entries.get_mut() = 0;
         self.next_measure_entry = 0;
         ClearState::Cleared
     }
@@ -435,12 +470,12 @@ mod tests {
         let mut cache = Cache::new();
         cache.store(&input(1.0), output(1.0));
         cache.store(&input(2.0), output(2.0));
-        cache.recently_used_entries = 0;
+        cache.recently_used_entries = AtomicU16::new(0);
         let entries = cache.measure_entries.clone();
 
         assert_eq!(cache.get(&input(1.0)), Some(output(1.0)));
         assert_eq!(cache.measure_entries, entries);
-        assert_ne!(cache.recently_used_entries, 0);
+        assert_ne!(cache.recently_used_entries.load(Ordering::Relaxed), 0);
     }
 
     fn perform_layout_input(width: f32, height: f32) -> LayoutInput {
