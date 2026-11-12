@@ -3,7 +3,7 @@ use super::CompactLength;
 use crate::geometry::Rect;
 use crate::style_helpers::{FromLength, FromPercent, TaffyAuto, TaffyZero};
 #[cfg(feature = "parse")]
-use crate::util::parse::{from_str_from_css, CssParseResult, FromCss, Parser, Token};
+use crate::util::parse::{from_str_from_css, CssParseError, CssParseResult, FromCss, Parser, Token};
 
 /// A unit of linear measurement
 ///
@@ -27,11 +27,11 @@ impl FromPercent for LengthPercentage {
 
 #[cfg(feature = "parse")]
 impl FromCss for LengthPercentage {
-    fn from_css<'i>(parser: &mut Parser<'i, '_>) -> CssParseResult<'i, Self> {
+    fn from_css<'i>(parser: &mut Parser<'i>) -> CssParseResult<'i, Self> {
         match parser.next()?.clone() {
             Token::Percentage { unit_value, .. } => Ok(Self::percent(unit_value)),
             Token::Dimension { unit, value, .. } if unit == "px" => Ok(Self::length(value)),
-            token => Err(parser.new_unexpected_token_error(token))?,
+            _ => Err(CssParseError::unexpected_token())?,
         }
     }
 }
@@ -172,12 +172,12 @@ impl From<LengthPercentage> for LengthPercentageAuto {
 
 #[cfg(feature = "parse")]
 impl FromCss for LengthPercentageAuto {
-    fn from_css<'i>(parser: &mut Parser<'i, '_>) -> CssParseResult<'i, Self> {
+    fn from_css<'i>(parser: &mut Parser<'i>) -> CssParseResult<'i, Self> {
         match parser.next()?.clone() {
             Token::Percentage { unit_value, .. } => Ok(Self::percent(unit_value)),
             Token::Dimension { unit, value, .. } if unit == "px" => Ok(Self::length(value)),
             Token::Ident(ident) if ident == "auto" => Ok(Self::auto()),
-            token => Err(parser.new_unexpected_token_error(token))?,
+            _ => Err(CssParseError::unexpected_token())?,
         }
     }
 }
@@ -356,7 +356,7 @@ impl From<LengthPercentageAuto> for Dimension {
 
 #[cfg(feature = "parse")]
 impl FromCss for Dimension {
-    fn from_css<'i>(parser: &mut Parser<'i, '_>) -> CssParseResult<'i, Self> {
+    fn from_css<'i>(parser: &mut Parser<'i>) -> CssParseResult<'i, Self> {
         let token = parser.next()?.clone();
         match token {
             Token::Percentage { unit_value, .. } => Ok(Self::percent(unit_value)),
@@ -368,17 +368,17 @@ impl FromCss for Dimension {
                 "fit-content" => Ok(Self::fit_content()),
                 "stretch" => Ok(Self::stretch()),
                 "content" => Ok(Self::content()),
-                _ => Err(parser.new_unexpected_token_error(token))?,
+                _ => Err(CssParseError::unexpected_token())?,
             },
             Token::Function(ref name) if name.as_ref() == "fit-content" => parser.parse_nested_block(|parser| {
                 let token = parser.next()?.clone();
                 match token {
                     Token::Percentage { unit_value, .. } => Ok(Self::fit_content_percent(unit_value)),
                     Token::Dimension { unit, value, .. } if unit == "px" => Ok(Self::fit_content_px(value)),
-                    token => Err(parser.new_unexpected_token_error(token))?,
+                    _ => Err(CssParseError::unexpected_token())?,
                 }
             }),
-            token => Err(parser.new_unexpected_token_error(token))?,
+            _ => Err(CssParseError::unexpected_token())?,
         }
     }
 }

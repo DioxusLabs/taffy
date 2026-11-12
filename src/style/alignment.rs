@@ -9,7 +9,7 @@
 //! constants on the structs, so call sites read identically to the previous enum form.
 
 #[cfg(feature = "parse")]
-use crate::util::parse::{CssParseResult, FromCss, Parser, Token};
+use crate::util::parse::{CssParseError, CssParseResult, FromCss, Parser};
 
 use crate::style::Direction;
 
@@ -268,7 +268,7 @@ impl AlignItems {
 
 #[cfg(feature = "parse")]
 impl FromCss for AlignItems {
-    fn from_css<'i>(input: &mut Parser<'i, '_>) -> CssParseResult<'i, Self> {
+    fn from_css<'i>(input: &mut Parser<'i>) -> CssParseResult<'i, Self> {
         let first = input.expect_ident()?.clone();
         cssparser::match_ignore_ascii_case! { &*first,
             "safe" => {
@@ -281,7 +281,7 @@ impl FromCss for AlignItems {
                     "self-start" => Ok(Self::SAFE_SELF_START),
                     "self-end" => Ok(Self::SAFE_SELF_END),
                     "center" => Ok(Self::SAFE_CENTER),
-                    _ => Err(input.new_unexpected_token_error(Token::Ident(pos))),
+                    _ => Err(CssParseError::unexpected_token()),
                 }
             },
             "unsafe" => {
@@ -294,7 +294,7 @@ impl FromCss for AlignItems {
                     "self-start" => AlignItemsKeyword::SelfStart,
                     "self-end" => AlignItemsKeyword::SelfEnd,
                     "center" => AlignItemsKeyword::Center,
-                    _ => return Err(input.new_unexpected_token_error(Token::Ident(pos))),
+                    _ => return Err(CssParseError::unexpected_token()),
                 };
                 Ok(Self { keyword, safety: AlignmentSafety::Unsafe })
             },
@@ -308,7 +308,7 @@ impl FromCss for AlignItems {
             "center" => Ok(Self::CENTER),
             "baseline" => Ok(Self::BASELINE),
             "stretch" => Ok(Self::STRETCH),
-            _ => Err(input.new_unexpected_token_error(Token::Ident(first))),
+            _ => Err(CssParseError::unexpected_token()),
         }
     }
 }
@@ -411,7 +411,7 @@ impl AlignContent {
 
 #[cfg(feature = "parse")]
 impl FromCss for AlignContent {
-    fn from_css<'i>(input: &mut Parser<'i, '_>) -> CssParseResult<'i, Self> {
+    fn from_css<'i>(input: &mut Parser<'i>) -> CssParseResult<'i, Self> {
         let first = input.expect_ident()?.clone();
         cssparser::match_ignore_ascii_case! { &*first,
             "safe" => {
@@ -422,7 +422,7 @@ impl FromCss for AlignContent {
                     "flex-start" => Ok(Self::SAFE_FLEX_START),
                     "flex-end" => Ok(Self::SAFE_FLEX_END),
                     "center" => Ok(Self::SAFE_CENTER),
-                    _ => Err(input.new_unexpected_token_error(Token::Ident(pos))),
+                    _ => Err(CssParseError::unexpected_token()),
                 }
             },
             "unsafe" => {
@@ -433,7 +433,7 @@ impl FromCss for AlignContent {
                     "flex-start" => AlignContentKeyword::FlexStart,
                     "flex-end" => AlignContentKeyword::FlexEnd,
                     "center" => AlignContentKeyword::Center,
-                    _ => return Err(input.new_unexpected_token_error(Token::Ident(pos))),
+                    _ => return Err(CssParseError::unexpected_token()),
                 };
                 Ok(Self { keyword, safety: AlignmentSafety::Unsafe })
             },
@@ -447,7 +447,7 @@ impl FromCss for AlignContent {
             "space-between" => Ok(Self::SPACE_BETWEEN),
             "space-evenly" => Ok(Self::SPACE_EVENLY),
             "space-around" => Ok(Self::SPACE_AROUND),
-            _ => Err(input.new_unexpected_token_error(Token::Ident(first))),
+            _ => Err(CssParseError::unexpected_token()),
         }
     }
 }

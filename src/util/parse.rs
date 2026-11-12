@@ -1,11 +1,11 @@
 //! Helpers for parsing style types from strings
 
 use cssparser::BasicParseError;
-pub(crate) use cssparser::{Parser, ParserInput, Token};
+pub(crate) use cssparser::{Parser, Token};
 use std::borrow::Cow;
 
 /// Error type for parsing a type from `cssparser::Parser`
-pub(crate) type CssParseError<'i> = cssparser::ParseError<'i, Cow<'i, str>>;
+pub(crate) type CssParseError<'i> = cssparser::ParseError<Cow<'i, str>>;
 
 /// Result type for parsing a type from `cssparser::Parser`
 pub(crate) type CssParseResult<'i, T> = Result<T, CssParseError<'i>>;
@@ -24,9 +24,9 @@ impl<'i> From<CssParseError<'i>> for ParseError {
         Self(value.to_string())
     }
 }
-impl<'i> From<BasicParseError<'i>> for ParseError {
-    fn from(value: BasicParseError<'i>) -> Self {
-        Self(CssParseError::from(value).to_string())
+impl From<BasicParseError> for ParseError {
+    fn from(value: BasicParseError) -> Self {
+        Self(value.kind.to_string())
     }
 }
 #[cfg(feature = "std")]
@@ -38,14 +38,13 @@ pub type ParseResult<T> = Result<T, ParseError>;
 /// Trait for parsing a type from a `cssparser::Parser` input
 pub(crate) trait FromCss: Sized {
     /// Parse type from a `cssparser::Parser` input
-    fn from_css<'i>(parser: &mut Parser<'i, '_>) -> CssParseResult<'i, Self>;
+    fn from_css<'i>(parser: &mut Parser<'i>) -> CssParseResult<'i, Self>;
 }
 
 /// Parse a string into a type that implements `FromCss`, ensuring that the
 /// entire input string is consumed.
 pub(crate) fn parse_css_str_entirely<T: FromCss>(input: &str) -> Result<T, ParseError> {
-    let mut parser_input = ParserInput::new(input);
-    let mut parser = Parser::new(&mut parser_input);
+    let mut parser = Parser::new(input);
     parser.parse_entirely(|parser| T::from_css(parser)).map_err(|err| ParseError(err.to_string()))
 }
 
@@ -81,7 +80,7 @@ macro_rules! impl_parse_for_keyword_enum {
 
         // Impl FromCss for the type
         impl $crate::util::parse::FromCss for $ty {
-            fn from_css<'i>(input: &mut cssparser::Parser<'i, '_>) -> $crate::util::parse::CssParseResult<'i, Self> {
+            fn from_css<'i>(input: &mut cssparser::Parser<'i>) -> $crate::util::parse::CssParseResult<'i, Self> {
 
                 // Parse an ident (or return an error)
                 let ident = input.expect_ident()?;
@@ -98,10 +97,7 @@ macro_rules! impl_parse_for_keyword_enum {
                     )+
 
                     // If none of the cases match the input, return an "unexpected token" error
-                    _ => {
-                        let ident = ident.clone();
-                        Err(input.new_unexpected_token_error(cssparser::Token::Ident(ident)))
-                    }
+                    _ => Err($crate::util::parse::CssParseError::unexpected_token()),
                 }
             }
         }

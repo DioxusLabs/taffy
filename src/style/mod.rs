@@ -614,7 +614,7 @@ impl core::ops::BitOrAssign for Contain {
 
 #[cfg(feature = "parse")]
 impl crate::util::parse::FromCss for Contain {
-    fn from_css<'i>(input: &mut crate::util::parse::Parser<'i, '_>) -> crate::util::parse::CssParseResult<'i, Self> {
+    fn from_css<'i>(input: &mut crate::util::parse::Parser<'i>) -> crate::util::parse::CssParseResult<'i, Self> {
         /// Duplicate-detection bit for the ignored `style` keyword, which does not map to a
         /// `Contain` flag
         const STYLE_BIT: u8 = 1 << 6;
@@ -630,7 +630,7 @@ impl crate::util::parse::FromCss for Contain {
                 // is rejected by the `seen != 0` check below)
                 "none" | "content" => {
                     if seen != 0 || !input.is_exhausted() {
-                        return Err(input.new_unexpected_token_error(crate::util::parse::Token::Ident(ident)));
+                        return Err(crate::util::parse::CssParseError::unexpected_token());
                     }
                     return Ok(cssparser::match_ignore_ascii_case! { &*ident,
                         "content" => Contain::CONTENT,
@@ -643,13 +643,13 @@ impl crate::util::parse::FromCss for Contain {
                 // CSS values round-trip
                 "style" => (Contain::NONE, STYLE_BIT),
                 _ => {
-                    return Err(input.new_unexpected_token_error(crate::util::parse::Token::Ident(ident)));
+                    return Err(crate::util::parse::CssParseError::unexpected_token());
                 }
             };
 
             // Reject duplicate keywords
             if seen & seen_bit != 0 {
-                return Err(input.new_unexpected_token_error(crate::util::parse::Token::Ident(ident)));
+                return Err(crate::util::parse::CssParseError::unexpected_token());
             }
             seen |= seen_bit;
             flags |= flag;
