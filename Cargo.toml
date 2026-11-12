@@ -65,7 +65,7 @@ calc = []
 content_size = []
 ## Causes algorithms to stores detailed information of the nodes in TaffyTree, with only CSS Grid supporting this.
 detailed_layout_info = []
-## Use strict provenance APIs for pointer manipulation. Using this feature requires Rust 1.84 or higher.
+## Deprecated no-op: Taffy always uses strict provenance APIs for pointer manipulation. Retained so that existing `features = ["strict_provenance"]` configurations keep compiling.
 strict_provenance = []
 
 #! ### Taffy Tree
