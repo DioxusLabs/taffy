@@ -220,6 +220,7 @@ pub struct Cache {
     /// Tracks which measure entries have been used since the eviction cursor last passed them.
     /// Atomic so that [`Cache::get`] can take `&self`. Each flag is only ever written with a
     /// plain (non read-modify-write) `Relaxed` store, so a racing write can at worst lose a hint.
+    #[cfg_attr(feature = "serde", serde(serialize_with = "serialize_atomic_u16"))]
     recently_used_entries: AtomicU16,
     /// The next measure entry to consider replacing
     next_measure_entry: u8,
@@ -229,6 +230,12 @@ pub struct Cache {
     /// entries were computed with. Results are only retrieved for inputs that have the same mode,
     /// and storing a result that was computed with a different mode drops the existing entries.
     mode: CacheMode,
+}
+
+/// Serializes an `AtomicU16` as a `u16` (serde only implements `Serialize` for atomics with `std`)
+#[cfg(feature = "serde")]
+fn serialize_atomic_u16<S: serde::Serializer>(value: &AtomicU16, serializer: S) -> Result<S::Ok, S::Error> {
+    serializer.serialize_u16(value.load(Ordering::Relaxed))
 }
 
 impl Clone for Cache {
