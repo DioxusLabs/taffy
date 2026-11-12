@@ -1,15 +1,15 @@
 #![allow(dead_code)]
 
 use rand::distr::uniform::SampleRange;
-use rand::Rng;
+use rand::{Rng, RngExt};
 use rand_chacha::ChaCha8Rng;
 use slotmap::{DefaultKey, SlotMap};
 
 use super::{BuildTree, BuildTreeExt, GenStyle};
 
 pub mod yg {
-    pub use ordered_float::OrderedFloat;
     pub use slotmap::{DefaultKey, SlotMap};
+    pub use yoga::traits::{Percent, Point};
     pub use yoga::types::*;
     pub use yoga::Node;
 
@@ -146,8 +146,8 @@ fn into_yg_units(dim: impl Into<tf::Dimension>) -> yg::StyleUnit {
     let val = dim.into_raw().value();
     match dim.into_raw().tag() {
         tf::CompactLength::AUTO_TAG => yg::StyleUnit::Auto,
-        tf::CompactLength::LENGTH_TAG => yg::StyleUnit::Point(yg::OrderedFloat(val)),
-        tf::CompactLength::PERCENT_TAG => yg::StyleUnit::Percent(yg::OrderedFloat(val * 100.0)),
+        tf::CompactLength::LENGTH_TAG => yg::Point::point(val),
+        tf::CompactLength::PERCENT_TAG => yg::Percent::percent(val * 100.0),
         _ => unreachable!(),
     }
 }
