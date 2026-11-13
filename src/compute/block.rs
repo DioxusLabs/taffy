@@ -638,11 +638,22 @@ fn compute_inner(
     // 1. Generate items
     let mut items = generate_item_list(tree, node_id, container_content_box_size);
 
+    // Under `SizingMode::ContentSize` the container's own `height`/`min-height` are ignored,
+    // so they cannot serve as the percentage basis for children either
+    // (https://drafts.csswg.org/css-flexbox/#min-size-auto: the content size suggestion
+    // must not be influenced by the item's specified height).
+    let container_percentage_resolution_height = percentage_basis_dimensions
+        .height
+        .or(if inputs.sizing_mode == SizingMode::InherentSize { size.height.maybe_max(min_size.height) } else { None });
+
     // 2. Compute container width
     let container_outer_width = known_dimensions.width.unwrap_or_else(|| {
         let available_width = available_space.width.maybe_sub(content_box_inset.horizontal_axis_sum());
-        let intrinsic_width = determine_content_based_container_width(tree, &items, available_width)
-            + content_box_inset.horizontal_axis_sum();
+        let percentage_basis_height =
+            container_percentage_resolution_height.maybe_sub(content_box_inset.vertical_axis_sum());
+        let intrinsic_width =
+            determine_content_based_container_width(tree, &items, available_width, percentage_basis_height)
+                + content_box_inset.horizontal_axis_sum();
         intrinsic_width.maybe_clamp(min_size.width, max_size.width).maybe_max(Some(padding_border_size.width))
     });
 
@@ -655,14 +666,6 @@ fn compute_inner(
     if run_mode == RunMode::ComputeSize && inputs.axis == RequestedAxis::Horizontal {
         return LayoutOutput::from_outer_size(Size { width: container_outer_width, height: 0.0 });
     }
-
-    // Under `SizingMode::ContentSize` the container's own `height`/`min-height` are ignored,
-    // so they cannot serve as the percentage basis for children either
-    // (https://drafts.csswg.org/css-flexbox/#min-size-auto: the content size suggestion
-    // must not be influenced by the item's specified height).
-    let container_percentage_resolution_height = percentage_basis_dimensions
-        .height
-        .or(if inputs.sizing_mode == SizingMode::InherentSize { size.height.maybe_max(min_size.height) } else { None });
 
     // 3. Perform final item layout and return content height
     //
@@ -1096,6 +1099,7 @@ fn determine_content_based_container_width(
     tree: &mut impl LayoutPartialTree,
     items: &[BlockItem],
     available_width: AvailableSpace,
+    percentage_basis_height: Option<f32>,
 ) -> f32 {
     let available_space = Size { width: available_width, height: AvailableSpace::MinContent };
 
@@ -1119,7 +1123,7 @@ fn determine_content_based_container_width(
             let width = tree.measure_child_size(
                 item.node_id,
                 known_dimensions,
-                Size::NONE,
+                Size { width: None, height: percentage_basis_height },
                 Size { width: item_available_width, height: available_space.height },
                 SizingMode::InherentSize,
                 crate::AbsoluteAxis::Horizontal,
