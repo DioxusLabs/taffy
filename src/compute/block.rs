@@ -1525,6 +1525,52 @@ fn perform_final_layout_on_in_flow_children<Tree: LayoutBlockContainer>(
                             .or(item.min_size.height)
                             .unwrap_or(0.0)
                             .max(item.padding_border_sum.height);
+                        let fits_in_slot = |slot: &BfcSlot| {
+                            let width = item
+                                .size
+                                .width
+                                .unwrap_or(slot.stretch_width.max(min_auto_width).max(0.0))
+                                .maybe_clamp(item.min_size.width, item.max_size.width);
+                            width <= slot.border_width + FIT_TOLERANCE
+                        };
+
+                        // The item may be taller than its minimum height, and so extend down beside
+                        // further floats that narrow the slot. Lay it out (with the same inputs as
+                        // its final layout, so that it is cached) and narrow the slot to the floats
+                        // beside its height until its height no longer reaches further floats. Like
+                        // Gecko and Servo, only retry when the slot gets strictly narrower: slot widths
+                        // come from float edges, so this terminates.
+                        // Returns `None` if the item doesn't fit beside the floats at this position.
+                        let fit_to_height = |tree: &mut Tree, mut slot: BfcSlot, after: Option<usize>| {
+                            if slot.height == f32::INFINITY {
+                                return Some(slot);
+                            }
+                            let mut stretch_width = slot.stretch_width.max(min_auto_width).max(0.0);
+                            loop {
+                                let inputs = item_inputs(tree, stretch_width);
+                                let height = tree.compute_child_layout(item.node_id, inputs).size.height;
+                                if height <= slot.height {
+                                    return Some(slot);
+                                }
+                                slot = block_ctx.find_bfc_slot(
+                                    min_y,
+                                    height.max(min_height),
+                                    x_margins,
+                                    direction,
+                                    item.clear,
+                                    after,
+                                );
+                                if !fits_in_slot(&slot) {
+                                    return None;
+                                }
+                                let narrower_stretch_width = slot.stretch_width.max(min_auto_width).max(0.0);
+                                if narrower_stretch_width >= stretch_width {
+                                    return Some(slot);
+                                }
+                                stretch_width = narrower_stretch_width;
+                            }
+                        };
+
                         let mut slot_segment = None;
                         let slot = loop {
                             let slot = block_ctx.find_bfc_slot(
@@ -1536,13 +1582,10 @@ fn perform_final_layout_on_in_flow_children<Tree: LayoutBlockContainer>(
                                 slot_segment,
                             );
                             let Some(segment_id) = slot.segment_id else { break slot };
-                            let width = item
-                                .size
-                                .width
-                                .unwrap_or(slot.stretch_width.max(min_auto_width).max(0.0))
-                                .maybe_clamp(item.min_size.width, item.max_size.width);
-                            if width <= slot.border_width + FIT_TOLERANCE {
-                                break slot;
+                            if fits_in_slot(&slot) {
+                                if let Some(slot) = fit_to_height(tree, slot, slot_segment) {
+                                    break slot;
+                                }
                             }
                             slot_segment = Some(segment_id);
                         };
