@@ -1,0 +1,17 @@
+<test name="aspect_ratio_flex_column_basis_from_max_clamped_cross_size__content_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="flex" box-sizing="content-box" direction="rtl" position="absolute" flex-direction="column" width="327px">
+      <div display="flex" box-sizing="content-box" direction="rtl" position="relative" flex-direction="column">
+        <div box-sizing="content-box" direction="rtl" position="relative" width="100%" max-width="240px" aspect-ratio="1"/>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="327" height="240">
+      <node x="0" y="0" width="327" height="240">
+        <node x="87" y="0" width="240" height="240"/>
+      </node>
+    </node>
+  </expectations>
+</test>
