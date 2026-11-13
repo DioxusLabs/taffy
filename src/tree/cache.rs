@@ -1,7 +1,5 @@
 //! A cache for storing the results of layout computation
 
-#![allow(clippy::unusual_byte_groupings)]
-
 use crate::geometry::Size;
 use crate::style::AvailableSpace;
 use crate::tree::{CollapsibleMarginSet, LayoutInput, LayoutOutput, RunMode, SizingMode};
@@ -11,13 +9,10 @@ use core::sync::atomic::{AtomicU16, Ordering};
 /// The number of cache entries for each node in the tree
 const CACHE_SIZE: usize = 9;
 
-// Manually written-out results of float to u32 bit casts because
-// `f32::to_bits` is not yet const at our MSRV.
-
 /// `f32::INFINITY` as a u32
-const INFINITY_BITS: u32 = 0b_0_11111111_00000000000000000000000_u32;
+const INFINITY_BITS: u32 = f32::INFINITY.to_bits();
 /// `f32::NEG_INFINITY` as a u32
-const NEG_INFINITY_BITS: u32 = 0b_1_11111111_00000000000000000000000_u32;
+const NEG_INFINITY_BITS: u32 = f32::NEG_INFINITY.to_bits();
 
 // The `CacheKey` encodes two f32s as a u64. We know that the f32s will always be
 // non-negative, so we pack two extra bits encoding the `RequestedAxis` into the

@@ -5,62 +5,12 @@ use crate::style_helpers::{
     FromFr, FromLength, FromPercent, TaffyAuto, TaffyFitContent, TaffyMaxContent, TaffyMinContent, TaffyZero,
 };
 
-/// Note: these two functions are copied directly from the std (core) library. But by duplicating them
-/// here we can reduce MSRV from 1.84 all the way down to 1.65 while retaining const constructors and
-/// strict pointer provenance
-mod compat {
-    #![allow(unsafe_code)]
-    #![allow(unknown_lints)]
-    #![allow(unnecessary_transmutes)]
-
-    /// Raw transmutation from `f32` to `u32`.
-    pub const fn f32_to_bits(val: f32) -> u32 {
-        // SAFETY: `u32` is a plain old datatype so we can always transmute to it.
-        unsafe { core::mem::transmute(val) }
-    }
-    /// Raw transmutation from `u32` to `f32`.
-    pub const fn f32_from_bits(v: u32) -> f32 {
-        // SAFETY: `u32` is a plain old datatype so we can always transmute from it.
-        unsafe { core::mem::transmute(v) }
-    }
-
-    /// Tag a pointer preserving provenance (requires Rust 1.84)
-    #[inline(always)]
-    #[cfg(all(target_pointer_width = "64", feature = "strict_provenance"))]
-    pub fn tag_ptr(ptr: *const (), tag: usize) -> *const () {
-        ptr.map_addr(|a| a | tag)
-    }
-
-    /// Tag a pointer exposing provenance (works back to Rust 1.0)
-    #[inline(always)]
-    #[cfg(all(target_pointer_width = "64", not(feature = "strict_provenance")))]
-    pub fn tag_ptr(ptr: *const (), tag: usize) -> *const () {
-        (ptr as usize | tag) as *const ()
-    }
-
-    /// Clear the tag bits of a pointer preserving provenance (requires Rust 1.84)
-    #[inline(always)]
-    #[cfg(all(target_pointer_width = "64", feature = "strict_provenance"))]
-    pub fn untag_ptr(ptr: *const (), mask: usize) -> *const () {
-        ptr.map_addr(|a| a & !mask)
-    }
-
-    /// Clear the tag bits of a pointer exposing provenance (works back to Rust 1.0)
-    #[inline(always)]
-    #[cfg(all(target_pointer_width = "64", not(feature = "strict_provenance")))]
-    pub fn untag_ptr(ptr: *const (), mask: usize) -> *const () {
-        (ptr as usize & !mask) as *const ()
-    }
-}
-
 #[cfg(not(any(target_pointer_width = "32", target_pointer_width = "64")))]
 std::compile_error!("Taffy only supports targets with a pointer width of 32 or 64 bits");
 
 /// CompactLengthInner implementation for 64 bit platforms
 #[cfg(target_pointer_width = "64")]
 mod inner {
-    use super::compat::{f32_from_bits, f32_to_bits, tag_ptr, untag_ptr};
-
     /// The low byte (8 bits)
     const TAG_MASK: usize = 0b11111111;
     /// The low 3 bits
@@ -79,14 +29,14 @@ mod inner {
         /// Construct a `CompactLengthInner` from a tag and pointer
         #[inline(always)]
         pub(super) fn from_ptr(ptr: *const (), tag: usize) -> Self {
-            let tagged_ptr = tag_ptr(ptr, tag);
+            let tagged_ptr = ptr.map_addr(|addr| addr | tag);
             Self { tagged_ptr }
         }
 
         /// Construct a `CompactLengthInner` from a tag and numeric value
         #[inline(always)]
         pub(super) const fn from_val(val: f32, tag: usize) -> Self {
-            let tagged_ptr = (((f32_to_bits(val) as usize) << 32) | tag) as *const ();
+            let tagged_ptr = (((val.to_bits() as usize) << 32) | tag) as *const ();
             Self { tagged_ptr }
         }
 
@@ -113,13 +63,13 @@ mod inner {
         /// Get the pointer value (with the tag bits cleared)
         #[inline(always)]
         pub(super) fn ptr(self) -> *const () {
-            untag_ptr(self.tagged_ptr, CALC_TAG_MASK)
+            self.tagged_ptr.map_addr(|addr| addr & !CALC_TAG_MASK)
         }
 
         /// Get the numeric value
         #[inline(always)]
         pub(super) fn value(self) -> f32 {
-            f32_from_bits((self.tagged_ptr as usize >> 32) as u32)
+            f32::from_bits((self.tagged_ptr as usize >> 32) as u32)
         }
 
         /// Get the serialized value.
@@ -141,8 +91,6 @@ mod inner {
 /// CompactLengthInner implementation for 32 bit platforms
 #[cfg(target_pointer_width = "32")]
 mod inner {
-    use super::compat::{f32_from_bits, f32_to_bits};
-
     /// On 32 bit platforms the tag is stored separately.
     /// Either an f32 value or a pointer (or neither) are packed into the ptr field
     /// depending on the variant indicated by the tag
@@ -164,7 +112,7 @@ mod inner {
         /// Construct a `CompactLengthInner` from a tag and numeric value
         #[inline(always)]
         pub(super) const fn from_val(val: f32, tag: usize) -> Self {
-            Self { ptr: f32_to_bits(val) as usize as *const (), tag }
+            Self { ptr: val.to_bits() as usize as *const (), tag }
         }
 
         /// Construct a `CompactLengthInner` from only a tag
@@ -195,7 +143,7 @@ mod inner {
         /// Get the numeric value
         #[inline(always)]
         pub(super) fn value(self) -> f32 {
-            f32_from_bits(self.ptr as u32)
+            f32::from_bits(self.ptr as u32)
         }
 
         /// Get the serialized value.
