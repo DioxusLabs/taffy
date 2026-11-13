@@ -1,5 +1,5 @@
 use rand::distr::uniform::SampleRange;
-use rand::Rng;
+use rand::{Rng, RngExt};
 use rand_chacha::ChaCha8Rng;
 use taffy::style::Style as TaffyStyle;
 use taffy::tree::NodeId as TaffyNodeId;

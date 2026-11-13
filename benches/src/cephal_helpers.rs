@@ -2,7 +2,7 @@
 //! Cephal's taffy-compat module only converts in the opposite direction.
 use cephal::{style as c, AvailableSpace, NodeId, Size, Style, Tree};
 use rand::distr::uniform::SampleRange;
-use rand::Rng;
+use rand::{Rng, RngExt};
 use rand_chacha::ChaCha8Rng;
 use taffy::style as t;
 

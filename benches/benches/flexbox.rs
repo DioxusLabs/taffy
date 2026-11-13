@@ -1,6 +1,6 @@
 //! This file includes benchmarks for very large, pseudo-randomly generated trees
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
-use rand::Rng;
+use rand::{Rng, RngExt};
 use taffy::prelude::*;
 use taffy::style::Dimension;
 use taffy::style::Style as TaffyStyle;
