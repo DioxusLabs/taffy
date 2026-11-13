@@ -12,6 +12,8 @@ mod flex;
 mod float;
 #[cfg(feature = "grid")]
 mod grid;
+#[cfg(feature = "table_layout")]
+mod table;
 
 pub use self::alignment::{
     AlignContent, AlignContentKeyword, AlignItems, AlignItemsKeyword, AlignSelf, AlignmentSafety, JustifyContent,
@@ -44,6 +46,8 @@ pub(crate) use self::grid::{GridAreaAxis, GridAreaEnd};
 pub use self::grid::{GridTemplateArea, GridTemplateAreas, NamedGridLine, TemplateLineNames};
 #[cfg(feature = "grid")]
 pub(crate) use self::grid::{NonNamedGridPlacement, OriginZeroGridPlacement};
+#[cfg(feature = "table_layout")]
+pub use self::table::{CaptionSide, TableContainerStyle, TableItemStyle, TableLayout, TableRole, Visibility};
 
 use crate::geometry::{Point, Rect, Size};
 use crate::style_helpers::TaffyAuto as _;
@@ -261,6 +265,28 @@ pub enum Display {
     /// The children will follow the CSS Grid layout algorithm
     #[cfg(feature = "grid")]
     Grid,
+    /// The children will follow the CSS Table layout algorithm
+    #[cfg(feature = "table_layout")]
+    Table,
+    /// A row group within a table (thead, tbody, tfoot). Laid out by the parent table.
+    #[cfg(feature = "table_layout")]
+    TableRowGroup,
+    /// A row within a table. Laid out by the parent table.
+    #[cfg(feature = "table_layout")]
+    TableRow,
+    /// A cell within a table row. The cell's content follows the block layout algorithm.
+    #[cfg(feature = "table_layout")]
+    TableCell,
+    /// A group of columns within a table (colgroup). Laid out by the parent table.
+    #[cfg(feature = "table_layout")]
+    TableColumnGroup,
+    /// A column within a table (col). Laid out by the parent table.
+    #[cfg(feature = "table_layout")]
+    TableColumn,
+    /// A caption of a table. Laid out by the parent table above or below the table box
+    /// (`caption-side`); the caption's content follows the block layout algorithm.
+    #[cfg(feature = "table_layout")]
+    TableCaption,
     /// The node is hidden, and it's children will also be hidden
     None,
 }
@@ -300,6 +326,20 @@ crate::util::parse::impl_parse_for_keyword_enum!(Display,
     "block" => Block,
     #[cfg(feature = "block_layout")]
     "flow-root" => FlowRoot,
+    #[cfg(feature = "table_layout")]
+    "table" => Table,
+    #[cfg(feature = "table_layout")]
+    "table-row-group" => TableRowGroup,
+    #[cfg(feature = "table_layout")]
+    "table-row" => TableRow,
+    #[cfg(feature = "table_layout")]
+    "table-cell" => TableCell,
+    #[cfg(feature = "table_layout")]
+    "table-column-group" => TableColumnGroup,
+    #[cfg(feature = "table_layout")]
+    "table-column" => TableColumn,
+    #[cfg(feature = "table_layout")]
+    "table-caption" => TableCaption,
 );
 
 impl core::fmt::Display for Display {
@@ -314,6 +354,20 @@ impl core::fmt::Display for Display {
             Display::Flex => write!(f, "FLEX"),
             #[cfg(feature = "grid")]
             Display::Grid => write!(f, "GRID"),
+            #[cfg(feature = "table_layout")]
+            Display::Table => write!(f, "TABLE"),
+            #[cfg(feature = "table_layout")]
+            Display::TableRowGroup => write!(f, "TABLE-ROW-GROUP"),
+            #[cfg(feature = "table_layout")]
+            Display::TableRow => write!(f, "TABLE-ROW"),
+            #[cfg(feature = "table_layout")]
+            Display::TableCell => write!(f, "TABLE-CELL"),
+            #[cfg(feature = "table_layout")]
+            Display::TableColumnGroup => write!(f, "TABLE-COLUMN-GROUP"),
+            #[cfg(feature = "table_layout")]
+            Display::TableColumn => write!(f, "TABLE-COLUMN"),
+            #[cfg(feature = "table_layout")]
+            Display::TableCaption => write!(f, "TABLE-CAPTION"),
         }
     }
 }
@@ -803,6 +857,31 @@ pub struct Style<S: CheapCloneStr = DefaultCheapStr> {
     #[cfg(feature = "block_layout")]
     pub text_align: TextAlign,
 
+    // Table container properties
+    /// Which column sizing algorithm to use
+    #[cfg(feature = "table_layout")]
+    pub table_layout: TableLayout,
+    /// The distance between adjacent cell borders
+    #[cfg(feature = "table_layout")]
+    #[cfg_attr(feature = "serde", serde(default = "style_helpers::zero"))]
+    pub border_spacing: Size<LengthPercentage>,
+
+    // Table cell properties
+    /// The number of columns this cell spans
+    #[cfg(feature = "table_layout")]
+    pub colspan: u16,
+    /// The number of rows this cell spans
+    #[cfg(feature = "table_layout")]
+    pub rowspan: u16,
+    /// Whether the box is collapsed out of its table. Only table layout reads this, for rows,
+    /// row groups, columns and column groups with `visibility: collapse`; for every other box
+    /// `visibility` is a painting matter and does not affect layout
+    #[cfg(feature = "table_layout")]
+    pub visibility: Visibility,
+    /// Which side of the table a caption (`display: table-caption`) is placed on
+    #[cfg(feature = "table_layout")]
+    pub caption_side: CaptionSide,
+
     // Flexbox container properties
     /// Which direction does the main axis flow in?
     #[cfg(feature = "flexbox")]
@@ -913,6 +992,19 @@ impl<S: CheapCloneStr> Style<S> {
         // Block
         #[cfg(feature = "block_layout")]
         text_align: TextAlign::Auto,
+        // Table
+        #[cfg(feature = "table_layout")]
+        table_layout: TableLayout::Auto,
+        #[cfg(feature = "table_layout")]
+        border_spacing: Size::zero(),
+        #[cfg(feature = "table_layout")]
+        colspan: 1,
+        #[cfg(feature = "table_layout")]
+        rowspan: 1,
+        #[cfg(feature = "table_layout")]
+        visibility: Visibility::Visible,
+        #[cfg(feature = "table_layout")]
+        caption_side: CaptionSide::Top,
         // Flexbox
         #[cfg(feature = "flexbox")]
         flex_direction: FlexDirection::Row,
@@ -1210,6 +1302,10 @@ impl<T: BlockContainerStyle> BlockContainerStyle for &'_ T {
 impl<S: CheapCloneStr> BlockItemStyle for Style<S> {
     #[inline(always)]
     fn is_table(&self) -> bool {
+        #[cfg(feature = "table_layout")]
+        if matches!(self.display, Display::Table) {
+            return true;
+        }
         self.item_is_table
     }
 
@@ -1599,6 +1695,106 @@ impl<S: CheapCloneStr> GridItemStyle for Style<S> {
     }
 }
 
+#[cfg(feature = "table_layout")]
+impl<S: CheapCloneStr> TableContainerStyle for Style<S> {
+    #[inline(always)]
+    fn border_spacing(&self) -> Size<LengthPercentage> {
+        self.border_spacing
+    }
+
+    #[inline(always)]
+    fn table_layout(&self) -> TableLayout {
+        self.table_layout
+    }
+}
+
+#[cfg(feature = "table_layout")]
+impl<T: TableContainerStyle> TableContainerStyle for &'_ T {
+    #[inline(always)]
+    fn border_spacing(&self) -> Size<LengthPercentage> {
+        (*self).border_spacing()
+    }
+
+    #[inline(always)]
+    fn table_layout(&self) -> TableLayout {
+        (*self).table_layout()
+    }
+}
+
+#[cfg(feature = "table_layout")]
+impl<S: CheapCloneStr> TableItemStyle for Style<S> {
+    #[inline(always)]
+    fn table_role(&self) -> TableRole {
+        match self.display {
+            Display::TableCell => TableRole::Cell,
+            Display::TableRow => TableRole::Row,
+            Display::TableRowGroup => TableRole::RowGroup,
+            Display::TableColumnGroup => TableRole::ColumnGroup,
+            Display::TableColumn => TableRole::Column,
+            Display::TableCaption => TableRole::Caption,
+            _ => TableRole::Other,
+        }
+    }
+
+    #[inline(always)]
+    fn align_content(&self) -> AlignContent {
+        self.align_content
+    }
+
+    #[inline(always)]
+    fn colspan(&self) -> u16 {
+        self.colspan
+    }
+
+    #[inline(always)]
+    fn rowspan(&self) -> u16 {
+        self.rowspan
+    }
+
+    #[inline(always)]
+    fn visibility(&self) -> Visibility {
+        self.visibility
+    }
+
+    #[inline(always)]
+    fn caption_side(&self) -> CaptionSide {
+        self.caption_side
+    }
+}
+
+#[cfg(feature = "table_layout")]
+impl<T: TableItemStyle> TableItemStyle for &'_ T {
+    #[inline(always)]
+    fn table_role(&self) -> TableRole {
+        (*self).table_role()
+    }
+
+    #[inline(always)]
+    fn align_content(&self) -> AlignContent {
+        (*self).align_content()
+    }
+
+    #[inline(always)]
+    fn colspan(&self) -> u16 {
+        (*self).colspan()
+    }
+
+    #[inline(always)]
+    fn rowspan(&self) -> u16 {
+        (*self).rowspan()
+    }
+
+    #[inline(always)]
+    fn visibility(&self) -> Visibility {
+        (*self).visibility()
+    }
+
+    #[inline(always)]
+    fn caption_side(&self) -> CaptionSide {
+        (*self).caption_side()
+    }
+}
+
 #[cfg(feature = "grid")]
 impl<T: GridItemStyle> GridItemStyle for &'_ T {
     #[inline(always)]
@@ -1671,6 +1867,18 @@ mod tests {
             gap: Size::zero(),
             #[cfg(feature = "block_layout")]
             text_align: Default::default(),
+            #[cfg(feature = "table_layout")]
+            table_layout: Default::default(),
+            #[cfg(feature = "table_layout")]
+            border_spacing: Size::zero(),
+            #[cfg(feature = "table_layout")]
+            colspan: 1,
+            #[cfg(feature = "table_layout")]
+            rowspan: 1,
+            #[cfg(feature = "table_layout")]
+            visibility: crate::style::Visibility::Visible,
+            #[cfg(feature = "table_layout")]
+            caption_side: crate::style::CaptionSide::Top,
             #[cfg(feature = "flexbox")]
             flex_grow: 0.0,
             #[cfg(feature = "flexbox")]
@@ -1805,12 +2013,12 @@ mod tests {
         assert_type_size::<GridTemplateComponent<String>>(56);
         assert_type_size::<GridPlacement<String>>(32);
         assert_type_size::<Line<GridPlacement<String>>>(64);
-        assert_type_size::<Style<String>>(560);
+        assert_type_size::<Style<String>>(584);
 
         // String-type dependent (Arc<str>)
         assert_type_size::<GridTemplateComponent<Arc<str>>>(56);
         assert_type_size::<GridPlacement<Arc<str>>>(24);
         assert_type_size::<Line<GridPlacement<Arc<str>>>>(48);
-        assert_type_size::<Style<Arc<str>>>(528);
+        assert_type_size::<Style<Arc<str>>>(552);
     }
 }
