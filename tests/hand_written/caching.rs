@@ -62,7 +62,7 @@ mod caching {
 
         taffy.compute_layout_with_measure(outer, Size::MAX_CONTENT, test_measure_function).unwrap();
         assert_eq!(taffy.layout(leaf).unwrap().size, Size { width: 50.0, height: 20.0 });
-        assert_eq!(taffy.get_node_context_mut(leaf).unwrap().count, 6);
+        assert_eq!(taffy.get_node_context_mut(leaf).unwrap().count, 5);
     }
 
     /// A grid item whose size in the axis being measured is already known (here: a definite width) does not
@@ -88,7 +88,7 @@ mod caching {
         taffy.compute_layout_with_measure(grid, Size::MAX_CONTENT, test_measure_function).unwrap();
         assert_eq!(taffy.layout(grid).unwrap().size, Size { width: 40.0, height: 20.0 });
         assert_eq!(taffy.layout(leaf).unwrap().size, Size { width: 40.0, height: 20.0 });
-        assert_eq!(taffy.get_node_context_mut(leaf).unwrap().count, 3);
+        assert_eq!(taffy.get_node_context_mut(leaf).unwrap().count, 2);
     }
 
     /// A grid item in a track that is not intrinsically sized does not contribute to the size of that track, so
@@ -130,7 +130,7 @@ mod caching {
         taffy.compute_layout_with_measure(grid, Size::MAX_CONTENT, test_measure_function).unwrap();
         assert_eq!(taffy.layout(grid).unwrap().size, Size { width: 150.0, height: 50.0 });
         assert_eq!(taffy.layout(leaf).unwrap().size, Size { width: 80.0, height: 50.0 });
-        assert_eq!(taffy.get_node_context_mut(leaf).unwrap().count, 3);
+        assert_eq!(taffy.get_node_context_mut(leaf).unwrap().count, 2);
     }
 
     /// A flex container that is only asked for its main size (e.g. because it is an item of a grid
@@ -139,7 +139,7 @@ mod caching {
     #[test]
     #[cfg(all(feature = "grid", feature = "flexbox"))]
     fn measure_count_flex_in_grid() {
-        for (flex_direction, expected_count) in [(FlexDirection::Row, 9), (FlexDirection::Column, 10)] {
+        for (flex_direction, expected_count) in [(FlexDirection::Row, 6), (FlexDirection::Column, 7)] {
             let mut taffy = new_test_tree();
 
             let text = TestNodeContext::ahem_text(

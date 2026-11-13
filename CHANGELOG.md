@@ -7,9 +7,11 @@ The MSRV is now 1.85.
 ### Performance
 
 - `TaffyTree` switches to FxHash for node contexts when `std` is enabled, for faster hash computation.
+- `TaffyTree` passes an `AvailableSpace::MinContent` height on to a node's layout as `AvailableSpace::MaxContent`, as a box's min-content block size is its max-content block size. Size queries that differ only in this constraint now share one cache entry, so nested flex and grid containers lay out and measure their children fewer times. Measure functions no longer receive `AvailableSpace::MinContent` in the height axis. `compute_cached_layout` is unchanged: a custom tree whose nodes may be laid out with `height` as their inline axis (e.g. to support vertical writing modes) must only do the same where `height` is the node's block axis.
 
 ### Fixed
 
+- `TaffyTree`: a box measured under a min-content height is now sized as it is under a max-content height, like in browsers. Previously a `flex-wrap: wrap` column flex container put each item on its own line, the rows of a grid were not grown towards their max track sizing function, and a flex item's `min-height` was treated as the height available to it.
 - Flexbox: `align-content: stretch` (and `normal`) and `justify-content: stretch` fall back to `flex-start` rather than `start` when the lines/items overflow the container, so overflowing lines in a `wrap-reverse` container (and items in a `row-reverse`/`column-reverse` container) are packed to the flex-start edge like in Chrome.
 - Grid: the clamp of an item's content-based minimum size to the fixed max track sizing functions it spans now leaves room for its margins and baseline shim (#1362).
 - Block/float: the auto height of a box that establishes a new block formatting context (e.g. a float or `display: flow-root`) and contains floats now includes its bottom padding and border below the bottom margin edge of those floats. Previously the floats' bottom edge was used as the box's outer height, so the bottom padding and border overlapped them.
