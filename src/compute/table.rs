@@ -1666,7 +1666,7 @@ fn distribute_width(columns: &[Column], target: f32, grow_constrained: bool) -> 
     const SPECIFIED: usize = 2;
     const MAX: usize = 3;
 
-    let mut sizes: Vec<f32> = core::iter::repeat(0.0).take(columns.len()).collect();
+    let mut sizes: Vec<f32> = core::iter::repeat_n(0.0, columns.len()).collect();
     let mut guess = [0.0f32; 4];
     // What each guess adds over the one before it, summed over the columns it grows
     let mut growth = [0.0f32; 4];
