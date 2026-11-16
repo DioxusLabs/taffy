@@ -119,6 +119,7 @@ members = [
     "scripts/format-fixtures",
     "scripts/import-yoga-tests",
     "tests/common",
+    "bindings/wasm",
 ]
 # The Parley example and benches are excluded from the workspace as their dependencies require a newer
 # Rust version than Taffy's MSRV
