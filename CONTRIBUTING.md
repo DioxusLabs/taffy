@@ -34,6 +34,24 @@ To add a new test case add another HTML file to `/test_fixtures` following the c
 
 **Note: test fixtures (HTML files in the `text_fixtures` directory) that begin with an "x" are considered disabled, and the test generation script will not generate a test for them (and as the test generation script overwrites the entire directory when generating tests, this means that prefixing an existing test with an "x" and then running the test generation script will delete that test)**
 
+### Blitz Web Platform Tests
+
+The **Blitz WPT** check automatically runs the `css` and `svg` Web Platform Tests for each PR. It compares the PR head with its merge-base, using the same resolved Blitz commit and WPT revision for both runs. Only the local Taffy dependency changes; no companion Blitz pin PR is needed.
+
+Results appear in the workflow summary and, after the reporting workflow completes, in a marked section of the PR description. The run artifacts contain compressed base/candidate reports and a `wpt-diff` artifact with the full diff and tested commit hashes. WPT failures are reported as differences, not as a failing CI check; build and runner errors do fail the check.
+
+For API-breaking changes, push the necessary Blitz compatibility changes to a branch in `DioxusLabs/blitz`, then add a standalone line to the Taffy PR description:
+
+```text
+blitz-revision: <full 40-character Blitz commit SHA>
+```
+
+This selects the candidate Blitz commit only. The baseline still uses Blitz main, and the report explicitly flags that the comparison includes Blitz compatibility changes. A Blitz PR is not required just to obtain results.
+
+Adding, changing or removing this field reruns WPT. Other description edits (including automated result updates) do not. Push the new Blitz commit and update the field whenever the compatibility branch changes; branch names and abbreviated SHAs are not accepted. Results from an older PR head or override are not published. Use **Re-run all jobs** in Actions to retry a run without changing the PR.
+
+The testing workflow has read-only permissions and no deployment credentials. A separate trusted workflow updates only the verified PR's WPT results section. The reusable workflow and helper scripts are pinned to a Blitz commit in both workflow files; update these pins together when upgrading the CI tooling.
+
 ### Writing tests
 
 1. All tests should be wrapped in a module called `tests` gated by the standard `test` feature flag, to ensure they are not compiled unless tests are being run.
