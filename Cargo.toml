@@ -44,6 +44,7 @@ default = [
     "calc",
     "content_size",
     "detailed_layout_info",
+    "builder"
 ]
 #! ## Feature Flags
 #!
@@ -67,6 +68,8 @@ content_size = []
 detailed_layout_info = []
 ## Deprecated no-op: Taffy always uses strict provenance APIs for pointer manipulation. Retained so that existing `features = ["strict_provenance"]` configurations keep compiling.
 strict_provenance = []
+## Expose a builder pattern interface to construct layout tree
+builder = []
 
 #! ### Taffy Tree
 
