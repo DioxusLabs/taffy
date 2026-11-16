@@ -259,6 +259,8 @@ impl AlgoConstants {
 }
 
 /// Computes the layout of a box according to the flexbox algorithm
+// Not inlined: keeps this algorithm's stack frame out of the caller's, which is on the stack at every level of recursion
+#[inline(never)]
 pub fn compute_flexbox_layout(
     tree: &mut impl LayoutFlexboxContainer,
     node: NodeId,
