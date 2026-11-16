@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    A wrapping flex item sized to the max-content sum of its own items keeps them on one line (f32 rounding must not make the items add up to more than that sum)
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="width: 640px; flex-wrap: wrap; align-items: flex-start;">
+  <div style="flex-wrap: wrap; column-gap: 4px;">
+    <div style="width: 82.68px; height: 10px;"></div>
+    <div style="width: 82.68px; height: 10px;"></div>
+    <div style="width: 82.68px; height: 10px;"></div>
+    <div style="width: 82.68px; height: 10px;"></div>
+    <div style="width: 82.68px; height: 10px;"></div>
+    <div style="width: 82.68px; height: 10px;"></div>
+  </div>
+</div>
+
+</body>
+</html>
