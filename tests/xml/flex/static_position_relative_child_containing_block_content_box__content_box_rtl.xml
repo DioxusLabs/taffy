@@ -1,0 +1,17 @@
+<test name="static_position_relative_child_containing_block_content_box__content_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div box-sizing="content-box" direction="rtl" position="absolute" flex-direction="column" align-content="flex-start" flex-shrink="0">
+      <div box-sizing="content-box" direction="rtl" position="relative" flex-direction="column" align-content="flex-start" flex-shrink="0" width="400px" height="400px" padding-top="100px" padding-left="100px" padding-bottom="100px" padding-right="100px">
+        <div box-sizing="content-box" direction="rtl" position="relative" flex-direction="column" align-content="flex-start" flex-shrink="0" width="50%" height="50px"/>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="600" height="600">
+      <node x="0" y="0" width="600" height="600">
+        <node x="300" y="100" width="200" height="50"/>
+      </node>
+    </node>
+  </expectations>
+</test>

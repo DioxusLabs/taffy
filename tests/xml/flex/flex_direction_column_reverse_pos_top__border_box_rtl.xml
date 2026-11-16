@@ -1,0 +1,21 @@
+<test name="flex_direction_column_reverse_pos_top__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div direction="rtl" position="absolute" flex-direction="column" align-content="flex-start" flex-shrink="0" width="100px" height="100px">
+      <div direction="rtl" position="relative" flex-direction="column-reverse" align-content="flex-start" flex-shrink="0" width="100px" height="100px" top="100px">
+        <div direction="rtl" position="relative" flex-direction="column" align-content="flex-start" flex-shrink="0" width="10px"/>
+        <div direction="rtl" position="relative" flex-direction="column" align-content="flex-start" flex-shrink="0" width="10px"/>
+        <div direction="rtl" position="relative" flex-direction="column" align-content="flex-start" flex-shrink="0" width="10px"/>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="100" height="100">
+      <node x="0" y="100" width="100" height="100">
+        <node x="90" y="100" width="10" height="0"/>
+        <node x="90" y="100" width="10" height="0"/>
+        <node x="90" y="100" width="10" height="0"/>
+      </node>
+    </node>
+  </expectations>
+</test>

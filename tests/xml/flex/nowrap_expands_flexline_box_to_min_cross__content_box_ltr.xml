@@ -1,0 +1,13 @@
+<test name="nowrap_expands_flexline_box_to_min_cross__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div box-sizing="content-box" direction="ltr" position="absolute" align-items="stretch" align-content="flex-start" flex-shrink="0" min-height="400px">
+      <div box-sizing="content-box" direction="ltr" position="relative" flex-direction="column" align-content="flex-start" flex-grow="1" flex-basis="0%"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="0" height="400">
+      <node x="0" y="0" width="0" height="400"/>
+    </node>
+  </expectations>
+</test>

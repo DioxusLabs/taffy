@@ -1,0 +1,21 @@
+<test name="static_position_static_child_width_percentage__content_box_ltr" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div box-sizing="content-box" direction="ltr" position="absolute" flex-direction="column" align-content="flex-start" flex-shrink="0">
+      <div box-sizing="content-box" direction="ltr" position="relative" flex-direction="column" align-content="flex-start" flex-shrink="0" width="200px" height="200px">
+        <div box-sizing="content-box" direction="ltr" flex-direction="column" align-content="flex-start" flex-shrink="0" width="100px" height="100px">
+          <div box-sizing="content-box" direction="ltr" flex-direction="column" align-content="flex-start" flex-shrink="0" width="50%" height="50px"/>
+        </div>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="200" height="200">
+      <node x="0" y="0" width="200" height="200">
+        <node x="0" y="0" width="100" height="100">
+          <node x="0" y="0" width="50" height="50"/>
+        </node>
+      </node>
+    </node>
+  </expectations>
+</test>
