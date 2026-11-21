@@ -1540,7 +1540,9 @@ fn perform_final_layout_on_in_flow_children<Tree: LayoutBlockContainer>(
                                 .size
                                 .width
                                 .unwrap_or(slot.stretch_width.max(min_auto_width).max(0.0))
-                                .maybe_clamp(item.min_size.width, item.max_size.width);
+                                .maybe_clamp(item.min_size.width, item.max_size.width)
+                                // The border box is never narrower than its padding and borders
+                                .max(item.padding_border_sum.width);
                             if width <= slot.border_width + FIT_TOLERANCE {
                                 break slot;
                             }
