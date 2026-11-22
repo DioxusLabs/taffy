@@ -1,9 +1,9 @@
 <test name="float_bfc_auto_width_padding_border_moves_below_float__border_box_ltr" use-rounding="true">
   <viewport width="max-content" height="max-content"/>
   <input>
-    <div display="block" box-sizing="border-box" direction="ltr" position="absolute" width="300px">
-      <div box-sizing="border-box" direction="ltr" position="relative" float="left" width="290px" height="50px"/>
-      <div display="block" box-sizing="border-box" direction="ltr" position="relative" overflow-x="hidden" overflow-y="hidden" scrollbar-width="15" height="20px" padding-left="10px" border-left="5px"/>
+    <div display="block" direction="ltr" position="absolute" width="300px">
+      <div direction="ltr" position="relative" float="left" width="290px" height="50px"/>
+      <div display="block" direction="ltr" position="relative" overflow-x="hidden" overflow-y="hidden" scrollbar-width="15" height="20px" padding-left="10px" border-left="5px"/>
     </div>
   </input>
   <expectations>
