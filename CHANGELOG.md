@@ -2,7 +2,7 @@
 
 ## 0.16.0
 
-The MSRV for this release is 1.85.
+The MSRV for this release is 1.85, and Taffy now uses the 2024 edition.
 
 As a result of the MSRV bump, the `strict_provenance` feature has been removed: `CompactLength` now always uses the strict provenance pointer APIs (#1411, #1413, #1419).
 
