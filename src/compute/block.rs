@@ -21,7 +21,9 @@ use crate::{
 };
 
 #[cfg(feature = "float_layout")]
-use super::float::{BfcSlot, ContentSlot, FloatContext, FloatIntrinsicWidthCalculator, FIT_TOLERANCE};
+use super::common::FIT_TOLERANCE;
+#[cfg(feature = "float_layout")]
+use super::float::{BfcSlot, ContentSlot, FloatContext, FloatIntrinsicWidthCalculator};
 #[cfg(feature = "float_layout")]
 use crate::{Clear, Float, FloatDirection};
 
