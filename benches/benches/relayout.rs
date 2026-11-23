@@ -147,6 +147,7 @@ fn measure_input(width: f32) -> LayoutInput {
         parent_size: Size { width: Some(1000.0), height: None },
         available_space: Size { width: AvailableSpace::MaxContent, height: AvailableSpace::MaxContent },
         vertical_margins_are_collapsible: Line::FALSE,
+        content_offset_y: 0.0,
     }
 }
 

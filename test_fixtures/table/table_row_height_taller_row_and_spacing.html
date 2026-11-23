@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    Extra table height distributed with vertical border-spacing
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="display: table; border-collapse: separate; height: 200px; border-spacing: 0 10px;">
+  <div style="display: table-row-group;">
+    <div style="display: table-row;">
+      <div style="display: table-cell; width: 40px; height: 20px;"></div>
+    </div>
+    <div style="display: table-row;">
+      <div style="display: table-cell; width: 40px; height: 20px;"></div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

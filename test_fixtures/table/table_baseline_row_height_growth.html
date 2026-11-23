@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    Baseline alignment can make the row taller than any single cell
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="display: table; border-collapse: separate;">
+  <div style="display: table-row-group;">
+    <div style="display: table-row;">
+      <div style="display: table-cell; width: 40px; padding-top: 30px;">
+        <div style="display: block;">HH</div>
+      </div>
+      <div style="display: table-cell; width: 40px; padding-bottom: 30px;">
+        <div style="display: block;">HH</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

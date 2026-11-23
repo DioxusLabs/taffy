@@ -222,6 +222,15 @@ function containingBlockElement(e) {
   return e.parentNode;
 }
 
+function parseBorderSpacing(input) {
+  if (!input) return undefined;
+  const parts = input.trim().split(/\s+/).map(part => parseDimension(part));
+  const x = parts[0];
+  const y = parts[1] ?? parts[0];
+  if (!x && !y) return undefined;
+  return { x, y };
+}
+
 function describeElement(e) {
 
   // Get precise, unrounded dimensions for the current element and its position reference
@@ -231,9 +240,14 @@ function describeElement(e) {
 
   const computedStyle = getComputedStyle(e);
 
+  // Real table elements (<table>, <tr>, <td>, ...) get their display from the UA
+  // stylesheet rather than an inline style, so fall back to the computed value for them
+  const isTableElement = ['TABLE', 'THEAD', 'TBODY', 'TFOOT', 'TR', 'TD', 'TH'].includes(e.tagName);
+  const displayValue = e.style.display || (isTableElement ? computedStyle.display : '');
+
   return {
     style: {
-      display: parseEnum(e.style.display),
+      display: parseEnum(displayValue),
       boxSizing: parseEnum(computedStyle.boxSizing),
 
       // The computed position, not the inline style: the test base stylesheet sets
@@ -248,6 +262,12 @@ function describeElement(e) {
       clear: parseEnum(e.style.clear),
 
       textAlign: parseEnum(e.style.textAlign),
+
+      tableLayout: parseEnum(e.style.tableLayout),
+      // border-spacing is inherited, so only record it on the table itself
+      borderSpacing: displayValue === 'table' ? parseBorderSpacing(computedStyle.borderSpacing) : undefined,
+      colspan: e.colSpan > 1 ? e.colSpan : undefined,
+      rowspan: e.rowSpan > 1 ? e.rowSpan : undefined,
 
       flexDirection: parseEnum(e.style.flexDirection),
       flexWrap: parseEnum(e.style.flexWrap),
