@@ -228,6 +228,72 @@ impl TryFrom<RequestedAxis> for AbsoluteAxis {
     }
 }
 
+/// Which of a node's baselines a caller of [`RunMode::ComputeSize`] layout will read from the
+/// [`LayoutOutput`]. Layout algorithms may skip computing unrequested baselines, and a `ComputeSize`
+/// output (including a cached one) only carries the requested ones.
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(Serialize))]
+pub struct RequestedBaselines(u8);
+
+impl RequestedBaselines {
+    /// No baselines are requested
+    pub const NONE: Self = Self(0);
+    /// The first baseline is requested
+    pub const FIRST: Self = Self(0b01);
+    /// The last baseline is requested
+    pub const LAST: Self = Self(0b10);
+    /// Both baselines are requested
+    pub const BOTH: Self = Self(0b11);
+
+    /// Request the first and/or last baseline
+    pub const fn new(first: bool, last: bool) -> Self {
+        Self((first as u8) | ((last as u8) << 1))
+    }
+
+    /// Whether no baselines are requested
+    #[inline]
+    pub const fn is_empty(self) -> bool {
+        self.0 == 0
+    }
+
+    /// Whether the first baseline is requested
+    #[inline]
+    pub const fn first(self) -> bool {
+        self.0 & Self::FIRST.0 != 0
+    }
+
+    /// Whether the last baseline is requested
+    #[inline]
+    pub const fn last(self) -> bool {
+        self.0 & Self::LAST.0 != 0
+    }
+
+    /// Whether every baseline in `other` is also requested by `self`
+    #[inline]
+    pub const fn contains(self, other: Self) -> bool {
+        self.0 & other.0 == other.0
+    }
+
+    /// The baselines that are not requested by `self`
+    #[inline]
+    pub const fn complement(self) -> Self {
+        Self(!self.0 & Self::BOTH.0)
+    }
+
+    /// The baselines requested by either `self` or `other`
+    #[inline]
+    pub const fn union(self, other: Self) -> Self {
+        Self(self.0 | other.0)
+    }
+}
+
+impl core::ops::BitOr for RequestedBaselines {
+    type Output = Self;
+    fn bitor(self, rhs: Self) -> Self {
+        self.union(rhs)
+    }
+}
+
 /// A struct containing the inputs constraints/hints for laying out a node, which are passed in by the parent
 #[derive(Debug, Copy, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize))]
@@ -270,6 +336,9 @@ pub struct LayoutInput {
     pub available_space: Size<AvailableSpace>,
     /// Specific to CSS Block layout. Used for correctly computing margin collapsing. You probably want to set this to `Line::FALSE`.
     pub vertical_margins_are_collapsible: Line<bool>,
+    /// Which of the node's baselines will be read from its [`LayoutOutput`]. Baselines that were not
+    /// requested are not computed and never present in the output, whatever the [`RunMode`].
+    pub requested_baselines: RequestedBaselines,
 }
 
 impl LayoutInput {
@@ -285,6 +354,7 @@ impl LayoutInput {
         sizing_mode: SizingMode::InherentSize,
         axis: RequestedAxis::Both,
         vertical_margins_are_collapsible: Line::FALSE,
+        requested_baselines: RequestedBaselines::NONE,
     };
 
     /// Swap the horizontal and vertical axes of every per-axis input.
@@ -303,6 +373,7 @@ impl LayoutInput {
             parent_size: self.parent_size.transpose(),
             available_space: self.available_space.transpose(),
             vertical_margins_are_collapsible: Line::FALSE,
+            requested_baselines: RequestedBaselines::NONE,
         }
     }
 }
@@ -312,22 +383,100 @@ impl LayoutInput {
 ///
 /// A baseline is the line on which text sits. See <https://www.w3.org/TR/css-writing-modes-3/#intro-baselines>
 /// for details.
-#[derive(Debug, Copy, Clone, PartialEq)]
+///
+/// Each baseline is stored as an `f32`, with `NaN` encoding the absence of a baseline.
+#[derive(Debug, Copy, Clone)]
 #[cfg_attr(feature = "serde", derive(Serialize))]
 pub struct Baselines {
-    /// The first baseline of the node, if any
-    pub first: Option<f32>,
-    /// The last baseline of the node, if any
-    pub last: Option<f32>,
+    /// The first baseline of the node (`NaN` if none)
+    first: f32,
+    /// The last baseline of the node (`NaN` if none)
+    last: f32,
 }
 
 impl Baselines {
     /// A `Baselines` with neither a first nor a last baseline
-    pub const NONE: Self = Self { first: None, last: None };
+    pub const NONE: Self = Self { first: f32::NAN, last: f32::NAN };
+
+    /// Create a `Baselines` from a first and a last baseline
+    pub const fn new(first: Option<f32>, last: Option<f32>) -> Self {
+        Self { first: Self::encode(first), last: Self::encode(last) }
+    }
 
     /// Create a `Baselines` from just a first baseline
     pub const fn from_first(first: Option<f32>) -> Self {
-        Self { first, last: None }
+        Self::new(first, None)
+    }
+
+    /// The first baseline of the node, if any
+    #[inline]
+    pub fn first(self) -> Option<f32> {
+        Self::decode(self.first)
+    }
+
+    /// The last baseline (if `last`) or first baseline of the node, if any
+    #[inline]
+    pub fn get(self, last: bool) -> Option<f32> {
+        if last {
+            self.last()
+        } else {
+            self.first()
+        }
+    }
+
+    /// The last baseline of the node, if any
+    #[inline]
+    pub fn last(self) -> Option<f32> {
+        Self::decode(self.last)
+    }
+
+    /// The baselines of `self`, with those it lacks taken from `other`
+    #[inline]
+    pub fn union(self, other: Self) -> Self {
+        Self {
+            first: if self.first.is_nan() { other.first } else { self.first },
+            last: if self.last.is_nan() { other.last } else { self.last },
+        }
+    }
+
+    /// Move both baselines by `offset`
+    #[inline]
+    pub fn offset(self, offset: f32) -> Self {
+        Self { first: self.first + offset, last: self.last + offset }
+    }
+
+    /// Drop the baselines that are not in `requested`
+    #[inline]
+    pub fn retain(self, requested: RequestedBaselines) -> Self {
+        Self {
+            first: if requested.first() { self.first } else { f32::NAN },
+            last: if requested.last() { self.last } else { f32::NAN },
+        }
+    }
+
+    /// Encode an optional baseline, with `NaN` representing `None`
+    const fn encode(baseline: Option<f32>) -> f32 {
+        match baseline {
+            Some(baseline) => baseline,
+            None => f32::NAN,
+        }
+    }
+
+    /// Decode a baseline encoded by [`Self::encode`]
+    #[inline]
+    fn decode(baseline: f32) -> Option<f32> {
+        if baseline.is_nan() {
+            None
+        } else {
+            Some(baseline)
+        }
+    }
+}
+
+impl PartialEq for Baselines {
+    fn eq(&self, other: &Self) -> bool {
+        // Bitwise comparison so that two absent (`NaN`) baselines compare equal
+        self.first.to_bits() == other.first.to_bits() && self.last.to_bits() == other.last.to_bits()
     }
 }
 
@@ -585,7 +734,8 @@ pub struct LayoutOutput {
     /// The scrollable overflow rectangle of the node's content
     /// (see [`Layout::scrollable_overflow_rect`] for the coordinate conventions)
     pub scrollable_overflow_rect: ScrollableOverflow,
-    /// The first and last baselines of the node in the horizontal axis, if any
+    /// The first and last baselines of the node in the horizontal axis, if any. The output of a
+    /// [`RunMode::ComputeSize`] layout only carries the baselines in [`LayoutInput::requested_baselines`].
     pub baselines: Baselines,
     /// Top margin that can be collapsed with. This is used for CSS block layout and can be set to
     /// `CollapsibleMarginSet::ZERO` for other layout modes that don't support margin collapsing

@@ -135,6 +135,7 @@ use crate::style::{AvailableSpace, CoreStyle, OofItemStyle};
 use crate::style::{FlexboxContainerStyle, FlexboxItemStyle};
 #[cfg(feature = "grid")]
 use crate::style::{GridContainerStyle, GridItemStyle};
+use crate::tree::RequestedBaselines;
 use crate::CheapCloneStr;
 #[cfg(feature = "block_layout")]
 use crate::{BlockContainerStyle, BlockContext, BlockItemStyle};
@@ -416,6 +417,7 @@ pub(crate) trait LayoutPartialTreeExt: LayoutPartialTree {
                 axis: axis.into(),
                 run_mode: RunMode::ComputeSize,
                 vertical_margins_are_collapsible,
+                requested_baselines: RequestedBaselines::NONE,
             },
         )
         .size
@@ -445,6 +447,7 @@ pub(crate) trait LayoutPartialTreeExt: LayoutPartialTree {
                 axis: RequestedAxis::Both,
                 run_mode: RunMode::ComputeSize,
                 vertical_margins_are_collapsible,
+                requested_baselines: RequestedBaselines::NONE,
             },
         )
         .size
@@ -472,6 +475,7 @@ pub(crate) trait LayoutPartialTreeExt: LayoutPartialTree {
                 axis: RequestedAxis::Both,
                 run_mode: RunMode::PerformLayout,
                 vertical_margins_are_collapsible,
+                requested_baselines: RequestedBaselines::NONE,
             },
         )
     }
