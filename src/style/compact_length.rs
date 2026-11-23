@@ -16,12 +16,14 @@ std::compile_error!("Taffy only supports targets with a pointer width of 32 or 6
 /// of up to 64 bits on every target. To be stored in a [`CompactLength`] it must be non-zero and its
 /// low 3 bits must be zero (they are used for the tag), which any 8-byte aligned pointer satisfies.
 ///
-/// On 64-bit targets the handle is stored as a pointer, so a handle created with `from_ptr` keeps its
-/// provenance.
-/// On 32-bit targets the handle is stored as a `u64`, so `from_ptr` exposes the pointer's provenance
-/// and [`CalcHandle::ptr`] recovers it.
+/// A handle created with [`CalcHandle::from_ptr`] keeps its pointer provenance on both 64-bit and
+/// 32-bit targets.
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
-pub struct CalcHandle(#[cfg(target_pointer_width = "64")] *const (), #[cfg(target_pointer_width = "32")] u64);
+pub struct CalcHandle(
+    #[cfg(target_pointer_width = "64")] *const (),
+    #[cfg(target_pointer_width = "32")] *const (),
+    #[cfg(target_pointer_width = "32")] u32,
+);
 
 #[cfg(target_pointer_width = "64")]
 impl CalcHandle {
@@ -54,31 +56,31 @@ impl CalcHandle {
 
 #[cfg(target_pointer_width = "32")]
 impl CalcHandle {
-    /// Create a handle from a pointer. On 32-bit targets this exposes the pointer's provenance.
+    /// Create a handle from a pointer
     #[inline(always)]
     pub fn from_ptr(ptr: *const ()) -> Self {
-        Self(ptr.expose_provenance() as u64)
+        Self(ptr, 0)
     }
 
     /// Create a handle from an integer
     #[inline(always)]
     pub fn from_bits(bits: u64) -> Self {
-        Self(bits)
+        Self(core::ptr::without_provenance(bits as usize), (bits >> 32) as u32)
     }
 
     /// Get the handle as a pointer. If the handle was created with [`CalcHandle::from_ptr`], this is
-    /// the pointer it was created from (with its exposed provenance). Handles created from integers
-    /// are truncated to 32 bits.
+    /// the pointer it was created from (with its provenance). Handles created from integers are
+    /// truncated to 32 bits.
     #[inline(always)]
     pub fn ptr(self) -> *const () {
-        core::ptr::with_exposed_provenance(self.0 as usize)
+        self.0
     }
 
     /// Get the handle as an integer. If the handle was created with [`CalcHandle::from_bits`], this
     /// is the integer it was created from.
     #[inline(always)]
     pub fn to_bits(self) -> u64 {
-        self.0
+        ((self.1 as u64) << 32) | (self.0.addr() as u64)
     }
 }
 
@@ -170,74 +172,79 @@ mod inner {
     use super::CalcHandle;
 
     /// The low byte (8 bits)
-    const TAG_MASK: u64 = 0b11111111;
+    const TAG_MASK: usize = 0b11111111;
     /// The low 3 bits
-    const CALC_TAG_MASK: u64 = 0b111;
+    const CALC_TAG_MASK: usize = 0b111;
 
-    /// On 32 bit platforms the tag, value and calc handle are packed into a single `u64`, using the
-    /// same layout as on 64 bit platforms (so calc handles have the same 61 bits available).
+    /// On 32 bit platforms the tag, value and calc handle are packed into a `(*const (), u32)` pair:
+    /// - `low` holds the low 32 bits (the tag in the low byte, or the low 32 bits of a calc handle
+    ///   with its low 3 bits holding the calc tag, preserving pointer provenance).
+    /// - `high` holds the high 32 bits (the `f32` value bits, or the high 32 bits of a 64-bit calc
+    ///   handle).
     #[derive(Copy, Clone, Debug, PartialEq)]
     pub(super) struct CompactLengthInner {
-        /// The tagged value
-        bits: u64,
+        /// Low 32 bits: the tag or tagged low half of a calc handle
+        low: *const (),
+        /// High 32 bits: the `f32` value bits or high half of a calc handle
+        high: u32,
     }
 
     impl CompactLengthInner {
         /// Construct a `CompactLengthInner` from a tag and calc handle
         #[inline(always)]
         pub(super) fn from_calc(handle: CalcHandle, tag: usize) -> Self {
-            Self { bits: handle.0 | tag as u64 }
+            Self { low: handle.0.map_addr(|addr| addr | tag), high: handle.1 }
         }
 
         /// Construct a `CompactLengthInner` from a tag and numeric value
         #[inline(always)]
         pub(super) const fn from_val(val: f32, tag: usize) -> Self {
-            Self { bits: ((val.to_bits() as u64) << 32) | tag as u64 }
+            Self { low: core::ptr::without_provenance(tag), high: val.to_bits() }
         }
 
         /// Construct a `CompactLengthInner` from only a tag
         #[inline(always)]
         pub(super) const fn from_tag(tag: usize) -> Self {
-            Self { bits: tag as u64 }
+            Self { low: core::ptr::without_provenance(tag), high: 0 }
         }
 
         /// Get the calc tag (low 3 bits)
         #[inline(always)]
         #[cfg(feature = "calc")]
         pub(super) fn calc_tag(self) -> usize {
-            (self.bits & CALC_TAG_MASK) as usize
+            self.low.addr() & CALC_TAG_MASK
         }
 
         /// Get the general tag (low 8 bits)
         #[inline(always)]
         pub(super) fn tag(self) -> usize {
-            (self.bits & TAG_MASK) as usize
+            self.low.addr() & TAG_MASK
         }
 
         /// Get the calc handle (with the tag bits cleared)
         #[inline(always)]
         pub(super) fn calc_handle(self) -> CalcHandle {
-            CalcHandle(self.bits & !CALC_TAG_MASK)
+            CalcHandle(self.low.map_addr(|addr| addr & !CALC_TAG_MASK), self.high)
         }
 
         /// Get the numeric value
         #[inline(always)]
         pub(super) fn value(self) -> f32 {
-            f32::from_bits((self.bits >> 32) as u32)
+            f32::from_bits(self.high)
         }
 
         /// Get the serialized value.
         #[inline(always)]
         #[cfg(feature = "serde")]
         pub(super) fn serialized(self) -> u64 {
-            self.bits.rotate_left(32)
+            ((self.low.addr() as u64) << 32) | (self.high as u64)
         }
 
-        /// Derialized from a value.
+        /// Deserialized from a value.
         #[inline(always)]
         #[cfg(feature = "serde")]
         pub(super) fn from_serialized(value: u64) -> Self {
-            Self { bits: value.rotate_right(32) }
+            Self { low: core::ptr::without_provenance((value >> 32) as usize), high: value as u32 }
         }
     }
 }
@@ -841,6 +848,23 @@ mod tests {
         let value = CompactLength::fit_content_calc(handle);
         assert!(value.is_fit_content_calc());
         assert_eq!(value.calc_value().to_bits(), bits);
+    }
+
+    #[test]
+    fn size_and_alignment() {
+        assert_eq!(core::mem::size_of::<CompactLength>(), 8);
+        assert_eq!(core::mem::align_of::<CompactLength>(), core::mem::align_of::<*const ()>());
+        assert_eq!(core::mem::size_of::<CalcHandle>(), 8);
+        assert_eq!(core::mem::align_of::<CalcHandle>(), core::mem::align_of::<*const ()>());
+    }
+
+    #[test]
+    #[cfg(feature = "serde")]
+    fn serde_round_trips_compact_length() {
+        let len = CompactLength::length(12.5);
+        let expected = ((CompactLength::LENGTH_TAG as u64) << 32) | (12.5_f32.to_bits() as u64);
+        assert_eq!(len.0.serialized(), expected);
+        assert_eq!(CompactLength(CompactLengthInner::from_serialized(expected)), len);
     }
 
     #[test]
