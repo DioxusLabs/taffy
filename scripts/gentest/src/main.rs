@@ -796,7 +796,7 @@ fn serialize_dimension(obj: &serde_json::Value) -> Option<Cow<'static, str>> {
                     "percent" => Cow::from(format!("{}%", value.expect("Expected value for % unit") * 100.0)),
                     "fraction" => Cow::from(format!("{}fr", value.expect("Expected value for fr unit"))),
                     _ => unreachable!(),
-                })
+                });
             }
             _ => panic!("Tried to serialize dimension object, but unit was not a string"),
         }

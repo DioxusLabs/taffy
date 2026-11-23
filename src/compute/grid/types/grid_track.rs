@@ -161,10 +161,6 @@ impl GridTrack {
     #[inline]
     /// Returns the track's flex factor if it is a flex track, else 0.
     pub fn flex_factor(&self) -> f32 {
-        if self.max_track_sizing_function.is_fr() {
-            self.max_track_sizing_function.0.value()
-        } else {
-            0.0
-        }
+        if self.max_track_sizing_function.is_fr() { self.max_track_sizing_function.0.value() } else { 0.0 }
     }
 }

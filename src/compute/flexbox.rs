@@ -14,18 +14,18 @@ use crate::tree::{
     OofPositioningArea,
 };
 use crate::tree::{Baselines, Layout, LayoutInput, LayoutOutput, OofCandidate, OofCandidates, RunMode, SizingMode};
-use crate::util::debug::debug_log;
-use crate::util::sys::{f32_max, f32_min, new_vec_with_capacity, Vec};
 use crate::util::MaybeMath;
+use crate::util::debug::debug_log;
+use crate::util::sys::{Vec, f32_max, f32_min, new_vec_with_capacity};
 use crate::util::{MaybeResolve, ResolveOrZero};
 use crate::{BoxGenerationMode, BoxSizing, Dimension, Direction, RequestedAxis};
 
 use super::common::alignment::apply_alignment_fallback;
 #[cfg(feature = "content_size")]
 use super::common::scrollable_overflow::{
-    compute_scrollable_overflow_contribution, finalize_scrollable_overflow, ScrollableOverflowContainer,
+    ScrollableOverflowContainer, compute_scrollable_overflow_contribution, finalize_scrollable_overflow,
 };
-use super::common::sizing_keyword::{resolve_sizing_keyword, SizingKeywordResolution};
+use super::common::sizing_keyword::{SizingKeywordResolution, resolve_sizing_keyword};
 
 /// The intermediate results of a flexbox calculation for a single item
 struct FlexItem {
@@ -122,11 +122,7 @@ struct FlexItem {
 impl FlexItem {
     /// The size that the item's size styles exclude: padding + border for `box-sizing: content-box`, otherwise zero
     fn box_sizing_adjustment(&self, style: &impl CoreStyle) -> Size<f32> {
-        if style.box_sizing() == BoxSizing::ContentBox {
-            (self.padding + self.border).sum_axes()
-        } else {
-            Size::ZERO
-        }
+        if style.box_sizing() == BoxSizing::ContentBox { (self.padding + self.border).sum_axes() } else { Size::ZERO }
     }
 
     /// Returns true if the item is a <https://www.w3.org/TR/css-overflow-3/#scroll-container>
@@ -1540,11 +1536,7 @@ fn determine_container_main_size(
                     return f32_max(size, f32_min(max_content_size, main_axis_available_space));
                 }
 
-                if lines.len() > 1 {
-                    f32_max(size, main_axis_available_space)
-                } else {
-                    size
-                }
+                if lines.len() > 1 { f32_max(size, main_axis_available_space) } else { size }
             }
             AvailableSpace::MinContent if constants.is_wrap => {
                 let longest_line_length: f32 = lines
@@ -1761,11 +1753,7 @@ fn determine_container_main_size(
                                 f32_max(1.0, item.flex_grow) * flex_fraction
                             } else if item.content_flex_fraction < 0.0 {
                                 let scaled_shrink_factor = f32_max(1.0, item.flex_shrink) * item.inner_flex_basis;
-                                if scaled_shrink_factor == 0.0 {
-                                    0.0
-                                } else {
-                                    scaled_shrink_factor * flex_fraction
-                                }
+                                if scaled_shrink_factor == 0.0 { 0.0 } else { scaled_shrink_factor * flex_fraction }
                             } else {
                                 0.0
                             };
@@ -2528,11 +2516,7 @@ fn align_flex_items_along_cross_axis(
                 // Until we support vertical writing modes, baseline alignment only makes sense if
                 // the constants.direction is row, so we treat it as flex-start alignment in columns.
                 let baseline_column_should_reverse = cross_axis_should_reverse && !constants.is_wrap;
-                if constants.is_wrap_reverse ^ baseline_column_should_reverse {
-                    free_space
-                } else {
-                    0.0
-                }
+                if constants.is_wrap_reverse ^ baseline_column_should_reverse { free_space } else { 0.0 }
             }
         }
         AlignItemsKeyword::Stretch => {
@@ -3087,7 +3071,7 @@ fn sum_axis_gaps(gap: f32, num_items: usize) -> f32 {
 /// a test oracle.
 #[cfg(feature = "flexbox_balance")]
 mod balance {
-    use crate::util::sys::{new_vec_with_capacity, Vec};
+    use crate::util::sys::{Vec, new_vec_with_capacity};
 
     /// Score assigned to divisions that violate the line size constraint
     const INFEASIBLE: f64 = f64::INFINITY;

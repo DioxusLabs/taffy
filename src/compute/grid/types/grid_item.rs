@@ -1,6 +1,6 @@
 //! Contains GridItem used to represent a single grid item during layout
 use super::GridTrack;
-use crate::compute::common::sizing_keyword::{resolve_sizing_keyword, SizingKeywordResolution};
+use crate::compute::common::sizing_keyword::{SizingKeywordResolution, resolve_sizing_keyword};
 use crate::compute::grid::OriginZeroLine;
 use crate::geometry::AbstractAxis;
 use crate::geometry::{Line, Point, Rect, Size};
@@ -471,11 +471,7 @@ impl GridItem {
                         .max_track_sizing_function
                         .definite_value(available_space.get(axis), resolve_calc_value)?;
 
-                    if min_size == max_size {
-                        Some(track.base_size)
-                    } else {
-                        None
-                    }
+                    if min_size == max_size { Some(track.base_size) } else { None }
                 })
                 .sum::<Option<f32>>(),
         );

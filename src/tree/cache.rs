@@ -1,9 +1,9 @@
 //! A cache for storing the results of layout computation
 
+use crate::RequestedAxis;
 use crate::geometry::Size;
 use crate::style::AvailableSpace;
 use crate::tree::{CollapsibleMarginSet, LayoutInput, LayoutOutput, RunMode, SizingMode};
-use crate::RequestedAxis;
 use core::sync::atomic::{AtomicU16, Ordering};
 
 /// The number of cache entries for each node in the tree

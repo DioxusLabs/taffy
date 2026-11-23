@@ -2,13 +2,13 @@ mod common {
     pub mod image;
     pub mod text;
 }
-use common::image::{image_measure_function, ImageContext};
-use common::text::{text_measure_function, FontMetrics, TextContext, WritingMode, LOREM_IPSUM};
-use taffy::util::print_tree;
+use common::image::{ImageContext, image_measure_function};
+use common::text::{FontMetrics, LOREM_IPSUM, TextContext, WritingMode, text_measure_function};
 use taffy::CalcHandle;
+use taffy::util::print_tree;
 use taffy::{
-    compute_cached_layout, compute_flexbox_layout, compute_grid_layout, compute_leaf_layout, compute_oof_layout,
-    compute_root_layout, prelude::*, round_layout, Cache, CacheTree,
+    Cache, CacheTree, compute_cached_layout, compute_flexbox_layout, compute_grid_layout, compute_leaf_layout,
+    compute_oof_layout, compute_root_layout, prelude::*, round_layout,
 };
 
 #[derive(Debug, Copy, Clone)]

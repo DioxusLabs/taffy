@@ -1,7 +1,7 @@
 //! Taffy uses two coordinate systems to refer to grid lines (the gaps/gutters between rows/columns):
 use super::super::types::TrackCounts;
 use crate::geometry::Line;
-use core::cmp::{max, Ordering};
+use core::cmp::{Ordering, max};
 use core::ops::{Add, AddAssign, Sub};
 
 /// The maximum number of tracks in each direction from the start of the explicit grid (line 0 in
@@ -111,11 +111,7 @@ impl OriginZeroLine {
     /// The inverse of [`GridLine::into_origin_zero_line`]
     pub(crate) fn into_grid_line(self, explicit_track_count: u16) -> GridLine {
         let explicit_line_count = explicit_track_count + 1;
-        if self.0 >= 0 {
-            GridLine(self.0 + 1)
-        } else {
-            GridLine(self.0 - explicit_line_count as i16)
-        }
+        if self.0 >= 0 { GridLine(self.0 + 1) } else { GridLine(self.0 - explicit_line_count as i16) }
     }
 
     /// Converts a grid line in OriginZero coordinates into the index of that same grid line in the GridTrackVec.
@@ -153,20 +149,12 @@ impl OriginZeroLine {
 
     /// The minimum number of negative implicit track there must be if a grid item starts at this line.
     pub(crate) fn implied_negative_implicit_tracks(self) -> u16 {
-        if self.0 < 0 {
-            self.0.unsigned_abs()
-        } else {
-            0
-        }
+        if self.0 < 0 { self.0.unsigned_abs() } else { 0 }
     }
 
     /// The minimum number of positive implicit track there must be if a grid item end at this line.
     pub(crate) fn implied_positive_implicit_tracks(self, explicit_track_count: u16) -> u16 {
-        if self.0 > explicit_track_count as i16 {
-            self.0 as u16 - explicit_track_count
-        } else {
-            0
-        }
+        if self.0 > explicit_track_count as i16 { self.0 as u16 - explicit_track_count } else { 0 }
     }
 }
 

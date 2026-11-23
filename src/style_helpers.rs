@@ -6,13 +6,13 @@ use crate::{
 
 #[cfg(feature = "grid")]
 use crate::{
+    CheapCloneStr,
     geometry::MinMax,
     style::{
         GridTemplateComponent, GridTemplateRepetition, MaxTrackSizingFunction, MinTrackSizingFunction, RepetitionCount,
         TrackSizingFunction,
     },
     util::sys::Vec,
-    CheapCloneStr,
 };
 #[cfg(feature = "grid")]
 use core::fmt::Debug;
@@ -590,8 +590,8 @@ mod repeat_fn_tests {
     type S = crate::sys::DefaultCheapStr;
     use super::repeat;
     use crate::{
-        style::{GridTemplateComponent, RepetitionCount, TrackSizingFunction},
         GridTemplateRepetition,
+        style::{GridTemplateComponent, RepetitionCount, TrackSizingFunction},
     };
 
     const TEST_VEC: Vec<TrackSizingFunction> = Vec::new();

@@ -1,15 +1,15 @@
 //! Implements the track sizing algorithm
 //! <https://www.w3.org/TR/css-grid-1/#layout-algorithm>
 use super::types::{GridItem, GridTrack, TrackCounts};
+use crate::CompactLength;
 use crate::compute::common::alignment::child_first_baseline;
 use crate::geometry::{AbstractAxis, Line, Size};
 use crate::style::CalcHandle;
 use crate::style::{AlignContent, AlignContentKeyword, AvailableSpace};
 use crate::style_helpers::TaffyMinContent;
 use crate::tree::{LayoutPartialTree, LayoutPartialTreeExt, SizingMode};
-use crate::util::sys::{f32_max, f32_min, Vec};
+use crate::util::sys::{Vec, f32_max, f32_min};
 use crate::util::{FrontBackVecBuilder, MaybeMath, ResolveOrZero};
-use crate::CompactLength;
 
 /// Takes an axis, and a list of grid items sorted firstly by whether they cross a flex track
 /// in the specified axis (items that don't cross a flex track first) and then by the number
@@ -1265,11 +1265,7 @@ fn expand_flexible_tracks<Tree: LayoutPartialTree>(
         AvailableSpace::Definite(available_space) => {
             let used_space: f32 = axis_tracks.iter().map(|track| track.base_size).sum();
             let free_space = available_space - used_space;
-            if free_space <= 0.0 {
-                0.0
-            } else {
-                find_size_of_fr(axis_tracks, available_space)
-            }
+            if free_space <= 0.0 { 0.0 } else { find_size_of_fr(axis_tracks, available_space) }
         }
         // If ... sizing the grid container under a min-content constraint the used flex fraction is zero.
         AvailableSpace::MinContent => 0.0,
@@ -1284,11 +1280,7 @@ fn expand_flexible_tracks<Tree: LayoutPartialTree>(
                     .filter(|track| track.max_track_sizing_function.is_fr())
                     .map(|track| {
                         let flex_factor = track.flex_factor();
-                        if flex_factor > 1.0 {
-                            track.base_size / flex_factor
-                        } else {
-                            track.base_size
-                        }
+                        if flex_factor > 1.0 { track.base_size / flex_factor } else { track.base_size }
                     })
                     .max_by(|a, b| a.total_cmp(b))
                     .unwrap_or(0.0),

@@ -3,7 +3,7 @@ use super::{
     AlignContent, AlignContentKeyword, AlignItems, AlignSelf, CheapCloneStr, CompactLength, CoreStyle, Dimension,
     JustifyContent, LengthPercentage, LengthPercentageAuto, Style,
 };
-use crate::compute::grid::{GridCoordinate, GridLine, OriginZeroLine, MAX_GRID_TRACKS};
+use crate::compute::grid::{GridCoordinate, GridLine, MAX_GRID_TRACKS, OriginZeroLine};
 use crate::geometry::{AbsoluteAxis, AbstractAxis, Line, MinMax, Size};
 use crate::style::CalcHandle;
 use crate::style_helpers::*;
@@ -13,7 +13,7 @@ use core::fmt::Debug;
 
 #[cfg(feature = "parse")]
 use crate::util::parse::{
-    from_str_from_css, parse_css_str_entirely, CssParseError, CssParseResult, FromCss, ParseError, Parser, Token,
+    CssParseError, CssParseResult, FromCss, ParseError, Parser, Token, from_str_from_css, parse_css_str_entirely,
 };
 
 /// Defines the value of the `grid-template-areas` property: the named areas plus the overall

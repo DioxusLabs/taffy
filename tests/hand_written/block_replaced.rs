@@ -5,9 +5,9 @@
 //! (<https://www.w3.org/TR/CSS22/visudet.html#block-replaced-width>).
 #[cfg(test)]
 mod block_replaced {
-    use taffy::prelude::*;
     use taffy::TaffyTree;
-    use taffy_test_helpers::{new_test_tree, test_measure_function, TestNodeContext};
+    use taffy::prelude::*;
+    use taffy_test_helpers::{TestNodeContext, new_test_tree, test_measure_function};
 
     // A 142x20 badge-like image (height = width * 20/142)
     const BADGE: TestNodeContext = TestNodeContext::aspect_ratio(142.0, 20.0 / 142.0);

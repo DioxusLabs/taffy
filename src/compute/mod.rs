@@ -38,10 +38,10 @@ pub(crate) mod flexbox;
 pub(crate) mod grid;
 
 pub use leaf::compute_leaf_layout;
-pub use oof::{compute_oof_layout, compute_oof_layout_for_area, resolve_static_offset, OofLayoutResult};
+pub use oof::{OofLayoutResult, compute_oof_layout, compute_oof_layout_for_area, resolve_static_offset};
 
 #[cfg(feature = "block_layout")]
-pub use self::block::{compute_block_align_content_offset, compute_block_layout, BlockContext, BlockFormattingContext};
+pub use self::block::{BlockContext, BlockFormattingContext, compute_block_align_content_offset, compute_block_layout};
 
 #[cfg(feature = "flexbox")]
 pub use self::flexbox::compute_flexbox_layout;
@@ -60,9 +60,9 @@ use crate::tree::{
     AxisStaticAlign, AxisStaticEdge, AxisStaticPosition, Layout, LayoutInput, LayoutOutput, LayoutPartialTree,
     LayoutPartialTreeExt, NodeId, OofCandidate, OofCandidates, RequestedAxis, RoundTree, RunMode, SizingMode,
 };
-use crate::util::debug::{debug_log, debug_log_node, debug_pop_node, debug_push_node};
-use crate::util::sys::{round, Vec};
 use crate::util::ResolveOrZero;
+use crate::util::debug::{debug_log, debug_log_node, debug_pop_node, debug_push_node};
+use crate::util::sys::{Vec, round};
 use crate::{CacheTree, MaybeMath, MaybeResolve};
 
 /// Compute layout for the root node in the tree
@@ -496,9 +496,9 @@ pub mod detailed_info {
 #[cfg(test)]
 mod tests {
     use super::compute_hidden_layout;
+    use crate::TaffyTree;
     use crate::geometry::{Point, Size};
     use crate::style::{Display, Style};
-    use crate::TaffyTree;
 
     #[test]
     fn hidden_layout_should_hide_recursively() {

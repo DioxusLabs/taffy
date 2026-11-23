@@ -3,8 +3,8 @@
 //! their `Layout.location` is relative to that containing block.
 #[cfg(test)]
 mod oof_hoisting {
-    use taffy::prelude::*;
     use taffy::Point;
+    use taffy::prelude::*;
 
     fn leaf_style(width: f32, height: f32) -> Style {
         Style { size: Size { width: length(width), height: length(height) }, ..Default::default() }

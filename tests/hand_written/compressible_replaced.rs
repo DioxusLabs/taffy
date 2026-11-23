@@ -10,7 +10,7 @@ mod compressible_replaced {
     use taffy::prelude::*;
     use taffy::style::CoreStyle;
     use taffy::{Point, TaffyTree};
-    use taffy_test_helpers::{new_test_tree, test_measure_function, TestNodeContext};
+    use taffy_test_helpers::{TestNodeContext, new_test_tree, test_measure_function};
 
     // A 150x20 text input (height = width * 20/150)
     const INPUT: TestNodeContext = TestNodeContext::aspect_ratio(150.0, 20.0 / 150.0);

@@ -2,8 +2,8 @@
 //! against a viewport-sized rectangle at the canvas origin, not against the root element's box.
 #[cfg(test)]
 mod initial_containing_block {
-    use taffy::prelude::*;
     use taffy::Point;
+    use taffy::prelude::*;
 
     const VIEWPORT: Size<AvailableSpace> =
         Size { width: AvailableSpace::Definite(800.0), height: AvailableSpace::Definite(600.0) };

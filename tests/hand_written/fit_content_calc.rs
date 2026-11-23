@@ -4,8 +4,8 @@
 #[cfg(all(feature = "calc", feature = "grid", feature = "block_layout"))]
 mod fit_content_calc {
     use taffy::{
-        compute_block_layout, compute_cached_layout, compute_grid_layout, compute_leaf_layout, compute_root_layout,
-        prelude::*, Cache, CacheTree, CalcHandle, Layout, LayoutInput, LayoutOutput, Style,
+        Cache, CacheTree, CalcHandle, Layout, LayoutInput, LayoutOutput, Style, compute_block_layout,
+        compute_cached_layout, compute_grid_layout, compute_leaf_layout, compute_root_layout, prelude::*,
     };
 
     /// A calc() value of the form `pct * basis + px`. 8-byte aligned so that its address can be tagged.
@@ -65,19 +65,11 @@ mod fit_content_calc {
         }
 
         fn node_from_id(&self, node_id: NodeId) -> &Node {
-            if node_id == ROOT {
-                self
-            } else {
-                &self.children[usize::from(node_id)]
-            }
+            if node_id == ROOT { self } else { &self.children[usize::from(node_id)] }
         }
 
         fn node_from_id_mut(&mut self, node_id: NodeId) -> &mut Node {
-            if node_id == ROOT {
-                self
-            } else {
-                &mut self.children[usize::from(node_id)]
-            }
+            if node_id == ROOT { self } else { &mut self.children[usize::from(node_id)] }
         }
 
         fn compute_layout(&mut self, available_space: Size<AvailableSpace>) {

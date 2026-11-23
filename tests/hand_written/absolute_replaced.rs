@@ -8,7 +8,7 @@
 mod absolute_replaced {
     use taffy::prelude::*;
     use taffy::{Point, TaffyTree};
-    use taffy_test_helpers::{new_test_tree, test_measure_function, TestNodeContext};
+    use taffy_test_helpers::{TestNodeContext, new_test_tree, test_measure_function};
 
     // A 100x50 image (height = width * 0.5)
     const IMAGE: TestNodeContext = TestNodeContext::aspect_ratio(100.0, 0.5);

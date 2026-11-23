@@ -104,21 +104,21 @@ pub use crate::compute::compute_flexbox_layout;
 #[doc(inline)]
 pub use crate::compute::compute_grid_layout;
 pub use crate::compute::detailed_info::*;
+#[doc(inline)]
+pub use crate::compute::{
+    OofLayoutResult, compute_cached_layout, compute_hidden_layout, compute_leaf_layout, compute_oof_layout,
+    compute_oof_layout_for_area, compute_root_layout, resolve_static_offset, round_layout,
+};
 #[cfg(feature = "block_layout")]
 #[doc(inline)]
 pub use crate::compute::{compute_block_align_content_offset, compute_block_layout};
 #[doc(inline)]
-pub use crate::compute::{
-    compute_cached_layout, compute_hidden_layout, compute_leaf_layout, compute_oof_layout, compute_oof_layout_for_area,
-    compute_root_layout, resolve_static_offset, round_layout, OofLayoutResult,
-};
-#[doc(inline)]
 pub use crate::style::Style;
-#[doc(inline)]
-pub use crate::tree::traits::*;
 #[cfg(feature = "taffy_tree")]
 #[doc(inline)]
 pub use crate::tree::TaffyTree;
+#[doc(inline)]
+pub use crate::tree::traits::*;
 #[cfg(feature = "std")]
 #[doc(inline)]
 pub use crate::util::print_tree;

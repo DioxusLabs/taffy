@@ -1,4 +1,4 @@
-use taffy::{compute_leaf_layout, LayoutInput, LayoutOutput, NodeId, ResolveOrZero, Size, Style, TaffyTree};
+use taffy::{LayoutInput, LayoutOutput, NodeId, ResolveOrZero, Size, Style, TaffyTree, compute_leaf_layout};
 
 /// Creates a `TaffyTree` that uses `TestNodeContext`. The purpose of this function is
 /// to allow `TaffyTree` to be monomophised once in this crate rather than separately for
@@ -159,8 +159,8 @@ impl AhemTextMeasureData {
         known_dimensions: taffy::Size<Option<f32>>,
         available_space: taffy::Size<taffy::AvailableSpace>,
     ) -> taffy::Size<f32> {
-        use taffy::prelude::*;
         use taffy::AbsoluteAxis;
+        use taffy::prelude::*;
 
         const ZWS: char = '\u{200B}';
         const H_WIDTH: f32 = 10.0;

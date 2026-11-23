@@ -5,7 +5,7 @@ use crate::style::{GenericGridPlacement, OriginZeroGridPlacement};
 use core::cmp::{max, min};
 
 use super::types::TrackCounts;
-use super::{ItemPlacement, OriginZeroLine, MAX_OZ_LINE, MIN_OZ_LINE};
+use super::{ItemPlacement, MAX_OZ_LINE, MIN_OZ_LINE, OriginZeroLine};
 
 /// Estimate the number of rows and columns in the grid
 /// This is used as a performance optimisation to pre-size vectors and reduce allocations. It also forms a necessary step
@@ -100,11 +100,7 @@ fn child_min_line_max_line_span(oz_line: Line<OriginZeroGridPlacement>) -> (Orig
         // Both tracks specified
         (Line(track1), Line(track2)) => {
             // See rules A and B above
-            if track1 == track2 {
-                track1
-            } else {
-                min(track1, track2)
-            }
+            if track1 == track2 { track1 } else { min(track1, track2) }
         }
 
         // Start track specified
@@ -125,11 +121,7 @@ fn child_min_line_max_line_span(oz_line: Line<OriginZeroGridPlacement>) -> (Orig
         // Both tracks specified
         (Line(track1), Line(track2)) => {
             // See rules A and B above
-            if track1 == track2 {
-                track1 + 1
-            } else {
-                max(track1, track2)
-            }
+            if track1 == track2 { track1 + 1 } else { max(track1, track2) }
         }
 
         // Start track specified
@@ -165,8 +157,8 @@ fn child_min_line_max_line_span(oz_line: Line<OriginZeroGridPlacement>) -> (Orig
 #[cfg(test)]
 mod tests {
     mod test_child_min_max_line {
-        use super::super::child_min_line_max_line_span;
         use super::super::OriginZeroLine;
+        use super::super::child_min_line_max_line_span;
         use crate::geometry::Line;
         use crate::style::GridPlacement;
         use crate::style_helpers::*;
@@ -193,11 +185,11 @@ mod tests {
     }
 
     mod test_initial_grid_sizing {
-        use super::super::{compute_grid_size_estimate, TrackCounts};
-        use crate::compute::grid::util::test_helpers::*;
-        use crate::compute::grid::NamedLineResolver;
-        use crate::style_helpers::*;
+        use super::super::{TrackCounts, compute_grid_size_estimate};
         use crate::Style;
+        use crate::compute::grid::NamedLineResolver;
+        use crate::compute::grid::util::test_helpers::*;
+        use crate::style_helpers::*;
 
         fn estimate(
             explicit_col_count: u16,

@@ -1,7 +1,7 @@
 //! This module is a partial implementation of the CSS Grid Level 1 specification
 //! <https://www.w3.org/TR/css-grid-1>
 #[cfg(feature = "content_size")]
-use super::common::scrollable_overflow::{finalize_scrollable_overflow, ScrollableOverflowContainer};
+use super::common::scrollable_overflow::{ScrollableOverflowContainer, finalize_scrollable_overflow};
 use crate::geometry::{AbsoluteAxis, AbstractAxis, InBothAbsAxis};
 use crate::geometry::{Line, Point, Rect, Size};
 use crate::style::{AlignContent, AlignItems, AvailableSpace, Contain, ContainingBlockClaims, Overflow};
@@ -9,18 +9,18 @@ use crate::tree::{
     AxisStaticPosition, Baselines, Layout, LayoutInput, LayoutOutput, LayoutPartialTreeExt, NodeId, OofCandidate,
     OofCandidates, OofPositioningArea, RunMode, SizingMode,
 };
-use crate::util::debug::debug_log;
-use crate::util::sys::{f32_max, f32_min, GridTrackVec, Vec};
 use crate::util::MaybeMath;
+use crate::util::debug::debug_log;
+use crate::util::sys::{GridTrackVec, Vec, f32_max, f32_min};
 use crate::util::{MaybeResolve, ResolveOrZero};
 use crate::{
-    style_helpers::*, BoxGenerationMode, BoxSizing, CoreStyle, Direction, GridContainerStyle, GridItemStyle,
-    LayoutGridContainer, RequestedAxis,
+    BoxGenerationMode, BoxSizing, CoreStyle, Direction, GridContainerStyle, GridItemStyle, LayoutGridContainer,
+    RequestedAxis, style_helpers::*,
 };
 use alignment::{align_and_position_item, align_tracks};
-use explicit_grid::{compute_explicit_grid_size_in_axis, initialize_grid_tracks, AutoRepeatStrategy};
+use explicit_grid::{AutoRepeatStrategy, compute_explicit_grid_size_in_axis, initialize_grid_tracks};
 use implicit_grid::compute_grid_size_estimate;
-use placement::{place_grid_items, ItemPlacement};
+use placement::{ItemPlacement, place_grid_items};
 use track_sizing::{
     determine_if_item_crosses_flexible_or_intrinsic_tracks, resolve_item_track_indexes, track_sizing_algorithm,
 };
@@ -31,7 +31,7 @@ use crate::{CheapCloneStr, GridAreaAxis, GridPlacement};
 use core::ops::Range;
 use types::{GridItem, GridTrackKind, TrackCounts};
 
-pub(crate) use types::{GridCoordinate, GridLine, OriginZeroLine, MAX_GRID_TRACKS, MAX_OZ_LINE, MIN_OZ_LINE};
+pub(crate) use types::{GridCoordinate, GridLine, MAX_GRID_TRACKS, MAX_OZ_LINE, MIN_OZ_LINE, OriginZeroLine};
 
 pub use types::{GridLineNames, GridLineNamesIter};
 
@@ -1029,11 +1029,7 @@ fn resolve_static_position_grid_area<S: CheapCloneStr>(
     }
     /// Resolve a grid line (by track vector index) used as an end edge to a position
     fn line_as_end_edge(tracks: &[GridTrack], index: usize) -> f32 {
-        if index == 0 {
-            tracks.get(1).unwrap_or(&tracks[0]).offset
-        } else {
-            tracks[index].offset
-        }
+        if index == 0 { tracks.get(1).unwrap_or(&tracks[0]).offset } else { tracks[index].offset }
     }
     // In RTL, tracks remain in logical order but physical offsets are assigned
     // right-to-left: a line used as an inline-start edge resolves to the physical
@@ -1056,11 +1052,7 @@ fn resolve_static_position_grid_area<S: CheapCloneStr>(
     }
     /// Resolve a grid line used as an inline-end edge to a physical left x-position (RTL)
     fn rtl_line_as_end_edge(tracks: &[GridTrack], index: usize) -> f32 {
-        if index == 0 {
-            tracks[0].offset
-        } else {
-            tracks[index - 1].offset
-        }
+        if index == 0 { tracks[0].offset } else { tracks[index - 1].offset }
     }
 
     // In RTL the item's physical left edge derives from its logical end line and its
@@ -1181,11 +1173,7 @@ impl<S: CheapCloneStr> DetailedGridTracksInfo<S> {
             .unwrap_or(&self.positions[index]);
         // Collapsed gutters overlap: a start edge follows the shared gutter, while an end
         // edge precedes it.
-        if is_start != is_reversed {
-            track.start
-        } else {
-            track.end
-        }
+        if is_start != is_reversed { track.start } else { track.end }
     }
 }
 

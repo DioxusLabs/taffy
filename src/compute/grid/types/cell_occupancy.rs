@@ -3,7 +3,7 @@ use super::TrackCounts;
 use crate::compute::grid::OriginZeroLine;
 use crate::geometry::AbsoluteAxis;
 use crate::geometry::Line;
-use crate::util::sys::{new_vec_with_capacity, Vec};
+use crate::util::sys::{Vec, new_vec_with_capacity};
 use core::cmp::{max, min};
 use core::fmt::Debug;
 use core::ops::Range;

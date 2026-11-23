@@ -2,7 +2,7 @@
 mod measure {
     use taffy::prelude::*;
     use taffy::{LayoutInput, LayoutOutput};
-    use taffy_test_helpers::{new_test_tree, test_measure_function, TestNodeContext};
+    use taffy_test_helpers::{TestNodeContext, new_test_tree, test_measure_function};
 
     const HUNDRED_HUNDRED: TestNodeContext = TestNodeContext::fixed(100.0, 100.0);
     const HUNDRED_FIFTY: TestNodeContext = TestNodeContext::fixed(100.0, 50.0);

@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod flex_line_count {
     use taffy::prelude::*;
-    use taffy_test_helpers::{new_test_tree, test_measure_function, TestNodeContext, WritingMode};
+    use taffy_test_helpers::{TestNodeContext, WritingMode, new_test_tree, test_measure_function};
 
     const TEXT: &str = "HHHHHHHHHH\u{200B}HHHHHHHHHH\u{200B}HHHHHHHHHH";
 

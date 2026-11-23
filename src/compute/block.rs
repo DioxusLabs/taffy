@@ -10,10 +10,10 @@ use crate::tree::{
     OofPositioningArea,
 };
 use crate::tree::{Baselines, CollapsibleMarginSet, Layout, LayoutInput, LayoutOutput, RunMode, SizingMode};
-use crate::util::debug::debug_log;
-use crate::util::sys::f32_max;
-use crate::util::sys::Vec;
 use crate::util::MaybeMath;
+use crate::util::debug::debug_log;
+use crate::util::sys::Vec;
+use crate::util::sys::f32_max;
 use crate::util::{MaybeResolve, ResolveOrZero};
 use crate::{
     BlockContainerStyle, BlockItemStyle, BoxGenerationMode, BoxSizing, Contain, Dimension, Direction,
@@ -21,7 +21,7 @@ use crate::{
 };
 
 #[cfg(feature = "float_layout")]
-use super::float::{BfcSlot, ContentSlot, FloatContext, FloatIntrinsicWidthCalculator, FIT_TOLERANCE};
+use super::float::{BfcSlot, ContentSlot, FIT_TOLERANCE, FloatContext, FloatIntrinsicWidthCalculator};
 #[cfg(feature = "float_layout")]
 use crate::{Clear, Float, FloatDirection};
 
@@ -322,9 +322,9 @@ impl BlockContext<'_> {
 use super::common::alignment::{apply_alignment_fallback, child_first_baseline, compute_alignment_offset};
 #[cfg(feature = "content_size")]
 use super::common::scrollable_overflow::{
-    compute_scrollable_overflow_contribution, finalize_scrollable_overflow, ScrollableOverflowContainer,
+    ScrollableOverflowContainer, compute_scrollable_overflow_contribution, finalize_scrollable_overflow,
 };
-use super::common::sizing_keyword::{resolve_sizing_keyword, SizingKeywordResolution};
+use super::common::sizing_keyword::{SizingKeywordResolution, resolve_sizing_keyword};
 
 /// Per-child data that is accumulated and modified over the course of the layout algorithm
 struct BlockItem {
@@ -1675,11 +1675,7 @@ fn perform_final_layout_on_in_flow_children<Tree: LayoutBlockContainer>(
             let free_x_space = f32_max(0.0, stretch_width - final_size.width);
             let x_axis_auto_margin_size = {
                 let auto_margin_count = item_margin.left.is_none() as u8 + item_margin.right.is_none() as u8;
-                if auto_margin_count > 0 {
-                    free_x_space / auto_margin_count as f32
-                } else {
-                    0.0
-                }
+                if auto_margin_count > 0 { free_x_space / auto_margin_count as f32 } else { 0.0 }
             };
             let resolved_margin = Rect {
                 left: item_margin.left.unwrap_or(x_axis_auto_margin_size),

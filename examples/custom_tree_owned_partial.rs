@@ -9,12 +9,12 @@ mod common {
     pub mod image;
     pub mod text;
 }
-use common::image::{image_measure_function, ImageContext};
-use common::text::{text_measure_function, FontMetrics, TextContext, WritingMode, LOREM_IPSUM};
+use common::image::{ImageContext, image_measure_function};
+use common::text::{FontMetrics, LOREM_IPSUM, TextContext, WritingMode, text_measure_function};
 use taffy::CalcHandle;
 use taffy::{
-    compute_cached_layout, compute_flexbox_layout, compute_grid_layout, compute_leaf_layout, compute_oof_layout,
-    compute_root_layout, prelude::*, Cache, CacheTree, Layout, Style,
+    Cache, CacheTree, Layout, Style, compute_cached_layout, compute_flexbox_layout, compute_grid_layout,
+    compute_leaf_layout, compute_oof_layout, compute_root_layout, prelude::*,
 };
 
 #[derive(Debug, Copy, Clone)]
@@ -94,20 +94,12 @@ impl Node {
     /// we use usize::MAX on the assumption that there will never be that many children.
     fn node_from_id(&self, node_id: NodeId) -> &Node {
         let idx = usize::from(node_id);
-        if idx == usize::MAX {
-            self
-        } else {
-            &self.children[idx]
-        }
+        if idx == usize::MAX { self } else { &self.children[idx] }
     }
 
     fn node_from_id_mut(&mut self, node_id: NodeId) -> &mut Node {
         let idx = usize::from(node_id);
-        if idx == usize::MAX {
-            self
-        } else {
-            &mut self.children[idx]
-        }
+        if idx == usize::MAX { self } else { &mut self.children[idx] }
     }
 }
 

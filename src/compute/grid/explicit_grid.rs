@@ -5,9 +5,9 @@ use crate::geometry::AbsoluteAxis;
 use crate::style::CalcHandle;
 use crate::style::{LengthPercentage, RepetitionCount, TrackSizingFunction};
 use crate::style_helpers::TaffyAuto;
-use crate::util::sys::{ceil, floor, Vec};
 use crate::util::MaybeMath;
 use crate::util::ResolveOrZero;
+use crate::util::sys::{Vec, ceil, floor};
 use core::cmp::min;
 
 use super::MAX_GRID_TRACKS;

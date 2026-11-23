@@ -136,11 +136,7 @@ mod polyfill {
     #[must_use]
     #[inline(always)]
     fn fract(value: f32) -> f32 {
-        if value == 0.0 {
-            0.0
-        } else {
-            value % 1.0
-        }
+        if value == 0.0 { 0.0 } else { value % 1.0 }
     }
 
     #[must_use]
@@ -150,11 +146,7 @@ mod polyfill {
         if f.is_nan() || f == 0.0 {
             value
         } else if value > 0.0 {
-            if f < 0.5 {
-                value - f
-            } else {
-                value - f + 1.0
-            }
+            if f < 0.5 { value - f } else { value - f + 1.0 }
         } else if -f < 0.5 {
             value - f
         } else {

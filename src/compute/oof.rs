@@ -15,13 +15,13 @@ use crate::tree::{
     AxisStaticPosition, Layout, LayoutContainingBlock, LayoutInput, LayoutOutput, LayoutPartialTreeExt, NodeId,
     OofCandidate, OofCandidates, OofPositioningArea, RequestedAxis, RunMode, SizingMode,
 };
-use crate::util::sys::{f32_max, Vec};
+use crate::util::sys::{Vec, f32_max};
 use crate::util::{MaybeMath, MaybeResolve, ResolveOrZero};
 use crate::{AxisStaticEdge, BoxSizing, Direction};
 
 #[cfg(feature = "content_size")]
 use super::common::scrollable_overflow::{
-    compute_scrollable_overflow_contribution, finalize_scrollable_overflow, ScrollableOverflowContainer,
+    ScrollableOverflowContainer, compute_scrollable_overflow_contribution, finalize_scrollable_overflow,
 };
 use super::common::sizing_keyword::resolve_absolute_sizing_keywords;
 
@@ -151,20 +151,12 @@ struct OofAxis {
 impl OofAxis {
     /// The physical edge corresponding to the logical start edge of the containing block
     fn start_edge(&self) -> AxisStaticEdge {
-        if self.reversed {
-            AxisStaticEdge::End
-        } else {
-            AxisStaticEdge::Start
-        }
+        if self.reversed { AxisStaticEdge::End } else { AxisStaticEdge::Start }
     }
 
     /// The physical edge corresponding to the logical end edge of the containing block
     fn end_edge(&self) -> AxisStaticEdge {
-        if self.reversed {
-            AxisStaticEdge::Start
-        } else {
-            AxisStaticEdge::End
-        }
+        if self.reversed { AxisStaticEdge::Start } else { AxisStaticEdge::End }
     }
 
     /// The inset-modified containing block (IMCB) in this axis

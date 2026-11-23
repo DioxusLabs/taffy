@@ -1,11 +1,11 @@
 //! Style type for representing available space as a sizing constraint
 use crate::{
-    prelude::{FromLength, TaffyMaxContent, TaffyMinContent, TaffyZero},
     Size,
+    prelude::{FromLength, TaffyMaxContent, TaffyMinContent, TaffyZero},
 };
 
 #[cfg(feature = "parse")]
-use crate::util::parse::{from_str_from_css, CssParseError, CssParseResult, FromCss, Parser, Token};
+use crate::util::parse::{CssParseError, CssParseResult, FromCss, Parser, Token, from_str_from_css};
 
 /// The amount of space available to a node in a given axis
 /// <https://www.w3.org/TR/css-sizing-3/#available>

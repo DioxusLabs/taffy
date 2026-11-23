@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod caching {
     use taffy::prelude::*;
-    use taffy_test_helpers::{new_test_tree, test_measure_function, TestNodeContext};
+    use taffy_test_helpers::{TestNodeContext, new_test_tree, test_measure_function};
 
     const NODE_CONTEXT: TestNodeContext = TestNodeContext::fixed(50.0, 50.0);
 

@@ -4,7 +4,7 @@ use crate::geometry::Rect;
 use crate::style::CalcHandle;
 use crate::style_helpers::{FromLength, FromPercent, TaffyAuto, TaffyZero};
 #[cfg(feature = "parse")]
-use crate::util::parse::{from_str_from_css, CssParseError, CssParseResult, FromCss, Parser, Token};
+use crate::util::parse::{CssParseError, CssParseResult, FromCss, Parser, Token, from_str_from_css};
 
 /// A unit of linear measurement
 ///

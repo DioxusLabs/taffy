@@ -2,8 +2,8 @@ mod common {
     pub mod image;
     pub mod text;
 }
-use common::image::{image_measure_function, ImageContext};
-use common::text::{text_measure_function, FontMetrics, TextContext, WritingMode, LOREM_IPSUM};
+use common::image::{ImageContext, image_measure_function};
+use common::text::{FontMetrics, LOREM_IPSUM, TextContext, WritingMode, text_measure_function};
 use taffy::prelude::*;
 
 enum NodeContext {

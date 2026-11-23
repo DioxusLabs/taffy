@@ -1,7 +1,7 @@
 //! Implements placing items in the grid and resolving the implicit grid.
 //! <https://www.w3.org/TR/css-grid-1/#placement>
 use super::types::{CellOccupancyMatrix, CellOccupancyState, GridItem};
-use super::{OriginZeroLine, MAX_OZ_LINE, MIN_OZ_LINE};
+use super::{MAX_OZ_LINE, MIN_OZ_LINE, OriginZeroLine};
 use crate::geometry::Line;
 use crate::geometry::{AbsoluteAxis, InBothAbsAxis};
 use crate::style::{GridAutoFlow, OriginZeroGridPlacement};
@@ -351,13 +351,13 @@ mod tests {
     use super::*;
 
     mod test_placement_algorithm {
+        use crate::compute::grid::CellOccupancyMatrix;
+        use crate::compute::grid::NamedLineResolver;
+        use crate::compute::grid::OriginZeroLine;
         use crate::compute::grid::implicit_grid::compute_grid_size_estimate;
         use crate::compute::grid::types::TrackCounts;
         use crate::compute::grid::util::test_helpers::{grid_items, resolve_named_lines};
         use crate::compute::grid::util::*;
-        use crate::compute::grid::CellOccupancyMatrix;
-        use crate::compute::grid::NamedLineResolver;
-        use crate::compute::grid::OriginZeroLine;
         use crate::prelude::*;
         use crate::style::GridAutoFlow;
 

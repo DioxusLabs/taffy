@@ -5,7 +5,7 @@
 #[cfg(feature = "grid")]
 mod grid_percentage_rerun {
     use taffy::prelude::*;
-    use taffy_test_helpers::{new_test_tree, test_measure_function, TestNodeContext, WritingMode};
+    use taffy_test_helpers::{TestNodeContext, WritingMode, new_test_tree, test_measure_function};
 
     /// Returns (container width, item width)
     fn layout_fit_content_percent_column(available_width: AvailableSpace) -> (f32, f32) {

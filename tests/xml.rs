@@ -1,11 +1,11 @@
 use roxmltree::Document;
 use std::{fmt::Debug, io::Write, path::PathBuf, str::FromStr};
 use taffy::{
-    prelude::TaffyZero as _, AlignContent, AlignItems, AlignSelf, AvailableSpace, CheapCloneStr, Dimension,
-    GridAutoTracks, GridTemplateComponent, GridTemplateTracks, JustifyContent, JustifyItems, LengthPercentage,
-    LengthPercentageAuto, Line, NodeId, Point, PrintTree, Rect, Size, TaffyTree,
+    AlignContent, AlignItems, AlignSelf, AvailableSpace, CheapCloneStr, Dimension, GridAutoTracks,
+    GridTemplateComponent, GridTemplateTracks, JustifyContent, JustifyItems, LengthPercentage, LengthPercentageAuto,
+    Line, NodeId, Point, PrintTree, Rect, Size, TaffyTree, prelude::TaffyZero as _,
 };
-use taffy_test_helpers::{test_measure_function, TestNodeContext};
+use taffy_test_helpers::{TestNodeContext, test_measure_function};
 
 #[path = "./xml/mod.rs"]
 mod xml;

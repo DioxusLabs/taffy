@@ -28,7 +28,7 @@
 
 use core::ops::{Index, IndexMut, Range};
 
-use crate::{debug::debug_log, sys::Vec, AvailableSpace, Clear, Direction, FloatDirection, FloatInsets, Point, Size};
+use crate::{AvailableSpace, Clear, Direction, FloatDirection, FloatInsets, Point, Size, debug::debug_log, sys::Vec};
 
 /// Tolerance used when checking whether a box fits in a horizontal space, to absorb `f32`
 /// rounding errors (e.g. percentage widths and margins that sum to exactly 100% may otherwise

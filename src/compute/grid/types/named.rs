@@ -6,11 +6,11 @@ use crate::{
 };
 use core::{borrow::Borrow, cmp::Ordering, fmt::Debug};
 
-use super::{GridLine, OriginZeroLine, MAX_GRID_TRACKS};
+use super::{GridLine, MAX_GRID_TRACKS, OriginZeroLine};
 use crate::geometry::AbsoluteAxis;
 use crate::sys::DefaultCheapStr;
 use crate::sys::{Map, Vec};
-use smallvec::{smallvec, SmallVec};
+use smallvec::{SmallVec, smallvec};
 
 /// Wrap an `AsRef<str>` type with a type which implements Hash by first
 /// deferring to the underlying `&str`'s implementation of Hash.
@@ -174,11 +174,7 @@ fn upsert_line_name_map<S: CheapCloneStr>(
 
     map.entry(StrHasher(key)).and_modify(|lines| lines.push(value)).or_insert_with(|| {
         // Until this entry is created, the only line that can have been recorded for this edge is the area's own
-        if area_line == 0 {
-            smallvec![value]
-        } else {
-            smallvec![area_line, value]
-        }
+        if area_line == 0 { smallvec![value] } else { smallvec![area_line, value] }
     });
 }
 
@@ -790,10 +786,10 @@ impl<S: CheapCloneStr> ExactSizeIterator for GridLineNamesIter<'_, S> {}
 mod tests {
     use super::super::{MAX_OZ_LINE, MIN_OZ_LINE};
     use super::*;
-    use crate::style::GenericGridPlacement;
-    use crate::sys::DefaultCheapStr;
     use crate::GridTemplateAreas;
     use crate::Style;
+    use crate::style::GenericGridPlacement;
+    use crate::sys::DefaultCheapStr;
     use crate::{GridTemplateArea, NonNamedGridPlacement};
 
     fn resolver(explicit_track_count: u16) -> NamedLineResolver<DefaultCheapStr> {

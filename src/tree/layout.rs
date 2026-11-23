@@ -154,11 +154,7 @@ impl CollapsibleMarginSet {
 
     /// Create a set from a single margin
     pub fn from_margin(margin: f32) -> Self {
-        if margin >= 0.0 {
-            Self { positive: margin, negative: 0.0 }
-        } else {
-            Self { positive: 0.0, negative: margin }
-        }
+        if margin >= 0.0 { Self { positive: margin, negative: 0.0 } } else { Self { positive: 0.0, negative: margin } }
     }
 
     /// Collapse a single margin with this set
