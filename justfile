@@ -5,7 +5,7 @@ getchrome:
   cargo run --release --package getchrome --
 
 import-yoga-tests:
-  cargo run --package import-yoga-tests --
+  cargo run --package import-yoga-test --
 
 format-fixtures:
   cargo run --package format-fixtures --

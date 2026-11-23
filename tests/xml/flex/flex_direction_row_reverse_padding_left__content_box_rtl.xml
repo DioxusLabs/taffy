@@ -1,0 +1,17 @@
+<test name="flex_direction_row_reverse_padding_left__content_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div box-sizing="content-box" direction="rtl" position="absolute" flex-direction="row-reverse" align-content="flex-start" flex-shrink="0" width="100px" height="100px" padding-left="100px">
+      <div box-sizing="content-box" direction="rtl" position="relative" flex-direction="column" align-content="flex-start" flex-shrink="0" width="10px"/>
+      <div box-sizing="content-box" direction="rtl" position="relative" flex-direction="column" align-content="flex-start" flex-shrink="0" width="10px"/>
+      <div box-sizing="content-box" direction="rtl" position="relative" flex-direction="column" align-content="flex-start" flex-shrink="0" width="10px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="200" height="100">
+      <node x="100" y="0" width="10" height="100"/>
+      <node x="110" y="0" width="10" height="100"/>
+      <node x="120" y="0" width="10" height="100"/>
+    </node>
+  </expectations>
+</test>

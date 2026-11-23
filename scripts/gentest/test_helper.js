@@ -222,6 +222,28 @@ function containingBlockElement(e) {
   return e.parentNode;
 }
 
+// Resolve logical edge declarations without resolving percentages to used pixel values.
+function physicalEdgeStyle(e, direction) {
+  const style = document.createElement('div').style;
+  for (const property of e.style) {
+    const logical = property.match(/^(margin|padding|border|inset)-(inline|block)(?:-(start|end))?(.*)$/);
+    if (!logical) {
+      style.setProperty(property, e.style.getPropertyValue(property), e.style.getPropertyPriority(property));
+      continue;
+    }
+    const [, prefix, axis, edge, suffix] = logical;
+    for (const side of edge ? [edge] : ['start', 'end']) {
+      const physical = axis === 'block'
+        ? (side === 'start' ? 'top' : 'bottom')
+        : ((side === 'start') === (direction !== 'rtl') ? 'left' : 'right');
+      const target = prefix === 'inset' ? physical : `${prefix}-${physical}${suffix}`;
+      const source = `${prefix}-${axis}-${side}${suffix}`;
+      style.setProperty(target, e.style.getPropertyValue(source), e.style.getPropertyPriority(property));
+    }
+  }
+  return style;
+}
+
 function describeElement(e) {
 
   // Get precise, unrounded dimensions for the current element and its position reference
@@ -230,6 +252,7 @@ function describeElement(e) {
   let containingBlockElementBoundingRect = containingBlockElement(e).getBoundingClientRect();
 
   const computedStyle = getComputedStyle(e);
+  const edgeStyle = physicalEdgeStyle(e, computedStyle.direction);
 
   return {
     style: {
@@ -291,31 +314,31 @@ function describeElement(e) {
       aspectRatio: parseRatio(e.style.aspectRatio),
 
       margin: parseEdges({
-        left: e.style.marginLeft,
-        right: e.style.marginRight,
-        top: e.style.marginTop,
-        bottom: e.style.marginBottom,
+        left: edgeStyle.marginLeft,
+        right: edgeStyle.marginRight,
+        top: edgeStyle.marginTop,
+        bottom: edgeStyle.marginBottom,
       }),
 
       padding: parseEdges({
-        left: e.style.paddingLeft,
-        right: e.style.paddingRight,
-        top: e.style.paddingTop,
-        bottom: e.style.paddingBottom,
+        left: edgeStyle.paddingLeft,
+        right: edgeStyle.paddingRight,
+        top: edgeStyle.paddingTop,
+        bottom: edgeStyle.paddingBottom,
       }),
 
       border: parseEdges({
-        left: e.style.borderLeftWidth,
-        right: e.style.borderRightWidth,
-        top: e.style.borderTopWidth,
-        bottom: e.style.borderBottomWidth,
+        left: edgeStyle.borderLeftWidth,
+        right: edgeStyle.borderRightWidth,
+        top: edgeStyle.borderTopWidth,
+        bottom: edgeStyle.borderBottomWidth,
       }),
 
       inset: parseEdges({
-        left: e.style.left,
-        right: e.style.right,
-        top: e.style.top,
-        bottom: e.style.bottom,
+        left: edgeStyle.left,
+        right: edgeStyle.right,
+        top: edgeStyle.top,
+        bottom: edgeStyle.bottom,
       }),
     },
 
