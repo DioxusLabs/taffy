@@ -1,0 +1,17 @@
+<test name="gridflex_grid_minmax_row_as_column_flex_item_auto_min_size__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div direction="rtl" position="absolute" flex-direction="column" width="200px" height="50px">
+      <div display="grid" direction="rtl" position="relative" grid-template-rows="minmax(10px, 100px)" grid-template-columns="30px">
+        <div direction="rtl" position="relative"/>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="200" height="50">
+      <node x="0" y="0" width="200" height="100" resolved-rows="100px" resolved-columns="30px">
+        <node x="170" y="0" width="30" height="100"/>
+      </node>
+    </node>
+  </expectations>
+</test>

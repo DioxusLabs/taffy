@@ -1,0 +1,17 @@
+<test name="grid_minmax_row_in_grid_min_content_row__content_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="grid" box-sizing="content-box" direction="rtl" position="absolute" width="200px" grid-template-rows="min-content">
+      <div display="grid" box-sizing="content-box" direction="rtl" position="relative" grid-template-rows="minmax(10px, 100px)" grid-template-columns="30px">
+        <div box-sizing="content-box" direction="rtl" position="relative"/>
+      </div>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="200" height="100" resolved-rows="100px" resolved-columns="200px">
+      <node x="0" y="0" width="200" height="100" resolved-rows="100px" resolved-columns="30px">
+        <node x="170" y="0" width="30" height="100"/>
+      </node>
+    </node>
+  </expectations>
+</test>
