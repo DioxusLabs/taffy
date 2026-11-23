@@ -1,0 +1,15 @@
+<test name="float_bfc_auto_width_padding_border_fits_beside_float__border_box_rtl" use-rounding="true">
+  <viewport width="max-content" height="max-content"/>
+  <input>
+    <div display="block" direction="rtl" position="absolute" width="300px">
+      <div direction="rtl" position="relative" float="left" width="280px" height="50px"/>
+      <div display="block" direction="rtl" position="relative" overflow-x="hidden" overflow-y="hidden" scrollbar-width="15" height="20px" padding-left="10px" border-left="5px"/>
+    </div>
+  </input>
+  <expectations>
+    <node x="0" y="0" width="300" height="50">
+      <node x="0" y="0" width="280" height="50"/>
+      <node x="280" y="0" width="20" height="20" scroll_width="0" scroll_height="0"/>
+    </node>
+  </expectations>
+</test>
