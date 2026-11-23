@@ -1,35 +1,50 @@
 # Changelog
 
-## Unreleased
+## 0.16.0
 
-The MSRV is now 1.85.
+The MSRV for this release is 1.85.
+
+As a result of the MSRV bump, the `strict_provenance` feature has been removed: `CompactLength` now always uses the strict provenance pointer APIs (#1411, #1413, #1419).
+
+### `calc()` values are stored as a `CalcHandle` (#1400)
+
+`calc()` values are now stored as an opaque `CalcHandle` rather than a `*const ()`. Create one with `CalcHandle::from_ptr` or `CalcHandle::from_bits`, and read it back with `ptr()` or `to_bits()`. The `calc`/`fit_content_calc` constructors take a `CalcHandle`, and `calc_value()`, the `Expanded*::Calc` variants, `LayoutPartialTree::resolve_calc_value` and calc resolver closures return or receive one.
+
+This allows handles to have 61 bits available on every target: previously 32-bit targets were limited to a 32-bit pointer.
+
+### Scrollable overflow supports reversed scroll origins (#1372)
+
+`Layout::scrollable_overflow_rect` and `LayoutOutput::scrollable_overflow_rect` are now a `ScrollableOverflow` rather than a `Rect<f32>`. As well as the overflow rectangle, it records whether each physical axis has a reversed scroll origin (`is_reversed()`), where scrolling starts at the end edge. Read the rectangle with `rect()` or the `left()`/`right()`/`top()`/`bottom()` accessors.
+
+Reversed (`row-reverse`, `column-reverse`) and `wrap-reverse` flex containers now retain reachable negative overflow, and scroll containers clip overflow that is unreachable by scrolling.
+
+### Improved Float placement API for custom formatting contexts (#1303, #1385, #1386, #1389, #1394)
+
+Most users will never need to interact this directly, but it affects consumers who integrate float-supporting text/inline with Taffy.
+
+- `BlockContext::place_floated_box` and `FloatContext::place_floated_box` take a caller-defined `id: u64`, which is stored on `PlacedFloatedBox`. `BlockContext::float_mark` and `BlockContext::floats_placed_since` return the id and position of the floats placed since a mark, so custom formatting contexts which place floats don't need to keep their own list of placements.
+- `find_content_slot` takes the `height` of the content being placed, and `find_bfc_slot` a `min_height`, and both avoid floats beside that height rather than only at its top edge. `ContentSlot::height` and the new `BfcSlot::height` are how far down the slot's width stays valid (previously `ContentSlot::height` was always infinite).
+- A new `FloatInsets` type (`left`/`right`) replaces the `[f32; 2]` insets and margins taken by `BlockContext::sub_context`, `BlockContext::apply_content_box_inset`, `BlockContext::find_bfc_slot` and the `FloatContext` placement methods. `FloatDirection::opposite` has also been added.
+
+### Changed
+
+- BREAKING: `CacheTree::cache_get` and `Cache::get` take `&self` rather than `&mut self`, with the measure cache's eviction clock stored in an `AtomicU16`. `Cache` no longer implements `Serialize` with the `serde` feature (#1409, #1410).
+- Upgrade `cssparser` to 0.38 (used by the `parse` feature). Parse error messages no longer name the offending token (#1414).
 
 ### Performance
 
-- `TaffyTree` switches to FxHash for node contexts when `std` is enabled, for faster hash computation.
+- `TaffyTree` uses FxHash for node context lookups when `std` is enabled (#1402).
 
 ### Fixed
 
-- Flexbox: `align-content: stretch` (and `normal`) and `justify-content: stretch` fall back to `flex-start` rather than `start` when the lines/items overflow the container, so overflowing lines in a `wrap-reverse` container (and items in a `row-reverse`/`column-reverse` container) are packed to the flex-start edge like in Chrome.
-- Grid: the clamp of an item's content-based minimum size to the fixed max track sizing functions it spans now leaves room for its margins and baseline shim (#1362).
-- Block/float: the auto height of a box that establishes a new block formatting context (e.g. a float or `display: flow-root`) and contains floats now includes its bottom padding and border below the bottom margin edge of those floats. Previously the floats' bottom edge was used as the box's outer height, so the bottom padding and border overlapped them.
-- Float: a zero-height float is now recorded in the float context, so content and boxes establishing a new block formatting context whose vertical extent crosses its position avoid it. Previously it only affected `clear` and the position of later floats.
-- Block: when a block with no top border or padding has a bottom border or padding, the margins of leading children that collapse through it (and so collapse with its own top margin) are no longer also added to its height. Previously such a block was too tall by the collapsed margin.
-- Block: the min-content contribution of a compressible replaced child (e.g. an image) with a percentage `width` or `max-width` now resolves that percentage against zero, so a shrink-to-fit block (e.g. an `inline-block` or float) holding a `width: 100%` image is capped by the available width rather than growing to the image's natural width.
-- Block/float: a box that establishes a new block formatting context (e.g. `overflow: hidden` or `display: flow-root`) beside floats now avoids the floats beside its laid-out height, not only those beside its styled (minimum) height. It is narrowed to the space beside the floats it reaches, or moved down to the next slot if it doesn't fit there.
-
-### Changes
-
-- Upgrade `cssparser` to 0.38 (used by the `parse` feature). Parse error messages no longer name the offending token, as cssparser no longer stores it.
-- Removed the `strict_provenance` feature: `CompactLength` always uses the strict provenance pointer APIs (stable since Rust 1.84).
-- `Cache` no longer implements `Serialize` when the `serde` feature is enabled.
-- `CacheTree::cache_get` and `Cache::get` now take `&self` rather than `&mut self`. `Cache` stores its measure-entry eviction clock in an `AtomicU16` (updated with relaxed loads and stores) so that a cache hit can record the entry as recently used through a shared reference.
-- Replace raw scrollable overflow rectangles in `Layout` and `LayoutOutput` with `ScrollableOverflow`, including physical reversed-scroll-origin flags and sign-restored `left()`, `right()`, `top()`, and `bottom()` accessors. Flex reverse directions and wrap-reverse now retain reachable negative overflow, while scroll containers clip unreachable overflow.
-- `BlockContext::place_floated_box` (and `FloatContext::place_floated_box`) now take a caller-defined `id: u64` for the box, which is stored on `PlacedFloatedBox`. `BlockContext::float_mark` and `BlockContext::floats_placed_since` read back the id and position of the floats placed since a mark, so that custom formatting contexts which place floats do not need to keep their own list of placements.
-- `BlockContext::find_content_slot` (and `FloatContext::find_content_slot`) now take the `height` of the content to be placed, and avoid the floats beside any part of that height rather than only those at its top edge. The returned `ContentSlot::height` is now how far down the slot's width stays valid (previously always infinite).
-- Add `FloatDirection::opposite` and a public `FloatInsets` type (`left`/`right`), which replaces the `[f32; 2]` insets and margins taken by `BlockContext::sub_context`, `BlockContext::apply_content_box_inset`, `BlockContext::find_bfc_slot` and the `FloatContext` placement methods.
-- `BfcSlot` (returned by `BlockContext::find_bfc_slot` and `FloatContext::find_bfc_slot`) has a new `height` field: how far down from its top the slot's widths stay valid. A box taller than this may be beside further floats.
-- BREAKING: `calc()` values are now stored as a `CalcHandle` instead of a `*const ()`. `CompactLength::calc`, `LengthPercentage::calc`, `Dimension::calc` (and the other `calc`/`fit_content_calc` constructors) take a `CalcHandle`, `calc_value()` and the `Expanded*::Calc` variants return one, and `LayoutPartialTree::resolve_calc_value` (and every calc resolver closure) receives one. Create a handle with `CalcHandle::from_ptr` or `CalcHandle::from_bits` and read it back with `ptr()` or `to_bits()`. Integer handles now have the same 61 bits available on 32-bit targets as on 64-bit targets (previously 32-bit targets were limited to a 32-bit pointer) (#1399).
+- Block/float: include the bottom padding and border of a box that establishes a block formatting context below the floats it contains (#1384).
+- Block/float: make a box that establishes a block formatting context avoid floats beside its whole laid-out height, not just its top edge, narrowing it or moving it down to the next slot that fits (#1385, #1396).
+- Block/float: move an `auto`-width box that establishes a block formatting context below a float when its padding and border don't fit beside it (#1417).
+- Block/float: make zero-height floats affect content and block formatting context roots that cross them, not just `clear` and later floats (#1387).
+- Block: don't add the margins of leading children that collapse through a block to its height when it has a bottom but no top padding or border (#1397).
+- Block: resolve percentage `width` and `max-width` against zero in the min-content contribution of compressible replaced children, so shrink-to-fit blocks holding a `width: 100%` image no longer grow to the image's natural width (#1401).
+- Flexbox: fall back to `flex-start` rather than `start` when overflowing lines or items are aligned with `align-content: stretch`/`normal` or `justify-content: stretch`, fixing `wrap-reverse` and reversed directions (#1363).
+- Grid: leave room for an item's margins and baseline shim when clamping its content-based minimum size to the fixed max track sizing functions it spans (#1362).
 
 ## 0.15.1
 
