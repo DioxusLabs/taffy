@@ -22,12 +22,11 @@ fn main() {
         .filter_map(|a| a.ok())
         .map(|f| {
             let file_name = f.file_name();
-            let file_name = if file_name.to_string_lossy().starts_with('x') {
+            if file_name.to_string_lossy().starts_with('x') {
                 file_name.to_string_lossy()[1..].replace(".html", "")
             } else {
                 file_name.to_string_lossy().replace(".html", "")
-            };
-            file_name
+            }
         })
         .collect::<HashSet<String>>();
 

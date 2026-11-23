@@ -106,12 +106,12 @@ impl Iterator for ChildIter<'_> {
 
 #[inline(always)]
 unsafe fn node_from_id<'a>(node_id: NodeId) -> &'a Node {
-    &*(usize::from(node_id) as *const Node)
+    unsafe { &*(usize::from(node_id) as *const Node) }
 }
 
 #[inline(always)]
 unsafe fn node_from_id_mut<'a>(node_id: NodeId) -> &'a mut Node {
-    &mut *(usize::from(node_id) as *mut Node)
+    unsafe { &mut *(usize::from(node_id) as *mut Node) }
 }
 
 struct StatelessLayoutTree;

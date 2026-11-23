@@ -2,7 +2,7 @@
 name = "getchrome"
 version = "0.1.0"
 authors = ["Nico Burns"]
-edition = "2021"
+edition = "2024"
 
 [dependencies]
 ureq = { version = "3.3.0", default-features = false, features = ["rustls"] }

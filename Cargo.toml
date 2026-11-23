@@ -6,7 +6,7 @@ authors = [
     "Johnathan Kelley <jkelleyrtp@gmail.com>",
     "Nico Burns <nico@nicoburns.com>",
 ]
-edition = "2021"
+edition = "2024"
 rust-version = "1.85"
 include = ["src/**/*", "examples/**/*", "Cargo.toml", "README.md"]
 description = "A flexible UI layout library "

@@ -593,7 +593,7 @@ fn generate_assertions(w: &mut XmlWriter, node: &Value, use_rounding: bool) {
 
     fn is_scrollable(overflow: &Value) -> bool {
         match overflow {
-            Value::String(ref value) => matches!(value.as_ref(), "hidden" | "scroll" | "auto"),
+            Value::String(value) => matches!(value.as_ref(), "hidden" | "scroll" | "auto"),
             _ => false,
         }
     }
@@ -632,7 +632,7 @@ fn generate_node(w: &mut XmlWriter, node: &Value) {
 
     fn get_string_value(value: &Value) -> Option<&str> {
         match value {
-            Value::String(ref value) => Some(value),
+            Value::String(value) => Some(value),
             _ => None,
         }
     }
@@ -743,42 +743,41 @@ fn generate_node(w: &mut XmlWriter, node: &Value) {
 }
 
 fn get_str_attr<'a>(value: &'a Value, elide_if: Option<&str>) -> Option<&'a str> {
-    if let Value::String(ref value) = value {
-        if Some(value.as_str()) != elide_if {
-            return Some(value.as_str());
-        }
+    if let Value::String(value) = value
+        && Some(value.as_str()) != elide_if
+    {
+        return Some(value.as_str());
     }
 
     None
 }
 
 fn get_num_attr(value: &Value, elide_if: Option<f64>) -> Option<f64> {
-    if let Value::Number(ref value) = value {
-        if let Some(num) = value.as_f64() {
-            if Some(num) != elide_if {
-                return Some(num);
-            }
-        }
+    if let Value::Number(value) = value
+        && let Some(num) = value.as_f64()
+        && Some(num) != elide_if
+    {
+        return Some(num);
     }
 
     None
 }
 
 fn get_dim_attr(value: &Value, elide_if: Option<&str>) -> Option<Cow<'static, str>> {
-    if let Some(attr) = serialize_dimension(value) {
-        if Some(attr.as_ref()) != elide_if {
-            return Some(attr);
-        }
+    if let Some(attr) = serialize_dimension(value)
+        && Some(attr.as_ref()) != elide_if
+    {
+        return Some(attr);
     }
     None
 }
 
 fn serialize_dimension(obj: &serde_json::Value) -> Option<Cow<'static, str>> {
-    if let Value::Object(ref dimen) = &obj {
+    if let Value::Object(dimen) = &obj {
         let unit = dimen.get("unit").unwrap();
         let value = dimen.get("value").and_then(|v| v.as_f64());
         match unit {
-            Value::String(ref unit) => {
+            Value::String(unit) => {
                 return Some(match unit.as_str() {
                     "auto" => Cow::from("auto"),
                     "max-content" => Cow::from("max-content"),
@@ -807,7 +806,7 @@ fn serialize_dimension(obj: &serde_json::Value) -> Option<Cow<'static, str>> {
 }
 
 fn serialize_grid_auto_flow(obj: &serde_json::Value) -> Option<Cow<'static, str>> {
-    if let Value::Object(ref auto_flow) = &obj {
+    if let Value::Object(auto_flow) = &obj {
         let direction = auto_flow.get("direction").unwrap().as_str().unwrap();
         let algorithm = auto_flow.get("algorithm").unwrap().as_str().unwrap();
 
@@ -825,12 +824,12 @@ fn serialize_grid_auto_flow(obj: &serde_json::Value) -> Option<Cow<'static, str>
 }
 
 fn serialize_grid_position(grid_position: &serde_json::Value) -> Option<Cow<'static, str>> {
-    if let Value::Object(ref grid_position) = &grid_position {
+    if let Value::Object(grid_position) = &grid_position {
         let kind = grid_position.get("kind").unwrap();
         let value = || grid_position.get("value").unwrap().as_f64().unwrap() as f32;
 
         return match kind {
-            Value::String(ref kind) => match kind.as_ref() {
+            Value::String(kind) => match kind.as_ref() {
                 "auto" => None, //Some(Cow::from("auto")),
                 "span" => Some(Cow::from(format!("span {}", value()))),
                 "line" => Some(Cow::from((value() as i32).to_string())),
@@ -845,7 +844,7 @@ fn serialize_grid_position(grid_position: &serde_json::Value) -> Option<Cow<'sta
 
 fn serialize_array(value: &Value, sep: char, quoter: impl Fn(&Value) -> Option<Cow<'static, str>>) -> Option<String> {
     match &value {
-        Value::Array(ref values) => serialize_value_list(values, sep, quoter),
+        Value::Array(values) => serialize_value_list(values, sep, quoter),
         _ => None,
     }
 }
