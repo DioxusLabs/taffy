@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+
+- Absolute positioning: clear a containing block's hoisted children when it becomes a leaf, so removing its last out-of-flow child no longer leaves a stale entry that panics in `round_layout`.
+
 ## 0.16.0
 
 The MSRV for this release is 1.85, and Taffy now uses the 2024 edition.

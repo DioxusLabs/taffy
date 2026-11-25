@@ -340,7 +340,12 @@ impl OofAxis {
 /// [`CoreStyle::is_containing_block`]. `position: fixed` boxes unclaimed by every ancestor are
 /// claimed by the final root positioning pass in [`compute_root_layout`](crate::compute_root_layout).
 pub fn compute_oof_layout(tree: &mut impl LayoutContainingBlock, node_id: NodeId, output: &mut LayoutOutput) {
-    let Some(area) = output.oof_positioning_area else { return };
+    // A node with no positioning area (a leaf: nothing can be hoisted into it) still clears
+    // its list, which may name boxes hoisted into it while it had children
+    let Some(area) = output.oof_positioning_area else {
+        tree.clear_hoisted_children(node_id);
+        return;
+    };
     if output.oof_candidates.is_empty() {
         tree.clear_hoisted_children(node_id);
         return;

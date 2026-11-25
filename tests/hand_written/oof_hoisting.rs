@@ -547,4 +547,94 @@ mod oof_hoisting {
             }
         }
     }
+
+    /// A containing block whose last child was an absolute box becomes childless, so it is
+    /// laid out as a leaf. Its hoisted-children list recorded by the previous layout must
+    /// not survive that: nothing is hoisted into a leaf.
+    #[test]
+    fn removing_the_last_absolute_child_clears_hoisted_children() {
+        for display in [Display::Block, Display::Flex, Display::Grid] {
+            let mut tree: TaffyTree<()> = TaffyTree::new();
+            let abs = tree
+                .new_leaf(Style {
+                    position: Position::Absolute,
+                    size: Size { width: length(30.0), height: length(30.0) },
+                    ..Default::default()
+                })
+                .unwrap();
+            let cb = tree
+                .new_with_children(
+                    Style {
+                        display,
+                        position: Position::Relative,
+                        size: Size { width: length(100.0), height: length(100.0) },
+                        ..Default::default()
+                    },
+                    &[abs],
+                )
+                .unwrap();
+            let root = tree.new_with_children(leaf_style(200.0, 200.0), &[cb]).unwrap();
+
+            tree.compute_layout(root, Size::MAX_CONTENT).unwrap();
+            assert_eq!(tree.hoisted_children(cb).unwrap(), &[abs], "{display:?}");
+
+            tree.remove_child(cb, abs).unwrap();
+            tree.compute_layout(root, Size::MAX_CONTENT).unwrap();
+            assert_eq!(tree.hoisted_children(cb).unwrap(), &[] as &[NodeId], "{display:?}");
+        }
+    }
+
+    /// The same, with the removed box also dropped from the tree: the stale entry would
+    /// name a freed node, and rounding (which walks the hoisted list) must not reach it.
+    #[test]
+    fn relayout_after_removing_the_last_absolute_node_does_not_panic() {
+        for display in [Display::Block, Display::Flex, Display::Grid] {
+            let mut tree: TaffyTree<()> = TaffyTree::new();
+            let abs = tree
+                .new_leaf(Style {
+                    position: Position::Absolute,
+                    size: Size { width: length(30.0), height: length(30.0) },
+                    ..Default::default()
+                })
+                .unwrap();
+            let cb = tree
+                .new_with_children(
+                    Style {
+                        display,
+                        position: Position::Relative,
+                        size: Size { width: length(100.0), height: length(100.0) },
+                        ..Default::default()
+                    },
+                    &[abs],
+                )
+                .unwrap();
+            let root = tree.new_with_children(leaf_style(200.0, 200.0), &[cb]).unwrap();
+            tree.compute_layout(root, Size::MAX_CONTENT).unwrap();
+
+            tree.remove(abs).unwrap();
+            tree.compute_layout(root, Size::MAX_CONTENT).unwrap();
+            assert_eq!(tree.layout(cb).unwrap().size, Size { width: 100.0, height: 100.0 }, "{display:?}");
+        }
+    }
+
+    /// The root, as the initial containing block, also loses a removed fixed box when that
+    /// leaves it childless.
+    #[test]
+    fn root_left_childless_clears_hoisted_children() {
+        let mut tree: TaffyTree<()> = TaffyTree::new();
+        let fixed = tree
+            .new_leaf(Style {
+                position: Position::Fixed,
+                size: Size { width: length(30.0), height: length(30.0) },
+                ..Default::default()
+            })
+            .unwrap();
+        let root = tree.new_with_children(leaf_style(200.0, 200.0), &[fixed]).unwrap();
+        tree.compute_layout(root, Size::MAX_CONTENT).unwrap();
+        assert_eq!(tree.hoisted_children(root).unwrap(), &[fixed]);
+
+        tree.remove(fixed).unwrap();
+        tree.compute_layout(root, Size::MAX_CONTENT).unwrap();
+        assert_eq!(tree.hoisted_children(root).unwrap(), &[] as &[NodeId]);
+    }
 }
