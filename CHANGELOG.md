@@ -35,6 +35,10 @@ Most users will never need to interact this directly, but it affects consumers w
 
 - `TaffyTree` uses FxHash for node context lookups when `std` is enabled (#1402).
 
+### Added
+
+- All built-in layout algorithms (flexbox, grid and block) now output the last baseline of a container (`LayoutOutput::baselines.last`) in addition to its first baseline. Last-baseline alignment is not yet supported.
+
 ### Fixed
 
 - Block/float: include the bottom padding and border of a box that establishes a block formatting context below the floats it contains (#1384).
