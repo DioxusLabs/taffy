@@ -376,10 +376,17 @@ where
 /// In order to prevent innacuracies caused by rounding already-rounded values, we read from `unrounded_layout`
 /// and write to `final_layout`.
 pub fn round_layout(tree: &mut impl RoundTree, node_id: NodeId) {
-    return round_layout_inner(tree, node_id, 0.0, 0.0);
+    return round_layout_inner(tree, node_id, 0.0, 0.0, false);
 
     /// Recursive function to apply rounding to all descendents
-    fn round_layout_inner(tree: &mut impl RoundTree, node_id: NodeId, cumulative_x: f32, cumulative_y: f32) {
+    fn round_layout_inner(
+        tree: &mut impl RoundTree,
+        node_id: NodeId,
+        cumulative_x: f32,
+        cumulative_y: f32,
+        is_hidden: bool,
+    ) {
+        let is_hidden = is_hidden || tree.is_hidden(node_id);
         let unrounded_layout = tree.get_unrounded_layout(node_id);
         let mut layout = unrounded_layout;
 
@@ -421,19 +428,25 @@ pub fn round_layout(tree: &mut impl RoundTree, node_id: NodeId) {
         // they are instead visited via their containing block's hoisted child list below, which
         // ensures each node is visited exactly once and that its cumulative offset is accumulated
         // relative to its containing block (which its `location` is relative to).
+        // Hidden subtrees have no new hoisted lists, so visit all of their children directly.
         let child_count = tree.child_count(node_id);
         for index in 0..child_count {
             let child = tree.get_child_id(node_id, index);
-            if !tree.is_out_of_flow(child) {
-                round_layout_inner(tree, child, cumulative_x, cumulative_y);
+            if is_hidden || !tree.is_out_of_flow(child) {
+                round_layout_inner(tree, child, cumulative_x, cumulative_y, is_hidden);
             }
+        }
+
+        // All hidden descendants have already been visited via the normal child lists.
+        if is_hidden {
+            return;
         }
 
         // Recurse into out-of-flow boxes for which this node is the containing block
         let hoisted_count = tree.hoisted_child_count(node_id);
         for index in 0..hoisted_count {
             let child = tree.get_hoisted_child_id(node_id, index);
-            round_layout_inner(tree, child, cumulative_x, cumulative_y);
+            round_layout_inner(tree, child, cumulative_x, cumulative_y, false);
         }
     }
 
