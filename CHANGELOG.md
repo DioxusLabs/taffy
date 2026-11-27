@@ -11,6 +11,10 @@
 - Flexbox: a wrapping flex container whose main size is determined from its contents now re-collects its items into flex lines against the resolved main size. Previously all items were kept on a single line, which diverged from browsers when the container's max-content size is smaller than the sum of the items' outer hypothetical main sizes.
 - Flexbox: the intrinsic main-size contribution of an item in a column flex container is now its outer hypothetical main size (flex base size clamped by min/max main sizes, including the automatic minimum size), matching the behavior browsers ship for the block axis. Previously the contribution was content-based and floored by the item's flex basis, which diverged from browsers when the automatic minimum size did not apply (e.g. with an explicit `min-height`).
 
+### Changed
+
+- `Cache` takes the number of its measure entries as a const generic parameter, `Cache<const N: usize = 9>` (between 1 and 16). The default and `TaffyTree` are unchanged. `Cache::new()` still creates a cache of the default size; `Cache::<N>::empty()` creates one of any size; `Default` stays on the default size so `Cache::default()` still infers.
+
 ## 0.15.0
 
 The MSRV for this release is 1.71.

@@ -7,8 +7,8 @@ use crate::style::AvailableSpace;
 use crate::tree::{CollapsibleMarginSet, LayoutInput, LayoutOutput, RunMode, SizingMode};
 use crate::RequestedAxis;
 
-/// The number of cache entries for each node in the tree
-const CACHE_SIZE: usize = 9;
+/// The number of measure entries in a [`Cache`] unless another size is chosen with its `N` parameter
+const DEFAULT_CACHE_SIZE: usize = 9;
 
 // Manually written-out results of float to u32 bit casts because
 // `f32::to_bits` is not yet const at our MSRV.
@@ -209,13 +209,32 @@ pub(crate) struct CacheEntry<T> {
 }
 
 /// A cache for caching the results of a sizing a Grid Item or Flexbox Item
+///
+/// `N` is the number of entries for the node's size measurements (in addition to the entry for its final layout).
+/// It defaults to 9, which is what [`TaffyTree`](crate::TaffyTree) uses. A custom tree can choose another size
+/// between 1 and 16: tree shapes whose nodes receive more distinct size requests per layout pass than `N` evict
+/// and recompute entries, while every extra entry costs 32 bytes per node.
+///
+/// ```
+/// use taffy::Cache;
+///
+/// let default_size: Cache = Cache::new();
+/// let larger: Cache<16> = Cache::empty();
+/// ```
+///
+/// A size outside of that range does not compile:
+///
+/// ```compile_fail
+/// let cache = taffy::Cache::<17>::empty();
+/// ```
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize))]
-pub struct Cache {
+pub struct Cache<const N: usize = DEFAULT_CACHE_SIZE> {
     /// The cache entry for the node's final layout
     final_layout_entry: Option<CacheEntry<LayoutOutput>>,
     /// The cache entries for the node's preliminary size measurements
-    measure_entries: [Option<CacheEntry<Size<f32>>>; CACHE_SIZE],
+    #[cfg_attr(feature = "serde", serde(serialize_with = "serialize_measure_entries"))]
+    measure_entries: [Option<CacheEntry<Size<f32>>>; N],
     /// Tracks which measure entries have been used since the eviction cursor last passed them
     recently_used_entries: u16,
     /// The next measure entry to consider replacing
@@ -228,6 +247,21 @@ pub struct Cache {
     mode: CacheMode,
 }
 
+/// Serializes the measure entries as a tuple, as serde serializes arrays of a fixed size
+#[cfg(feature = "serde")]
+fn serialize_measure_entries<S: serde::Serializer, const N: usize>(
+    entries: &[Option<CacheEntry<Size<f32>>>; N],
+    serializer: S,
+) -> Result<S::Ok, S::Error> {
+    use serde::ser::SerializeTuple;
+    let mut tuple = serializer.serialize_tuple(N)?;
+    for entry in entries {
+        tuple.serialize_element(entry)?;
+    }
+    tuple.end()
+}
+
+// Only for the default size, so that `Cache::default()` infers without a type annotation
 impl Default for Cache {
     fn default() -> Self {
         Self::new()
@@ -235,13 +269,27 @@ impl Default for Cache {
 }
 
 impl Cache {
-    /// Create a new empty cache
+    /// Create a new empty cache with the default number of measure entries
+    ///
+    /// Use [`Cache::empty`] to create a cache with another number of entries.
     pub const fn new() -> Self {
+        Self::empty()
+    }
+}
+
+impl<const N: usize> Cache<N> {
+    /// `recently_used_entries` holds one bit per measure entry, and storing needs at least one entry
+    const SIZE_IS_VALID: () = assert!(N >= 1 && N <= 16, "a Cache holds between 1 and 16 measure entries");
+
+    /// Create a new empty cache
+    pub const fn empty() -> Self {
+        #[allow(clippy::let_unit_value)]
+        let () = Self::SIZE_IS_VALID;
         /// Workaround for `Option<CacheEntry<_>>` not being `Copy` (required for array repeat expressions)
         const NONE_MEASURE_ENTRY: Option<CacheEntry<Size<f32>>> = None;
         Self {
             final_layout_entry: None,
-            measure_entries: [NONE_MEASURE_ENTRY; CACHE_SIZE],
+            measure_entries: [NONE_MEASURE_ENTRY; N],
             recently_used_entries: 0,
             next_measure_entry: 0,
             is_empty: true,
@@ -321,7 +369,7 @@ impl Cache {
                 while self.recently_used_entries & (1 << self.next_measure_entry) != 0 {
                     self.recently_used_entries &= !(1 << self.next_measure_entry);
                     self.next_measure_entry += 1;
-                    if self.next_measure_entry == CACHE_SIZE as u8 {
+                    if self.next_measure_entry == N as u8 {
                         self.next_measure_entry = 0;
                     }
                 }
@@ -329,7 +377,7 @@ impl Cache {
                 self.measure_entries[entry_index] = Some(CacheEntry { key, content: layout_output.size });
                 self.recently_used_entries |= 1 << entry_index;
                 self.next_measure_entry += 1;
-                if self.next_measure_entry == CACHE_SIZE as u8 {
+                if self.next_measure_entry == N as u8 {
                     self.next_measure_entry = 0;
                 }
             }
@@ -346,7 +394,7 @@ impl Cache {
         self.final_layout_entry = None;
         /// Workaround for `Option<CacheEntry<_>>` not being `Copy` (required for array repeat expressions)
         const NONE_MEASURE_ENTRY: Option<CacheEntry<Size<f32>>> = None;
-        self.measure_entries = [NONE_MEASURE_ENTRY; CACHE_SIZE];
+        self.measure_entries = [NONE_MEASURE_ENTRY; N];
         self.recently_used_entries = 0;
         self.next_measure_entry = 0;
         ClearState::Cleared
@@ -389,19 +437,43 @@ mod tests {
         LayoutOutput::from_outer_size(Size { width, height: width })
     }
 
-    #[test]
-    fn recently_used_measure_entries_get_a_second_chance() {
-        let mut cache = Cache::new();
-        for width in 0..CACHE_SIZE {
+    fn recently_used_measure_entries_get_a_second_chance_with<const N: usize>() {
+        let mut cache = Cache::<N>::empty();
+        for width in 0..N {
             cache.store(&input(width as f32), output(width as f32));
         }
-        cache.store(&input(CACHE_SIZE as f32), output(CACHE_SIZE as f32));
+        cache.store(&input(N as f32), output(N as f32));
 
         assert_eq!(cache.get(&input(1.0)), Some(output(1.0)));
-        cache.store(&input((CACHE_SIZE + 1) as f32), output((CACHE_SIZE + 1) as f32));
+        cache.store(&input((N + 1) as f32), output((N + 1) as f32));
 
         assert_eq!(cache.get(&input(1.0)), Some(output(1.0)));
         assert_eq!(cache.get(&input(2.0)), None);
+    }
+
+    #[test]
+    fn recently_used_measure_entries_get_a_second_chance() {
+        recently_used_measure_entries_get_a_second_chance_with::<DEFAULT_CACHE_SIZE>();
+        recently_used_measure_entries_get_a_second_chance_with::<4>();
+        recently_used_measure_entries_get_a_second_chance_with::<16>();
+    }
+
+    #[test]
+    fn a_cache_holds_n_measurements() {
+        fn holds<const N: usize>() {
+            let mut cache = Cache::<N>::empty();
+            for width in 0..N {
+                cache.store(&input(width as f32), output(width as f32));
+            }
+            for width in 0..N {
+                assert_eq!(cache.get(&input(width as f32)), Some(output(width as f32)));
+            }
+            cache.store(&input(N as f32), output(N as f32));
+            assert_eq!((0..=N).filter(|&width| cache.get(&input(width as f32)).is_some()).count(), N);
+        }
+        holds::<1>();
+        holds::<DEFAULT_CACHE_SIZE>();
+        holds::<16>();
     }
 
     #[test]
