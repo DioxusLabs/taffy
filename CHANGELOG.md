@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+
+- Absolute positioning: with both insets set, a `safe`-aligned box that overflows its inset-modified containing block is now aligned within the overflow limit rect, like the default overflow alignment, rather than falling back to the start of the inset-modified containing block (#1431).
+
 ## 0.16.0
 
 The MSRV for this release is 1.85, and Taffy now uses the 2024 edition.

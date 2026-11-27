@@ -284,13 +284,9 @@ impl OofAxis {
                 let edge = self.alignment.physical_edge(self.reversed);
                 let margin_box_start = match self.safety {
                     AlignmentSafety::Unsafe => align_in_line(imcb, margin_box_size, edge),
-                    AlignmentSafety::Safe => {
-                        let edge = if margin_box_size > imcb_size { self.start_edge() } else { edge };
-                        align_in_line(imcb, margin_box_size, edge)
-                    }
-                    // Default overflow alignment for absolutely positioned boxes:
+                    // Default and `safe` overflow alignment for absolutely positioned boxes:
                     // <https://www.w3.org/TR/css-align-3/#auto-safety-position>
-                    AlignmentSafety::Default => {
+                    AlignmentSafety::Default | AlignmentSafety::Safe => {
                         if margin_box_size <= imcb_size || self.alignment == OofAlignment::Normal {
                             // 1. Fits within the IMCB: align as specified
                             align_in_line(imcb, margin_box_size, edge)

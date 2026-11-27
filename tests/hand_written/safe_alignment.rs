@@ -306,3 +306,89 @@ fn flex_safe_align_content_falls_back_to_start_on_multiline_overflow() {
     // to start: first line at y == 0.
     assert_eq!(taffy.layout(child_a).unwrap().location.y, 0.0);
 }
+
+/// With both insets set, `safe` on an absolutely positioned box takes the same overflow steps as
+/// the default overflow alignment: a box that overflows the inset-modified containing block but
+/// fits the overflow limit rect covers the former and is aligned as specified within the latter.
+/// <https://drafts.csswg.org/css-align-3/#auto-safety-position>
+///
+/// The containing block is 400 wide. Chrome 158 still start-aligns within the inset-modified
+/// containing block, so these expectations follow the spec (and Safari) rather than Chrome.
+#[cfg(feature = "block_layout")]
+#[test]
+fn block_absolute_safe_alignment_between_insets_uses_overflow_limit_rect() {
+    for direction in [Direction::Ltr, Direction::Rtl] {
+        for (left, right, width, justify_self, x_ltr, x_rtl) in [
+            // Fits the IMCB (200..400): aligned as specified
+            (200.0, 0.0, 100.0, JustifySelf::SAFE_END, 300.0, 200.0),
+            // Overflows the IMCB, fits the overflow limit rect (0..400): kept inside the limit
+            (200.0, 0.0, 260.0, JustifySelf::SAFE_END, 140.0, 140.0),
+            (200.0, 0.0, 260.0, JustifySelf::SAFE_CENTER, 140.0, 140.0),
+            (0.0, 200.0, 260.0, JustifySelf::SAFE_START, 0.0, 0.0),
+            // Overflows the overflow limit rect: start-aligned within it
+            (200.0, 0.0, 500.0, JustifySelf::SAFE_END, 0.0, -100.0),
+        ] {
+            let mut taffy = new_test_tree();
+            let child = taffy
+                .new_leaf(Style {
+                    position: Position::Absolute,
+                    direction,
+                    size: Size { width: length(width), height: length(10.0) },
+                    inset: Rect { left: length(left), right: length(right), top: length(0.0), bottom: auto() },
+                    justify_self: Some(justify_self),
+                    ..Default::default()
+                })
+                .unwrap();
+            let root = taffy
+                .new_with_children(
+                    Style {
+                        display: Display::Block,
+                        position: Position::Relative,
+                        direction,
+                        size: Size { width: length(400.0), height: length(100.0) },
+                        ..Default::default()
+                    },
+                    &[child],
+                )
+                .unwrap();
+            taffy.compute_layout(root, Size::MAX_CONTENT).unwrap();
+            let x = if direction == Direction::Rtl { x_rtl } else { x_ltr };
+            assert_eq!(
+                taffy.layout(child).unwrap().location.x,
+                x,
+                "{direction:?}: {width} wide, left {left}, right {right}, {justify_self:?}"
+            );
+        }
+    }
+}
+
+#[cfg(feature = "block_layout")]
+#[test]
+fn block_absolute_safe_align_self_between_insets_uses_overflow_limit_rect() {
+    let mut taffy = new_test_tree();
+    let child = taffy
+        .new_leaf(Style {
+            position: Position::Absolute,
+            size: Size { width: length(10.0), height: length(260.0) },
+            inset: Rect { left: length(0.0), right: auto(), top: length(200.0), bottom: length(0.0) },
+            align_self: Some(AlignSelf::SAFE_END),
+            ..Default::default()
+        })
+        .unwrap();
+    let root = taffy
+        .new_with_children(
+            Style {
+                display: Display::Block,
+                position: Position::Relative,
+                size: Size { width: length(100.0), height: length(400.0) },
+                ..Default::default()
+            },
+            &[child],
+        )
+        .unwrap();
+    taffy.compute_layout(root, Size::MAX_CONTENT).unwrap();
+
+    // The IMCB spans 200..400 and the 260-tall box overflows it, but it fits the containing
+    // block, so `safe end` keeps it ending at 400 instead of falling back to y == 200.
+    assert_eq!(taffy.layout(child).unwrap().location.y, 140.0);
+}
