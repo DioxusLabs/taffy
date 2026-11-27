@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- `TaffyTree` resolves `calc()` values, which it previously resolved to 0. `TaffyTree::new_calc` stores a `LinearCalc` (a percentage plus a length) and `remove_calc` removes it. `compute_layout_with_measure_and_calc` gives measure functions a `CalcResolver` for calc in a leaf's own style (#PR).
+
 ## 0.16.0
 
 The MSRV for this release is 1.85, and Taffy now uses the 2024 edition.
